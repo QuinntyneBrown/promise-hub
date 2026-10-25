@@ -6,7 +6,8 @@
       [personName]="s.personName"
       [menuOpen]="menuOpen()"
       (moreRequested)="openMenu(s)"
-      (accountRequested)="openMenu(s)"
+      [personContext]="context(s)"
+      (signOutRequested)="signOut()"
       (searched)="search($event)"
     />
   }

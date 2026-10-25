@@ -1,3 +1,5 @@
+export * from './lib/alert/alert';
+export * from './lib/auth-card/auth-card';
 export * from './lib/avatar/avatar';
 export * from './lib/avatar/avatar-tint';
 export * from './lib/bottom-navigation/bottom-navigation';
@@ -14,4 +16,6 @@ export * from './lib/icon/icon-name';
 export * from './lib/navigation/nav-item';
 export * from './lib/page-header/page-header';
 export * from './lib/skip-link/skip-link';
+export * from './lib/switch/switch';
+export * from './lib/text-field/text-field';
 export * from './lib/top-bar/top-bar';

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { PhAvatar } from '../avatar/avatar';
@@ -14,7 +15,17 @@ import { NavItem } from '../navigation/nav-item';
  */
 @Component({
   selector: 'ph-top-bar',
-  imports: [FormsModule, RouterLink, RouterLinkActive, PhAvatar, PhBrandMark, PhIcon],
+  imports: [
+    CdkMenu,
+    CdkMenuItem,
+    CdkMenuTrigger,
+    FormsModule,
+    RouterLink,
+    RouterLinkActive,
+    PhAvatar,
+    PhBrandMark,
+    PhIcon,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './top-bar.html',
   styleUrl: './top-bar.scss',
@@ -23,12 +34,14 @@ export class PhTopBar {
   readonly items = input.required<NavItem[]>();
   readonly homeLink = input('/');
   readonly personName = input.required<string>();
+  /** "Site lead · Harbourview Youth Collective", shown at the top of the account menu. */
+  readonly personContext = input('');
   readonly avatarTint = input<AvatarTint>('sky');
   readonly unread = input(0);
   readonly menuOpen = input(false);
 
   readonly moreRequested = output<void>();
-  readonly accountRequested = output<void>();
+  readonly signOutRequested = output<void>();
   readonly notificationsRequested = output<void>();
   readonly searched = output<string>();
 

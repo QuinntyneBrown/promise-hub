@@ -1,0 +1,33 @@
+<ph-skip-link />
+<main id="main">
+  <ph-auth-card title="Enter your code" subtitle="From your authenticator app.">
+    <form class="stack" novalidate (ngSubmit)="submit()">
+      @if (failed()) {
+        <ph-alert
+          tone="danger"
+          title="We couldn’t check your code"
+          text="Something went wrong on our side. Try again in a minute."
+        />
+      }
+      <ph-text-field
+        inputId="code"
+        label="Six-digit code"
+        inputmode="numeric"
+        autocomplete="one-time-code"
+        name="code"
+        [maxlength]="6"
+        [error]="invalid() ? 'That code didn’t work. Check your app and try again.' : null"
+        [(ngModel)]="code"
+      />
+      <ph-switch
+        label="Don’t ask again on this laptop for 30 days"
+        name="trust"
+        [(ngModel)]="trust"
+      />
+      <ph-button variant="primary" size="lg" type="submit" [block]="true" [busy]="submitting()"
+        >Continue</ph-button
+      >
+      <p class="text-center"><a routerLink="/sign-in">Start over</a></p>
+    </form>
+  </ph-auth-card>
+</main>

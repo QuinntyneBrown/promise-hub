@@ -1,0 +1,33 @@
+<label class="label" [for]="inputId()">{{ label() }}</label>
+<div class="group">
+  <input
+    class="input"
+    [id]="inputId()"
+    [type]="inputType()"
+    [value]="value()"
+    [disabled]="disabled()"
+    [attr.autocomplete]="autocomplete()"
+    [attr.inputmode]="inputmode()"
+    [attr.maxlength]="maxlength()"
+    [attr.aria-invalid]="error() ? 'true' : null"
+    [attr.aria-describedby]="error() ? inputId() + '-error' : null"
+    (input)="update($any($event.target).value)"
+    (blur)="onTouched()"
+  />
+  @if (type() === 'password') {
+    <button
+      class="reveal"
+      type="button"
+      [attr.aria-label]="revealed() ? 'Hide password' : 'Show password'"
+      [attr.aria-pressed]="revealed()"
+      (click)="revealed.set(!revealed())"
+    >
+      <ph-icon [name]="revealed() ? 'eye-off' : 'eye'" />
+    </button>
+  }
+</div>
+@if (error()) {
+  <div class="error" [id]="inputId() + '-error'" [attr.data-testid]="inputId() + '-error'">
+    {{ error() }}
+  </div>
+}

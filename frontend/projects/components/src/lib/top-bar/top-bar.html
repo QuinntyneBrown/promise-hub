@@ -54,10 +54,40 @@
   <button
     class="avatar-trigger"
     type="button"
-    aria-haspopup="menu"
     [attr.aria-label]="'Account menu for ' + personName()"
-    (click)="accountRequested.emit()"
+    [cdkMenuTriggerFor]="accountMenu"
   >
     <ph-avatar [name]="personName()" size="sm" [tint]="avatarTint()" />
   </button>
 </header>
+
+<ng-template #accountMenu>
+  <ul class="menu" cdkMenu [attr.aria-label]="'Account menu for ' + personName()">
+    <li class="menu__header" role="none">
+      <span class="menu__title">{{ personName() }}</span>
+      <span class="menu__caption">{{ personContext() }}</span>
+    </li>
+    <li class="menu__divider" role="none"></li>
+    <li role="none">
+      <a class="menu__item" cdkMenuItem routerLink="/account"
+        ><ph-icon name="account" />Your account</a
+      >
+    </li>
+    <li role="none">
+      <a class="menu__item" cdkMenuItem routerLink="/notifications"
+        ><ph-icon name="notifications" />Notifications</a
+      >
+    </li>
+    <li class="menu__divider" role="none"></li>
+    <li role="none">
+      <button
+        class="menu__item"
+        cdkMenuItem
+        type="button"
+        (cdkMenuItemTriggered)="signOutRequested.emit()"
+      >
+        <ph-icon name="sign-out" />Sign out
+      </button>
+    </li>
+  </ul>
+</ng-template>

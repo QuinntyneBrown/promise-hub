@@ -46,6 +46,20 @@ export class ShellPage extends BasePage {
     await this.menu.getByRole('link', { name: label }).click();
   }
 
+  get accountMenu(): Locator {
+    return this.page.getByRole('menu', { name: /^Account menu for/ });
+  }
+
+  async openAccountMenu(): Promise<void> {
+    await this.page.getByRole('button', { name: /^Account menu for/ }).click();
+    await expect(this.accountMenu).toBeVisible();
+  }
+
+  async signOut(): Promise<void> {
+    await this.openAccountMenu();
+    await this.accountMenu.getByRole('menuitem', { name: 'Sign out' }).click();
+  }
+
   async accountButtonName(): Promise<string | null> {
     return this.page.getByRole('button', { name: /^Account menu for/ }).getAttribute('aria-label');
   }
