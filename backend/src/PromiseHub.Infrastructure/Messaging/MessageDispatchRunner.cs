@@ -33,7 +33,12 @@ public sealed class MessageDispatchRunner(IServiceScopeFactory scopes, TimeProvi
             var withReminders = await db.PermissionSlips.IgnoreQueryFilters().AsNoTracking()
                 .Where(s => s.Status == SlipStatus.Sent && s.Reminders != SlipReminders.None)
                 .Select(s => s.OrganizationId).Distinct().ToListAsync(cancellationToken);
-            organizations = [.. withDeliveries.Union(withSlips).Union(withReminders)];
+            // Sessions past the no-show delay that haven't ended may have children to alert; the handler decides per child.
+            var withSessions = (await db.Events.IgnoreQueryFilters().AsNoTracking()
+                .Where(e => e.NoShowAlert && e.Status != Domain.Events.EventStatus.Cancelled)
+                .Select(e => new { e.OrganizationId, e.StartsAt, e.EndsAt }).ToListAsync(cancellationToken))
+                .Where(e => e.StartsAt + Application.Attendance.NoShowRules.Delay <= now && e.EndsAt > now).Select(e => e.OrganizationId);
+            organizations = [.. withDeliveries.Union(withSlips).Union(withReminders).Union(withSessions)];
         }
         foreach (var organizationId in organizations)
         {
@@ -41,6 +46,7 @@ public sealed class MessageDispatchRunner(IServiceScopeFactory scopes, TimeProvi
             scope.ServiceProvider.GetRequiredService<TenantContext>().ResolveForJob(organizationId);
             await scope.ServiceProvider.GetRequiredService<SendDueSlipsHandler>().HandleAsync(cancellationToken);
             await scope.ServiceProvider.GetRequiredService<SendDueRemindersHandler>().HandleAsync(cancellationToken);
+            await scope.ServiceProvider.GetRequiredService<Application.Attendance.SendNoShowAlertsHandler>().HandleAsync(cancellationToken);
             await scope.ServiceProvider.GetRequiredService<SendQueuedDeliveriesHandler>().HandleAsync(cancellationToken);
         }
     }

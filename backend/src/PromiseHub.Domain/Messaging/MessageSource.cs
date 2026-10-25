@@ -8,4 +8,7 @@ public enum MessageSource
 
     /// <summary>Enrollment decisions to guardians; part of the Roster module.</summary>
     Enrollment,
+
+    /// <summary>No-show alerts to guardians; part of the Roll Call module.</summary>
+    NoShow,
 }

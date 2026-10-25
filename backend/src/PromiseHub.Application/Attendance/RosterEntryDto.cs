@@ -13,4 +13,6 @@ public sealed record RosterEntryDto(
     DateTimeOffset? CheckedInAt,
     bool WalkIn,
     DateTimeOffset? SignedOutAt = null,
-    string? CollectedBy = null);
+    string? CollectedBy = null,
+    string? NoShow = null,
+    DateTimeOffset? NoShowAt = null);

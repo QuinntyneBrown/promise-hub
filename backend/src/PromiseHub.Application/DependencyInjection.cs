@@ -50,6 +50,8 @@ public static class DependencyInjection
         services.AddScoped<Messaging.PreviewMessageHandler>();
         services.AddScoped<Messaging.SendMessageHandler>();
         services.AddScoped<Messaging.SendQueuedDeliveriesHandler>();
+        services.AddScoped<Attendance.SendNoShowAlertsHandler>();
+        services.AddScoped<Attendance.NoShowReplyHandler>();
         services.AddScoped<Messaging.ListMessagesHandler>();
         services.AddScoped<Messaging.GetMessageHandler>();
         services.AddScoped<Messaging.GetSmsCapHandler>();

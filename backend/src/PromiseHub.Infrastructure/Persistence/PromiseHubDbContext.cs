@@ -44,6 +44,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Enrollment.EnrollmentSession> EnrollmentSessions => Set<Domain.Enrollment.EnrollmentSession>();
     public DbSet<Domain.Enrollment.EnrollmentRequest> EnrollmentRequests => Set<Domain.Enrollment.EnrollmentRequest>();
     public DbSet<Domain.Incidents.Incident> Incidents => Set<Domain.Incidents.Incident>();
+    public DbSet<Domain.Attendance.NoShowAlert> NoShowAlerts => Set<Domain.Attendance.NoShowAlert>();
     public DbSet<Domain.Incidents.IncidentFollowUp> IncidentFollowUps => Set<Domain.Incidents.IncidentFollowUp>();
     public DbSet<GuardianVerification> GuardianVerifications => Set<GuardianVerification>();
     public DbSet<TrustedGuardianDevice> TrustedGuardianDevices => Set<TrustedGuardianDevice>();
@@ -274,6 +275,13 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(i => i.ReviewNote).HasMaxLength(4000);
             e.Property(i => i.ReviewedBy).HasMaxLength(200);
             e.Property(i => i.ReviewedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+        });
+        modelBuilder.Entity<Domain.Attendance.NoShowAlert>(e =>
+        {
+            e.Property(a => a.Reply).HasConversion<string>().HasMaxLength(20);
+            e.Property(a => a.SentAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(a => a.RepliedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.HasIndex(a => new { a.EventId, a.ChildId }).IsUnique();
         });
         modelBuilder.Entity<Domain.Incidents.IncidentFollowUp>(e =>
         {
