@@ -13,6 +13,7 @@ const can = {
   manageEvents: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
   cancelEvents: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
   runSessions: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker'].includes(m.role),
+  runAnySession: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
 };
 
 interface FakeAttendance {
@@ -54,6 +55,8 @@ export class FakeApi {
   private attendance = new Map<string, Map<string, FakeAttendance>>();
   private walkIns: FakeWalkIn[] = [];
   private actions = new Set<string>();
+  /** Who works each session; youth workers run only these (as seeded: Jaylen and Aisha tonight). */
+  private sessionStaff = new Map<string, string[]>([['e-tutoring-today', ['m-jaylen', 'm-aisha']]]);
   private nextId = 1;
 
   constructor(private membershipId: string | null) {}
@@ -61,6 +64,12 @@ export class FakeApi {
   /** Makes the next calls to a route answer with the given status, as the real API would on a fault. */
   failNext(path: string, status: number): void {
     this.failures.set(path, status);
+  }
+
+  /** Adds a session tonight in After-School Tutoring with no staff assigned, as a director would. */
+  addSessionTonight(name: string): void {
+    const base = this.events.find((e) => e.id === 'e-tutoring-today')!;
+    this.events.push({ ...base, id: `e-${this.nextId++}`, name, startsAt: '2026-11-05T23:00:00Z', endsAt: '2026-11-06T00:00:00Z', place: 'Room 3' });
   }
 
   /** Sets the modules on for an organization, as Settings › Modules would. */
@@ -657,6 +666,11 @@ export class FakeApi {
     return route.fulfill({ status: 204 });
   }
 
+  /** Roles that run sessions without running any session (youth workers) open only the ones they are assigned to. */
+  private mayRun(m: Membership, eventId: string): boolean {
+    return !can.runSessions(m) || can.runAnySession(m) || (this.sessionStaff.get(eventId) ?? []).includes(m.id);
+  }
+
   private ownEvent(m: Membership, id: string): FakeEvent | undefined {
     return this.events.find((e) => e.id === id && e.organizationId === m.organizationId);
   }
@@ -801,6 +815,7 @@ export class FakeApi {
     const end = '2026-11-06T05:00:00.000Z';
     const sessions = this.events
       .filter((e) => e.organizationId === m.organizationId && e.status === 'Scheduled' && e.startsAt < end && e.endsAt > start)
+      .filter((e) => this.mayRun(m, e.id))
       .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
       .map((e) => this.sessionSummary(e));
     return route.fulfill({ json: { sessions } });
@@ -811,6 +826,7 @@ export class FakeApi {
     if (!m) return;
     const e = this.ownEvent(m, id);
     if (!e) return route.fulfill({ status: 404 });
+    if (!this.mayRun(m, e.id)) return this.forbidden(route);
     const p = this.programs.find((x) => x.id === e.programId)!;
     const records = this.sessionRecords(e.id);
     const children = this.childrenOf(m)
@@ -854,6 +870,7 @@ export class FakeApi {
     if (!can.runSessions(m)) return this.forbidden(route);
     const e = this.ownEvent(m, id);
     if (!e) return route.fulfill({ status: 404 });
+    if (!this.mayRun(m, e.id)) return this.forbidden(route);
     const b = route.request().postDataJSON() as { childId: string; arrivedAt?: string | null; clientActionId: string };
     if (this.actions.has(b.clientActionId)) return route.fulfill({ json: { status: 'saved' } });
     if (e.status === 'Cancelled') return route.fulfill({ status: 422, json: { errors: { session: 'This session is cancelled.' } } });
@@ -872,6 +889,7 @@ export class FakeApi {
     if (!can.runSessions(m)) return this.forbidden(route);
     const e = this.ownEvent(m, id);
     if (!e) return route.fulfill({ status: 404 });
+    if (!this.mayRun(m, e.id)) return this.forbidden(route);
     const b = route.request().postDataJSON() as { childName: string; guardian: string; medicalNotes: string };
     const errors: Record<string, string> = {};
     if (!b.childName?.trim()) errors['childName'] = 'Enter the child’s name.';
@@ -921,6 +939,7 @@ export class FakeApi {
     if (!can.runSessions(m)) return this.forbidden(route);
     const e = this.ownEvent(m, id);
     if (!e) return route.fulfill({ status: 404 });
+    if (!this.mayRun(m, e.id)) return this.forbidden(route);
     const b = route.request().postDataJSON() as {
       childId: string;
       guardianId: string | null;

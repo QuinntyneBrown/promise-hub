@@ -21,6 +21,15 @@
       </ph-empty-state>
     </ph-card>
   }
+  @case ('forbidden') {
+    <ph-error-page
+      icon="lock"
+      title="You’re not on this session"
+      text="Youth workers open the sessions they work. Ask a site lead to add you."
+    >
+      <ph-button variant="primary" link="/check-in">Your sessions today</ph-button>
+    </ph-error-page>
+  }
   @case ('error') {
     <ph-page-header title="Check-in" />
     <ph-card [flush]="true">

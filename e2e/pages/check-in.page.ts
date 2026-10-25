@@ -15,6 +15,15 @@ export class CheckInPage extends BasePage {
     return this.page.getByRole('list', { name: /^Roster for / });
   }
 
+  get forbiddenText(): Locator {
+    return this.page.getByTestId('empty-state-text');
+  }
+
+  /** The buttons that switch to today's other sessions. */
+  otherSession(name: string): Locator {
+    return this.page.getByRole('link', { name, exact: true });
+  }
+
   get dialog(): Locator {
     return this.page.getByRole('dialog');
   }

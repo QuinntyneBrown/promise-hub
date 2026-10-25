@@ -24,6 +24,7 @@ import {
   PhChip,
   PhDialogs,
   PhEmptyState,
+  PhErrorPage,
   PhFlag,
   PhPageHeader,
   PhRoster,
@@ -57,6 +58,7 @@ type Filter = 'all' | 'not-yet' | 'in' | 'absent';
     PhCard,
     PhChip,
     PhEmptyState,
+    PhErrorPage,
     PhFlag,
     PhPageHeader,
     PhRoster,
@@ -81,9 +83,9 @@ export class CheckInPage {
   /** Route parameter; without it, the first of today's sessions opens. */
   readonly sessionId = input<string | undefined>(undefined);
 
-  protected readonly state = signal<'loading' | 'loaded' | 'none' | 'not-found' | 'error'>(
-    'loading',
-  );
+  protected readonly state = signal<
+    'loading' | 'loaded' | 'none' | 'not-found' | 'forbidden' | 'error'
+  >('loading');
   protected readonly session = signal<SessionSummary | null>(null);
   protected readonly entries = signal<RosterEntry[]>([]);
   protected readonly others = signal<SessionSummary[]>([]);
@@ -139,7 +141,11 @@ export class CheckInPage {
           this.entries.set(roster.value.children);
           this.state.set('loaded');
         } else {
-          this.state.set(roster.status === 'not-found' ? 'not-found' : 'error');
+          this.state.set(
+            roster.status === 'not-found' || roster.status === 'forbidden'
+              ? roster.status
+              : 'error',
+          );
         }
       });
     });
