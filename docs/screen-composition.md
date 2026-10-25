@@ -55,6 +55,7 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Archive program | `archive-program` | `ph-dialog`, `ph-text-field`, `ph-button` |
 | Cancel event | `cancel-event` | `ph-dialog`, `ph-textarea`, `ph-switch`, `ph-button` |
 | Check-in sheet | `check-in-sheet` | `ph-dialog`, `ph-radio-group`, `ph-text-field` (time), `ph-button` |
+| Sign out | `confirm-pickup` (default, invalid, failed, confirm) | `ph-dialog`, `ph-radio-group` (with error), `ph-alert` (warning, danger), `ph-button` (tel: link), `ph-text-field`, `ph-switch` (with error) |
 | Add a walk-in | `add-walk-in` (default, invalid) | `ph-dialog`, `ph-text-field`, `ph-textarea`, `ph-button` |
 
 The toast region (`ph-toast-region`) sits once in the app root.
