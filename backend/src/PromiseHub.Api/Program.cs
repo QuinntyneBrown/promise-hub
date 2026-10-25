@@ -39,6 +39,7 @@ app.MapProgramEndpoints();
 app.MapEventEndpoints();
 app.MapAttendanceEndpoints();
 app.MapMessagingEndpoints();
+app.MapSlipEndpoints();
 app.MapSettingsEndpoints();
 
 app.Run();

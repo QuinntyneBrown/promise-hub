@@ -53,6 +53,17 @@ public static class DependencyInjection
         services.AddScoped<Messaging.ListMessagesHandler>();
         services.AddScoped<Messaging.GetMessageHandler>();
         services.AddScoped<Messaging.GetSmsCapHandler>();
+        services.AddScoped<Messaging.MessageWriter>();
+        services.AddScoped<Slips.SlipReader>();
+        services.AddScoped<Slips.SlipSender>();
+        services.AddScoped<Slips.GetSlipHandler>();
+        services.AddScoped<Slips.ListSlipsHandler>();
+        services.AddScoped<Slips.SaveSlipHandler>();
+        services.AddScoped<Slips.SendSlipHandler>();
+        services.AddScoped<Slips.SendSlipNowHandler>();
+        services.AddScoped<Slips.CancelSlipSendHandler>();
+        services.AddScoped<Slips.EditSlipHandler>();
+        services.AddScoped<Slips.SendDueSlipsHandler>();
         services.AddScoped<SignOutHandler>();
         services.AddScoped<GetPickupOptionsHandler>();
         services.AddScoped<MarkAbsentHandler>();

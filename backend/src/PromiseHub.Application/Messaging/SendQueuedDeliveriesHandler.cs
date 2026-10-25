@@ -1,15 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using PromiseHub.Application.Organizations;
 using PromiseHub.Domain.Messaging;
+using PromiseHub.Domain.Organizations;
 
 namespace PromiseHub.Application.Messaging;
 
 /// <summary>
-/// The per-tenant send job (L2-034, L2-022 criterion 2): sends each due delivery once through the provider, reserving SMS
+/// The per-tenant send job (L2-034, L2-022 criterion 2): sends each due delivery of a module that is on once through the provider, reserving SMS
 /// segments first. A text the cap refuses goes by email when the household has one and is paused otherwise; email never
 /// consults the cap. A refused send is retried with backoff and then recorded as failed.
 /// </summary>
-public sealed class SendQueuedDeliveriesHandler(IPromiseHubDb db, ITenantContext tenant, SmsCap cap, ISmsSender sms, IEmailSender email, TimeProvider clock)
+public sealed class SendQueuedDeliveriesHandler(IPromiseHubDb db, ITenantContext tenant, SmsCap cap, ISmsSender sms, IEmailSender email, IModuleGate modules, TimeProvider clock)
 {
     public async Task HandleAsync(CancellationToken cancellationToken = default)
     {
@@ -22,7 +23,15 @@ public sealed class SendQueuedDeliveriesHandler(IPromiseHubDb db, ITenantContext
         }
         var organization = await db.Organizations.AsNoTracking().SingleAsync(o => o.Id == tenant.OrganizationId, cancellationToken);
         var messageIds = due.Select(d => d.MessageId).Distinct().ToList();
-        var messages = await db.Messages.Where(m => messageIds.Contains(m.Id)).ToDictionaryAsync(m => m.Id, cancellationToken);
+        var on = await modules.OnAsync(cancellationToken);
+        var messages = (await db.Messages.Where(m => messageIds.Contains(m.Id)).ToListAsync(cancellationToken))
+            .Where(m => on.Contains(m.Source == MessageSource.Slips ? ModuleId.Slips : ModuleId.Messages))
+            .ToDictionary(m => m.Id);
+        due = [.. due.Where(d => messages.ContainsKey(d.MessageId))];
+        if (due.Count == 0)
+        {
+            return;
+        }
         var period = await cap.CurrentAsync(cancellationToken);
 
         foreach (var delivery in due)

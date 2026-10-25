@@ -7,4 +7,5 @@ public enum ResultStatus
     NotFound,
     Invalid,
     Forbidden,
+    Conflict,
 }
