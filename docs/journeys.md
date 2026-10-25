@@ -48,3 +48,4 @@
 | Platform admin | Create an organization | Add a tenant and prepare its onboarding. | [3 days](detailed-designs/organizations/manage-organizations/README.md) | 0% |
 | Platform admin | Suspend an organization | Block access and outbound messages while retaining tenant data. | [3 days](detailed-designs/organizations/manage-organizations/README.md) | 0% |
 | Platform admin | Manage organizations | Review tenants across the deployment with platform-only access. | [3 days](detailed-designs/organizations/manage-organizations/README.md) | 0% |
+| Everyone | Walking skeleton | Tenancy, migrate and seed, the shell and audit recording that every journey builds on. | [supporting](prompts/01-walking-skeleton.md) | 100% · [video](videos/01-walking-skeleton/README.md) |

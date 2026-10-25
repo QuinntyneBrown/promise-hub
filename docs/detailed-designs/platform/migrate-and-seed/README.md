@@ -17,7 +17,7 @@ This feature designs the three commands of `PromiseHub.Cli` (`migrate`, `seed`, 
 
 ### CLI — `PromiseHub.Cli`
 
-- **`Program.cs`** — builds a generic host with the same configuration sources as the API (`appsettings`, environment, user secrets), registers `PromiseHubDbContext` and the seeder from `PromiseHub.Infrastructure`, and dispatches to one of three commands by the first argument. Exit code 0 on success, 1 on failure, 2 on usage error. The command-line parsing library is <TO SUPPLY>.
+- **`Program.cs`** — builds a generic host with the same configuration sources as the API (`appsettings`, environment, user secrets), registers `PromiseHubDbContext` and the seeder from `PromiseHub.Infrastructure`, and dispatches to one of three commands by the first argument. Exit code 0 on success, 1 on failure, 2 on usage error. Arguments are parsed by hand in `CliApp`; the three commands need no parsing library.
 - **`MigrateCommand`** — lists pending migrations, logs each by name, calls `Database.MigrateAsync()`, and reports the final revision. With `--check` it exits 3 when migrations are pending and applies nothing, for CI gates.
 - **`SeedCommand`** — runs `DatabaseSeeder.SeedAsync()`. It refuses to run when migrations are pending. With `--profile demo` (the default) it seeds the two organizations below; with `--profile test` it seeds the minimal fixture used by `PromiseHub.Api.Tests`.
 - **`ResetCommand`** — allowed only when `ASPNETCORE_ENVIRONMENT` is `Development` or `--force` is given with a non-production connection. It calls `EnsureDeletedAsync()`, then runs `MigrateCommand` and `SeedCommand`. Production connection strings are detected by a configuration marker `Database:AllowReset = false`.
@@ -29,7 +29,7 @@ This feature designs the three commands of `PromiseHub.Cli` (`migrate`, `seed`, 
 - **`Persistence/Migrations/`** — the only folder holding EF Core migrations, generated with `dotnet ef migrations add` against the `PromiseHub.Cli` startup project.
 - **`DatabaseSeeder`** — orchestrates `ISeedStep` implementations in dependency order inside one transaction per organization. Every seeded row has a fixed `Guid` derived from a stable name (for example `SeedIds.Of("org:harbourview")`), so a re-run finds existing rows by id and compares field by field. A row that matches is left untouched; a row that differs is reported as drift and left untouched unless `--repair` is given (`L2-042` criterion 2).
 - **Seed steps** (`Persistence/Seed/`):
-  - `OrganizationsSeedStep` — Harbourview Youth Collective (Hamilton, Ontario; Standard plan; every module on) and a second organization with a different plan and module set. The second organization's name, plan and modules are <TO SUPPLY>; the design requires the Free plan and a subset of modules so tests exercise `L2-005` and `L2-037`.
+  - `OrganizationsSeedStep` — Harbourview Youth Collective (Hamilton, Ontario; Standard plan; every module on) and a second organization with a different plan and module set. The second organization is Northgate Community Church Kids (Burlington, Ontario) on the Free plan; its module subset arrives with `configure-modules`.
   - `StaffSeedStep` — the six Harbourview staff with their roles; Priya Raman also holds a membership in the second organization so `switch-organization` has data. Sam Lee is left in the invited state.
   - `HouseholdsSeedStep` — the eight households with guardians, children, languages, medical flags and approved pickups as the mocks describe.
   - `ProgramsAndEventsSeedStep` — After-School Tutoring, Saturday Sports, One-to-one Mentoring, Winter Camp 2026, Summer Camp 2026 (archived), and the six events including the Fall field trip slip and the cancelled Saturday Sports.
@@ -49,6 +49,10 @@ This feature designs the three commands of `PromiseHub.Cli` (`migrate`, `seed`, 
 - CI: `migrate --check` fails the build when a migration is missing for a model change; the API integration tests seed the `test` profile into the fake database.
 - Deployment: `eng/` runs `migrate` as a release step before the new API instances start, then `seed --profile demo` only in demo environments.
 - Restore drill: `migrate` is applied to the restored copy (`platform/run-background-jobs`).
+
+## Built so far
+
+Slice 01 (walking skeleton) delivered `migrate` and `migrate --check`, `seed`, `reset` (Development or `--force`), the API start-up guard (`MigrationGuard`) and a first seed of both organizations, their staff and the Rivera, Thompson and Tran households (with a second Mateo Rivera in Northgate). The database is SQLite (ADR 0001). Seed profiles, `--repair`, drift reporting and the rest of the cast arrive with the features that need them.
 
 ## Requirements
 

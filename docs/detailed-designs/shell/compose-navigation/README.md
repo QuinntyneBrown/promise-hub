@@ -56,6 +56,10 @@ The slice runs from the shell components in the `promisehub` application to the 
 - The role filters items the person may not open. The server remains the authority (`L2-007`).
 - The breakpoints are the design system's `--layout-breakpoint-*` tokens (640, 768, 1024 and 1280 px); `L2-036` names the same values, so the shell and the tokens agree.
 
+## Built so far
+
+Slice 01 delivered the shell (`Shell` in the app) composed from `ph-skip-link`, `ph-top-bar`, `ph-bottom-navigation` and the `ph-nav-drawer` More menu (CDK Dialog, closes on Escape). Navigation is a static list until module configuration (slice 03) filters it. The avatar opens the same drawer until the account menu arrives with sign-out (slice 02).
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

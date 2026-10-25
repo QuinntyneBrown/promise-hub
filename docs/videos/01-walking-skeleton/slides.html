@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 01 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="01" data-video-title="The walking skeleton" data-parts="Introduction|Promises|Migrate and seed|Tenancy|Audit|Shell|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 01</div>
+  <h1>The walking skeleton</h1>
+  <p class="lead">Tenancy, migrate and seed, audit recording and the shell</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="Four promises, each one backed by tests.">
+  <h2>What the skeleton promises</h2>
+  <ul>
+    <li>The CLI migrates and seeds two organizations, safely re-run</li>
+    <li>Every query filtered by the signed-in membership's organization</li>
+    <li>Sensitive actions written to an append-only audit log</li>
+    <li>A shell built only from the components library</li>
+  </ul>
+</section>
+
+<section id="seed" data-part="2" data-cue="The API never touches the schema.">
+  <h2>Migrate and seed</h2>
+  <pre class="code" data-lang="sh">dotnet run --project backend/src/PromiseHub.Cli -- migrate
+dotnet run --project backend/src/PromiseHub.Cli -- seed
+dotnet run --project backend/src/PromiseHub.Cli -- migrate --check   # exit 3 when pending</pre>
+  <div class="cols">
+    <div class="card"><h3>Harbourview Youth Collective</h3><p>Standard plan · Jaylen, Marisol, Tom, Priya, Aisha · Rivera, Thompson, Tran</p></div>
+    <div class="card"><h3>Northgate Community Church Kids</h3><p>Free plan · Priya, Grace · its own Mateo Rivera</p></div>
+  </div>
+</section>
+
+<section id="guard" data-part="2" data-cue="If you start the API against a database with a pending migration">
+  <h2>The API refuses an unmigrated database</h2>
+  <p class="file">backend/src/PromiseHub.Api/Middleware/MigrationGuard.cs</p>
+  <ul><li>Logs each pending migration by name, at Critical</li><li>Stops the host before it serves a request</li><li>Never applies a migration itself</li></ul>
+</section>
+
+<section id="tenant" data-part="3" data-cue="The tenant never comes from the request.">
+  <h2>One tenant at a time</h2>
+  <ul>
+    <li><code>TenantContextMiddleware</code> resolves the membership from the session</li>
+    <li>A query filter adds <code>OrganizationId</code> to every tenant-owned query</li>
+    <li>Saving a row for another organization throws</li>
+  </ul>
+</section>
+
+<section id="cross" data-part="3" data-cue="Both organizations have a child called Mateo Rivera on purpose.">
+  <h2>Asking for another tenant's child</h2>
+  <table class="facts">
+    <tr><th>Request</th><th>Answer</th><th>Audit</th></tr>
+    <tr><td>Jaylen → Harbourview's Mateo</td><td>200</td><td>—</td></tr>
+    <tr><td>Jaylen → Northgate's Mateo</td><td>404</td><td>AccessDenied in Harbourview's log</td></tr>
+  </table>
+</section>
+
+<section id="audit" data-part="4" data-cue="Audit entries are written in the same unit of work">
+  <h2>An audit trail that stays put</h2>
+  <ul><li><code>IAuditWriter</code> joins the caller's unit of work</li><li>Edits and deletes throw <code>AuditImmutableException</code></li><li>Every entry belongs to one organization</li></ul>
+</section>
+
+<section id="shell" data-part="5" data-cue="Here is the shell on a laptop." data-clip="clips/shell-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Top bar, More drawer, not found</h3><p>Incidents and Settings live in More, so the capsule never overflows.</p></div>
+</section>
+
+<section id="phone" data-part="5" data-cue="On a phone, the same sections move to a tab bar at the bottom." data-clip="clips/shell-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Tab bar and menu</h3><p>Priya, signed in to Northgate, sees Northgate only.</p></div>
+</section>
+
+<section id="states" data-part="5" data-cue="Every one of these screens passes an axe accessibility check">
+  <h2>Default, empty and error states</h2>
+  <div class="cols">
+    <img class="shot" alt="Today empty state on desktop" src="shots/desktop-today.png">
+    <img class="shot" alt="Not found page on desktop" src="shots/desktop-404.png">
+  </div>
+</section>
+
+<section id="testing" data-part="6" data-cue="Backend tests run against the real API">
+  <h2>How it is tested</h2>
+  <div class="cols">
+    <div class="card"><h3>Backend</h3><p>API integration tests on in-memory SQLite, migrated and seeded by the CLI. Cross-tenant and audit cases included.</p></div>
+    <div class="card"><h3>Browser</h3><p>Playwright, Chromium, page objects, axe. A fake API answers every call; unrouted requests fail.</p></div>
+  </div>
+</section>
+
+<section id="recap" data-part="7" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>The CLI owns the schema and the seed</li><li>The membership decides the tenant, never the client</li><li>Audit entries are permanent</li><li>Every screen comes from the components library</li></ul>
+  <p class="muted">Next: staff sign in securely</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

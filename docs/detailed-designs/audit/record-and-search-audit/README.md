@@ -44,6 +44,10 @@ Domain in `PromiseHub.Domain/Audit/`: `AuditEntry` (`Id`, `OrganizationId`, `Occ
 
 Immutability (`L2-032` criterion 4) is enforced in three places: `AuditEntry` has no mutators; `PromiseHubDbContext` marks the entity so `Update` and `Remove` throw `AuditImmutableException` before reaching the database; and the migration grants the application login `INSERT` and `SELECT` only on the audit table. Cross-tenant 404s from `L2-001` criterion 2 write an `AccessDenied` entry through the same writer.
 
+### Built so far
+
+Slice 01 delivered `AuditEntry`, `AuditAction`, `IAuditWriter` and `AuditWriter` (entries join the caller's unit of work) and immutability in `PromiseHubDbContext` (`AuditImmutableException`). The first writer is the cross-tenant `AccessDenied` entry. The interceptor, view auditing, search, export and the audit-log screen are still to come.
+
 ### Undecided details
 
 - Retention period and purge policy for audit entries are `<TO SUPPLY>`.

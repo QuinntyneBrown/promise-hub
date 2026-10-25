@@ -4,7 +4,7 @@ import { SESSION_API } from '@promisehub/api';
 import { PhButton, PhCard, PhEmptyState, PhPageHeader } from '@promisehub/components';
 import { EMPTY, catchError } from 'rxjs';
 
-const dateFormat = new Intl.DateTimeFormat('en-CA', {
+const dateFormat = new Intl.DateTimeFormat('en-GB', {
   weekday: 'long',
   day: 'numeric',
   month: 'long',
