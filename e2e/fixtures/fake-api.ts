@@ -179,6 +179,23 @@ export class FakeApi {
     submittedAt?: string;
     note?: string | null;
   }[] = [];
+  /** Incidents as reported: organization, reporter membership and the form's facts. */
+  private incidents: {
+    id: string;
+    organizationId: string;
+    reporterId: string;
+    reportedBy: string;
+    category: string;
+    childId: string;
+    occurredAt: string;
+    place: string;
+    whatHappened: string;
+    actionTaken: string;
+    guardianContact: string;
+    severity: string;
+    status: 'NeedsReview' | 'Open' | 'Closed';
+    reportedAt: string;
+  }[] = [];
   /** Household home links as texted with an enrollment decision: token → household. */
   private homeLinks = new Map<string, string>([
     ['tok-home-tran', 'hh-tran'],
@@ -230,6 +247,14 @@ export class FakeApi {
     const position = status === 'Waitlisted' ? this.enrollmentRequests.filter((r) => r.programId === programId && r.status === 'Waitlisted').length + 1 : null;
     this.enrollmentRequests.push({ id: `er-${this.nextId++}`, programId, status, position, childId, submittedAt: '2026-11-02T15:00:00Z', note });
     if (status === 'Accepted') this.programs.find((x) => x.id === programId)!.roster.push(childId);
+  }
+
+  /** An incident someone already reported (seeded as the API would store it). */
+  reportIncident(reporterId: string, category: string, childId: string): string {
+    const m = memberships.find((x) => x.id === reporterId)!;
+    const id = `inc-${this.nextId++}`;
+    this.incidents.push({ id, organizationId: m.organizationId, reporterId, reportedBy: m.personName, category, childId, occurredAt: '2026-10-21T18:40:00Z', place: 'Gym', whatHappened: 'Fell during the relay.', actionTaken: 'Ice pack.', guardianContact: 'LeftMessage', severity: 'Minor', status: 'NeedsReview', reportedAt: NOW.toISOString() });
+    return id;
   }
 
   /** Takes a household's children off every roster, as if they never enrolled. */
@@ -361,6 +386,10 @@ export class FakeApi {
     ['POST', /^\/api\/imports\/(?<id>[^/]+)\/run$/, (route, p) => this.runImport(route, p['id']!)],
     ['POST', /^\/api\/g\/auth\/code$/, (route) => this.guardianCodeRoute(route)],
     ['POST', /^\/api\/g\/auth\/verify$/, (route) => this.guardianVerify(route)],
+    ['GET', /^\/api\/incidents$/, (route) => this.listIncidents(route)],
+    ['GET', /^\/api\/incidents\/form$/, (route) => this.incidentForm(route)],
+    ['GET', /^\/api\/incidents\/(?<id>[^/]+)$/, (route, p) => this.getIncident(route, p['id']!)],
+    ['POST', /^\/api\/incidents$/, (route) => this.createIncident(route)],
     ['GET', /^\/api\/g\/home\/(?<token>[^/]+)$/, (route, p) => this.guardianHome(route, p['token']!)],
     ['GET', /^\/api\/g\/slips\/(?<token>[^/]+)$/, (route, p) => this.guardianSlip(route, p['token']!)],
     ['POST', /^\/api\/g\/slips\/(?<token>[^/]+)\/sign$/, (route, p) => this.guardianAnswer(route, p['token']!, 'Signed')],
@@ -1725,6 +1754,76 @@ export class FakeApi {
   }
 
   /** Resolves a guardian link like the server: gone, module off, verification needed, or the page's data. */
+  private async incidentCaller(route: Route): Promise<Membership | null> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) {
+      await this.unauthenticated(route);
+      return null;
+    }
+    if (!this.modules.get(m.organizationId)!.includes('Incidents')) {
+      await route.fulfill({ status: 404 });
+      return null;
+    }
+    return m;
+  }
+
+  private readableIncidents(m: Membership) {
+    const log = ['Admin', 'ProgramDirector'].includes(m.role);
+    return this.incidents.filter((i) => i.organizationId === m.organizationId && (log || i.reporterId === m.id));
+  }
+
+  private childName(id: string): string {
+    const c = this.households.flatMap((h) => h.children).find((x) => x.id === id);
+    return c ? `${c.firstName} ${c.lastName}` : '';
+  }
+
+  private async listIncidents(route: Route): Promise<void> {
+    const m = await this.incidentCaller(route);
+    if (!m) return;
+    const incidents = this.readableIncidents(m).map((i) => ({ id: i.id, category: i.category, child: this.childName(i.childId), occurredAt: i.occurredAt, severity: i.severity, status: i.status, reportedBy: i.reportedBy }));
+    return route.fulfill({ json: { canReadLog: ['Admin', 'ProgramDirector'].includes(m.role), incidents } });
+  }
+
+  private async incidentForm(route: Route): Promise<void> {
+    const m = await this.incidentCaller(route);
+    if (!m) return;
+    const supervisor = memberships.filter((x) => x.organizationId === m.organizationId && x.role === 'ProgramDirector').map((x) => x.personName).sort()[0] ?? null;
+    const children = this.households
+      .filter((h) => h.organizationId === m.organizationId)
+      .flatMap((h) => h.children)
+      .map((c) => ({ id: c.id, name: `${c.firstName} ${c.lastName}` }))
+      .sort((a, z) => a.name.localeCompare(z.name));
+    return route.fulfill({ json: { supervisor, children } });
+  }
+
+  private async getIncident(route: Route, id: string): Promise<void> {
+    const m = await this.incidentCaller(route);
+    if (!m) return;
+    const i = this.readableIncidents(m).find((x) => x.id === id);
+    if (!i) return route.fulfill({ status: 404 });
+    const { organizationId: _, reporterId: __, ...rest } = i;
+    return route.fulfill({ json: { ...rest, child: this.childName(i.childId) } });
+  }
+
+  private async createIncident(route: Route): Promise<void> {
+    const m = await this.incidentCaller(route);
+    if (!m) return;
+    const b = route.request().postDataJSON() as Record<string, string | null>;
+    const errors: Record<string, string> = {};
+    if (!b['category']) errors['category'] = 'Choose the type.';
+    const child = this.households.filter((h) => h.organizationId === m.organizationId).flatMap((h) => h.children).find((c) => c.id === b['childId']);
+    if (!child) errors['childId'] = 'Choose the child involved.';
+    if (!b['occurredAt']) errors['occurredAt'] = 'Enter when it happened.';
+    if (!b['whatHappened']?.trim()) errors['whatHappened'] = 'Describe what happened.';
+    if (!b['actionTaken']?.trim()) errors['actionTaken'] = 'Describe what you did.';
+    if (!b['guardianContact']) errors['guardianContact'] = 'Say whether the guardian was contacted.';
+    if (!b['severity']) errors['severity'] = 'Choose the severity.';
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    const id = `inc-${this.nextId++}`;
+    this.incidents.push({ id, organizationId: m.organizationId, reporterId: m.id, reportedBy: m.personName, category: b['category']!, childId: child!.id, occurredAt: new Date(b['occurredAt']!).toISOString(), place: b['place'] || 'Other', whatHappened: b['whatHappened']!.trim(), actionTaken: b['actionTaken']!.trim(), guardianContact: b['guardianContact']!, severity: b['severity']!, status: 'NeedsReview', reportedAt: NOW.toISOString() });
+    return route.fulfill({ status: 201, json: { id } });
+  }
+
   /** A slip link or a home link: either picks the household. */
   private linkOf(token: string): { householdId: string } | undefined {
     const home = this.homeLinks.get(token);
