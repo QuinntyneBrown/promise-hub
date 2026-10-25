@@ -1,0 +1,42 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Notify in app
+
+Container_Boundary(api, "PromiseHub API and job runner") {
+  Component(endpoints, "NotificationsEndpoints", "Minimal API", "/notifications list, unread-count, stream, read, read-all, preferences")
+  Component(publisher, "NotificationPublisher", "Application service (INotificationPublisher)", "Resolves recipients, applies preferences, creates one Notification each")
+  Component(list, "ListNotificationsQueryHandler", "Query handler", "Person and organization scoped, newest first, 20 per page")
+  Component(count, "GetUnreadCountQueryHandler", "Query handler", "Unread count for the active organization")
+  Component(markRead, "MarkNotificationReadCommandHandler", "Command handler", "Sets ReadAt, raises UnreadCountChanged")
+  Component(markAll, "MarkAllReadCommandHandler", "Command handler", "Sets ReadAt on all unread")
+  Component(prefs, "UpdatePreferencesCommandHandler", "Command handler", "Per-membership preferences")
+  Component(hub, "NotificationStreamHub", "Server-sent events hub", "Connections keyed by person and organization")
+  Component(bus, "Event bus", "In-process events", "NotificationCreated, UnreadCountChanged after commit")
+  Component(notification, "Notification", "Domain entity", "Recipient, kind, text, link, ReadAt")
+  Component(preferences, "NotificationPreferences", "Domain entity", "InAppKinds, EmailKinds, DigestSchedule")
+  Component(sources, "Feature handlers", "Incidents, Enrollment, Messaging, Slips, Imports, Reports, Billing, Jobs", "Call Publish")
+  Component(digest, "DigestJob", "Background job", "Daily and Monday digests by preference")
+  Component(emailPort, "IEmailSender", "Infrastructure interface", "Per-kind emails and digests")
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "Tenant-filtered persistence")
+}
+
+Rel(sources, publisher, "Publish(NotificationRequest)")
+Rel(publisher, preferences, "Filters recipients by kind")
+Rel(publisher, notification, "Creates per recipient")
+Rel(publisher, bus, "NotificationCreated after commit")
+Rel(publisher, emailPort, "Per-kind email when preferred")
+Rel(endpoints, list, "Sends ListNotificationsQuery")
+Rel(endpoints, count, "Sends GetUnreadCountQuery")
+Rel(endpoints, markRead, "Sends MarkNotificationReadCommand")
+Rel(endpoints, markAll, "Sends MarkAllReadCommand")
+Rel(endpoints, prefs, "Sends UpdatePreferencesCommand")
+Rel(endpoints, hub, "GET /notifications/stream")
+Rel(markRead, bus, "UnreadCountChanged")
+Rel(bus, hub, "Forwards to connected devices")
+Rel(digest, notification, "Unread since last digest")
+Rel(digest, preferences, "DigestSchedule")
+Rel(digest, emailPort, "Sends digest")
+Rel(notification, db, "Persisted by", "EF Core")
+Rel(preferences, db, "Persisted by", "EF Core")
+@enduml

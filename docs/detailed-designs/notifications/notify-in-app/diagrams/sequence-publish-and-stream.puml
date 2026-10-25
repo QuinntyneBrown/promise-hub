@@ -1,0 +1,73 @@
+@startuml
+title UML sequence behaviour — Publish a notification and update every device
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Site lead" as reporter
+box "Frontend — PromiseHub web app, incidents library and shell" #E0F2FE
+  participant "NewIncidentPage" as incidentPage
+  participant "NotificationBell (supervisor, phone and laptop)" as bell
+  participant "NotificationStream" as stream
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "IncidentsEndpoints" as endpoints
+  participant "NotificationStreamHub" as hub
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "ReportIncidentCommandHandler" as incidentHandler
+  participant "NotificationPublisher" as publisher
+  participant "NotificationPreferences" as prefs
+  participant "Notification" as notification
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "Event bus" as bus
+  participant "IEmailSender" as email
+  database "PromiseHub database" as db
+end box
+
+bell -> stream : Subscribe on shell load
+stream -> hub : GET /notifications/stream (person, active organization)
+hub --> stream : Open; initial unread count
+
+reporter -> incidentPage : Submit incident report
+incidentPage -> endpoints : POST /incidents
+endpoints -> incidentHandler : Send ReportIncidentCommand
+incidentHandler -> db : Save Incident (Needs review)
+incidentHandler -> publisher : Publish(IncidentReported, Recipients.Supervisors, text, link)
+publisher -> db : Resolve supervisors among memberships of the organization (L2-001)
+db --> publisher : Recipient staff ids
+loop each recipient
+  publisher -> prefs : WantsInApp(IncidentReported)?
+  alt wants in app
+    publisher -> notification : Create for recipient (unread)
+  end
+  publisher -> prefs : WantsEmail(IncidentReported)?
+  opt wants email
+    publisher -> email : Per-kind email after commit
+  end
+end
+incidentHandler -> db : SaveChanges (incident and notifications in one unit of work)
+db --> incidentHandler : Committed
+incidentHandler -> bus : NotificationCreated (after commit)
+bus -> hub : Forward to each recipient's connections
+hub -> stream : event: notification + unreadCount (L2-040 criterion 1)
+stream -> bell : Badge shows new count on every connected device
+incidentHandler --> endpoints : Result
+endpoints --> incidentPage : 201
+
+alt stream unavailable
+  stream -> hub : Poll GET /notifications/unread-count every 60 s
+  hub --> stream : Count
+end
+@enduml

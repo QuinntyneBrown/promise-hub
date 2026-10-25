@@ -1,0 +1,140 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Notify in app
+
+enum NotificationKind {
+  IncidentReported
+  IncidentReviewed
+  EnrollmentWaiting
+  EnrollmentsAccepted
+  EmailBounced
+  SmsCapWarning
+  SmsCapReached
+  SlipSigned
+  SlipDeclined
+  SlipsUnsigned
+  ImportFinished
+  ExportReady
+  PaymentFailed
+  PlanLimitReached
+  JobFailed
+}
+
+enum DigestSchedule {
+  None
+  Daily
+  WeeklyMonday
+}
+
+class Notification {
+  +Guid Id
+  +Guid OrganizationId
+  +Guid RecipientStaffId
+  +NotificationKind Kind
+  +string Text
+  +string? LinkPath
+  +string? RecordType
+  +Guid? RecordId
+  +Guid? ActorStaffId
+  +DateTimeOffset CreatedAt
+  +DateTimeOffset? ReadAt
+  +bool IsUnread
+  +MarkRead(at: DateTimeOffset): void
+}
+
+class NotificationPreferences {
+  +Guid OrganizationId
+  +Guid StaffId
+  +ISet<NotificationKind> InAppKinds
+  +ISet<NotificationKind> EmailKinds
+  +DigestSchedule DigestSchedule
+  +DateTimeOffset? LastDigestAt
+  +bool WantsInApp(kind: NotificationKind): bool
+  +bool WantsEmail(kind: NotificationKind): bool
+}
+
+class NotificationRequest {
+  +Guid OrganizationId
+  +NotificationKind Kind
+  +RecipientRule Recipients
+  +string Text
+  +string? LinkPath
+  +string? RecordType
+  +Guid? RecordId
+  +Guid? ActorStaffId
+}
+
+class RecipientRule <<value object>> {
+  +{static} Supervisors(): RecipientRule
+  +{static} Admins(): RecipientRule
+  +{static} Person(staffId: Guid): RecipientRule
+  +{static} Role(role: Role): RecipientRule
+}
+
+interface INotificationPublisher {
+  +Publish(request: NotificationRequest): Task
+}
+
+class NotificationPublisher {
+  +Publish(request: NotificationRequest): Task
+  -ResolveRecipients(rule: RecipientRule, organizationId: Guid): Task<IReadOnlyList<Guid>>
+}
+
+class ListNotificationsQueryHandler {
+  +{static} int PageSize = 20
+  +Handle(query: ListNotificationsQuery): Task<PagedResult<NotificationDto>>
+}
+
+class GetUnreadCountQueryHandler {
+  +Handle(query: GetUnreadCountQuery): Task<int>
+}
+
+class MarkNotificationReadCommandHandler {
+  +Handle(command: MarkNotificationReadCommand): Task<Result>
+}
+
+class MarkAllReadCommandHandler {
+  +Handle(command: MarkAllReadCommand): Task<Result>
+}
+
+class UpdatePreferencesCommandHandler {
+  +Handle(command: UpdatePreferencesCommand): Task<Result>
+}
+
+class NotificationStreamHub {
+  +Connect(staffId: Guid, organizationId: Guid, response: HttpResponse): Task
+  +Push(staffId: Guid, organizationId: Guid, event: StreamEvent): Task
+}
+
+class DigestJob {
+  +Run(organizationId: Guid, now: DateTimeOffset): Task
+}
+
+Notification --> NotificationKind : has
+NotificationPreferences --> DigestSchedule : has
+NotificationRequest --> RecipientRule : has
+NotificationPublisher ..|> INotificationPublisher
+NotificationPublisher ..> NotificationRequest : consumes
+NotificationPublisher --> NotificationPreferences : filters by
+NotificationPublisher --> Notification : creates per recipient
+NotificationPublisher ..> NotificationStreamHub : NotificationCreated after commit
+ListNotificationsQueryHandler --> Notification : reads
+GetUnreadCountQueryHandler --> Notification : counts unread
+MarkNotificationReadCommandHandler --> Notification : MarkRead
+MarkNotificationReadCommandHandler ..> NotificationStreamHub : UnreadCountChanged
+MarkAllReadCommandHandler --> Notification : MarkRead all
+UpdatePreferencesCommandHandler --> NotificationPreferences : updates
+DigestJob --> Notification : unread since LastDigestAt
+DigestJob --> NotificationPreferences : DigestSchedule
+@enduml

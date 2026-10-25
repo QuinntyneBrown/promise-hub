@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Search the organization
+
+Person(staff, "Staff member", "Searches children, families, guardians and events")
+System(promisehub, "PromiseHub", "Searches the active organization's records within modules that are on")
+
+Rel(staff, promisehub, "Types a name or phone fragment, opens a result", "HTTPS")
+@enduml

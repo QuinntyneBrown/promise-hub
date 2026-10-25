@@ -1,0 +1,78 @@
+@startuml
+title UML sequence behaviour — Mark read across devices and send a digest
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Program director" as actor
+box "Frontend — PromiseHub web app, shell" #E0F2FE
+  participant "BellPanel (phone)" as panel
+  participant "NotificationBell (laptop)" as laptop
+  participant "NotificationsApi / NotificationStream" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "NotificationsEndpoints" as endpoints
+  participant "NotificationStreamHub" as hub
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "MarkNotificationReadCommandHandler" as handler
+  participant "Notification" as notification
+  participant "NotificationPreferences" as prefs
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "DigestJob" as digest
+  participant "IEmailSender" as email
+  database "PromiseHub database" as db
+end box
+
+== Mark read ==
+actor -> panel : Open a notification
+panel -> client : markRead(id)
+client -> endpoints : POST /notifications/{id}/read
+endpoints -> endpoints : Authenticate, resolve person and active organization
+endpoints -> handler : Send MarkNotificationReadCommand
+handler -> db : Load Notification by id, recipient and organization (L2-001)
+alt not found for this person
+  db --> handler : None
+  handler --> endpoints : Not found
+  endpoints --> client : 404
+else found
+  db --> handler : Notification
+  handler -> notification : MarkRead(now)
+  handler -> db : Save
+  db --> handler : Committed; new unread count
+  handler -> hub : UnreadCountChanged(person, organization, count)
+  hub -> laptop : event: unreadCount (L2-040 criterion 2)
+  hub -> panel : event: unreadCount
+  handler --> endpoints : Result ok
+  endpoints --> client : 200
+  client --> panel : Item styled read; navigate to link
+end
+
+== Digest ==
+digest -> db : Memberships of the organization with DigestSchedule due now
+db --> digest : People
+loop each person
+  digest -> prefs : DigestSchedule
+  alt DigestSchedule is None (L2-040 criterion 3)
+    digest -> digest : Skip; no email sent
+  else Daily or WeeklyMonday due
+    digest -> db : Unread notifications since LastDigestAt
+    db --> digest : Items
+    opt one or more items
+      digest -> email : One digest email
+      digest -> db : LastDigestAt = now
+    end
+  end
+end
+@enduml
