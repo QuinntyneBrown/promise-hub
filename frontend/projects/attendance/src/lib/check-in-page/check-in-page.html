@@ -57,6 +57,24 @@
         <ph-stat label="Not yet" [value]="'' + t.notYet" data-testid="total-Not yet" />
         <ph-stat label="On roster" [value]="'' + t.all" />
       </div>
+      @if (clearance(); as c) {
+        <div class="kpis" role="group" aria-label="Permission slips">
+          <ph-stat label="Cleared" [value]="'' + c.cleared" data-testid="clearance-Cleared" />
+          <ph-stat
+            label="Missing slip"
+            [value]="'' + c.missing"
+            data-testid="clearance-Missing slip"
+          />
+          <ph-stat label="Declined" [value]="'' + c.declined" data-testid="clearance-Declined" />
+        </div>
+        @if (c.missing) {
+          <ph-alert
+            tone="warning"
+            title="Children without a signed slip can’t go."
+            text="Missing slips are listed first. A guardian at the door can sign on this tablet."
+          />
+        }
+      }
       <div class="toolbar">
         <ph-text-field
           class="search"
@@ -117,8 +135,27 @@
                 @if (e.walkIn) {
                   <ph-badge tone="info">Walk-in</ph-badge>
                 }
+                @switch (slipStatus(e)) {
+                  @case ('Missing') {
+                    <ph-badge tone="warning">Slip missing</ph-badge>
+                  }
+                  @case ('Declined') {
+                    <ph-badge tone="danger">Declined</ph-badge>
+                  }
+                  @case ('Cleared') {
+                    <ph-badge tone="success">Cleared</ph-badge>
+                  }
+                }
               </ng-container>
               @if (canRun()) {
+                @if (slipStatus(e) === 'Missing' && householdOf(e); as household) {
+                  <ph-button
+                    size="sm"
+                    [link]="['/check-in', s.id, 'sign-on-tablet', household]"
+                    [label]="'Sign on tablet for ' + e.name"
+                    >Sign on tablet</ph-button
+                  >
+                }
                 @if (e.status === 'NotYet' || e.status === 'Absent') {
                   <ph-button
                     variant="primary"

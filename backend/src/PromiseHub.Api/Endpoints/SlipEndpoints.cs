@@ -26,6 +26,17 @@ public static class SlipEndpoints
             (await handler.HandleAsync(id, ct)).ToHttp()).RequirePermission(Permission.ManageSlips);
         slips.MapPut("/{id:guid}", async (Guid id, EditSlipCommand command, EditSlipHandler handler, CancellationToken ct) =>
             (await handler.HandleAsync(id, command, ct)).ToHttp()).RequirePermission(Permission.ManageSlips);
+        slips.MapGet("/{id:guid}/unsigned", async (Guid id, GetUnsignedHandler handler, CancellationToken ct) =>
+            await handler.HandleAsync(id, ct) is { } unsigned ? Results.Ok(unsigned) : Results.NotFound());
+        slips.MapPost("/{id:guid}/remind", async (Guid id, RemindNowCommand command, RemindNowHandler handler, CancellationToken ct) =>
+        {
+            var (result, value) = await handler.HandleAsync(id, command, ct);
+            return value is not null ? Results.Ok(value) : result.ToHttp();
+        }).RequirePermission(Permission.ManageSlips);
+        slips.MapPost("/{id:guid}/sign-on-tablet", async (Guid id, SignOnTabletCommand command, SignOnTabletHandler handler, CancellationToken ct) =>
+            (await handler.HandleAsync(id, command, ct)).ToHttp()).RequirePermission(Permission.RunSessions);
+        app.MapGet("/sessions/{id:guid}/clearance", async (Guid id, GetClearanceHandler handler, CancellationToken ct) =>
+            await handler.HandleAsync(id, ct) is { } clearance ? Results.Ok(clearance) : Results.NotFound()).RequireModule(ModuleId.Slips);
         return app;
     }
 }

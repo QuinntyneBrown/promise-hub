@@ -152,6 +152,14 @@ export class FakeApi {
     this.failures.set(path, status);
   }
 
+  /** Takes away every way to reach a household: no mobile, and its email bounced. */
+  makeUnreachable(householdId: string): void {
+    for (const g of this.households.find((h) => h.id === householdId)!.guardians) {
+      g.mobile = null;
+      g.emailBounced = true;
+    }
+  }
+
   /** Trusts this browser for a household, as a verified code would. */
   trustGuardianDevice(householdId: string): void {
     this.trustedHouseholds.add(householdId);
@@ -245,6 +253,10 @@ export class FakeApi {
     ['GET', /^\/api\/g\/slips\/(?<token>[^/]+)$/, (route, p) => this.guardianSlip(route, p['token']!)],
     ['POST', /^\/api\/g\/slips\/(?<token>[^/]+)\/sign$/, (route, p) => this.guardianAnswer(route, p['token']!, 'Signed')],
     ['POST', /^\/api\/g\/slips\/(?<token>[^/]+)\/decline$/, (route, p) => this.guardianAnswer(route, p['token']!, 'Declined')],
+    ['GET', /^\/api\/sessions\/(?<id>[^/]+)\/clearance$/, (route, p) => this.clearance(route, p['id']!)],
+    ['GET', /^\/api\/slips\/(?<id>[^/]+)\/unsigned$/, (route, p) => this.unsignedFamilies(route, p['id']!)],
+    ['POST', /^\/api\/slips\/(?<id>[^/]+)\/remind$/, (route, p) => this.remindNow(route, p['id']!)],
+    ['POST', /^\/api\/slips\/(?<id>[^/]+)\/sign-on-tablet$/, (route, p) => this.signOnTablet(route, p['id']!)],
     ['GET', /^\/api\/events\/(?<id>[^/]+)\/slip$/, (route, p) => this.getSlip(route, p['id']!)],
     ['PUT', /^\/api\/events\/(?<id>[^/]+)\/slip$/, (route, p) => this.saveSlip(route, p['id']!)],
     ['GET', /^\/api\/slips$/, (route) => this.listSlips(route)],
@@ -1360,6 +1372,79 @@ export class FakeApi {
     }
     const by = signer?.name ?? this.sortedGuardians(household)[0]!.name;
     slip.answers.set(child.id, { status, by, version: slip.version });
+    return route.fulfill({ status: 204 });
+  }
+
+  /** Families with a child still to answer the slip, as the server lists them. */
+  private families(m: Membership, slip: FakeSlip, event: FakeEvent) {
+    const outstanding = this.slipResponses(m, slip, event).filter((r) => r.status === 'Outstanding');
+    return this.households
+      .filter((h) => outstanding.some((r) => r.household === h.name && h.organizationId === m.organizationId))
+      .sort((a, z) => a.name.localeCompare(z.name))
+      .map((h) => {
+        const reachable = h.guardians.some((g) => g.mobile || (g.email && !g.emailBounced));
+        return {
+          householdId: h.id,
+          household: h.name,
+          guardian: this.sortedGuardians(h)[0]?.name ?? null,
+          children: outstanding.filter((r) => r.household === h.name).map((r) => r.child.split(' ')[0]!),
+          childIds: outstanding.filter((r) => r.household === h.name).map((r) => r.childId),
+          lastRemindedAt: null as string | null,
+          reachable,
+          reason: reachable ? null : h.guardians.some((g) => g.emailBounced) ? 'Email bounced, no mobile' : 'No mobile or email',
+        };
+      });
+  }
+
+  private async clearance(route: Route, sessionId: string): Promise<void> {
+    const m = await this.slipsCaller(route);
+    if (!m) return;
+    const event = this.ownEvent(m, sessionId);
+    const slip = event?.requiresSlip ? this.slips.get(event.id) : undefined;
+    if (!event || !slip || slip.status !== 'Sent') return route.fulfill({ status: 404 });
+    const order: Record<string, number> = { Missing: 0, Declined: 1, Cleared: 2 };
+    const children = this.slipResponses(m, slip, event)
+      .map((r) => ({ childId: r.childId, householdId: this.households.find((h) => h.name === r.household && h.organizationId === m.organizationId)!.id, name: r.child, status: r.status === 'Signed' ? 'Cleared' : r.status === 'Declined' ? 'Declined' : 'Missing' }))
+      .sort((a, z) => order[a.status]! - order[z.status]! || a.name.localeCompare(z.name));
+    return route.fulfill({
+      json: { slipId: slip.id, title: slip.title || event.name, cleared: children.filter((c) => c.status === 'Cleared').length, missing: children.filter((c) => c.status === 'Missing').length, declined: children.filter((c) => c.status === 'Declined').length, children },
+    });
+  }
+
+  private async unsignedFamilies(route: Route, id: string): Promise<void> {
+    const m = await this.slipsCaller(route);
+    if (!m) return;
+    const found = this.slipById(m, id);
+    if (!found) return route.fulfill({ status: 404 });
+    return route.fulfill({ json: { households: this.families(m, found.slip, found.event).map(({ childIds: _, ...f }) => f) } });
+  }
+
+  private async remindNow(route: Route, id: string): Promise<void> {
+    const m = await this.slipsCaller(route, true);
+    if (!m) return;
+    const found = this.slipById(m, id);
+    if (!found) return route.fulfill({ status: 404 });
+    const b = route.request().postDataJSON() as { body: string };
+    if (!(b.body ?? '').includes('{link}')) return route.fulfill({ status: 422, json: { errors: { body: 'Keep {link} in the message.' } } });
+    const families = this.families(m, found.slip, found.event);
+    return route.fulfill({ json: { households: families.filter((f) => f.reachable).length, unreachable: families.filter((f) => !f.reachable).length } });
+  }
+
+  private async signOnTablet(route: Route, id: string): Promise<void> {
+    const m = await this.slipsCaller(route);
+    if (!m) return;
+    if (!can.runSessions(m)) return this.forbidden(route);
+    const found = this.slipById(m, id);
+    if (!found) return route.fulfill({ status: 404 });
+    const b = route.request().postDataJSON() as { householdId: string; name: string };
+    const family = this.families(m, found.slip, found.event).find((f) => f.householdId === b.householdId);
+    if (!family) return route.fulfill({ status: 409, json: { code: 'conflict' } });
+    const typed = (b.name ?? '').trim().replace(/\s+/g, ' ');
+    if (!typed) return route.fulfill({ status: 422, json: { errors: { name: 'The guardian needs to type their full name.' } } });
+    const household = this.households.find((h) => h.id === b.householdId)!;
+    const signer = household.guardians.find((g) => g.canSign && g.name.toLowerCase() === typed.toLowerCase());
+    if (!signer) return route.fulfill({ status: 422, json: { errors: { name: 'That name doesn’t match a guardian of this family.' } } });
+    for (const childId of family.childIds) found.slip.answers.set(childId, { status: 'Signed', by: signer.name, version: found.slip.version });
     return route.fulfill({ status: 204 });
   }
 

@@ -13,6 +13,8 @@ public sealed class FakeSmsSender : ISmsSender
 
     public void FailFor(string to) => _failing[to] = true;
 
+    public void Clear() => _sent.Clear();
+
     public Task<SendResult> SendAsync(string to, string text, CancellationToken cancellationToken)
     {
         if (_failing.ContainsKey(to))

@@ -3,7 +3,10 @@ import type { LoadResult } from '../load-result';
 import type { WriteOutcome } from '../write-outcome';
 import type { Slip } from './slip';
 import type { SlipFields } from './slip-fields';
+import type { RemindOutcome } from './remind-outcome';
+import type { SlipClearance } from './slip-clearance';
 import type { SlipRow } from './slip-row';
+import type { UnsignedFamily } from './unsigned-family';
 
 /** The Permission slips module: write, send or schedule, edit and track an event's slip. */
 export interface SlipsApi {
@@ -18,5 +21,17 @@ export interface SlipsApi {
   edit(
     slipId: string,
     change: { title: string; body: string; signBy: string; material: boolean },
+  ): Observable<WriteOutcome>;
+  /** Day of: who is cleared, missing or declined for a session whose event needs a slip. */
+  clearance(sessionId: string): Observable<LoadResult<SlipClearance>>;
+  unsigned(slipId: string): Observable<LoadResult<{ households: UnsignedFamily[] }>>;
+  /** A staff-written reminder; {child} and {link} fill in per family. */
+  remind(slipId: string, body: string): Observable<RemindOutcome>;
+  /** A guardian at the door signs on the staff device for the family's unsigned children. */
+  signOnTablet(
+    slipId: string,
+    householdId: string,
+    name: string,
+    photos: boolean | null,
   ): Observable<WriteOutcome>;
 }

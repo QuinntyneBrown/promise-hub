@@ -104,4 +104,17 @@ export class CheckInPage extends BasePage {
     await this.dialog.getByLabel('Their name').fill(name);
     if (confirmed) await this.dialog.getByRole('switch', { name: /confirmed by phone/ }).check();
   }
+
+  /** Day-of totals when the session's event needs a slip. */
+  clearanceTotal(label: 'Cleared' | 'Missing slip' | 'Declined'): Locator {
+    return this.page.getByRole('group', { name: 'Permission slips' }).getByTestId(`clearance-${label}`).getByTestId('stat-value');
+  }
+
+  get clearanceWarning(): Locator {
+    return this.page.getByText('Children without a signed slip can’t go.');
+  }
+
+  signOnTablet(name: string): Locator {
+    return this.row(name).getByRole('link', { name: `Sign on tablet for ${name}` });
+  }
 }

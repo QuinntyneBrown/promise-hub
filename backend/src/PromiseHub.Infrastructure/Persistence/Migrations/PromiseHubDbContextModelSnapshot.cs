@@ -1056,6 +1056,47 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.ToTable("PermissionSlips");
                 });
 
+            modelBuilder.Entity("PromiseHub.Domain.Slips.SlipReminder", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("HouseholdId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("SentAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("SlipId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Slot")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Unreachable")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("SlipId", "HouseholdId", "Slot")
+                        .IsUnique();
+
+                    b.ToTable("SlipReminders");
+                });
+
             modelBuilder.Entity("PromiseHub.Domain.Slips.SlipSignature", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1382,6 +1423,21 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
                         .WithMany()
                         .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Slips.SlipReminder", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Slips.PermissionSlip", null)
+                        .WithMany()
+                        .HasForeignKey("SlipId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

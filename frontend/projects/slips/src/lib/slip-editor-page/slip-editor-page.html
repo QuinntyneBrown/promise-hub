@@ -57,6 +57,13 @@
           }
           <ph-card title="Signatures">
             <div class="stack">
+              @if (canWrite() && s.outstanding) {
+                <div>
+                  <ph-button size="sm" icon="messages" hasPopup="dialog" (click)="remind(s)"
+                    >Text {{ s.outstanding }} unsigned</ph-button
+                  >
+                </div>
+              }
               <ph-progress-bar
                 [value]="s.signed"
                 [max]="s.children"

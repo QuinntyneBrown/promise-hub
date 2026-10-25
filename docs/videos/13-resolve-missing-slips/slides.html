@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 13 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="13" data-video-title="Resolve missing slips" data-parts="Introduction|Promises|Bus door|Text the unsigned|Screens|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 13</div>
+  <h1>Resolve missing slips</h1>
+  <p class="lead">Reminders that run themselves, and a tablet at the bus door</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="Reminders follow the slip's schedule">
+  <h2>What the day-of promises</h2>
+  <ul>
+    <li>6 pm reminders on the slip's schedule until the deadline</li>
+    <li>Only unanswered families, once per slot, with fresh links</li>
+    <li>Unreachable families listed for staff, not retried</li>
+    <li>On the day: cleared, missing and declined, missing first</li>
+  </ul>
+</section>
+
+<section id="bus" data-part="2" data-cue="On the morning of the trip, Jaylen opens check-in on his phone." data-clip="clips/bus-door-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Signed on the tablet</h3><p>Sofía is cleared at once; Carmen gets a copy.</p></div>
+</section>
+
+<section id="remind" data-part="3" data-cue="Back at the office, Marisol opens the slip" data-clip="clips/text-unsigned-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Text the unsigned</h3><p>The Haddads can't be reached; {link} is required.</p></div>
+</section>
+
+<section id="screens" data-part="4" data-cue="Two screens: the trip's check-in on the day">
+  <h2>The screens</h2>
+  <div class="cols">
+    <img class="shot" alt="Check-in with missing slips first" src="shots/phone-day-of.png">
+    <img class="shot" alt="Sign on this tablet" src="shots/phone-tablet.png">
+  </div>
+</section>
+
+<section id="testing" data-part="5" data-cue="Backend tests cover the schedule slot">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Job runs twice in a slot</td><td>Each family reminded once</td></tr>
+    <tr><td>Bounced email, no mobile</td><td>Listed as unreachable</td></tr>
+    <tr><td>Manual reminder without {link}</td><td>422</td></tr>
+    <tr><td>Wrong name on the tablet</td><td>Refused inline</td></tr>
+    <tr><td>Another organization / Slips off</td><td>404; job sends nothing</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="6" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Reminders run themselves, once per slot</li><li>Missing slips first on the day</li><li>Tablet signing, same record, staff as witness</li></ul>
+  <p class="muted">Next: enroll a child</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

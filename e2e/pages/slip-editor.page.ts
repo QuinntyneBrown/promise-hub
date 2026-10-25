@@ -78,4 +78,18 @@ export class SlipEditorPage extends BasePage {
     await this.dialog.getByRole('button', { name, exact: true }).click();
     await expect(this.dialog).toBeHidden();
   }
+
+  async openReminder(): Promise<void> {
+    await this.page.getByRole('button', { name: /^Text \d+ unsigned$/ }).click();
+    await expect(this.dialog).toBeVisible();
+  }
+
+  reminderFamily(household: string): Locator {
+    return this.dialog.getByRole('listitem').filter({ hasText: household });
+  }
+
+  async remind(body?: string): Promise<void> {
+    if (body !== undefined) await this.dialog.getByLabel('Message').fill(body);
+    await this.dialog.getByRole('button', { name: /^Send to / }).click();
+  }
 }

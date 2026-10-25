@@ -39,6 +39,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<SmsUsagePeriod> SmsUsagePeriods => Set<SmsUsagePeriod>();
     public DbSet<SlipSignature> SlipSignatures => Set<SlipSignature>();
     public DbSet<GuardianLink> GuardianLinks => Set<GuardianLink>();
+    public DbSet<SlipReminder> SlipReminders => Set<SlipReminder>();
     public DbSet<GuardianVerification> GuardianVerifications => Set<GuardianVerification>();
     public DbSet<TrustedGuardianDevice> TrustedGuardianDevices => Set<TrustedGuardianDevice>();
     public DbSet<StaffUser> StaffUsers => Set<StaffUser>();
@@ -228,6 +229,14 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(s => s.TextHash).HasMaxLength(64);
             e.Property(s => s.Answers).HasMaxLength(500);
             e.Property(s => s.Reason).HasMaxLength(500);
+        });
+        modelBuilder.Entity<SlipReminder>(e =>
+        {
+            e.Property(r => r.Kind).HasConversion<string>().HasMaxLength(20);
+            e.Property(r => r.Slot).HasMaxLength(60);
+            e.Property(r => r.SentAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.HasOne<PermissionSlip>().WithMany().HasForeignKey(r => r.SlipId);
+            e.HasIndex(r => new { r.SlipId, r.HouseholdId, r.Slot }).IsUnique();
         });
         modelBuilder.Entity<GuardianLink>(e =>
         {

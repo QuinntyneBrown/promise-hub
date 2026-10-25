@@ -64,6 +64,13 @@ public static class DependencyInjection
         services.AddScoped<Slips.CancelSlipSendHandler>();
         services.AddScoped<Slips.EditSlipHandler>();
         services.AddScoped<Slips.SendDueSlipsHandler>();
+        services.AddScoped<Slips.SlipFamilies>();
+        services.AddScoped<Slips.SlipReminderSender>();
+        services.AddScoped<Slips.SendDueRemindersHandler>();
+        services.AddScoped<Slips.RemindNowHandler>();
+        services.AddScoped<Slips.GetUnsignedHandler>();
+        services.AddScoped<Slips.GetClearanceHandler>();
+        services.AddScoped<Slips.SignOnTabletHandler>();
         services.AddScoped<Guardian.GuardianAccess>();
         services.AddScoped<Guardian.GuardianLinkIssuer>();
         services.AddScoped<Guardian.GuardianContactChange>();
