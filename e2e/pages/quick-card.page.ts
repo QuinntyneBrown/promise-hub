@@ -27,6 +27,10 @@ export class QuickCardPage extends BasePage {
     return this.page.getByRole('status').filter({ hasText: 'Medical details are hidden for your role' });
   }
 
+  get savedOnPhone(): Locator {
+    return this.page.getByTestId('sync-chip');
+  }
+
   get empty(): Locator {
     return this.page.getByRole('heading', { name: 'No medical information yet' });
   }

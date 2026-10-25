@@ -34,6 +34,11 @@
           <div>
             <h1 class="name">{{ c.name }}</h1>
             <p class="muted">{{ subtitle(c) }}</p>
+            @if (c.savedAt) {
+              <ph-sync-chip data-testid="sync-chip"
+                >Saved on this phone · {{ savedTime(c.savedAt) }}</ph-sync-chip
+              >
+            }
           </div>
         </div>
         <div class="body" data-testid="quick-card-body">

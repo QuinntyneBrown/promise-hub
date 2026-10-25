@@ -4,4 +4,6 @@ export type WriteOutcome =
   | { status: 'invalid'; errors: Record<string, string> }
   | { status: 'not-found' }
   | { status: 'forbidden' }
-  | { status: 'error' };
+  | { status: 'error' }
+  /** No signal: saved on this device and sent when the connection returns. */
+  | { status: 'queued' };

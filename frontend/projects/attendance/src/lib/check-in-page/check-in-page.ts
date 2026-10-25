@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   computed,
   effect,
   inject,
@@ -11,6 +12,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import {
   ATTENDANCE_API,
+  QUICK_CARD_API,
   AttendanceStatus,
   RosterEntry,
   SESSION_API,
@@ -33,6 +35,7 @@ import {
   PhRoster,
   PhRosterItem,
   PhStat,
+  PhSyncChip,
   PhTextField,
   ToastService,
   formatTime,
@@ -70,6 +73,7 @@ import { SessionNotesDialog } from '../session-notes-dialog/session-notes-dialog
     PhRoster,
     PhRosterItem,
     PhStat,
+    PhSyncChip,
     PhTextField,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -81,6 +85,7 @@ export class CheckInPage {
   private readonly slips = inject(SLIPS_API);
   private readonly dialogs = inject(PhDialogs);
   private readonly toasts = inject(ToastService);
+  private readonly cards = inject(QUICK_CARD_API);
   private readonly me = toSignal(
     inject(SESSION_API)
       .current()
@@ -91,8 +96,13 @@ export class CheckInPage {
   readonly sessionId = input<string | undefined>(undefined);
 
   protected readonly state = signal<
-    'loading' | 'loaded' | 'none' | 'not-found' | 'forbidden' | 'error'
+    'loading' | 'loaded' | 'none' | 'not-found' | 'forbidden' | 'error' | 'offline'
   >('loading');
+  /** Check-ins and absences made without signal, waiting to send (L2-028). */
+  protected readonly queue = signal(this.api.queued());
+  protected readonly queuedIds = computed(() => new Set(this.queue().map((a) => a.childId)));
+  /** When the roster came from this phone without signal: the time it was saved. */
+  protected readonly savedAt = signal<string | null>(null);
   protected readonly session = signal<SessionSummary | null>(null);
   protected readonly entries = signal<RosterEntry[]>([]);
   protected readonly others = signal<SessionSummary[]>([]);
@@ -139,6 +149,24 @@ export class CheckInPage {
 
   constructor() {
     effect(() => this.load(this.sessionId()));
+    const online = () => this.sync();
+    window.addEventListener('online', online);
+    inject(DestroyRef).onDestroy(() => window.removeEventListener('online', online));
+  }
+
+  /** Sends what waited for signal, in order, then shows the server's roster again. */
+  protected sync(): void {
+    if (!this.queue().length) return;
+    this.api.sync().subscribe((sent) => {
+      this.queue.set(this.api.queued());
+      if (!sent) return;
+      this.toasts.show({
+        tone: 'success',
+        title: `${sent} check-in${sent === 1 ? '' : 's'} synced`,
+        text: 'The roster is up to date.',
+      });
+      this.load(this.session()?.id);
+    });
   }
 
   protected load(sessionId: string | undefined): void {
@@ -148,24 +176,36 @@ export class CheckInPage {
       const id = sessionId ?? sessions[0]?.id;
       this.others.set(sessions.filter((s) => s.id !== id));
       if (!id) {
-        this.state.set(today.status === 'error' ? 'error' : 'none');
+        this.state.set(
+          today.status === 'offline' ? 'offline' : today.status === 'error' ? 'error' : 'none',
+        );
         return;
       }
       this.api.roster(id).subscribe((roster) => {
         if (roster.status === 'loaded') {
           this.session.set(roster.value.session);
           this.entries.set(roster.value.children);
+          this.savedAt.set(roster.value.savedAt ?? null);
+          if (!roster.value.savedAt) this.saveQuickCards(roster.value.children);
           this.loadClearance(id);
           this.state.set('loaded');
         } else {
           this.state.set(
-            roster.status === 'not-found' || roster.status === 'forbidden'
+            roster.status === 'not-found' ||
+              roster.status === 'forbidden' ||
+              roster.status === 'offline'
               ? roster.status
               : 'error',
           );
         }
       });
     });
+  }
+
+  /** Loads every Quick Card on tonight's roster while there is signal, so each opens without it (L2-028 criterion 1). */
+  private saveQuickCards(children: RosterEntry[]): void {
+    if (!this.quickCards()) return;
+    for (const c of children) if (c.childId) this.cards.get(c.childId).subscribe();
   }
 
   protected loadClearance(sessionId: string): void {
@@ -184,7 +224,8 @@ export class CheckInPage {
     return this.clearance()?.children.find((c) => c.childId === e.childId)?.householdId ?? null;
   }
 
-  protected rowStatus(e: RosterEntry): 'not-yet' | 'in' | 'out' | 'absent' {
+  protected rowStatus(e: RosterEntry): 'not-yet' | 'in' | 'out' | 'absent' | 'queued' {
+    if (this.queuedIds().has(e.id)) return 'queued';
     return e.status === 'Present'
       ? 'in'
       : e.status === 'SignedOut'
@@ -208,7 +249,10 @@ export class CheckInPage {
                 .filter(Boolean)
                 .join(' · ')
             : 'Not yet here';
-    return [status, e.school?.split(', ')[1] ?? null].filter(Boolean).join(' · ');
+    const extra = this.queuedIds().has(e.id)
+      ? 'waiting to sync'
+      : (e.school?.split(', ')[1] ?? null);
+    return [status, extra].filter(Boolean).join(' · ');
   }
 
   protected endSession(s: SessionSummary): void {
@@ -246,6 +290,17 @@ export class CheckInPage {
         });
         this.load(s.id);
       });
+  }
+
+  protected savedText(): string {
+    const n = this.queue().length;
+    const at = this.savedAt();
+    return [
+      at ? `Roster saved ${formatTime(new Date(at))}.` : null,
+      n ? `${n} waiting to sync.` : null,
+    ]
+      .filter(Boolean)
+      .join(' ');
   }
 
   protected recordedText(s: SessionSummary): string {
@@ -331,7 +386,14 @@ export class CheckInPage {
     const previous = { status: entry.status, checkedInAt: entry.checkedInAt };
     this.patch(entry.id, { status, checkedInAt });
     send(session.id, crypto.randomUUID()).subscribe((outcome) => {
-      if (outcome.status === 'saved') {
+      if (outcome.status === 'queued') {
+        this.queue.set(this.api.queued());
+        this.toasts.show({
+          tone: 'info',
+          title: `${entry.name} saved on this phone`,
+          text: 'It sends when you have signal.',
+        });
+      } else if (outcome.status === 'saved') {
         if (status === 'Present') {
           const t = this.totals();
           this.toasts.show({

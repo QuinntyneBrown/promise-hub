@@ -114,3 +114,4 @@ export * from './lib/incidents/incident-report';
 export * from './lib/incidents/incident-summary';
 export * from './lib/incidents/incidents-api';
 export * from './lib/incidents/incidents-api.token';
+export * from './lib/offline/queued-attendance';

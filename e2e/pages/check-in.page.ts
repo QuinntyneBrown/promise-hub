@@ -32,6 +32,35 @@ export class CheckInPage extends BasePage {
     return this.page.getByRole('group', { name: 'Session totals' }).getByTestId(`total-${label}`).getByTestId('stat-value');
   }
 
+  get offlineBanner(): Locator {
+    return this.page.getByRole('main').getByRole('status').filter({ hasText: 'You’re offline' });
+  }
+
+  get syncChip(): Locator {
+    return this.page.getByTestId('sync-chip');
+  }
+
+  get nothingSaved(): Locator {
+    return this.page.getByRole('heading', { name: 'Nothing is saved on this phone' });
+  }
+
+  conflictNote(name: string): Locator {
+    return this.row(name).getByTestId('conflict');
+  }
+
+  async openQuickCard(name: string): Promise<void> {
+    await this.row(name).getByRole('link', { name }).click();
+  }
+
+  /** The browser reports the connection is back, as it does when signal returns. */
+  async connectionReturns(): Promise<void> {
+    await this.page.evaluate(() => window.dispatchEvent(new Event('online')));
+  }
+
+  async openFromNavigation(): Promise<void> {
+    await this.page.getByRole('navigation', { name: 'Primary', exact: true }).or(this.page.getByRole('navigation', { name: 'Primary, phone' })).getByRole('link', { name: 'Check-in' }).first().click();
+  }
+
   get recorded(): Locator {
     return this.page.getByRole('main').getByRole('status').filter({ hasText: 'Session recorded' });
   }

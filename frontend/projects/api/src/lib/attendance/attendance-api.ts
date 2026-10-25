@@ -1,3 +1,4 @@
+import type { QueuedAttendance } from '../offline/queued-attendance';
 import type { Observable } from 'rxjs';
 import type { LoadResult } from '../load-result';
 import type { WriteOutcome } from '../write-outcome';
@@ -18,6 +19,10 @@ export interface AttendanceApi {
     clientActionId: string,
   ): Observable<WriteOutcome>;
   markAbsent(sessionId: string, childId: string, clientActionId: string): Observable<WriteOutcome>;
+  /** Check-ins and absences made without signal, in the order they will send. */
+  queued(): QueuedAttendance[];
+  /** Sends the queue in order and stops at the first network failure; emits how many were sent. */
+  sync(): Observable<number>;
   endSession(
     sessionId: string,
     notCheckedIn: 'MarkAbsent' | 'LeaveNotRecorded',
