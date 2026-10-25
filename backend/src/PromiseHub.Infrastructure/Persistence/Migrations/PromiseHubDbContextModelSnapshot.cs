@@ -829,6 +829,10 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Outcome")
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Place")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -843,6 +847,17 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("ReporterId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReviewNote")
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("ReviewedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ReviewedBy")
+                        .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Severity")
@@ -869,6 +884,40 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.HasIndex("ReporterId");
 
                     b.ToTable("Incidents");
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Incidents.IncidentFollowUp", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("IncidentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("WrittenAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("WrittenBy")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IncidentId");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.ToTable("IncidentFollowUps");
                 });
 
             modelBuilder.Entity("PromiseHub.Domain.Messaging.Delivery", b =>
@@ -1624,6 +1673,21 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.HasOne("PromiseHub.Domain.Households.Child", null)
                         .WithMany()
                         .HasForeignKey("ChildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Incidents.IncidentFollowUp", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Incidents.Incident", null)
+                        .WithMany()
+                        .HasForeignKey("IncidentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

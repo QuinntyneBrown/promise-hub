@@ -27,8 +27,13 @@ public sealed class IncidentQueries(IPromiseHubDb db, ITenantContext tenant, IAu
         var child = (await Names([i.ChildId], cancellationToken)).GetValueOrDefault(i.ChildId, "");
         audit.Record(new AuditEvent(AuditAction.Viewed, "Incident", i.Id, $"Viewed by {tenant.ActorName}"));
         await db.SaveChangesAsync(cancellationToken);
+        var followUps = await db.IncidentFollowUps.AsNoTracking().Where(f => f.IncidentId == i.Id).ToListAsync(cancellationToken);
+        var trail = await db.AuditEntries.AsNoTracking().Where(a => a.RecordType == "Incident" && a.RecordId == i.Id).ToListAsync(cancellationToken);
         return new IncidentDto(i.Id, i.Category.ToString(), i.ChildId, child, i.OccurredAt, i.Place, i.WhatHappened, i.ActionTaken, i.GuardianContact.ToString(),
-            i.Severity.ToString(), i.Status.ToString(), i.ReportedBy, i.ReportedAt);
+            i.Severity.ToString(), i.Status.ToString(), i.ReportedBy, i.ReportedAt, IncidentAccess.ReadsLog(tenant.Role),
+            i.ReviewNote is null ? null : new IncidentReviewDto(i.ReviewNote, i.Outcome!.Value.ToString(), i.ReviewedBy!, i.ReviewedAt!.Value),
+            [.. followUps.OrderBy(f => f.WrittenAt).Select(f => new IncidentFollowUpDto(f.Text, f.WrittenBy, f.WrittenAt))],
+            [.. trail.OrderBy(a => a.OccurredAt).Select(a => new IncidentTrailDto(Trail(a), a.OccurredAt))]);
     }
 
     public async Task<IncidentFormDto> FormAsync(CancellationToken cancellationToken = default)
@@ -39,6 +44,13 @@ public sealed class IncidentQueries(IPromiseHubDb db, ITenantContext tenant, IAu
             .Select(c => new IncidentChildDto(c.Id, c.FullName)).ToList();
         return new IncidentFormDto(supervisor, children);
     }
+
+    private static string Trail(Domain.Audit.AuditEntry entry) => entry.Action switch
+    {
+        AuditAction.Created => $"{entry.ActorName} submitted the report",
+        AuditAction.Viewed => $"{entry.ActorName} opened the report",
+        _ => $"{entry.ActorName}: {entry.Summary}",
+    };
 
     private async Task<Dictionary<Guid, string>> Names(IEnumerable<Guid> ids, CancellationToken cancellationToken)
     {

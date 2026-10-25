@@ -44,6 +44,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Enrollment.EnrollmentSession> EnrollmentSessions => Set<Domain.Enrollment.EnrollmentSession>();
     public DbSet<Domain.Enrollment.EnrollmentRequest> EnrollmentRequests => Set<Domain.Enrollment.EnrollmentRequest>();
     public DbSet<Domain.Incidents.Incident> Incidents => Set<Domain.Incidents.Incident>();
+    public DbSet<Domain.Incidents.IncidentFollowUp> IncidentFollowUps => Set<Domain.Incidents.IncidentFollowUp>();
     public DbSet<GuardianVerification> GuardianVerifications => Set<GuardianVerification>();
     public DbSet<TrustedGuardianDevice> TrustedGuardianDevices => Set<TrustedGuardianDevice>();
     public DbSet<StaffUser> StaffUsers => Set<StaffUser>();
@@ -269,6 +270,17 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(i => i.ReportedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.HasOne<Child>().WithMany().HasForeignKey(i => i.ChildId);
             e.HasIndex(i => i.ReporterId);
+            e.Property(i => i.Outcome).HasConversion<string>().HasMaxLength(30);
+            e.Property(i => i.ReviewNote).HasMaxLength(4000);
+            e.Property(i => i.ReviewedBy).HasMaxLength(200);
+            e.Property(i => i.ReviewedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+        });
+        modelBuilder.Entity<Domain.Incidents.IncidentFollowUp>(e =>
+        {
+            e.Property(f => f.Text).HasMaxLength(4000);
+            e.Property(f => f.WrittenBy).HasMaxLength(200);
+            e.Property(f => f.WrittenAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.HasOne<Domain.Incidents.Incident>().WithMany().HasForeignKey(f => f.IncidentId);
         });
         modelBuilder.Entity<Domain.Imports.ImportSession>(e =>
         {

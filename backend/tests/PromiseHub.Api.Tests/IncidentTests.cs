@@ -91,6 +91,61 @@ public sealed class IncidentTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task A_supervisor_reviews_with_a_required_note_and_the_reporter_is_told()
+    {
+        var id = await Reported();
+
+        var noNote = await _factory.ClientFor(Marisol).PostAsJsonAsync($"/incidents/{id}/review", new { note = " ", outcome = "ClosedNoAction" });
+        var reviewed = await _factory.ClientFor(Marisol).PostAsJsonAsync($"/incidents/{id}/review", new { note = "Followed first-aid procedure correctly.", outcome = "ClosedNoAction" });
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, noNote.StatusCode);
+        Assert.Equal("Write a review note.", (await noNote.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("errors").GetProperty("note").GetString());
+        Assert.Equal(HttpStatusCode.NoContent, reviewed.StatusCode);
+        var incident = await _factory.ClientFor(Jaylen).GetFromJsonAsync<JsonElement>($"/incidents/{id}");
+        Assert.Equal("Closed", incident.GetProperty("status").GetString());
+        Assert.Equal("Followed first-aid procedure correctly.", incident.GetProperty("review").GetProperty("note").GetString());
+        Assert.Equal("Marisol Delgado", incident.GetProperty("review").GetProperty("by").GetString());
+        Assert.Contains(Email.Sent, e => e.To == "jaylen@harbourview.example" && e.Subject.Contains("reviewed", StringComparison.Ordinal));
+        Assert.Equal(HttpStatusCode.Conflict, (await _factory.ClientFor(Marisol).PostAsJsonAsync($"/incidents/{id}/review", new { note = "Again", outcome = "ClosedNoAction" })).StatusCode);
+    }
+
+    [Fact]
+    public async Task Keep_open_leaves_it_open_and_follow_ups_are_kept_even_after_closing()
+    {
+        var id = await Reported();
+
+        await _factory.ClientFor(Marisol).PostAsJsonAsync($"/incidents/{id}/review", new { note = "Waiting on the building manager.", outcome = "KeepOpen" });
+        Assert.Equal("Open", (await _factory.ClientFor(Marisol).GetFromJsonAsync<JsonElement>($"/incidents/{id}")).GetProperty("status").GetString());
+        await _factory.ClientFor(Marisol).PostAsJsonAsync($"/incidents/{id}/review", new { note = "Lighting fixed.", outcome = "ClosedPolicyChange" });
+        var empty = await _factory.ClientFor(Jaylen).PostAsJsonAsync($"/incidents/{id}/notes", new { text = "" });
+        var note = await _factory.ClientFor(Jaylen).PostAsJsonAsync($"/incidents/{id}/notes", new { text = "Called Carmen the next day; Mateo is fine." });
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, empty.StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, note.StatusCode);
+        var incident = await _factory.ClientFor(Marisol).GetFromJsonAsync<JsonElement>($"/incidents/{id}");
+        Assert.Equal("ClosedPolicyChange", incident.GetProperty("review").GetProperty("outcome").GetString());
+        Assert.Equal("Called Carmen the next day; Mateo is fine.", incident.GetProperty("followUps")[0].GetProperty("text").GetString());
+        Assert.Contains(incident.GetProperty("trail").EnumerateArray(), t => t.GetProperty("text").GetString()!.Contains("Marisol Delgado opened the report", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task A_supervisor_reopens_a_closed_report_and_others_cannot_review_or_reopen()
+    {
+        var id = await Reported();
+        await _factory.ClientFor(Marisol).PostAsJsonAsync($"/incidents/{id}/review", new { note = "Done.", outcome = "ClosedNoAction" });
+
+        Assert.Equal(HttpStatusCode.Forbidden, (await _factory.ClientFor(Jaylen).PostAsync($"/incidents/{id}/reopen", null)).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await _factory.ClientFor(Jaylen).PostAsJsonAsync($"/incidents/{id}/review", new { note = "Mine", outcome = "ClosedNoAction" })).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await _factory.ClientFor(Aisha).PostAsJsonAsync($"/incidents/{id}/notes", new { text = "Hi" })).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, (await _factory.ClientFor(Tom).PostAsync($"/incidents/{id}/reopen", null)).StatusCode);
+        Assert.Equal("Open", (await _factory.ClientFor(Tom).GetFromJsonAsync<JsonElement>($"/incidents/{id}")).GetProperty("status").GetString());
+        Assert.Equal(2, Query("SELECT Id FROM AuditEntries WHERE RecordType = 'Incident' AND Action = 'Updated'").Count);
+    }
+
+    private async Task<Guid> Reported() =>
+        (await (await _factory.ClientFor(Jaylen).PostAsJsonAsync("/incidents", Report())).Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
+
+    [Fact]
     public async Task Another_organization_never_sees_the_incident()
     {
         var id = (await (await _factory.ClientFor(Jaylen).PostAsJsonAsync("/incidents", Report())).Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();

@@ -44,4 +44,20 @@ public sealed class Incident : ITenantOwned
 
     public string ReportedBy { get; private set; }
     public DateTimeOffset ReportedAt { get; private set; }
+    public string? ReviewNote { get; private set; }
+    public ReviewOutcome? Outcome { get; private set; }
+    public string? ReviewedBy { get; private set; }
+    public DateTimeOffset? ReviewedAt { get; private set; }
+
+    /// <summary>A supervisor's review: closes the incident, or keeps it open while follow-up is pending (L2-023 criterion 2).</summary>
+    public void Review(string note, ReviewOutcome outcome, string reviewer, DateTimeOffset now)
+    {
+        ReviewNote = note;
+        Outcome = outcome;
+        ReviewedBy = reviewer;
+        ReviewedAt = now;
+        Status = outcome == ReviewOutcome.KeepOpen ? IncidentStatus.Open : IncidentStatus.Closed;
+    }
+
+    public void Reopen() => Status = IncidentStatus.Open;
 }
