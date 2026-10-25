@@ -36,6 +36,7 @@ import {
 } from '@promisehub/components';
 import { EMPTY, Observable, catchError } from 'rxjs';
 import { AddWalkInDialog } from '../add-walk-in-dialog/add-walk-in-dialog';
+import { SignOutDialog, SignOutData, SignOutResult } from '../sign-out-dialog/sign-out-dialog';
 import {
   CheckInSheetDialog,
   CheckInSheetResult,
@@ -91,6 +92,8 @@ export class CheckInPage {
   protected readonly canRun = computed(() => !!this.me() && can(this.me()!.role, 'runSessions'));
   /** Names open the Quick Card only while that module is on. */
   protected readonly quickCards = computed(() => !!this.me()?.modules.includes('QuickCards'));
+  /** Sign out is offered only while the Pickup module is on. */
+  protected readonly pickup = computed(() => !!this.me()?.modules.includes('Pickup'));
 
   protected readonly totals = computed(() => {
     const list = this.entries();
@@ -159,7 +162,12 @@ export class CheckInPage {
         : e.status === 'Absent'
           ? 'Absent'
           : e.status === 'SignedOut'
-            ? 'Signed out'
+            ? [
+                e.signedOutAt ? `Signed out ${formatTime(new Date(e.signedOutAt))}` : 'Signed out',
+                e.collectedBy,
+              ]
+                .filter(Boolean)
+                .join(' · ')
             : 'Not yet here';
     return [status, e.school?.split(', ')[1] ?? null].filter(Boolean).join(' · ');
   }
@@ -189,6 +197,30 @@ export class CheckInPage {
       .closed.subscribe((result) => {
         if (result?.kind === 'check-in') this.checkIn(entry, result.arrivedAt);
         if (result?.kind === 'absent') this.markAbsent(entry);
+      });
+  }
+
+  protected signOut(entry: RosterEntry): void {
+    const session = this.session();
+    if (!session) return;
+    this.dialogs
+      .open<SignOutResult, SignOutData, SignOutDialog>(SignOutDialog, {
+        sessionId: session.id,
+        entry,
+      })
+      .closed.subscribe((result) => {
+        if (!result) return;
+        const at = new Date();
+        this.patch(entry.id, {
+          status: 'SignedOut',
+          signedOutAt: at.toISOString(),
+          collectedBy: result.collectedBy,
+        });
+        this.toasts.show({
+          tone: 'success',
+          title: `${entry.name} signed out`,
+          text: `With ${result.collectedBy} at ${formatTime(at)}`,
+        });
       });
   }
 

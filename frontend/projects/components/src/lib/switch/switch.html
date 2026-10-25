@@ -2,6 +2,8 @@
   <input
     type="checkbox"
     role="switch"
+    [attr.aria-invalid]="error() ? 'true' : null"
+    [attr.aria-describedby]="error() ? id + '-error' : null"
     [checked]="checked()"
     [disabled]="disabled()"
     (change)="toggle($any($event.target).checked)"
@@ -9,3 +11,6 @@
   />
   <span class="text" [class.visually-hidden]="labelHidden()">{{ label() }}</span>
 </label>
+@if (error()) {
+  <div class="error" [id]="id + '-error'">{{ error() }}</div>
+}

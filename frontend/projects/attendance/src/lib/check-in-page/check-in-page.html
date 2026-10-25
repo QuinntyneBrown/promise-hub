@@ -119,6 +119,15 @@
                     >Check in</ph-button
                   >
                 }
+                @if (pickup() && e.status === 'Present' && e.childId) {
+                  <ph-button
+                    size="sm"
+                    [label]="'Sign out ' + e.name"
+                    hasPopup="dialog"
+                    (click)="signOut(e)"
+                    >Sign out</ph-button
+                  >
+                }
                 @if (e.childId) {
                   <ph-button
                     variant="ghost"

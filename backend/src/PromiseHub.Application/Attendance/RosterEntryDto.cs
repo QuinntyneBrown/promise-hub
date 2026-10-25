@@ -11,4 +11,6 @@ public sealed record RosterEntryDto(
     string? MedicalFlag,
     string Status,
     DateTimeOffset? CheckedInAt,
-    bool WalkIn);
+    bool WalkIn,
+    DateTimeOffset? SignedOutAt = null,
+    string? CollectedBy = null);

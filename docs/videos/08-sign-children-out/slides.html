@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 08 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="08" data-video-title="Sign children out" data-parts="Introduction|Promises|Mateo|Someone else|States|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 08</div>
+  <h1>Sign children out</h1>
+  <p class="lead">Every child leaves with an adult who is allowed to take them</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="A child leaves only with an adult on their approved list">
+  <h2>What sign-out promises</h2>
+  <ul>
+    <li>Approved adults, or someone the primary guardian okays by phone</li>
+    <li>Photo ID checked, or a person staff know</li>
+    <li>Who collected the child and when, audited</li>
+    <li>Part of the Pickup module</li>
+  </ul>
+</section>
+
+<section id="mateo" data-part="2" data-cue="Here is Jaylen at the end of tutoring night" data-clip="clips/sign-out-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Signed out to Carmen</h3><p>The approved list, primary first; the row keeps the time and her name.</p></div>
+</section>
+
+<section id="someone-else" data-part="3" data-cue="Now a cousin, Daniel, arrives instead." data-clip="clips/someone-else-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Not on the list</h3><p>Carmen's number one tap away; refused until she okays it.</p></div>
+</section>
+
+<section id="states" data-part="4" data-cue="The dialog has a state for every outcome">
+  <h2>The states on screen</h2>
+  <div class="cols">
+    <img class="shot" alt="Sign-out dialog with the approved list" src="shots/phone-default.png">
+    <img class="shot" alt="Sign-out dialog with the someone-else warning and error" src="shots/phone-blocked.png">
+  </div>
+</section>
+
+<section id="testing" data-part="5" data-cue="Backend tests cover the approved list in order">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Approved adult, tap sent twice</td><td>Signed out once, audited</td></tr>
+    <tr><td>Someone else without the okay</td><td>422, ask the primary guardian</td></tr>
+    <tr><td>Guardian from another household</td><td>422 with whom to call</td></tr>
+    <tr><td>Volunteer coordinator</td><td>403, no button</td></tr>
+    <tr><td>Another organization / Pickup off</td><td>404</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="6" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Approved adults, or the guardian's okay by phone</li><li>Photo ID is part of the step</li><li>Who and when, audited</li></ul>
+  <p class="muted">Next: record attendance as a youth worker</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

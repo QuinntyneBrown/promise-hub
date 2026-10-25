@@ -6,7 +6,7 @@ using PromiseHub.Domain.Organizations;
 
 namespace PromiseHub.Api.Endpoints;
 
-/// <summary>Sessions and check-in: the Roll Call module. A session is an event (ADR 0009).</summary>
+/// <summary>Sessions and check-in (Roll Call), sign-out (Pickup) and Quick Cards. A session is an event (ADR 0009).</summary>
 public static class AttendanceEndpoints
 {
     public static IEndpointRouteBuilder MapAttendanceEndpoints(this IEndpointRouteBuilder app)
@@ -21,6 +21,10 @@ public static class AttendanceEndpoints
             Ok(await handler.HandleAsync(id, command, ct))).RequirePermission(Permission.RunSessions);
         sessions.MapPost("/{id:guid}/walk-ins", async (Guid id, AddWalkInCommand command, AddWalkInHandler handler, CancellationToken ct) =>
             (await handler.HandleAsync(id, command, ct)).ToHttp()).RequirePermission(Permission.RunSessions);
+        sessions.MapPost("/{id:guid}/sign-outs", async (Guid id, SignOutCommand command, SignOutHandler handler, CancellationToken ct) =>
+            Ok(await handler.HandleAsync(id, command, ct))).RequireModule(ModuleId.Pickup).RequirePermission(Permission.RunSessions);
+        app.MapGet("/children/{id:guid}/pickups", async (Guid id, GetPickupOptionsHandler handler, CancellationToken ct) =>
+            await handler.HandleAsync(id, ct) is { } pickups ? Results.Ok(pickups) : Results.NotFound()).RequireModule(ModuleId.Pickup);
         app.MapGet("/children/{id:guid}/quick-card", async (Guid id, GetQuickCardHandler handler, HttpContext http, CancellationToken ct) =>
         {
             // The offline copy belongs to the app, never to an HTTP cache.

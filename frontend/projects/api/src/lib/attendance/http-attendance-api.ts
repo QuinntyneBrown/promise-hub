@@ -7,6 +7,8 @@ import { LoadResult } from '../load-result';
 import { WriteOutcome } from '../write-outcome';
 import { AttendanceApi } from './attendance-api';
 import { NewWalkIn } from './new-walk-in';
+import { PickupOptions } from './pickup-options';
+import { SignOut } from './sign-out';
 import { SessionRoster } from './session-roster';
 import { SessionSummary } from './session-summary';
 
@@ -50,6 +52,16 @@ export class HttpAttendanceApi implements AttendanceApi {
   addWalkIn(sessionId: string, walkIn: NewWalkIn): Observable<WriteOutcome> {
     return toWrite(
       this.http.post<{ id: string }>(`${this.baseUrl}/sessions/${sessionId}/walk-ins`, walkIn),
+    );
+  }
+
+  pickups(childId: string): Observable<LoadResult<PickupOptions>> {
+    return toLoad(this.http.get<PickupOptions>(`${this.baseUrl}/children/${childId}/pickups`));
+  }
+
+  signOut(sessionId: string, signOut: SignOut): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(`${this.baseUrl}/sessions/${sessionId}/sign-outs`, signOut),
     );
   }
 }

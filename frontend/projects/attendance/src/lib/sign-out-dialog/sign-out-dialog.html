@@ -1,0 +1,76 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    [title]="'Sign out ' + data.entry.name"
+    description="Pick from the approved list. Check ID if you don’t know them."
+  >
+    @if (failed()) {
+      <ph-alert
+        tone="danger"
+        title="That didn’t go through"
+        text="Nothing was changed. Try again."
+      />
+    }
+    @switch (state()) {
+      @case ('loading') {
+        <p role="status">Loading the approved list…</p>
+      }
+      @case ('error') {
+        <ph-alert tone="danger" title="We couldn’t load the approved list" text="Try again.">
+          <ph-button size="sm" (click)="load()">Try again</ph-button>
+        </ph-alert>
+      }
+      @case ('loaded') {
+        @let p = pickups()!;
+        <ph-radio-group
+          legend="Picked up by"
+          name="who"
+          [options]="options()"
+          [error]="errors()['who'] ?? null"
+          [ngModel]="who()"
+          (ngModelChange)="who.set($event)"
+        />
+        @if (someoneElse()) {
+          <ph-alert
+            tone="warning"
+            title="Not on the approved list"
+            [text]="'Call ' + p.primaryName + ' before ' + first + ' leaves.'"
+          >
+            @if (p.primaryPhone) {
+              <ph-button
+                variant="primary"
+                size="sm"
+                icon="phone"
+                [href]="'tel:' + p.primaryPhone"
+                [label]="'Call ' + p.primaryName + ' ' + p.primaryPhone"
+                >Call {{ p.primaryName }} {{ p.primaryPhone }}</ph-button
+              >
+            }
+          </ph-alert>
+          <ph-text-field
+            inputId="otherName"
+            label="Their name"
+            name="otherName"
+            [error]="errors()['otherName'] ?? null"
+            [(ngModel)]="otherName"
+          />
+          <ph-switch
+            name="guardianConfirmed"
+            [label]="p.primaryName + ' confirmed by phone'"
+            [error]="errors()['guardianConfirmed'] ?? null"
+            [(ngModel)]="guardianConfirmed"
+          />
+        }
+        <ph-switch
+          name="idChecked"
+          label="I checked photo ID or know this person"
+          [error]="errors()['idChecked'] ?? null"
+          [(ngModel)]="idChecked"
+        />
+      }
+    }
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Sign out</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

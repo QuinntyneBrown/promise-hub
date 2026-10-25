@@ -13,4 +13,7 @@ export interface RosterEntry {
   status: AttendanceStatus;
   checkedInAt: string | null;
   walkIn: boolean;
+  signedOutAt: string | null;
+  /** Who collected the child at sign-out. */
+  collectedBy: string | null;
 }
