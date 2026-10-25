@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 26 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="26" data-video-title="Manage approved pickups" data-parts="Introduction|Promises|Linh adds|Staff|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 26</div>
+  <h1>Manage approved pickups</h1>
+  <p class="lead">Who may take a child home, kept by families and staff</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="Guardians who may pick up are always on the list.">
+  <h2>What approved pickups promise</h2>
+  <ul>
+    <li>Guardians plus approved adults</li>
+    <li>On the Quick Card and in sign-out at once</li>
+    <li>Removal keeps the history</li>
+    <li>Staff removals text the guardian</li>
+  </ul>
+</section>
+
+<section id="linh" data-part="2" data-cue="Here is Linh's family page, after the code check." data-clip="clips/family-pickups-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Add someone for Kevin</h3><p>Mai Tran, aunt.</p></div>
+</section>
+
+<section id="staff" data-part="3" data-cue="On Mateo's Quick Card, Jaylen can add">
+  <h2>Staff on the Quick Card</h2>
+  <div class="cols">
+    <img class="shot" alt="The add an approved adult dialog" src="shots/desktop-add.png">
+    <img class="shot" alt="The Quick Card's approved list" src="shots/phone-card.png">
+  </div>
+</section>
+
+<section id="testing" data-part="4" data-cue="Backend tests cover adding with missing details">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Missing name or relationship</td><td>422, each named</td></tr>
+    <tr><td>Youth worker changes the list</td><td>403</td></tr>
+    <tr><td>Another household's child</td><td>404</td></tr>
+    <tr><td>Pickup off</td><td>404</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="5" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>One list</li><li>Families and staff change it</li><li>History kept</li></ul>
+  <p class="muted">Next: messaging families</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
