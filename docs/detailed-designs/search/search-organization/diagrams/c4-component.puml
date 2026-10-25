@@ -1,0 +1,36 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Search the organization
+
+Container_Boundary(api, "PromiseHub API") {
+  Component(endpoints, "SearchEndpoints", "Minimal API", "GET /search, GET /search/recent")
+  Component(handler, "SearchQueryHandler", "Query handler", "Normalize, scope, run sources in parallel, group, measure budget")
+  Component(normalizer, "QueryNormalizer", "Domain service", "Trim, lower-case, strip diacritics, extract digit run")
+  Component(scope, "SearchScope", "Value object", "Types in scope from modules and role")
+  Component(modules, "IModuleConfiguration", "Application interface", "Modules on for the organization")
+  Component(childSource, "ChildSearchSource", "ISearchSource", "Children by name; medical flags by role")
+  Component(householdSource, "HouseholdSearchSource", "ISearchSource", "Families by name")
+  Component(guardianSource, "GuardianSearchSource", "ISearchSource", "Guardians by name or phone digits")
+  Component(eventSource, "EventSearchSource", "ISearchSource", "Events by title")
+  Component(recent, "RecentItemsQueryHandler", "Query handler", "Last 10 opened records for the person")
+  Component(recorder, "RecordOpenedBehaviour", "MediatR pipeline behaviour", "Upserts RecentItem on detail queries")
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "Normalized columns and indexes; tenant filter")
+}
+
+Rel(endpoints, handler, "Sends SearchQuery")
+Rel(endpoints, recent, "Sends RecentItemsQuery")
+Rel(handler, normalizer, "Normalize(q)")
+Rel(handler, modules, "Modules on")
+Rel(handler, scope, "Build from modules and role")
+Rel(handler, childSource, "Search")
+Rel(handler, householdSource, "Search")
+Rel(handler, guardianSource, "Search")
+Rel(handler, eventSource, "Search")
+Rel(childSource, db, "Query", "EF Core")
+Rel(householdSource, db, "Query", "EF Core")
+Rel(guardianSource, db, "Query", "EF Core")
+Rel(eventSource, db, "Query", "EF Core")
+Rel(recent, db, "Reads RecentItem", "EF Core")
+Rel(recorder, db, "Upserts RecentItem", "EF Core")
+@enduml

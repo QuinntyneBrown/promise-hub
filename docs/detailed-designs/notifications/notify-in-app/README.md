@@ -2,7 +2,7 @@
 
 ## Overview
 
-Staff at a youth-serving organization need to know what needs their attention without watching every page: an incident to review, enrollments waiting, an email that bounced, a text cap about to be reached, a slip a guardian just signed. PromiseHub collects those events into one notification center per person. A bell in the shell shows the unread count, a dropdown panel lists the latest items, a full page lists everything, and preferences decide which items also arrive as email digests.
+Staff at a youth-serving organization depend on knowing what needs their attention without watching every page: an incident to review, enrollments waiting, an email that bounced, a text cap about to be reached, a slip a guardian just signed. PromiseHub collects those events into one notification center per person. A bell in the shell shows the unread count, a dropdown panel lists the latest items, a full page lists everything, and preferences decide which items also arrive as email digests.
 
 A notification is addressed to one person in one organization. The same event can produce notifications for several people (every supervisor on a new incident) and the same person can carry separate unread counts in each organization they belong to. Reading a notification on one device marks it read for every device of that person, because read state lives on the server, not in the browser.
 
@@ -27,7 +27,7 @@ The shell (`frontend/projects/promisehub/`) hosts the bell; the pages live in `f
 - **`BellPanel`** — overlay (`bell`) listing the newest notifications with avatar or icon, text, link and time, a Mark all read action when unread items exist, an empty state and a See all link to the page. It closes on Escape and traps focus.
 - **`NotificationsPage`** — the full list (`notifications`), newest first, with unread styling, Mark all read, a Settings link, and loading, empty, error and read states.
 - **`NotificationStream`** — service in `frontend/projects/api/` that subscribes to server-sent events at `GET /notifications/stream` and emits `unreadCount` and new notifications. When the stream is unavailable it falls back to polling `unreadCount()` every 60 seconds. The stream is per session and carries only the active organization's notifications.
-- **`NotificationSettingsPage`** (`settings-notifications`, Staff emails card) and the Your notifications card on **`AccountPage`** (`account`) edit `NotificationPreferences` through `NotificationsApi.updatePreferences()`.
+- **`NotificationSettingsPage`** (`settings-notifications`, Staff emails card) and the personal notifications card on **`AccountPage`** (`account`) edit `NotificationPreferences` through `NotificationsApi.updatePreferences()`.
 - **`NotificationsApi`** — behind the `NOTIFICATIONS_API` injection token: `list(page)`, `unreadCount()`, `markRead(id)`, `markAllRead()`, `getPreferences()`, `updatePreferences(prefs)`.
 
 ### Backend

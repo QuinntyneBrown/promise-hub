@@ -1,0 +1,76 @@
+@startuml
+title UML sequence behaviour — Search by name or phone fragment
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Staff member" as actor
+box "Frontend — PromiseHub web app, shell" #E0F2FE
+  participant "SearchField / SearchPage" as page
+  participant "SearchQueryState" as state
+  participant "SearchApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "SearchEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "SearchQueryHandler" as handler
+  participant "QueryNormalizer" as normalizer
+  participant "SearchScope" as scope
+  participant "ChildSearchSource / HouseholdSearchSource / GuardianSearchSource / EventSearchSource" as sources
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "IModuleConfiguration" as modules
+  database "PromiseHub database" as db
+end box
+
+actor -> page : Type "Riv" or "0142"
+page -> state : Update query, sync URL
+state -> state : Debounce 150 ms, cancel in-flight request
+state -> client : search(q)
+client -> endpoints : GET /search?q=
+endpoints -> endpoints : Authenticate, resolve organization and role
+endpoints -> handler : Send SearchQuery
+handler -> normalizer : Normalize(q)
+normalizer --> handler : NormalizedQuery (text, digit run)
+alt query shorter than 2 characters
+  handler --> endpoints : Empty result
+  endpoints --> client : 200 (no groups)
+  client --> page : Recent items (empty state)
+else query long enough
+  handler -> modules : Modules on for the organization
+  modules --> handler : ModuleSet
+  handler -> scope : From(modules, role) (L2-039 criterion 3, L2-005, L2-007)
+  scope --> handler : Types in scope; medical flags by role
+  par one source per type in scope
+    handler -> sources : Search(organizationId, query, scope, 10)
+    sources -> db : Prefix match on SearchName; digit-contains on PhoneDigits for guardians (L2-001, L2-039 criterion 2)
+    db --> sources : Hits and total count
+    sources --> handler : SearchResultGroup
+  end
+  handler -> handler : Order groups Children, Families, Guardians, Events; record elapsed ms
+  opt elapsed > 300 ms (L2-039 criterion 1)
+    handler -> handler : Log budget warning with tenant and query length
+  end
+  alt total count is 0
+    handler --> endpoints : SearchResultDto with empty groups
+    endpoints --> client : 200
+    client --> page : No-results state with Add family (L2-039 criterion 4)
+  else results found
+    handler --> endpoints : SearchResultDto
+    endpoints --> client : 200
+    client --> page : Grouped results with highlights
+    page --> actor : "n results for query", Children, Families, Guardians, Events
+  end
+end
+@enduml

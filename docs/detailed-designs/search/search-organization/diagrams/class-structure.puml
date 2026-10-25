@@ -1,0 +1,126 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Search the organization
+
+enum SearchRecordType {
+  Child
+  Household
+  Guardian
+  Event
+}
+
+class NormalizedQuery <<value object>> {
+  +string Text
+  +string? DigitRun
+  +bool IsTooShort
+}
+
+class QueryNormalizer {
+  +{static} int MinimumLength = 2
+  +Normalize(raw: string): NormalizedQuery
+}
+
+class SearchScope <<value object>> {
+  +IReadOnlySet<SearchRecordType> Types
+  +bool IncludeMedicalFlags
+  +{static} From(modules: ModuleSet, role: Role): SearchScope
+}
+
+class SearchQuery {
+  +string Q
+}
+
+class SearchHit {
+  +SearchRecordType Type
+  +Guid Id
+  +string Label
+  +IReadOnlyList<HighlightSpan> Highlights
+  +string Summary
+  +IReadOnlyList<string> Flags
+}
+
+class SearchResultGroup {
+  +SearchRecordType Type
+  +int TotalCount
+  +IReadOnlyList<SearchHit> Hits
+}
+
+class SearchResultDto {
+  +string Query
+  +IReadOnlyList<SearchResultGroup> Groups
+  +int TotalCount
+  +int ElapsedMs
+}
+
+interface ISearchSource {
+  +SearchRecordType Type
+  +Search(organizationId: Guid, query: NormalizedQuery, scope: SearchScope, limit: int): Task<SearchResultGroup>
+}
+
+class ChildSearchSource {
+  +Search(...): Task<SearchResultGroup>
+}
+
+class HouseholdSearchSource {
+  +Search(...): Task<SearchResultGroup>
+}
+
+class GuardianSearchSource {
+  +Search(...): Task<SearchResultGroup>
+}
+
+class EventSearchSource {
+  +Search(...): Task<SearchResultGroup>
+}
+
+class SearchQueryHandler {
+  +{static} int PerTypeLimit = 10
+  +{static} int BudgetMs = 300
+  +Handle(query: SearchQuery): Task<SearchResultDto>
+}
+
+class RecentItem {
+  +Guid OrganizationId
+  +Guid StaffId
+  +SearchRecordType RecordType
+  +Guid RecordId
+  +string Label
+  +DateTimeOffset OpenedAt
+}
+
+class RecentItemsQueryHandler {
+  +Handle(query: RecentItemsQuery): Task<IReadOnlyList<RecentItem>>
+}
+
+class RecordOpenedBehaviour<TRequest, TResponse> {
+  +Handle(request, next): Task<TResponse>
+}
+
+SearchQueryHandler ..> SearchQuery : handles
+SearchQueryHandler --> QueryNormalizer : uses
+SearchQueryHandler --> SearchScope : builds
+SearchQueryHandler --> ISearchSource : runs each in scope
+SearchQueryHandler ..> SearchResultDto : returns
+QueryNormalizer ..> NormalizedQuery : produces
+ChildSearchSource ..|> ISearchSource
+HouseholdSearchSource ..|> ISearchSource
+GuardianSearchSource ..|> ISearchSource
+EventSearchSource ..|> ISearchSource
+SearchResultDto "1" *-- "*" SearchResultGroup
+SearchResultGroup "1" *-- "*" SearchHit
+SearchHit --> SearchRecordType
+SearchScope --> SearchRecordType
+RecentItemsQueryHandler --> RecentItem : reads
+RecordOpenedBehaviour --> RecentItem : upserts
+@enduml

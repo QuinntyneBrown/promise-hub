@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Search the organization
+
+Person(staff, "Staff member", "Searches")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "Shell SearchField and SearchPage; SearchQueryState debounce")
+  Container(api, "PromiseHub API", "ASP.NET Core", "SearchEndpoints, SearchQueryHandler, search sources")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "Children, households, guardians, events with normalized search columns; recent items")
+}
+
+Rel(staff, web, "Uses", "HTTPS")
+Rel(web, api, "GET /search?q=, GET /search/recent", "JSON/HTTPS")
+Rel(api, db, "Prefix and digit-contains queries with tenant filter", "EF Core")
+@enduml
