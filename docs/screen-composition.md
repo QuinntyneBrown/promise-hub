@@ -45,7 +45,7 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Guardian home | `guardian-home` (status, declined, none, error) | `ph-guardian-shell`, `ph-list`, `ph-list-item`, `ph-badge` (success, warning, danger, neutral), `ph-card`, `ph-text-field`, `ph-alert`, `ph-empty-state`, `ph-button` | Code check, language strings |
 | Guardian slip | `slip-sign` (default, invalid, submitting, success, error, expired, already-signed, es) | `ph-guardian-shell`, `ph-card` (titled), `ph-description-list`, `ph-radio-group`, `ph-text-field`, `ph-alert`, `ph-empty-state`, `ph-button` | Code check, language strings |
 | Sign on this tablet | `sign-on-tablet` | `ph-page-header`, `ph-card` (titled), `ph-text-field`, `ph-radio-group`, `ph-alert`, `ph-empty-state`, `ph-button` | A screen, mounted under check-in |
-| Roster review | `roster` (default, empty, error, forbidden, selected) | `ph-breadcrumb`, `ph-page-header`, `ph-tabs` (tablist), `ph-list`, `ph-list-item` (with lead), `ph-checkbox`, `ph-bulk-action-bar`, `ph-card`, `ph-empty-state`, `ph-error-page` (forbidden), `ph-button`, toast | Selection set |
+| Roster review | `roster` (default, empty, error, forbidden, selected, waitlist) | `ph-breadcrumb`, `ph-page-header`, `ph-tabs` (tablist), `ph-list`, `ph-list-item` (with lead), `ph-checkbox`, `ph-bulk-action-bar`, `ph-card`, `ph-empty-state`, `ph-error-page` (forbidden), `ph-button`, toast | Selection set |
 | Import a roster | `import-roster` (default, mapping, invalid, success, error) | `ph-breadcrumb`, `ph-page-header`, `ph-stepper`, `ph-file-upload`, `ph-roster-mapping`, `ph-select`, `ph-error-summary`, `ph-alert`, `ph-switch`, `ph-stat`, `ph-card`, `ph-error-page`, `ph-button` | Wizard state |
 | Guardian enrollment | `enroll` (default, code, closed), `enroll-household`, `enroll-child`, `enroll-review` (default, success, waitlisted) | `ph-guardian-shell`, `ph-text-field`, `ph-select`, `ph-switch`, `ph-card`, `ph-description-list`, `ph-alert`, `ph-empty-state`, `ph-button` | Steps and language strings |
 
@@ -63,6 +63,7 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Add a child to a program | `enroll-in-program` | `ph-dialog`, `ph-text-field`, `ph-list`, `ph-list-item`, `ph-button` |
 | Remove from roster | `remove-from-roster` | `ph-dialog`, `ph-radio-group`, `ph-button` |
 | Review enrollment | `review-enrollment` (default, invalid, full) | `ph-dialog`, `ph-radio-group`, `ph-textarea`, `ph-alert` (danger), `ph-button` |
+| Move in | `move-in` | `ph-dialog`, `ph-textarea`, `ph-alert` (danger), `ph-button` |
 | Bulk review | `bulk-review` | `ph-dialog`, `ph-list`, `ph-list-item`, `ph-textarea`, `ph-alert`, `ph-button` |
 | Program actions / Event actions | `program-actions`, `event-actions` | `ph-dialog`, `ph-action-menu`, `ph-button` |
 | Archive program | `archive-program` | `ph-dialog`, `ph-text-field`, `ph-button` |

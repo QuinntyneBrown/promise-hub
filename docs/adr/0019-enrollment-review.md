@@ -14,6 +14,8 @@ Prompt 16 lets office staff accept, waitlist or decline the children submitted t
 - **Notification.** Each decision queues one SMS or email to the household through the existing message path with the new `MessageSource.Enrollment`, gated by the Roster module, in the guardian's words: enrolled, waitlisted with the number, or not enrolled with the reason.
 - **Screen.** The roster review is a page of the `enrollment` library at `/programs/:programId/roster`, with in-page tabs (a tablist mode of `ph-tabs`), a selection checkbox per row (`ph-checkbox`), a `ph-bulk-action-bar` and two CDK dialogs: review one, review the selected.
 
+- **Waitlist moves (prompt 18).** Moving a waitlisted child in is the Accept decision on that request, from a Move in button on the roster's Waitlist tab (dialog: `move-in`); the children behind it move up one place, so positions stay 1, 2, 3 with no gaps. Declining a waitlisted child closes the gap the same way.
+
 ## Consequences
 
-Moving children off the waitlist and managing it is prompt 18; the guardian's own view of the status is a later journey. Decline texts are sent in English until messages are translated per household.
+The guardian's own view of the status is a later journey. Decline texts are sent in English until messages are translated per household.
