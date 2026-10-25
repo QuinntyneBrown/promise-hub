@@ -1,0 +1,102 @@
+@startuml
+title UML sequence behaviour — View and review an incident
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Reader (director or youth worker)" as actor
+box "Frontend — PromiseHub web app, incidents library" #E0F2FE
+  participant "IncidentPage" as page
+  participant "ReviewIncidentDialog" as dialog
+  participant "IncidentsApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "IncidentEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain (Incidents)" #ECFDF3
+  participant "GetIncidentQueryHandler" as get
+  participant "IncidentAccessPolicy" as policy
+  participant "ReviewIncidentCommandHandler" as review
+  participant "Incident" as entity
+  participant "IncidentRouter" as router
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "AuditLog" as audit
+  participant "NotificationService" as notify
+end box
+actor -> page : Open /incidents/{id}
+page -> client : get(id)
+client -> endpoints : GET /incidents/{id}
+endpoints -> endpoints : Authenticate; organization from membership (L2-001)
+endpoints -> get : Send GetIncidentQuery
+get -> db : Load Incident within organization
+db --> get : Incident or none
+get -> policy : CanRead(incident, actor)? (L2-007 AC2)
+alt not found, or youth worker who is not the reporter
+  policy --> get : Denied
+  get --> endpoints : NotFound (L2-023 AC3)
+  endpoints --> client : 404 Not Found
+  client --> page : Not found
+  page --> actor : "You can't open this report" state
+else permitted
+  policy --> get : Allowed
+  get -> policy : CanSeeNames(incident, actor)?
+  alt names restricted and reader is neither reporter nor program director
+    policy --> get : Mask names (L2-023 AC5)
+  else
+    policy --> get : Show names
+  end
+  get -> audit : Record IncidentViewed(actor, incident, now) (L2-023 AC4, L2-032)
+  audit --> get : Recorded
+  get --> endpoints : IncidentDto
+  endpoints --> client : 200 OK
+  client --> page : IncidentDto
+  page --> actor : Report, follow-up, trail
+  opt reader is a supervisor: Mark reviewed
+    actor -> dialog : Write review note; choose outcome; Mark reviewed
+    dialog -> client : review(id, { note, outcome })
+    client -> endpoints : POST /incidents/{id}/review
+    endpoints -> review : Send ReviewIncidentCommand
+    review -> policy : CanReview(actor)?
+    alt not a supervisor
+      policy --> review : Denied
+      review --> endpoints : Forbidden
+      endpoints --> client : 403 ProblemDetails
+      client --> dialog : Failed
+    else supervisor
+      policy --> review : Allowed
+      alt note empty
+        review --> endpoints : Validation failure "Write a review note"
+        endpoints --> client : 400 ProblemDetails
+        client --> dialog : Field error
+      else valid
+        review -> entity : Review(actor, note, outcome, now): Closed or Open (L2-023 AC2)
+        entity --> review : Transition applied; read-only except notes when Closed
+        review -> db : SaveChanges in one unit of work
+        db --> review : Commit result
+        review -> audit : Record review (L2-032)
+        audit --> review : Recorded
+        review -> router : NotifyReporter(incident)
+        router -> notify : Email and in-app notice to the reporter
+        notify --> router : Queued
+        router --> review : Notified
+        review --> endpoints : Result
+        endpoints --> client : 200 OK
+        client --> dialog : Done
+        dialog --> actor : Incident shows Closed with the review note
+      end
+    end
+  end
+end
+@enduml

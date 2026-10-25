@@ -1,0 +1,140 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Sync offline queue
+
+enum QueuedActionKind {
+  CheckIn
+  MarkAbsent
+  SignOut
+}
+
+enum QueuedActionState {
+  Pending
+  Sending
+  Sent
+  Rejected
+}
+
+enum SyncOutcome {
+  Applied
+  Duplicate
+  Rejected
+}
+
+class QueuedAction <<Angular, IndexedDB>> {
+  +id: string
+  +sequence: number
+  +kind: QueuedActionKind
+  +sessionId: string
+  +childId: string
+  +clientActionId: string
+  +deviceTime: string
+  +deviceId: string
+  +payload: CheckInRequest | SignOutRequest
+  +state: QueuedActionState
+  +rejectionReason?: string
+}
+
+class AttendanceQueueStore <<Angular>> {
+  +enqueue(action: QueuedAction): Promise<void>
+  +peek(): Promise<QueuedAction | undefined>
+  +markSent(id: string): Promise<void>
+  +markRejected(id: string, reason: string): Promise<void>
+  +pendingFor(childId: string): Promise<QueuedAction[]>
+  +count(): Signal<number>
+}
+
+class SyncService <<Angular>> {
+  +start(): void
+  +syncNow(): Promise<void>
+  +status: Signal<'idle'|'syncing'|'offline'|'failed'>
+}
+
+class TodayRosterCache <<Angular>> {
+  +fill(): Promise<void>
+  +roster(sessionId: string): Promise<CachedRoster | undefined>
+  +quickCard(childId: string): Promise<CachedQuickCard | undefined>
+  +savedAt: Signal<Date | null>
+}
+
+class RosterStore <<Angular>> {
+  +checkIn(childId: string, request: CheckInRequest): void
+  +signOut(childId: string, request: SignOutRequest): void
+  +canSignOut(childId: string): Signal<boolean>
+}
+
+class SyncAttendanceActionsCommand {
+  +Guid SessionId
+  +IReadOnlyList<QueuedActionDto> Actions
+}
+
+class QueuedActionDto {
+  +string Kind
+  +Guid ChildId
+  +string ClientActionId
+  +DateTimeOffset DeviceTime
+  +string DeviceId
+  +object Payload
+}
+
+class SyncResult {
+  +string ClientActionId
+  +SyncOutcome Outcome
+  +bool HasConflict
+  +string? Reason
+  +RosterRowDto? Row
+}
+
+class SyncAttendanceActionsCommandHandler {
+  +Handle(command: SyncAttendanceActionsCommand): Task<IReadOnlyList<SyncResult>>
+}
+
+class CheckInChildCommandHandler {
+  +Handle(command: CheckInChildCommand): Task<Result<RosterRowDto>>
+}
+
+class AttendanceConflictResolver {
+  +Resolve(record: AttendanceRecord, incoming: AttendanceEvent): ConflictResolution
+}
+
+class AttendanceRecord {
+  +AttendanceStatus Status
+  +bool HasConflict
+  +ResolveConflict(events: IReadOnlyList<AttendanceEvent>): void
+}
+
+class AttendanceEvent {
+  +AttendanceEventKind Kind
+  +DateTimeOffset OccurredAt
+  +string ClientActionId
+  +string DeviceId
+}
+
+QueuedAction --> QueuedActionKind
+QueuedAction --> QueuedActionState
+SyncResult --> SyncOutcome
+AttendanceQueueStore "1" o-- "*" QueuedAction : ordered by sequence
+RosterStore ..> AttendanceQueueStore : enqueue when offline
+RosterStore ..> TodayRosterCache : roster when offline
+SyncService ..> AttendanceQueueStore : drains in order
+SyncService ..> SyncAttendanceActionsCommand : posts as batch
+SyncService ..> RosterStore : applies SyncResult
+SyncAttendanceActionsCommand "1" *-- "*" QueuedActionDto
+SyncAttendanceActionsCommandHandler ..> SyncAttendanceActionsCommand : handles
+SyncAttendanceActionsCommandHandler --> SyncResult : returns per action
+SyncAttendanceActionsCommandHandler ..> CheckInChildCommandHandler : dispatches
+CheckInChildCommandHandler ..> AttendanceConflictResolver : on newer event
+AttendanceConflictResolver --> AttendanceRecord : resolves
+AttendanceRecord "1" --> "*" AttendanceEvent : keeps both
+@enduml

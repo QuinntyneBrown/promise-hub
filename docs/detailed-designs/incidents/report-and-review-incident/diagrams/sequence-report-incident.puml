@@ -1,0 +1,67 @@
+@startuml
+title UML sequence behaviour — Report an incident
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Site lead" as actor
+box "Frontend — PromiseHub web app, incidents library" #E0F2FE
+  participant "NewIncidentPage" as page
+  participant "IncidentsApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "IncidentEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain (Incidents)" #ECFDF3
+  participant "ReportIncidentCommandHandler" as handler
+  participant "IncidentValidator" as validator
+  participant "Incident" as entity
+  participant "IncidentRouter" as router
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "AuditLog" as audit
+  participant "NotificationService" as notify
+end box
+actor -> page : Fill type, child, when, where, what happened, what was done, guardian, severity; Submit report
+page -> client : report(request)
+client -> endpoints : POST /incidents
+endpoints -> endpoints : Authenticate; organization from membership (L2-001); Incident log on? (L2-005)
+endpoints -> handler : Send ReportIncidentCommand
+handler -> validator : Validate(command)
+alt required fields missing
+  validator --> handler : Field errors
+  handler --> endpoints : Validation failure; nothing saved (L2-023 AC1)
+  endpoints --> client : 400 ProblemDetails
+  client --> page : Field errors
+  page --> actor : Inline errors and error summary
+else complete
+  validator --> handler : Valid
+  handler -> db : Verify children are on the organization's roster
+  db --> handler : Children
+  handler -> entity : new Incident(..., ReporterId = actor); Submit(now): Status = NeedsReview
+  entity --> handler : Incident
+  handler -> db : Add and SaveChanges in one unit of work
+  db --> handler : Commit result
+  handler -> audit : Record create with actor, record, after values (L2-032)
+  audit --> handler : Recorded
+  handler -> router : NotifySupervisors(incident)
+  router -> notify : Email and in-app notice to program directors (L2-023 AC1)
+  notify --> router : Queued
+  router --> handler : Routed
+  handler --> endpoints : IncidentDto
+  endpoints --> client : 201 Created
+  client --> page : IncidentDto
+  page --> actor : "Report filed. Sent to Marisol Delgado and attached to the child's record"
+end
+@enduml

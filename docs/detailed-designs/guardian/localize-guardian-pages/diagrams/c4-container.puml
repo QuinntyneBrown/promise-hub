@@ -1,0 +1,19 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Localize guardian pages
+
+Person_Ext(guardian, "Guardian", "Reads in the household language")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "guardian library: shell with language select, locale service, translation bundles, survey page")
+  Container(api, "PromiseHub API", "ASP.NET Core minimal API", "Guardian context and language endpoints, message renderer, survey handlers")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "Household language, message templates, surveys, responses, audit")
+}
+System_Ext(sms, "SMS provider", "Localized texts")
+System_Ext(email, "Email provider", "Localized emails")
+Rel(guardian, web, "Opens /g/... pages", "HTTPS")
+Rel(web, api, "Loads context, sets language, answers survey", "JSON/HTTPS")
+Rel(api, db, "Reads and writes", "EF Core")
+Rel(api, sms, "Sends rendered templates", "API")
+Rel(api, email, "Sends rendered templates", "SMTP/API")
+@enduml

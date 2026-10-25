@@ -1,0 +1,73 @@
+@startuml
+title UML sequence behaviour — Search and export the audit log
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Admin" as actor
+box "Frontend — PromiseHub web app, administration library" #E0F2FE
+  participant "AuditLogPage" as page
+  participant "ExportDialog" as dialog
+  participant "AuditApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "AuditEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "SearchAuditQueryHandler" as search
+  participant "ExportAuditCommandHandler" as exportCmd
+  participant "ExportPipeline" as pipeline
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "IFileStore" as files
+  database "PromiseHub database" as db
+end box
+
+actor -> page : Open Audit log, type "Petrov", choose action and period
+page -> client : search(filter, page)
+client -> endpoints : GET /audit?q&action&from&to&page
+endpoints -> endpoints : Authenticate, resolve organization
+alt caller lacks Audit.Read
+  endpoints --> client : 403 ProblemDetails
+  client --> page : Forbidden state
+else authorized
+  endpoints -> search : Send SearchAuditQuery
+  search -> db : WHERE OrganizationId = active AND filters, ORDER BY OccurredAt DESC, 50 rows (L2-001, L2-032 criterion 3)
+  db --> search : Entries and total count
+  alt no entries match
+    search --> endpoints : Empty page
+    endpoints --> client : 200
+    client --> page : No-results state offering a wider period
+  else entries found
+    search --> endpoints : PagedResult<AuditEntryDto>
+    endpoints --> client : 200
+    client --> page : Rows
+    page --> actor : Table newest first, Showing 1 to 50 of n
+  end
+end
+
+actor -> page : Tap Export
+page -> dialog : Open with export kind AuditLog, format CSV
+actor -> dialog : Export
+dialog -> client : exportCsv(filter)
+client -> endpoints : POST /audit/exports
+endpoints -> exportCmd : Send ExportAuditCommand
+exportCmd -> pipeline : Run with AuditCsvSource (inline or background by row count)
+pipeline -> db : Stream matching entries
+pipeline -> files : Put CSV
+pipeline -> db : Append AuditEntry Exported (requester, filter, row count)
+pipeline --> exportCmd : ExportDto
+exportCmd --> endpoints : Result
+endpoints --> client : 201 or 202
+client --> dialog : Success with Download, or progress on the page
+@enduml

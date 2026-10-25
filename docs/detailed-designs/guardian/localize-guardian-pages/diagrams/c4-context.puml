@@ -1,0 +1,14 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Localize guardian pages
+
+Person_Ext(guardian, "Guardian", "Reads pages, texts and emails in English, Spanish or French")
+System(promisehub, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+System_Ext(sms, "SMS provider", "Delivers localized texts")
+System_Ext(email, "Email provider", "Delivers localized emails")
+
+Rel(guardian, promisehub, "Opens guardian pages in the household language; changes language; answers surveys", "HTTPS")
+Rel(promisehub, sms, "Sends texts in the household language via", "API")
+Rel(promisehub, email, "Sends emails in the household language via", "SMTP/API")
+@enduml
