@@ -14,6 +14,7 @@ public sealed class IncidentTests : IAsyncLifetime
     private static readonly Guid Tom = DatabaseSeeder.MembershipId(DatabaseSeeder.Harbourview, "tom@harbourview.example");
     private static readonly Guid Jaylen = DatabaseSeeder.MembershipId(DatabaseSeeder.Harbourview, "jaylen@harbourview.example");
     private static readonly Guid Aisha = DatabaseSeeder.MembershipId(DatabaseSeeder.Harbourview, "aisha@harbourview.example");
+    private static readonly Guid Priya = DatabaseSeeder.MembershipId(DatabaseSeeder.Harbourview, "priya@harbourview.example");
     private static readonly Guid Grace = DatabaseSeeder.MembershipId(DatabaseSeeder.Northgate, "grace@northgate.example");
     private static readonly Guid Mateo = DatabaseSeeder.ChildId(DatabaseSeeder.Harbourview, "Mateo Rivera");
 
@@ -72,6 +73,21 @@ public sealed class IncidentTests : IAsyncLifetime
         Assert.Equal(2, log.GetProperty("incidents").GetArrayLength());
         Assert.Equal(HttpStatusCode.NotFound, (await _factory.ClientFor(Jaylen).GetAsync($"/incidents/{aishas}")).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await _factory.ClientFor(Tom).GetAsync($"/incidents/{aishas}")).StatusCode);
+    }
+
+    [Fact]
+    public async Task Youth_workers_and_volunteer_coordinators_report_but_never_read_others_reports()
+    {
+        var jaylens = (await (await _factory.ClientFor(Jaylen).PostAsJsonAsync("/incidents", Report())).Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
+
+        foreach (var reader in new[] { Aisha, Priya })
+        {
+            Assert.Equal(HttpStatusCode.Created, (await _factory.ClientFor(reader).PostAsJsonAsync("/incidents", Report() with { Category = "Other" })).StatusCode);
+            var mine = await _factory.ClientFor(reader).GetFromJsonAsync<JsonElement>("/incidents");
+            Assert.False(mine.GetProperty("canReadLog").GetBoolean());
+            Assert.Equal(["Other"], mine.GetProperty("incidents").EnumerateArray().Select(i => i.GetProperty("category").GetString()));
+            Assert.Equal(HttpStatusCode.NotFound, (await _factory.ClientFor(reader).GetAsync($"/incidents/{jaylens}")).StatusCode);
+        }
     }
 
     [Fact]

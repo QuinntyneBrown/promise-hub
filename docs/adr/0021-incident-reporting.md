@@ -14,6 +14,8 @@ Prompt 19 lets a site lead record an incident and submit it for supervisor revie
 - **Reads.** `GET /incidents` returns `canReadLog` and the readable incidents; `GET /incidents/{id}` audits every view; `GET /incidents/form` gives the children and the supervisor. All of it needs the Incident log module.
 - **Pages.** `IncidentsPage`, `NewIncidentPage` and `IncidentPage` in the `incidents` library, composed from existing library components.
 
+- **Not found, not forbidden.** Prompt 20 asks for others' reports to be refused on the server; they are refused with 404 rather than 403, as `L2-023` criterion 3 requires, so a youth worker can't learn that a report exists.
+
 ## Consequences
 
 Review, notes and reopening are prompt 20. Several children on one report, restricted names, saving a draft on the server and in-app notifications come later.
