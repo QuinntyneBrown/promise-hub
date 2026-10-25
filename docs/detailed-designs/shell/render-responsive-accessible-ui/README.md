@@ -47,6 +47,10 @@ Guardian pages use `GuardianShellComponent` from the library: one column, a thin
 - **Layout specs** — stats per row, stacked filters, phone tab bar and wrapped badges under 640 px; four stats per row and the top bar from 768 px; two columns from 1024 px; search from 1280 px; 1280 px container at 1600 px with the organization switcher (`L2-036`).
 - **Contrast** — `docs/design-system/tokens/contrast-pairs.json` is checked by the design-system script; the e2e axe run re-checks rendered pairs.
 
+## Built so far
+
+Slice 01 delivered tokens and foundations in the components library, the Today empty state, the five error pages and axe checks on every screen at desktop and phone widths.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

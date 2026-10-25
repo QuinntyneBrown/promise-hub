@@ -133,6 +133,12 @@ Rules (MUST be followed):
 - Keep secrets out of the repo; use configuration and environment variables.
 - Read the relevant ADRs in `docs/adr/` before changing the areas they cover.
 
+## One file per type
+
+- Angular components are never single-file: each has its own `.ts`, `.html` and, when it needs styles, `.css`. No inline `template` or `styles`.
+- Backend: one type per file (class, record, interface, enum), named after the type. Small nested or tightly coupled types are the exception, not the rule.
+- Frontend: the same applies to services, contracts, models and tokens: one exported type per file.
+
 ## Frontend conventions
 
 - Prettier owns formatting and the linter owns lint; CI fails on either.

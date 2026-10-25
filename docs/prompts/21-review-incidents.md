@@ -23,6 +23,7 @@ Why now: Completes incidents.
 - Follow `AGENTS.md` exactly, especially:
   - The mandatory repository layout; files go only where the tree assigns them.
   - Components library is mandatory: every design-system component is built once in `frontend/projects/components/` and reused; no local copies or restyles in feature libraries.
+  - One file per type: Angular components use separate `.ts`, `.html` and (when needed) `.css` files, never inline templates or styles; backend and frontend keep one type per file.
   - Feature libraries depend only on `components` and `api`; pages use API tokens, never `HttpClient`; dialogs use Angular CDK Dialog; no inline forms.
   - Multi-tenant: tenant from membership, every query filtered by organization id, a cross-tenant integration test per endpoint.
   - Module: **Incident log**. Include the module-off acceptance case: the route redirects to Today and the API answers 404.

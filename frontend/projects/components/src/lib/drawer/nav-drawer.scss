@@ -1,0 +1,87 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  width: min(var(--layout-sidebar-width), calc(100vw - var(--space-12)));
+  height: 100dvh;
+  border-right: var(--border-width-hairline) solid var(--color-border-default);
+  background: var(--color-bg-surface-raised);
+  color: var(--color-fg-default);
+  box-shadow: var(--shadow-4);
+  animation: slide-in-start var(--duration-base) var(--ease-enter);
+}
+.nav-drawer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--border-width-hairline) solid var(--color-border-default);
+}
+.nav-drawer__title {
+  font: var(--text-h4);
+}
+.close {
+  display: inline-grid;
+  place-items: center;
+  width: var(--control-height-md);
+  height: var(--control-height-md);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-fg-default);
+  cursor: pointer;
+}
+.close:hover {
+  background: var(--color-bg-subtle);
+}
+.nav-drawer__nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  overflow-y: auto;
+}
+.nav-drawer__link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--target-comfortable);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--color-fg-muted);
+  font: var(--text-label);
+  text-decoration: none;
+}
+.nav-drawer__link:hover {
+  background: var(--color-bg-subtle);
+  color: var(--color-fg-default);
+}
+.nav-drawer__link[aria-current='page'] {
+  background: var(--color-accent-subtle);
+  color: var(--color-fg-accent);
+}
+.nav-drawer__identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-top: var(--border-width-hairline) solid var(--color-border-default);
+}
+.name {
+  font: var(--text-label);
+}
+.context {
+  font: var(--text-caption);
+  color: var(--color-fg-muted);
+}
+@keyframes slide-in-start {
+  from {
+    transform: translateX(-100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :host {
+    animation: none;
+  }
+}

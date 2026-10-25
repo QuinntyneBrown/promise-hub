@@ -360,7 +360,12 @@
             "browser": "projects/promisehub/src/main.ts",
             "tsConfig": "projects/promisehub/tsconfig.app.json",
             "assets": ["projects/promisehub/src/favicon.ico"],
-            "styles": ["projects/promisehub/src/styles.css"]
+            "styles": [
+              "projects/components/src/styles/tokens.css",
+              "projects/components/src/styles/foundation.css",
+              "projects/promisehub/src/styles.css"
+            ],
+            "inlineStyleLanguage": "scss"
           },
           "configurations": {
             "production": {
@@ -391,7 +396,10 @@
               "buildTarget": "promisehub:build:development"
             }
           },
-          "defaultConfiguration": "development"
+          "defaultConfiguration": "development",
+          "options": {
+            "proxyConfig": "projects/promisehub/proxy.conf.json"
+          }
         },
         "lint": {
           "builder": "@angular-eslint/builder:lint",

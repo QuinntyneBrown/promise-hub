@@ -29,7 +29,7 @@ PromiseHub is a web app that helps youth-serving organizations keep their promis
 
 The scaffold also requires .NET SDK 10.0.402 (pinned in `backend/global.json`), Node.js 22.22.3 or newer in the 22.x line (24 and 26 are also supported), and npm.
 
-### Scaffold setup and checks
+### Setup and checks
 
 ```sh
 cd frontend
@@ -38,7 +38,7 @@ npm run check
 npm start
 ```
 
-The Angular app starts at `http://localhost:4200` and renders a blank router outlet. All feature routes and shared library exports are placeholders. `npm run check` checks Prettier formatting, runs angular-eslint across all projects and builds every library and the app. Use `npm run format` to apply formatting.
+The Angular app starts at `http://localhost:4200` and proxies `/api` to the API on `http://localhost:5080`. `npm run check` checks Prettier formatting, runs angular-eslint across all projects and builds every library and the app. Use `npm run format` to apply formatting.
 
 Installing frontend dependencies also installs root `.husky/` hooks. Before commits, the hook checks frontend formatting and lint and backend formatting. It requires Node and the .NET SDK on PATH. CI sets `HUSKY=0` and runs checks directly.
 
@@ -49,10 +49,22 @@ dotnet restore backend/PromiseHub.sln
 dotnet build backend/PromiseHub.sln --no-restore
 dotnet test backend/PromiseHub.sln --no-build
 dotnet format backend/PromiseHub.sln --verify-no-changes --no-restore
-dotnet run --project backend/src/PromiseHub.Api -- --urls http://localhost:5000
+$env:ASPNETCORE_ENVIRONMENT = "Development"   # PowerShell; export ASPNETCORE_ENVIRONMENT=Development in sh
+dotnet run --project backend/src/PromiseHub.Cli -- migrate
+dotnet run --project backend/src/PromiseHub.Cli -- seed
+dotnet run --project backend/src/PromiseHub.Api -- --urls http://localhost:5080
 ```
 
-The API host has no endpoints and returns 404. No persistence, authentication, migrations or external providers are wired. The CLI has no commands and exits with code 1. The four test projects contain no tests; a successful test command provides no behavior coverage. Angular unit tests and Playwright setup will be added with implementation and must use Chromium only.
+The CLI owns the schema: `migrate` (`--check` exits 3 when migrations are pending), `seed` (idempotent; two organizations) and `reset` (Development or `--force`). The API refuses to start against a database with pending migrations. Local data is a SQLite file, `backend/promisehub.dev.db` ([ADR 0001](docs/adr/0001-sqlite-for-persistence.md)).
+
+The Playwright suite runs in Chromium with the backend faked; it starts only the frontend:
+
+```sh
+cd e2e
+npm ci
+npx playwright install chromium
+npx playwright test
+```
 
 See [backend/README.md](backend/README.md) and [frontend/README.md](frontend/README.md) for scaffold boundaries.
 

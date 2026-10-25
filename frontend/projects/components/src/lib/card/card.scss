@@ -1,0 +1,12 @@
+:host {
+  display: block;
+  background: var(--color-bg-surface);
+  border: var(--border-width-hairline) solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  padding: var(--space-6);
+}
+:host(.card--flush) {
+  padding: 0;
+  overflow: hidden;
+}

@@ -1,5 +1,4 @@
-# Scaffold only. Overwrite or delete as implementation requires.
-name: Scaffold checks
+name: Checks
 on:
   push:
   pull_request:
@@ -22,6 +21,29 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run check
+  e2e:
+    # Playwright 1.56 supports Ubuntu up to 24.04.
+    runs-on: ubuntu-24.04
+    env:
+      HUSKY: '0'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.2'
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            e2e/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - run: npm ci
+        working-directory: e2e
+      - run: npx playwright install --with-deps chromium
+        working-directory: e2e
+      # The backend is faked; webServer starts only the frontend.
+      - run: npx playwright test
+        working-directory: e2e
   backend:
     runs-on: ubuntu-latest
     steps:
@@ -32,5 +54,4 @@ jobs:
       - run: dotnet restore backend/PromiseHub.sln
       - run: dotnet build backend/PromiseHub.sln --no-restore
       - run: dotnet format backend/PromiseHub.sln --verify-no-changes --no-restore
-      # No tests yet; this verifies that the empty test projects load.
       - run: dotnet test backend/PromiseHub.sln --no-build

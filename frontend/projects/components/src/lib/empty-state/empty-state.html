@@ -1,0 +1,9 @@
+<span class="empty__icon"><ph-icon [name]="icon()" size="lg" /></span>
+@if (headingLevel() === 1) {
+  <h1 class="empty__title">{{ title() }}</h1>
+} @else {
+  <h2 class="empty__title">{{ title() }}</h2>
+}
+<p class="empty__text" data-testid="empty-state-text">{{ text() }}</p>
+<ng-content select="[phEmptyStateDetail]" />
+<div class="empty__actions"><ng-content /></div>

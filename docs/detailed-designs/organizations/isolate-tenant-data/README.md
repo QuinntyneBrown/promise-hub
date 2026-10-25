@@ -44,6 +44,10 @@ The web app carries no tenant id in requests. The typed clients in `frontend/pro
 
 Every feature's integration suite in `backend/tests/PromiseHub.Api.Tests/` includes one cross-tenant test that signs in as organization A and requests organization B's record by id, asserting 404 and the audit entry (criterion 4). The seeder creates at least two organizations, each with a child named "Mateo Rivera", so the search case of criterion 1 is testable from seed data.
 
+## Built so far
+
+Slice 01 delivered `ITenantOwned`, the query filter and save guard on `PromiseHubDbContext`, `TenantContextMiddleware` (session claim `membership_id`) and the cross-tenant 404 with an `AccessDenied` audit entry on `GET /children/{id}`. Without a mediator (ADR 0003) the cross-tenant check lives in the handler; ADR 0002 records the rules. `ClientTenantValueFilter` is unnecessary because no handler reads an organization id from the request; `TenantScope`, `JobRunner`, search and exports arrive with their features.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

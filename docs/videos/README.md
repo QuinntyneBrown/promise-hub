@@ -8,7 +8,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 
 | # | Video | Runtime | Covers |
 |---|---|---|---|
-| _none yet_ | | | |
+| 01 | [The walking skeleton](01-walking-skeleton/README.md) | ~3.5 min | Tenancy, migrate and seed, audit recording, the shell |
 
 ## Making or updating a video
 

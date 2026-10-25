@@ -1,0 +1,23 @@
+:host {
+  display: inline-flex;
+  flex: none;
+  width: var(--size-icon-md);
+  height: var(--size-icon-md);
+}
+:host(.icon--sm) {
+  width: var(--size-icon-sm);
+  height: var(--size-icon-sm);
+}
+:host(.icon--lg) {
+  width: var(--size-icon-lg);
+  height: var(--size-icon-lg);
+}
+svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
