@@ -20,7 +20,7 @@ import {
   PhTextField,
   RadioOption,
   ToastService,
-  formatWhen,
+  formatDateTime,
 } from '@promisehub/components';
 
 /**
@@ -93,7 +93,7 @@ export class SignOnTabletPage {
   }
 
   protected when(s: Slip): string {
-    return formatWhen(s.eventStartsAt, s.eventStartsAt);
+    return formatDateTime(s.eventStartsAt);
   }
 
   protected sign(s: Slip, f: UnsignedFamily): void {
