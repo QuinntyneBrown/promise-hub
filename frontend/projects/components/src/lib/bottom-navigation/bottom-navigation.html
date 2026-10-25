@@ -1,0 +1,20 @@
+<nav class="tabbar" aria-label="Primary, phone">
+  @for (item of tabs(); track item.link) {
+    <a
+      [routerLink]="item.link"
+      routerLinkActive
+      ariaCurrentWhenActive="page"
+      [routerLinkActiveOptions]="{ exact: item.link === homeLink() }"
+    >
+      <ph-icon [name]="item.icon" size="lg" />{{ item.label }}
+    </a>
+  }
+  <button
+    type="button"
+    aria-haspopup="dialog"
+    [attr.aria-expanded]="menuOpen()"
+    (click)="moreRequested.emit()"
+  >
+    <ph-icon name="menu" size="lg" />More
+  </button>
+</nav>

@@ -4,7 +4,6 @@ using PromiseHub.Domain.Audit;
 
 namespace PromiseHub.Application.Households;
 
-public sealed record ChildDto(Guid Id, string Name);
 
 public sealed class GetChildHandler(IPromiseHubDb db, IAuditWriter audit)
 {

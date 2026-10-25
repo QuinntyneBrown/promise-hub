@@ -1,0 +1,23 @@
+<ph-skip-link />
+<div class="has-tabbar">
+  @if (session(); as s) {
+    <ph-top-bar
+      [items]="navigation"
+      [personName]="s.personName"
+      [menuOpen]="menuOpen()"
+      (moreRequested)="openMenu(s)"
+      (accountRequested)="openMenu(s)"
+      (searched)="search($event)"
+    />
+  }
+  <main id="main" class="container">
+    <router-outlet />
+  </main>
+  @if (session(); as s) {
+    <ph-bottom-navigation
+      [items]="navigation"
+      [menuOpen]="menuOpen()"
+      (moreRequested)="openMenu(s)"
+    />
+  }
+</div>

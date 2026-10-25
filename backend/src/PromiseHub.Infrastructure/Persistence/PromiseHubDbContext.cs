@@ -98,5 +98,3 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
         }
     }
 }
-
-public sealed class AuditImmutableException() : InvalidOperationException("Audit entries cannot be edited or deleted.");

@@ -1,0 +1,63 @@
+<header class="topbar">
+  <a class="topbar__brand" [routerLink]="homeLink()" aria-label="PromiseHub home">
+    <ph-brand-mark />
+    <span class="topbar__brand-name">PromiseHub</span>
+  </a>
+  <nav class="topbar__nav" aria-label="Primary">
+    @for (item of items(); track item.link) {
+      @if (item.placement !== 'overflow') {
+        <a
+          class="nav-link"
+          [class.nav-link--wide]="item.placement === 'wide'"
+          [routerLink]="item.link"
+          routerLinkActive
+          ariaCurrentWhenActive="page"
+          [routerLinkActiveOptions]="{ exact: item.link === homeLink() }"
+          >{{ item.label }}</a
+        >
+      }
+    }
+    <button
+      class="nav-link nav-link--more"
+      type="button"
+      aria-haspopup="dialog"
+      [attr.aria-expanded]="menuOpen()"
+      (click)="moreRequested.emit()"
+    >
+      More<ph-icon name="chevron-down" size="sm" />
+    </button>
+  </nav>
+  <span class="topbar__spacer"></span>
+  <form class="topbar__search" role="search" (ngSubmit)="searched.emit(query)">
+    <label class="visually-hidden" for="global-q">Search children, families and events</label>
+    <input
+      class="input"
+      id="global-q"
+      name="q"
+      type="search"
+      placeholder="Search"
+      [(ngModel)]="query"
+    />
+  </form>
+  <button
+    class="icon-button"
+    type="button"
+    aria-haspopup="dialog"
+    [attr.aria-label]="unread() ? 'Notifications, ' + unread() + ' unread' : 'Notifications'"
+    (click)="notificationsRequested.emit()"
+  >
+    <ph-icon name="notifications" />
+    @if (unread()) {
+      <span class="count" aria-hidden="true">{{ unread() }}</span>
+    }
+  </button>
+  <button
+    class="avatar-trigger"
+    type="button"
+    aria-haspopup="menu"
+    [attr.aria-label]="'Account menu for ' + personName()"
+    (click)="accountRequested.emit()"
+  >
+    <ph-avatar [name]="personName()" size="sm" [tint]="avatarTint()" />
+  </button>
+</header>

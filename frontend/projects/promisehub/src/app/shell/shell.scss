@@ -1,0 +1,13 @@
+.has-tabbar {
+  padding-bottom: calc(var(--layout-tabbar-height) + var(--space-6));
+}
+
+main:focus {
+  outline: none;
+}
+
+@media (min-width: 48rem) {
+  .has-tabbar {
+    padding-bottom: 0;
+  }
+}

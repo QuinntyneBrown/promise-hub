@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace PromiseHub.Application.Organizations;
 
-public sealed record SessionDto(string PersonName, string Role, Guid OrganizationId, string OrganizationName, string Plan);
 
 public sealed class GetSessionHandler(IPromiseHubDb db, ITenantContext tenant)
 {

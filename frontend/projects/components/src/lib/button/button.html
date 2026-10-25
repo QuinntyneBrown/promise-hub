@@ -1,0 +1,28 @@
+<ng-template #content>
+  @if (icon(); as name) {
+    <ph-icon [name]="name" />
+  }
+  <ng-content />
+</ng-template>
+@if (link(); as target) {
+  <a
+    [class]="classes()"
+    [routerLink]="target"
+    [attr.aria-label]="label()"
+    [attr.aria-current]="current() ? 'page' : null"
+  >
+    <ng-container *ngTemplateOutlet="content" />
+  </a>
+} @else {
+  <button
+    [class]="classes()"
+    [type]="type()"
+    [disabled]="disabled()"
+    [attr.aria-busy]="busy() || null"
+    [attr.aria-label]="label()"
+    [attr.aria-haspopup]="hasPopup()"
+    [attr.aria-expanded]="expanded()"
+  >
+    <ng-container *ngTemplateOutlet="content" />
+  </button>
+}

@@ -1,2 +1,2 @@
-// Scaffold only. Overwrite or delete as implementation requires. No product logic is implemented.
 export { routes } from './lib/today.routes';
+export { TodayPage } from './lib/today-page';
