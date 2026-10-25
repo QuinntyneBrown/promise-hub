@@ -42,7 +42,7 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Message | `message` (default, error) | `ph-breadcrumb`, `ph-page-header`, `ph-stat`, `ph-card` (titled, flush), `ph-table` (badge cells), `ph-sms-preview`, `ph-empty-state`, `ph-button` | Refresh while sending |
 | Permission slips | `slips` (default, empty, error) | `ph-page-header`, `ph-progress-bar`, `ph-badge`, `ph-card`, `ph-empty-state`, `ph-button` | Slip rows with a progress bar |
 | Slip editor | `slip-editor` (default, error, invalid, submitting, success, edit) | `ph-breadcrumb`, `ph-page-header`, `ph-error-summary`, `ph-alert`, `ph-card` (titled), `ph-text-field`, `ph-textarea` (counter), `ph-select`, `ph-switch`, `ph-radio-group`, `ph-progress-bar`, `ph-stat`, `ph-table`, `ph-button` | Draft, scheduled and sent modes |
-| Guardian home | `guardian-home` (status, declined, none, no-show, no-show-answered, error) | `ph-guardian-shell`, `ph-list`, `ph-list-item`, `ph-badge` (success, warning, danger, neutral), `ph-card`, `ph-text-field`, `ph-alert`, `ph-empty-state`, `ph-button` | Code check, language strings |
+| Guardian home | `guardian-home` (status, declined, none, no-show, no-show-answered, pickup-request, error) | `ph-guardian-shell`, `ph-list`, `ph-list-item`, `ph-badge` (success, warning, danger, neutral), `ph-card`, `ph-text-field`, `ph-alert`, `ph-empty-state`, `ph-button` | Code check, language strings |
 | Guardian slip | `slip-sign` (default, invalid, submitting, success, error, expired, already-signed, es) | `ph-guardian-shell`, `ph-card` (titled), `ph-description-list`, `ph-radio-group`, `ph-text-field`, `ph-alert`, `ph-empty-state`, `ph-button` | Code check, language strings |
 | Sign on this tablet | `sign-on-tablet` | `ph-page-header`, `ph-card` (titled), `ph-text-field`, `ph-radio-group`, `ph-alert`, `ph-empty-state`, `ph-button` | A screen, mounted under check-in |
 | Roster review | `roster` (default, empty, error, forbidden, selected, waitlist) | `ph-breadcrumb`, `ph-page-header`, `ph-tabs` (tablist), `ph-list`, `ph-list-item` (with lead), `ph-checkbox`, `ph-bulk-action-bar`, `ph-card`, `ph-empty-state`, `ph-error-page` (forbidden), `ph-button`, toast | Selection set |
@@ -79,7 +79,7 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Archive program | `archive-program` | `ph-dialog`, `ph-text-field`, `ph-button` |
 | Cancel event | `cancel-event` | `ph-dialog`, `ph-textarea`, `ph-switch`, `ph-button` |
 | Check-in sheet | `check-in-sheet` | `ph-dialog`, `ph-radio-group`, `ph-text-field` (time), `ph-button` |
-| Sign out | `confirm-pickup` (default, invalid, failed, confirm) | `ph-dialog`, `ph-radio-group` (with error), `ph-alert` (warning, danger), `ph-button` (tel: link), `ph-text-field`, `ph-switch` (with error) |
+| Sign out | `confirm-pickup` (default, invalid, failed, confirm, ask) | `ph-dialog`, `ph-radio-group` (with error), `ph-alert` (warning, danger), `ph-button` (tel: link), `ph-text-field`, `ph-switch` (with error) |
 | Send now | `send-now` | `ph-dialog`, `ph-button` |
 | Cancel send | `cancel-send` | `ph-dialog`, `ph-button` (danger) |
 | Decline slip | `decline-slip` | `ph-dialog`, `ph-textarea`, `ph-button` (danger) |

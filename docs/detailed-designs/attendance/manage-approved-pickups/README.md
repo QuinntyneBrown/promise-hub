@@ -17,7 +17,7 @@ The feature belongs to the `attendance` subsystem and the Pickup module. Pickup 
 
 ## Built so far
 
-Slice 26 delivered `ApprovedPickup`, `ApprovedPickupsHandler`, the staff and guardian pickup endpoints, `AddPickupDialog` and `RemovePickupDialog` on `QuickCardPage`, `GuardianPickupDialog` and the pickups section on the guardian home, `PICKUP_API` and the guardian API methods (ADR 0024). Photo ID, refuse and report, and a household-page view are not built yet.
+Slice 26 delivered `ApprovedPickup`, `ApprovedPickupsHandler`, the staff and guardian pickup endpoints, `AddPickupDialog` and `RemovePickupDialog` on `QuickCardPage`, `GuardianPickupDialog` and the pickups section on the guardian home, `PICKUP_API` and the guardian API methods (ADR 0024). Slice 27 delivered `PickupRequest` with the ask, status and guardian decision endpoints, the ask-by-text answer in `SignOutDialog`, the approve or refuse alert on the guardian home, and the refused-pickup incident. Photo ID and a household-page view are not built yet.
 
 ## Description
 

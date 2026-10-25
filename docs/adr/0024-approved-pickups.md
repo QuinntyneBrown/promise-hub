@@ -14,6 +14,8 @@ Prompt 26 lets guardians and staff add or remove the adults authorized to collec
 - **Guardians.** The family page (`/g/home/:token`, ADR 0020) lists each child's approved adults and adds or removes them through `/g/home/{token}/children/{childId}/pickups` after the code check, limited to the household's own children.
 - **Screens.** Staff manage the list from the Quick Card (the `attendance` library, which owns Pickup) with `AddPickupDialog` and `RemovePickupDialog`; guardians use `GuardianPickupDialog` in the `guardian` library. The household page in the `households` library is unchanged, since a feature library maps to one module.
 
+- **Asking the guardian (prompt 27).** From the sign-out dialog, staff can text the household about an adult not on the list (`POST /sessions/{id}/pickup-requests`, a `PickupRequest`); the text links to the family page, where the guardian approves or refuses. The dialog polls `GET /pickup-requests/{id}`. An approved request for that child, session and name counts as the guardian's okay at sign-out; a refused one blocks it and, with the Incident log on, creates a `PickupOrSafeguarding` incident reported by the staff member who asked.
+
 ## Consequences
 
-Photo ID on file, refusing and reporting at sign-out, and the household page's staff view are later. Texts are in English until messages are translated.
+Photo ID on file and the household page's staff view are later. Texts are in English until messages are translated.
