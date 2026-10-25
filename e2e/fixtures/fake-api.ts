@@ -379,6 +379,8 @@ export class FakeApi {
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/check-ins$/, (route, p) => this.attend(route, p['id']!, 'Present')],
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/absences$/, (route, p) => this.attend(route, p['id']!, 'Absent')],
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/walk-ins$/, (route, p) => this.addWalkIn(route, p['id']!)],
+    ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/end$/, (route, p) => this.endSession(route, p['id']!)],
+    ['PUT', /^\/api\/sessions\/(?<id>[^/]+)\/notes$/, (route, p) => this.sessionNotes(route, p['id']!)],
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/sign-outs$/, (route, p) => this.signChildOut(route, p['id']!)],
     ['GET', /^\/api\/children\/(?<id>[^/]+)\/pickups$/, (route, p) => this.pickups(route, p['id']!)],
     ['GET', /^\/api\/programs\/(?<id>[^/]+)\/enrollments$/, (route, p) => this.listEnrollmentRequests(route, p['id']!)],
@@ -1102,6 +1104,9 @@ export class FakeApi {
       absent,
       notYet: ids.length - checkedIn - absent,
       status: e.status,
+      endedAt: e.endedAt ?? null,
+      endedBy: e.endedBy ?? null,
+      notes: e.notes ?? null,
     };
   }
 
@@ -1164,6 +1169,50 @@ export class FakeApi {
     return route.fulfill({ json: { session: this.sessionSummary(e), children: [...children, ...walkIns].sort((a, b) => a.name.localeCompare(b.name)) } });
   }
 
+  private async runnableSession(route: Route, id: string) {
+    const m = await this.rollCallCaller(route);
+    if (!m) return null;
+    if (!can.runSessions(m)) {
+      await this.forbidden(route);
+      return null;
+    }
+    const e = this.ownEvent(m, id);
+    if (!e) {
+      await route.fulfill({ status: 404 });
+      return null;
+    }
+    if (!this.mayRun(m, e.id)) {
+      await this.forbidden(route);
+      return null;
+    }
+    return { m, e };
+  }
+
+  private async endSession(route: Route, id: string): Promise<void> {
+    const found = await this.runnableSession(route, id);
+    if (!found) return;
+    const { m, e } = found;
+    if (e.status !== 'Scheduled') return route.fulfill({ status: 409, json: { code: 'conflict' } });
+    const b = route.request().postDataJSON() as { notCheckedIn: 'MarkAbsent' | 'LeaveNotRecorded'; notSignedOut: 'SignOutAtEnd' | 'LeaveUnsigned' };
+    const records = this.sessionRecords(e.id);
+    const p = this.programs.find((x) => x.id === e.programId)!;
+    for (const childId of p.roster) {
+      const r = records.get(childId);
+      if ((!r || r.status === 'NotYet') && b.notCheckedIn === 'MarkAbsent') records.set(childId, { status: 'Absent', checkedInAt: null });
+      else if (r?.status === 'Present' && b.notSignedOut === 'SignOutAtEnd') records.set(childId, { ...r, status: 'SignedOut', signedOutAt: e.endsAt, collectedBy: 'A guardian, at the end of the session' });
+    }
+    Object.assign(e, { status: 'Ended', endedAt: NOW.toISOString(), endedBy: m.personName });
+    return route.fulfill({ json: this.sessionSummary(e) });
+  }
+
+  private async sessionNotes(route: Route, id: string): Promise<void> {
+    const found = await this.runnableSession(route, id);
+    if (!found) return;
+    const b = route.request().postDataJSON() as { notes: string | null };
+    found.e.notes = b.notes?.trim() || null;
+    return route.fulfill({ status: 204 });
+  }
+
   private async attend(route: Route, id: string, status: 'Present' | 'Absent'): Promise<void> {
     const m = await this.rollCallCaller(route);
     if (!m) return;
@@ -1174,6 +1223,7 @@ export class FakeApi {
     const b = route.request().postDataJSON() as { childId: string; arrivedAt?: string | null; clientActionId: string };
     if (this.actions.has(b.clientActionId)) return route.fulfill({ json: { status: 'saved' } });
     if (e.status === 'Cancelled') return route.fulfill({ status: 422, json: { errors: { session: 'This session is cancelled.' } } });
+    if (e.status === 'Ended') return route.fulfill({ status: 422, json: { errors: { session: 'This session has ended.' } } });
     const p = this.programs.find((x) => x.id === e.programId)!;
     if (!p.roster.includes(b.childId)) {
       return route.fulfill({ status: 422, json: { errors: { childId: 'This child is not on tonight’s roster. Add a walk-in instead.' } } });

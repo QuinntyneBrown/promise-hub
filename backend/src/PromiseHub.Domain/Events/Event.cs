@@ -50,6 +50,21 @@ public sealed class Event : ITenantOwned
         StaffNotes = staffNotes;
     }
 
+    public DateTimeOffset? EndedAt { get; private set; }
+    public string? EndedBy { get; private set; }
+
+    /// <summary>The site lead's notes for the next site lead or the director.</summary>
+    public string? SessionNotes { get; private set; }
+
+    public void End(string actor, DateTimeOffset now)
+    {
+        Status = EventStatus.Ended;
+        EndedAt = now;
+        EndedBy = actor;
+    }
+
+    public void SaveNotes(string? notes) => SessionNotes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim();
+
     public void Cancel(string actor, DateTimeOffset now, string? message, bool tellGuardians)
     {
         Status = EventStatus.Cancelled;

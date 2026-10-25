@@ -1,0 +1,30 @@
+<form novalidate (ngSubmit)="end()">
+  <ph-dialog
+    [title]="'End ' + data.name + '?'"
+    [description]="data.notYet + ' not checked in and ' + data.stillIn + ' not signed out.'"
+  >
+    @if (failed()) {
+      <ph-alert
+        tone="danger"
+        title="That didn’t go through"
+        text="The session is still open. Try again."
+      />
+    }
+    <ph-radio-group
+      [legend]="'The ' + data.notYet + ' not checked in'"
+      name="notCheckedIn"
+      [options]="absentOptions"
+      [(ngModel)]="notCheckedIn"
+    />
+    <ph-radio-group
+      [legend]="'The ' + data.stillIn + ' not signed out'"
+      name="notSignedOut"
+      [options]="signOutOptions"
+      [(ngModel)]="notSignedOut"
+    />
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">End session</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

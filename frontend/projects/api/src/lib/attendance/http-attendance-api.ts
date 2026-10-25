@@ -40,6 +40,23 @@ export class HttpAttendanceApi implements AttendanceApi {
     );
   }
 
+  endSession(
+    sessionId: string,
+    notCheckedIn: 'MarkAbsent' | 'LeaveNotRecorded',
+    notSignedOut: 'SignOutAtEnd' | 'LeaveUnsigned',
+  ): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(`${this.baseUrl}/sessions/${sessionId}/end`, {
+        notCheckedIn,
+        notSignedOut,
+      }),
+    );
+  }
+
+  saveNotes(sessionId: string, notes: string): Observable<WriteOutcome> {
+    return toWrite(this.http.put<null>(`${this.baseUrl}/sessions/${sessionId}/notes`, { notes }));
+  }
+
   markAbsent(sessionId: string, childId: string, clientActionId: string): Observable<WriteOutcome> {
     return toWrite(
       this.http.post<null>(`${this.baseUrl}/sessions/${sessionId}/absences`, {

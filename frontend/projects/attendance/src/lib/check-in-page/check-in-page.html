@@ -50,7 +50,28 @@
         @for (other of others(); track other.id) {
           <ph-button size="sm" [link]="['/check-in', other.id]">{{ other.name }}</ph-button>
         }
+        @if (canRun()) {
+          <ph-button hasPopup="dialog" (click)="editNotes(s)">Session notes</ph-button>
+        }
+        @if (live()) {
+          <ph-button variant="primary" hasPopup="dialog" (click)="endSession(s)"
+            >End session</ph-button
+          >
+        }
       </ph-page-header>
+      @if (s.status === 'Ended') {
+        <ph-alert tone="success" title="Session recorded" [text]="recordedText(s)">
+          <ph-button link="/">Back to Today</ph-button>
+          @if (incidents()) {
+            <ph-button link="/incidents/new">Report an incident</ph-button>
+          }
+        </ph-alert>
+      }
+      @if (s.notes) {
+        <ph-card title="Session notes">
+          <p data-testid="session-notes">{{ s.notes }}</p>
+        </ph-card>
+      }
       <div class="kpis" role="group" aria-label="Session totals">
         <ph-stat label="Checked in" [value]="'' + t.checkedIn" data-testid="total-Checked in" />
         <ph-stat label="Absent" [value]="'' + t.absent" data-testid="total-Absent" />
@@ -113,7 +134,7 @@
             @if (query()) {
               <ph-button (click)="query.set('')">Clear search</ph-button>
             }
-            @if (canRun()) {
+            @if (live()) {
               <ph-button variant="primary" (click)="addWalkIn()">Add walk-in</ph-button>
             }
           </ph-empty-state>
@@ -160,7 +181,7 @@
                   }
                 }
               </ng-container>
-              @if (canRun()) {
+              @if (live()) {
                 @if (slipStatus(e) === 'Missing' && householdOf(e); as household) {
                   <ph-button
                     size="sm"
@@ -202,7 +223,7 @@
             </ph-roster-item>
           }
         </ph-roster>
-        @if (canRun()) {
+        @if (live()) {
           <div class="footer-action">
             <ph-button variant="ghost" (click)="addWalkIn()">Add walk-in</ph-button>
           </div>

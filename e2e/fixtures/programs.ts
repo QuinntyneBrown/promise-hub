@@ -31,7 +31,10 @@ export interface FakeEvent {
   requiresSlip: boolean;
   noShowAlert: boolean;
   staffNotes: string | null;
-  status: 'Scheduled' | 'Cancelled';
+  status: 'Scheduled' | 'Cancelled' | 'Ended';
+  endedAt?: string | null;
+  endedBy?: string | null;
+  notes?: string | null;
   slipStatus: 'NotNeeded' | 'Draft' | 'Scheduled' | 'Sent';
   cancelledAt: string | null;
   cancelledBy: string | null;

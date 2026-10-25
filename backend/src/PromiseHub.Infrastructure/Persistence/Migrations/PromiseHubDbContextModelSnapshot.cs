@@ -376,6 +376,12 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTimeOffset?>("EndedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EndedBy")
+                        .HasColumnType("TEXT");
+
                     b.Property<long>("EndsAt")
                         .HasColumnType("INTEGER");
 
@@ -402,6 +408,9 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
 
                     b.Property<bool>("RequiresSlip")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("SessionNotes")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("StaffNotes")
                         .HasMaxLength(2000)

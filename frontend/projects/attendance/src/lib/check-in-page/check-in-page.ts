@@ -48,6 +48,8 @@ import {
 
 type Filter = 'all' | 'not-yet' | 'in' | 'absent';
 
+import { EndSessionData, EndSessionDialog } from '../end-session-dialog/end-session-dialog';
+import { SessionNotesDialog } from '../session-notes-dialog/session-notes-dialog';
 /**
  * Check-in (mock: check-in): tonight's roster with one-tap check-in. Taps update the row and the
  * totals at once and revert if the server refuses (L2-017 criterion 1).
@@ -99,6 +101,9 @@ export class CheckInPage {
   protected readonly filter = signal<Filter>('all');
   protected readonly query = signal('');
   protected readonly canRun = computed(() => !!this.me() && can(this.me()!.role, 'runSessions'));
+  /** Check-in actions are offered only while the session is open; an ended session is read-only. */
+  protected readonly live = computed(() => this.canRun() && this.session()?.status === 'Scheduled');
+  protected readonly incidents = computed(() => !!this.me()?.modules.includes('Incidents'));
   /** Names open the Quick Card only while that module is on. */
   protected readonly quickCards = computed(() => !!this.me()?.modules.includes('QuickCards'));
   /** Sign out is offered only while the Pickup module is on. */
@@ -204,6 +209,47 @@ export class CheckInPage {
                 .join(' · ')
             : 'Not yet here';
     return [status, e.school?.split(', ')[1] ?? null].filter(Boolean).join(' · ');
+  }
+
+  protected endSession(s: SessionSummary): void {
+    const stillIn = this.entries().filter((e) => e.status === 'Present').length;
+    this.dialogs
+      .open<boolean, EndSessionData, EndSessionDialog>(EndSessionDialog, {
+        sessionId: s.id,
+        name: s.name,
+        notYet: s.notYet,
+        stillIn,
+        endTime: formatTime(new Date(s.endsAt)),
+      })
+      .closed.subscribe((done) => {
+        if (done) this.load(s.id);
+      });
+  }
+
+  protected editNotes(s: SessionSummary): void {
+    this.dialogs
+      .open<
+        boolean,
+        { sessionId: string; notes: string | null; incidents: boolean },
+        SessionNotesDialog
+      >(SessionNotesDialog, {
+        sessionId: s.id,
+        notes: s.notes ?? null,
+        incidents: this.incidents(),
+      })
+      .closed.subscribe((done) => {
+        if (!done) return;
+        this.toasts.show({
+          tone: 'success',
+          title: 'Notes saved',
+          text: 'The next site lead can read them.',
+        });
+        this.load(s.id);
+      });
+  }
+
+  protected recordedText(s: SessionSummary): string {
+    return `${s.checkedIn} present, ${s.absent} absent. Attendance saved.`;
   }
 
   protected subtitle(s: SessionSummary): string {

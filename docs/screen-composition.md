@@ -35,7 +35,7 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Events | `events` (default, no-results, error) | `ph-page-header`, `ph-text-field` (search), `ph-chip`, `ph-select`, `ph-list`, `ph-list-item`, `ph-badge`, `ph-card`, `ph-empty-state`, `ph-button` | Times via `formatWhen` |
 | Event | `event` (default, empty, cancelled) | `ph-breadcrumb`, `ph-page-header`, `ph-alert`, `ph-card` (titled), `ph-badge`, `ph-description-list`, `ph-button` | — |
 | Event form | `event-form` (default, invalid) | `ph-breadcrumb`, `ph-page-header`, `ph-card`, `ph-text-field`, `ph-select`, `ph-radio-group`, `ph-switch`, `ph-textarea`, `ph-alert`, `ph-button` | Local time conversion |
-| Check-in | `check-in` (default, empty, no-results, error, forbidden, day-of) | `ph-page-header`, `ph-stat`, `ph-text-field` (search), `ph-chip`, `ph-roster`, `ph-roster-item`, `ph-flag`, `ph-badge` (no-show: warning, info, neutral), `ph-card`, `ph-empty-state`, `ph-error-page` (forbidden), `ph-button`, toast | Optimistic roster state |
+| Check-in | `check-in` (default, empty, no-results, error, forbidden, day-of, complete) | `ph-page-header`, `ph-stat`, `ph-text-field` (search), `ph-chip`, `ph-roster`, `ph-roster-item`, `ph-flag`, `ph-badge` (no-show: warning, info, neutral), `ph-card`, `ph-empty-state`, `ph-error-page` (forbidden), `ph-button`, toast | Optimistic roster state |
 | Quick Card | `quick-card` (default, empty, forbidden, error) | `ph-avatar`, `ph-quick-card-alert`, `ph-alert`, `ph-card` (titled), `ph-description-list`, `ph-call-list`, `ph-list`, `ph-list-item`, `ph-badge`, `ph-empty-state`, `ph-button` | Section order, overline heading for the call list |
 | Messages | `messages` (default, empty, error, forbidden) | `ph-page-header`, `ph-alert` (danger, cap reached), `ph-list`, `ph-list-item`, `ph-badge`, `ph-card`, `ph-empty-state`, `ph-error-page`, `ph-button` | — |
 | New message | `new-message` (default, invalid, error, no-results, over-cap) | `ph-breadcrumb`, `ph-page-header`, `ph-alert`, `ph-card` (titled), `ph-select`, `ph-recipient-count`, `ph-textarea` (help, counter), `ph-radio-group` (disabled options), `ph-sms-preview`, `ph-button` | Debounced preview |
@@ -70,6 +70,8 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Review incident | `review-incident` (default, invalid, busy, failed) | `ph-dialog`, `ph-textarea`, `ph-radio-group`, `ph-alert`, `ph-button` |
 | Add a follow-up | `add-follow-up` | `ph-dialog`, `ph-textarea`, `ph-alert`, `ph-button` |
 | Reopen incident | `reopen-incident` | `ph-dialog`, `ph-alert`, `ph-button` |
+| End session | `end-session` (default, busy, failed) | `ph-dialog`, `ph-radio-group`, `ph-alert`, `ph-button` |
+| Session notes | `session-notes` (default, busy, failed) | `ph-dialog`, `ph-textarea`, `ph-alert`, `ph-button` |
 | Bulk review | `bulk-review` | `ph-dialog`, `ph-list`, `ph-list-item`, `ph-textarea`, `ph-alert`, `ph-button` |
 | Program actions / Event actions | `program-actions`, `event-actions` | `ph-dialog`, `ph-action-menu`, `ph-button` |
 | Archive program | `archive-program` | `ph-dialog`, `ph-text-field`, `ph-button` |

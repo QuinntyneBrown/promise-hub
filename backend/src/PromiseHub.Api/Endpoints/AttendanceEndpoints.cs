@@ -22,6 +22,13 @@ public static class AttendanceEndpoints
             Ok(await handler.HandleAsync(id, command, ct))).RequirePermission(Permission.RunSessions);
         sessions.MapPost("/{id:guid}/absences", async (Guid id, MarkAbsentCommand command, MarkAbsentHandler handler, CancellationToken ct) =>
             Ok(await handler.HandleAsync(id, command, ct))).RequirePermission(Permission.RunSessions);
+        sessions.MapPost("/{id:guid}/end", async (Guid id, EndSessionCommand command, EndSessionHandler handler, CancellationToken ct) =>
+        {
+            var (status, summary) = await handler.EndAsync(id, command, ct);
+            return summary is not null ? Results.Ok(summary) : new Application.Result(status).ToHttp();
+        }).RequirePermission(Permission.RunSessions);
+        sessions.MapPut("/{id:guid}/notes", async (Guid id, SessionNotesCommand command, EndSessionHandler handler, CancellationToken ct) =>
+            (await handler.SaveNotesAsync(id, command, ct)).ToHttp()).RequirePermission(Permission.RunSessions);
         sessions.MapPost("/{id:guid}/walk-ins", async (Guid id, AddWalkInCommand command, AddWalkInHandler handler, CancellationToken ct) =>
             (await handler.HandleAsync(id, command, ct)).ToHttp()).RequirePermission(Permission.RunSessions);
         sessions.MapPost("/{id:guid}/sign-outs", async (Guid id, SignOutCommand command, SignOutHandler handler, CancellationToken ct) =>

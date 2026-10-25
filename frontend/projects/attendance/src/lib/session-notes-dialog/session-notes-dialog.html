@@ -1,0 +1,25 @@
+<form novalidate (ngSubmit)="save()">
+  <ph-dialog title="Session notes" description="For the next site lead or the program director.">
+    @if (failed()) {
+      <ph-alert
+        tone="danger"
+        title="That didn’t go through"
+        text="Your notes are still here. Try again."
+      />
+    }
+    <ph-textarea
+      inputId="session-notes"
+      label="Notes"
+      name="notes"
+      [rows]="4"
+      [(ngModel)]="notes"
+    />
+    @if (data.incidents) {
+      <p>Something happened to a child? <a href="/incidents/new">Report an incident</a> instead.</p>
+    }
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Save notes</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

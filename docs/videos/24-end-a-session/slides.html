@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 24 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="24" data-video-title="End a session" data-parts="Introduction|Promises|Jaylen ends it|Read-only|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 24</div>
+  <h1>End a session</h1>
+  <p class="lead">Two questions, then the record is closed</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="Ending a session asks two questions.">
+  <h2>What ending a session promises</h2>
+  <ul>
+    <li>Not checked in: absent, or not recorded</li>
+    <li>Not signed out: at the end time, or later</li>
+    <li>Every change recorded with who made it</li>
+    <li>Read-only afterwards; notes any time</li>
+  </ul>
+</section>
+
+<section id="end" data-part="2" data-cue="Here is tonight's roster on Jaylen's phone." data-clip="clips/end-session-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>End session, then notes</h3><p>3 present, 1 absent, recorded.</p></div>
+</section>
+
+<section id="readonly" data-part="3" data-cue="If anyone tries to check a child in after the end">
+  <h2>Read-only after the end</h2>
+  <div class="cols">
+    <img class="shot" alt="The end-session dialog" src="shots/desktop-dialog.png">
+    <img class="shot" alt="The recorded session with notes" src="shots/phone-recorded.png">
+  </div>
+</section>
+
+<section id="testing" data-part="4" data-cue="Backend tests end the session both ways">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Check-in after the end</td><td>422, session has ended</td></tr>
+    <tr><td>End twice</td><td>409</td></tr>
+    <tr><td>Notes after the end</td><td>204, saved</td></tr>
+    <tr><td>Another organization / Roll Call off</td><td>404</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="5" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Two questions, then recorded</li><li>Read-only after</li><li>Notes for whoever is next</li></ul>
+  <p class="muted">Next: messaging families</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

@@ -15,7 +15,7 @@
 | Site lead | Run check-in offline | Use the cached roster and sync queued attendance when connectivity returns. | [5 days](detailed-designs/attendance/sync-offline-queue/README.md) | 0% |
 | Site lead | Resolve missing slips | See who lacks consent and collect a signature on a tablet. | [3 days](detailed-designs/slips/remind-and-clear/README.md) | 75% · [video](videos/13-resolve-missing-slips/README.md) |
 | Site lead | Follow up no-shows | Review missing children and guardian responses after alerts. | [5 days](detailed-designs/attendance/alert-no-show-and-end-session/README.md) | 75% · [video](videos/22-follow-up-no-shows/README.md) |
-| Site lead | End a session | Reconcile attendance and close the day's session. | [3 days](detailed-designs/attendance/alert-no-show-and-end-session/README.md) | 0% |
+| Site lead | End a session | Reconcile attendance and close the day's session. | [3 days](detailed-designs/attendance/alert-no-show-and-end-session/README.md) | 85% · [video](videos/24-end-a-session/README.md) |
 | Site lead | Report an incident | Record what happened and submit it for supervisor review. | [3 days](detailed-designs/incidents/report-and-review-incident/README.md) | 80% · [video](videos/19-report-an-incident/README.md) |
 | Program director | Create programs and events | Set schedules, capacity, and event details for enrolled children. | [7 days](detailed-designs/programs/manage-programs/README.md) | 75% · [video](videos/05-create-programs-and-events/README.md) |
 | Program director | Send permission slips | Write event consent, contact guardians, and monitor signatures. | [7 days](detailed-designs/slips/write-and-send-slip/README.md) | 70% · [video](videos/11-send-permission-slips/README.md) |
