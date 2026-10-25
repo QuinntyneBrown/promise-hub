@@ -31,6 +31,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 21 | [Review incidents](21-review-incidents/README.md) | ~2 min | A note and an outcome on every review, the reporter told, follow-ups kept after closing |
 | 22 | [Follow up no-shows](22-follow-up-no-shows/README.md) | ~2 min | One text per family fifteen minutes in, replies of 1 or 2, and who still needs a call |
 | 23 | [Respond to an absence alert](23-respond-to-an-absence-alert/README.md) | ~2 min | Reply 1 or 2, or tap the family page, and the roster shows the answer |
+| 24 | [End a session](24-end-a-session/README.md) | ~2 min | Mark absences, sign out the rest, keep notes; an ended session is read-only |
 
 ## Making or updating a video
 
