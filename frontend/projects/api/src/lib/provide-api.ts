@@ -12,6 +12,8 @@ import { HttpQuickCardApi } from './quick-cards/http-quick-card-api';
 import { QUICK_CARD_API } from './quick-cards/quick-card-api.token';
 import { PROGRAMS_API } from './programs/programs-api.token';
 import { HttpHouseholdsApi } from './households/http-households-api';
+import { HttpMessagingApi } from './messaging/http-messaging-api';
+import { MESSAGING_API } from './messaging/messaging-api.token';
 import { HttpModulesApi } from './modules/http-modules-api';
 import { MODULES_API } from './modules/modules-api.token';
 import { HttpSessionApi } from './session/http-session-api';
@@ -29,5 +31,6 @@ export function provideApi(): EnvironmentProviders {
     { provide: EVENTS_API, useClass: HttpEventsApi },
     { provide: ATTENDANCE_API, useClass: HttpAttendanceApi },
     { provide: QUICK_CARD_API, useClass: HttpQuickCardApi },
+    { provide: MESSAGING_API, useClass: HttpMessagingApi },
   ]);
 }

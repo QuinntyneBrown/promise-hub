@@ -18,6 +18,9 @@ export class PhTextarea implements ControlValueAccessor {
   readonly optional = input(false);
   readonly placeholder = input<string | null>(null);
   readonly error = input<string | null>(null);
+  readonly help = input<string | null>(null);
+  /** A counter under the field, such as "133 / 480". */
+  readonly count = input<string | null>(null);
 
   protected readonly value = signal('');
   protected readonly disabled = signal(false);

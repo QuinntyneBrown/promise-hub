@@ -1,0 +1,96 @@
+<ph-breadcrumb [items]="[{ label: 'Messages', link: '/messages' }, { label: 'New message' }]" />
+<ph-page-header title="New message" />
+@if (atCap()) {
+  <ph-alert
+    tone="warning"
+    [title]="
+      'You’ve used all ' + (cap()?.cap ?? 0).toLocaleString('en-CA') + ' SMS segments this month'
+    "
+    text="Texts resume on the 1st. Email still sends."
+  />
+}
+@if (previewFailed()) {
+  <ph-alert
+    tone="danger"
+    title="We couldn’t count recipients"
+    text="Try again; Send stays off until counted."
+  >
+    <ph-button size="sm" variant="primary" (click)="refresh()">Try again</ph-button>
+  </ph-alert>
+}
+@if (failed()) {
+  <ph-alert
+    tone="danger"
+    title="We couldn’t send the message"
+    text="Nothing was sent. Try again."
+  />
+}
+<form class="compose" novalidate (ngSubmit)="submit()">
+  <div class="split">
+    <div class="stack">
+      <ph-card title="Who">
+        <div class="stack">
+          <ph-select
+            inputId="audience"
+            label="Send to"
+            name="audience"
+            [options]="audiences()"
+            [ngModel]="audience()"
+            (ngModelChange)="audience.set($event)"
+          />
+          <ph-select
+            inputId="language"
+            label="Language"
+            name="language"
+            [options]="languages"
+            [ngModel]="language()"
+            (ngModelChange)="language.set($event)"
+          />
+          <ph-recipient-count
+            [count]="preview()?.recipientCount ?? null"
+            [detail]="detail()"
+            [warning]="errors()['audience'] ?? warning()"
+          />
+        </div>
+      </ph-card>
+      <ph-card title="What">
+        <div class="stack">
+          <ph-textarea
+            inputId="body"
+            label="Message"
+            name="body"
+            [rows]="5"
+            help="Sent as written to every household."
+            [count]="count()"
+            [error]="errors()['body'] ?? null"
+            [ngModel]="body()"
+            (ngModelChange)="body.set($event)"
+          />
+          <ph-radio-group
+            legend="Send by"
+            name="channel"
+            [options]="channels()"
+            [ngModel]="channel()"
+            (ngModelChange)="channel.set($event)"
+          />
+        </div>
+      </ph-card>
+    </div>
+    <aside class="stack" aria-label="Preview">
+      <ph-card title="What guardians see">
+        <ph-sms-preview
+          [text]="smsText()"
+          [characters]="preview()?.characters ?? smsText().length"
+          [segments]="preview()?.segments ?? 1"
+          [over]="!!preview()?.fallingBackToEmail"
+        />
+      </ph-card>
+    </aside>
+  </div>
+  <div class="form-actions">
+    <ph-button variant="ghost" link="/messages">Cancel</ph-button>
+    <ph-button variant="primary" type="submit" [busy]="busy()" [disabled]="!canSend()"
+      >Send to {{ preview()?.recipientCount ?? 0 }} guardians</ph-button
+    >
+  </div>
+</form>

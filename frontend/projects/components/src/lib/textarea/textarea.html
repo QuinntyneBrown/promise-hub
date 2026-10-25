@@ -12,10 +12,18 @@
   [disabled]="disabled()"
   [attr.placeholder]="placeholder()"
   [attr.aria-invalid]="error() ? 'true' : null"
-  [attr.aria-describedby]="error() ? inputId() + '-error' : null"
+  [attr.aria-describedby]="error() ? inputId() + '-error' : help() ? inputId() + '-help' : null"
   (input)="update($any($event.target).value)"
   (blur)="onTouched()"
 ></textarea>
+@if (help() || count()) {
+  <div class="meta">
+    <span class="help" [id]="inputId() + '-help'">{{ help() }}</span>
+    @if (count()) {
+      <span class="count" [attr.data-testid]="inputId() + '-count'">{{ count() }}</span>
+    }
+  </div>
+}
 @if (error()) {
   <div class="error" [id]="inputId() + '-error'" [attr.data-testid]="inputId() + '-error'">
     {{ error() }}

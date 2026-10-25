@@ -1,0 +1,14 @@
+<div
+  class="recipient-count"
+  role="status"
+  data-testid="recipient-count"
+  [attr.aria-describedby]="warning() ? id + '-warning' : null"
+>
+  <strong>{{ count() ?? '—' }}</strong> {{ noun() }}
+  @if (detail()) {
+    · {{ detail() }}
+  }
+</div>
+@if (warning()) {
+  <p class="warning" [id]="id + '-warning'">{{ warning() }}</p>
+}

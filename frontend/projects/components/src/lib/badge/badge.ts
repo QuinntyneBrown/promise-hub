@@ -9,5 +9,5 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   styleUrl: './badge.scss',
 })
 export class PhBadge {
-  readonly tone = input<'neutral' | 'info' | 'success' | 'warning'>('neutral');
+  readonly tone = input<'neutral' | 'info' | 'success' | 'warning' | 'danger'>('neutral');
 }

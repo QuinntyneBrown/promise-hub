@@ -41,3 +41,9 @@ export function toLocalInput(iso: string): string {
 export function fromLocalInput(value: string | null): string | null {
   return value ? new Date(value).toISOString() : null;
 }
+
+/** "Fri 30 Oct, 2:14 pm" for a moment, in the viewer's time zone. */
+export function formatDateTime(iso: string): string {
+  const d = new Date(iso);
+  return `${day.format(d)}, ${formatTime(d)}`;
+}

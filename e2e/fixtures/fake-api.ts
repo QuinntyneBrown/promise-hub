@@ -14,7 +14,57 @@ const can = {
   cancelEvents: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
   runSessions: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker'].includes(m.role),
   runAnySession: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
+  sendMessages: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
 };
+
+type ChannelChoice = 'TextWithEmailFallback' | 'EmailOnly' | 'TextOnly';
+
+interface FakeDelivery {
+  household: string;
+  guardian: string | null;
+  channel: 'Sms' | 'Email';
+  language: string;
+  status: 'Queued' | 'Sent' | 'FellBackToEmail' | 'Paused' | 'Failed';
+  reason: string | null;
+  at: string | null;
+}
+
+interface FakeMessage {
+  id: string;
+  organizationId: string;
+  title: string;
+  body: string;
+  sentAt: string;
+  sentBy: string;
+  audience: string;
+  channel: ChannelChoice;
+  deliveries: FakeDelivery[];
+}
+
+interface AudienceBody {
+  programId: string | null;
+  eventId: string | null;
+  language: string | null;
+  body: string;
+  channel: ChannelChoice;
+}
+
+const GSM7 = '@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#¤%&\'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà';
+
+/** SMS segments as the server counts them: 160/153 GSM-7 characters, 70/67 otherwise. */
+function segmentsOf(text: string): number {
+  const gsm = [...text].every((c) => GSM7.includes(c));
+  const [single, multi] = gsm ? [160, 153] : [70, 67];
+  return text.length <= single ? 1 : Math.ceil(text.length / multi);
+}
+
+/** The first sentence of a body, or its first 60 characters, as the server titles a message. */
+function titleOf(body: string): string {
+  const text = body.trim();
+  const end = text.search(/[.!?]/);
+  if (end > 0 && end < 60) return text.slice(0, end + 1);
+  return text.length <= 60 ? text : `${text.slice(0, 59).trimEnd()}…`;
+}
 
 interface FakeAttendance {
   status: 'NotYet' | 'Present' | 'Absent' | 'SignedOut';
@@ -55,6 +105,8 @@ export class FakeApi {
   private attendance = new Map<string, Map<string, FakeAttendance>>();
   private walkIns: FakeWalkIn[] = [];
   private actions = new Set<string>();
+  private messages: FakeMessage[] = [];
+  private smsUsed = new Map<string, number>();
   /** Who works each session; youth workers run only these (as seeded: Jaylen and Aisha tonight). */
   private sessionStaff = new Map<string, string[]>([['e-tutoring-today', ['m-jaylen', 'm-aisha']]]);
   private nextId = 1;
@@ -64,6 +116,11 @@ export class FakeApi {
   /** Makes the next calls to a route answer with the given status, as the real API would on a fault. */
   failNext(path: string, status: number): void {
     this.failures.set(path, status);
+  }
+
+  /** Sets the SMS segments an organization has used this month (the cap is 2,000 on Standard, 200 on Free). */
+  setSmsUsed(organizationId: string, used: number): void {
+    this.smsUsed.set(organizationId, used);
   }
 
   /** Adds a session tonight in After-School Tutoring with no staff assigned, as a director would. */
@@ -131,6 +188,11 @@ export class FakeApi {
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/walk-ins$/, (route, p) => this.addWalkIn(route, p['id']!)],
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/sign-outs$/, (route, p) => this.signChildOut(route, p['id']!)],
     ['GET', /^\/api\/children\/(?<id>[^/]+)\/pickups$/, (route, p) => this.pickups(route, p['id']!)],
+    ['GET', /^\/api\/messages$/, (route) => this.listMessages(route)],
+    ['POST', /^\/api\/messages\/preview$/, (route) => this.previewMessage(route)],
+    ['POST', /^\/api\/messages$/, (route) => this.sendMessage(route)],
+    ['GET', /^\/api\/messages\/(?<id>[^/]+)$/, (route, p) => this.getMessage(route, p['id']!)],
+    ['GET', /^\/api\/messaging\/sms-cap$/, (route) => this.smsCap(route)],
     ['GET', /^\/api\/children\/(?<id>[^/]+)\/quick-card$/, (route, p) => this.quickCard(route, p['id']!)],
     ['GET', /^\/api\/children\/(?<id>[^/]+)$/, (route, p) => this.getChild(route, p['id']!)],
     ['PUT', /^\/api\/children\/(?<id>[^/]+)$/, (route, p) => this.updateChild(route, p['id']!)],
@@ -977,6 +1039,167 @@ export class FakeApi {
     this.actions.add(b.clientActionId);
     this.sessionRecords(e.id).set(b.childId, { ...record!, status: 'SignedOut', signedOutAt: b.leftAt ?? NOW.toISOString(), collectedBy });
     return route.fulfill({ json: { status: 'saved' } });
+  }
+
+  private async messagingCaller(route: Route): Promise<Membership | null> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) {
+      await this.unauthenticated(route);
+      return null;
+    }
+    if (!this.modules.get(m.organizationId)!.includes('Messages')) {
+      await route.fulfill({ status: 404 });
+      return null;
+    }
+    if (!can.sendMessages(m)) {
+      await this.forbidden(route);
+      return null;
+    }
+    return m;
+  }
+
+  private capOf(m: Membership) {
+    const plan = organizations.find((o) => o.id === m.organizationId)!.plan;
+    const cap = plan === 'Free' ? 200 : plan === 'Standard' ? 2000 : 5000;
+    const used = this.smsUsed.get(m.organizationId) ?? 0;
+    return { cap, used, remaining: Math.max(0, cap - used) };
+  }
+
+  /** Households with children enrolled in the program (or the event's program), each with the channel that reaches its primary guardian. */
+  private audienceOf(m: Membership, b: AudienceBody) {
+    const programId = b.eventId ? this.ownEvent(m, b.eventId)?.programId : b.programId;
+    const programs = this.programs.filter((p) => p.organizationId === m.organizationId && (!programId || p.id === programId));
+    const childIds = new Set(programs.flatMap((p) => p.roster));
+    const label = b.eventId ? (this.ownEvent(m, b.eventId)?.name ?? 'All programs') : (programs.length === 1 && programId ? programs[0]!.name : 'All programs');
+    const recipients = this.households
+      .filter((h) => h.organizationId === m.organizationId && h.children.some((c) => childIds.has(c.id)) && (!b.language || h.language === b.language))
+      .sort((a, z) => a.name.localeCompare(z.name))
+      .map((h) => {
+        const g = this.sortedGuardians(h)[0];
+        const mobile = g?.mobile || null;
+        const email = g?.email && !g.emailBounced ? g.email : null;
+        const base = { household: h.name.replace(/ household$/, ''), guardian: g?.name ?? null, language: h.language };
+        if (b.channel === 'TextOnly') return { ...base, channel: 'Sms' as const, to: mobile, fallback: null, unreachable: mobile ? null : 'No mobile number' };
+        if (b.channel === 'EmailOnly') return { ...base, channel: 'Email' as const, to: email, fallback: null, unreachable: email ? null : 'No email address' };
+        return mobile
+          ? { ...base, channel: 'Sms' as const, to: mobile, fallback: email, unreachable: null }
+          : { ...base, channel: 'Email' as const, to: email, fallback: null, unreachable: email ? null : 'No mobile number or email' };
+      });
+    return { label: b.language ? `${label} · ${b.language} households` : label, recipients };
+  }
+
+  private async previewMessage(route: Route): Promise<void> {
+    const m = await this.messagingCaller(route);
+    if (!m) return;
+    const b = route.request().postDataJSON() as AudienceBody;
+    const { recipients } = this.audienceOf(m, b);
+    const org = organizations.find((o) => o.id === m.organizationId)!;
+    const text = `${org.name}: ${(b.body ?? '').trim()}`;
+    const segments = segmentsOf(text);
+    const reachable = recipients.filter((r) => !r.unreachable);
+    const texts = reachable.filter((r) => r.channel === 'Sms');
+    const { remaining } = this.capOf(m);
+    const textable = Math.floor(remaining / segments);
+    return route.fulfill({
+      json: {
+        recipientCount: recipients.length,
+        textCount: texts.length,
+        emailCount: reachable.length - texts.length,
+        unreachableCount: recipients.length - reachable.length,
+        characters: text.length,
+        segments,
+        totalSegments: texts.length * segments,
+        remainingSegments: remaining,
+        fallingBackToEmail: texts.slice(textable).filter((r) => r.fallback).length,
+      },
+    });
+  }
+
+  /** Creates the message and runs the send job at once: texts within the cap, email instead or paused beyond it. */
+  private async sendMessage(route: Route): Promise<void> {
+    const m = await this.messagingCaller(route);
+    if (!m) return;
+    const b = route.request().postDataJSON() as AudienceBody;
+    const body = (b.body ?? '').trim();
+    const { label, recipients } = this.audienceOf(m, b);
+    const errors: Record<string, string> = {};
+    if (!body) errors['body'] = 'Enter a message.';
+    else if (body.length > 480) errors['body'] = 'Keep it to 480 characters.';
+    if (recipients.length === 0) errors['audience'] = 'Nobody matches. Loosen a filter.';
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    const org = organizations.find((o) => o.id === m.organizationId)!;
+    const segments = segmentsOf(`${org.name}: ${body}`);
+    const now = NOW.toISOString();
+    const deliveries: FakeDelivery[] = recipients.map((r) => {
+      const base = { household: r.household, guardian: r.guardian, language: r.language, at: null as string | null };
+      if (r.unreachable) return { ...base, channel: r.channel, status: 'Failed', reason: r.unreachable };
+      if (r.channel === 'Email') return { ...base, channel: 'Email', status: 'Sent', reason: null, at: now };
+      const { remaining, used } = this.capOf(m);
+      if (remaining >= segments) {
+        this.smsUsed.set(m.organizationId, used + segments);
+        return { ...base, channel: 'Sms', status: 'Sent', reason: null, at: now };
+      }
+      return r.fallback
+        ? { ...base, channel: 'Email', status: 'FellBackToEmail', reason: 'SMS cap reached', at: now }
+        : { ...base, channel: 'Sms', status: 'Paused', reason: 'SMS cap reached' };
+    });
+    const id = `msg-${this.nextId++}`;
+    this.messages.unshift({ id, organizationId: m.organizationId, title: titleOf(body), body, sentAt: now, sentBy: m.personName, audience: label, channel: b.channel, deliveries });
+    return route.fulfill({ status: 201, json: { id } });
+  }
+
+  private counts(d: FakeDelivery[]) {
+    return {
+      deliveredCount: d.filter((x) => x.status === 'Sent' || x.status === 'FellBackToEmail').length,
+      failedCount: d.filter((x) => x.status === 'Failed').length,
+      pausedCount: d.filter((x) => x.status === 'Paused').length,
+    };
+  }
+
+  private async listMessages(route: Route): Promise<void> {
+    const m = await this.messagingCaller(route);
+    if (!m) return;
+    const { cap, used } = this.capOf(m);
+    const messages = this.messages
+      .filter((x) => x.organizationId === m.organizationId)
+      .map((x) => ({ id: x.id, title: x.title, sentAt: x.sentAt, sentBy: x.sentBy, recipientCount: x.deliveries.length, audience: x.audience, channel: x.channel, status: 'Sent', ...this.counts(x.deliveries) }));
+    return route.fulfill({ json: { messages, segmentsUsed: used, segmentCap: cap } });
+  }
+
+  private async getMessage(route: Route, id: string): Promise<void> {
+    const m = await this.messagingCaller(route);
+    if (!m) return;
+    const x = this.messages.find((y) => y.id === id && y.organizationId === m.organizationId);
+    if (!x) return route.fulfill({ status: 404 });
+    const org = organizations.find((o) => o.id === m.organizationId)!;
+    const smsText = `${org.name}: ${x.body}`;
+    const problem = (d: FakeDelivery) => (d.status === 'Failed' || d.status === 'Paused' ? 0 : 1);
+    return route.fulfill({
+      json: {
+        id: x.id,
+        title: x.title,
+        body: x.body,
+        smsText,
+        characters: smsText.length,
+        segments: segmentsOf(smsText),
+        sentAt: x.sentAt,
+        sentBy: x.sentBy,
+        audience: x.audience,
+        channel: x.channel,
+        status: 'Sent',
+        recipientCount: x.deliveries.length,
+        ...this.counts(x.deliveries),
+        languages: [...new Set(x.deliveries.map((d) => d.language))].sort(),
+        deliveries: [...x.deliveries].sort((a, z) => problem(a) - problem(z) || a.household.localeCompare(z.household)),
+      },
+    });
+  }
+
+  private async smsCap(route: Route): Promise<void> {
+    const m = await this.messagingCaller(route);
+    if (!m) return;
+    const { cap, used, remaining } = this.capOf(m);
+    return route.fulfill({ json: { cap, used, remaining, state: remaining === 0 ? 'Reached' : 'Ok', period: '2026-11' } });
   }
 
   private async quickCard(route: Route, id: string): Promise<void> {

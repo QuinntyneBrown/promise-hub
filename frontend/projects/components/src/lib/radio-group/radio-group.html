@@ -7,7 +7,7 @@
         [name]="name"
         [value]="option.value"
         [checked]="option.value === value()"
-        [disabled]="disabled()"
+        [disabled]="disabled() || !!option.disabled"
         [attr.aria-invalid]="error() ? 'true' : null"
         (change)="select(option.value)"
         (blur)="onTouched()"

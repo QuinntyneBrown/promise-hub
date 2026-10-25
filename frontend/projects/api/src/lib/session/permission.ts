@@ -7,4 +7,5 @@ export type Permission =
   | 'managePrograms'
   | 'manageEvents'
   | 'cancelEvents'
-  | 'runSessions';
+  | 'runSessions'
+  | 'sendMessages';
