@@ -1,3 +1,4 @@
+import type { ModuleId } from '../modules/module-id';
 import type { Role } from './role';
 
 /** The signed-in person and the organization of their active membership (GET /me). */
@@ -7,4 +8,6 @@ export interface Session {
   organizationId: string;
   organizationName: string;
   plan: 'Free' | 'Standard' | 'Plus';
+  /** The modules on for this organization; navigation is composed from these only. */
+  modules: ModuleId[];
 }

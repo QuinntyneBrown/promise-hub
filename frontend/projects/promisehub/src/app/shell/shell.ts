@@ -1,11 +1,11 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterOutlet } from '@angular/router';
 import { AUTH_API, ROLE_LABELS, SESSION_API, Session } from '@promisehub/api';
 import { NavDrawerService, PhBottomNavigation, PhSkipLink, PhTopBar } from '@promisehub/components';
 import { EMPTY, catchError } from 'rxjs';
-import { NAVIGATION } from './navigation';
+import { navigationFor } from './navigation';
 
 /** The staff shell: skip link, top bar, main, phone tab bar and the More drawer. */
 @Component({
@@ -20,7 +20,6 @@ export class Shell {
   private readonly drawer = inject(NavDrawerService);
   private readonly auth = inject(AUTH_API);
 
-  protected readonly navigation = NAVIGATION;
   protected readonly menuOpen = signal(false);
   protected readonly session = toSignal(
     inject(SESSION_API)
@@ -43,10 +42,13 @@ export class Shell {
     this.auth.signOut().subscribe(() => void this.router.navigateByUrl('/sign-in'));
   }
 
+  /** Only sections whose module is on (L2-005). */
+  protected readonly navigation = computed(() => navigationFor(this.session()?.modules ?? []));
+
   protected openMenu(session: Session): void {
     this.menuOpen.set(true);
     const ref = this.drawer.open({
-      items: this.navigation,
+      items: this.navigation(),
       homeLink: '/',
       personName: session.personName,
       avatarTint: 'sky',

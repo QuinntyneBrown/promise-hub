@@ -1,0 +1,13 @@
+<div class="body">
+  <div class="title" data-testid="module-title">{{ title() }}</div>
+  @if (meta()) {
+    <div class="meta">{{ meta() }}</div>
+  }
+  @if (caption()) {
+    <span class="caption">{{ caption() }}</span>
+  }
+  @if (error()) {
+    <div class="error" data-testid="module-error">{{ error() }}</div>
+  }
+</div>
+<ng-content />

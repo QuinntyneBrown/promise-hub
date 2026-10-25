@@ -1,9 +1,24 @@
 // Seeded in-memory data for the fake API. Mirrors backend DatabaseSeeder: two organizations and the Harbourview cast.
 
+export type ModuleId = 'Roster' | 'Slips' | 'RollCall' | 'QuickCards' | 'Pickup' | 'Messages' | 'Incidents' | 'Reports';
+
+/** Mirrors backend ModuleCatalog: names, order and dependencies. */
+export const moduleCatalog: { id: ModuleId; name: string; needs: ModuleId[] }[] = [
+  { id: 'Roster', name: 'Roster', needs: [] },
+  { id: 'Slips', name: 'Permission slips', needs: ['Roster'] },
+  { id: 'RollCall', name: 'Roll Call', needs: ['Roster'] },
+  { id: 'QuickCards', name: 'Quick Cards', needs: ['Roster'] },
+  { id: 'Pickup', name: 'Pickup', needs: ['Roster', 'RollCall'] },
+  { id: 'Messages', name: 'Messages', needs: ['Roster'] },
+  { id: 'Incidents', name: 'Incident log', needs: ['Roster'] },
+  { id: 'Reports', name: 'Reports', needs: ['Roster'] },
+];
+
 export interface Organization {
   id: string;
   name: string;
   plan: 'Free' | 'Standard' | 'Plus';
+  modules: ModuleId[];
 }
 
 export interface Membership {
@@ -15,8 +30,13 @@ export interface Membership {
 }
 
 export const organizations: Organization[] = [
-  { id: 'org-harbourview', name: 'Harbourview Youth Collective', plan: 'Standard' },
-  { id: 'org-northgate', name: 'Northgate Community Church Kids', plan: 'Free' },
+  {
+    id: 'org-harbourview',
+    name: 'Harbourview Youth Collective',
+    plan: 'Standard',
+    modules: ['Roster', 'Slips', 'RollCall', 'QuickCards', 'Pickup', 'Messages', 'Incidents', 'Reports'],
+  },
+  { id: 'org-northgate', name: 'Northgate Community Church Kids', plan: 'Free', modules: ['Roster', 'RollCall', 'QuickCards'] },
 ];
 
 export const memberships: Membership[] = [

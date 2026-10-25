@@ -7,5 +7,5 @@
     (change)="toggle($any($event.target).checked)"
     (blur)="onTouched()"
   />
-  <span class="text">{{ label() }}</span>
+  <span class="text" [class.visually-hidden]="labelHidden()">{{ label() }}</span>
 </label>
