@@ -1429,7 +1429,7 @@ export class FakeApi {
     const ids = id ? [id] : (b.ids ?? []);
     const requests = this.enrollmentRequests.filter((r) => r.id && ids.includes(r.id) && this.ownProgram(m, r.programId));
     if (!requests.length || requests.length !== ids.length) return route.fulfill({ status: 404 });
-    if (requests.some((r) => r.status === 'Accepted' || r.status === 'Declined')) return route.fulfill({ status: 409, json: { code: 'conflict' } });
+    if (requests.some((r) => r.status === 'Accepted' || r.status === 'Declined' || (b.decision === 'Waitlist' && r.status === 'Waitlisted'))) return route.fulfill({ status: 409, json: { code: 'conflict' } });
     const note = b.note?.trim() || null;
     if (b.decision === 'Decline' && !note) return route.fulfill({ status: 422, json: { errors: { note: 'Write a reason the guardian will read.' } } });
     const program = this.programs.find((x) => x.id === requests[0]!.programId)!;
@@ -1438,6 +1438,11 @@ export class FakeApi {
     }
     let position = Math.max(0, ...this.enrollmentRequests.filter((r) => r.programId === program.id && r.status === 'Waitlisted').map((r) => r.position ?? 0));
     for (const r of requests) {
+      const leftPlace = r.status === 'Waitlisted' ? r.position : null;
+      if (leftPlace !== null) {
+        for (const behind of this.enrollmentRequests.filter((x) => x.programId === program.id && x.status === 'Waitlisted' && (x.position ?? 0) > leftPlace)) behind.position = behind.position! - 1;
+        position--;
+      }
       if (b.decision === 'Accept') {
         r.status = 'Accepted';
         if (!program.roster.includes(r.childId!)) program.roster.push(r.childId!);

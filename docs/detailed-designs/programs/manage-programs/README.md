@@ -53,6 +53,8 @@ Decided in ADR 0008: names are at most 120 characters; archiving does not cancel
 
 ## Built so far
 
+Slice 18 added program directors moving waitlisted children in from the roster review page (`enrollment` library, `/programs/:programId/roster`); the program page links to it.
+
 Slice 05 delivered `ProgramsListPage` (`ProgramsPage`), `ProgramPage` (stats, roster with add and remove, events, archived read-only state with Restore), `ProgramFormPage` for new and edit, `EnrollDialog`, `RemoveFromRosterDialog`, `ProgramActionsDialog` and `ArchiveProgramDialog`, `PROGRAMS_API`, every endpoint above plus `POST /programs/{id}/enrollments` and `DELETE /programs/{id}/enrollments/{childId}`, the handlers with audit entries and the `Enrollment` entity. Schedule is free text as in the mock. Waitlists, the enrollment link, attendance figures and the funder report arrive with their features.
 
 ## Requirements

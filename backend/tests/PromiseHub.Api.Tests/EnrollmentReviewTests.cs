@@ -75,6 +75,24 @@ public sealed partial class EnrollmentReviewTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Moving_a_waitlisted_child_in_enrolls_them_texts_the_guardian_and_moves_the_others_up()
+    {
+        await Enroll("905-555-0142", null, null);
+        var queue = await Queue("WaitingReview");
+        await _factory.ClientFor(Tom).PostAsJsonAsync("/enrollments/review", new { ids = queue.Select(r => r.GetProperty("id").GetGuid()).ToArray(), decision = "Waitlist" });
+        var first = (await Queue("Waitlisted")).First(r => r.GetProperty("position").GetInt32() == 1);
+
+        var moved = await _factory.ClientFor(Marisol).PostAsJsonAsync($"/enrollments/{first.GetProperty("id").GetGuid()}/review", new { decision = "Accept", note = "A place opened." });
+        await RunJob();
+
+        Assert.Equal(HttpStatusCode.NoContent, moved.StatusCode);
+        var left = (await Queue("Waitlisted")).Single();
+        Assert.Equal(1, left.GetProperty("position").GetInt32());
+        Assert.Equal(1, (await _factory.ClientFor(Tom).GetFromJsonAsync<JsonElement>($"/programs/{WinterCamp}")).GetProperty("enrolled").GetInt32());
+        Assert.Contains(Sms.Sent, s => s.Text.Contains($"{first.GetProperty("child").GetString()!.Split(' ')[0]} is enrolled in Winter Camp 2026. A place opened.", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async Task Accepting_past_capacity_is_refused_with_the_count()
     {
         await _factory.ClientFor(Tom).PutAsJsonAsync($"/programs/{WinterCamp}", new { name = "Winter Camp 2026", startsOn = "2026-12-21", endsOn = "2026-12-23", schedule = "21–23 Dec", capacity = 1, ages = "6–12", enrollmentOpen = true, seasonConsent = true });
