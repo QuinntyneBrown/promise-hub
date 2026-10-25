@@ -12,7 +12,12 @@ public static class CliApp
 {
     public const string Usage = "Usage: promisehub (migrate [--check] | seed | reset [--force])";
 
-    public static async Task<int> RunAsync(string[] args, string connectionString, bool isDevelopment = false, TextWriter? output = null)
+    public static async Task<int> RunAsync(
+        string[] args,
+        string connectionString,
+        bool isDevelopment = false,
+        TextWriter? output = null,
+        SeedOptions? seed = null)
     {
         output ??= Console.Out;
         var services = new ServiceCollection()
@@ -28,7 +33,7 @@ public static class CliApp
             case "migrate":
                 return await MigrateAsync(db, flags.Contains("--check"), output);
             case "seed":
-                return await SeedAsync(db, scope.ServiceProvider.GetRequiredService<DatabaseSeeder>(), output);
+                return await SeedAsync(db, scope.ServiceProvider.GetRequiredService<DatabaseSeeder>(), seed, output);
             case "reset":
                 if (!isDevelopment && !flags.Contains("--force"))
                 {
@@ -37,7 +42,7 @@ public static class CliApp
                 }
                 await db.Database.EnsureDeletedAsync();
                 var migrated = await MigrateAsync(db, check: false, output);
-                return migrated != 0 ? migrated : await SeedAsync(db, scope.ServiceProvider.GetRequiredService<DatabaseSeeder>(), output);
+                return migrated != 0 ? migrated : await SeedAsync(db, scope.ServiceProvider.GetRequiredService<DatabaseSeeder>(), seed, output);
             default:
                 output.WriteLine(Usage);
                 return 2;
@@ -60,14 +65,18 @@ public static class CliApp
         return 0;
     }
 
-    private static async Task<int> SeedAsync(PromiseHubDbContext db, DatabaseSeeder seeder, TextWriter output)
+    private static async Task<int> SeedAsync(PromiseHubDbContext db, DatabaseSeeder seeder, SeedOptions? seed, TextWriter output)
     {
         if ((await db.Database.GetPendingMigrationsAsync()).Any())
         {
             output.WriteLine("Run migrate first: migrations are pending.");
             return 1;
         }
-        output.WriteLine($"Seeded {await seeder.SeedAsync()} new rows.");
+        if (seed?.StaffPassword is null)
+        {
+            output.WriteLine("Seed:StaffPassword is not configured; seeded staff cannot sign in.");
+        }
+        output.WriteLine($"Seeded {await seeder.SeedAsync(seed)} new rows.");
         return 0;
     }
 }

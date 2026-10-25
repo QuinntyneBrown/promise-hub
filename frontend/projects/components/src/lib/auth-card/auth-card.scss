@@ -1,0 +1,37 @@
+:host {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6) var(--layout-margin);
+}
+.auth-card {
+  width: 100%;
+  max-width: var(--layout-auth-compact);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  background: var(--color-bg-surface);
+  border: var(--border-width-hairline) solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  padding: var(--space-6);
+}
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: center;
+  text-align: center;
+}
+.mark {
+  width: var(--size-avatar-lg);
+  height: var(--size-avatar-lg);
+}
+h1 {
+  font: var(--text-h2);
+  margin: 0;
+}
+.subtitle {
+  color: var(--color-fg-muted);
+  margin: 0;
+}

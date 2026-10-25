@@ -9,11 +9,16 @@ import { SessionApi } from './session-api';
 export class HttpSessionApi implements SessionApi {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL);
-  private readonly session$ = this.http
-    .get<Session>(`${this.baseUrl}/me`)
-    .pipe(shareReplay({ bufferSize: 1, refCount: false }));
+  private session$: Observable<Session> | null = null;
 
   current(): Observable<Session> {
+    this.session$ ??= this.http
+      .get<Session>(`${this.baseUrl}/me`)
+      .pipe(shareReplay({ bufferSize: 1, refCount: false }));
     return this.session$;
+  }
+
+  reset(): void {
+    this.session$ = null;
   }
 }

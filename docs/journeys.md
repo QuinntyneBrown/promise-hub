@@ -40,7 +40,7 @@
 | Youth worker | Use permitted child details | Find authorized roster details without exposing restricted records. | [3 days](detailed-designs/identity/authorize-request/README.md) | 0% |
 | Volunteer coordinator | Coordinate staff coverage | Invite volunteers and align them with sessions and permissions. | [3 days](detailed-designs/staff/invite-and-onboard-staff/README.md) | 0% |
 | Volunteer coordinator | Switch organizations | Select an active organization before working with its records. | [4 days](detailed-designs/organizations/switch-organization/README.md) | 0% |
-| Staff | Sign in securely | Access authorized work with credentials and required verification. | [5 days](detailed-designs/identity/sign-in/README.md) | 0% |
+| Staff | Sign in securely | Access authorized work with credentials and required verification. | [5 days](detailed-designs/identity/sign-in/README.md) | 80% · [video](videos/02-sign-in-securely/README.md) |
 | Staff | Search records | Find permitted children, families, and events across enabled modules. | [4 days](detailed-designs/search/search-organization/README.md) | 0% |
 | Staff | Review notifications | Open relevant tasks, alerts, and updates from the notification center. | [5 days](detailed-designs/notifications/notify-in-app/README.md) | 0% |
 | Staff | Recover account access | Reset a forgotten password and resume authorized work. | Not sized: password-reset design missing | — |

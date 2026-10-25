@@ -1,0 +1,8 @@
+<ph-icon class="alert-icon" [name]="icon()" />
+<div class="body">
+  <div class="title">{{ title() }}</div>
+  @if (text()) {
+    <div class="text">{{ text() }}</div>
+  }
+  <div class="actions"><ng-content /></div>
+</div>

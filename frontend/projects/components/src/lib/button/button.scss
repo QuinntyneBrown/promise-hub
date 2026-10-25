@@ -109,3 +109,11 @@
     transform: rotate(360deg);
   }
 }
+
+/* A full-width button wraps its label rather than scrolling the page on a narrow phone. */
+.btn--block {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  white-space: normal;
+}

@@ -161,3 +161,7 @@ a[data-state='hover'] {
 .ph-backdrop {
   background: var(--color-bg-backdrop);
 }
+/* Centred text: a standalone link under a form. */
+.text-center {
+  text-align: center;
+}

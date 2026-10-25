@@ -30,3 +30,9 @@ export const memberships: Membership[] = [
 ];
 
 export type MembershipId = (typeof memberships)[number]['id'];
+
+/** The password every seeded staff member signs in with in the fake (the real seed reads it from configuration). */
+export const seededPassword = 'harbour-tutoring-2026';
+
+/** The six-digit code the fake accepts for staff enrolled in MFA. */
+export const seededMfaCode = '246810';

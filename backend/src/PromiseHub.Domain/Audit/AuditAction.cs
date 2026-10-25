@@ -13,4 +13,5 @@ public enum AuditAction
     RoleChanged,
     ModuleChanged,
     AccessDenied,
+    SignedIn,
 }

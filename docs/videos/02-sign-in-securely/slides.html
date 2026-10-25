@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 02 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="02" data-video-title="Sign in securely" data-parts="Introduction|Promises|Sign in|Failures|Second factor|Sessions|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 02</div>
+  <h1>Sign in securely</h1>
+  <p class="lead">Passwords, lockout, a second factor and server-side roles</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="Valid credentials land you on Today.">
+  <h2>What sign-in promises</h2>
+  <ul>
+    <li>Valid credentials land on Today</li>
+    <li>Five failures in 15 minutes pause sign-in, revealing nothing</li>
+    <li>Admins and program directors enter a six-digit code</li>
+    <li>12 idle hours end a session; sign-in returns you to your page</li>
+    <li>Every request checked on the server against the role</li>
+  </ul>
+</section>
+
+<section id="desktop" data-part="2" data-cue="Here is Jaylen at the sign-in page on a laptop." data-clip="clips/sign-in-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Wrong password, then Today</h3><p>Only the password is cleared. The account menu names the role and organization.</p></div>
+</section>
+
+<section id="failures" data-part="3" data-cue="The same message answers a wrong password">
+  <h2>Wrong, and wrong again</h2>
+  <div class="cols">
+    <img class="shot" alt="Wrong email or password" src="shots/phone-invalid.png">
+    <img class="shot" alt="Sign-in paused after five failures" src="shots/phone-locked.png">
+  </div>
+</section>
+
+<section id="mfa" data-part="4" data-cue="Tom is an admin, so after his password" data-clip="clips/mfa-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Enter your code</h3><p>A five-minute ticket opens only the code step.</p></div>
+</section>
+
+<section id="sessions" data-part="5" data-cue="The session is a cookie the browser cannot read from script">
+  <h2>Sessions and the server</h2>
+  <table class="facts">
+    <tr><th>Rule</th><th>Where</th></tr>
+    <tr><td>HttpOnly, Secure, SameSite=Strict, 12 h sliding</td><td><code>.PromiseHub.Session</code></td></tr>
+    <tr><td>Expired cookie → 401 <code>session-expired</code></td><td>sign-in keeps the destination</td></tr>
+    <tr><td>Site lead → <code>/settings/organization</code></td><td>403 from <code>RolePermissions</code></td></tr>
+    <tr><td>Every sign-in</td><td><code>SignedIn</code> audit entry</td></tr>
+  </table>
+</section>
+
+<section id="testing" data-part="6" data-cue="Backend tests drive the real cookie sign-in with a fake clock">
+  <h2>How it is tested</h2>
+  <div class="cols">
+    <div class="card"><h3>Backend</h3><p>Real cookies, a fake clock: lockout, the 15-minute pause, codes, sign-out, 12-hour expiry, 403s and headers.</p></div>
+    <div class="card"><h3>Browser</h3><p>Sign-in, code step, expiry and sign-out against the fake API, phone and desktop, axe on every state.</p></div>
+  </div>
+</section>
+
+<section id="recap" data-part="7" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>One message for every failed sign-in</li><li>Five failures pause any email for 15 minutes</li><li>Admins and directors enter a code</li><li>The server checks the role on every request</li></ul>
+  <p class="muted">Next: configure modules</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

@@ -1,17 +1,22 @@
 using Microsoft.EntityFrameworkCore;
+using PromiseHub.Application.Identity;
 using PromiseHub.Domain.Households;
+using PromiseHub.Domain.Identity;
 using PromiseHub.Domain.Organizations;
 
 namespace PromiseHub.Infrastructure.Persistence.Seed;
 
 /// <summary>Seeds the Harbourview cast and a second organization. Rows are found by stable id; existing rows are never changed.</summary>
-public sealed class DatabaseSeeder(PromiseHubDbContext db)
+public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hasher)
 {
     public static readonly Guid Harbourview = SeedIds.Of("org:harbourview");
     public static readonly Guid Northgate = SeedIds.Of("org:northgate");
 
-    public async Task<int> SeedAsync(CancellationToken cancellationToken = default)
+    private SeedOptions _options = SeedOptions.None;
+
+    public async Task<int> SeedAsync(SeedOptions? options = null, CancellationToken cancellationToken = default)
     {
+        _options = options ?? SeedOptions.None;
         Add(new Organization(Harbourview, "Harbourview Youth Collective", "Hamilton, Ontario", Plan.Standard));
         Add(new Organization(Northgate, "Northgate Community Church Kids", "Burlington, Ontario", Plan.Free));
 
@@ -36,8 +41,19 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db)
 
     public static Guid ChildId(Guid organizationId, string fullName) => SeedIds.Of($"child:{organizationId}:{fullName}");
 
-    private void Staff(Guid organizationId, string name, string email, Role role) =>
+    public static Guid UserId(string email) => SeedIds.Of($"user:{email}");
+
+    private void Staff(Guid organizationId, string name, string email, Role role)
+    {
         Add(new Membership(MembershipId(organizationId, email), organizationId, name, email, role));
+        // Admins and program directors are enrolled in MFA when a secret is configured (L2-006).
+        var mfa = SignInPolicy.RequiresMfa(role) ? _options.MfaSecret : null;
+        var password = _options.StaffPassword is { } p ? hasher.Hash(p) : null;
+        if (db.ChangeTracker.Entries<StaffUser>().All(e => e.Entity.Email != email))
+        {
+            Add(new StaffUser(UserId(email), email, password, mfa));
+        }
+    }
 
     private void Family(Guid organizationId, string name, params (string First, string Last)[] children)
     {

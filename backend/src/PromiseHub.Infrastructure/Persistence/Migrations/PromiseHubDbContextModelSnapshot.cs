@@ -125,6 +125,55 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.ToTable("Households");
                 });
 
+            modelBuilder.Entity("PromiseHub.Domain.Identity.SignInAttempt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("At")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Succeeded")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email", "At");
+
+                    b.ToTable("SignInAttempts");
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Identity.StaffUser", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MfaSecret")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("StaffUsers");
+                });
+
             modelBuilder.Entity("PromiseHub.Domain.Organizations.Membership", b =>
                 {
                     b.Property<Guid>("Id")

@@ -22,6 +22,8 @@ export class PhButton {
   readonly type = input<'button' | 'submit'>('button');
   readonly icon = input<IconName | null>(null);
   readonly iconOnly = input(false);
+  /** Full width; the label wraps instead of widening the page. */
+  readonly block = input(false);
   readonly label = input<string | null>(null);
   readonly disabled = input(false);
   readonly busy = input(false);
@@ -35,6 +37,7 @@ export class PhButton {
       this.variant() === 'default' ? '' : `btn--${this.variant()}`,
       this.size() === 'md' ? '' : `btn--${this.size()}`,
       this.iconOnly() ? 'btn--icon' : '',
+      this.block() ? 'btn--block' : '',
     ]
       .filter(Boolean)
       .join(' ');

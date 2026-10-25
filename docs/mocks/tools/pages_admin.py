@@ -241,7 +241,7 @@ def sign_in(S):
                 + switch("remember", "Keep me signed in on this phone", checked=True)
                 + btn("Sign in", "primary", type_="submit", busy=busy, size="lg", block=True) + f'<p class="text-center"><a href="{page("forgot-password")}">Forgot your password?</a></p></form>')
     S.add("default", "Staff sign-in: email, password, remember on this phone.", main=auth_head("Sign in to PromiseHub", ORG) + form())
-    S.add("invalid", "Wrong password: one message, nothing cleared but the password.", main=auth_head("Sign in to PromiseHub", ORG) + form(err={"pw": "Wrong password. Try again or reset it."}))
+    S.add("invalid", "Wrong email or password: one message that never reveals whether the email exists; only the password is cleared.", main=auth_head("Sign in to PromiseHub", ORG) + form(err={"pw": "That email and password don’t match. Try again or reset your password."}))
     S.add("submitting", "Signing in.", main=auth_head("Sign in to PromiseHub", ORG) + form(busy=True))
     S.add("error", "The server didn’t answer.", main=auth_head("Sign in to PromiseHub", ORG) + form(alert_html=alert("danger", "We couldn’t sign you in", "Connection dropped. Try again.")))
     S.add("mfa", "Second step for admins: a six-digit code from the authenticator app.", main=auth_head("Enter your code", "From your authenticator app.") +

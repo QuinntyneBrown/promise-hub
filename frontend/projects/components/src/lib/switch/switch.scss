@@ -1,0 +1,54 @@
+.switch {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  cursor: pointer;
+  font: var(--text-body);
+  padding-block: var(--space-1);
+  min-height: var(--target-min);
+}
+input {
+  appearance: none;
+  flex: none;
+  position: relative;
+  width: calc(var(--size-icon-md) * 1.75);
+  height: var(--size-icon-md);
+  margin: var(--space-0-5) 0 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--color-border-strong);
+  cursor: pointer;
+  transition: background-color var(--duration-base) var(--ease-standard);
+}
+input::before {
+  content: '';
+  position: absolute;
+  top: var(--space-0-5);
+  left: var(--space-0-5);
+  width: calc(var(--size-icon-md) - var(--space-1));
+  height: calc(var(--size-icon-md) - var(--space-1));
+  border-radius: var(--radius-full);
+  background: var(--color-bg-surface);
+  box-shadow: var(--shadow-1);
+  transition: translate var(--duration-base) var(--ease-spring);
+}
+input:hover {
+  background: var(--color-fg-muted);
+}
+input:checked {
+  background: var(--color-accent);
+}
+input:checked:hover {
+  background: var(--color-accent-hover);
+}
+input:checked::before {
+  translate: calc(var(--size-icon-md) * 0.75) 0;
+}
+input:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: var(--space-0-5);
+}
+input:disabled {
+  background: var(--color-border-default);
+  cursor: not-allowed;
+}

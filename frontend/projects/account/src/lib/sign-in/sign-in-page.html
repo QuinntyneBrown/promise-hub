@@ -1,0 +1,57 @@
+<ph-skip-link />
+<main id="main">
+  <ph-auth-card
+    [title]="expired() ? 'Your session timed out' : 'Sign in to PromiseHub'"
+    [subtitle]="
+      expired() ? 'Signed out after 12 hours. Sign in to pick up where you left off.' : null
+    "
+  >
+    <form class="stack" novalidate (ngSubmit)="submit()">
+      @if (lockedUntil()) {
+        <ph-alert tone="warning" title="Too many tries" [text]="lockedText()">
+          <ph-button variant="primary" size="sm" link="/forgot-password">Reset password</ph-button>
+        </ph-alert>
+      }
+      @if (failed()) {
+        <ph-alert
+          tone="danger"
+          title="We couldn’t sign you in"
+          text="Something went wrong on our side. Try again in a minute."
+        />
+      }
+      <ph-text-field
+        inputId="email"
+        label="Work email"
+        type="email"
+        autocomplete="username"
+        name="email"
+        [(ngModel)]="email"
+      />
+      <ph-text-field
+        inputId="password"
+        label="Password"
+        type="password"
+        autocomplete="current-password"
+        name="password"
+        [error]="
+          invalid()
+            ? 'That email and password don’t match. Try again or reset your password.'
+            : null
+        "
+        [(ngModel)]="password"
+      />
+      <ph-switch label="Keep me signed in on this phone" name="remember" [(ngModel)]="remember" />
+      <ph-button
+        variant="primary"
+        size="lg"
+        type="submit"
+        [block]="true"
+        [busy]="submitting()"
+        [disabled]="!!lockedUntil()"
+      >
+        Sign in
+      </ph-button>
+      <p class="text-center"><a href="/forgot-password">Forgot your password?</a></p>
+    </form>
+  </ph-auth-card>
+</main>

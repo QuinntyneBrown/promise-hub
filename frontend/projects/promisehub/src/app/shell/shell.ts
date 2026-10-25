@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterOutlet } from '@angular/router';
-import { ROLE_LABELS, SESSION_API, Session } from '@promisehub/api';
+import { AUTH_API, ROLE_LABELS, SESSION_API, Session } from '@promisehub/api';
 import { NavDrawerService, PhBottomNavigation, PhSkipLink, PhTopBar } from '@promisehub/components';
 import { EMPTY, catchError } from 'rxjs';
 import { NAVIGATION } from './navigation';
@@ -18,6 +18,7 @@ import { NAVIGATION } from './navigation';
 export class Shell {
   private readonly router = inject(Router);
   private readonly drawer = inject(NavDrawerService);
+  private readonly auth = inject(AUTH_API);
 
   protected readonly navigation = NAVIGATION;
   protected readonly menuOpen = signal(false);
@@ -34,6 +35,14 @@ export class Shell {
       ),
   );
 
+  protected context(session: Session): string {
+    return `${ROLE_LABELS[session.role]} · ${session.organizationName}`;
+  }
+
+  protected signOut(): void {
+    this.auth.signOut().subscribe(() => void this.router.navigateByUrl('/sign-in'));
+  }
+
   protected openMenu(session: Session): void {
     this.menuOpen.set(true);
     const ref = this.drawer.open({
@@ -41,7 +50,7 @@ export class Shell {
       homeLink: '/',
       personName: session.personName,
       avatarTint: 'sky',
-      context: `${ROLE_LABELS[session.role]} · ${session.organizationName}`,
+      context: this.context(session),
     });
     ref.closed.subscribe(() => this.menuOpen.set(false));
   }

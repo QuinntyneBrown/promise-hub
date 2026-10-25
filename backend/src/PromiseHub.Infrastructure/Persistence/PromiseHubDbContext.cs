@@ -4,6 +4,7 @@ using PromiseHub.Application;
 using PromiseHub.Application.Organizations;
 using PromiseHub.Domain.Audit;
 using PromiseHub.Domain.Households;
+using PromiseHub.Domain.Identity;
 using PromiseHub.Domain.Organizations;
 
 namespace PromiseHub.Infrastructure.Persistence;
@@ -16,6 +17,8 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Household> Households => Set<Household>();
     public DbSet<Child> Children => Set<Child>();
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
+    public DbSet<StaffUser> StaffUsers => Set<StaffUser>();
+    public DbSet<SignInAttempt> SignInAttempts => Set<SignInAttempt>();
 
     // Read by the query filter on every query, so the filter follows the current tenant.
     private Guid CurrentOrganizationId => tenant.OrganizationId;
@@ -50,6 +53,18 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             // SQLite cannot order by DateTimeOffset; store UTC ticks.
             e.Property(a => a.OccurredAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.HasIndex(a => new { a.OrganizationId, a.OccurredAt });
+        });
+
+        modelBuilder.Entity<StaffUser>(e =>
+        {
+            e.Property(u => u.Email).HasMaxLength(320);
+            e.HasIndex(u => u.Email).IsUnique();
+        });
+        modelBuilder.Entity<SignInAttempt>(e =>
+        {
+            e.Property(a => a.Email).HasMaxLength(320);
+            e.Property(a => a.At).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.HasIndex(a => new { a.Email, a.At });
         });
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes().Where(t => typeof(ITenantOwned).IsAssignableFrom(t.ClrType)))

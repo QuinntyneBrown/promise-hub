@@ -6,4 +6,4 @@
 | migrate-and-seed | 5 days | 60% |
 | observe-and-alert | 5 days | 0% |
 | run-background-jobs | 5 days | 0% |
-| secure-transport-and-storage | 5 days | 10% |
+| secure-transport-and-storage | 5 days | 25% |
