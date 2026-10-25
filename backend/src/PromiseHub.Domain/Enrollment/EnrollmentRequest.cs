@@ -48,6 +48,9 @@ public sealed class EnrollmentRequest : ITenantOwned
 
     public void Decline(string reviewer, DateTimeOffset now, string reason) => Decide(EnrollmentRequestStatus.Declined, null, reviewer, now, reason);
 
+    /// <summary>Moves up one place when a child ahead leaves the waitlist.</summary>
+    public void MoveUp() => Position = Position - 1;
+
     private void Decide(EnrollmentRequestStatus status, int? position, string reviewer, DateTimeOffset now, string? note)
     {
         Status = status;

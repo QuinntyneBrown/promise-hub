@@ -51,6 +51,7 @@ public sealed class ReviewEnrollmentHandler(IPromiseHubDb db, ITenantContext ten
             foreach (var request in group.OrderBy(r => r.SubmittedAt))
             {
                 var child = await db.Children.AsNoTracking().SingleAsync(c => c.Id == request.ChildId, cancellationToken);
+                var leftPlace = request.Status == EnrollmentRequestStatus.Waitlisted ? request.Position : null;
                 string message;
                 switch (decision)
                 {
@@ -71,6 +72,15 @@ public sealed class ReviewEnrollmentHandler(IPromiseHubDb db, ITenantContext ten
                         message = $"{child.FirstName} wasn’t enrolled in {program.Name}: {text}";
                         text = null;
                         break;
+                }
+                if (leftPlace is { } place)
+                {
+                    // Children behind on the waitlist move up one place (L2-013 criterion 13).
+                    foreach (var behind in await db.EnrollmentRequests.Where(r => r.ProgramId == program.Id && r.Status == EnrollmentRequestStatus.Waitlisted && r.Position > place).ToListAsync(cancellationToken))
+                    {
+                        behind.MoveUp();
+                    }
+                    position--;
                 }
                 var body = $"{(text is null ? message : $"{message} {text}")} See where things stand: {links.IssueHome(request.HouseholdId)}";
                 var audience = await resolver.ForHouseholdAsync(request.HouseholdId, cancellationToken);
