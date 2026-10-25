@@ -115,3 +115,6 @@ export * from './lib/incidents/incident-summary';
 export * from './lib/incidents/incidents-api';
 export * from './lib/incidents/incidents-api.token';
 export * from './lib/offline/queued-attendance';
+export * from './lib/pickups/new-pickup';
+export * from './lib/pickups/pickup-api';
+export * from './lib/pickups/pickup-api.token';

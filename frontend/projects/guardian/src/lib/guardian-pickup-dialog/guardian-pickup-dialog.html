@@ -1,0 +1,38 @@
+@let t = data.text;
+@let r = data.remove;
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    [title]="r ? t.removeTitle(r.name, data.child) : t.addPickupTitle(data.child)"
+    [description]="r ? t.removeText : t.addPickupText"
+  >
+    @if (failed()) {
+      <ph-alert
+        tone="danger"
+        [title]="r ? t.removeTitle(r.name, data.child) : t.addPickupTitle(data.child)"
+      />
+    }
+    @if (!r) {
+      <ph-text-field
+        inputId="g-pickup-name"
+        [label]="t.pickupName"
+        name="name"
+        autocomplete="name"
+        [error]="errors()['name'] ? t.pickupNameError : null"
+        [(ngModel)]="name"
+      />
+      <ph-text-field
+        inputId="g-pickup-relationship"
+        [label]="t.pickupRelationship(data.child)"
+        name="relationship"
+        [error]="errors()['relationship'] ?? null"
+        [(ngModel)]="relationship"
+      />
+    }
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">{{ t.cancel }}</ph-button>
+      <ph-button [variant]="r ? 'danger' : 'primary'" type="submit" [busy]="busy()">{{
+        r ? t.remove : t.add
+      }}</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

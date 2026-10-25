@@ -54,7 +54,9 @@ public sealed class GetQuickCardHandler(IPromiseHubDb db, ITenantContext tenant,
             alert,
             medical,
             [.. ordered.Where(g => g.Mobile != null).Select(g => new ContactDto(g.Name, g.Relationship, g.Mobile, g.Language, g.IsPrimary))],
-            [.. ordered.Where(g => g.CanPickUp).Select(g => new PickupDto(g.Name, g.Relationship, g.IsPrimary))],
+            [.. ordered.Where(g => g.CanPickUp).Select(g => new PickupDto(g.Name, g.Relationship, g.IsPrimary)),
+             .. (await db.ApprovedPickups.AsNoTracking().Where(p => p.ChildId == child.Id && p.RemovedAt == null).OrderBy(p => p.Name).ToListAsync(cancellationToken))
+                 .Select(p => new PickupDto(p.Name, p.Relationship, false, p.Id))],
             child.Notes,
             !medicalAllowed);
     }

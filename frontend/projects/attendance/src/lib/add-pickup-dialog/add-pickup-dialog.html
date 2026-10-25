@@ -1,0 +1,44 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    [title]="'Add an approved adult for ' + data.firstName"
+    description="Staff ask for photo ID."
+  >
+    @if (failed()) {
+      <ph-alert tone="danger" title="That didn’t go through" text="Nothing was added. Try again." />
+    }
+    <ph-text-field
+      inputId="pickup-name"
+      label="Full name"
+      name="name"
+      autocomplete="name"
+      [error]="errors()['name'] ?? null"
+      [(ngModel)]="pickup.name"
+    />
+    <ph-text-field
+      inputId="pickup-relationship"
+      [label]="'Relationship to ' + data.firstName"
+      name="relationship"
+      [error]="errors()['relationship'] ?? null"
+      [(ngModel)]="pickup.relationship"
+    />
+    <ph-text-field
+      inputId="pickup-mobile"
+      label="Mobile"
+      type="tel"
+      name="mobile"
+      autocomplete="tel"
+      [optional]="true"
+      [(ngModel)]="pickup.mobile"
+    />
+    <ph-radio-group
+      legend="Applies to"
+      name="appliesTo"
+      [options]="scopes"
+      [(ngModel)]="appliesTo"
+    />
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Add</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

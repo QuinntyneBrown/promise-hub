@@ -33,6 +33,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 23 | [Respond to an absence alert](23-respond-to-an-absence-alert/README.md) | ~2 min | Reply 1 or 2, or tap the family page, and the roster shows the answer |
 | 24 | [End a session](24-end-a-session/README.md) | ~2 min | Mark absences, sign out the rest, keep notes; an ended session is read-only |
 | 25 | [Run check-in offline](25-run-check-in-offline/README.md) | ~2 min | Roster and Quick Cards kept on the phone, a queue that syncs in order, conflicts flagged |
+| 26 | [Manage approved pickups](26-manage-approved-pickups/README.md) | ~2 min | Guardians and staff add or remove approved adults; the Quick Card and sign-out follow |
 
 ## Making or updating a video
 

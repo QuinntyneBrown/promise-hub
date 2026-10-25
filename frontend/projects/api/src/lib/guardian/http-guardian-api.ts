@@ -4,6 +4,7 @@ import { Observable, catchError, map, of } from 'rxjs';
 import { API_BASE_URL } from '../api-base-url';
 import { toWrite } from '../http-results';
 import { WriteOutcome } from '../write-outcome';
+import { NewPickup } from '../pickups/new-pickup';
 import { GuardianAnswers } from './guardian-answers';
 import { GuardianApi } from './guardian-api';
 import { GuardianHome } from './guardian-home';
@@ -35,6 +36,23 @@ export class HttpGuardianApi implements GuardianApi {
         eventId,
         reply,
       }),
+    );
+  }
+
+  addPickup(token: string, childId: string, pickup: NewPickup): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<{ id: string }>(
+        `${this.baseUrl}/g/home/${encodeURIComponent(token)}/children/${childId}/pickups`,
+        pickup,
+      ),
+    );
+  }
+
+  removePickup(token: string, childId: string, pickupId: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.delete<null>(
+        `${this.baseUrl}/g/home/${encodeURIComponent(token)}/children/${childId}/pickups/${pickupId}`,
+      ),
     );
   }
 

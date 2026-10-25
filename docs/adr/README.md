@@ -27,3 +27,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0021](0021-incident-reporting.md) | Incidents are reported by any staff member and read by supervisors and the reporter only |
 | [0022](0022-no-show-alerts.md) | No-show texts run in the send job fifteen minutes after start, and replies arrive by a signed webhook |
 | [0023](0023-offline-check-in.md) | Offline check-in keeps the last roster and Quick Cards on the device and replays queued actions in order |
+| [0024](0024-approved-pickups.md) | Approved pickups are their own rows beside the guardians, changed from the Quick Card and the family page |

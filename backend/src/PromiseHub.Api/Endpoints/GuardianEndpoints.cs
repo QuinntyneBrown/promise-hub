@@ -1,3 +1,4 @@
+using PromiseHub.Application.Attendance;
 using PromiseHub.Application.Guardian;
 
 namespace PromiseHub.Api.Endpoints;
@@ -45,6 +46,16 @@ public static class GuardianEndpoints
             ToHttp(await handler.GetAsync(Request(token, http), ct)));
         g.MapPost("/home/{token}/no-show", async (string token, AnswerNoShowRequest body, GuardianHomeHandler handler, HttpContext http, CancellationToken ct) =>
             ToHttp(await handler.AnswerNoShowAsync(Request(token, http), body, ct)));
+        g.MapPost("/home/{token}/children/{childId:guid}/pickups", async (string token, Guid childId, AddPickupCommand body, GuardianHomeHandler handler, HttpContext http, CancellationToken ct) =>
+        {
+            var (problem, done) = await handler.AddPickupAsync(Request(token, http), childId, body, ct);
+            return problem is not null ? ToHttp(problem) : done!.ToHttp($"/g/home/{token}");
+        });
+        g.MapDelete("/home/{token}/children/{childId:guid}/pickups/{pickupId:guid}", async (string token, Guid childId, Guid pickupId, GuardianHomeHandler handler, HttpContext http, CancellationToken ct) =>
+        {
+            var (problem, done) = await handler.RemovePickupAsync(Request(token, http), childId, pickupId, ct);
+            return problem is not null ? ToHttp(problem) : done!.ToHttp();
+        });
         var enroll = g.MapGroup("/enroll/{slug}");
         enroll.MapGet("", async (string slug, PromiseHub.Application.Enrollment.GuardianEnrollmentHandler handler, CancellationToken ct) =>
             ToHttp(await handler.PageAsync(slug, ct)));

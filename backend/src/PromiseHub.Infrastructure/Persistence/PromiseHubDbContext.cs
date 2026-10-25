@@ -45,6 +45,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Enrollment.EnrollmentRequest> EnrollmentRequests => Set<Domain.Enrollment.EnrollmentRequest>();
     public DbSet<Domain.Incidents.Incident> Incidents => Set<Domain.Incidents.Incident>();
     public DbSet<Domain.Attendance.NoShowAlert> NoShowAlerts => Set<Domain.Attendance.NoShowAlert>();
+    public DbSet<Domain.Attendance.ApprovedPickup> ApprovedPickups => Set<Domain.Attendance.ApprovedPickup>();
     public DbSet<Domain.Incidents.IncidentFollowUp> IncidentFollowUps => Set<Domain.Incidents.IncidentFollowUp>();
     public DbSet<GuardianVerification> GuardianVerifications => Set<GuardianVerification>();
     public DbSet<TrustedGuardianDevice> TrustedGuardianDevices => Set<TrustedGuardianDevice>();
@@ -275,6 +276,18 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(i => i.ReviewNote).HasMaxLength(4000);
             e.Property(i => i.ReviewedBy).HasMaxLength(200);
             e.Property(i => i.ReviewedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+        });
+        modelBuilder.Entity<Domain.Attendance.ApprovedPickup>(e =>
+        {
+            e.Property(p => p.Name).HasMaxLength(200);
+            e.Property(p => p.Relationship).HasMaxLength(100);
+            e.Property(p => p.Mobile).HasMaxLength(30);
+            e.Property(p => p.AddedBy).HasMaxLength(200);
+            e.Property(p => p.RemovedBy).HasMaxLength(200);
+            e.Property(p => p.AddedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(p => p.RemovedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.HasOne<Child>().WithMany().HasForeignKey(p => p.ChildId);
+            e.HasIndex(p => p.ChildId);
         });
         modelBuilder.Entity<Domain.Attendance.NoShowAlert>(e =>
         {

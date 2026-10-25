@@ -24,7 +24,13 @@ export interface QuickCard {
     language: string;
     isPrimary: boolean;
   }[];
-  approvedPickups: { name: string; relationship: string; isPrimary: boolean }[];
+  /** Guardians who may pick up, then other approved adults (with their pickupId). */
+  approvedPickups: {
+    name: string;
+    relationship: string;
+    isPrimary: boolean;
+    pickupId?: string | null;
+  }[];
   notes: string | null;
   medicalRestricted: boolean;
   /** Set when the card came from this device without signal: when it was saved. */

@@ -12,6 +12,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { GUARDIAN_API, GuardianHome, GuardianPageResult } from '@promisehub/api';
 import {
+  PhDialogs,
   PhAlert,
   PhBadge,
   PhButton,
@@ -23,6 +24,10 @@ import {
   PhTextField,
 } from '@promisehub/components';
 import { guardianText, longDate, timeRange } from '../guardian-text';
+import {
+  GuardianPickupData,
+  GuardianPickupDialog,
+} from '../guardian-pickup-dialog/guardian-pickup-dialog';
 import { homeText } from '../home-text';
 
 type Enrollment = GuardianHome['children'][number]['enrollments'][number];
@@ -52,6 +57,7 @@ type Step = 'contact' | 'code' | 'locked';
 export class GuardianHomePage {
   private readonly api = inject(GUARDIAN_API);
   private readonly document = inject(DOCUMENT);
+  private readonly dialogs = inject(PhDialogs);
 
   readonly token = input.required<string>();
 
@@ -151,6 +157,22 @@ export class GuardianHomePage {
         this.load(this.token());
       } else this.failed.set(true);
     });
+  }
+
+  /** Adds or removes an adult who may collect the child (L2-020 criterion 5). */
+  protected editPickups(
+    child: GuardianHome['children'][number],
+    remove: { id: string; name: string } | null,
+  ): void {
+    this.dialogs
+      .open<boolean, GuardianPickupData, GuardianPickupDialog>(GuardianPickupDialog, {
+        token: this.token(),
+        childId: child.id,
+        child: child.firstName,
+        text: this.h(),
+        remove,
+      })
+      .closed.subscribe((done) => done && this.load(this.token()));
   }
 
   protected requestCode(): void {

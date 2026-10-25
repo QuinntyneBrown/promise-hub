@@ -1,3 +1,4 @@
+using PromiseHub.Application.Organizations;
 using PromiseHub.Api.Authorization;
 using PromiseHub.Api.Modules;
 using PromiseHub.Application.Attendance;
@@ -35,6 +36,10 @@ public static class AttendanceEndpoints
             Ok(await handler.HandleAsync(id, command, ct))).RequireModule(ModuleId.Pickup).RequirePermission(Permission.RunSessions);
         app.MapGet("/children/{id:guid}/pickups", async (Guid id, GetPickupOptionsHandler handler, CancellationToken ct) =>
             await handler.HandleAsync(id, ct) is { } pickups ? Results.Ok(pickups) : Results.NotFound()).RequireModule(ModuleId.Pickup);
+        app.MapPost("/children/{id:guid}/pickups", async (Guid id, AddPickupCommand command, ApprovedPickupsHandler handler, ITenantContext tenant, CancellationToken ct) =>
+            (await handler.AddAsync(id, command, false, tenant.ActorName, null, ct)).ToHttp($"/children/{id}/pickups")).RequireModule(ModuleId.Pickup).RequirePermission(Permission.ManagePickups);
+        app.MapDelete("/children/{id:guid}/pickups/{pickupId:guid}", async (Guid id, Guid pickupId, ApprovedPickupsHandler handler, ITenantContext tenant, CancellationToken ct) =>
+            (await handler.RemoveAsync(id, pickupId, false, tenant.ActorName, null, ct)).ToHttp()).RequireModule(ModuleId.Pickup).RequirePermission(Permission.ManagePickups);
         app.MapGet("/children/{id:guid}/quick-card", async (Guid id, GetQuickCardHandler handler, HttpContext http, CancellationToken ct) =>
         {
             // The offline copy belongs to the app, never to an HTTP cache.

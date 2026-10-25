@@ -130,6 +130,32 @@
             <p>{{ h().none }}</p>
           </ph-card>
         }
+        @for (child of home.children; track child.id) {
+          @if (child.pickups; as pickups) {
+            <h2>{{ h().pickupsHeading(child.firstName) }}</h2>
+            <ph-list [label]="h().pickupsHeading(child.firstName)">
+              @for (p of pickups; track p.id) {
+                <ph-list-item [title]="p.name" [meta]="p.relationship">
+                  <ph-button
+                    variant="ghost"
+                    size="sm"
+                    hasPopup="dialog"
+                    [label]="h().removePickup(p.name)"
+                    (click)="editPickups(child, p)"
+                    >{{ h().remove }}</ph-button
+                  >
+                </ph-list-item>
+              } @empty {
+                <ph-list-item [title]="h().pickupsNone" />
+              }
+            </ph-list>
+            <div>
+              <ph-button hasPopup="dialog" (click)="editPickups(child, null)">{{
+                h().addPickup(child.firstName)
+              }}</ph-button>
+            </div>
+          }
+        }
       }
     }
   }
