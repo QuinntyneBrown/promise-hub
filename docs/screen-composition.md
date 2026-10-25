@@ -42,6 +42,7 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Message | `message` (default, error) | `ph-breadcrumb`, `ph-page-header`, `ph-stat`, `ph-card` (titled, flush), `ph-table` (badge cells), `ph-sms-preview`, `ph-empty-state`, `ph-button` | Refresh while sending |
 | Permission slips | `slips` (default, empty, error) | `ph-page-header`, `ph-progress-bar`, `ph-badge`, `ph-card`, `ph-empty-state`, `ph-button` | Slip rows with a progress bar |
 | Slip editor | `slip-editor` (default, error, invalid, submitting, success, edit) | `ph-breadcrumb`, `ph-page-header`, `ph-error-summary`, `ph-alert`, `ph-card` (titled), `ph-text-field`, `ph-textarea` (counter), `ph-select`, `ph-switch`, `ph-radio-group`, `ph-progress-bar`, `ph-stat`, `ph-table`, `ph-button` | Draft, scheduled and sent modes |
+| Guardian slip | `slip-sign` (default, invalid, submitting, success, error, expired, already-signed, es) | `ph-guardian-shell`, `ph-card` (titled), `ph-description-list`, `ph-radio-group`, `ph-text-field`, `ph-alert`, `ph-empty-state`, `ph-button` | Code check, language strings |
 
 ## Dialogs
 
@@ -63,6 +64,7 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Sign out | `confirm-pickup` (default, invalid, failed, confirm) | `ph-dialog`, `ph-radio-group` (with error), `ph-alert` (warning, danger), `ph-button` (tel: link), `ph-text-field`, `ph-switch` (with error) |
 | Send now | `send-now` | `ph-dialog`, `ph-button` |
 | Cancel send | `cancel-send` | `ph-dialog`, `ph-button` (danger) |
+| Decline slip | `decline-slip` | `ph-dialog`, `ph-textarea`, `ph-button` (danger) |
 | Add a walk-in | `add-walk-in` (default, invalid) | `ph-dialog`, `ph-text-field`, `ph-textarea`, `ph-button` |
 
 The toast region (`ph-toast-region`) sits once in the app root.

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 12 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="12" data-video-title="Sign a permission slip" data-parts="Introduction|Promises|Carmen signs|Dana declines|Safety|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 12</div>
+  <h1>Sign a permission slip</h1>
+  <p class="lead">From a text to a signed slip, in the family's language, with no account</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="Each child gets a link">
+  <h2>What signing promises</h2>
+  <ul>
+    <li>A link per child; alone it shows nothing</li>
+    <li>A six-digit code to a contact on file, 10 minutes</li>
+    <li>Three wrong codes pause the link for 15 minutes</li>
+    <li>Name, time, device, language and the text's fingerprint</li>
+  </ul>
+</section>
+
+<section id="carmen" data-part="2" data-cue="Here is Carmen's phone." data-clip="clips/carmen-signs-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone · Español</span><h3>Code, check, sign</h3><p>Mateo's details pre-filled; a receipt by name.</p></div>
+</section>
+
+<section id="dana" data-part="3" data-cue="Jordan can't go on the trip." data-clip="clips/dana-declines-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Declined, with a reason</h3><p>Tracking shows Jordan as declined.</p></div>
+</section>
+
+<section id="safety" data-part="4" data-cue="The name must match a guardian of the child">
+  <h2>Keeping families safe</h2>
+  <div class="cols">
+    <img class="shot" alt="A name that doesn't match is refused" src="shots/phone-name.png">
+    <img class="shot" alt="An expired link offers the organization's number" src="shots/phone-expired.png">
+  </div>
+</section>
+
+<section id="testing" data-part="5" data-cue="Backend tests cover the code request">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Contact not on file</td><td>Same 202, no code sent</td></tr>
+    <tr><td>Fourth try after three wrong codes</td><td>423 for 15 minutes</td></tr>
+    <tr><td>Verified phone, another family's link</td><td>Code asked again</td></tr>
+    <tr><td>Contact changed / a month past the deadline</td><td>410 with the organization's number</td></tr>
+    <tr><td>Slips off</td><td>404</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="6" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>A link plus a six-digit code, no accounts</li><li>The family's language</li><li>Who, when, which device, and exactly what was agreed</li></ul>
+  <p class="muted">Next: reminders that chase unsigned slips</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

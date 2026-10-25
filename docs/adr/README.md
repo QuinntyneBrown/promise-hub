@@ -18,3 +18,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0012](0012-session-staff.md) | Staff are assigned per session; youth workers run only their own |
 | [0013](0013-guardian-messages.md) | Guardian messages send through a per-tenant dispatcher behind provider abstractions |
 | [0014](0014-permission-slips.md) | Slips send through the message path and answer to their own module |
+| [0015](0015-guardian-links.md) | Guardian links carry a hashed token, a code trusts the device, and the link chooses the tenant |

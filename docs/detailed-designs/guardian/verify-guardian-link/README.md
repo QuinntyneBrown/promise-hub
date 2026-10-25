@@ -14,6 +14,10 @@ Terms used in this document:
 - **trusted device** — browser that holds a device token issued after verification, valid for 30 days for one household
 - **link lockout** — 15-minute refusal of further codes for one link after three wrong codes
 
+## Built so far
+
+Slice 12 delivered `GuardianLink`, `GuardianVerification`, `TrustedGuardianDevice`, `GuardianAccess` (the link picks the tenant), `POST /g/auth/code` and `/g/auth/verify` with the 10-minute code, the 15-minute lock after three wrong codes, the 30-day HttpOnly device cookie, and revocation when a guardian's mobile changes (ADR 0015). The `enroll` identify page and links for other purposes are not built yet.
+
 ## Description
 
 The feature lives in the `guardian` frontend library and the `Guardian` application folder, and supplies a filter that every other guardian endpoint uses.
