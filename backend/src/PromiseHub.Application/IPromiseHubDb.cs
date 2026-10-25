@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PromiseHub.Domain.Audit;
 using PromiseHub.Domain.Households;
+using PromiseHub.Domain.Identity;
 using PromiseHub.Domain.Organizations;
 
 namespace PromiseHub.Application;
@@ -13,6 +14,8 @@ public interface IPromiseHubDb
     DbSet<Household> Households { get; }
     DbSet<Child> Children { get; }
     DbSet<AuditEntry> AuditEntries { get; }
+    DbSet<StaffUser> StaffUsers { get; }
+    DbSet<SignInAttempt> SignInAttempts { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

@@ -4,6 +4,7 @@ using PromiseHub.Application.Organizations;
 using PromiseHub.Domain.Audit;
 using PromiseHub.Domain.Households;
 using PromiseHub.Domain.Organizations;
+using PromiseHub.Infrastructure.Auth;
 using PromiseHub.Infrastructure.Persistence;
 using PromiseHub.Infrastructure.Persistence.Seed;
 
@@ -18,7 +19,7 @@ public sealed class PersistenceGuardTests : IDisposable
         _connection.Open();
         using var db = Context(TenantContext.System());
         db.Database.Migrate();
-        new DatabaseSeeder(db).SeedAsync().GetAwaiter().GetResult();
+        new DatabaseSeeder(db, new PasswordHasher()).SeedAsync().GetAwaiter().GetResult();
     }
 
     // L2-032 criterion 4: an audit entry cannot be edited or deleted through the application.

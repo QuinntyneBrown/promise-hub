@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using PromiseHub.Cli;
+using PromiseHub.Infrastructure.Persistence.Seed;
 
 var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
 var configuration = new ConfigurationBuilder()
@@ -15,4 +16,5 @@ if (string.IsNullOrWhiteSpace(connectionString))
     return 1;
 }
 
-return await CliApp.RunAsync(args, connectionString, environment == "Development");
+var seed = new SeedOptions(configuration["Seed:StaffPassword"], configuration["Seed:MfaSecret"]);
+return await CliApp.RunAsync(args, connectionString, environment == "Development", seed: seed);
