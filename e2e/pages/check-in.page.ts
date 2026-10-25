@@ -32,6 +32,10 @@ export class CheckInPage extends BasePage {
     return this.page.getByRole('group', { name: 'Session totals' }).getByTestId(`total-${label}`).getByTestId('stat-value');
   }
 
+  noShowNote(name: string): Locator {
+    return this.row(name).getByTestId('no-show');
+  }
+
   row(name: string): Locator {
     return this.roster.getByRole('listitem').filter({ has: this.page.getByText(name, { exact: true }) });
   }

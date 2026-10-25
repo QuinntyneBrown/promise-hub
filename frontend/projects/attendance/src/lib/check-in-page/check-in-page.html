@@ -135,6 +135,19 @@
                 @if (e.walkIn) {
                   <ph-badge tone="info">Walk-in</ph-badge>
                 }
+                @if (e.noShow) {
+                  <ph-badge
+                    data-testid="no-show"
+                    [tone]="
+                      e.noShow === 'TextSent'
+                        ? 'warning'
+                        : e.noShow === 'OnTheWay'
+                          ? 'info'
+                          : 'neutral'
+                    "
+                    >{{ noShowText(e) }}</ph-badge
+                  >
+                }
                 @switch (slipStatus(e)) {
                   @case ('Missing') {
                     <ph-badge tone="warning">Slip missing</ph-badge>

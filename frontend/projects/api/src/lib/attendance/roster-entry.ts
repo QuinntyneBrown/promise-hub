@@ -16,4 +16,7 @@ export interface RosterEntry {
   signedOutAt: string | null;
   /** Who collected the child at sign-out. */
   collectedBy: string | null;
+  /** The no-show text and the guardian's reply, when the job sent one. */
+  noShow: 'TextSent' | 'OnTheWay' | 'Absent' | null;
+  noShowAt: string | null;
 }
