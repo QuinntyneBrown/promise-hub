@@ -28,5 +28,6 @@ public sealed class UpdateMedicalHandler(IPromiseHubDb db, ITenantContext tenant
         string.IsNullOrWhiteSpace(d.Medication) ? null : d.Medication.Trim(),
         string.IsNullOrWhiteSpace(d.Conditions) ? null : d.Conditions.Trim(),
         string.IsNullOrWhiteSpace(d.Doctor) ? null : d.Doctor.Trim(),
-        d.RedAlert);
+        d.RedAlert,
+        string.IsNullOrWhiteSpace(d.AlertInstruction) ? null : d.AlertInstruction.Trim());
 }

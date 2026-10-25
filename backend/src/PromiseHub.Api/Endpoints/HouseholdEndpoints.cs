@@ -34,7 +34,7 @@ public static class HouseholdEndpoints
         roster.MapPut("/children/{id:guid}", async (Guid id, UpdateChildCommand command, UpdateChildHandler handler, CancellationToken ct) =>
             (await handler.HandleAsync(id, command, ct)).ToHttp()).RequirePermission(Permission.WriteHouseholds);
         roster.MapPut("/children/{id:guid}/medical", async (Guid id, MedicalRequest request, UpdateMedicalHandler handler, CancellationToken ct) =>
-            (await handler.HandleAsync(id, new MedicalDetails(request.Allergies, request.Medication, request.Conditions, request.Doctor, request.RedAlert), ct)).ToHttp())
+            (await handler.HandleAsync(id, new MedicalDetails(request.Allergies, request.Medication, request.Conditions, request.Doctor, request.RedAlert, request.AlertInstruction), ct)).ToHttp())
             .RequirePermission(Permission.WriteMedical);
         return app;
     }

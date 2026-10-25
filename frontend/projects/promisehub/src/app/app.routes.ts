@@ -30,6 +30,9 @@ export const routes: Routes = [
       ...moduleRoute('check-in', 'RollCall', () =>
         import('@promisehub/attendance').then((m) => m.routes),
       ),
+      ...moduleRoute('quick-cards', 'QuickCards', () =>
+        import('@promisehub/attendance').then((m) => m.quickCardRoutes),
+      ),
       ...moduleRoute('events', 'Slips', () => import('@promisehub/events').then((m) => m.routes)),
       ...moduleRoute('programs', 'Slips', () =>
         import('@promisehub/programs').then((m) => m.routes),

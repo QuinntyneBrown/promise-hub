@@ -30,6 +30,15 @@
       [options]="alertOptions"
       [(ngModel)]="alert"
     />
+    @if (alert === 'red') {
+      <ph-textarea
+        inputId="alertInstruction"
+        label="What staff should do"
+        name="alertInstruction"
+        placeholder="EpiPen in backpack front pocket. Use it, call 911, then the guardian."
+        [(ngModel)]="changes.alertInstruction"
+      />
+    }
     <ng-container ngProjectAs="[phDialogFooter]">
       <ph-button (click)="ref.close()">Cancel</ph-button>
       <ph-button variant="primary" type="submit" [busy]="busy()">Save medical details</ph-button>

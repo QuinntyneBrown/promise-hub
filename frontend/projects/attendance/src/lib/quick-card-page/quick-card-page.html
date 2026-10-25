@@ -1,0 +1,100 @@
+@let r = result();
+@switch (r?.status) {
+  @case ('not-found') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="search"
+        title="We can’t find that Quick Card"
+        text="The child may have been removed or belong to another organization."
+        [headingLevel]="1"
+      >
+        <ph-button variant="primary" link="/check-in">Back to check-in</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('error') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load this Quick Card"
+        text="Try again, or call the guardian."
+        [headingLevel]="1"
+      >
+        <ph-button variant="primary" (click)="retry()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('loaded') {
+    @if (r?.status === 'loaded') {
+      @let c = r.value;
+      <div class="quick-card">
+        <div class="head">
+          <ph-avatar [name]="c.name" size="lg" tint="peach" />
+          <div>
+            <h1 class="name">{{ c.name }}</h1>
+            <p class="muted">{{ subtitle(c) }}</p>
+          </div>
+        </div>
+        <div class="body" data-testid="quick-card-body">
+          @if (c.allergyAlert; as alert) {
+            <ph-quick-card-alert
+              data-block="alert"
+              [title]="alert.title"
+              [instruction]="alert.instruction"
+            />
+          }
+          @if (c.medicalRestricted) {
+            <div data-block="restricted" class="stack">
+              <ph-alert
+                tone="info"
+                title="Medical details are hidden for your role"
+                text="Ask a site lead or program director if you need them."
+              />
+            </div>
+          } @else if (c.medical) {
+            <ph-card data-block="medical" title="Medical">
+              <ph-description-list [facts]="medicalFacts(c)" />
+            </ph-card>
+          } @else {
+            <ph-card data-block="empty" [flush]="true">
+              <ph-empty-state
+                icon="quick-cards"
+                title="No medical information yet"
+                [text]="'Ask ' + (c.primaryGuardian ?? 'the guardian') + ' to add it.'"
+              />
+            </ph-card>
+          }
+          <section data-block="call" class="section" aria-labelledby="qc-call">
+            <h2 id="qc-call" class="overline">Call, in this order</h2>
+            @if (c.callOrder.length) {
+              <ph-call-list label="Call, in this order" [contacts]="contacts(c)" />
+            } @else {
+              <p class="muted">No phone numbers on file. Check the household.</p>
+            }
+          </section>
+          <ph-card data-block="pickups" title="Approved to pick up" [flush]="true">
+            <ph-list label="Approved to pick up" [inset]="true">
+              @for (p of c.approvedPickups; track p.name) {
+                <ph-list-item [title]="p.name" [meta]="p.relationship" [avatar]="p.name">
+                  @if (p.isPrimary) {
+                    <ph-badge tone="success">Primary</ph-badge>
+                  }
+                </ph-list-item>
+              } @empty {
+                <ph-list-item
+                  title="No one approved yet"
+                  meta="Ask the guardian before anyone takes the child."
+                />
+              }
+            </ph-list>
+            <div phCardFooter>Others need the primary guardian’s okay by phone.</div>
+          </ph-card>
+          <ph-card data-block="notes" title="Also good to know">
+            <ph-description-list [facts]="otherFacts(c)" />
+          </ph-card>
+        </div>
+      </div>
+    }
+  }
+}

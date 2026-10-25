@@ -1,7 +1,17 @@
 <ph-avatar [name]="name()" size="sm" [tint]="avatarTint()" />
 <div class="body">
   <div class="name">
-    <span data-testid="roster-name">{{ name() }}</span>
+    @if (link(); as target) {
+      <a
+        class="name-link"
+        [routerLink]="target"
+        [attr.aria-label]="'Quick Card for ' + name()"
+        data-testid="roster-name"
+        >{{ name() }}</a
+      >
+    } @else {
+      <span data-testid="roster-name">{{ name() }}</span>
+    }
     <ng-content select="[phRosterFlags]" />
   </div>
   @if (meta()) {

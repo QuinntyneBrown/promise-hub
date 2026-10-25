@@ -13,3 +13,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0007](0007-soft-delete-and-command-results.md) | Soft delete, command results and client-side permission hints |
 | [0008](0008-programs-and-events.md) | Programs and events as roster data, in-process draft slips |
 | [0009](0009-sessions-are-events.md) | A session is an event; idempotent attendance |
+| [0010](0010-quick-cards.md) | Quick Cards in the attendance library, every open audited |

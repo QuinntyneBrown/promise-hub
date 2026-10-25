@@ -46,6 +46,7 @@ public static class DependencyInjection
         services.AddScoped<CheckInHandler>();
         services.AddScoped<MarkAbsentHandler>();
         services.AddScoped<AddWalkInHandler>();
+        services.AddScoped<GetQuickCardHandler>();
         services.AddScoped<GetOrganizationSettingsHandler>();
         services.AddScoped<IModuleGate, ModuleGate>();
         services.AddScoped<GetModulesHandler>();

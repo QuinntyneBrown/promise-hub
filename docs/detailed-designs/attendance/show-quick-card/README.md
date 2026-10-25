@@ -40,7 +40,7 @@ The feature belongs to the `attendance` subsystem and the Quick Cards module. Th
 ### Backend — `PromiseHub.Application/Attendance/`
 
 - **`GetQuickCardQuery`** / **`GetQuickCardQueryHandler`** — assembles `QuickCardDto` for one child in the signed-in person's organization. The handler asks `QuickCardPermissions.CanViewMedical(role)`; when false it omits `Medical` and `HealthCard` from the DTO and sets `MedicalRestricted = true`. It writes one audit entry per call through `IAuditLog` with actor, child, organization, time and whether medical fields were included (`L2-019`, `L2-032`).
-- **`GetTodayQuickCardsQuery`** / **`GetTodayQuickCardsQueryHandler`** — returns the cards for every child on today's sessions of the organization, with the same role filtering. It writes one audit entry per card listing the cache fill as the reason. `<TO SUPPLY>`: whether a cache fill counts as a view in the audit log or is recorded as a distinct `CacheFill` action.
+- **`GetTodayQuickCardsQuery`** / **`GetTodayQuickCardsQueryHandler`** — returns the cards for every child on today's sessions of the organization, with the same role filtering. It writes one audit entry per card listing the cache fill as the reason. A cache fill is recorded as its own action (ADR 0010).
 - **`QuickCardPermissions`** — medical fields are visible to site lead, program director and admin; absent for volunteer coordinator and youth worker (`L2-007`).
 - **`QuickCardDto`** — `Child` (name, age, grade, programs), `AllergyAlert` (title, instruction; null when no severe allergy), `Medical` (allergies, medication, conditions, health card masked to the last four digits, doctor; null when restricted or empty), `CallOrder` (contacts with relationship, language, phone), `ApprovedPickups`, `Notes` (school, language at home, notes), `MedicalRestricted`, `GeneratedAt`.
 
@@ -52,6 +52,10 @@ The feature belongs to the `attendance` subsystem and the Quick Cards module. Th
 
 - **`PromiseHubDbContext`** — one query joining child, medical details, guardians and approved pickups, filtered by organization.
 - **`IAuditLog`** — writes the view entry. The entry is immutable through the application (`L2-032`).
+
+### Built so far
+
+Slice 07 delivered `QuickCardPage` at `/quick-cards/:childId` (default, empty, forbidden, not-found and error), opened from a check-in name; `QUICK_CARD_API`; `GET /children/{childId}/quick-card` under Quick Cards with `Cache-Control: private, no-store`; `GetQuickCardHandler` with role filtering and a `Viewed` audit entry per open; the alert instruction, masked health card and notes on the child (ADR 0010). `QuickCardStore`, the offline copy, the sync chip and `GET /quick-cards/today` arrive with offline check-in; approved adults beyond guardians with slice 26.
 
 ### Behavioural rules
 

@@ -21,6 +21,12 @@ public static class AttendanceEndpoints
             Ok(await handler.HandleAsync(id, command, ct))).RequirePermission(Permission.RunSessions);
         sessions.MapPost("/{id:guid}/walk-ins", async (Guid id, AddWalkInCommand command, AddWalkInHandler handler, CancellationToken ct) =>
             (await handler.HandleAsync(id, command, ct)).ToHttp()).RequirePermission(Permission.RunSessions);
+        app.MapGet("/children/{id:guid}/quick-card", async (Guid id, GetQuickCardHandler handler, HttpContext http, CancellationToken ct) =>
+        {
+            // The offline copy belongs to the app, never to an HTTP cache.
+            http.Response.Headers.CacheControl = "private, no-store";
+            return await handler.HandleAsync(id, ct) is { } card ? Results.Ok(card) : Results.NotFound();
+        }).RequireModule(ModuleId.QuickCards);
         return app;
     }
 
