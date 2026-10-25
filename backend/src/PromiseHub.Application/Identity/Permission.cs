@@ -15,4 +15,5 @@ public enum Permission
     SendMessages,
     ManageSlips,
     ReviewEnrollments,
+    ReviewIncidents,
 }

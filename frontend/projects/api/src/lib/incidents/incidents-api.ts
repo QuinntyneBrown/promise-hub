@@ -1,7 +1,7 @@
 import type { Observable } from 'rxjs';
 import type { LoadResult } from '../load-result';
 import type { WriteOutcome } from '../write-outcome';
-import type { Incident } from './incident';
+import type { Incident, ReviewOutcome } from './incident';
 import type { IncidentForm } from './incident-form';
 import type { IncidentReport } from './incident-report';
 import type { IncidentSummary } from './incident-summary';
@@ -12,4 +12,7 @@ export interface IncidentsApi {
   get(id: string): Observable<LoadResult<Incident>>;
   form(): Observable<LoadResult<IncidentForm>>;
   report(report: IncidentReport): Observable<WriteOutcome>;
+  review(id: string, note: string, outcome: ReviewOutcome): Observable<WriteOutcome>;
+  addFollowUp(id: string, text: string): Observable<WriteOutcome>;
+  reopen(id: string): Observable<WriteOutcome>;
 }

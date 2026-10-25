@@ -1,0 +1,9 @@
+<ph-dialog title="Reopen this report?" description="It goes back to open; the review note is kept.">
+  @if (failed()) {
+    <ph-alert tone="danger" title="That didn’t go through" text="Nothing was changed. Try again." />
+  }
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close()">Cancel</ph-button>
+    <ph-button variant="primary" [busy]="busy()" (click)="reopen()">Reopen</ph-button>
+  </ng-container>
+</ph-dialog>

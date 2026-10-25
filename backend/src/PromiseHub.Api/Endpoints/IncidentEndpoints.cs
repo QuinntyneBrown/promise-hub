@@ -1,4 +1,6 @@
+using PromiseHub.Api.Authorization;
 using PromiseHub.Api.Modules;
+using PromiseHub.Application.Identity;
 using PromiseHub.Application.Incidents;
 using PromiseHub.Domain.Organizations;
 
@@ -16,6 +18,12 @@ public static class IncidentEndpoints
             await queries.GetAsync(id, ct) is { } incident ? Results.Ok(incident) : Results.NotFound());
         incidents.MapPost("", async (ReportIncidentCommand command, ReportIncidentHandler handler, CancellationToken ct) =>
             (await handler.HandleAsync(command, ct)).ToHttp("/incidents"));
+        incidents.MapPost("/{id:guid}/review", async (Guid id, ReviewIncidentCommand command, IncidentReviewHandler handler, CancellationToken ct) =>
+            (await handler.ReviewAsync(id, command, ct)).ToHttp()).RequirePermission(Permission.ReviewIncidents);
+        incidents.MapPost("/{id:guid}/reopen", async (Guid id, IncidentReviewHandler handler, CancellationToken ct) =>
+            (await handler.ReopenAsync(id, ct)).ToHttp()).RequirePermission(Permission.ReviewIncidents);
+        incidents.MapPost("/{id:guid}/notes", async (Guid id, AddFollowUpCommand command, IncidentReviewHandler handler, CancellationToken ct) =>
+            (await handler.AddFollowUpAsync(id, command, ct)).ToHttp());
         return app;
     }
 }

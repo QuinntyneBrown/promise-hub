@@ -1,0 +1,23 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog title="Add a follow-up" description="Kept on the report, even after it is closed.">
+    @if (failed()) {
+      <ph-alert
+        tone="danger"
+        title="That didn’t go through"
+        text="Nothing was changed. Try again."
+      />
+    }
+    <ph-textarea
+      inputId="follow-up"
+      label="Follow-up"
+      name="text"
+      [rows]="3"
+      [error]="errors()['text'] ?? null"
+      [(ngModel)]="text"
+    />
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Add follow-up</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

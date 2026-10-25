@@ -1894,6 +1894,38 @@
       ]
     },
     {
+      "id": "add-follow-up",
+      "kind": "dialog",
+      "title": "Add a follow-up",
+      "opens_from": "incident",
+      "requirements": [
+        "L1-011"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ]
+    },
+    {
+      "id": "reopen-incident",
+      "kind": "dialog",
+      "title": "Reopen this report?",
+      "opens_from": "incident",
+      "requirements": [
+        "L1-011"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "invalid": "No inputs."
+      }
+    },
+    {
       "id": "export-data",
       "kind": "dialog",
       "title": "Export",

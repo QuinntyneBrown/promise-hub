@@ -57,6 +57,8 @@ export * from './lib/table/table-cell';
 export * from './lib/table/table-column';
 export * from './lib/switch/switch';
 export * from './lib/tabs/tab-item';
+export * from './lib/timeline/timeline';
+export * from './lib/timeline/timeline-entry';
 export * from './lib/tabs/tab-link';
 export * from './lib/tabs/tabs';
 export * from './lib/text-field/text-field';
