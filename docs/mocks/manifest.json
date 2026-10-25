@@ -1,0 +1,2179 @@
+{
+  "project": "PromiseHub",
+  "required_states": {
+    "page": [
+      "default",
+      "loading",
+      "empty",
+      "error"
+    ],
+    "dialog": [
+      "default",
+      "busy",
+      "invalid"
+    ],
+    "notification": [
+      "info",
+      "success",
+      "warning",
+      "danger"
+    ]
+  },
+  "screens": [
+    {
+      "id": "today",
+      "kind": "page",
+      "title": "Today",
+      "route": "/",
+      "requirements": [
+        "PRD-ROLLCALL",
+        "PRD-SLIPS",
+        "PRD-NOTIFY"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "partial",
+        "single-module",
+        "offline"
+      ]
+    },
+    {
+      "id": "check-in",
+      "kind": "page",
+      "title": "Check-in",
+      "route": "/check-in",
+      "requirements": [
+        "PRD-ROLLCALL",
+        "PRD-PICKUP",
+        "PRD-NFR-MOBILE"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "no-results",
+        "offline",
+        "day-of",
+        "complete",
+        "long"
+      ]
+    },
+    {
+      "id": "quick-card",
+      "kind": "page",
+      "title": "Quick Card",
+      "route": "/children/:id/quick-card",
+      "requirements": [
+        "PRD-QUICKCARD",
+        "PRD-NFR-PRIVACY",
+        "PRD-NFR-MOBILE"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "offline",
+        "forbidden",
+        "edge"
+      ]
+    },
+    {
+      "id": "events",
+      "kind": "page",
+      "title": "Events",
+      "route": "/events",
+      "requirements": [
+        "PRD-SLIPS",
+        "PRD-ROLLCALL"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "no-results",
+        "long"
+      ]
+    },
+    {
+      "id": "event",
+      "kind": "page",
+      "title": "Event",
+      "route": "/events/:id",
+      "requirements": [
+        "PRD-SLIPS",
+        "PRD-ROLLCALL",
+        "PRD-NOTIFY"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "partial",
+        "upcoming",
+        "cancelled"
+      ]
+    },
+    {
+      "id": "families",
+      "kind": "page",
+      "title": "Families",
+      "route": "/families",
+      "requirements": [
+        "PRD-ENROLL",
+        "PRD-NFR-PRIVACY"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "no-results",
+        "long",
+        "edge"
+      ]
+    },
+    {
+      "id": "household",
+      "kind": "page",
+      "title": "Household",
+      "route": "/families/:id",
+      "requirements": [
+        "PRD-ENROLL",
+        "PRD-NFR-PRIVACY",
+        "PRD-DATA"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "forbidden",
+        "edge"
+      ]
+    },
+    {
+      "id": "child",
+      "kind": "page",
+      "title": "Child",
+      "route": "/children/:id",
+      "requirements": [
+        "PRD-ENROLL",
+        "PRD-QUICKCARD",
+        "PRD-PICKUP",
+        "PRD-NFR-PRIVACY",
+        "PRD-DATA"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "forbidden",
+        "edge"
+      ]
+    },
+    {
+      "id": "programs",
+      "kind": "page",
+      "title": "Programs",
+      "route": "/programs",
+      "requirements": [
+        "PRD-ENROLL"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "no-results"
+      ]
+    },
+    {
+      "id": "program",
+      "kind": "page",
+      "title": "Program",
+      "route": "/programs/:id",
+      "requirements": [
+        "PRD-ENROLL",
+        "PRD-REPORTS"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "archived"
+      ]
+    },
+    {
+      "id": "roster",
+      "kind": "page",
+      "title": "Program roster",
+      "route": "/programs/:id/roster",
+      "requirements": [
+        "PRD-ENROLL"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "no-results",
+        "selected",
+        "long"
+      ]
+    },
+    {
+      "id": "program-form",
+      "kind": "page",
+      "title": "Program form",
+      "route": "/programs/new",
+      "requirements": [
+        "PRD-ENROLL"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "error",
+        "invalid",
+        "submitting",
+        "success",
+        "edit"
+      ],
+      "not_applicable": {
+        "empty": "A form has no collection to be empty of."
+      }
+    },
+    {
+      "id": "event-form",
+      "kind": "page",
+      "title": "Event form",
+      "route": "/events/new",
+      "requirements": [
+        "PRD-SLIPS",
+        "PRD-ROLLCALL"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "error",
+        "invalid",
+        "submitting",
+        "success",
+        "edit"
+      ],
+      "not_applicable": {
+        "empty": "A form has no collection to be empty of."
+      }
+    },
+    {
+      "id": "slips",
+      "kind": "page",
+      "title": "Slips",
+      "route": "/slips",
+      "requirements": [
+        "PRD-SLIPS"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "no-results"
+      ]
+    },
+    {
+      "id": "slip-editor",
+      "kind": "page",
+      "title": "Slip editor",
+      "route": "/events/:id/slip",
+      "requirements": [
+        "PRD-SLIPS",
+        "PRD-NOTIFY",
+        "PRD-NFR-COST"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "error",
+        "invalid",
+        "submitting",
+        "success",
+        "edit"
+      ],
+      "not_applicable": {
+        "empty": "A form has no collection to be empty of."
+      }
+    },
+    {
+      "id": "messages",
+      "kind": "page",
+      "title": "Messages",
+      "route": "/messages",
+      "requirements": [
+        "PRD-NOTIFY",
+        "PRD-NFR-COST"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "no-results",
+        "long"
+      ]
+    },
+    {
+      "id": "new-message",
+      "kind": "page",
+      "title": "New message",
+      "route": "/messages/new",
+      "requirements": [
+        "PRD-NOTIFY",
+        "PRD-NFR-COST",
+        "PRD-NFR-ACCESS"
+      ],
+      "states": [
+        "default",
+        "error",
+        "invalid",
+        "submitting",
+        "success",
+        "no-results",
+        "over-cap"
+      ],
+      "not_applicable": {
+        "empty": "A form has no collection to be empty of.",
+        "loading": "The compose form is static; recipient counts load inline."
+      }
+    },
+    {
+      "id": "message",
+      "kind": "page",
+      "title": "Message",
+      "route": "/messages/:id",
+      "requirements": [
+        "PRD-NOTIFY"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "error",
+        "partial",
+        "scheduled"
+      ],
+      "not_applicable": {
+        "empty": "A sent message always has recipients."
+      }
+    },
+    {
+      "id": "incidents",
+      "kind": "page",
+      "title": "Incidents",
+      "route": "/incidents",
+      "requirements": [
+        "PRD-INCIDENT",
+        "PRD-NFR-PRIVACY"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "forbidden",
+        "no-results"
+      ]
+    },
+    {
+      "id": "new-incident",
+      "kind": "page",
+      "title": "Report incident",
+      "route": "/incidents/new",
+      "requirements": [
+        "PRD-INCIDENT"
+      ],
+      "states": [
+        "default",
+        "error",
+        "invalid",
+        "submitting",
+        "success"
+      ],
+      "not_applicable": {
+        "empty": "A form has no collection to be empty of.",
+        "loading": "The report form is static and works offline."
+      }
+    },
+    {
+      "id": "incident",
+      "kind": "page",
+      "title": "Incident",
+      "route": "/incidents/:id",
+      "requirements": [
+        "PRD-INCIDENT",
+        "PRD-NFR-PRIVACY",
+        "PRD-DATA"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "error",
+        "forbidden",
+        "reviewed"
+      ],
+      "not_applicable": {
+        "empty": "An incident always has a report body."
+      }
+    },
+    {
+      "id": "reports",
+      "kind": "page",
+      "title": "Reports",
+      "route": "/reports",
+      "requirements": [
+        "PRD-REPORTS",
+        "PRD-NFR-PRIVACY"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "no-results",
+        "submitting",
+        "success"
+      ]
+    },
+    {
+      "id": "attendance",
+      "kind": "page",
+      "title": "Attendance",
+      "route": "/programs/:id/attendance",
+      "requirements": [
+        "PRD-ROLLCALL",
+        "PRD-REPORTS"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "no-results",
+        "long"
+      ]
+    },
+    {
+      "id": "import-roster",
+      "kind": "page",
+      "title": "Import roster",
+      "route": "/import",
+      "requirements": [
+        "PRD-NFR-INTEGRATION",
+        "PRD-NFR-TTV",
+        "PRD-ENROLL"
+      ],
+      "states": [
+        "default",
+        "mapping",
+        "invalid",
+        "submitting",
+        "success",
+        "error",
+        "loading"
+      ],
+      "not_applicable": {
+        "empty": "The import wizard starts empty by design; the default state is that screen."
+      }
+    },
+    {
+      "id": "settings",
+      "kind": "page",
+      "title": "Settings",
+      "route": "/settings",
+      "requirements": [
+        "PRD-NFR-COMPLIANCE",
+        "PRD-NFR-TTV"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "error",
+        "invalid",
+        "submitting",
+        "success"
+      ],
+      "not_applicable": {
+        "empty": "Settings always have values."
+      }
+    },
+    {
+      "id": "staff",
+      "kind": "page",
+      "title": "Staff and roles",
+      "route": "/settings/staff",
+      "requirements": [
+        "PRD-NFR-PRIVACY",
+        "PRD-NFR-SECURITY"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "forbidden"
+      ]
+    },
+    {
+      "id": "settings-notifications",
+      "kind": "page",
+      "title": "Notification settings",
+      "route": "/settings/notifications",
+      "requirements": [
+        "PRD-NOTIFY",
+        "PRD-ROLLCALL",
+        "PRD-NFR-COST"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "error",
+        "invalid",
+        "submitting",
+        "success"
+      ],
+      "not_applicable": {
+        "empty": "Settings always have values."
+      }
+    },
+    {
+      "id": "settings-privacy",
+      "kind": "page",
+      "title": "Privacy and data",
+      "route": "/settings/privacy",
+      "requirements": [
+        "PRD-NFR-PRIVACY",
+        "PRD-NFR-COMPLIANCE",
+        "PRD-NFR-SECURITY",
+        "PRD-DATA"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "error",
+        "submitting",
+        "success"
+      ],
+      "not_applicable": {
+        "empty": "Settings always have values."
+      }
+    },
+    {
+      "id": "audit-log",
+      "kind": "page",
+      "title": "Audit log",
+      "route": "/settings/audit",
+      "requirements": [
+        "PRD-NFR-PRIVACY",
+        "PRD-NFR-SECURITY",
+        "PRD-DATA"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "no-results",
+        "long"
+      ]
+    },
+    {
+      "id": "billing",
+      "kind": "page",
+      "title": "Billing",
+      "route": "/settings/billing",
+      "requirements": [
+        "PRD-NFR-COST"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "error",
+        "free",
+        "limit-reached",
+        "payment-failed"
+      ],
+      "not_applicable": {
+        "empty": "Billing always shows a plan."
+      }
+    },
+    {
+      "id": "account",
+      "kind": "page",
+      "title": "Your account",
+      "route": "/account",
+      "requirements": [
+        "PRD-NFR-SECURITY"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "error",
+        "invalid",
+        "submitting",
+        "success",
+        "mfa-off"
+      ],
+      "not_applicable": {
+        "empty": "An account always has a profile."
+      }
+    },
+    {
+      "id": "notifications",
+      "kind": "page",
+      "title": "Notifications",
+      "route": "/notifications",
+      "requirements": [
+        "PRD-NOTIFY",
+        "PRD-SLIPS",
+        "PRD-INCIDENT"
+      ],
+      "states": [
+        "default",
+        "read",
+        "loading",
+        "empty",
+        "error"
+      ]
+    },
+    {
+      "id": "search",
+      "kind": "page",
+      "title": "Search",
+      "route": "/search",
+      "requirements": [
+        "PRD-ENROLL"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "no-results"
+      ]
+    },
+    {
+      "id": "not-found",
+      "kind": "page",
+      "title": "Not found",
+      "route": "/404",
+      "states": [
+        "default"
+      ],
+      "not_applicable": {
+        "loading": "Static page.",
+        "empty": "Static page.",
+        "error": "This page is the error."
+      }
+    },
+    {
+      "id": "forbidden",
+      "kind": "page",
+      "title": "Forbidden",
+      "route": "/403",
+      "requirements": [
+        "PRD-NFR-PRIVACY"
+      ],
+      "states": [
+        "default"
+      ],
+      "not_applicable": {
+        "loading": "Static page.",
+        "empty": "Static page.",
+        "error": "This page is the error."
+      }
+    },
+    {
+      "id": "server-error",
+      "kind": "page",
+      "title": "Server error",
+      "route": "/500",
+      "states": [
+        "default"
+      ],
+      "not_applicable": {
+        "loading": "Static page.",
+        "empty": "Static page.",
+        "error": "This page is the error."
+      }
+    },
+    {
+      "id": "offline",
+      "kind": "page",
+      "title": "Offline",
+      "route": "/offline",
+      "requirements": [
+        "PRD-NFR-MOBILE",
+        "PRD-ROLLCALL"
+      ],
+      "states": [
+        "default"
+      ],
+      "not_applicable": {
+        "loading": "Static page.",
+        "empty": "Static page.",
+        "error": "This page is the error."
+      }
+    },
+    {
+      "id": "maintenance",
+      "kind": "page",
+      "title": "Maintenance",
+      "route": "/maintenance",
+      "states": [
+        "default"
+      ],
+      "not_applicable": {
+        "loading": "Static page.",
+        "empty": "Static page.",
+        "error": "This page is the error."
+      }
+    },
+    {
+      "id": "sign-in",
+      "kind": "page",
+      "title": "Sign in",
+      "route": "/sign-in",
+      "requirements": [
+        "PRD-NFR-SECURITY"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "submitting",
+        "error",
+        "mfa",
+        "expired",
+        "locked"
+      ],
+      "not_applicable": {
+        "loading": "The form is static.",
+        "empty": "A form has no collection to be empty of."
+      }
+    },
+    {
+      "id": "forgot-password",
+      "kind": "page",
+      "title": "Forgot password",
+      "route": "/forgot-password",
+      "requirements": [
+        "PRD-NFR-SECURITY"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "submitting",
+        "success",
+        "error"
+      ],
+      "not_applicable": {
+        "loading": "The form is static.",
+        "empty": "A form has no collection to be empty of."
+      }
+    },
+    {
+      "id": "reset-password",
+      "kind": "page",
+      "title": "Reset password",
+      "route": "/reset-password",
+      "requirements": [
+        "PRD-NFR-SECURITY"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "submitting",
+        "success",
+        "error"
+      ],
+      "not_applicable": {
+        "loading": "The form is static.",
+        "empty": "A form has no collection to be empty of."
+      }
+    },
+    {
+      "id": "accept-invite",
+      "kind": "page",
+      "title": "Accept invitation",
+      "route": "/invite/:token",
+      "requirements": [
+        "PRD-NFR-SECURITY",
+        "PRD-NFR-TTV"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "submitting",
+        "success",
+        "error"
+      ],
+      "not_applicable": {
+        "loading": "The form is static.",
+        "empty": "A form has no collection to be empty of."
+      }
+    },
+    {
+      "id": "setup",
+      "kind": "page",
+      "title": "Set up",
+      "route": "/setup",
+      "requirements": [
+        "PRD-NFR-TTV",
+        "PRD-NFR-INTEGRATION"
+      ],
+      "states": [
+        "default",
+        "error",
+        "success"
+      ],
+      "not_applicable": {
+        "empty": "The setup checklist is the empty state of the product.",
+        "loading": "Static checklist."
+      }
+    },
+    {
+      "id": "onboard-welcome",
+      "kind": "page",
+      "title": "Welcome",
+      "route": "/welcome",
+      "requirements": [
+        "PRD-NFR-TTV"
+      ],
+      "states": [
+        "default"
+      ],
+      "not_applicable": {
+        "loading": "Nothing is fetched; the page is static.",
+        "empty": "No collection on this page.",
+        "error": "Nothing can fail here; failures belong to the steps that save."
+      }
+    },
+    {
+      "id": "onboard-org",
+      "kind": "page",
+      "title": "Set up: organization",
+      "route": "/welcome/organization",
+      "requirements": [
+        "PRD-NFR-TTV",
+        "PRD-NOTIFY"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "submitting",
+        "error"
+      ],
+      "not_applicable": {
+        "loading": "The form is static; nothing is fetched before it shows.",
+        "empty": "A single form has no collection to be empty of."
+      }
+    },
+    {
+      "id": "onboard-modules",
+      "kind": "page",
+      "title": "Set up: modules",
+      "route": "/welcome/modules",
+      "requirements": [
+        "PRD-NFR-TTV",
+        "PRD-NFR-MODULES"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "submitting",
+        "error"
+      ],
+      "not_applicable": {
+        "loading": "The choice is static.",
+        "empty": "The step offers presets; nothing to be empty of."
+      }
+    },
+    {
+      "id": "onboard-program",
+      "kind": "page",
+      "title": "Set up: first program",
+      "route": "/welcome/program",
+      "requirements": [
+        "PRD-NFR-TTV",
+        "PRD-ROLLCALL"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "submitting",
+        "error"
+      ],
+      "not_applicable": {
+        "loading": "The form is static; nothing is fetched before it shows.",
+        "empty": "A single form has no collection to be empty of."
+      }
+    },
+    {
+      "id": "onboard-roster",
+      "kind": "page",
+      "title": "Set up: children",
+      "route": "/welcome/children",
+      "requirements": [
+        "PRD-NFR-TTV",
+        "PRD-ENROLL"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "submitting",
+        "success",
+        "error"
+      ],
+      "not_applicable": {
+        "loading": "The choice is static.",
+        "empty": "The step asks how to fill an empty roster; that is its default."
+      }
+    },
+    {
+      "id": "onboard-staff",
+      "kind": "page",
+      "title": "Set up: staff",
+      "route": "/welcome/staff",
+      "requirements": [
+        "PRD-NFR-TTV",
+        "PRD-NFR-SECURITY"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "submitting",
+        "error"
+      ],
+      "not_applicable": {
+        "loading": "The form is static; nothing is fetched before it shows.",
+        "empty": "A single form has no collection to be empty of."
+      }
+    },
+    {
+      "id": "onboard-first-event",
+      "kind": "page",
+      "title": "Set up: first slip",
+      "route": "/welcome/first-slip",
+      "requirements": [
+        "PRD-NFR-TTV",
+        "PRD-SLIPS"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "submitting",
+        "error"
+      ],
+      "not_applicable": {
+        "loading": "The form is static; nothing is fetched before it shows.",
+        "empty": "A single form has no collection to be empty of."
+      }
+    },
+    {
+      "id": "onboard-done",
+      "kind": "page",
+      "title": "Set up: done",
+      "route": "/welcome/done",
+      "requirements": [
+        "PRD-NFR-TTV"
+      ],
+      "states": [
+        "default"
+      ],
+      "not_applicable": {
+        "loading": "Static summary of what the wizard created.",
+        "empty": "Reached only after at least the organization exists.",
+        "error": "Nothing is saved on this screen."
+      }
+    },
+    {
+      "id": "onboard-staff-phone",
+      "kind": "page",
+      "title": "Get ready: your phone",
+      "route": "/welcome/phone",
+      "requirements": [
+        "PRD-NFR-TTV",
+        "PRD-NOTIFY",
+        "PRD-NFR-MOBILE"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "submitting",
+        "error"
+      ],
+      "not_applicable": {
+        "loading": "The form is static; nothing is fetched before it shows.",
+        "empty": "A single form has no collection to be empty of."
+      }
+    },
+    {
+      "id": "onboard-staff-sessions",
+      "kind": "page",
+      "title": "Get ready: your sessions",
+      "route": "/welcome/sessions",
+      "requirements": [
+        "PRD-NFR-TTV",
+        "PRD-ROLLCALL"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "submitting",
+        "error"
+      ],
+      "not_applicable": {
+        "loading": "Programs are already loaded when the invitation is accepted.",
+        "empty": "An organization with no programs skips this step."
+      }
+    },
+    {
+      "id": "onboard-staff-ready",
+      "kind": "page",
+      "title": "Get ready: done",
+      "route": "/welcome/ready",
+      "requirements": [
+        "PRD-NFR-TTV",
+        "PRD-ROLLCALL",
+        "PRD-NFR-MOBILE"
+      ],
+      "states": [
+        "default"
+      ],
+      "not_applicable": {
+        "loading": "Static.",
+        "empty": "If no session is scheduled the page shows the next one; the organization always has one after setup.",
+        "error": "Nothing is saved on this screen."
+      }
+    },
+    {
+      "id": "settings-modules",
+      "kind": "page",
+      "title": "Modules",
+      "route": "/settings/modules",
+      "requirements": [
+        "PRD-NFR-MODULES",
+        "PRD-NFR-COMPLIANCE"
+      ],
+      "states": [
+        "default",
+        "single",
+        "invalid",
+        "submitting",
+        "success",
+        "loading",
+        "error",
+        "forbidden"
+      ],
+      "not_applicable": {
+        "empty": "The roster module is always listed; the page is never empty."
+      }
+    },
+    {
+      "id": "organizations",
+      "kind": "page",
+      "title": "Organizations",
+      "route": "/admin/organizations",
+      "requirements": [
+        "PRD-NFR-MULTITENANT",
+        "PRD-NFR-SECURITY",
+        "PRD-NFR-COST"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "no-results",
+        "forbidden"
+      ]
+    },
+    {
+      "id": "switch-organization",
+      "kind": "dialog",
+      "title": "Switch organization",
+      "opens_from": "today",
+      "requirements": [
+        "PRD-NFR-MULTITENANT",
+        "PRD-NFR-SECURITY"
+      ],
+      "states": [
+        "default"
+      ],
+      "not_applicable": {
+        "busy": "Switching is a navigation, not a submit.",
+        "invalid": "A menu has no inputs."
+      }
+    },
+    {
+      "id": "add-organization",
+      "kind": "dialog",
+      "title": "Add organization",
+      "opens_from": "organizations",
+      "requirements": [
+        "PRD-NFR-MULTITENANT",
+        "PRD-NFR-COST"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed",
+        "success"
+      ]
+    },
+    {
+      "id": "suspend-organization",
+      "kind": "dialog",
+      "title": "Suspend organization",
+      "opens_from": "organizations",
+      "requirements": [
+        "PRD-NFR-MULTITENANT",
+        "PRD-NFR-SECURITY"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "invalid": "No inputs beyond the confirmation."
+      }
+    },
+    {
+      "id": "guardian-home",
+      "kind": "page",
+      "title": "Guardian home",
+      "route": "/g",
+      "requirements": [
+        "PRD-ENROLL",
+        "PRD-NFR-PRIVACY"
+      ],
+      "states": [
+        "default",
+        "error"
+      ],
+      "not_applicable": {
+        "empty": "Static landing page.",
+        "loading": "Static landing page."
+      }
+    },
+    {
+      "id": "enroll",
+      "kind": "page",
+      "title": "Enroll: identify",
+      "route": "/g/enroll/:program",
+      "requirements": [
+        "PRD-ENROLL",
+        "PRD-NFR-ACCESS",
+        "PRD-NFR-PRIVACY"
+      ],
+      "states": [
+        "default",
+        "code",
+        "invalid",
+        "submitting",
+        "error",
+        "closed",
+        "expired"
+      ],
+      "not_applicable": {
+        "empty": "Static form.",
+        "loading": "Static form."
+      }
+    },
+    {
+      "id": "enroll-household",
+      "kind": "page",
+      "title": "Enroll: household",
+      "route": "/g/enroll/:program/household",
+      "requirements": [
+        "PRD-ENROLL",
+        "PRD-NFR-ACCESS"
+      ],
+      "states": [
+        "default",
+        "new",
+        "loading",
+        "invalid",
+        "submitting",
+        "error"
+      ],
+      "not_applicable": {
+        "empty": "A guardian page is always about one household."
+      }
+    },
+    {
+      "id": "enroll-child",
+      "kind": "page",
+      "title": "Enroll: children",
+      "route": "/g/enroll/:program/children",
+      "requirements": [
+        "PRD-ENROLL",
+        "PRD-PICKUP",
+        "PRD-NFR-PRIVACY",
+        "PRD-NFR-ACCESS"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "invalid",
+        "submitting",
+        "error",
+        "edge"
+      ]
+    },
+    {
+      "id": "enroll-review",
+      "kind": "page",
+      "title": "Enroll: review",
+      "route": "/g/enroll/:program/review",
+      "requirements": [
+        "PRD-ENROLL",
+        "PRD-SLIPS",
+        "PRD-NFR-PRIVACY"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "submitting",
+        "error",
+        "success",
+        "waitlisted"
+      ],
+      "not_applicable": {
+        "empty": "A review page always has content.",
+        "loading": "Content comes from the previous steps on the device."
+      }
+    },
+    {
+      "id": "slip-sign",
+      "kind": "page",
+      "title": "Permission slip",
+      "route": "/g/slip/:token",
+      "requirements": [
+        "PRD-SLIPS",
+        "PRD-NFR-ACCESS",
+        "PRD-NFR-PRIVACY"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "invalid",
+        "submitting",
+        "success",
+        "error",
+        "expired",
+        "already-signed",
+        "es"
+      ],
+      "not_applicable": {
+        "empty": "A slip link always carries a slip."
+      }
+    },
+    {
+      "id": "guardian-update",
+      "kind": "page",
+      "title": "Family page",
+      "route": "/g/:household",
+      "requirements": [
+        "PRD-ENROLL",
+        "PRD-PICKUP",
+        "PRD-NOTIFY",
+        "PRD-NFR-PRIVACY"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "expired"
+      ]
+    },
+    {
+      "id": "survey",
+      "kind": "page",
+      "title": "Survey",
+      "route": "/g/survey/:token",
+      "requirements": [
+        "PRD-NOTIFY"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "submitting",
+        "success",
+        "error",
+        "expired"
+      ],
+      "not_applicable": {
+        "empty": "Static form.",
+        "loading": "Static form."
+      }
+    },
+    {
+      "id": "check-in-sheet",
+      "kind": "dialog",
+      "title": "Check in Kevin Tran",
+      "opens_from": "check-in",
+      "requirements": [
+        "PRD-ROLLCALL",
+        "PRD-QUICKCARD"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "invalid": "Arrival is a radio group with a default; nothing can be invalid."
+      }
+    },
+    {
+      "id": "confirm-pickup",
+      "kind": "dialog",
+      "title": "Sign out Mateo Rivera",
+      "opens_from": "check-in",
+      "requirements": [
+        "PRD-PICKUP",
+        "PRD-ROLLCALL"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed",
+        "confirm"
+      ]
+    },
+    {
+      "id": "sign-on-tablet",
+      "kind": "dialog",
+      "title": "Sign on this tablet",
+      "opens_from": "check-in",
+      "requirements": [
+        "PRD-SLIPS"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed",
+        "success"
+      ]
+    },
+    {
+      "id": "end-session",
+      "kind": "dialog",
+      "title": "End Tutoring night?",
+      "opens_from": "check-in",
+      "requirements": [
+        "PRD-ROLLCALL",
+        "PRD-REPORTS"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "invalid": "Both groups have a default choice."
+      }
+    },
+    {
+      "id": "session-notes",
+      "kind": "dialog",
+      "title": "Session notes",
+      "opens_from": "check-in",
+      "requirements": [
+        "PRD-ROLLCALL"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "invalid": "Notes are optional free text."
+      }
+    },
+    {
+      "id": "add-walk-in",
+      "kind": "dialog",
+      "title": "Add a walk-in to tonight",
+      "opens_from": "check-in",
+      "requirements": [
+        "PRD-ROLLCALL",
+        "PRD-ENROLL"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ]
+    },
+    {
+      "id": "open-enrollment",
+      "kind": "dialog",
+      "title": "Open enrollment for After-School Tutoring",
+      "opens_from": "program",
+      "requirements": [
+        "PRD-ENROLL",
+        "PRD-NFR-TTV"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed",
+        "success"
+      ]
+    },
+    {
+      "id": "close-enrollment",
+      "kind": "dialog",
+      "title": "Close enrollment?",
+      "opens_from": "program",
+      "requirements": [
+        "PRD-ENROLL"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "invalid": "A radio group with a default."
+      }
+    },
+    {
+      "id": "review-enrollment",
+      "kind": "dialog",
+      "title": "Accept Nikolai Petrov?",
+      "opens_from": "roster",
+      "requirements": [
+        "PRD-ENROLL",
+        "PRD-NOTIFY"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed",
+        "decline"
+      ],
+      "not_applicable": {
+        "invalid": "Decision has a default; the note is optional."
+      }
+    },
+    {
+      "id": "bulk-review",
+      "kind": "dialog",
+      "title": "Accept 2 enrollments?",
+      "opens_from": "roster",
+      "requirements": [
+        "PRD-ENROLL",
+        "PRD-NOTIFY"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "invalid": "The note is optional."
+      }
+    },
+    {
+      "id": "enroll-in-program",
+      "kind": "dialog",
+      "title": "Add a child to After-School Tutoring",
+      "opens_from": "roster",
+      "requirements": [
+        "PRD-ENROLL"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ]
+    },
+    {
+      "id": "remove-from-roster",
+      "kind": "dialog",
+      "title": "Remove Lily Chen from Summer Camp 2026?",
+      "opens_from": "roster",
+      "requirements": [
+        "PRD-ENROLL",
+        "PRD-DATA"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "invalid": "A radio group with a default."
+      }
+    },
+    {
+      "id": "add-family",
+      "kind": "dialog",
+      "title": "Add a family",
+      "opens_from": "families",
+      "requirements": [
+        "PRD-ENROLL"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ]
+    },
+    {
+      "id": "add-child",
+      "kind": "dialog",
+      "title": "Add a child to the Rivera household",
+      "opens_from": "household",
+      "requirements": [
+        "PRD-ENROLL",
+        "PRD-QUICKCARD"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ]
+    },
+    {
+      "id": "add-guardian",
+      "kind": "dialog",
+      "title": "Add a guardian to the Rivera household",
+      "opens_from": "household",
+      "requirements": [
+        "PRD-ENROLL",
+        "PRD-PICKUP"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ]
+    },
+    {
+      "id": "edit-guardian",
+      "kind": "dialog",
+      "title": "Edit Luis Rivera",
+      "opens_from": "household",
+      "requirements": [
+        "PRD-ENROLL",
+        "PRD-PICKUP"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ]
+    },
+    {
+      "id": "edit-child",
+      "kind": "dialog",
+      "title": "Edit Mateo Rivera",
+      "opens_from": "child",
+      "requirements": [
+        "PRD-ENROLL",
+        "PRD-DATA"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ]
+    },
+    {
+      "id": "edit-medical",
+      "kind": "dialog",
+      "title": "Edit Mateo’s medical information",
+      "opens_from": "child",
+      "requirements": [
+        "PRD-QUICKCARD",
+        "PRD-NFR-PRIVACY",
+        "PRD-DATA"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ]
+    },
+    {
+      "id": "add-pickup",
+      "kind": "dialog",
+      "title": "Add an approved adult for Mateo",
+      "opens_from": "child",
+      "requirements": [
+        "PRD-PICKUP"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ]
+    },
+    {
+      "id": "remove-pickup",
+      "kind": "dialog",
+      "title": "Remove Luis Rivera from Mateo’s approved pickups?",
+      "opens_from": "child",
+      "requirements": [
+        "PRD-PICKUP",
+        "PRD-DATA"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "invalid": "The dialog has no inputs to validate."
+      }
+    },
+    {
+      "id": "household-actions",
+      "kind": "dialog",
+      "title": "More actions for the Rivera household",
+      "opens_from": "household",
+      "requirements": [
+        "PRD-NFR-PRIVACY",
+        "PRD-DATA"
+      ],
+      "states": [
+        "default"
+      ],
+      "not_applicable": {
+        "busy": "A menu has no submit.",
+        "invalid": "A menu has no inputs.",
+        "failed": "A menu makes no server call."
+      }
+    },
+    {
+      "id": "child-actions",
+      "kind": "dialog",
+      "title": "More actions for Mateo Rivera",
+      "opens_from": "child",
+      "requirements": [
+        "PRD-ENROLL",
+        "PRD-DATA"
+      ],
+      "states": [
+        "default"
+      ],
+      "not_applicable": {
+        "busy": "A menu has no submit.",
+        "invalid": "A menu has no inputs.",
+        "failed": "A menu makes no server call."
+      }
+    },
+    {
+      "id": "program-actions",
+      "kind": "dialog",
+      "title": "More actions for After-School Tutoring",
+      "opens_from": "program",
+      "requirements": [
+        "PRD-ENROLL",
+        "PRD-REPORTS"
+      ],
+      "states": [
+        "default"
+      ],
+      "not_applicable": {
+        "busy": "A menu has no submit.",
+        "invalid": "A menu has no inputs.",
+        "failed": "A menu makes no server call."
+      }
+    },
+    {
+      "id": "archive-program",
+      "kind": "dialog",
+      "title": "Archive After-School Tutoring?",
+      "opens_from": "program",
+      "requirements": [
+        "PRD-ENROLL",
+        "PRD-REPORTS",
+        "PRD-DATA"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed",
+        "confirm"
+      ]
+    },
+    {
+      "id": "event-actions",
+      "kind": "dialog",
+      "title": "More actions for the field trip",
+      "opens_from": "event",
+      "requirements": [
+        "PRD-SLIPS",
+        "PRD-NOTIFY"
+      ],
+      "states": [
+        "default"
+      ],
+      "not_applicable": {
+        "busy": "A menu has no submit.",
+        "invalid": "A menu has no inputs.",
+        "failed": "A menu makes no server call."
+      }
+    },
+    {
+      "id": "cancel-event",
+      "kind": "dialog",
+      "title": "Cancel the field trip?",
+      "opens_from": "event",
+      "requirements": [
+        "PRD-SLIPS",
+        "PRD-NOTIFY"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed",
+        "confirm"
+      ]
+    },
+    {
+      "id": "send-reminder",
+      "kind": "dialog",
+      "title": "Text the 7 unsigned",
+      "opens_from": "event",
+      "requirements": [
+        "PRD-SLIPS",
+        "PRD-NOTIFY",
+        "PRD-NFR-COST"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ]
+    },
+    {
+      "id": "send-now",
+      "kind": "dialog",
+      "title": "Send “Winter Camp: pack list” now?",
+      "opens_from": "message",
+      "requirements": [
+        "PRD-NOTIFY"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "invalid": "The dialog has no inputs to validate."
+      }
+    },
+    {
+      "id": "cancel-send",
+      "kind": "dialog",
+      "title": "Cancel the scheduled send?",
+      "opens_from": "message",
+      "requirements": [
+        "PRD-NOTIFY"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "invalid": "The dialog has no inputs to validate."
+      }
+    },
+    {
+      "id": "decline-slip",
+      "kind": "dialog",
+      "title": "Mateo can’t come?",
+      "opens_from": "slip-sign",
+      "requirements": [
+        "PRD-SLIPS",
+        "PRD-NOTIFY"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "invalid": "Reason has a default; the note is optional."
+      }
+    },
+    {
+      "id": "guardian-data-request",
+      "kind": "dialog",
+      "title": "Ask for a copy of your family’s data",
+      "opens_from": "guardian-update",
+      "requirements": [
+        "PRD-NFR-PRIVACY",
+        "PRD-NFR-COMPLIANCE"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed",
+        "success"
+      ]
+    },
+    {
+      "id": "review-incident",
+      "kind": "dialog",
+      "title": "Mark as reviewed",
+      "opens_from": "incident",
+      "requirements": [
+        "PRD-INCIDENT"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ]
+    },
+    {
+      "id": "export-data",
+      "kind": "dialog",
+      "title": "Export",
+      "opens_from": "reports",
+      "requirements": [
+        "PRD-REPORTS",
+        "PRD-NFR-PRIVACY"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed",
+        "success"
+      ],
+      "not_applicable": {
+        "invalid": "Format has a default; includes are optional."
+      }
+    },
+    {
+      "id": "invite-staff",
+      "kind": "dialog",
+      "title": "Invite staff",
+      "opens_from": "staff",
+      "requirements": [
+        "PRD-NFR-SECURITY",
+        "PRD-NFR-PRIVACY"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed",
+        "success"
+      ]
+    },
+    {
+      "id": "change-role",
+      "kind": "dialog",
+      "title": "Change Priya Raman’s role",
+      "opens_from": "staff",
+      "requirements": [
+        "PRD-NFR-SECURITY",
+        "PRD-NFR-PRIVACY"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "invalid": "A radio group with a default."
+      }
+    },
+    {
+      "id": "remove-staff",
+      "kind": "dialog",
+      "title": "Remove Aisha Bello?",
+      "opens_from": "staff",
+      "requirements": [
+        "PRD-NFR-SECURITY",
+        "PRD-NFR-PRIVACY"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed",
+        "confirm"
+      ]
+    },
+    {
+      "id": "delete-household",
+      "kind": "dialog",
+      "title": "Delete the Rivera household?",
+      "opens_from": "household",
+      "requirements": [
+        "PRD-NFR-PRIVACY",
+        "PRD-NFR-COMPLIANCE",
+        "PRD-DATA"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed",
+        "confirm"
+      ]
+    },
+    {
+      "id": "change-plan",
+      "kind": "dialog",
+      "title": "Move to Standard",
+      "opens_from": "billing",
+      "requirements": [
+        "PRD-NFR-COST"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed",
+        "success"
+      ]
+    },
+    {
+      "id": "recovery-codes",
+      "kind": "dialog",
+      "title": "Recovery codes",
+      "opens_from": "account",
+      "requirements": [
+        "PRD-NFR-SECURITY"
+      ],
+      "states": [
+        "default"
+      ],
+      "not_applicable": {
+        "busy": "Showing codes makes no call.",
+        "invalid": "No inputs.",
+        "failed": "No call."
+      }
+    },
+    {
+      "id": "sign-out-all",
+      "kind": "dialog",
+      "title": "Sign out everywhere?",
+      "opens_from": "account",
+      "requirements": [
+        "PRD-NFR-SECURITY"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "invalid": "The dialog has no inputs to validate."
+      }
+    },
+    {
+      "id": "main-menu",
+      "kind": "dialog",
+      "title": "Main menu",
+      "opens_from": "today",
+      "requirements": [
+        "PRD-NFR-MOBILE"
+      ],
+      "states": [
+        "default",
+        "director"
+      ],
+      "not_applicable": {
+        "busy": "A menu has no submit.",
+        "invalid": "A menu has no inputs."
+      }
+    },
+    {
+      "id": "account-menu",
+      "kind": "dialog",
+      "title": "Account menu",
+      "opens_from": "today",
+      "requirements": [
+        "PRD-NFR-SECURITY"
+      ],
+      "states": [
+        "default"
+      ],
+      "not_applicable": {
+        "busy": "A menu has no submit.",
+        "invalid": "A menu has no inputs."
+      }
+    },
+    {
+      "id": "session-expired",
+      "kind": "dialog",
+      "title": "Session expired",
+      "opens_from": "new-incident",
+      "requirements": [
+        "PRD-NFR-SECURITY"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ]
+    },
+    {
+      "id": "offline-queue",
+      "kind": "dialog",
+      "title": "Waiting to sync",
+      "opens_from": "check-in",
+      "requirements": [
+        "PRD-NFR-MOBILE",
+        "PRD-ROLLCALL"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed",
+        "success"
+      ],
+      "not_applicable": {
+        "invalid": "No inputs."
+      }
+    },
+    {
+      "id": "toast",
+      "kind": "notification",
+      "title": "Toast",
+      "opens_from": "check-in",
+      "requirements": [
+        "PRD-ROLLCALL",
+        "PRD-SLIPS",
+        "PRD-NOTIFY"
+      ],
+      "states": [
+        "info",
+        "success",
+        "warning",
+        "danger",
+        "with-action",
+        "stacked"
+      ]
+    },
+    {
+      "id": "banner",
+      "kind": "notification",
+      "title": "Banner",
+      "opens_from": "today",
+      "requirements": [
+        "PRD-NFR-MOBILE",
+        "PRD-NFR-COST",
+        "PRD-ENROLL"
+      ],
+      "states": [
+        "info",
+        "success",
+        "warning",
+        "danger",
+        "persistent",
+        "verify"
+      ]
+    },
+    {
+      "id": "bell",
+      "kind": "notification",
+      "title": "Bell panel",
+      "opens_from": "today",
+      "requirements": [
+        "PRD-NOTIFY",
+        "PRD-SLIPS",
+        "PRD-INCIDENT"
+      ],
+      "states": [
+        "unread",
+        "read",
+        "empty"
+      ],
+      "not_applicable": {
+        "info": "The panel lists notices of mixed kinds; see unread, read and empty.",
+        "success": "See unread.",
+        "warning": "See unread.",
+        "danger": "See unread."
+      }
+    },
+    {
+      "id": "inline-alert",
+      "kind": "notification",
+      "title": "Inline alert",
+      "opens_from": "event",
+      "requirements": [
+        "PRD-SLIPS",
+        "PRD-ROLLCALL",
+        "PRD-QUICKCARD"
+      ],
+      "states": [
+        "info",
+        "success",
+        "warning",
+        "danger",
+        "with-action"
+      ]
+    },
+    {
+      "id": "guardian-sms",
+      "kind": "notification",
+      "title": "Guardian text",
+      "opens_from": "guardian-update",
+      "requirements": [
+        "PRD-NOTIFY",
+        "PRD-SLIPS",
+        "PRD-ROLLCALL",
+        "PRD-NFR-ACCESS"
+      ],
+      "states": [
+        "info",
+        "success",
+        "warning",
+        "danger",
+        "stacked",
+        "es"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in · mfa — PromiseHub mocks</title>
+<meta name="mock:kind" content="page">
+<meta name="mock:screen" content="sign-in">
+<meta name="mock:state" content="mfa">
+<meta name="mock:requirements" content="PRD-NFR-SECURITY">
+<meta name="description" content="Second step for admins: a six-digit code from the authenticator app.">
+<link rel="stylesheet" href="../../../design-system/tokens/tokens.css">
+<link rel="stylesheet" href="../../../design-system/assets/components.css">
+<link rel="stylesheet" href="../../assets/ui.css">
+<link rel="stylesheet" href="../../assets/mock.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<main id="main" class="auth-layout"><div class="auth-card card stack"><div class="stack" style="gap: var(--space-2); align-items: center; text-align: center;"><span class="ph-mark" aria-hidden="true" style="width: var(--size-avatar-lg); height: var(--size-avatar-lg);"><svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 21s-7-4.6-9-9a5 5 0 0 1 9-4 5 5 0 0 1 9 4c-2 4.4-9 9-9 9z"/><path d="M4 12h4l2-3 3 6 2-3h5"/></svg></span><h1 style="font: var(--text-h2);">Enter your code</h1><p class="text-muted">From your authenticator app.</p></div><form class="stack" action="#" method="post" novalidate><div class="field"><label class="field__label" for="code">Six-digit code</label><input class="input" id="code" name="code" type="text" value="" maxlength="6" pattern="[0-9]*" autofocus inputmode="numeric" autocomplete="one-time-code"></div><label class="switch"><input type="checkbox" name="trust" checked><span class="switch__text">Don’t ask again on this laptop for 30 days</span></label><button class="btn btn--primary btn--lg btn--block" type="submit">Continue</button><p class="text-center"><a href="../../dialogs/recovery-codes/default.html">Use a recovery code</a> · <a href="../../pages/sign-in/default.html">Start over</a></p></form></div></main><div class="toast-region" role="status" aria-live="polite"></div><nav class="mock-bar" aria-label="Mock navigation"><a class="mock-bar__home" href="../../index.html" aria-label="All mocks">âŒ‚</a><span class="mock-bar__screen">Sign in</span><ul class="mock-bar__states"><li><a href="default.html">default</a></li><li><a href="invalid.html">invalid</a></li><li><a href="submitting.html">submitting</a></li><li><a href="error.html">error</a></li><li><a href="mfa.html" aria-current="page">mfa</a></li><li><a href="expired.html">expired</a></li><li><a href="locked.html">locked</a></li></ul><button type="button" data-theme-toggle aria-pressed="false">â˜¾ Dark</button><button type="button" data-chrome-toggle aria-label="Hide mock chrome">×</button></nav>
+<script src="../../assets/mock.js"></script>
+</body>
+</html>

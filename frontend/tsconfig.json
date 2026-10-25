@@ -1,0 +1,42 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "dom"],
+    "paths": {
+      "@promisehub/api": ["./projects/api/src/public-api.ts"],
+      "@promisehub/components": ["./projects/components/src/public-api.ts"],
+      "@promisehub/account": ["./projects/account/src/public-api.ts"],
+      "@promisehub/today": ["./projects/today/src/public-api.ts"],
+      "@promisehub/households": ["./projects/households/src/public-api.ts"],
+      "@promisehub/enrollment": ["./projects/enrollment/src/public-api.ts"],
+      "@promisehub/programs": ["./projects/programs/src/public-api.ts"],
+      "@promisehub/events": ["./projects/events/src/public-api.ts"],
+      "@promisehub/slips": ["./projects/slips/src/public-api.ts"],
+      "@promisehub/attendance": ["./projects/attendance/src/public-api.ts"],
+      "@promisehub/messaging": ["./projects/messaging/src/public-api.ts"],
+      "@promisehub/incidents": ["./projects/incidents/src/public-api.ts"],
+      "@promisehub/reports": ["./projects/reports/src/public-api.ts"],
+      "@promisehub/guardian": ["./projects/guardian/src/public-api.ts"],
+      "@promisehub/settings": ["./projects/settings/src/public-api.ts"],
+      "@promisehub/administration": ["./projects/administration/src/public-api.ts"]
+    }
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
+  }
+}

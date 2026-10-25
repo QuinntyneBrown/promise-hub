@@ -1,0 +1,4 @@
+# Scaffold only. Overwrite or delete as implementation requires. No product logic is implemented.
+npm --prefix frontend run format:check || exit 1
+npm --prefix frontend run lint || exit 1
+dotnet format backend/PromiseHub.sln --verify-no-changes || exit 1

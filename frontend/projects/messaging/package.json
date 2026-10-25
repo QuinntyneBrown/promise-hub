@@ -1,0 +1,15 @@
+{
+  "name": "@promisehub/messaging",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Scaffold only. Overwrite or delete as implementation requires. No product logic is implemented.",
+  "peerDependencies": {
+    "@angular/common": "^22.0.0",
+    "@angular/core": "^22.0.0",
+    "@angular/router": "^22.0.0"
+  },
+  "dependencies": {
+    "tslib": "^2.8.1"
+  },
+  "sideEffects": false
+}

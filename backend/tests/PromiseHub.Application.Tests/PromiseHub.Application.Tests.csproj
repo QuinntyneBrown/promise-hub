@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Scaffold only. No product logic is implemented. Overwrite or delete this placeholder as implementation requires. -->
+  <PropertyGroup><IsTestProject>true</IsTestProject><IsPackable>false</IsPackable></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio"><PrivateAssets>all</PrivateAssets></PackageReference>
+    <ProjectReference Include="../../src/PromiseHub.Api/PromiseHub.Api.csproj" />
+    <ProjectReference Include="../../src/PromiseHub.Application/PromiseHub.Application.csproj" />
+  </ItemGroup>
+</Project>

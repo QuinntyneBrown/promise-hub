@@ -1,0 +1,13 @@
+docs/mocks/.cache/
+
+# Scaffold tooling output
+**/bin/
+**/obj/
+**/TestResults/
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/coverage/
+.husky/_/
+
+docs/design-system/.cache/

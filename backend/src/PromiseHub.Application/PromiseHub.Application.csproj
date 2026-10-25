@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Scaffold only. No product logic is implemented. Overwrite or delete this placeholder as implementation requires. -->
+  <ItemGroup>
+    <ProjectReference Include="../PromiseHub.Domain/PromiseHub.Domain.csproj" />
+  </ItemGroup>
+</Project>

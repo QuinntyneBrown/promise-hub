@@ -1,0 +1,6 @@
+# Scaffold tooling output and generated lockfile
+node_modules/
+dist/
+.angular/
+coverage/
+package-lock.json
