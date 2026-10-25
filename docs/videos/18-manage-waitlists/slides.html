@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 18 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="18" data-video-title="Manage waitlists" data-parts="Introduction|Promises|Move in|Full and roles|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 18</div>
+  <h1>Manage waitlists</h1>
+  <p class="lead">A place opens: move the next child in</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="The waitlist is kept in order">
+  <h2>What the waitlist promises</h2>
+  <ul>
+    <li>In order, with no gaps</li>
+    <li>Move in while places are free</li>
+    <li>The guardian is texted, everyone behind moves up</li>
+    <li>Full program: the button is off and says why</li>
+  </ul>
+</section>
+
+<section id="move" data-part="2" data-cue="Here is the Winter Camp roster on Marisol's laptop." data-clip="clips/move-in-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Move in and text Linh</h3><p>Emily moves up to number one.</p></div>
+</section>
+
+<section id="full" data-part="3" data-cue="If Winter Camp were full">
+  <h2>Full programs and other roles</h2>
+  <div class="cols">
+    <img class="shot" alt="Move in switched off on a full program" src="shots/desktop-full.png">
+    <img class="shot" alt="The waitlist on a phone" src="shots/phone-waitlist.png">
+  </div>
+</section>
+
+<section id="testing" data-part="4" data-cue="The backend tests put two children on the waitlist">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Move in with places free</td><td>204, enrolled, texted</td></tr>
+    <tr><td>The child behind</td><td>Now number one</td></tr>
+    <tr><td>Program full</td><td>Button off, 422 with the count</td></tr>
+    <tr><td>Site lead / other organization / Roster off</td><td>403 / 404 / Today</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="5" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>In order, no gaps</li><li>Move in texts the guardian</li><li>Everyone behind moves up</li></ul>
+  <p class="muted">Next: the youth worker's day</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
