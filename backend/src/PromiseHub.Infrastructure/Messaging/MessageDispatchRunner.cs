@@ -29,13 +29,18 @@ public sealed class MessageDispatchRunner(IServiceScopeFactory scopes, TimeProvi
                 .Where(s => s.Status == SlipStatus.Scheduled)
                 .Select(s => new { s.OrganizationId, s.ScheduledFor }).ToListAsync(cancellationToken))
                 .Where(s => s.ScheduledFor <= now).Select(s => s.OrganizationId);
-            organizations = [.. withDeliveries.Union(withSlips)];
+            // Sent slips with a schedule may have a reminder slot due; the handler decides per slot.
+            var withReminders = await db.PermissionSlips.IgnoreQueryFilters().AsNoTracking()
+                .Where(s => s.Status == SlipStatus.Sent && s.Reminders != SlipReminders.None)
+                .Select(s => s.OrganizationId).Distinct().ToListAsync(cancellationToken);
+            organizations = [.. withDeliveries.Union(withSlips).Union(withReminders)];
         }
         foreach (var organizationId in organizations)
         {
             using var scope = scopes.CreateScope();
             scope.ServiceProvider.GetRequiredService<TenantContext>().ResolveForJob(organizationId);
             await scope.ServiceProvider.GetRequiredService<SendDueSlipsHandler>().HandleAsync(cancellationToken);
+            await scope.ServiceProvider.GetRequiredService<SendDueRemindersHandler>().HandleAsync(cancellationToken);
             await scope.ServiceProvider.GetRequiredService<SendQueuedDeliveriesHandler>().HandleAsync(cancellationToken);
         }
     }

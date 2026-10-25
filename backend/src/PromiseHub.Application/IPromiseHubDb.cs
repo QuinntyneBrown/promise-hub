@@ -36,6 +36,7 @@ public interface IPromiseHubDb
     DbSet<SmsUsagePeriod> SmsUsagePeriods { get; }
     DbSet<SlipSignature> SlipSignatures { get; }
     DbSet<GuardianLink> GuardianLinks { get; }
+    DbSet<SlipReminder> SlipReminders { get; }
     DbSet<GuardianVerification> GuardianVerifications { get; }
     DbSet<TrustedGuardianDevice> TrustedGuardianDevices { get; }
     DbSet<StaffUser> StaffUsers { get; }
