@@ -15,3 +15,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0009](0009-sessions-are-events.md) | A session is an event; idempotent attendance |
 | [0010](0010-quick-cards.md) | Quick Cards in the attendance library, every open audited |
 | [0011](0011-sign-out-and-approved-adults.md) | Sign-out checks the approved list; anyone else needs the guardian's okay |
+| [0012](0012-session-staff.md) | Staff are assigned per session; youth workers run only their own |

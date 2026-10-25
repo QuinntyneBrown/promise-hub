@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 09 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="09" data-video-title="Record attendance as a youth worker" data-parts="Introduction|Rule|Aisha's night|Not her session|States|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 09</div>
+  <h1>Record attendance as a youth worker</h1>
+  <p class="lead">Quick at the door, limited to the sessions you work</p>
+</section>
+
+<section id="rule" data-part="1" data-cue="Staff are assigned to sessions">
+  <h2>The rule</h2>
+  <ul>
+    <li>Staff are assigned per session</li>
+    <li>Admins, directors and site leads run any session</li>
+    <li>Youth workers run only their own: other sessions answer 403</li>
+    <li>Another organization's session answers 404</li>
+  </ul>
+</section>
+
+<section id="aisha" data-part="2" data-cue="Here is Aisha on her phone." data-clip="clips/her-session-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Her session only</h3><p>Check in and sign out, as a site lead would.</p></div>
+</section>
+
+<section id="not-hers" data-part="3" data-cue="Now Aisha follows an old link" data-clip="clips/not-her-session-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Not on this session</h3><p>Refused on the server; the page says whom to ask.</p></div>
+</section>
+
+<section id="states" data-part="4" data-cue="Side by side, the two states Aisha can meet">
+  <h2>The two states</h2>
+  <div class="cols">
+    <img class="shot" alt="Aisha's Today with only Tutoring night" src="shots/phone-today.png">
+    <img class="shot" alt="You're not on this session" src="shots/phone-forbidden.png">
+  </div>
+</section>
+
+<section id="testing" data-part="5" data-cue="Backend tests cover the list of today's sessions">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Aisha's Today</td><td>Only Tutoring night</td></tr>
+    <tr><td>Her session: check in, sign out</td><td>200</td></tr>
+    <tr><td>Another session: roster and every write</td><td>403</td></tr>
+    <tr><td>Site lead or director, no assignment</td><td>200</td></tr>
+    <tr><td>Another organization / Roll Call off</td><td>404</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="6" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Staff are assigned per session</li><li>Youth workers see and run only their own</li><li>Refused on the server, not just hidden</li></ul>
+  <p class="muted">Next: send a permission slip</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

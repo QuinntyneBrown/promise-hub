@@ -16,6 +16,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 06 | [Check children in](06-check-children-in/README.md) | ~3 min | One-tap check-in, absences, walk-ins and Today's sessions |
 | 07 | [Read a Quick Card](07-read-a-quick-card/README.md) | ~2.5 min | The allergy alert first, tap-to-call, restricted medical details and audited opens |
 | 08 | [Sign children out](08-sign-children-out/README.md) | ~2.5 min | Approved adults, someone else with the guardian's okay by phone, and audited sign-outs |
+| 09 | [Record attendance as a youth worker](09-record-attendance-as-youth-worker/README.md) | ~2.5 min | Staff assigned per session; youth workers run only their own, refused on the server |
 
 ## Making or updating a video
 
