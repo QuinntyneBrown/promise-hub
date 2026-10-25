@@ -1169,6 +1169,8 @@
       "states": [
         "default",
         "status",
+        "no-show",
+        "no-show-answered",
         "declined",
         "none",
         "error"
