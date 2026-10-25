@@ -14,6 +14,8 @@ Prompt 22 texts guardians when an expected child is not checked in after the sta
 - **Replies.** `POST /webhooks/sms/inbound` is anonymous but requires the provider's shared secret (`Sms:InboundSecret`, from configuration, compared in constant time). The sender's number is matched to the households of open alerts from the last twelve hours, and the latest alert sets the organization. "1" records on the way; "2" marks every alerted child of that household absent and audits it. Anything else, or an unmatched number, changes nothing; the answer is always 200.
 - **Screen.** The check-in roster shows the alert and reply as a badge on each row.
 
+- **Page answer (prompt 23).** Each no-show text ends with a household home link (ADR 0020). The guardian home lists the household's unanswered alerts, and `POST /g/home/{token}/no-show` applies "on the way" or "absent" through the same `NoShowReplyHandler.ApplyAsync` as a texted reply, after the code check.
+
 ## Consequences
 
 Texts are English only until messages are translated per household. Unmatched replies are not yet stored for staff; ending a session, attendance history and the configurable delay are later prompts.
