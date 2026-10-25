@@ -1,0 +1,26 @@
+namespace PromiseHub.Application.Slips;
+
+public sealed record SlipDto(
+    Guid Id,
+    Guid EventId,
+    string EventName,
+    DateTimeOffset EventStartsAt,
+    string Title,
+    string Body,
+    DateOnly SignBy,
+    bool AskPhotos,
+    bool AskSwimming,
+    bool AskLunch,
+    string Reminders,
+    string Channel,
+    string Status,
+    DateTimeOffset? ScheduledFor,
+    DateTimeOffset? SentAt,
+    int Version,
+    int Households,
+    int Children,
+    int Signed,
+    int Declined,
+    int Outstanding,
+    IReadOnlyList<SlipResponseDto> Responses,
+    SlipDeliveryDto? Delivery);

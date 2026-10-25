@@ -1,0 +1,9 @@
+<ph-dialog
+  title="Cancel the scheduled send?"
+  [description]="'“' + data.title + '” stays as a draft.'"
+>
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close(false)">Keep it scheduled</ph-button>
+    <ph-button variant="danger" (click)="ref.close(true)">Cancel send</ph-button>
+  </ng-container>
+</ph-dialog>

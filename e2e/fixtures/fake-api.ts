@@ -15,7 +15,27 @@ const can = {
   runSessions: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker'].includes(m.role),
   runAnySession: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
   sendMessages: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
+  manageSlips: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
 };
+
+interface FakeSlip {
+  id: string;
+  eventId: string;
+  title: string;
+  body: string;
+  signBy: string;
+  askPhotos: boolean;
+  askSwimming: boolean;
+  askLunch: boolean;
+  reminders: 'TwiceWeekly' | 'Daily' | 'Once' | 'None';
+  channel: 'TextAndEmail' | 'EmailOnly';
+  status: 'Draft' | 'Scheduled' | 'Sent';
+  scheduledFor: string | null;
+  sentAt: string | null;
+  version: number;
+  answers: Map<string, { status: 'Signed' | 'Declined'; by: string; version: number }>;
+  messageId: string | null;
+}
 
 type ChannelChoice = 'TextWithEmailFallback' | 'EmailOnly' | 'TextOnly';
 
@@ -106,6 +126,7 @@ export class FakeApi {
   private walkIns: FakeWalkIn[] = [];
   private actions = new Set<string>();
   private messages: FakeMessage[] = [];
+  private slips = new Map<string, FakeSlip>();
   private smsUsed = new Map<string, number>();
   /** Who works each session; youth workers run only these (as seeded: Jaylen and Aisha tonight). */
   private sessionStaff = new Map<string, string[]>([['e-tutoring-today', ['m-jaylen', 'm-aisha']]]);
@@ -116,6 +137,19 @@ export class FakeApi {
   /** Makes the next calls to a route answer with the given status, as the real API would on a fault. */
   failNext(path: string, status: number): void {
     this.failures.set(path, status);
+  }
+
+  /** A guardian's answer for one child, as the guardian slip page will record it. */
+  answerSlip(eventId: string, childId: string, status: 'Signed' | 'Declined', by = 'Carmen Rivera'): void {
+    const slip = this.slipOf(eventId)!;
+    slip.answers.set(childId, { status, by, version: slip.version });
+  }
+
+  /** Writes and sends an event's slip, as a director would. */
+  sendSlip(eventId: string, body = 'We’re taking the After-School Tutoring group to the Royal Botanical Gardens.'): void {
+    const slip = this.slipOf(eventId)!;
+    Object.assign(slip, { body, signBy: '2026-11-12', status: 'Sent', sentAt: NOW.toISOString() });
+    this.events.find((e) => e.id === eventId)!.slipStatus = 'Sent';
   }
 
   /** Sets the SMS segments an organization has used this month (the cap is 2,000 on Standard, 200 on Free). */
@@ -188,6 +222,13 @@ export class FakeApi {
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/walk-ins$/, (route, p) => this.addWalkIn(route, p['id']!)],
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/sign-outs$/, (route, p) => this.signChildOut(route, p['id']!)],
     ['GET', /^\/api\/children\/(?<id>[^/]+)\/pickups$/, (route, p) => this.pickups(route, p['id']!)],
+    ['GET', /^\/api\/events\/(?<id>[^/]+)\/slip$/, (route, p) => this.getSlip(route, p['id']!)],
+    ['PUT', /^\/api\/events\/(?<id>[^/]+)\/slip$/, (route, p) => this.saveSlip(route, p['id']!)],
+    ['GET', /^\/api\/slips$/, (route) => this.listSlips(route)],
+    ['POST', /^\/api\/slips\/(?<id>[^/]+)\/send$/, (route, p) => this.sendSlipRoute(route, p['id']!)],
+    ['POST', /^\/api\/slips\/(?<id>[^/]+)\/send-now$/, (route, p) => this.slipTransition(route, p['id']!, 'send-now')],
+    ['POST', /^\/api\/slips\/(?<id>[^/]+)\/cancel-send$/, (route, p) => this.slipTransition(route, p['id']!, 'cancel')],
+    ['PUT', /^\/api\/slips\/(?<id>[^/]+)$/, (route, p) => this.editSlip(route, p['id']!)],
     ['GET', /^\/api\/messages$/, (route) => this.listMessages(route)],
     ['POST', /^\/api\/messages\/preview$/, (route) => this.previewMessage(route)],
     ['POST', /^\/api\/messages$/, (route) => this.sendMessage(route)],
@@ -1200,6 +1241,227 @@ export class FakeApi {
     if (!m) return;
     const { cap, used, remaining } = this.capOf(m);
     return route.fulfill({ json: { cap, used, remaining, state: remaining === 0 ? 'Reached' : 'Ok', period: '2026-11' } });
+  }
+
+  /** An event's slip, created as a draft the first time it is read, as the server creates it with the event. */
+  private slipOf(eventId: string): FakeSlip | undefined {
+    const e = this.events.find((x) => x.id === eventId);
+    if (!e || !e.requiresSlip) return undefined;
+    if (!this.slips.has(eventId)) {
+      this.slips.set(eventId, {
+        id: `slip-${eventId}`,
+        eventId,
+        title: '',
+        body: '',
+        signBy: e.startsAt.slice(0, 10),
+        askPhotos: true,
+        askSwimming: false,
+        askLunch: true,
+        reminders: 'TwiceWeekly',
+        channel: 'TextAndEmail',
+        status: 'Draft',
+        scheduledFor: null,
+        sentAt: null,
+        version: 1,
+        answers: new Map(),
+        messageId: null,
+      });
+    }
+    return this.slips.get(eventId);
+  }
+
+  private slipById(m: Membership, id: string): { slip: FakeSlip; event: FakeEvent } | undefined {
+    const slip = [...this.slips.values()].find((x) => x.id === id);
+    const event = slip ? this.ownEvent(m, slip.eventId) : undefined;
+    return slip && event ? { slip, event } : undefined;
+  }
+
+  private async slipsCaller(route: Route, write = false): Promise<Membership | null> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) {
+      await this.unauthenticated(route);
+      return null;
+    }
+    if (!this.modules.get(m.organizationId)!.includes('Slips')) {
+      await route.fulfill({ status: 404 });
+      return null;
+    }
+    if (write && !can.manageSlips(m)) {
+      await this.forbidden(route);
+      return null;
+    }
+    return m;
+  }
+
+  private slipResponses(m: Membership, slip: FakeSlip, event: FakeEvent) {
+    const program = this.programs.find((p) => p.id === event.programId)!;
+    return this.childrenOf(m)
+      .filter(({ child }) => program.roster.includes(child.id))
+      .sort((a, z) => a.child.firstName.localeCompare(z.child.firstName))
+      .map(({ child, household }) => {
+        const a = slip.answers.get(child.id);
+        const current = a && a.version === slip.version ? a : null;
+        return { childId: child.id, child: `${child.firstName} ${child.lastName}`, household: household.name, status: current?.status ?? 'Outstanding', signedBy: current?.by ?? null };
+      });
+  }
+
+  private slipDto(m: Membership, slip: FakeSlip, event: FakeEvent) {
+    const responses = this.slipResponses(m, slip, event);
+    const message = this.messages.find((x) => x.id === slip.messageId);
+    const of = (status: FakeDelivery['status']) => (message?.deliveries ?? []).filter((d) => d.status === status).map((d) => d.household).sort();
+    return {
+      id: slip.id,
+      eventId: event.id,
+      eventName: event.name,
+      eventStartsAt: event.startsAt,
+      title: slip.title || event.name,
+      body: slip.body,
+      signBy: slip.signBy,
+      askPhotos: slip.askPhotos,
+      askSwimming: slip.askSwimming,
+      askLunch: slip.askLunch,
+      reminders: slip.reminders,
+      channel: slip.channel,
+      status: slip.status,
+      scheduledFor: slip.scheduledFor,
+      sentAt: slip.sentAt,
+      version: slip.version,
+      households: new Set(responses.map((r) => r.household)).size,
+      children: responses.length,
+      signed: responses.filter((r) => r.status === 'Signed').length,
+      declined: responses.filter((r) => r.status === 'Declined').length,
+      outstanding: responses.filter((r) => r.status === 'Outstanding').length,
+      responses,
+      delivery: message ? { sent: of('Sent').length, emailInstead: of('FellBackToEmail'), paused: of('Paused'), failed: of('Failed') } : null,
+    };
+  }
+
+  private async getSlip(route: Route, eventId: string): Promise<void> {
+    const m = await this.slipsCaller(route);
+    if (!m) return;
+    const event = this.ownEvent(m, eventId);
+    const slip = event ? this.slipOf(eventId) : undefined;
+    if (!event || !slip) return route.fulfill({ status: 404 });
+    return route.fulfill({ json: this.slipDto(m, slip, event) });
+  }
+
+  private async saveSlip(route: Route, eventId: string): Promise<void> {
+    const m = await this.slipsCaller(route, true);
+    if (!m) return;
+    const event = this.ownEvent(m, eventId);
+    const slip = event ? this.slipOf(eventId) : undefined;
+    if (!event || !slip) return route.fulfill({ status: 404 });
+    if (slip.status === 'Sent') return route.fulfill({ status: 409, json: { code: 'conflict' } });
+    const b = route.request().postDataJSON() as Pick<FakeSlip, 'title' | 'body' | 'signBy' | 'askPhotos' | 'askSwimming' | 'askLunch' | 'reminders' | 'channel'>;
+    if ((b.body ?? '').trim().length > 600) return route.fulfill({ status: 422, json: { errors: { body: 'Keep it to 600 characters.' } } });
+    Object.assign(slip, { ...b, title: (b.title ?? '').trim(), body: (b.body ?? '').trim() });
+    return route.fulfill({ status: 204 });
+  }
+
+  private slipErrors(title: string, body: string, signBy: string, event: FakeEvent): Record<string, string> {
+    const errors: Record<string, string> = {};
+    if (!title.trim()) errors['title'] = 'Enter a slip title.';
+    if (!body.trim()) errors['body'] = 'Enter the slip text.';
+    // Event days are in Hamilton time; the seeded events start in the afternoon UTC, so the UTC date is the local date.
+    const day = event.startsAt.slice(0, 10);
+    if (signBy >= day) {
+      const label = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(`${day}T12:00:00Z`)).replace(',', '');
+      errors['signBy'] = `Must be before ${label}.`;
+    }
+    return errors;
+  }
+
+  /** Queues the slip's message to the event's households through the same path as Messages. */
+  private deliverSlip(m: Membership, slip: FakeSlip, event: FakeEvent, edited: boolean): void {
+    const org = organizations.find((o) => o.id === m.organizationId)!;
+    const audience = this.audienceOf(m, { programId: null, eventId: event.id, language: null, body: '', channel: slip.channel === 'EmailOnly' ? 'EmailOnly' : 'TextWithEmailFallback' });
+    const title = slip.title || event.name;
+    const body = edited ? `The permission slip for “${title}” has changed. Please read it and sign again.` : `Please sign the permission slip for “${title}”.`;
+    const segments = segmentsOf(`${org.name}: ${body}`);
+    const deliveries: FakeDelivery[] = audience.recipients.map((r) => {
+      const base = { household: r.household, guardian: r.guardian, language: r.language, at: null as string | null };
+      if (r.unreachable) return { ...base, channel: r.channel, status: 'Failed', reason: r.unreachable };
+      if (r.channel === 'Email') return { ...base, channel: 'Email', status: 'Sent', reason: null, at: NOW.toISOString() };
+      const { remaining, used } = this.capOf(m);
+      if (remaining >= segments) {
+        this.smsUsed.set(m.organizationId, used + segments);
+        return { ...base, channel: 'Sms', status: 'Sent', reason: null, at: NOW.toISOString() };
+      }
+      return r.fallback ? { ...base, channel: 'Email', status: 'FellBackToEmail', reason: 'SMS cap reached', at: NOW.toISOString() } : { ...base, channel: 'Sms', status: 'Paused', reason: 'SMS cap reached' };
+    });
+    const id = `msg-${this.nextId++}`;
+    this.messages.unshift({ id, organizationId: m.organizationId, title: `Permission slip: ${title}`, body, sentAt: NOW.toISOString(), sentBy: m.personName, audience: audience.label, channel: slip.channel === 'EmailOnly' ? 'EmailOnly' : 'TextWithEmailFallback', deliveries });
+    slip.messageId = id;
+    if (!edited) Object.assign(slip, { status: 'Sent', sentAt: NOW.toISOString(), scheduledFor: null });
+    event.slipStatus = 'Sent';
+  }
+
+  private async sendSlipRoute(route: Route, id: string): Promise<void> {
+    const m = await this.slipsCaller(route, true);
+    if (!m) return;
+    const found = this.slipById(m, id);
+    if (!found) return route.fulfill({ status: 404 });
+    const { slip, event } = found;
+    if (slip.status === 'Sent') return route.fulfill({ status: 409, json: { code: 'conflict' } });
+    const errors = this.slipErrors(slip.title || event.name, slip.body, slip.signBy, event);
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    const b = route.request().postDataJSON() as { at?: string | null };
+    if (b.at && b.at > NOW.toISOString()) {
+      Object.assign(slip, { status: 'Scheduled', scheduledFor: b.at });
+      event.slipStatus = 'Scheduled';
+    } else {
+      this.deliverSlip(m, slip, event, false);
+    }
+    return route.fulfill({ status: 204 });
+  }
+
+  private async slipTransition(route: Route, id: string, action: 'send-now' | 'cancel'): Promise<void> {
+    const m = await this.slipsCaller(route, true);
+    if (!m) return;
+    const found = this.slipById(m, id);
+    if (!found) return route.fulfill({ status: 404 });
+    const { slip, event } = found;
+    if (slip.status !== 'Scheduled') return route.fulfill({ status: 409, json: { code: 'conflict' } });
+    if (action === 'send-now') {
+      this.deliverSlip(m, slip, event, false);
+    } else {
+      Object.assign(slip, { status: 'Draft', scheduledFor: null });
+      event.slipStatus = 'Draft';
+    }
+    return route.fulfill({ status: 204 });
+  }
+
+  private async editSlip(route: Route, id: string): Promise<void> {
+    const m = await this.slipsCaller(route, true);
+    if (!m) return;
+    const found = this.slipById(m, id);
+    if (!found) return route.fulfill({ status: 404 });
+    const { slip, event } = found;
+    if (slip.status !== 'Sent') return route.fulfill({ status: 409, json: { code: 'conflict' } });
+    const b = route.request().postDataJSON() as { title: string; body: string; signBy: string; material: boolean };
+    const errors = this.slipErrors(b.title ?? '', b.body ?? '', b.signBy, event);
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    Object.assign(slip, { title: b.title.trim(), body: b.body.trim(), signBy: b.signBy });
+    if (b.material) {
+      slip.version++;
+      this.deliverSlip(m, slip, event, true);
+    }
+    return route.fulfill({ status: 204 });
+  }
+
+  private async listSlips(route: Route): Promise<void> {
+    const m = await this.slipsCaller(route);
+    if (!m) return;
+    const slips = this.events
+      .filter((e) => e.organizationId === m.organizationId && e.requiresSlip)
+      .map((e) => ({ e, slip: this.slipOf(e.id)! }))
+      .sort((a, z) => a.slip.signBy.localeCompare(z.slip.signBy))
+      .map(({ e, slip }) => {
+        const responses = this.slipResponses(m, slip, e);
+        const program = this.programs.find((p) => p.id === e.programId)!;
+        return { id: slip.id, eventId: e.id, title: slip.title || e.name, programName: program.name, signBy: slip.signBy, status: slip.status, children: responses.length, signed: responses.filter((r) => r.status === 'Signed').length, declined: responses.filter((r) => r.status === 'Declined').length };
+      });
+    return route.fulfill({ json: { slips } });
   }
 
   private async quickCard(route: Route, id: string): Promise<void> {

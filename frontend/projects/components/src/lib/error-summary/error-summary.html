@@ -1,0 +1,11 @@
+<ph-icon class="icon" name="warning" />
+<div class="body">
+  <div class="title">{{ heading() }}</div>
+  <ul class="items">
+    @for (item of items(); track item.field) {
+      <li>
+        <a [href]="'#' + item.field">{{ item.message }}</a>
+      </li>
+    }
+  </ul>
+</div>

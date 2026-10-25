@@ -36,6 +36,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Message> Messages => Set<Message>();
     public DbSet<Delivery> Deliveries => Set<Delivery>();
     public DbSet<SmsUsagePeriod> SmsUsagePeriods => Set<SmsUsagePeriod>();
+    public DbSet<SlipSignature> SlipSignatures => Set<SlipSignature>();
     public DbSet<StaffUser> StaffUsers => Set<StaffUser>();
     public DbSet<SignInAttempt> SignInAttempts => Set<SignInAttempt>();
 
@@ -147,6 +148,11 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
         modelBuilder.Entity<PermissionSlip>(e =>
         {
             e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.Title).HasMaxLength(200);
+            e.Property(x => x.Body).HasMaxLength(PermissionSlip.MaxBodyLength);
+            e.Property(x => x.Reminders).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.Channel).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.ScheduledFor).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
             e.HasOne<Event>().WithMany().HasForeignKey(x => x.EventId);
             e.HasIndex(x => x.EventId).IsUnique();
         });
@@ -188,6 +194,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(m => m.CreatedBy).HasMaxLength(200);
             e.Property(m => m.Channel).HasConversion<string>().HasMaxLength(30);
             e.Property(m => m.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(m => m.Source).HasConversion<string>().HasMaxLength(20);
             e.Property(m => m.CreatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
         });
         modelBuilder.Entity<Delivery>(e =>
@@ -203,6 +210,14 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(d => d.DueAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.HasOne<Message>().WithMany().HasForeignKey(d => d.MessageId);
             e.HasIndex(d => new { d.OrganizationId, d.Status });
+        });
+        modelBuilder.Entity<SlipSignature>(e =>
+        {
+            e.Property(s => s.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(s => s.SignedBy).HasMaxLength(200);
+            e.Property(s => s.At).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.HasOne<PermissionSlip>().WithMany().HasForeignKey(s => s.SlipId);
+            e.HasIndex(s => new { s.SlipId, s.ChildId });
         });
         modelBuilder.Entity<SmsUsagePeriod>(e =>
         {

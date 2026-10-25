@@ -17,7 +17,8 @@ public sealed class Message : ITenantOwned
         string? language,
         int recipientCount,
         DateTimeOffset createdAt,
-        string createdBy)
+        string createdBy,
+        MessageSource source = MessageSource.Messages)
     {
         Id = id;
         OrganizationId = organizationId;
@@ -31,6 +32,7 @@ public sealed class Message : ITenantOwned
         RecipientCount = recipientCount;
         CreatedAt = createdAt;
         CreatedBy = createdBy;
+        Source = source;
         Status = MessageStatus.Sending;
     }
 
@@ -50,6 +52,7 @@ public sealed class Message : ITenantOwned
     public DateTimeOffset CreatedAt { get; private set; }
     public string CreatedBy { get; private set; }
     public MessageStatus Status { get; private set; }
+    public MessageSource Source { get; private set; }
 
     public void MarkSent() => Status = MessageStatus.Sent;
 

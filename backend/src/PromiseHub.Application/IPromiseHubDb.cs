@@ -33,6 +33,7 @@ public interface IPromiseHubDb
     DbSet<Message> Messages { get; }
     DbSet<Delivery> Deliveries { get; }
     DbSet<SmsUsagePeriod> SmsUsagePeriods { get; }
+    DbSet<SlipSignature> SlipSignatures { get; }
     DbSet<StaffUser> StaffUsers { get; }
     DbSet<SignInAttempt> SignInAttempts { get; }
 

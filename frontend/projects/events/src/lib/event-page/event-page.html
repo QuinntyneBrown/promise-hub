@@ -58,11 +58,15 @@
                 }}</ph-badge>
               </div>
               @if (e.slipStatus === 'Draft') {
-                <p>
-                  The slip is a draft. Write it and send it to {{ e.rosterSize }} guardians from
-                  Permission slips.
-                </p>
-              } @else if (e.slipStatus === 'NotNeeded') {
+                <p>The slip is a draft. Write it and send it to {{ e.rosterSize }} guardians.</p>
+              }
+              @if (e.slipStatus !== 'NotNeeded') {
+                <div>
+                  <ph-button size="sm" [link]="['/events', e.id, 'slip']">{{
+                    e.slipStatus === 'Sent' ? 'Track signatures' : 'Write the slip'
+                  }}</ph-button>
+                </div>
+              } @else {
                 <p>The season consent covers this event.</p>
               }
             </div>

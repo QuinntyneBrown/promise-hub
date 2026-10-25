@@ -20,6 +20,7 @@ public static class RolePermissions
         // Youth workers run only the sessions they are assigned to (L2-007 criterion 6).
         Permission.RunAnySession => role is Role.Admin or Role.ProgramDirector or Role.SiteLead,
         Permission.SendMessages => role is Role.Admin or Role.ProgramDirector or Role.SiteLead,
+        Permission.ManageSlips => role is Role.Admin or Role.ProgramDirector or Role.SiteLead,
         _ => false,
     };
 }

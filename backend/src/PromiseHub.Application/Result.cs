@@ -6,6 +6,7 @@ public sealed record Result(ResultStatus Status, Guid? Id = null, IReadOnlyDicti
     public static readonly Result Done = new(ResultStatus.Done);
     public static readonly Result NotFound = new(ResultStatus.NotFound);
     public static readonly Result Forbidden = new(ResultStatus.Forbidden);
+    public static readonly Result Conflict = new(ResultStatus.Conflict);
 
     public static Result Created(Guid id) => new(ResultStatus.Created, id);
 

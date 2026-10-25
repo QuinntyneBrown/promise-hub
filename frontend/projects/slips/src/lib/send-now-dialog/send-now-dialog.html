@@ -1,0 +1,9 @@
+<ph-dialog
+  [title]="'Send “' + data.title + '” now?'"
+  [description]="'Instead of ' + data.when + '. ' + data.households + ' households.'"
+>
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close(false)">Not now</ph-button>
+    <ph-button variant="primary" (click)="ref.close(true)">Send now</ph-button>
+  </ng-container>
+</ph-dialog>

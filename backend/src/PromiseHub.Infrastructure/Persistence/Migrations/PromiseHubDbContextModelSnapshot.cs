@@ -633,6 +633,11 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.Property<int>("RecipientCount")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -865,10 +870,43 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("AskLunch")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("AskPhotos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("AskSwimming")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(600)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Channel")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("EventId")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("MessageId")
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reminders")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("ScheduledFor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset?>("SentAt")
                         .HasColumnType("TEXT");
 
                     b.Property<DateOnly>("SignBy")
@@ -879,6 +917,14 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
                     b.HasIndex("EventId")
@@ -887,6 +933,46 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.HasIndex("OrganizationId");
 
                     b.ToTable("PermissionSlips");
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Slips.SlipSignature", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("At")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("ChildId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SignedBy")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("SlipId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("SlipId", "ChildId");
+
+                    b.ToTable("SlipSignatures");
                 });
 
             modelBuilder.Entity("PromiseHub.Domain.Attendance.AttendanceEvent", b =>
@@ -1110,6 +1196,21 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
                         .WithMany()
                         .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Slips.SlipSignature", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Slips.PermissionSlip", null)
+                        .WithMany()
+                        .HasForeignKey("SlipId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

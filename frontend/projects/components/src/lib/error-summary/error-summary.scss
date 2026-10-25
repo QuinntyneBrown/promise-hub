@@ -1,0 +1,27 @@
+:host {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: var(--border-width-hairline) solid var(--color-danger-border, var(--color-danger-fg));
+  border-radius: var(--radius-lg);
+  background: var(--color-danger-bg);
+  color: var(--color-danger-fg);
+}
+:host(:focus-visible) {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+.title {
+  font: var(--text-label);
+}
+.items {
+  margin: var(--space-1) 0 0;
+  padding-left: var(--space-4);
+  font: var(--text-body-sm);
+}
+.items a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  color: inherit;
+}

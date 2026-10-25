@@ -13,4 +13,5 @@ public enum Permission
     RunSessions,
     RunAnySession,
     SendMessages,
+    ManageSlips,
 }

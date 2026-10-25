@@ -1,0 +1,51 @@
+@let r = result();
+<ph-page-header
+  title="Permission slips"
+  [subtitle]="r?.status === 'loaded' ? subtitle(r.value.slips) : null"
+/>
+@switch (r?.status) {
+  @case ('error') {
+    <ph-card [flush]="true">
+      <ph-empty-state icon="warning" tone="error" title="We couldn’t load slips" text="Try again.">
+        <ph-button variant="primary" (click)="load()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('loaded') {
+    @if (r?.status === 'loaded') {
+      @if (r.value.slips.length === 0) {
+        <ph-card [flush]="true">
+          <ph-empty-state
+            icon="slips"
+            title="No slips yet"
+            text="Create an event that needs a slip."
+          >
+            <ph-button variant="primary" link="/events/new">New event</ph-button>
+          </ph-empty-state>
+        </ph-card>
+      } @else {
+        <ul class="slips" aria-label="Permission slips">
+          @for (s of r.value.slips; track s.id) {
+            <li class="slip">
+              <div class="body">
+                <a class="title" [routerLink]="['/events', s.eventId, 'slip']">{{ s.title }}</a>
+                <div class="meta">{{ meta(s) }}</div>
+                @if (s.status === 'Sent') {
+                  <ph-progress-bar
+                    class="progress"
+                    [value]="s.signed"
+                    [max]="s.children"
+                    [label]="s.title + ': ' + s.signed + ' of ' + s.children + ' signed'"
+                    [caption]="s.signed + ' of ' + s.children + ' signed'"
+                    [tone]="s.signed === s.children ? 'success' : 'accent'"
+                  />
+                }
+              </div>
+              <ph-badge [tone]="badge(s).tone">{{ badge(s).label }}</ph-badge>
+            </li>
+          }
+        </ul>
+      }
+    }
+  }
+}
