@@ -6,6 +6,7 @@ export class GuardianSlipPage extends BasePage {
   async open(token: string): Promise<void> {
     await super.open(`/g/slip/${token}`);
     await expect(this.heading).toBeVisible();
+    await expect(this.heading).not.toHaveText(/^(Loading|Cargando|Chargement)/);
   }
 
   get heading(): Locator {
