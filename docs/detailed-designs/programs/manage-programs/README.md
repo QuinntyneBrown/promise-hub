@@ -49,7 +49,11 @@ The feature is a vertical slice from the staff UI to the database.
   - `ProgramStatus` — `Active`, `Archived`. `EnrollmentState` — `Open`, `Closed`.
 - **`PromiseHub.Infrastructure`** — `PromiseHubDbContext` maps `Programs` with a global query filter on `OrganizationId`. `AuditLog` records archive and restore. Picker and navigation queries exclude `Archived` programs; report queries include them.
 
-Undecided details: the maximum program name length `<TO SUPPLY>`; whether archiving cancels future events of the program `<TO SUPPLY>`.
+Decided in ADR 0008: names are at most 120 characters; archiving does not cancel future events.
+
+## Built so far
+
+Slice 05 delivered `ProgramsListPage` (`ProgramsPage`), `ProgramPage` (stats, roster with add and remove, events, archived read-only state with Restore), `ProgramFormPage` for new and edit, `EnrollDialog`, `RemoveFromRosterDialog`, `ProgramActionsDialog` and `ArchiveProgramDialog`, `PROGRAMS_API`, every endpoint above plus `POST /programs/{id}/enrollments` and `DELETE /programs/{id}/enrollments/{childId}`, the handlers with audit entries and the `Enrollment` entity. Schedule is free text as in the mock. Waitlists, the enrollment link, attendance figures and the funder report arrive with their features.
 
 ## Requirements
 

@@ -12,6 +12,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 02 | [Sign in securely](02-sign-in-securely/README.md) | ~3 min | Sign-in, lockout, the code step, sessions and server-side roles |
 | 03 | [Configure modules](03-configure-modules/README.md) | ~3 min | Settings › Modules, dependencies, module gates and navigation |
 | 04 | [Maintain households](04-maintain-households/README.md) | ~3 min | Families, guardians, children, medical details and who sees them |
+| 05 | [Create programs and events](05-create-programs-and-events/README.md) | ~3 min | Programs, rosters, archiving, events, draft slips and cancellations |
 
 ## Making or updating a video
 

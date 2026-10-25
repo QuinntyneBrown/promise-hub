@@ -2,4 +2,4 @@
 
 | Design | Effort | Complete |
 |---|---|---|
-| manage-programs | 5 days | 0% |
+| manage-programs | 5 days | 75% |

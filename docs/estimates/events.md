@@ -2,4 +2,4 @@
 
 | Design | Effort | Complete |
 |---|---|---|
-| manage-events | 5 days | 0% |
+| manage-events | 5 days | 65% |

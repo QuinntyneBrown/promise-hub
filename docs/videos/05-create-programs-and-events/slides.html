@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 05 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="05" data-video-title="Create programs and events" data-parts="Introduction|Promises|Programs|Archive|Events|Roles|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 05</div>
+  <h1>Create programs and events</h1>
+  <p class="lead">Rosters, capacity, archiving, draft slips and cancellations</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="A program has dates, a schedule, a capacity and an age range.">
+  <h2>What programs and events promise</h2>
+  <ul>
+    <li>New programs start empty, with enrollment closed</li>
+    <li>Rosters stop at capacity</li>
+    <li>Archiving hides and keeps; restoring brings it back</li>
+    <li>An event that needs a slip starts with a draft</li>
+  </ul>
+</section>
+
+<section id="programs" data-part="2" data-cue="Here is Marisol in Programs on a laptop." data-clip="clips/programs-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Spring Robotics</h3><p>Created empty and closed, then Amara joins the roster.</p></div>
+</section>
+
+<section id="archive" data-part="3" data-cue="Archiving asks for the program's name to be typed.">
+  <h2>Archive and restore</h2>
+  <div class="cols">
+    <img class="shot" alt="Programs list" src="shots/phone-programs.png">
+    <img class="shot" alt="Archived program, read-only with Restore" src="shots/phone-archived.png">
+  </div>
+</section>
+
+<section id="events" data-part="4" data-cue="Events lists what is coming up" data-clip="clips/cancel-event-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Cancel the field trip</h3><p>Kept as cancelled, with who and why.</p></div>
+</section>
+
+<section id="roles" data-part="5" data-cue="Program directors and admins create, edit and archive programs">
+  <h2>Who can do what</h2>
+  <table class="facts">
+    <tr><th>Role</th><th>Programs</th><th>Events</th></tr>
+    <tr><td>Admin, program director</td><td>Create, edit, archive, roster</td><td>Create, edit, cancel</td></tr>
+    <tr><td>Site lead</td><td>Read</td><td>Create, edit</td></tr>
+    <tr><td>Youth worker</td><td>Read</td><td>Read</td></tr>
+  </table>
+</section>
+
+<section id="testing" data-part="6" data-cue="Backend tests cover the rules for new programs">
+  <h2>How it is tested</h2>
+  <div class="cols">
+    <div class="card"><h3>Backend</h3><p>New-program rules, capacity, archive and restore, draft slips, cancelling, roles, cross-tenant, Roster off.</p></div>
+    <div class="card"><h3>Browser</h3><p>Create, roster, archive, restore and cancel at phone and desktop widths, axe on every page and dialog.</p></div>
+  </div>
+</section>
+
+<section id="recap" data-part="7" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>New programs start empty and closed</li><li>Capacity is enforced</li><li>Archiving keeps everything and can be undone</li><li>A slip-needing event starts with a draft</li></ul>
+  <p class="muted">Next: check children in</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

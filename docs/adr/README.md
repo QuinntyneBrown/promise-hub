@@ -11,3 +11,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0005](0005-cookie-sessions-and-totp.md) | Cookie sessions, a separate MFA ticket and TOTP |
 | [0006](0006-module-gates-and-navigation.md) | Module gates, navigation mapping and dependency details |
 | [0007](0007-soft-delete-and-command-results.md) | Soft delete, command results and client-side permission hints |
+| [0008](0008-programs-and-events.md) | Programs and events as roster data, in-process draft slips |
