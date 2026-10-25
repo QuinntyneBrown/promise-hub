@@ -15,4 +15,5 @@ public sealed record RosterEntryDto(
     DateTimeOffset? SignedOutAt = null,
     string? CollectedBy = null,
     string? NoShow = null,
-    DateTimeOffset? NoShowAt = null);
+    DateTimeOffset? NoShowAt = null,
+    bool Conflict = false);

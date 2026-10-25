@@ -54,9 +54,11 @@ public sealed class AttendanceWriter(IPromiseHubDb db, ITenantContext tenant, IA
             db.AttendanceRecords.Add(record);
         }
         var before = new { Status = record.Status.ToString(), record.CheckedInAt };
+        var hadConflict = record.HasConflict;
         change(record);
+        var conflict = record.HasConflict && !hadConflict ? " · conflict: marked absent later on another device, present kept" : "";
         db.AttendanceEvents.Add(new AttendanceEvent(Guid.NewGuid(), tenant.OrganizationId, record.Id, kind, at, tenant.MembershipId, clientActionId));
-        audit.Record(new AuditEvent(AuditAction.Updated, "Attendance", record.Id, $"{child.FullName} · {e.Name} · {kind}", before,
+        audit.Record(new AuditEvent(AuditAction.Updated, "Attendance", record.Id, $"{child.FullName} · {e.Name} · {kind}{conflict}", before,
             new { Status = record.Status.ToString(), record.CheckedInAt }));
         await db.SaveChangesAsync(cancellationToken);
         return Result.Done;

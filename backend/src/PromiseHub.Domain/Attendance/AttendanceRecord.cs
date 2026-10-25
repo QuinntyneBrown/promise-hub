@@ -36,9 +36,19 @@ public sealed class AttendanceRecord : ITenantOwned
 
     public bool IdChecked { get; private set; }
 
+    /// <summary>
+    /// True when a check-in made earlier on one device reached the server after another device marked the child absent:
+    /// both events are kept, present wins, and staff see the conflict (L2-028 criterion 3).
+    /// </summary>
+    public bool HasConflict { get; private set; }
+
     /// <summary>Checks the child in; allowed from not-yet or absent, which clears the absence.</summary>
     public void CheckIn(DateTimeOffset at, string actor)
     {
+        if (Status == AttendanceStatus.Absent && MarkedAbsentAt > at)
+        {
+            HasConflict = true;
+        }
         Status = AttendanceStatus.Present;
         CheckedInAt = at;
         MarkedAbsentAt = null;

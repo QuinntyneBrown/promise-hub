@@ -37,7 +37,8 @@ public sealed class GetSessionRosterHandler(IPromiseHubDb db, ITenantContext ten
             return new RosterEntryDto(c.Id, c.Id, c.HouseholdId, c.FullName, c.AgeOn(today), c.School, flag,
                 (record?.Status ?? AttendanceStatus.NotYet).ToString(), record?.CheckedInAt, WalkIn: false, record?.SignedOutAt, record?.CollectedBy,
                 alerts.FirstOrDefault(a => a.ChildId == c.Id) is { } alert ? (alert.Reply == NoShowReply.None ? "TextSent" : alert.Reply.ToString()) : null,
-                alerts.FirstOrDefault(a => a.ChildId == c.Id)?.SentAt);
+                alerts.FirstOrDefault(a => a.ChildId == c.Id)?.SentAt,
+                record?.HasConflict ?? false);
         }).Concat(walkIns.Select(w =>
         {
             var record = records.FirstOrDefault(r => r.WalkInId == w.Id);
