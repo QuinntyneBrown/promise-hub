@@ -1,0 +1,144 @@
+@switch (state()) {
+  @case ('none') {
+    <ph-page-header title="Check-in" />
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="events"
+        title="No sessions today"
+        text="Sessions appear here on the day they run."
+      />
+    </ph-card>
+  }
+  @case ('not-found') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="search"
+        title="We can’t find that session"
+        text="It may belong to another organization."
+        [headingLevel]="1"
+      >
+        <ph-button variant="primary" link="/check-in">Today’s check-in</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('error') {
+    <ph-page-header title="Check-in" />
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load the roster"
+        text="Try again."
+      >
+        <ph-button variant="primary" (click)="load(sessionId())">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('loaded') {
+    @if (session(); as s) {
+      @let t = totals();
+      <ph-page-header [title]="s.name" [subtitle]="subtitle(s)">
+        @for (other of others(); track other.id) {
+          <ph-button size="sm" [link]="['/check-in', other.id]">{{ other.name }}</ph-button>
+        }
+      </ph-page-header>
+      <div class="kpis" role="group" aria-label="Session totals">
+        <ph-stat label="Checked in" [value]="'' + t.checkedIn" data-testid="total-Checked in" />
+        <ph-stat label="Absent" [value]="'' + t.absent" data-testid="total-Absent" />
+        <ph-stat label="Not yet" [value]="'' + t.notYet" data-testid="total-Not yet" />
+        <ph-stat label="On roster" [value]="'' + t.all" />
+      </div>
+      <div class="toolbar">
+        <ph-text-field
+          class="search"
+          inputId="roster-q"
+          type="search"
+          label="Find a child"
+          [labelHidden]="true"
+          placeholder="Find a child"
+          [ngModel]="query()"
+          (ngModelChange)="query.set($event)"
+        />
+        <div class="chips" role="group" aria-label="Filter roster">
+          <ph-chip [pressed]="filter() === 'all'" (click)="filter.set('all')"
+            >All {{ t.all }}</ph-chip
+          >
+          <ph-chip [pressed]="filter() === 'not-yet'" (click)="filter.set('not-yet')"
+            >Not yet {{ t.notYet }}</ph-chip
+          >
+          <ph-chip [pressed]="filter() === 'in'" (click)="filter.set('in')"
+            >Checked in {{ t.checkedIn }}</ph-chip
+          >
+          <ph-chip [pressed]="filter() === 'absent'" (click)="filter.set('absent')"
+            >Absent {{ t.absent }}</ph-chip
+          >
+        </div>
+      </div>
+      @if (visible().length === 0) {
+        <ph-card [flush]="true">
+          <ph-empty-state
+            icon="search"
+            [title]="query() ? 'No “' + query() + '” on tonight’s roster' : 'No one here'"
+            [text]="
+              query() ? 'Check the spelling, or add them as a walk-in.' : 'Try another filter.'
+            "
+          >
+            @if (query()) {
+              <ph-button (click)="query.set('')">Clear search</ph-button>
+            }
+            @if (canRun()) {
+              <ph-button variant="primary" (click)="addWalkIn()">Add walk-in</ph-button>
+            }
+          </ph-empty-state>
+        </ph-card>
+      } @else {
+        <ph-roster [label]="'Roster for ' + s.name">
+          @for (e of visible(); track e.id) {
+            <ph-roster-item
+              [name]="e.name"
+              [meta]="meta(e)"
+              [status]="rowStatus(e)"
+              avatarTint="peach"
+            >
+              <ng-container ngProjectAs="[phRosterFlags]">
+                @if (e.medicalFlag) {
+                  <ph-flag data-testid="medical-flag">{{ e.medicalFlag }}</ph-flag>
+                }
+                @if (e.walkIn) {
+                  <ph-badge tone="info">Walk-in</ph-badge>
+                }
+              </ng-container>
+              @if (canRun()) {
+                @if (e.status === 'NotYet' || e.status === 'Absent') {
+                  <ph-button
+                    variant="primary"
+                    size="sm"
+                    [label]="'Check in ' + e.name"
+                    (click)="checkIn(e)"
+                    >Check in</ph-button
+                  >
+                }
+                @if (e.childId) {
+                  <ph-button
+                    variant="ghost"
+                    size="sm"
+                    icon="menu"
+                    [iconOnly]="true"
+                    [label]="'More for ' + e.name"
+                    hasPopup="dialog"
+                    (click)="options(e)"
+                  />
+                }
+              }
+            </ph-roster-item>
+          }
+        </ph-roster>
+        @if (canRun()) {
+          <div class="footer-action">
+            <ph-button variant="ghost" (click)="addWalkIn()">Add walk-in</ph-button>
+          </div>
+        }
+      }
+    }
+  }
+}

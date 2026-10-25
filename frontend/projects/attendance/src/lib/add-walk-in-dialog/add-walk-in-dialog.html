@@ -1,0 +1,33 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    title="Add a walk-in to tonight"
+    description="Tonight only. The office enrolls them tomorrow."
+  >
+    <ph-text-field
+      inputId="childName"
+      label="Child’s name"
+      name="childName"
+      [error]="errors()['childName'] ?? null"
+      [(ngModel)]="walkIn.childName"
+    />
+    <ph-text-field
+      inputId="guardian"
+      label="Guardian’s name and phone"
+      name="guardian"
+      help="Reachable tonight."
+      [error]="errors()['guardian'] ?? null"
+      [(ngModel)]="walkIn.guardian"
+    />
+    <ph-textarea
+      inputId="medicalNotes"
+      label="Allergies or medical, as the guardian told you"
+      name="medicalNotes"
+      placeholder="None that we know of"
+      [(ngModel)]="walkIn.medicalNotes"
+    />
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Check in for tonight</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

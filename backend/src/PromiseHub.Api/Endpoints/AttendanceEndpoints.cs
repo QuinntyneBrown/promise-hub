@@ -1,0 +1,30 @@
+using PromiseHub.Api.Authorization;
+using PromiseHub.Api.Modules;
+using PromiseHub.Application.Attendance;
+using PromiseHub.Application.Identity;
+using PromiseHub.Domain.Organizations;
+
+namespace PromiseHub.Api.Endpoints;
+
+/// <summary>Sessions and check-in: the Roll Call module. A session is an event (ADR 0009).</summary>
+public static class AttendanceEndpoints
+{
+    public static IEndpointRouteBuilder MapAttendanceEndpoints(this IEndpointRouteBuilder app)
+    {
+        var sessions = app.MapGroup("/sessions").RequireModule(ModuleId.RollCall);
+        sessions.MapGet("/today", (TodaySessionsHandler handler, CancellationToken ct) => handler.HandleAsync(ct));
+        sessions.MapGet("/{id:guid}/roster", async (Guid id, GetSessionRosterHandler handler, CancellationToken ct) =>
+            await handler.HandleAsync(id, ct) is { } roster ? Results.Ok(roster) : Results.NotFound());
+        sessions.MapPost("/{id:guid}/check-ins", async (Guid id, CheckInCommand command, CheckInHandler handler, CancellationToken ct) =>
+            Ok(await handler.HandleAsync(id, command, ct))).RequirePermission(Permission.RunSessions);
+        sessions.MapPost("/{id:guid}/absences", async (Guid id, MarkAbsentCommand command, MarkAbsentHandler handler, CancellationToken ct) =>
+            Ok(await handler.HandleAsync(id, command, ct))).RequirePermission(Permission.RunSessions);
+        sessions.MapPost("/{id:guid}/walk-ins", async (Guid id, AddWalkInCommand command, AddWalkInHandler handler, CancellationToken ct) =>
+            (await handler.HandleAsync(id, command, ct)).ToHttp()).RequirePermission(Permission.RunSessions);
+        return app;
+    }
+
+    /// <summary>Attendance writes answer 200 so a repeated tap and the first one look the same to the client.</summary>
+    private static IResult Ok(Application.Result result) =>
+        result.Status == Application.ResultStatus.Done ? Results.Ok(new { status = "saved" }) : result.ToHttp();
+}

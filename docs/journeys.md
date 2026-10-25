@@ -9,7 +9,7 @@
 | Guardian | Track enrollment status | See whether a child is accepted or waitlisted. | [2 days](detailed-designs/enrollment/enroll-guardian/README.md) | 0% |
 | Guardian | Request household data | Ask for an export or deletion of household information. | [4 days](detailed-designs/organizations/set-privacy-and-residency/README.md) | 0% |
 | Guardian | Complete a survey | Submit feedback or outcomes through a translated, verified page. | [3 days](detailed-designs/guardian/localize-guardian-pages/README.md) | 0% |
-| Site lead | Check children in | Open today's session and record arrivals from a phone. | [5 days](detailed-designs/attendance/check-in-and-sign-out/README.md) | 0% |
+| Site lead | Check children in | Open today's session and record arrivals from a phone. | [5 days](detailed-designs/attendance/check-in-and-sign-out/README.md) | 80% · [video](videos/06-check-children-in/README.md) |
 | Site lead | Sign children out | Verify pickup authority and record who collected each child. | [3 days](detailed-designs/attendance/check-in-and-sign-out/README.md) | 0% |
 | Site lead | Read a Quick Card | Find allergies, medication, emergency contacts, and pickup rules immediately. | [3 days](detailed-designs/attendance/show-quick-card/README.md) | 0% |
 | Site lead | Run check-in offline | Use the cached roster and sync queued attendance when connectivity returns. | [5 days](detailed-designs/attendance/sync-offline-queue/README.md) | 0% |

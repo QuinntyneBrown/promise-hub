@@ -12,3 +12,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0006](0006-module-gates-and-navigation.md) | Module gates, navigation mapping and dependency details |
 | [0007](0007-soft-delete-and-command-results.md) | Soft delete, command results and client-side permission hints |
 | [0008](0008-programs-and-events.md) | Programs and events as roster data, in-process draft slips |
+| [0009](0009-sessions-are-events.md) | A session is an event; idempotent attendance |

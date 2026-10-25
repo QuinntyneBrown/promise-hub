@@ -6,4 +6,5 @@ export type Permission =
   | 'writeMedical'
   | 'managePrograms'
   | 'manageEvents'
-  | 'cancelEvents';
+  | 'cancelEvents'
+  | 'runSessions';

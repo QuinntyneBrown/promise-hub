@@ -1,0 +1,11 @@
+<ph-avatar [name]="name()" size="sm" [tint]="avatarTint()" />
+<div class="body">
+  <div class="name">
+    <span data-testid="roster-name">{{ name() }}</span>
+    <ng-content select="[phRosterFlags]" />
+  </div>
+  @if (meta()) {
+    <div class="meta">{{ meta() }}</div>
+  }
+</div>
+<div class="actions"><ng-content /></div>

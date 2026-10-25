@@ -1,0 +1,13 @@
+.sessions {
+  display: grid;
+  gap: var(--layout-gutter);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+}
+.muted {
+  color: var(--color-fg-muted);
+  margin: 0;
+}
+.count {
+  font: var(--text-h3);
+  margin: 0;
+}

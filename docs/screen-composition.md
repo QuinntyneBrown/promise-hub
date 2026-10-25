@@ -16,7 +16,7 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 
 | Screen | Mock | Library components | Built locally |
 |---|---|---|---|
-| Today (empty) | `today/empty` | `ph-page-header`, `ph-card`, `ph-empty-state`, `ph-button` | Greeting and date |
+| Today | `today` (sessions), `today/empty` | `ph-page-header`, `ph-card` (titled), `ph-empty-state`, `ph-button` | Greeting, date and session counts |
 | Not found | `not-found` | `ph-error-page`, `ph-button` | — |
 | Forbidden | `forbidden` | `ph-error-page`, `ph-button` | — |
 | Server error | `server-error` | `ph-error-page`, `ph-button` | Retry reloads |
@@ -35,6 +35,7 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Events | `events` (default, no-results, error) | `ph-page-header`, `ph-text-field` (search), `ph-chip`, `ph-select`, `ph-list`, `ph-list-item`, `ph-badge`, `ph-card`, `ph-empty-state`, `ph-button` | Times via `formatWhen` |
 | Event | `event` (default, empty, cancelled) | `ph-breadcrumb`, `ph-page-header`, `ph-alert`, `ph-card` (titled), `ph-badge`, `ph-description-list`, `ph-button` | — |
 | Event form | `event-form` (default, invalid) | `ph-breadcrumb`, `ph-page-header`, `ph-card`, `ph-text-field`, `ph-select`, `ph-radio-group`, `ph-switch`, `ph-textarea`, `ph-alert`, `ph-button` | Local time conversion |
+| Check-in | `check-in` (default, empty, no-results, error) | `ph-page-header`, `ph-stat`, `ph-text-field` (search), `ph-chip`, `ph-roster`, `ph-roster-item`, `ph-flag`, `ph-badge`, `ph-card`, `ph-empty-state`, `ph-button`, toast | Optimistic roster state |
 
 ## Dialogs
 
@@ -52,6 +53,8 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Program actions / Event actions | `program-actions`, `event-actions` | `ph-dialog`, `ph-action-menu`, `ph-button` |
 | Archive program | `archive-program` | `ph-dialog`, `ph-text-field`, `ph-button` |
 | Cancel event | `cancel-event` | `ph-dialog`, `ph-textarea`, `ph-switch`, `ph-button` |
+| Check-in sheet | `check-in-sheet` | `ph-dialog`, `ph-radio-group`, `ph-text-field` (time), `ph-button` |
+| Add a walk-in | `add-walk-in` (default, invalid) | `ph-dialog`, `ph-text-field`, `ph-textarea`, `ph-button` |
 
 The toast region (`ph-toast-region`) sits once in the app root.
 

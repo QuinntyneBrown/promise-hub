@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using PromiseHub.Application;
 using PromiseHub.Application.Organizations;
+using PromiseHub.Domain.Attendance;
 using PromiseHub.Domain.Audit;
 using PromiseHub.Domain.Households;
 using PromiseHub.Domain.Identity;
@@ -26,6 +27,9 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Enrollment> Enrollments => Set<Enrollment>();
     public DbSet<Event> Events => Set<Event>();
     public DbSet<PermissionSlip> PermissionSlips => Set<PermissionSlip>();
+    public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
+    public DbSet<AttendanceEvent> AttendanceEvents => Set<AttendanceEvent>();
+    public DbSet<WalkIn> WalkIns => Set<WalkIn>();
     public DbSet<StaffUser> StaffUsers => Set<StaffUser>();
     public DbSet<SignInAttempt> SignInAttempts => Set<SignInAttempt>();
 
@@ -39,6 +43,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(o => o.Name).HasMaxLength(200);
             e.Property(o => o.City).HasMaxLength(200);
             e.Property(o => o.Plan).HasConversion<string>().HasMaxLength(20);
+            e.Property(o => o.TimeZone).HasMaxLength(60);
         });
         modelBuilder.Entity<Membership>(e =>
         {
@@ -135,6 +140,29 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
             e.HasOne<Event>().WithMany().HasForeignKey(x => x.EventId);
             e.HasIndex(x => x.EventId).IsUnique();
+        });
+        modelBuilder.Entity<AttendanceRecord>(e =>
+        {
+            e.Property(r => r.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(r => r.UpdatedBy).HasMaxLength(200);
+            e.Property(r => r.CheckedInAt).HasConversion(v => v.HasValue ? v.Value.UtcTicks : (long?)null, v => v.HasValue ? new DateTimeOffset(v.Value, TimeSpan.Zero) : null);
+            e.Property(r => r.MarkedAbsentAt).HasConversion(v => v.HasValue ? v.Value.UtcTicks : (long?)null, v => v.HasValue ? new DateTimeOffset(v.Value, TimeSpan.Zero) : null);
+            e.HasOne<Event>().WithMany().HasForeignKey(r => r.EventId);
+            e.HasIndex(r => new { r.EventId, r.ChildId });
+        });
+        modelBuilder.Entity<AttendanceEvent>(e =>
+        {
+            e.Property(x => x.Kind).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.OccurredAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.HasOne<AttendanceRecord>().WithMany().HasForeignKey(x => x.RecordId);
+            e.HasIndex(x => new { x.OrganizationId, x.ClientActionId }).IsUnique();
+        });
+        modelBuilder.Entity<WalkIn>(e =>
+        {
+            e.Property(w => w.ChildName).HasMaxLength(200);
+            e.Property(w => w.Guardian).HasMaxLength(300);
+            e.Property(w => w.MedicalNotes).HasMaxLength(1000);
+            e.HasOne<Event>().WithMany().HasForeignKey(w => w.EventId);
         });
         modelBuilder.Entity<StaffUser>(e =>
         {

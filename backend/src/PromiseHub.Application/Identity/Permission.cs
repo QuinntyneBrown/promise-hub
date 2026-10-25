@@ -10,4 +10,5 @@ public enum Permission
     ManagePrograms,
     ManageEvents,
     CancelEvents,
+    RunSessions,
 }

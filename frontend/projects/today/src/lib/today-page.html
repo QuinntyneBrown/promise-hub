@@ -3,10 +3,34 @@
     [title]="'Welcome, ' + firstName()"
     [subtitle]="s.organizationName + ' · ' + today"
   />
-  <ph-card [flush]="true">
-    <ph-empty-state title="Nothing here yet" text="Import a roster to begin.">
-      <ph-button variant="primary" link="/welcome" icon="arrow-right">Start setup</ph-button>
-      <ph-button link="/import" icon="upload">Import a roster</ph-button>
-    </ph-empty-state>
-  </ph-card>
+  @if (sessions(); as list) {
+    @if (list.length) {
+      <div class="sessions">
+        @for (session of list; track session.id) {
+          <ph-card [title]="session.name">
+            <div class="stack">
+              <p class="muted">
+                {{ when(session.startsAt, session.endsAt)
+                }}{{ session.place ? ' · ' + session.place : '' }}
+              </p>
+              <p class="count">{{ session.checkedIn }} of {{ session.expected }} checked in</p>
+              <p class="muted">{{ session.absent }} absent · {{ session.notYet }} not yet here</p>
+              <div>
+                <ph-button variant="primary" icon="check-in" [link]="['/check-in', session.id]"
+                  >Open check-in</ph-button
+                >
+              </div>
+            </div>
+          </ph-card>
+        }
+      </div>
+    } @else {
+      <ph-card [flush]="true">
+        <ph-empty-state title="Nothing here yet" text="Import a roster to begin.">
+          <ph-button variant="primary" link="/welcome" icon="arrow-right">Start setup</ph-button>
+          <ph-button link="/import" icon="upload">Import a roster</ph-button>
+        </ph-empty-state>
+      </ph-card>
+    }
+  }
 }

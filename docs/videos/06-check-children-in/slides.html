@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 06 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="06" data-video-title="Check children in" data-parts="Introduction|Promises|At the door|Failures|Laptop|Roles|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 06</div>
+  <h1>Check children in</h1>
+  <p class="lead">One tap per child, on a phone at the door</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="Today shows tonight's session">
+  <h2>What check-in promises</h2>
+  <ul>
+    <li>One tap; the row and totals change at once</li>
+    <li>Earlier arrivals, absences and walk-ins</li>
+    <li>Every change recorded; a repeated tap never counts twice</li>
+    <li>Nothing of Roll Call when the module is off</li>
+  </ul>
+</section>
+
+<section id="door" data-part="2" data-cue="Here is Jaylen on his phone." data-clip="clips/check-in-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Mateo, Sofía, Yusuf absent, Nikolai walks in</h3><p>Each tap is green at once; the toast counts who is here.</p></div>
+</section>
+
+<section id="failures" data-part="3" data-cue="If the server refuses a check-in">
+  <h2>When the network fails</h2>
+  <div class="cols">
+    <img class="shot" alt="Check-in failure toast and reverted row" src="shots/phone-failed.png">
+    <div class="card"><h3>Honest by design</h3><p>The row goes back, the totals return and the toast names the child.</p><p>A client action id per tap makes a repeat harmless.</p></div>
+  </div>
+</section>
+
+<section id="laptop" data-part="4" data-cue="On a laptop, Today shows the session card" data-clip="clips/today-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Today, then check-in</h3><p>Totals, search and filters.</p></div>
+</section>
+
+<section id="roles" data-part="5" data-cue="Site leads, youth workers, program directors and admins run sessions.">
+  <h2>Who can do what</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Site lead, youth worker, director, admin</td><td>Check in, mark absent, walk-ins</td></tr>
+    <tr><td>Volunteer coordinator</td><td>Read the roster, no medical flags</td></tr>
+    <tr><td>Another organization's session</td><td>404</td></tr>
+    <tr><td>Roll Call off</td><td>404; check-in redirects to Today</td></tr>
+  </table>
+</section>
+
+<section id="testing" data-part="6" data-cue="Backend tests cover today's sessions">
+  <h2>How it is tested</h2>
+  <div class="cols">
+    <div class="card"><h3>Backend</h3><p>Time zone, roster, now and earlier, absent then present, repeated taps, walk-ins, cancelled sessions, roles, cross-tenant.</p></div>
+    <div class="card"><h3>Browser</h3><p>Check-in, failure revert, absence, walk-in and module off at phone and desktop widths, axe on every state.</p></div>
+  </div>
+</section>
+
+<section id="recap" data-part="7" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>One tap, instant feedback, honest revert</li><li>A repeated tap never counts twice</li><li>Walk-ins are tonight only</li></ul>
+  <p class="muted">Next: read a Quick Card</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

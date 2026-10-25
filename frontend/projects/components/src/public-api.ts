@@ -31,6 +31,8 @@ export * from './lib/navigation/nav-item';
 export * from './lib/page-header/page-header';
 export * from './lib/radio-group/radio-group';
 export * from './lib/radio-group/radio-option';
+export * from './lib/roster/roster';
+export * from './lib/roster/roster-item';
 export * from './lib/select/select';
 export * from './lib/select/select-option';
 export * from './lib/skip-link/skip-link';
