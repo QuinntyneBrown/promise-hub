@@ -21,6 +21,6 @@ public sealed class SessionReader(IPromiseHubDb db)
         var checkedIn = counted.Count(r => r.Status is AttendanceStatus.Present or AttendanceStatus.SignedOut);
         var absent = counted.Count(r => r.Status == AttendanceStatus.Absent);
         return new SessionSummaryDto(e.Id, e.Name, program.Id, program.Name, e.StartsAt, e.EndsAt, e.Place, expected, checkedIn, absent,
-            expected - checkedIn - absent, e.Status.ToString());
+            expected - checkedIn - absent, e.Status.ToString(), e.EndedAt, e.EndedBy, e.SessionNotes);
     }
 }

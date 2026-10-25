@@ -12,4 +12,7 @@ public sealed record SessionSummaryDto(
     int CheckedIn,
     int Absent,
     int NotYet,
-    string Status);
+    string Status,
+    DateTimeOffset? EndedAt = null,
+    string? EndedBy = null,
+    string? Notes = null);

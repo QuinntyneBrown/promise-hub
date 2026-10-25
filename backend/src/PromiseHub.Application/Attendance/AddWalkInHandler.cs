@@ -26,6 +26,10 @@ public sealed class AddWalkInHandler(IPromiseHubDb db, ITenantContext tenant, IA
         {
             errors["session"] = "This session is cancelled.";
         }
+        if (e.Status == EventStatus.Ended)
+        {
+            errors["session"] = "This session has ended.";
+        }
         if (string.IsNullOrWhiteSpace(command.ChildName))
         {
             errors["childName"] = "Enter the child’s name.";

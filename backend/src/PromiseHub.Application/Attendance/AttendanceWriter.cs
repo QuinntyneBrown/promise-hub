@@ -36,6 +36,10 @@ public sealed class AttendanceWriter(IPromiseHubDb db, ITenantContext tenant, IA
         {
             return Result.Invalid(new Dictionary<string, string> { ["session"] = "This session is cancelled." });
         }
+        if (e.Status == EventStatus.Ended)
+        {
+            return Result.Invalid(new Dictionary<string, string> { ["session"] = "This session has ended." });
+        }
         var child = await db.Children.AsNoTracking().FirstOrDefaultAsync(c => c.Id == childId, cancellationToken);
         if (child is null || !(await reader.RosterChildIdsAsync(e.ProgramId, cancellationToken)).Contains(childId))
         {
