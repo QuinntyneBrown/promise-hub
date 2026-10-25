@@ -6,7 +6,7 @@ PromiseHub replaces paper permission slips with a digital slip that guardians si
 
 A **slip delivery** — record of the one message sent to one household for a slip, with the household's language, the channel used (`Sms`, `Email` or `Push`) and the delivery status. Sending a slip to 48 enrolled children creates one delivery per household, not per child, in the household's language and preferred channel. When the organization's monthly SMS cap is reached, texts are skipped and the delivery falls back to email; the sender sees which households got email only (`L2-022`).
 
-A **material edit** — change to a sent slip's terms that invalidates existing signatures. Editing the wording of a sent slip warns the editor that signed guardians will be asked to re-sign only when the change is marked material. A material edit increments the slip version, stores a new text hash and re-opens signing for every household.
+A **material edit** — change to a sent slip's terms that invalidates existing signatures. Editing the wording of a sent slip warns the editor that signed guardians are asked to re-sign only when the change is marked material. A material edit increments the slip version, stores a new text hash and re-opens signing for every household.
 
 Local terms used below:
 

@@ -1,0 +1,77 @@
+@startuml
+title UML sequence behaviour — Cache today's roster and open offline
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Site lead" as lead
+box "Frontend — PromiseHub web app, today and attendance libraries" #E0F2FE
+  participant "TodayPage" as today
+  participant "TodayRosterCache" as cache
+  participant "Service worker cache" as sw
+  participant "AttendanceApi / QuickCardApi" as client
+  participant "CheckInPage" as checkin
+  participant "QuickCardPage" as qc
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "AttendanceEndpoints / QuickCardEndpoints" as ep
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "GetTodaySessionsQuery / GetSessionRosterQuery / GetTodayQuickCardsQuery" as q
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+end box
+
+== Online: fill the cache ==
+lead -> today : Open Today (online)
+today -> cache : fill()
+cache -> client : getTodaySessions()
+client -> ep : GET /sessions/today
+ep -> q : Query (tenant filter, modules on)
+q -> db : Read
+db --> q : Sessions
+q --> ep : DTOs
+ep --> client : 200
+client --> cache : Sessions
+loop each session
+  cache -> client : getSessionRoster(sessionId)
+  client -> ep : GET /sessions/{id}/roster
+  ep --> client : 200
+  cache -> sw : Store roster with savedAt
+end
+cache -> client : getTodayQuickCards(today)
+client -> ep : GET /quick-cards/today
+ep -> q : Query, role filter, audit per card
+ep --> client : 200
+cache -> sw : Store every Quick Card with savedAt (L2-028)
+cache --> today : savedAt 3:58 pm
+
+== Offline: open from cache ==
+lead -> checkin : Open check-in (no connection)
+checkin -> cache : roster(sessionId)
+cache -> sw : Lookup
+alt Roster cached
+  sw --> cache : Roster + savedAt
+  cache --> checkin : Render offline state, banner "Roster saved at 3:58 pm", sync chip
+  lead -> checkin : Tap a child's name
+  checkin -> qc : Navigate
+  qc -> cache : quickCard(childId)
+  cache -> sw : Lookup
+  sw --> cache : Card + savedAt
+  cache --> qc : Render offline card "Saved on this phone · 3:58 pm" (L2-028)
+else Nothing cached for this device
+  sw --> cache : Miss
+  cache --> checkin : Error state "Nothing is saved on this phone", guardian numbers if any, Back to Today (L2-028)
+end
+@enduml

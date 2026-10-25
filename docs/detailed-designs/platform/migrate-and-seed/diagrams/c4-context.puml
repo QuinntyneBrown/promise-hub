@@ -1,0 +1,12 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Migrate and seed
+
+Person(dev, "Developer or release pipeline", "Runs migrate, seed and reset")
+System(promisehub, "PromiseHub", "CLI applies schema and seed; API refuses an unmigrated database")
+SystemDb(db, "PromiseHub database", "Schema, migration history, seeded tenants")
+
+Rel(dev, promisehub, "Runs PromiseHub.Cli commands", "Shell")
+Rel(promisehub, db, "Migrates, seeds, checks pending migrations", "EF Core")
+@enduml

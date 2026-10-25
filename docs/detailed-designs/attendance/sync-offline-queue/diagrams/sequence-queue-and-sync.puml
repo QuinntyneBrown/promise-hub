@@ -1,0 +1,96 @@
+@startuml
+title UML sequence behaviour — Queue a check-in offline and sync in order
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Site lead" as lead
+box "Frontend — PromiseHub web app, attendance library" #E0F2FE
+  participant "CheckInPage / RosterStore" as roster
+  participant "AttendanceQueueStore" as queue
+  participant "SyncService" as sync
+  participant "OfflineQueueDialog" as dlg
+  participant "AttendanceApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "AttendanceEndpoints" as ep
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "SyncAttendanceActionsCommandHandler" as h
+  participant "CheckInChildCommandHandler" as ci
+  participant "AttendanceConflictResolver" as res
+  participant "AttendanceRecord" as rec
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "IAuditLog" as audit
+end box
+
+== Offline ==
+lead -> roster : Tap Check in on Jordan, then on Kevin
+roster -> roster : Mark rows Present (optimistic)
+roster -> queue : enqueue(CheckIn Jordan, seq 1, clientActionId, deviceTime 4:05)
+roster -> queue : enqueue(CheckIn Kevin, seq 2, clientActionId, deviceTime 4:06)
+queue --> roster : 2 pending
+roster --> lead : Rows "waiting to sync", chip "2 queued", Sign out disabled on both (L2-028)
+lead -> roster : Tap Sign out on Jordan
+roster --> lead : Disabled while check-in unsent (L2-028)
+opt Open the queue dialog
+  lead -> dlg : Tap "2 queued"
+  dlg -> queue : List pending
+  dlg --> lead : "2 check-ins waiting to sync. They send when you have signal."
+end
+
+== Connection returns ==
+sync -> sync : online event
+sync -> queue : peek() in sequence order
+sync -> client : sync(sessionId, [Jordan, Kevin])
+client -> ep : POST /sessions/{id}/sync
+ep -> ep : Authenticate, resolve tenant, Roll Call on
+ep -> h : Send SyncAttendanceActionsCommand
+loop each action in order (L2-028)
+  h -> ci : CheckInChildCommand(OccurredAt = deviceTime, clientActionId, deviceId)
+  ci -> db : Load record and events
+  db --> ci : Current state
+  alt ClientActionId already stored
+    ci --> h : Duplicate
+  else Record has a newer event from another device (marked absent at 4:15)
+    ci -> res : Resolve(record, incoming CheckIn)
+    res -> rec : Append incoming event; ResolveConflict -> Present; HasConflict = true
+    res -> audit : Write conflict entry listing both events
+    res --> ci : Applied with conflict (L2-028)
+    ci -> db : Save
+    ci --> h : Applied, HasConflict
+  else No conflict
+    ci -> rec : CheckIn(deviceTime, actor)
+    ci -> audit : Write attendance change
+    ci -> db : Save
+    ci --> h : Applied
+  else Validation fails (e.g. session already ended)
+    ci --> h : Rejected with reason
+  end
+end
+h --> ep : SyncResult per action
+ep --> client : 200
+client --> sync : Results
+loop each result
+  alt Applied or Duplicate
+    sync -> queue : markSent(id)
+    sync -> roster : Confirm row; show "Present · conflict" with both times when flagged
+  else Rejected
+    sync -> queue : markRejected(id, reason)
+    sync -> roster : Revert row; list in dialog with reason
+  end
+end
+sync --> lead : Toast "All synced · 2 check-ins sent at 4:19 pm"; Sign out enabled again
+@enduml

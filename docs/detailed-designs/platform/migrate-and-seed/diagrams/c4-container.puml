@@ -1,0 +1,17 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Migrate and seed
+
+Person(dev, "Developer or release pipeline", "")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(cli, "PromiseHub.Cli", ".NET console", "migrate, seed, reset")
+  Container(api, "PromiseHub API", "ASP.NET Core", "MigrationGuardHostedService; never applies migrations")
+  Container(infra, "PromiseHub.Infrastructure", ".NET library", "PromiseHubDbContext, Persistence/Migrations, DatabaseSeeder")
+  ContainerDb(db, "PromiseHub database", "SQL", "Schema and __EFMigrationsHistory")
+}
+Rel(dev, cli, "Runs", "Shell")
+Rel(cli, infra, "Uses context and seeder")
+Rel(api, infra, "Uses context and IMigrationStatus")
+Rel(infra, db, "Applies migrations, inserts seed, reads history", "EF Core")
+@enduml

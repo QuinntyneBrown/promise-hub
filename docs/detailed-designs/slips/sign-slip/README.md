@@ -22,7 +22,7 @@ The Permission slips module gates the guardian slip endpoints (`L2-005`). Pages 
 
 ### Frontend (`frontend/projects/guardian/`)
 
-- **`SlipSignPage`** — guardian page for `slip-sign` (`/g/slip/:token`). Sections: the event block, "Please check" with pre-filled child details and a link to update them, the optional questions ("Two quick questions"), and "Sign" with the consent sentence, the `Type your full name to sign` field, the live signature preview with date and device, the one primary button `Sign the slip` and the ghost `Mateo can't come`. States: `loading`, `invalid` (name missing), `submitting`, `success` (receipt with time, what to bring, calendar link), `error` (answers kept), `expired`, `already-signed` and `es`. The page sets `html lang` to the household language.
+- **`SlipSignPage`** — guardian page for `slip-sign` (`/g/slip/:token`). Sections: the event block, "Please check" with pre-filled child details and a link to update them, the optional questions ("Two quick questions"), and "Sign" with the consent sentence, the full-name signature field, the live signature preview with date and device, the one primary button `Sign the slip` and the ghost `Mateo can't come`. States: `loading`, `invalid` (name missing), `submitting`, `success` (receipt with time, what to bring, calendar link), `error` (answers kept), `expired`, `already-signed` and `es`. The page sets `html lang` to the household language.
 - **`DeclineSlipDialog`** — CDK dialog for `decline-slip`: reason (`Away that day`, `Not feeling well`, `Prefer not to say`) and an optional note for staff.
 - Components from `frontend/projects/components/`: `guardian-shell`, `slip-event`, `summary`, `radio`, `form-field`, `signature`, `button`, `alert`, `dialog`, `error-summary`.
 

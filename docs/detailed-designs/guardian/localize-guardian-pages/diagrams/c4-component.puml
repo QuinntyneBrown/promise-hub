@@ -1,0 +1,40 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Localize guardian pages
+
+Container_Boundary(web, "PromiseHub web app — guardian library") {
+  Component(shell, "GuardianShellComponent", "Angular layout", "Organization name, language select, one column, contact footer")
+  Component(locale, "GuardianLocaleService", "Angular service", "Loads locale and translation bundle; sets html lang")
+  Component(pages, "Guardian pages", "Angular pages", "GuardianHomePage, SlipSignPage, SurveyPage; one primary button each")
+  Component(clients, "GuardianApi / SurveyApi", "Typed clients (api library)", "getContext, setLanguage, get, answer")
+}
+Container_Boundary(api, "PromiseHub API") {
+  Component(endpoints, "GuardianEndpoints / SurveyEndpoints", "Minimal API groups", "GET /g/context, PUT /g/language, GET and POST /g/survey (GuardianLinkFilter)")
+  Component(context, "GetGuardianContextQueryHandler", "Application handler", "Organization name, contact, household language")
+  Component(setlang, "SetHouseholdLanguageCommandHandler", "Application handler", "Validates and stores language; audits")
+  Component(renderer, "GuardianMessageRenderer", "Application service", "Selects template by kind and language; fills placeholders")
+  Component(survey, "GetSurveyQueryHandler / AnswerSurveyCommandHandler", "Application handlers", "Two answers stored against the event")
+  Component(domain, "Household.Language / MessageTemplate / SurveyResponse", "Domain", "Supported languages, templates, responses")
+  Component(senders, "ISmsSender / IEmailSender", "Infrastructure services", "Provider adapters")
+  Component(audit, "AuditLog", "Infrastructure writer", "Language change, survey submission")
+  ComponentDb(db, "PromiseHub database", "EF Core", "Household, template, survey tables")
+}
+Rel(shell, locale, "Applies language")
+Rel(shell, clients, "getContext / setLanguage")
+Rel(pages, locale, "Translate")
+Rel(pages, clients, "Survey get / answer")
+Rel(clients, endpoints, "Calls", "JSON/HTTPS")
+Rel(endpoints, context, "Sends GetGuardianContextQuery")
+Rel(endpoints, setlang, "Sends SetHouseholdLanguageCommand")
+Rel(endpoints, survey, "Sends GetSurveyQuery / AnswerSurveyCommand")
+Rel(context, domain, "Reads")
+Rel(setlang, domain, "Mutates Household.Language")
+Rel(renderer, domain, "Reads MessageTemplate by language")
+Rel(renderer, senders, "Sends rendered message")
+Rel(survey, domain, "Creates SurveyResponse")
+Rel(setlang, audit, "Writes entry")
+Rel(survey, audit, "Writes entry")
+Rel(domain, db, "Persisted by", "EF Core")
+Rel(audit, db, "Appends", "EF Core")
+@enduml

@@ -1,0 +1,117 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Localize guardian pages
+
+enum Language {
+  en
+  es
+  fr
+}
+
+enum MessageKind {
+  SlipRequest
+  SlipReminder
+  EnrollmentAccepted
+  EnrollmentWaitlisted
+  NoShowAlert
+  SurveyInvite
+}
+
+class Household {
+  +Guid Id
+  +Guid OrganizationId
+  +Language Language
+  +SetLanguage(language: Language): void
+}
+
+class SupportedLanguages {
+  +{static} IReadOnlySet<Language> All
+  +{static} IsSupported(code: string): bool
+}
+
+class GuardianContextDto {
+  +string OrganizationName
+  +string ContactPhone
+  +string ContactEmail
+  +Language Language
+}
+
+class MessageTemplate {
+  +MessageKind Kind
+  +Language Language
+  +string SmsText
+  +string EmailSubject
+  +string EmailBody
+  +Render(values: IReadOnlyDictionary<string, string>): RenderedMessage
+}
+
+class GuardianMessageRenderer {
+  +Render(kind: MessageKind, household: Household, values: IReadOnlyDictionary<string, string>): RenderedMessage
+}
+
+class Survey {
+  +Guid Id
+  +Guid EventId
+  +string Question1
+  +string Question2
+}
+
+class SurveyResponse {
+  +Guid Id
+  +Guid SurveyId
+  +Guid EventId
+  +Guid HouseholdId
+  +string Answer1
+  +string Answer2
+  +DateTimeOffset AnsweredAt
+}
+
+class SetHouseholdLanguageCommand {
+  +string LinkToken
+  +Language Language
+}
+
+class SetHouseholdLanguageCommandHandler {
+  +Handle(command: SetHouseholdLanguageCommand): Task
+}
+
+class GetGuardianContextQuery {
+  +string LinkToken
+}
+
+class AnswerSurveyCommand {
+  +string LinkToken
+  +string Answer1
+  +string Answer2
+}
+
+class AnswerSurveyCommandHandler {
+  +Handle(command: AnswerSurveyCommand): Task
+}
+
+Household --> Language
+SupportedLanguages ..> Language
+MessageTemplate --> MessageKind
+MessageTemplate --> Language
+GuardianMessageRenderer --> MessageTemplate : selects by kind and household language
+GuardianMessageRenderer ..> Household : reads Language
+SetHouseholdLanguageCommandHandler ..> SetHouseholdLanguageCommand : handles
+SetHouseholdLanguageCommandHandler --> Household : SetLanguage
+SetHouseholdLanguageCommandHandler ..> SupportedLanguages : validates
+GetGuardianContextQuery ..> GuardianContextDto : returns
+Survey "1" --> "*" SurveyResponse
+AnswerSurveyCommandHandler ..> AnswerSurveyCommand : handles
+AnswerSurveyCommandHandler --> SurveyResponse : creates
+AnswerSurveyCommandHandler --> Survey : loads by event
+@enduml

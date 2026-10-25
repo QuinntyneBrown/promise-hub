@@ -1,0 +1,40 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Migrate and seed
+
+Container_Boundary(cli, "PromiseHub.Cli") {
+  Component(program, "Program", "Host builder", "Same configuration sources as the API; exit codes")
+  Component(migrate, "MigrateCommand", "Command", "Lists and applies pending migrations; --check")
+  Component(seed, "SeedCommand", "Command", "Runs DatabaseSeeder; --profile demo|test; --repair")
+  Component(reset, "ResetCommand", "Command", "Development only: drop, migrate, seed")
+}
+Container_Boundary(infra, "PromiseHub.Infrastructure") {
+  ComponentDb(ctx, "PromiseHubDbContext", "EF Core", "Entities with OrganizationId")
+  Component(migrations, "Persistence/Migrations", "EF Core migrations", "Only location for schema changes")
+  Component(status, "IMigrationStatus", "Service", "Pending migration names")
+  Component(seeder, "DatabaseSeeder", "Orchestrator", "Ordered ISeedStep, one transaction per organization")
+  Component(steps, "Seed steps", "ISeedStep implementations", "Organizations, Staff, Households, Programs and events, Slips/attendance/incidents, Usage")
+  Component(ids, "SeedIds", "Static helper", "Stable Guid from a name")
+}
+Container_Boundary(api, "PromiseHub API") {
+  Component(guard, "MigrationGuardHostedService", "IHostedService", "Stops the host when migrations are pending")
+  Component(ready, "/health/ready", "Health check", "Includes migrations check")
+}
+Rel(program, migrate, "Dispatches")
+Rel(program, seed, "Dispatches")
+Rel(program, reset, "Dispatches")
+Rel(migrate, status, "Pending?")
+Rel(migrate, ctx, "Database.MigrateAsync()")
+Rel(seed, status, "Refuses when pending")
+Rel(seed, seeder, "SeedAsync(profile)")
+Rel(reset, ctx, "EnsureDeletedAsync()")
+Rel(reset, migrate, "Then")
+Rel(reset, seed, "Then")
+Rel(seeder, steps, "Runs in order")
+Rel(steps, ids, "Stable ids")
+Rel(steps, ctx, "Find by id; insert when absent")
+Rel(ctx, migrations, "Model snapshot")
+Rel(guard, status, "Pending?")
+Rel(ready, status, "Pending?")
+@enduml
