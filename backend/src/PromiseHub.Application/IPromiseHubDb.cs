@@ -40,6 +40,7 @@ public interface IPromiseHubDb
     DbSet<Domain.Imports.ImportSession> ImportSessions { get; }
     DbSet<Domain.Enrollment.EnrollmentSession> EnrollmentSessions { get; }
     DbSet<Domain.Enrollment.EnrollmentRequest> EnrollmentRequests { get; }
+    DbSet<Domain.Incidents.Incident> Incidents { get; }
     DbSet<GuardianVerification> GuardianVerifications { get; }
     DbSet<TrustedGuardianDevice> TrustedGuardianDevices { get; }
     DbSet<StaffUser> StaffUsers { get; }
