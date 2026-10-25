@@ -27,6 +27,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 17 | [Track enrollment status](17-track-enrollment-status/README.md) | ~2 min | A home link in every decision text, a code, and each child's enrollment status |
 | 18 | [Manage waitlists](18-manage-waitlists/README.md) | ~2 min | Move waitlisted children in when places are free; everyone behind moves up |
 | 19 | [Report an incident](19-report-an-incident/README.md) | ~2 min | Facts in a fixed order, straight to the program director, read only by supervisors and the reporter |
+| 20 | [Report an incident as a youth worker](20-report-an-incident-as-a-youth-worker/README.md) | ~2 min | The same form for youth workers; their own reports only, others' not found |
 
 ## Making or updating a video
 
