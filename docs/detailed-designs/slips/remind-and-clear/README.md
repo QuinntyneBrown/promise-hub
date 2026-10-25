@@ -20,6 +20,10 @@ Local terms used below:
 
 The Permission slips module gates every endpoint here; the day-of roster also needs Roll Call (`L2-005`). Background jobs run per tenant and respect the SMS cap (`L2-022`, `L2-034`).
 
+## Built so far
+
+Slice 13 delivered the reminder job (`ReminderSlots`, `SendDueRemindersHandler`, `SlipReminder` once per slot, unreachable families recorded), `RemindNowHandler` and `SendReminderDialog` with `{child}` and `{link}`, `GET /slips/{id}/unsigned`, the day-of clearance on `CheckInPage` (`GET /sessions/{id}/clearance`, missing first, warning, counts) and `SignOnTabletPage` at `/check-in/:sessionId/sign-on-tablet/:householdId` with the staff member recorded on the signature (ADR 0016). "On the bus" counts, the "Text unsigned" action on check-in and translated reminder copy are not built yet.
+
 ## Description
 
 ### Frontend
