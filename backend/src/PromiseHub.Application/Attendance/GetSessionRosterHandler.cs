@@ -25,6 +25,7 @@ public sealed class GetSessionRosterHandler(IPromiseHubDb db, ITenantContext ten
         var children = await db.Children.AsNoTracking().Where(c => childIds.Contains(c.Id)).ToListAsync(cancellationToken);
         var records = await db.AttendanceRecords.AsNoTracking().Where(r => r.EventId == eventId).ToListAsync(cancellationToken);
         var walkIns = await db.WalkIns.AsNoTracking().Where(w => w.EventId == eventId).ToListAsync(cancellationToken);
+        var alerts = await db.NoShowAlerts.AsNoTracking().Where(a => a.EventId == eventId).ToListAsync(cancellationToken);
 
         var rows = children.Select(c =>
         {
@@ -34,7 +35,9 @@ public sealed class GetSessionRosterHandler(IPromiseHubDb db, ITenantContext ten
                 : !string.IsNullOrWhiteSpace(c.Medication) ? "Medication"
                 : string.IsNullOrWhiteSpace(c.Conditions) ? null : c.Conditions;
             return new RosterEntryDto(c.Id, c.Id, c.HouseholdId, c.FullName, c.AgeOn(today), c.School, flag,
-                (record?.Status ?? AttendanceStatus.NotYet).ToString(), record?.CheckedInAt, WalkIn: false, record?.SignedOutAt, record?.CollectedBy);
+                (record?.Status ?? AttendanceStatus.NotYet).ToString(), record?.CheckedInAt, WalkIn: false, record?.SignedOutAt, record?.CollectedBy,
+                alerts.FirstOrDefault(a => a.ChildId == c.Id) is { } alert ? (alert.Reply == NoShowReply.None ? "TextSent" : alert.Reply.ToString()) : null,
+                alerts.FirstOrDefault(a => a.ChildId == c.Id)?.SentAt);
         }).Concat(walkIns.Select(w =>
         {
             var record = records.FirstOrDefault(r => r.WalkInId == w.Id);

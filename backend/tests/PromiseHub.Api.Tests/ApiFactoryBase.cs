@@ -39,6 +39,9 @@ public abstract class ApiFactoryBase : WebApplicationFactory<Program>
 
     public string ConnectionString { get; }
 
+    /// <summary>The shared secret the SMS provider sends with inbound texts in tests; not a real credential.</summary>
+    public const string InboundSmsSecret = "test-inbound-secret";
+
     public FakeTimeProvider Clock { get; } = new(new DateTimeOffset(2026, 11, 5, 21, 12, 0, TimeSpan.Zero));
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -47,6 +50,7 @@ public abstract class ApiFactoryBase : WebApplicationFactory<Program>
         builder.UseSetting("ConnectionStrings:PromiseHub", ConnectionString);
         // The tests run the send job by hand.
         builder.UseSetting("Messaging:Dispatch", "false");
+        builder.UseSetting("Sms:InboundSecret", InboundSmsSecret);
         builder.ConfigureServices(services =>
         {
             services.AddSingleton<TimeProvider>(Clock);

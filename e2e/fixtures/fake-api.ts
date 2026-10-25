@@ -199,6 +199,8 @@ export class FakeApi {
     followUps?: { text: string; by: string; at: string }[];
     trail?: { text: string; at: string }[];
   }[] = [];
+  /** No-show texts the job sent, and the guardian's reply: "event:child" → state and time. */
+  private noShows = new Map<string, { state: 'TextSent' | 'OnTheWay' | 'Absent'; at: string }>();
   /** Household home links as texted with an enrollment decision: token → household. */
   private homeLinks = new Map<string, string>([
     ['tok-home-tran', 'hh-tran'],
@@ -250,6 +252,12 @@ export class FakeApi {
     const position = status === 'Waitlisted' ? this.enrollmentRequests.filter((r) => r.programId === programId && r.status === 'Waitlisted').length + 1 : null;
     this.enrollmentRequests.push({ id: `er-${this.nextId++}`, programId, status, position, childId, submittedAt: '2026-11-02T15:00:00Z', note });
     if (status === 'Accepted') this.programs.find((x) => x.id === programId)!.roster.push(childId);
+  }
+
+  /** The no-show job texted this child's household; a reply of 2 also marks the child absent, as the API does. */
+  noShowAlert(eventId: string, childId: string, state: 'TextSent' | 'OnTheWay' | 'Absent' = 'TextSent', at = '2026-10-21T20:15:00Z'): void {
+    this.noShows.set(`${eventId}:${childId}`, { state, at });
+    if (state === 'Absent') this.sessionRecords(eventId).set(childId, { status: 'Absent', checkedInAt: null });
   }
 
   /** An incident someone already reported (seeded as the API would store it). */
@@ -1133,6 +1141,8 @@ export class FakeApi {
         walkIn: false,
         signedOutAt: records.get(child.id)?.signedOutAt ?? null,
         collectedBy: records.get(child.id)?.collectedBy ?? null,
+        noShow: this.noShows.get(`${e.id}:${child.id}`)?.state ?? null,
+        noShowAt: this.noShows.get(`${e.id}:${child.id}`)?.at ?? null,
       }));
     const walkIns = this.walkIns
       .filter((w) => w.eventId === e.id)

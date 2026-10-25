@@ -112,6 +112,45 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.ToTable("AttendanceRecords");
                 });
 
+            modelBuilder.Entity("PromiseHub.Domain.Attendance.NoShowAlert", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ChildId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("HouseholdId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("RepliedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Reply")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("SentAt")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("EventId", "ChildId")
+                        .IsUnique();
+
+                    b.ToTable("NoShowAlerts");
+                });
+
             modelBuilder.Entity("PromiseHub.Domain.Attendance.WalkIn", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1472,6 +1511,15 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Attendance.NoShowAlert", b =>
+                {
                     b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
                         .WithMany()
                         .HasForeignKey("OrganizationId")

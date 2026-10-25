@@ -20,6 +20,10 @@ Local terms:
 
 The feature belongs to the `attendance` subsystem and the Roll Call module. The alert text uses the Messages infrastructure (`ISmsSender`, SMS cap) but does not require the Messages module to be on. `<TO SUPPLY>`: whether the no-show alert is suppressed when the Messages module is off for the organization.
 
+## Built so far
+
+Slice 22 delivered `SendNoShowAlertsHandler` in the per-tenant send job, `NoShowAlert`, `MessageSource.NoShow`, `POST /webhooks/sms/inbound` with `NoShowReplyHandler`, and the no-show badge on `CheckInPage` rows (ADR 0022). The delay is fixed at 15 minutes. Ending a session, the completion page, attendance history and unmatched replies are not built yet.
+
 ## Description
 
 ### Frontend — `frontend/projects/attendance/`

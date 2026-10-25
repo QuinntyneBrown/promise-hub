@@ -313,4 +313,14 @@ export class CheckInPage {
   private patch(id: string, changes: Partial<RosterEntry>): void {
     this.entries.update((list) => list.map((e) => (e.id === id ? { ...e, ...changes } : e)));
   }
+
+  /** The no-show text on a row (L2-018): sent, or what the guardian replied. */
+  protected noShowText(e: RosterEntry): string {
+    const at = e.noShowAt ? formatTime(new Date(e.noShowAt)) : '';
+    return e.noShow === 'TextSent'
+      ? `Guardian texted ${at}`
+      : e.noShow === 'OnTheWay'
+        ? 'On the way · guardian replied'
+        : 'Absent · guardian replied';
+  }
 }

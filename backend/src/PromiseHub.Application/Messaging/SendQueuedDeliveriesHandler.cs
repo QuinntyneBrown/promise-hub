@@ -25,7 +25,7 @@ public sealed class SendQueuedDeliveriesHandler(IPromiseHubDb db, ITenantContext
         var messageIds = due.Select(d => d.MessageId).Distinct().ToList();
         var on = await modules.OnAsync(cancellationToken);
         var messages = (await db.Messages.Where(m => messageIds.Contains(m.Id)).ToListAsync(cancellationToken))
-            .Where(m => on.Contains(m.Source switch { MessageSource.Slips => ModuleId.Slips, MessageSource.Enrollment => ModuleId.Roster, _ => ModuleId.Messages }))
+            .Where(m => on.Contains(m.Source switch { MessageSource.Slips => ModuleId.Slips, MessageSource.Enrollment => ModuleId.Roster, MessageSource.NoShow => ModuleId.RollCall, _ => ModuleId.Messages }))
             .ToDictionary(m => m.Id);
         due = [.. due.Where(d => messages.ContainsKey(d.MessageId))];
         if (due.Count == 0)
