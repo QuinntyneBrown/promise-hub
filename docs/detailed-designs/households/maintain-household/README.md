@@ -35,8 +35,12 @@ Backend:
 - **`CreateHouseholdCommand`**, **`AddChildCommand`**, **`AddGuardianCommand`**, **`UpdateGuardianCommand`**, **`UpdateChildCommand`**, **`UpdateMedicalCommand`**, **`DeleteHouseholdCommand`** and their handlers in `PromiseHub.Application/Households/`. Each write handler loads the aggregate within the caller's organization, applies the change on the entity, writes an audit entry with before and after values and saves in one unit of work.
 - **`Household`**, **`Guardian`**, **`Child`**, **`MedicalDetails`**, **`ApprovedPickup`** — domain entities and value objects in `PromiseHub.Domain/Households/`. `Household.SoftDelete(now)` sets `DeletedAt` and `PurgeAfter`; `Child.UpdateMedical(details)` returns the previous value for the audit entry.
 - **`PromiseHubDbContext`** — applies a global query filter on `OrganizationId` and on `DeletedAt == null` for `Household`, `Guardian` and `Child`.
-- **`HouseholdPurgeJob`** — job in `PromiseHub.Infrastructure/Jobs/` run by the job runner per tenant; it hard-deletes households whose `PurgeAfter` has passed and keeps aggregate attendance counts without names. The retention period comes from the organization's privacy settings; the purge for a guardian data request is 30 days (`L2-030`), and the default for an admin-initiated delete is `<TO SUPPLY>`.
+- **`HouseholdPurgeJob`** — job in `PromiseHub.Infrastructure/Jobs/` run by the job runner per tenant; it hard-deletes households whose `PurgeAfter` has passed and keeps aggregate attendance counts without names. The retention period comes from the organization's privacy settings; the purge for a guardian data request is 30 days (`L2-030`), and the default for an admin-initiated delete is 30 days (ADR 0007).
 - **`AuditLog`** — infrastructure writer used for every create, update, delete and medical view.
+
+## Built so far
+
+Slice 04 delivered `FamiliesPage` (default, empty, no-results and error), `HouseholdPage` (default, restricted and not-found), `ChildPage` (medical card or the restricted note), the add-family, add-child, add-guardian, edit-guardian, edit-child, edit-medical, household-actions and delete-household dialogs, `HOUSEHOLDS_API`, every endpoint above under the Roster module, the handlers with audit entries, `Guardian`, the child's medical fields and the soft delete (ADR 0007). Read permissions are any staff role; writes need `WriteHouseholds`, medical edits `WriteMedical` and deletion `DeleteHouseholds`; medical fields are omitted without `ReadMedical`, and each medical read writes a `Viewed` entry. Approved pickups, the child's programs, slips and attendance, the household's consent and audit cards, sending the enrollment link and `HouseholdPurgeJob` arrive with their features.
 
 ## Requirements
 

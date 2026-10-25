@@ -26,6 +26,21 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Sign in | `sign-in` (default, invalid, submitting, error, expired, locked) | `ph-auth-card`, `ph-text-field`, `ph-switch`, `ph-alert`, `ph-button`, `ph-skip-link` | Return-path handling |
 | Enter your code | `sign-in/mfa` | `ph-auth-card`, `ph-text-field`, `ph-switch`, `ph-alert`, `ph-button`, `ph-skip-link` | — |
 | Settings › Modules | `settings-modules` (default, single, invalid, success, error, forbidden) | `ph-page-header`, `ph-tabs`, `ph-chip`, `ph-list`, `ph-list-item`, `ph-switch`, `ph-button`, `ph-card`, `ph-empty-state`, toast via `ToastService` | Presets and dependency captions from `MODULE_CATALOG` |
+| Families | `families` (default, empty, no-results, error) | `ph-page-header`, `ph-text-field` (search), `ph-chip`, `ph-list`, `ph-list-item`, `ph-badge`, `ph-flag`, `ph-card`, `ph-empty-state`, `ph-button` | Row meta text |
+| Household | `household` (default, forbidden) | `ph-breadcrumb`, `ph-page-header`, `ph-alert`, `ph-card` (titled), `ph-list`, `ph-list-item`, `ph-flag`, `ph-badge`, `ph-button` | — |
+| Child | `child` (default, forbidden) | `ph-breadcrumb`, `ph-page-header`, `ph-card` (titled), `ph-description-list`, `ph-button` | Medical facts |
+
+## Dialogs
+
+| Dialog | Mock | Library components |
+|---|---|---|
+| Add a family | `add-family` (default, invalid, busy) | `ph-dialog` via `PhDialogs`, `ph-text-field`, `ph-select`, `ph-button` |
+| Add a child | `add-child` | `ph-dialog`, `ph-text-field`, `ph-textarea`, `ph-button` |
+| Add a guardian / Edit a guardian | `add-guardian`, `edit-guardian` | `ph-dialog`, `ph-text-field`, `ph-select`, `ph-switch`, `ph-button` |
+| Edit a child | `edit-child` | `ph-dialog`, `ph-text-field`, `ph-button` |
+| Edit medical | `edit-medical` | `ph-dialog`, `ph-textarea`, `ph-text-field`, `ph-radio-group`, `ph-button` |
+| Household actions | `household-actions` | `ph-dialog`, `ph-action-menu`, `ph-button` |
+| Delete household | `delete-household` (default, invalid, busy) | `ph-dialog`, `ph-radio-group`, `ph-text-field`, `ph-button` |
 
 The toast region (`ph-toast-region`) sits once in the app root.
 

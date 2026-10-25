@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 04 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="04" data-video-title="Maintain households" data-parts="Introduction|Promises|The roster|States|Who sees what|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 04</div>
+  <h1>Maintain households</h1>
+  <p class="lead">Families, guardians, children and medical details</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="A household holds guardians and children.">
+  <h2>What the roster promises</h2>
+  <ul>
+    <li>Search by child, guardian or phone; "Missing info" flags</li>
+    <li>Every change audited, every medical view logged</li>
+    <li>Deleted households kept 30 days, then purged</li>
+  </ul>
+</section>
+
+<section id="roster" data-part="2" data-cue="Here is Tom in Families on a laptop." data-clip="clips/households-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Search, add a child, edit medical</h3><p>The medical card names who changed it last.</p></div>
+</section>
+
+<section id="states" data-part="3" data-cue="The add family dialog asks only for the first guardian">
+  <h2>The states</h2>
+  <div class="cols">
+    <img class="shot" alt="Add a family with the missing fields named" src="shots/phone-add-family-invalid.png">
+    <img class="shot" alt="Families with search and filters" src="shots/phone-families.png">
+  </div>
+</section>
+
+<section id="roles" data-part="4" data-cue="Aisha is a youth worker." data-clip="clips/restricted-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Hidden for her role</h3><p>No flags, no medical fields: the server never sends them.</p></div>
+</section>
+
+<section id="testing" data-part="5" data-cue="Backend tests list, search and filter households">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Medical edit</td><td><code>Updated</code> audit with before and after</td></tr>
+    <tr><td>Another organization's household</td><td>404</td></tr>
+    <tr><td>Site lead adds a family</td><td>403</td></tr>
+    <tr><td>Roster off</td><td>404 and Families redirects to Today</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="6" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Search finds a child, a guardian or a phone</li><li>Medical changes and views are logged</li><li>No medical data for roles without access</li><li>A deleted household waits 30 days</li></ul>
+  <p class="muted">Next: create programs and events</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
