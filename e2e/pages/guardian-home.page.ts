@@ -69,7 +69,8 @@ export class GuardianHomePage extends BasePage {
   async verify(contact: string, code: string): Promise<void> {
     await this.page.getByRole('main').getByRole('textbox').fill(contact);
     await this.page.getByRole('button', { name: /^(Send me a code|Envíenme un código|Envoyez-moi un code)$/ }).click();
-    await this.page.getByRole('main').getByRole('textbox').fill(code);
+    // Wait for the code step: filling straight away can still hit the contact field on a slow machine.
+    await this.page.getByRole('main').getByLabel(/^(Six-digit code|Código de seis dígitos|Code à six chiffres)/).fill(code);
     await this.page.getByRole('button', { name: /^(Continue|Continuar|Continuer)$/ }).click();
   }
 }
