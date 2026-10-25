@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PromiseHub.Application.Guardian;
 using PromiseHub.Application.Messaging;
 using PromiseHub.Application.Organizations;
 using PromiseHub.Domain.Attendance;
@@ -13,7 +14,7 @@ namespace PromiseHub.Application.Attendance;
 /// ended, queues one text per household of the children still not checked in, recording each alert first so a retry never
 /// texts twice. Texts go through the message path, so the SMS cap and email fallback apply (L2-018 criteria 1 and 3, L2-022, L2-034).
 /// </summary>
-public sealed class SendNoShowAlertsHandler(IPromiseHubDb db, ITenantContext tenant, IModuleGate modules, SessionReader reader, AudienceResolver resolver, MessageWriter writer, TimeProvider clock)
+public sealed class SendNoShowAlertsHandler(IPromiseHubDb db, ITenantContext tenant, IModuleGate modules, SessionReader reader, AudienceResolver resolver, MessageWriter writer, GuardianLinkIssuer links, TimeProvider clock)
 {
     public async Task HandleAsync(CancellationToken cancellationToken = default)
     {
@@ -36,7 +37,7 @@ public sealed class SendNoShowAlertsHandler(IPromiseHubDb db, ITenantContext ten
             {
                 var names = string.Join(" and ", household.OrderBy(c => c.FirstName).Select(c => c.FirstName));
                 var verb = household.Count() == 1 ? "isn’t" : "aren’t";
-                var body = $"{names} {verb} checked in at {e.Name} yet. Reply 1 if on the way, 2 if absent.";
+                var body = $"{names} {verb} checked in at {e.Name} yet. Reply 1 if on the way, 2 if absent. Or answer here: {links.IssueHome(household.Key)}";
                 foreach (var child in household)
                 {
                     db.NoShowAlerts.Add(new NoShowAlert(Guid.NewGuid(), tenant.OrganizationId, e.Id, child.Id, household.Key, now));
