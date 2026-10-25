@@ -18,6 +18,12 @@ export interface AttendanceApi {
     clientActionId: string,
   ): Observable<WriteOutcome>;
   markAbsent(sessionId: string, childId: string, clientActionId: string): Observable<WriteOutcome>;
+  endSession(
+    sessionId: string,
+    notCheckedIn: 'MarkAbsent' | 'LeaveNotRecorded',
+    notSignedOut: 'SignOutAtEnd' | 'LeaveUnsigned',
+  ): Observable<WriteOutcome>;
+  saveNotes(sessionId: string, notes: string): Observable<WriteOutcome>;
   addWalkIn(sessionId: string, walkIn: NewWalkIn): Observable<WriteOutcome>;
   /** The Pickup module: a child's approved adults, and signing the child out. */
   pickups(childId: string): Observable<LoadResult<PickupOptions>>;

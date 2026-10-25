@@ -10,5 +10,9 @@ export interface SessionSummary {
   checkedIn: number;
   absent: number;
   notYet: number;
-  status: 'Scheduled' | 'Cancelled';
+  status: 'Scheduled' | 'Cancelled' | 'Ended';
+  endedAt?: string | null;
+  endedBy?: string | null;
+  /** The site lead's notes for the next site lead or the director. */
+  notes?: string | null;
 }

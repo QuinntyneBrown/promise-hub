@@ -32,6 +32,37 @@ export class CheckInPage extends BasePage {
     return this.page.getByRole('group', { name: 'Session totals' }).getByTestId(`total-${label}`).getByTestId('stat-value');
   }
 
+  get recorded(): Locator {
+    return this.page.getByRole('main').getByRole('status').filter({ hasText: 'Session recorded' });
+  }
+
+  get notes(): Locator {
+    return this.page.getByTestId('session-notes');
+  }
+
+  checkInButton(name: string): Locator {
+    return this.row(name).getByRole('button', { name: `Check in ${name}` });
+  }
+
+  get endSessionButton(): Locator {
+    return this.page.getByRole('button', { name: 'End session' });
+  }
+
+  async endSession(notCheckedIn: 'Mark absent' | 'Leave as not recorded', notSignedOut: RegExp | string): Promise<void> {
+    await this.endSessionButton.click();
+    await expect(this.dialog).toBeVisible();
+    await this.dialog.getByRole('radio', { name: new RegExp(`^${notCheckedIn}`) }).check();
+    await this.dialog.getByRole('radio', { name: notSignedOut }).check();
+    await this.dialog.getByRole('button', { name: 'End session' }).click();
+  }
+
+  async saveNotes(text: string): Promise<void> {
+    await this.page.getByRole('button', { name: 'Session notes' }).click();
+    await expect(this.dialog).toBeVisible();
+    await this.dialog.getByRole('textbox').fill(text);
+    await this.dialog.getByRole('button', { name: 'Save notes' }).click();
+  }
+
   noShowNote(name: string): Locator {
     return this.row(name).getByTestId('no-show');
   }
