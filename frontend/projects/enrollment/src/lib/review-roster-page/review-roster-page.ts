@@ -37,6 +37,7 @@ import {
 } from '@promisehub/components';
 import { EMPTY, catchError } from 'rxjs';
 import { BulkReviewData, BulkReviewDialog } from '../bulk-review-dialog/bulk-review-dialog';
+import { MoveInData, MoveInDialog } from '../move-in-dialog/move-in-dialog';
 import {
   ReviewEnrollmentData,
   ReviewEnrollmentDialog,
@@ -132,6 +133,29 @@ export class ReviewRosterPage {
     ]
       .filter(Boolean)
       .join(' · ');
+  }
+
+  protected full(p: Program): boolean {
+    return p.enrolled >= p.capacity;
+  }
+
+  protected moveIn(r: EnrollmentRequest): void {
+    const p = this.program();
+    if (!p) return;
+    this.dialogs
+      .open<boolean, MoveInData, MoveInDialog>(MoveInDialog, {
+        request: r,
+        places: `${p.enrolled} of ${p.capacity} places taken`,
+      })
+      .closed.subscribe((done) => {
+        if (!done) return;
+        this.toasts.show({
+          tone: 'success',
+          title: `${r.child} moved in`,
+          text: `${r.guardian} is texted.`,
+        });
+        this.load(this.programId());
+      });
   }
 
   protected toggle(id: string, on: boolean): void {

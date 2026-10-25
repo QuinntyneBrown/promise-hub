@@ -113,6 +113,17 @@
               </ph-list>
             }
             @case ('waitlist') {
+              @if (waitlist().length) {
+                <p>
+                  {{
+                    full(p)
+                      ? 'The program is full. Free a place to move a child in.'
+                      : p.capacity -
+                        p.enrolled +
+                        ' places free. Moving a child in texts the guardian; the others move up.'
+                  }}
+                </p>
+              }
               <ph-list label="Waitlist">
                 @for (r of waitlist(); track r.id) {
                   <ph-list-item
@@ -120,7 +131,17 @@
                     [meta]="r.guardian + ' · applied ' + r.submittedAt.slice(0, 10)"
                     [avatar]="r.child"
                     avatarTint="peach"
-                  />
+                  >
+                    <ph-button
+                      variant="primary"
+                      size="sm"
+                      hasPopup="dialog"
+                      [label]="'Move in ' + r.child"
+                      [disabled]="full(p)"
+                      (click)="moveIn(r)"
+                      >Move in</ph-button
+                    >
+                  </ph-list-item>
                 } @empty {
                   <ph-list-item
                     title="Nobody on the waitlist"

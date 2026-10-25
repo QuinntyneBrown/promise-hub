@@ -47,6 +47,17 @@ export class EnrollmentRosterPage extends BasePage {
     await this.dialog.getByRole('button', { name: /^(Accept|Waitlist|Decline) and text / }).click();
   }
 
+  async moveIn(child: string, note?: string): Promise<void> {
+    await this.row('Waitlist', child).getByRole('button', { name: `Move in ${child}` }).click();
+    await expect(this.dialog).toBeVisible();
+    if (note !== undefined) await this.dialog.getByRole('textbox').fill(note);
+    await this.dialog.getByRole('button', { name: /^Move in and text / }).click();
+  }
+
+  moveInButton(child: string): Locator {
+    return this.row('Waitlist', child).getByRole('button', { name: `Move in ${child}` });
+  }
+
   async select(child: string): Promise<void> {
     await this.row('Waiting review', child).getByRole('checkbox', { name: `Select ${child}` }).check();
   }
