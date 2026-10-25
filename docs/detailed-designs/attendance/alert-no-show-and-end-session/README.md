@@ -22,7 +22,7 @@ The feature belongs to the `attendance` subsystem and the Roll Call module. The 
 
 ## Built so far
 
-Slice 22 delivered `SendNoShowAlertsHandler` in the per-tenant send job, `NoShowAlert`, `MessageSource.NoShow`, `POST /webhooks/sms/inbound` with `NoShowReplyHandler`, and the no-show badge on `CheckInPage` rows (ADR 0022). Slice 23 added the home link to the no-show text and the answer on `GuardianHomePage` (`POST /g/home/{token}/no-show`). The delay is fixed at 15 minutes. Ending a session, the completion page, attendance history and unmatched replies are not built yet.
+Slice 22 delivered `SendNoShowAlertsHandler` in the per-tenant send job, `NoShowAlert`, `MessageSource.NoShow`, `POST /webhooks/sms/inbound` with `NoShowReplyHandler`, and the no-show badge on `CheckInPage` rows (ADR 0022). Slice 23 added the home link to the no-show text and the answer on `GuardianHomePage` (`POST /g/home/{token}/no-show`). Slice 24 delivered `EndSessionDialog`, `SessionNotesDialog`, the recorded state on `CheckInPage`, `POST /sessions/{id}/end`, `PUT /sessions/{id}/notes` and the `Ended` status. The delay is fixed at 15 minutes. Attendance history and unmatched replies are not built yet.
 
 ## Description
 

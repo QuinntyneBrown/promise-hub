@@ -16,6 +16,8 @@ Prompt 22 texts guardians when an expected child is not checked in after the sta
 
 - **Page answer (prompt 23).** Each no-show text ends with a household home link (ADR 0020). The guardian home lists the household's unanswered alerts, and `POST /g/home/{token}/no-show` applies "on the way" or "absent" through the same `NoShowReplyHandler.ApplyAsync` as a texted reply, after the code check.
 
+- **Ending (prompt 24).** `POST /sessions/{id}/end` takes what to do with the children not checked in (`MarkAbsent`, `LeaveNotRecorded`) and those still in (`SignOutAtEnd` at the end time, or now if earlier; `LeaveUnsigned`), sets the event to the new `Ended` status with who and when, and audits every change. An ended session is read-only; `PUT /sessions/{id}/notes` keeps notes on the event before or after ending. Attendance history, recording from memory and cancelling an unrecorded session are later.
+
 ## Consequences
 
-Texts are English only until messages are translated per household. Unmatched replies are not yet stored for staff; ending a session, attendance history and the configurable delay are later prompts.
+Texts are English only until messages are translated per household. Unmatched replies are not yet stored for staff; attendance history and the configurable delay are later prompts.
