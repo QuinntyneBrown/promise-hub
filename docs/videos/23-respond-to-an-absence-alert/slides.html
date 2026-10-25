@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 23 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="23" data-video-title="Respond to an absence alert" data-parts="Introduction|Promises|Linh answers|The roster|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 23</div>
+  <h1>Respond to an absence alert</h1>
+  <p class="lead">One number, or one tap</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="The text says which children aren't checked in">
+  <h2>What answering promises</h2>
+  <ul>
+    <li>Reply 1: on the way. Reply 2: absent</li>
+    <li>Or tap the link to the family's page</li>
+    <li>The answer reaches the roster at once</li>
+    <li>Absent children are marked absent</li>
+  </ul>
+</section>
+
+<section id="answer" data-part="2" data-cue="Here is Linh Tran's phone." data-clip="clips/answer-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Absent tonight</h3><p>Emily and Kevin, in one tap.</p></div>
+</section>
+
+<section id="roster" data-part="3" data-cue="On the roster, each child shows the family's answer">
+  <h2>What the site lead sees</h2>
+  <div class="cols">
+    <img class="shot" alt="The no-show alert on Linh’s page" src="shots/phone-alert.png">
+    <img class="shot" alt="The roster with the family's answers" src="shots/desktop-roster.png">
+  </div>
+</section>
+
+<section id="testing" data-part="4" data-cue="A backend test runs the no-show job">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>New phone answers</td><td>401 until the code</td></tr>
+    <tr><td>Answer absent</td><td>204, child absent</td></tr>
+    <tr><td>After answering</td><td>No open alert</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="5" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Reply 1 or 2, or tap</li><li>At once on the roster</li><li>Absent is marked for staff</li></ul>
+  <p class="muted">Next: ending the session</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
