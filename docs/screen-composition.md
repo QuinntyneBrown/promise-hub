@@ -50,7 +50,7 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Guardian enrollment | `enroll` (default, code, closed), `enroll-household`, `enroll-child`, `enroll-review` (default, success, waitlisted) | `ph-guardian-shell`, `ph-text-field`, `ph-select`, `ph-switch`, `ph-card`, `ph-description-list`, `ph-alert`, `ph-empty-state`, `ph-button` | Steps and language strings |
 | Incident log | `incidents` (default, empty, error, forbidden) | `ph-page-header`, `ph-list`, `ph-list-item`, `ph-badge`, `ph-error-page` (forbidden), `ph-card`, `ph-empty-state`, `ph-button` | Log or own reports |
 | Report an incident | `new-incident` (default, invalid, submitting, error) | `ph-page-header`, `ph-error-summary`, `ph-card`, `ph-radio-group`, `ph-select`, `ph-text-field` (datetime-local), `ph-textarea`, `ph-alert` (info, danger), `ph-button`, toast | Form state |
-| Incident | `incident` (default, error, forbidden) | `ph-breadcrumb`, `ph-page-header`, `ph-badge`, `ph-card` (titled), `ph-description-list`, `ph-empty-state`, `ph-button` | — |
+| Incident | `incident` (default, reviewed, error, forbidden) | `ph-breadcrumb`, `ph-page-header`, `ph-badge`, `ph-alert` (success, info), `ph-card` (titled), `ph-description-list`, `ph-timeline` (follow-up, trail), `ph-empty-state`, `ph-button` | — |
 
 ## Dialogs
 
@@ -67,6 +67,9 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Remove from roster | `remove-from-roster` | `ph-dialog`, `ph-radio-group`, `ph-button` |
 | Review enrollment | `review-enrollment` (default, invalid, full) | `ph-dialog`, `ph-radio-group`, `ph-textarea`, `ph-alert` (danger), `ph-button` |
 | Move in | `move-in` | `ph-dialog`, `ph-textarea`, `ph-alert` (danger), `ph-button` |
+| Review incident | `review-incident` (default, invalid, busy, failed) | `ph-dialog`, `ph-textarea`, `ph-radio-group`, `ph-alert`, `ph-button` |
+| Add a follow-up | `add-follow-up` | `ph-dialog`, `ph-textarea`, `ph-alert`, `ph-button` |
+| Reopen incident | `reopen-incident` | `ph-dialog`, `ph-alert`, `ph-button` |
 | Bulk review | `bulk-review` | `ph-dialog`, `ph-list`, `ph-list-item`, `ph-textarea`, `ph-alert`, `ph-button` |
 | Program actions / Event actions | `program-actions`, `event-actions` | `ph-dialog`, `ph-action-menu`, `ph-button` |
 | Archive program | `archive-program` | `ph-dialog`, `ph-text-field`, `ph-button` |

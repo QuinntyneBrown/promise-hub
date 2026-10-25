@@ -20,7 +20,7 @@ The Incident log module gates every page and endpoint here (`L2-005`).
 
 ## Built so far
 
-Slice 19 delivered `NewIncidentPage`, `IncidentsPage` (the log for supervisors, the forbidden state with your reports for everyone else) and `IncidentPage`, `INCIDENTS_API`, `GET /incidents`, `GET /incidents/form`, `GET /incidents/{id}` (each view audited), `POST /incidents` with email to the program directors, and the `Incident` entity (ADR 0021). Slice 20 added acceptance tests for youth workers and volunteer coordinators reporting and never reading others' reports. Review, notes, reopen, drafts, several children and restricted names are not built yet.
+Slice 19 delivered `NewIncidentPage`, `IncidentsPage` (the log for supervisors, the forbidden state with your reports for everyone else) and `IncidentPage`, `INCIDENTS_API`, `GET /incidents`, `GET /incidents/form`, `GET /incidents/{id}` (each view audited), `POST /incidents` with email to the program directors, and the `Incident` entity (ADR 0021). Slice 20 added acceptance tests for youth workers and volunteer coordinators reporting and never reading others' reports. Slice 21 delivered `ReviewIncidentDialog`, `AddFollowUpDialog`, `ReopenIncidentDialog`, the review alert, follow-ups and trail on `IncidentPage` with the new library `ph-timeline`, and the review, notes and reopen endpoints. Drafts, several children and restricted names are not built yet.
 
 ## Description
 

@@ -16,6 +16,8 @@ Prompt 19 lets a site lead record an incident and submit it for supervisor revie
 
 - **Not found, not forbidden.** Prompt 20 asks for others' reports to be refused on the server; they are refused with 404 rather than 403, as `L2-023` criterion 3 requires, so a youth worker can't learn that a report exists.
 
+- **Review (prompt 21).** `POST /incidents/{id}/review` (note required; `ClosedNoAction`, `ClosedPolicyChange` or `KeepOpen`) and `POST /incidents/{id}/reopen` need the new `ReviewIncidents` permission (admins and program directors); `POST /incidents/{id}/notes` adds a follow-up for anyone who can read the report, also after closing. The reporter is emailed the review. The trail on the page is read from the audit log. Follow-up is a CDK dialog, not the inline form the mock shows, because pages have no inline forms.
+
 ## Consequences
 
-Review, notes and reopening are prompt 20. Several children on one report, restricted names, saving a draft on the server and in-app notifications come later.
+Several children on one report, restricted names, saving a draft on the server and in-app notifications come later.
