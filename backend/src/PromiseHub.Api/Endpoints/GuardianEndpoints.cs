@@ -41,6 +41,8 @@ public static class GuardianEndpoints
             ToHttp(await handler.SignAsync(Request(token, http), body, ct)));
         g.MapPost("/slips/{token}/decline", async (string token, DeclineSlipRequest body, GuardianSlipHandler handler, HttpContext http, CancellationToken ct) =>
             ToHttp(await handler.DeclineAsync(Request(token, http), body, ct)));
+        g.MapGet("/home/{token}", async (string token, GuardianHomeHandler handler, HttpContext http, CancellationToken ct) =>
+            ToHttp(await handler.GetAsync(Request(token, http), ct)));
         var enroll = g.MapGroup("/enroll/{slug}");
         enroll.MapGet("", async (string slug, PromiseHub.Application.Enrollment.GuardianEnrollmentHandler handler, CancellationToken ct) =>
             ToHttp(await handler.PageAsync(slug, ct)));

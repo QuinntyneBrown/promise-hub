@@ -3,7 +3,7 @@ using PromiseHub.Domain.Guardian;
 
 namespace PromiseHub.Application.Guardian;
 
-/// <summary>Mints a link for one household and one child's slip; returns the address to text, keeping only the token's hash.</summary>
+/// <summary>Mints a link for one household (a child's slip, or the home page); returns the address to text, keeping only the token's hash.</summary>
 public sealed class GuardianLinkIssuer(IPromiseHubDb db, ITenantContext tenant, GuardianLinkOptions options, TimeProvider clock)
 {
     public string Issue(Guid householdId, Guid slipId, Guid childId)
@@ -11,5 +11,12 @@ public sealed class GuardianLinkIssuer(IPromiseHubDb db, ITenantContext tenant, 
         var token = GuardianTokens.New();
         db.GuardianLinks.Add(new GuardianLink(Guid.NewGuid(), tenant.OrganizationId, householdId, slipId, childId, GuardianTokens.Hash(token), clock.GetUtcNow()));
         return $"{options.BaseUrl.TrimEnd('/')}/g/slip/{token}";
+    }
+
+    public string IssueHome(Guid householdId)
+    {
+        var token = GuardianTokens.New();
+        db.GuardianLinks.Add(new GuardianLink(Guid.NewGuid(), tenant.OrganizationId, householdId, null, null, GuardianTokens.Hash(token), clock.GetUtcNow()));
+        return $"{options.BaseUrl.TrimEnd('/')}/g/home/{token}";
     }
 }

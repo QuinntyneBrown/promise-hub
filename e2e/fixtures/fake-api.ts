@@ -177,7 +177,13 @@ export class FakeApi {
     position: number | null;
     childId?: string;
     submittedAt?: string;
+    note?: string | null;
   }[] = [];
+  /** Household home links as texted with an enrollment decision: token → household. */
+  private homeLinks = new Map<string, string>([
+    ['tok-home-tran', 'hh-tran'],
+    ['tok-home-rivera', 'hh-rivera'],
+  ]);
   /** The verified enrollment session of this browser: program, contact and draft (the HttpOnly cookie, in the fake). */
   private enrollSession: { programId: string; contact: string; householdId: string | null; draft: FakeEnrollDraft | null; submitted: boolean } | null = null;
   /** Guardian links as texted with a sent slip: token → household, child and event. */
@@ -217,6 +223,19 @@ export class FakeApi {
   /** A child of a seeded household who asked to enroll in a program, waiting for review. */
   requestEnrollment(programId: string, childId: string, submittedAt = '2026-11-02T15:00:00Z'): void {
     this.enrollmentRequests.push({ id: `er-${this.nextId++}`, programId, status: 'WaitingReview', position: null, childId, submittedAt });
+  }
+
+  /** A child's enrollment as staff decided it, with the note the guardian reads; an accepted child is on the roster. */
+  decideEnrollment(programId: string, childId: string, status: 'Accepted' | 'Waitlisted' | 'Declined', note: string | null = null): void {
+    const position = status === 'Waitlisted' ? this.enrollmentRequests.filter((r) => r.programId === programId && r.status === 'Waitlisted').length + 1 : null;
+    this.enrollmentRequests.push({ id: `er-${this.nextId++}`, programId, status, position, childId, submittedAt: '2026-11-02T15:00:00Z', note });
+    if (status === 'Accepted') this.programs.find((x) => x.id === programId)!.roster.push(childId);
+  }
+
+  /** Takes a household's children off every roster, as if they never enrolled. */
+  unenrollHousehold(householdId: string): void {
+    const ids = this.households.find((h) => h.id === householdId)!.children.map((c) => c.id);
+    for (const p of this.programs) p.roster = p.roster.filter((id) => !ids.includes(id));
   }
 
   /** Closes a program's enrollment; its link stays the same. */
@@ -342,6 +361,7 @@ export class FakeApi {
     ['POST', /^\/api\/imports\/(?<id>[^/]+)\/run$/, (route, p) => this.runImport(route, p['id']!)],
     ['POST', /^\/api\/g\/auth\/code$/, (route) => this.guardianCodeRoute(route)],
     ['POST', /^\/api\/g\/auth\/verify$/, (route) => this.guardianVerify(route)],
+    ['GET', /^\/api\/g\/home\/(?<token>[^/]+)$/, (route, p) => this.guardianHome(route, p['token']!)],
     ['GET', /^\/api\/g\/slips\/(?<token>[^/]+)$/, (route, p) => this.guardianSlip(route, p['token']!)],
     ['POST', /^\/api\/g\/slips\/(?<token>[^/]+)\/sign$/, (route, p) => this.guardianAnswer(route, p['token']!, 'Signed')],
     ['POST', /^\/api\/g\/slips\/(?<token>[^/]+)\/decline$/, (route, p) => this.guardianAnswer(route, p['token']!, 'Declined')],
@@ -1427,6 +1447,7 @@ export class FakeApi {
       } else {
         r.status = 'Declined';
       }
+      r.note = note;
     }
     return route.fulfill({ status: 204 });
   }
@@ -1699,6 +1720,41 @@ export class FakeApi {
   }
 
   /** Resolves a guardian link like the server: gone, module off, verification needed, or the page's data. */
+  /** A slip link or a home link: either picks the household. */
+  private linkOf(token: string): { householdId: string } | undefined {
+    const home = this.homeLinks.get(token);
+    return home ? { householdId: home } : this.guardianLinks.get(token);
+  }
+
+  private async guardianHome(route: Route, token: string): Promise<void> {
+    const householdId = this.homeLinks.get(token);
+    const household = householdId ? this.households.find((h) => h.id === householdId) : undefined;
+    const org = household ? organizations.find((o) => o.id === household.organizationId)! : undefined;
+    if (!household || !org) return route.fulfill({ status: 410, json: { code: 'link-expired', organization: null, phone: null } });
+    if (!this.modules.get(org.id)!.includes('Roster')) return route.fulfill({ status: 404 });
+    if (!this.trustedHouseholds.has(household.id)) {
+      const contacts = household.guardians.filter((g) => g.mobile).map((g) => `•••-•••-${g.mobile!.slice(-4)}`);
+      return route.fulfill({ status: 401, json: { code: 'verification-required', language: this.guardianLanguage(household.language), organization: org.name, phone: '905-555-0100', contacts } });
+    }
+    const label = { Accepted: 'Enrolled', Waitlisted: 'Waitlisted', Declined: 'Declined', WaitingReview: 'WaitingReview' } as const;
+    const children = [...household.children]
+      .sort((a, z) => a.firstName.localeCompare(z.firstName))
+      .map((c) => {
+        const requests = this.enrollmentRequests.filter((r) => r.childId === c.id);
+        const fromRequests = requests.map((r) => ({ program: this.programs.find((x) => x.id === r.programId)!, status: label[r.status], position: r.position, note: r.note ?? null }));
+        const onRoster = this.programs.filter((x) => x.roster.includes(c.id) && !requests.some((r) => r.programId === x.id)).map((program) => ({ program, status: 'Enrolled', position: null, note: null }));
+        return {
+          name: `${c.firstName} ${c.lastName}`,
+          firstName: c.firstName,
+          enrollments: [...fromRequests, ...onRoster]
+            .map((e) => ({ program: e.program.name, status: e.status, position: e.position, note: e.note, startsOn: e.program.startsOn, schedule: e.program.schedule }))
+            .sort((a, z) => a.program.localeCompare(z.program)),
+        };
+      });
+    const primary = this.sortedGuardians(household)[0];
+    return route.fulfill({ json: { language: this.guardianLanguage(household.language), organization: org.name, phone: '905-555-0100', firstName: primary?.name.split(' ')[0] ?? '', children } });
+  }
+
   private async guardianScope(route: Route, token: string) {
     const link = this.guardianLinks.get(token);
     const household = link ? this.households.find((h) => h.id === link.householdId) : undefined;
@@ -1724,14 +1780,14 @@ export class FakeApi {
 
   private async guardianCodeRoute(route: Route): Promise<void> {
     const b = route.request().postDataJSON() as { token: string; contact: string };
-    const link = this.guardianLinks.get(b.token);
+    const link = this.linkOf(b.token);
     if (!link) return route.fulfill({ status: 410, json: { code: 'link-expired' } });
     return route.fulfill({ status: 202 });
   }
 
   private async guardianVerify(route: Route): Promise<void> {
     const b = route.request().postDataJSON() as { token: string; code: string };
-    const link = this.guardianLinks.get(b.token);
+    const link = this.linkOf(b.token);
     if (!link) return route.fulfill({ status: 410, json: { code: 'link-expired' } });
     if (this.lockedLinks.has(b.token)) return route.fulfill({ status: 423, json: { code: 'locked' } });
     if (b.code !== this.guardianCode) {

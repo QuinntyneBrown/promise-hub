@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PromiseHub.Application.Audit;
+using PromiseHub.Application.Guardian;
 using PromiseHub.Application.Messaging;
 using PromiseHub.Application.Organizations;
 using PromiseHub.Domain.Audit;
@@ -10,9 +11,10 @@ namespace PromiseHub.Application.Enrollment;
 
 /// <summary>
 /// Accepts, waitlists or declines children who asked to enroll, one or several at once (dialogs: review-enrollment,
-/// bulk-review; L2-013 criterion 4). An accepted child joins the roster; the guardian is texted the decision; each decision is audited.
+/// bulk-review; L2-013 criterion 4). An accepted child joins the roster; the guardian is texted the decision with a link to the
+/// household's home page (criterion 12); each decision is audited.
 /// </summary>
-public sealed class ReviewEnrollmentHandler(IPromiseHubDb db, ITenantContext tenant, AudienceResolver resolver, MessageWriter writer, IAuditWriter audit, TimeProvider clock)
+public sealed class ReviewEnrollmentHandler(IPromiseHubDb db, ITenantContext tenant, AudienceResolver resolver, MessageWriter writer, GuardianLinkIssuer links, IAuditWriter audit, TimeProvider clock)
 {
     public Task<Result> ReviewAsync(Guid id, ReviewEnrollmentCommand command, CancellationToken cancellationToken = default) =>
         DecideAsync([id], command.Decision, command.Note, cancellationToken);
@@ -70,7 +72,7 @@ public sealed class ReviewEnrollmentHandler(IPromiseHubDb db, ITenantContext ten
                         text = null;
                         break;
                 }
-                var body = text is null ? message : $"{message} {text}";
+                var body = $"{(text is null ? message : $"{message} {text}")} See where things stand: {links.IssueHome(request.HouseholdId)}";
                 var audience = await resolver.ForHouseholdAsync(request.HouseholdId, cancellationToken);
                 writer.Queue(MessageSource.Enrollment, $"Enrollment: {program.Name}", body, ChannelChoice.TextWithEmailFallback, audience,
                     new AudienceRequest(program.Id, null, null, body, ChannelChoice.TextWithEmailFallback));

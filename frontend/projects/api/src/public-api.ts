@@ -106,3 +106,5 @@ export * from './lib/enrollment/enrollment-api';
 export * from './lib/enrollment/enrollment-api.token';
 export * from './lib/enrollment/enrollment-request';
 export * from './lib/enrollment/review-decision';
+export * from './lib/guardian/guardian-home';
+export * from './lib/guardian/guardian-page-result';

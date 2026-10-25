@@ -418,7 +418,7 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("ChildId")
+                    b.Property<Guid?>("ChildId")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -439,7 +439,7 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("RevokedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("SlipId")
+                    b.Property<Guid?>("SlipId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("TokenHash")

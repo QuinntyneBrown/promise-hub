@@ -6,6 +6,8 @@ import { toWrite } from '../http-results';
 import { WriteOutcome } from '../write-outcome';
 import { GuardianAnswers } from './guardian-answers';
 import { GuardianApi } from './guardian-api';
+import { GuardianHome } from './guardian-home';
+import { GuardianPageResult } from './guardian-page-result';
 import { GuardianSlip } from './guardian-slip';
 import { GuardianSlipResult } from './guardian-slip-result';
 import { GuardianVerifyOutcome } from './guardian-verify-outcome';
@@ -16,10 +18,18 @@ export class HttpGuardianApi implements GuardianApi {
   private readonly baseUrl = inject(API_BASE_URL);
 
   slip(token: string): Observable<GuardianSlipResult> {
-    return this.http.get<GuardianSlip>(`${this.baseUrl}/g/slips/${encodeURIComponent(token)}`).pipe(
-      map((value): GuardianSlipResult => ({ status: 'loaded', value })),
+    return this.page<GuardianSlip>(`${this.baseUrl}/g/slips/${encodeURIComponent(token)}`);
+  }
+
+  home(token: string): Observable<GuardianPageResult<GuardianHome>> {
+    return this.page<GuardianHome>(`${this.baseUrl}/g/home/${encodeURIComponent(token)}`);
+  }
+
+  private page<T>(url: string): Observable<GuardianPageResult<T>> {
+    return this.http.get<T>(url).pipe(
+      map((value): GuardianPageResult<T> => ({ status: 'loaded', value })),
       catchError((error: HttpErrorResponse) =>
-        of<GuardianSlipResult>(
+        of<GuardianPageResult<T>>(
           error.status === 401
             ? {
                 status: 'verify',

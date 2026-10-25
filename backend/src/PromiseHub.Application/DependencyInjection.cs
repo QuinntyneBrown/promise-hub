@@ -86,6 +86,7 @@ public static class DependencyInjection
         services.AddScoped<Guardian.RequestGuardianCodeHandler>();
         services.AddScoped<Guardian.VerifyGuardianCodeHandler>();
         services.AddScoped<Guardian.GuardianSlipHandler>();
+        services.AddScoped<Guardian.GuardianHomeHandler>();
         services.AddScoped<SignOutHandler>();
         services.AddScoped<GetPickupOptionsHandler>();
         services.AddScoped<MarkAbsentHandler>();
