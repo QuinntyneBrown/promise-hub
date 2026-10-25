@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { LoadResult, QUICK_CARD_API, QuickCard } from '@promisehub/api';
+import { LoadResult, QUICK_CARD_API, QuickCard, SESSION_API, can } from '@promisehub/api';
 import {
   formatTime,
   PhSyncChip,
@@ -11,6 +11,7 @@ import {
   PhBadge,
   PhButton,
   PhCallList,
+  PhDialogs,
   PhCard,
   PhDescriptionList,
   PhEmptyState,
@@ -18,7 +19,9 @@ import {
   PhListItem,
   PhQuickCardAlert,
 } from '@promisehub/components';
-import { Subject, startWith, switchMap } from 'rxjs';
+import { EMPTY, Subject, catchError, startWith, switchMap } from 'rxjs';
+import { AddPickupData, AddPickupDialog } from '../add-pickup-dialog/add-pickup-dialog';
+import { RemovePickupData, RemovePickupDialog } from '../remove-pickup-dialog/remove-pickup-dialog';
 
 /** A child's Quick Card (mock: quick-card): the allergy alert first, then medical, who to call, pickups and notes. */
 @Component({
@@ -44,6 +47,19 @@ import { Subject, startWith, switchMap } from 'rxjs';
 export class QuickCardPage {
   private readonly api = inject(QUICK_CARD_API);
   private readonly retry$ = new Subject<void>();
+  private readonly dialogs = inject(PhDialogs);
+  private readonly me = toSignal(
+    inject(SESSION_API)
+      .current()
+      .pipe(catchError(() => EMPTY)),
+  );
+  /** Site leads, directors and admins change the approved list (L2-020); everyone else reads it. */
+  protected readonly canManage = computed(
+    () =>
+      !!this.me() &&
+      can(this.me()!.role, 'managePickups') &&
+      !!this.me()!.modules.includes('Pickup'),
+  );
 
   /** Route parameter. */
   readonly childId = input.required<string>();
@@ -59,6 +75,27 @@ export class QuickCardPage {
     ),
     { initialValue: null },
   );
+
+  protected addPickup(c: QuickCard): void {
+    this.dialogs
+      .open<boolean, AddPickupData, AddPickupDialog>(AddPickupDialog, {
+        childId: this.childId(),
+        firstName: c.name.split(' ')[0] ?? c.name,
+      })
+      .closed.subscribe((done) => done && this.retry());
+  }
+
+  protected removePickup(c: QuickCard, p: QuickCard['approvedPickups'][number]): void {
+    this.dialogs
+      .open<boolean, RemovePickupData, RemovePickupDialog>(RemovePickupDialog, {
+        childId: this.childId(),
+        pickupId: p.pickupId!,
+        name: p.name,
+        firstName: c.name.split(' ')[0] ?? c.name,
+        primary: c.approvedPickups.find((x) => x.isPrimary)?.name ?? null,
+      })
+      .closed.subscribe((done) => done && this.retry());
+  }
 
   protected retry(): void {
     this.retry$.next();

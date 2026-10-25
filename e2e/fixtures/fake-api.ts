@@ -16,6 +16,7 @@ const can = {
   runAnySession: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
   sendMessages: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
   manageSlips: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
+  managePickups: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
 };
 
 type ImportField = 'ChildName' | 'DateOfBirth' | 'School' | 'GuardianName' | 'GuardianPhone' | 'GuardianEmail' | 'Allergies' | 'Language' | 'Notes' | 'Skip';
@@ -383,6 +384,10 @@ export class FakeApi {
     ['PUT', /^\/api\/sessions\/(?<id>[^/]+)\/notes$/, (route, p) => this.sessionNotes(route, p['id']!)],
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/sign-outs$/, (route, p) => this.signChildOut(route, p['id']!)],
     ['GET', /^\/api\/children\/(?<id>[^/]+)\/pickups$/, (route, p) => this.pickups(route, p['id']!)],
+    ['POST', /^\/api\/children\/(?<id>[^/]+)\/pickups$/, (route, p) => this.addPickup(route, p['id']!)],
+    ['DELETE', /^\/api\/children\/(?<id>[^/]+)\/pickups\/(?<pickup>[^/]+)$/, (route, p) => this.removePickup(route, p['id']!, p['pickup']!)],
+    ['POST', /^\/api\/g\/home\/(?<token>[^/]+)\/children\/(?<id>[^/]+)\/pickups$/, (route, p) => this.guardianAddPickup(route, p['token']!, p['id']!)],
+    ['DELETE', /^\/api\/g\/home\/(?<token>[^/]+)\/children\/(?<id>[^/]+)\/pickups\/(?<pickup>[^/]+)$/, (route, p) => this.guardianRemovePickup(route, p['token']!, p['id']!, p['pickup']!)],
     ['GET', /^\/api\/programs\/(?<id>[^/]+)\/enrollments$/, (route, p) => this.listEnrollmentRequests(route, p['id']!)],
     ['POST', /^\/api\/enrollments\/review$/, (route) => this.reviewEnrollments(route, null)],
     ['POST', /^\/api\/enrollments\/(?<id>[^/]+)\/review$/, (route, p) => this.reviewEnrollments(route, p['id']!)],
@@ -433,6 +438,8 @@ export class FakeApi {
     ['PUT', /^\/api\/children\/(?<id>[^/]+)\/medical$/, (route, p) => this.updateMedical(route, p['id']!)],
   ];
 
+  /** Approved adults besides the guardians, as added by staff or the family. */
+  private extraPickups: { id: string; childId: string; householdId: string; name: string; relationship: string; removed: boolean }[] = [];
   /** While true, every API call fails as if the device had no signal (the app shell stays loaded). */
   private offline = false;
   /** Children whose offline check-in arrived after another device marked them absent: "event:child". */
@@ -1300,9 +1307,87 @@ export class FakeApi {
         childName: `${found.child.firstName} ${found.child.lastName}`,
         primaryName: guardians[0]?.name ?? null,
         primaryPhone: guardians[0]?.mobile ?? null,
-        approved: guardians.filter((g) => g.canPickUp).map((g) => ({ guardianId: g.id, name: g.name, relationship: g.relationship, isPrimary: g.isPrimary })),
+        approved: [
+          ...guardians.filter((g) => g.canPickUp).map((g) => ({ guardianId: g.id, name: g.name, relationship: g.relationship, isPrimary: g.isPrimary, pickupId: null })),
+          ...this.activePickups(found.child.id).map((x) => ({ guardianId: null, name: x.name, relationship: x.relationship, isPrimary: false, pickupId: x.id })),
+        ],
       },
     });
+  }
+
+  /** An adult already approved besides the guardians (seeded as the API would store it). */
+  approvePickup(childId: string, name: string, relationship = 'Aunt'): string {
+    const household = this.households.find((h) => h.children.some((c) => c.id === childId))!;
+    const id = `pu-${this.nextId++}`;
+    this.extraPickups.push({ id, childId, householdId: household.id, name, relationship, removed: false });
+    return id;
+  }
+
+  private activePickups(childId: string) {
+    return this.extraPickups.filter((x) => x.childId === childId && !x.removed).sort((a, z) => a.name.localeCompare(z.name));
+  }
+
+  private validatePickup(route: Route, firstName: string) {
+    const b = route.request().postDataJSON() as { name?: string; relationship?: string; siblings?: boolean };
+    const errors: Record<string, string> = {};
+    if (!b.name?.trim()) errors['name'] = 'Enter the adult’s full name.';
+    if (!b.relationship?.trim()) errors['relationship'] = `Say how they know ${firstName}.`;
+    return { b, errors };
+  }
+
+  private async savePickup(route: Route, household: { id: string; children: { id: string; firstName: string }[] }, childId: string): Promise<void> {
+    const child = household.children.find((c) => c.id === childId);
+    if (!child) return route.fulfill({ status: 404 });
+    const { b, errors } = this.validatePickup(route, child.firstName);
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    let first = '';
+    for (const c of b.siblings ? household.children : [child]) {
+      const id = this.approvePickup(c.id, b.name!.trim(), b.relationship!.trim());
+      if (c.id === childId) first = id;
+    }
+    return route.fulfill({ status: 201, json: { id: first } });
+  }
+
+  private async addPickup(route: Route, childId: string): Promise<void> {
+    const m = await this.pickupCaller(route);
+    if (!m) return;
+    if (!can.managePickups(m)) return this.forbidden(route);
+    const found = this.ownChild(m, childId);
+    if (!found) return route.fulfill({ status: 404 });
+    return this.savePickup(route, found.household, childId);
+  }
+
+  private async removePickup(route: Route, childId: string, pickupId: string): Promise<void> {
+    const m = await this.pickupCaller(route);
+    if (!m) return;
+    if (!can.managePickups(m)) return this.forbidden(route);
+    const found = this.ownChild(m, childId);
+    const pickup = this.extraPickups.find((x) => x.id === pickupId && x.childId === childId && !x.removed);
+    if (!found || !pickup) return route.fulfill({ status: 404 });
+    pickup.removed = true;
+    return route.fulfill({ status: 204 });
+  }
+
+  private guardianHousehold(token: string) {
+    const householdId = this.homeLinks.get(token);
+    return householdId ? this.households.find((h) => h.id === householdId) : undefined;
+  }
+
+  private async guardianAddPickup(route: Route, token: string, childId: string): Promise<void> {
+    const household = this.guardianHousehold(token);
+    if (!household) return route.fulfill({ status: 410, json: { code: 'link-expired' } });
+    if (!this.trustedHouseholds.has(household.id)) return route.fulfill({ status: 401, json: { code: 'verification-required' } });
+    return this.savePickup(route, household, childId);
+  }
+
+  private async guardianRemovePickup(route: Route, token: string, childId: string, pickupId: string): Promise<void> {
+    const household = this.guardianHousehold(token);
+    if (!household) return route.fulfill({ status: 410, json: { code: 'link-expired' } });
+    if (!this.trustedHouseholds.has(household.id)) return route.fulfill({ status: 401, json: { code: 'verification-required' } });
+    const pickup = this.extraPickups.find((x) => x.id === pickupId && x.childId === childId && x.householdId === household.id && !x.removed);
+    if (!pickup) return route.fulfill({ status: 404 });
+    pickup.removed = true;
+    return route.fulfill({ status: 204 });
   }
 
   private async signChildOut(route: Route, id: string): Promise<void> {
@@ -1984,6 +2069,8 @@ export class FakeApi {
         const fromRequests = requests.map((r) => ({ program: this.programs.find((x) => x.id === r.programId)!, status: label[r.status], position: r.position, note: r.note ?? null }));
         const onRoster = this.programs.filter((x) => x.roster.includes(c.id) && !requests.some((r) => r.programId === x.id)).map((program) => ({ program, status: 'Enrolled', position: null, note: null }));
         return {
+          id: c.id,
+          pickups: this.modules.get(org.id)!.includes('Pickup') ? this.activePickups(c.id).map((x) => ({ id: x.id, name: x.name, relationship: x.relationship })) : null,
           name: `${c.firstName} ${c.lastName}`,
           firstName: c.firstName,
           enrollments: [...fromRequests, ...onRoster]
@@ -2432,7 +2519,10 @@ export class FakeApi {
         allergyAlert: allowed && med.redAlert && med.allergies ? { title: `Severe allergy: ${med.allergies}`, instruction: med.alertInstruction ?? null } : null,
         medical: allowed && hasMedical ? { allergies: med.allergies, medication: med.medication, conditions: med.conditions, doctor: med.doctor, healthCard: med.healthCard ?? null } : null,
         callOrder: guardians.filter((g) => g.mobile).map((g) => ({ name: g.name, relationship: g.relationship, phone: g.mobile, language: g.language, isPrimary: g.isPrimary })),
-        approvedPickups: guardians.filter((g) => g.canPickUp).map((g) => ({ name: g.name, relationship: g.relationship, isPrimary: g.isPrimary })),
+        approvedPickups: [
+          ...guardians.filter((g) => g.canPickUp).map((g) => ({ name: g.name, relationship: g.relationship, isPrimary: g.isPrimary, pickupId: null })),
+          ...this.activePickups(child.id).map((x) => ({ name: x.name, relationship: x.relationship, isPrimary: false, pickupId: x.id })),
+        ],
         notes: child.notes ?? null,
         medicalRestricted: !allowed,
       },

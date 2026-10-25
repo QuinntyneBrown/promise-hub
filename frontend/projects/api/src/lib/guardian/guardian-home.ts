@@ -5,6 +5,9 @@ export interface GuardianHome {
   phone: string | null;
   firstName: string;
   children: {
+    id: string;
+    /** Adults besides the guardians who may collect the child; null while Pickup is off. */
+    pickups: { id: string; name: string; relationship: string }[] | null;
     name: string;
     firstName: string;
     enrollments: {

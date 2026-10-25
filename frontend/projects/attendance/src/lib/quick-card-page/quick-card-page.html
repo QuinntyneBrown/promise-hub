@@ -85,6 +85,16 @@
                   @if (p.isPrimary) {
                     <ph-badge tone="success">Primary</ph-badge>
                   }
+                  @if (p.pickupId && canManage() && !c.savedAt) {
+                    <ph-button
+                      variant="ghost"
+                      size="sm"
+                      hasPopup="dialog"
+                      [label]="'Remove ' + p.name"
+                      (click)="removePickup(c, p)"
+                      >Remove</ph-button
+                    >
+                  }
                 </ph-list-item>
               } @empty {
                 <ph-list-item
@@ -93,7 +103,14 @@
                 />
               }
             </ph-list>
-            <div phCardFooter>Others need the primary guardian’s okay by phone.</div>
+            <div phCardFooter>
+              Others need the primary guardian’s okay by phone.
+              @if (canManage() && !c.savedAt) {
+                <ph-button size="sm" hasPopup="dialog" (click)="addPickup(c)"
+                  >Add an approved adult</ph-button
+                >
+              }
+            </div>
           </ph-card>
           <ph-card data-block="notes" title="Also good to know">
             <ph-description-list [facts]="otherFacts(c)" />

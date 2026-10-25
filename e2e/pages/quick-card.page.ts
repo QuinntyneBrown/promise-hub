@@ -27,6 +27,33 @@ export class QuickCardPage extends BasePage {
     return this.page.getByRole('status').filter({ hasText: 'Medical details are hidden for your role' });
   }
 
+  get dialog(): Locator {
+    return this.page.getByRole('dialog');
+  }
+
+  get addPickupButton(): Locator {
+    return this.page.getByRole('button', { name: 'Add an approved adult' });
+  }
+
+  removeButton(name: string): Locator {
+    return this.pickups.getByRole('button', { name: `Remove ${name}` });
+  }
+
+  async addPickup(adult: { name: string; relationship: string; siblings?: boolean }): Promise<void> {
+    await this.addPickupButton.click();
+    await expect(this.dialog).toBeVisible();
+    await this.dialog.getByLabel('Full name').fill(adult.name);
+    await this.dialog.getByLabel(/^Relationship to/).fill(adult.relationship);
+    if (adult.siblings) await this.dialog.getByRole('radio', { name: 'All the family’s children' }).check();
+    await this.dialog.getByRole('button', { name: 'Add', exact: true }).click();
+  }
+
+  async removePickup(name: string): Promise<void> {
+    await this.removeButton(name).click();
+    await expect(this.dialog).toBeVisible();
+    await this.dialog.getByRole('button', { name: 'Remove', exact: true }).click();
+  }
+
   get savedOnPhone(): Locator {
     return this.page.getByTestId('sync-chip');
   }

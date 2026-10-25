@@ -29,6 +29,23 @@ export class GuardianHomePage extends BasePage {
     return this.page.getByRole('main').getByText(content);
   }
 
+  pickups(child: string): Locator {
+    return this.page.getByRole('list', { name: new RegExp(`${child}`) });
+  }
+
+  async addPickup(child: string, name: string, relationship: string): Promise<void> {
+    await this.page.getByRole('button', { name: new RegExp(`^(Add someone for|Agregar a alguien para|Ajouter quelqu’un pour) ${child}`) }).click();
+    const dialog = this.page.getByRole('dialog');
+    await dialog.getByRole('textbox').first().fill(name);
+    await dialog.getByRole('textbox').nth(1).fill(relationship);
+    await dialog.getByRole('button', { name: /^(Add|Agregar|Ajouter)$/ }).click();
+  }
+
+  async removePickup(name: string): Promise<void> {
+    await this.page.getByRole('button', { name: new RegExp(`^(Remove|Quitar|Retirer) ${name}`) }).click();
+    await this.page.getByRole('dialog').getByRole('button', { name: /^(Remove|Quitar|Retirer)$/ }).click();
+  }
+
   get noShowAlert(): Locator {
     return this.page.getByRole('main').getByRole('status').filter({ hasText: /checked in|registrad|enregistr/ });
   }

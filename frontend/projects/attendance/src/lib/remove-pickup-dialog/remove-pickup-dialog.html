@@ -1,0 +1,12 @@
+<ph-dialog
+  [title]="'Remove ' + data.name + ' from ' + data.firstName + '’s approved pickups?'"
+  [description]="(data.primary ?? 'The primary guardian') + ' is texted. Kept in the audit log.'"
+>
+  @if (failed()) {
+    <ph-alert tone="danger" title="That didn’t go through" text="Nothing was removed. Try again." />
+  }
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close()">Cancel</ph-button>
+    <ph-button variant="danger" [busy]="busy()" (click)="remove()">Remove</ph-button>
+  </ng-container>
+</ph-dialog>

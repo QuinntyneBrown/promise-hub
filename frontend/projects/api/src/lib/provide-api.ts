@@ -25,6 +25,8 @@ import { HttpEnrollmentApi } from './enrollment/http-enrollment-api';
 import { HttpIncidentsApi } from './incidents/http-incidents-api';
 import { INCIDENTS_API } from './incidents/incidents-api.token';
 import { HttpModulesApi } from './modules/http-modules-api';
+import { HttpPickupApi } from './pickups/http-pickup-api';
+import { PICKUP_API } from './pickups/pickup-api.token';
 import { HttpSlipsApi } from './slips/http-slips-api';
 import { SLIPS_API } from './slips/slips-api.token';
 import { MODULES_API } from './modules/modules-api.token';
@@ -50,5 +52,6 @@ export function provideApi(): EnvironmentProviders {
     { provide: IMPORTS_API, useClass: HttpImportsApi },
     { provide: ENROLLMENT_API, useClass: HttpEnrollmentApi },
     { provide: INCIDENTS_API, useClass: HttpIncidentsApi },
+    { provide: PICKUP_API, useClass: HttpPickupApi },
   ]);
 }

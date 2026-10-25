@@ -10,4 +10,5 @@ export type Permission =
   | 'runSessions'
   | 'sendMessages'
   | 'manageSlips'
-  | 'reviewEnrollments';
+  | 'reviewEnrollments'
+  | 'managePickups';
