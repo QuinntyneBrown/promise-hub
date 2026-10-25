@@ -36,6 +36,7 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Event | `event` (default, empty, cancelled) | `ph-breadcrumb`, `ph-page-header`, `ph-alert`, `ph-card` (titled), `ph-badge`, `ph-description-list`, `ph-button` | — |
 | Event form | `event-form` (default, invalid) | `ph-breadcrumb`, `ph-page-header`, `ph-card`, `ph-text-field`, `ph-select`, `ph-radio-group`, `ph-switch`, `ph-textarea`, `ph-alert`, `ph-button` | Local time conversion |
 | Check-in | `check-in` (default, empty, no-results, error) | `ph-page-header`, `ph-stat`, `ph-text-field` (search), `ph-chip`, `ph-roster`, `ph-roster-item`, `ph-flag`, `ph-badge`, `ph-card`, `ph-empty-state`, `ph-button`, toast | Optimistic roster state |
+| Quick Card | `quick-card` (default, empty, forbidden, error) | `ph-avatar`, `ph-quick-card-alert`, `ph-alert`, `ph-card` (titled), `ph-description-list`, `ph-call-list`, `ph-list`, `ph-list-item`, `ph-badge`, `ph-empty-state`, `ph-button` | Section order, overline heading for the call list |
 
 ## Dialogs
 

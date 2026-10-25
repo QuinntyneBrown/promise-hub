@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 07 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="07" data-video-title="Read a Quick Card" data-parts="Introduction|Promises|Mateo's card|Empty|Restricted|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 07</div>
+  <h1>Read a Quick Card</h1>
+  <p class="lead">What matters first, in an emergency, on a phone</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="The severe allergy alert is always the first thing on the card">
+  <h2>What the Quick Card promises</h2>
+  <ul>
+    <li>The allergy alert first, with what to do</li>
+    <li>Who to call in order, each number one tap away</li>
+    <li>Medical details kept from roles without access, by the server</li>
+    <li>Every open audited</li>
+  </ul>
+</section>
+
+<section id="mateo" data-part="2" data-cue="Here is Jaylen at check-in on his phone." data-clip="clips/quick-card-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>From the roster to the alert</h3><p>EpiPen, 911, then Carmen; her number dials when tapped.</p></div>
+</section>
+
+<section id="empty" data-part="3" data-cue="A child with no medical information gets a card that says so plainly">
+  <h2>When there is nothing medical</h2>
+  <div class="cols">
+    <img class="shot" alt="Quick Card with no medical information" src="shots/phone-empty.png">
+    <img class="shot" alt="Mateo's Quick Card" src="shots/phone-default.png">
+  </div>
+</section>
+
+<section id="restricted" data-part="4" data-cue="Priya is a volunteer coordinator." data-clip="clips/restricted-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Hidden for her role</h3><p>No medical fields in the response; who to call stays.</p></div>
+</section>
+
+<section id="testing" data-part="5" data-cue="Backend tests check the alert and its order">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Site lead opens Mateo</td><td>Alert first, masked health card, call order</td></tr>
+    <tr><td>Volunteer coordinator</td><td>No medical, no alert; still who to call</td></tr>
+    <tr><td>Any open</td><td><code>Viewed</code> audit entry</td></tr>
+    <tr><td>Another organization / Quick Cards off</td><td>404</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="6" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>The alert comes first</li><li>Numbers are one tap away</li><li>Medical details never leave the server for roles without access</li><li>Every open is audited</li></ul>
+  <p class="muted">Next: sign children out</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

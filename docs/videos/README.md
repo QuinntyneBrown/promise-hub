@@ -14,6 +14,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 04 | [Maintain households](04-maintain-households/README.md) | ~3 min | Families, guardians, children, medical details and who sees them |
 | 05 | [Create programs and events](05-create-programs-and-events/README.md) | ~3 min | Programs, rosters, archiving, events, draft slips and cancellations |
 | 06 | [Check children in](06-check-children-in/README.md) | ~3 min | One-tap check-in, absences, walk-ins and Today's sessions |
+| 07 | [Read a Quick Card](07-read-a-quick-card/README.md) | ~2.5 min | The allergy alert first, tap-to-call, restricted medical details and audited opens |
 
 ## Making or updating a video
 
