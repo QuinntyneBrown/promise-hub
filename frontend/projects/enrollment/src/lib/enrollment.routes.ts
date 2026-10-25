@@ -1,4 +1,7 @@
-// Scaffold only. Overwrite or delete as implementation requires. No product logic is implemented.
 import { Routes } from '@angular/router';
+import { ImportRosterPage } from './import-roster-page/import-roster-page';
 
-export const routes: Routes = [];
+/** Mounted by the app at /import while the Roster module is on. */
+export const routes: Routes = [
+  { path: '', component: ImportRosterPage, title: 'Import a roster · PromiseHub' },
+];

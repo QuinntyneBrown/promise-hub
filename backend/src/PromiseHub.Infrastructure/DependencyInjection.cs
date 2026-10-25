@@ -27,6 +27,7 @@ public static class DependencyInjection
         services.AddSingleton<ISmsSender, LoggingSmsSender>();
         services.AddSingleton<IEmailSender, LoggingEmailSender>();
         services.AddSingleton<MessageDispatchRunner>();
+        services.AddSingleton<PromiseHub.Application.Imports.ISpreadsheetReader, Imports.SpreadsheetReader>();
         return services;
     }
 }

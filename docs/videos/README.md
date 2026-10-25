@@ -21,6 +21,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 11 | [Send permission slips](11-send-permission-slips/README.md) | ~3 min | Write, send or schedule, track answers per child, material edits re-open signing |
 | 12 | [Sign a permission slip](12-sign-a-permission-slip/README.md) | ~3 min | A texted link and a six-digit code, the family's language, typed-name signing and decline |
 | 13 | [Resolve missing slips](13-resolve-missing-slips/README.md) | ~3 min | Scheduled reminders once per slot, day-of clearance, tablet signing and texting the unsigned |
+| 14 | [Import a roster](14-import-a-roster/README.md) | ~3 min | CSV or XLSX upload, column mapping, duplicates and gaps reviewed, families created in one audited go |
 
 ## Making or updating a video
 

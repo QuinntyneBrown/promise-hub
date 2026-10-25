@@ -37,6 +37,7 @@ public interface IPromiseHubDb
     DbSet<SlipSignature> SlipSignatures { get; }
     DbSet<GuardianLink> GuardianLinks { get; }
     DbSet<SlipReminder> SlipReminders { get; }
+    DbSet<Domain.Imports.ImportSession> ImportSessions { get; }
     DbSet<GuardianVerification> GuardianVerifications { get; }
     DbSet<TrustedGuardianDevice> TrustedGuardianDevices { get; }
     DbSet<StaffUser> StaffUsers { get; }

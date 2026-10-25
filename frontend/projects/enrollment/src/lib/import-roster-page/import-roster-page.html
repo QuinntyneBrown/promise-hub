@@ -1,0 +1,161 @@
+@if (!allowed()) {
+  <ph-error-page
+    icon="lock"
+    title="Only admins and program directors import rosters"
+    text="Ask Tom Nguyen or Marisol Delgado to import the spreadsheet."
+  >
+    <ph-button variant="primary" link="/families">Families</ph-button>
+  </ph-error-page>
+} @else if (step() === 'done') {
+  @if (summary(); as s) {
+    <ph-card>
+      <div class="stack">
+        <h1>Imported {{ s.imported }} of {{ s.rows }} rows</h1>
+        <div class="kpis" role="group" aria-label="Import results">
+          <ph-stat
+            label="Families created"
+            [value]="'' + s.familiesCreated"
+            data-testid="kpi-Families created"
+          />
+          <ph-stat
+            label="Families updated"
+            [value]="'' + s.familiesUpdated"
+            caption="matched by phone"
+            data-testid="kpi-Families updated"
+          />
+          <ph-stat label="Children" [value]="'' + s.children" data-testid="kpi-Children" />
+          <ph-stat
+            label="Enrolled"
+            [value]="'' + s.enrolled"
+            [caption]="s.programName"
+            data-testid="kpi-Enrolled"
+          />
+        </div>
+        @if (s.skipped) {
+          <p>{{ s.skipped }} already in PromiseHub and skipped.</p>
+        }
+        @if (s.needFix) {
+          <ph-alert tone="warning" [title]="toFix(s)" [text]="toFixRows(s)" />
+        }
+        <div class="cluster">
+          <ph-button variant="primary" link="/families">See families</ph-button>
+          <ph-button link="/events/new">Send the first slip</ph-button>
+        </div>
+      </div>
+    </ph-card>
+  }
+} @else {
+  <ph-breadcrumb [items]="[{ label: 'Families', link: '/families' }, { label: 'Import' }]" />
+  <ph-page-header
+    title="Import a roster"
+    [subtitle]="
+      upload()
+        ? upload()!.fileName +
+          ' · ' +
+          upload()!.rowCount +
+          ' rows · ' +
+          upload()!.columns.length +
+          ' columns'
+        : 'Sheets, Excel or CSV · about ten minutes'
+    "
+  />
+  <ph-stepper [current]="stepNumber()" [total]="3" />
+  @if (failed()) {
+    <ph-alert
+      tone="danger"
+      title="That didn’t go through"
+      text="Nothing was imported. Try again."
+    />
+  }
+  @switch (step()) {
+    @case ('upload') {
+      <ph-card>
+        <div class="stack">
+          @if (errors()['file']; as message) {
+            <ph-alert tone="danger" title="We couldn’t read that file" [text]="message" />
+          }
+          <ph-file-upload
+            title="Drop your spreadsheet here"
+            text="CSV or XLSX · one row per child · up to 5,000 rows"
+            accept=".csv,.xlsx"
+            [busy]="busy()"
+            (fileSelected)="chosen($event)"
+          />
+          <p>
+            Needed: the child’s name, and a guardian’s name with a phone or email. Other columns are
+            matched or kept as notes.
+          </p>
+        </div>
+      </ph-card>
+    }
+    @case ('mapping') {
+      @if (summaryItems().length) {
+        <ph-error-summary [items]="summaryItems()" />
+      }
+      <ph-card>
+        <div class="stack" id="mapping">
+          <ph-alert
+            tone="success"
+            [title]="
+              upload()!.matched +
+              ' of ' +
+              upload()!.columns.length +
+              ' columns matched automatically'
+            "
+            text="Check the rest, then choose a program."
+          />
+          <ph-roster-mapping [rows]="rows()" [options]="fields" (changed)="remap($event)" />
+          <ph-select
+            inputId="program"
+            label="Enroll everyone in"
+            name="program"
+            [options]="programs()"
+            [(ngModel)]="programId"
+          />
+          <div class="form-actions">
+            <ph-button variant="ghost" (click)="step.set('upload')">Back</ph-button>
+            <ph-button variant="primary" [busy]="busy()" (click)="review()">Review</ph-button>
+          </div>
+        </div>
+      </ph-card>
+    }
+    @case ('review') {
+      @if (preview(); as p) {
+        <ph-card>
+          <div class="stack">
+            <p>{{ p.rows }} rows{{ p.programName ? ', enrolled in ' + p.programName : '' }}.</p>
+            @if (p.duplicates.length) {
+              <h2>Already in PromiseHub</h2>
+              <ul class="stack" aria-label="Already in PromiseHub">
+                @for (d of p.duplicates; track d.row) {
+                  <li>
+                    <div>Row {{ d.row }} · {{ d.child }}</div>
+                    <ph-switch
+                      [label]="'Merge row ' + d.row + ' with the existing record'"
+                      [ngModel]="merge().has(d.row)"
+                      (ngModelChange)="toggleMerge(d.row, $event)"
+                    />
+                  </li>
+                }
+              </ul>
+            }
+            @if (p.needLook.length) {
+              <h2>Rows that need a look</h2>
+              <ul class="stack" aria-label="Rows that need a look">
+                @for (r of p.needLook; track r.row) {
+                  <li>Row {{ r.row }} · {{ r.child }} · {{ r.reason }}</li>
+                }
+              </ul>
+            }
+            <div class="form-actions">
+              <ph-button variant="ghost" (click)="step.set('mapping')">Back</ph-button>
+              <ph-button variant="primary" [busy]="busy()" (click)="run()"
+                >Import {{ p.rows }} rows</ph-button
+              >
+            </div>
+          </div>
+        </ph-card>
+      }
+    }
+  }
+}

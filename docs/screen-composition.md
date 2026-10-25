@@ -44,6 +44,7 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Slip editor | `slip-editor` (default, error, invalid, submitting, success, edit) | `ph-breadcrumb`, `ph-page-header`, `ph-error-summary`, `ph-alert`, `ph-card` (titled), `ph-text-field`, `ph-textarea` (counter), `ph-select`, `ph-switch`, `ph-radio-group`, `ph-progress-bar`, `ph-stat`, `ph-table`, `ph-button` | Draft, scheduled and sent modes |
 | Guardian slip | `slip-sign` (default, invalid, submitting, success, error, expired, already-signed, es) | `ph-guardian-shell`, `ph-card` (titled), `ph-description-list`, `ph-radio-group`, `ph-text-field`, `ph-alert`, `ph-empty-state`, `ph-button` | Code check, language strings |
 | Sign on this tablet | `sign-on-tablet` | `ph-page-header`, `ph-card` (titled), `ph-text-field`, `ph-radio-group`, `ph-alert`, `ph-empty-state`, `ph-button` | A screen, mounted under check-in |
+| Import a roster | `import-roster` (default, mapping, invalid, success, error) | `ph-breadcrumb`, `ph-page-header`, `ph-stepper`, `ph-file-upload`, `ph-roster-mapping`, `ph-select`, `ph-error-summary`, `ph-alert`, `ph-switch`, `ph-stat`, `ph-card`, `ph-error-page`, `ph-button` | Wizard state |
 
 ## Dialogs
 

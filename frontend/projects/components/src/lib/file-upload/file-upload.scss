@@ -1,0 +1,58 @@
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-8) var(--space-4);
+  border: var(--border-width-thick, 2px) dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+  text-align: center;
+}
+.dropzone--over {
+  border-color: var(--color-accent);
+  background: var(--color-accent-subtle);
+}
+.tile {
+  display: grid;
+  place-content: center;
+  width: var(--target-comfortable, 3rem);
+  height: var(--target-comfortable, 3rem);
+  border-radius: var(--radius-md);
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+}
+.title {
+  margin: 0;
+  font: var(--text-h4, var(--text-label));
+  color: var(--color-fg-default);
+}
+.text {
+  margin: 0;
+  font: var(--text-body-sm);
+  color: var(--color-fg-muted);
+}
+.button {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  color: var(--color-fg-on-accent);
+  font: var(--text-label);
+  cursor: pointer;
+}
+input:focus-visible + .button,
+.button:has(+ input:focus-visible) {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

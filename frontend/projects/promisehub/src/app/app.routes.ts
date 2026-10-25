@@ -26,6 +26,9 @@ export const routes: Routes = [
         path: 'settings',
         loadChildren: () => import('@promisehub/settings').then((m) => m.routes),
       },
+      ...moduleRoute('import', 'Roster', () =>
+        import('@promisehub/enrollment').then((m) => m.routes),
+      ),
       ...moduleRoute('families', 'Roster', () =>
         import('@promisehub/households').then((m) => m.routes),
       ),

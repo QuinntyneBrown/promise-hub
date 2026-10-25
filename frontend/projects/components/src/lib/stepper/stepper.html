@@ -1,0 +1,10 @@
+<span class="dots" aria-hidden="true">
+  @for (d of dots(); track d) {
+    <span
+      class="dot"
+      [class.dot--current]="d === current()"
+      [class.dot--done]="d < current()"
+    ></span>
+  }
+</span>
+<span>Step {{ current() }} of {{ total() }}</span>

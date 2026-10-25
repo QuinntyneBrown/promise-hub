@@ -18,5 +18,7 @@ export class PhAlert {
   readonly tone = input<'info' | 'success' | 'warning' | 'danger'>('info');
   readonly title = input.required<string>();
   readonly text = input<string | null>(null);
-  protected readonly icon = computed<IconName>(() => (this.tone() === 'info' ? 'info' : 'warning'));
+  protected readonly icon = computed<IconName>(() =>
+    this.tone() === 'info' ? 'info' : this.tone() === 'success' ? 'check-circle' : 'warning',
+  );
 }

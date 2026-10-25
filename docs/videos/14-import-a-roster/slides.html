@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 14 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="14" data-video-title="Import a roster" data-parts="Introduction|Promises|Tom imports|Wrong file|Screens|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 14</div>
+  <h1>Import a roster</h1>
+  <p class="lead">From the old spreadsheet to families in PromiseHub, in three steps</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="Tom can upload a CSV or an Excel file">
+  <h2>What the import promises</h2>
+  <ul>
+    <li>CSV or XLSX, up to 5,000 rows, columns matched by name</li>
+    <li>Duplicates and gaps shown before anything is created</li>
+    <li>Returning families updated, not duplicated</li>
+    <li>One audit entry: file, rows, importer</li>
+  </ul>
+</section>
+
+<section id="tom" data-part="2" data-cue="Here is the import on Tom's laptop." data-clip="clips/import-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Upload, map, review</h3><p>3 children in 2 new families; 1 row to fix.</p></div>
+</section>
+
+<section id="wrong" data-part="3" data-cue="On a phone, Tom first picks a Numbers file" data-clip="clips/wrong-file-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Not a spreadsheet</h3><p>Nothing created; the formats that work.</p></div>
+</section>
+
+<section id="screens" data-part="4" data-cue="Two screens to remember">
+  <h2>The screens</h2>
+  <div class="cols">
+    <img class="shot" alt="Column mapping" src="shots/desktop-mapping.png">
+    <img class="shot" alt="Import results" src="shots/desktop-results.png">
+  </div>
+</section>
+
+<section id="testing" data-part="5" data-cue="Backend tests cover matching the columns">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>CSV and XLSX</td><td>Columns matched, unmatched listed</td></tr>
+    <tr><td>Not a spreadsheet</td><td>422, nothing created</td></tr>
+    <tr><td>Same name and date of birth</td><td>Skipped unless merged</td></tr>
+    <tr><td>Site lead</td><td>403</td></tr>
+    <tr><td>Another organization / Roster off</td><td>404</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="6" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Upload, map, review</li><li>Nothing created before the review</li><li>One audit entry for the whole import</li></ul>
+  <p class="muted">Next: families enroll their children themselves</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

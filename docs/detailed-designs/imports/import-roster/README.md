@@ -14,6 +14,10 @@ Terms used in this document:
 - **merge** — choice to update the existing matched household and child from the row instead of skipping it
 - **rows need a look** — count of imported rows that created a record with a known gap, such as a guardian without a mobile number
 
+## Built so far
+
+Slice 14 delivered `ImportRosterPage` at `/import` (upload with `ph-file-upload`, mapping with `ph-roster-mapping` and `ph-stepper`, the invalid summary, review of duplicates with merge switches and rows that need a look, results with counts and rows to fix), `IMPORTS_API`, `POST /imports`, `PUT /imports/{id}/mapping`, `POST /imports/{id}/run`, `ImportSession`, `ColumnMatcher`, the duplicate rule and `SpreadsheetReader` for CSV and XLSX (ADR 0017). Progress polling, file storage and the pickup column are not built yet.
+
 ## Description
 
 The feature lives in the `enrollment` frontend library (roster import and review share that library in `AGENTS.md`) and the `Imports` application folder.
