@@ -7,8 +7,8 @@ using PromiseHub.Domain.Events;
 
 namespace PromiseHub.Application.Attendance;
 
-/// <summary>Shared rules of every attendance change: the session exists and is scheduled, the child is on its roster, and a repeated client action changes nothing.</summary>
-public sealed class AttendanceWriter(IPromiseHubDb db, ITenantContext tenant, IAuditWriter audit, SessionReader reader)
+/// <summary>Shared rules of every attendance change: the session exists, the caller may run it, it is scheduled, the child is on its roster, and a repeated client action changes nothing.</summary>
+public sealed class AttendanceWriter(IPromiseHubDb db, ITenantContext tenant, IAuditWriter audit, SessionReader reader, SessionAccess access)
 {
     public async Task<Result> ApplyAsync(
         Guid eventId,
@@ -23,6 +23,10 @@ public sealed class AttendanceWriter(IPromiseHubDb db, ITenantContext tenant, IA
         if (e is null)
         {
             return Result.NotFound;
+        }
+        if (!await access.AllowsAsync(eventId, cancellationToken))
+        {
+            return Result.Forbidden;
         }
         if (await db.AttendanceEvents.AnyAsync(x => x.ClientActionId == clientActionId, cancellationToken))
         {

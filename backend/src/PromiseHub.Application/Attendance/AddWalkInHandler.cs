@@ -8,7 +8,7 @@ using PromiseHub.Domain.Events;
 namespace PromiseHub.Application.Attendance;
 
 /// <summary>Adds a walk-in to this session only, checked in and flagged for enrollment follow-up (L2-017 criterion 4).</summary>
-public sealed class AddWalkInHandler(IPromiseHubDb db, ITenantContext tenant, IAuditWriter audit, TimeProvider clock)
+public sealed class AddWalkInHandler(IPromiseHubDb db, ITenantContext tenant, IAuditWriter audit, TimeProvider clock, SessionAccess access)
 {
     public async Task<Result> HandleAsync(Guid eventId, AddWalkInCommand command, CancellationToken cancellationToken = default)
     {
@@ -16,6 +16,10 @@ public sealed class AddWalkInHandler(IPromiseHubDb db, ITenantContext tenant, IA
         if (e is null)
         {
             return Result.NotFound;
+        }
+        if (!await access.AllowsAsync(eventId, cancellationToken))
+        {
+            return Result.Forbidden;
         }
         var errors = new Dictionary<string, string>();
         if (e.Status == EventStatus.Cancelled)

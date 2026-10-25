@@ -6,14 +6,18 @@ using PromiseHub.Domain.Attendance;
 namespace PromiseHub.Application.Attendance;
 
 /// <summary>A session's roster: enrolled children and walk-ins with their status, sorted by name.</summary>
-public sealed class GetSessionRosterHandler(IPromiseHubDb db, ITenantContext tenant, TimeProvider clock, SessionReader reader)
+public sealed class GetSessionRosterHandler(IPromiseHubDb db, ITenantContext tenant, TimeProvider clock, SessionReader reader, SessionAccess access)
 {
-    public async Task<SessionRosterDto?> HandleAsync(Guid eventId, CancellationToken cancellationToken = default)
+    public async Task<(ResultStatus Status, SessionRosterDto? Roster)> HandleAsync(Guid eventId, CancellationToken cancellationToken = default)
     {
         var e = await db.Events.AsNoTracking().FirstOrDefaultAsync(x => x.Id == eventId, cancellationToken);
         if (e is null)
         {
-            return null;
+            return (ResultStatus.NotFound, null);
+        }
+        if (!await access.AllowsAsync(eventId, cancellationToken))
+        {
+            return (ResultStatus.Forbidden, null);
         }
         var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
         var medical = RolePermissions.Has(tenant.Role, Permission.ReadMedical);
@@ -38,6 +42,6 @@ public sealed class GetSessionRosterHandler(IPromiseHubDb db, ITenantContext ten
             return new RosterEntryDto(w.Id, null, null, w.ChildName, null, null, flag,
                 (record?.Status ?? AttendanceStatus.NotYet).ToString(), record?.CheckedInAt, WalkIn: true, record?.SignedOutAt, record?.CollectedBy);
         }));
-        return new SessionRosterDto(await reader.SummaryAsync(e, cancellationToken), [.. rows.OrderBy(r => r.Name, StringComparer.CurrentCulture)]);
+        return (ResultStatus.Done, new SessionRosterDto(await reader.SummaryAsync(e, cancellationToken), [.. rows.OrderBy(r => r.Name, StringComparer.CurrentCulture)]));
     }
 }

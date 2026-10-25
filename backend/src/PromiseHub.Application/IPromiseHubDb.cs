@@ -7,6 +7,7 @@ using PromiseHub.Domain.Organizations;
 using PromiseHub.Domain.Programs;
 using PromiseHub.Domain.Slips;
 using Event = PromiseHub.Domain.Events.Event;
+using SessionStaff = PromiseHub.Domain.Events.SessionStaff;
 
 namespace PromiseHub.Application;
 
@@ -27,6 +28,7 @@ public interface IPromiseHubDb
     DbSet<AttendanceRecord> AttendanceRecords { get; }
     DbSet<AttendanceEvent> AttendanceEvents { get; }
     DbSet<WalkIn> WalkIns { get; }
+    DbSet<SessionStaff> SessionStaff { get; }
     DbSet<StaffUser> StaffUsers { get; }
     DbSet<SignInAttempt> SignInAttempts { get; }
 

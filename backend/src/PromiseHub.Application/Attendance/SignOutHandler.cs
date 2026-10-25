@@ -8,13 +8,17 @@ namespace PromiseHub.Application.Attendance;
 /// Signs a checked-in child out to an approved adult, or to someone else the primary guardian okayed by phone
 /// (L2-017 criterion 3, L2-020 criterion 3). Anyone else is refused with whom to call.
 /// </summary>
-public sealed class SignOutHandler(IPromiseHubDb db, AttendanceWriter writer, ITenantContext tenant, TimeProvider clock)
+public sealed class SignOutHandler(IPromiseHubDb db, AttendanceWriter writer, ITenantContext tenant, TimeProvider clock, SessionAccess access)
 {
     public async Task<Result> HandleAsync(Guid eventId, SignOutCommand command, CancellationToken cancellationToken = default)
     {
         if (!await db.Events.AnyAsync(e => e.Id == eventId, cancellationToken))
         {
             return Result.NotFound;
+        }
+        if (!await access.AllowsAsync(eventId, cancellationToken))
+        {
+            return Result.Forbidden;
         }
         if (await db.AttendanceEvents.AnyAsync(x => x.ClientActionId == command.ClientActionId, cancellationToken))
         {

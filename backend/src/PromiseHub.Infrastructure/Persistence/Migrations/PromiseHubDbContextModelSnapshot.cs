@@ -271,6 +271,33 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.ToTable("Events");
                 });
 
+            modelBuilder.Entity("PromiseHub.Domain.Events.SessionStaff", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("MembershipId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MembershipId");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("EventId", "MembershipId")
+                        .IsUnique();
+
+                    b.ToTable("SessionStaff");
+                });
+
             modelBuilder.Entity("PromiseHub.Domain.Households.Child", b =>
                 {
                     b.Property<Guid>("Id")
@@ -764,6 +791,27 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.HasOne("PromiseHub.Domain.Programs.Program", null)
                         .WithMany()
                         .HasForeignKey("ProgramId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Events.SessionStaff", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Events.Event", null)
+                        .WithMany()
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Organizations.Membership", null)
+                        .WithMany()
+                        .HasForeignKey("MembershipId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

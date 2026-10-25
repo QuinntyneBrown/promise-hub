@@ -10,6 +10,7 @@ using PromiseHub.Domain.Organizations;
 using PromiseHub.Domain.Programs;
 using PromiseHub.Domain.Slips;
 using Event = PromiseHub.Domain.Events.Event;
+using SessionStaff = PromiseHub.Domain.Events.SessionStaff;
 
 namespace PromiseHub.Infrastructure.Persistence;
 
@@ -30,6 +31,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
     public DbSet<AttendanceEvent> AttendanceEvents => Set<AttendanceEvent>();
     public DbSet<WalkIn> WalkIns => Set<WalkIn>();
+    public DbSet<SessionStaff> SessionStaff => Set<SessionStaff>();
     public DbSet<StaffUser> StaffUsers => Set<StaffUser>();
     public DbSet<SignInAttempt> SignInAttempts => Set<SignInAttempt>();
 
@@ -166,6 +168,12 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(w => w.Guardian).HasMaxLength(300);
             e.Property(w => w.MedicalNotes).HasMaxLength(1000);
             e.HasOne<Event>().WithMany().HasForeignKey(w => w.EventId);
+        });
+        modelBuilder.Entity<SessionStaff>(e =>
+        {
+            e.HasOne<Event>().WithMany().HasForeignKey(s => s.EventId);
+            e.HasOne<Membership>().WithMany().HasForeignKey(s => s.MembershipId);
+            e.HasIndex(s => new { s.EventId, s.MembershipId }).IsUnique();
         });
         modelBuilder.Entity<StaffUser>(e =>
         {

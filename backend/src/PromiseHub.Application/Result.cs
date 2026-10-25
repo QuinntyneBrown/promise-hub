@@ -1,10 +1,11 @@
 namespace PromiseHub.Application;
 
-/// <summary>The outcome of a command: done, created with an id, not found, or invalid with one message per field.</summary>
+/// <summary>The outcome of a command: done, created with an id, not found, forbidden, or invalid with one message per field.</summary>
 public sealed record Result(ResultStatus Status, Guid? Id = null, IReadOnlyDictionary<string, string>? Errors = null)
 {
     public static readonly Result Done = new(ResultStatus.Done);
     public static readonly Result NotFound = new(ResultStatus.NotFound);
+    public static readonly Result Forbidden = new(ResultStatus.Forbidden);
 
     public static Result Created(Guid id) => new(ResultStatus.Created, id);
 

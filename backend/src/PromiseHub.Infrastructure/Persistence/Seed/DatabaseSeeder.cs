@@ -6,6 +6,7 @@ using PromiseHub.Domain.Organizations;
 using PromiseHub.Domain.Programs;
 using PromiseHub.Domain.Slips;
 using Event = PromiseHub.Domain.Events.Event;
+using SessionStaff = PromiseHub.Domain.Events.SessionStaff;
 
 namespace PromiseHub.Infrastructure.Persistence.Seed;
 
@@ -86,6 +87,9 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
         Session(Harbourview, sports, "Saturday Sports", At(2026, 11, 7, 10), At(2026, 11, 7, 12), "Bennetto School gym", slip: false);
         Session(Harbourview, tutoring, "Fall field trip: Royal Botanical Gardens", At(2026, 11, 14, 9), At(2026, 11, 14, 15), "Royal Botanical Gardens · bus leaves 8:45 am", slip: true);
         Session(Harbourview, tutoring, "Tutoring night", At(2026, 11, 4, 16), At(2026, 11, 4, 18), "Harbourview Community Centre, Room 2", slip: false, key: "past");
+        // Tonight's staff, as on the event page: Jaylen leads and Aisha works it; she is not on last night's session.
+        Assign(Harbourview, "Tutoring night", "jaylen@harbourview.example");
+        Assign(Harbourview, "Tutoring night", "aisha@harbourview.example");
         var kidsClub = Program(Northgate, "Kids Club", new(2026, 9, 9), new(2027, 6, 16), "Wed, 6–7:30 pm", 30, "5–11", open: true);
         Enroll(Northgate, kidsClub, "Mateo Rivera");
         Session(Northgate, kidsClub, "Kids Club night", At(2026, 11, 11, 18), At(2026, 11, 11, 19), "Northgate fellowship hall", slip: false);
@@ -132,6 +136,13 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
         {
             Add(new PermissionSlip(SeedIds.Of($"slip:{id}"), organizationId, id, DateOnly.FromDateTime(starts.UtcDateTime)));
         }
+    }
+
+    private void Assign(Guid organizationId, string session, string email)
+    {
+        var eventId = EventId(organizationId, session);
+        var membershipId = MembershipId(organizationId, email);
+        Add(new SessionStaff(SeedIds.Of($"session-staff:{eventId}:{membershipId}"), organizationId, eventId, membershipId));
     }
 
     public static Guid UserId(string email) => SeedIds.Of($"user:{email}");

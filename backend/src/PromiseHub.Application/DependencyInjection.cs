@@ -44,6 +44,7 @@ public static class DependencyInjection
         services.AddScoped<TodaySessionsHandler>();
         services.AddScoped<GetSessionRosterHandler>();
         services.AddScoped<CheckInHandler>();
+        services.AddScoped<SessionAccess>();
         services.AddScoped<SignOutHandler>();
         services.AddScoped<GetPickupOptionsHandler>();
         services.AddScoped<MarkAbsentHandler>();
