@@ -16,4 +16,5 @@ public enum Permission
     ManageSlips,
     ReviewEnrollments,
     ReviewIncidents,
+    ManagePickups,
 }

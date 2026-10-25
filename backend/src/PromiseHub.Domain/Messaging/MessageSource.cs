@@ -11,4 +11,7 @@ public enum MessageSource
 
     /// <summary>No-show alerts to guardians; part of the Roll Call module.</summary>
     NoShow,
+
+    /// <summary>Changes to a child's approved pickups; part of the Pickup module.</summary>
+    Pickup,
 }

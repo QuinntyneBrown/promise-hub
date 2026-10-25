@@ -11,7 +11,7 @@ namespace PromiseHub.Application.Guardian;
 /// The household's home page, opened from a decision text (L2-013 criterion 12): each child's programs with the status, the
 /// waitlist position and the note staff wrote. The household comes from the link; a new device verifies with a code first.
 /// </summary>
-public sealed class GuardianHomeHandler(IPromiseHubDb db, GuardianAccess access, IModuleGate modules, NoShowReplyHandler replies, TimeProvider clock)
+public sealed class GuardianHomeHandler(IPromiseHubDb db, GuardianAccess access, IModuleGate modules, NoShowReplyHandler replies, ApprovedPickupsHandler pickups, TimeProvider clock)
 {
     public async Task<GuardianResult> GetAsync(GuardianRequest request, CancellationToken cancellationToken = default)
     {
@@ -38,6 +38,8 @@ public sealed class GuardianHomeHandler(IPromiseHubDb db, GuardianAccess access,
         var programIds = requests.Select(r => r.ProgramId).Concat(rosters.Select(e => e.ProgramId)).Distinct().ToList();
         var programs = await db.Programs.AsNoTracking().Where(p => programIds.Contains(p.Id)).ToDictionaryAsync(p => p.Id, cancellationToken);
         var primary = guardians.OrderByDescending(g => g.IsPrimary).ThenBy(g => g.Name).FirstOrDefault();
+        var pickupsOn = await modules.IsOnAsync(ModuleId.Pickup, cancellationToken);
+        var pickups = pickupsOn ? await db.ApprovedPickups.AsNoTracking().Where(p => ids.Contains(p.ChildId) && p.RemovedAt == null).OrderBy(p => p.Name).ToListAsync(cancellationToken) : [];
         var noShows = await OpenNoShowsAsync(scope.Household.Id, children.ToDictionary(c => c.Id, c => c.FirstName), cancellationToken);
         return GuardianResult.Of(GuardianOutcome.Ok, new GuardianHomeDto(
             GuardianLanguage.Code(scope.Household.Language),
@@ -56,7 +58,8 @@ public sealed class GuardianHomeHandler(IPromiseHubDb db, GuardianAccess access,
                     }, r.Position, r.Note))
                     .Concat(rosters.Where(e => e.ChildId == child.Id && latest.All(r => r.ProgramId != e.ProgramId)).Select(e => Row(programs[e.ProgramId], "Enrolled", null, null)))
                     .OrderBy(e => e.Program).ToList();
-                return new GuardianHomeChildDto(child.FullName, child.FirstName, enrollments);
+                return new GuardianHomeChildDto(child.FullName, child.FirstName, enrollments, child.Id,
+                    pickupsOn ? [.. pickups.Where(p => p.ChildId == child.Id).Select(p => new GuardianHomePickupDto(p.Id, p.Name, p.Relationship))] : null);
             })],
             noShows));
     }
@@ -85,6 +88,48 @@ public sealed class GuardianHomeHandler(IPromiseHubDb db, GuardianAccess access,
             ? GuardianResult.Of(GuardianOutcome.Done)
             : GuardianResult.Of(GuardianOutcome.NotFound);
     }
+
+    /// <summary>Adds an approved adult for one of the household's own children from the family page (L2-020 criterion 5).</summary>
+    public async Task<(GuardianResult? Problem, Result? Done)> AddPickupAsync(GuardianRequest request, Guid childId, AddPickupCommand body, CancellationToken cancellationToken = default)
+    {
+        var (problem, scope) = await PickupScopeAsync(request, cancellationToken);
+        if (problem is not null)
+        {
+            return (problem, null);
+        }
+        return (null, await pickups.AddAsync(childId, body, true, await GuardianNameAsync(scope!, cancellationToken), scope!.Household.Id, cancellationToken));
+    }
+
+    public async Task<(GuardianResult? Problem, Result? Done)> RemovePickupAsync(GuardianRequest request, Guid childId, Guid pickupId, CancellationToken cancellationToken = default)
+    {
+        var (problem, scope) = await PickupScopeAsync(request, cancellationToken);
+        if (problem is not null)
+        {
+            return (problem, null);
+        }
+        return (null, await pickups.RemoveAsync(childId, pickupId, true, await GuardianNameAsync(scope!, cancellationToken), scope!.Household.Id, cancellationToken));
+    }
+
+    private async Task<(GuardianResult? Problem, GuardianScope? Scope)> PickupScopeAsync(GuardianRequest request, CancellationToken cancellationToken)
+    {
+        var scope = await access.ResolveAsync(request, cancellationToken);
+        if (scope is null || scope.Link.SlipId is not null)
+        {
+            return (GuardianResult.Of(GuardianOutcome.Gone, GuardianAccess.GoneBody(scope?.Organization)), null);
+        }
+        if (!await modules.IsOnAsync(ModuleId.Roster, cancellationToken) || !await modules.IsOnAsync(ModuleId.Pickup, cancellationToken))
+        {
+            return (GuardianResult.Of(GuardianOutcome.NotFound), null);
+        }
+        if (!scope.Trusted)
+        {
+            return (GuardianResult.Of(GuardianOutcome.VerificationRequired, GuardianAccess.VerifyBody(scope, [])), null);
+        }
+        return (null, scope);
+    }
+
+    private async Task<string> GuardianNameAsync(GuardianScope scope, CancellationToken cancellationToken) =>
+        await db.Guardians.AsNoTracking().Where(g => g.HouseholdId == scope.Household.Id).OrderByDescending(g => g.IsPrimary).Select(g => g.Name).FirstOrDefaultAsync(cancellationToken) ?? "A guardian";
 
     private async Task<IReadOnlyList<GuardianHomeNoShowDto>> OpenNoShowsAsync(Guid householdId, Dictionary<Guid, string> names, CancellationToken cancellationToken)
     {
