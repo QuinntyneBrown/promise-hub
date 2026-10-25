@@ -60,4 +60,39 @@ export class CheckInPage extends BasePage {
     await this.dialog.getByLabel('Guardian’s name and phone').fill(values.guardian);
     await this.dialog.getByRole('button', { name: 'Check in for tonight' }).click();
   }
+
+  signOutButton(name: string): Locator {
+    return this.row(name).getByRole('button', { name: `Sign out ${name}` });
+  }
+
+  async openSignOut(name: string): Promise<void> {
+    await this.signOutButton(name).click();
+    await expect(this.dialog).toBeVisible();
+  }
+
+  /** The approved adults as offered, in order, without "Someone else". */
+  async approvedAdults(): Promise<string[]> {
+    const labels = await this.dialog.getByRole('group', { name: 'Picked up by' }).getByRole('radio').evaluateAll((inputs) =>
+      inputs.map((i) => (i.closest('label')?.querySelector('.text')?.firstChild?.textContent ?? '').trim()),
+    );
+    return labels.filter((l) => l !== 'Someone else');
+  }
+
+  async pickUpBy(name: string): Promise<void> {
+    await this.dialog.getByRole('radio', { name: new RegExp(`^${name}`) }).check();
+  }
+
+  async confirmSignOut(): Promise<void> {
+    await this.dialog.getByRole('button', { name: 'Sign out' }).click();
+  }
+
+  get callPrimary(): Locator {
+    return this.dialog.getByRole('link', { name: /^Call / });
+  }
+
+  async someoneElse(name: string, confirmed: boolean): Promise<void> {
+    await this.pickUpBy('Someone else');
+    await this.dialog.getByLabel('Their name').fill(name);
+    if (confirmed) await this.dialog.getByRole('switch', { name: /confirmed by phone/ }).check();
+  }
 }

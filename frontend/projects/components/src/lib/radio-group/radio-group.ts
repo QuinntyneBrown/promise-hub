@@ -17,6 +17,8 @@ let nextId = 0;
 export class PhRadioGroup implements ControlValueAccessor {
   readonly legend = input.required<string>();
   readonly options = input.required<RadioOption[]>();
+  /** The invalid state: the message under the choices, announced with the group. */
+  readonly error = input<string | null>(null);
 
   protected readonly name = `ph-radio-${nextId++}`;
   protected readonly value = signal('');

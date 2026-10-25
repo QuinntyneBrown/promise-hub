@@ -60,3 +60,14 @@ input:focus-visible {
   color: var(--color-fg-muted);
   font: var(--text-body-sm);
 }
+.error {
+  font: var(--text-body-sm);
+  color: var(--color-danger-fg);
+  display: flex;
+  gap: var(--space-1);
+  align-items: flex-start;
+}
+.error::before {
+  content: '⚠';
+  flex: none;
+}

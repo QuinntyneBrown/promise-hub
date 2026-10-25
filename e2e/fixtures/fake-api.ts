@@ -1,5 +1,5 @@
 import type { Page, Route } from '@playwright/test';
-import { type FakeHousehold, ageOf, hasMedicalFlag, medicalFlag, reachable, seedHouseholds } from './households';
+import { type FakeGuardian, type FakeHousehold, ageOf, hasMedicalFlag, medicalFlag, reachable, seedHouseholds } from './households';
 import { type FakeEvent, type FakeProgram, NOW, seedEvents, seedPrograms } from './programs';
 import { type Membership, type ModuleId, moduleCatalog, memberships, organizations, seededMfaCode, seededPassword } from './seed';
 
@@ -18,6 +18,8 @@ const can = {
 interface FakeAttendance {
   status: 'NotYet' | 'Present' | 'Absent' | 'SignedOut';
   checkedInAt: string | null;
+  signedOutAt?: string | null;
+  collectedBy?: string | null;
 }
 
 interface FakeWalkIn {
@@ -118,6 +120,8 @@ export class FakeApi {
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/check-ins$/, (route, p) => this.attend(route, p['id']!, 'Present')],
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/absences$/, (route, p) => this.attend(route, p['id']!, 'Absent')],
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/walk-ins$/, (route, p) => this.addWalkIn(route, p['id']!)],
+    ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/sign-outs$/, (route, p) => this.signChildOut(route, p['id']!)],
+    ['GET', /^\/api\/children\/(?<id>[^/]+)\/pickups$/, (route, p) => this.pickups(route, p['id']!)],
     ['GET', /^\/api\/children\/(?<id>[^/]+)\/quick-card$/, (route, p) => this.quickCard(route, p['id']!)],
     ['GET', /^\/api\/children\/(?<id>[^/]+)$/, (route, p) => this.getChild(route, p['id']!)],
     ['PUT', /^\/api\/children\/(?<id>[^/]+)$/, (route, p) => this.updateChild(route, p['id']!)],
@@ -822,6 +826,8 @@ export class FakeApi {
         status: records.get(child.id)?.status ?? 'NotYet',
         checkedInAt: records.get(child.id)?.checkedInAt ?? null,
         walkIn: false,
+        signedOutAt: records.get(child.id)?.signedOutAt ?? null,
+        collectedBy: records.get(child.id)?.collectedBy ?? null,
       }));
     const walkIns = this.walkIns
       .filter((w) => w.eventId === e.id)
@@ -836,6 +842,8 @@ export class FakeApi {
         status: records.get(w.id)?.status ?? 'NotYet',
         checkedInAt: records.get(w.id)?.checkedInAt ?? null,
         walkIn: true,
+        signedOutAt: records.get(w.id)?.signedOutAt ?? null,
+        collectedBy: records.get(w.id)?.collectedBy ?? null,
       }));
     return route.fulfill({ json: { session: this.sessionSummary(e), children: [...children, ...walkIns].sort((a, b) => a.name.localeCompare(b.name)) } });
   }
@@ -873,6 +881,83 @@ export class FakeApi {
     this.walkIns.push(walkIn);
     this.sessionRecords(e.id).set(walkIn.id, { status: 'Present', checkedInAt: NOW.toISOString() });
     return route.fulfill({ status: 201, json: { id: walkIn.id } });
+  }
+
+  /** Pickup needs Roll Call, so the caller must pass both module checks. */
+  private async pickupCaller(route: Route): Promise<Membership | null> {
+    const m = await this.rollCallCaller(route);
+    if (!m) return null;
+    if (!this.modules.get(m.organizationId)!.includes('Pickup')) {
+      await route.fulfill({ status: 404 });
+      return null;
+    }
+    return m;
+  }
+
+  private sortedGuardians(household: FakeHousehold): FakeGuardian[] {
+    return [...household.guardians].sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.name.localeCompare(b.name));
+  }
+
+  private async pickups(route: Route, id: string): Promise<void> {
+    const m = await this.pickupCaller(route);
+    if (!m) return;
+    const found = this.ownChild(m, id);
+    if (!found) return route.fulfill({ status: 404 });
+    const guardians = this.sortedGuardians(found.household);
+    return route.fulfill({
+      json: {
+        childId: found.child.id,
+        childName: `${found.child.firstName} ${found.child.lastName}`,
+        primaryName: guardians[0]?.name ?? null,
+        primaryPhone: guardians[0]?.mobile ?? null,
+        approved: guardians.filter((g) => g.canPickUp).map((g) => ({ guardianId: g.id, name: g.name, relationship: g.relationship, isPrimary: g.isPrimary })),
+      },
+    });
+  }
+
+  private async signChildOut(route: Route, id: string): Promise<void> {
+    const m = await this.pickupCaller(route);
+    if (!m) return;
+    if (!can.runSessions(m)) return this.forbidden(route);
+    const e = this.ownEvent(m, id);
+    if (!e) return route.fulfill({ status: 404 });
+    const b = route.request().postDataJSON() as {
+      childId: string;
+      guardianId: string | null;
+      someoneElse: boolean;
+      otherName: string | null;
+      guardianConfirmed: boolean;
+      idChecked: boolean;
+      leftAt: string | null;
+      clientActionId: string;
+    };
+    if (this.actions.has(b.clientActionId)) return route.fulfill({ json: { status: 'saved' } });
+    const found = this.ownChild(m, b.childId);
+    const record = this.sessionRecords(e.id).get(b.childId);
+    if (found && record?.status !== 'Present') {
+      return route.fulfill({ status: 422, json: { errors: { childId: `${found.child.firstName} ${found.child.lastName} is not checked in.` } } });
+    }
+    const guardians = found ? this.sortedGuardians(found.household) : [];
+    const primary = guardians[0];
+    const first = found?.child.firstName ?? 'the child';
+    const errors: Record<string, string> = {};
+    let collectedBy: string | null = null;
+    if (b.guardianId) {
+      const g = guardians.find((x) => x.id === b.guardianId && x.canPickUp);
+      if (!g) errors['who'] = `Not on ${first}’s approved list. Call ${primary?.name} at ${primary?.mobile} before ${first} leaves.`;
+      collectedBy = g?.name ?? null;
+    } else if (b.someoneElse) {
+      if (!b.otherName?.trim()) errors['otherName'] = 'Enter their name.';
+      if (!b.guardianConfirmed) errors['guardianConfirmed'] = `${primary?.name ?? 'The guardian'} needs to okay this by phone first.`;
+      collectedBy = b.otherName?.trim() ?? null;
+    } else {
+      errors['who'] = `Choose who is taking ${first} home.`;
+    }
+    if (!b.idChecked) errors['idChecked'] = 'Check photo ID, or confirm you know this person.';
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    this.actions.add(b.clientActionId);
+    this.sessionRecords(e.id).set(b.childId, { ...record!, status: 'SignedOut', signedOutAt: b.leftAt ?? NOW.toISOString(), collectedBy });
+    return route.fulfill({ json: { status: 'saved' } });
   }
 
   private async quickCard(route: Route, id: string): Promise<void> {

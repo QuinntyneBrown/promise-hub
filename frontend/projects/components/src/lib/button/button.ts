@@ -19,6 +19,8 @@ export class PhButton {
   readonly variant = input<'default' | 'primary' | 'danger' | 'ghost'>('default');
   readonly size = input<'sm' | 'md' | 'lg'>('md');
   readonly link = input<string | unknown[] | null>(null);
+  /** A link outside the router, such as tel: or mailto:. */
+  readonly href = input<string | null>(null);
   readonly type = input<'button' | 'submit'>('button');
   readonly icon = input<IconName | null>(null);
   readonly iconOnly = input(false);
