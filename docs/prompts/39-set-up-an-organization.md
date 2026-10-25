@@ -76,6 +76,7 @@ Why now: Composes features already built, so it comes after them.
 ## Done means
 - Admin / office manager can do this end to end: set up an organization.
 - All the new and existing tests pass, including module-off, cross-tenant, permission and axe checks.
+- Every presentation component the screens use that the design system (`docs/design-system/`) defines is implemented once in `frontend/projects/components/` and reused from there by the app and every feature library. No feature library or the app re-implements, copies, wraps or restyles one; a component or variant the library lacked was added to the library first.
 - The documentation agrees with the code, and the estimate and `docs/journeys.md` show the true percent complete.
 - `docs/videos/39-set-up-an-organization/39-set-up-an-organization.mp4` exists, with narration, the PromiseHub logo, real screen clips and screenshots, and background music.
 - The work is on a branch with a pull request to the default branch, and its checks are green. Fetch and rebase first.
