@@ -85,6 +85,9 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(c => c.Medication).HasMaxLength(1000);
             e.Property(c => c.Conditions).HasMaxLength(1000);
             e.Property(c => c.Doctor).HasMaxLength(300);
+            e.Property(c => c.AlertInstruction).HasMaxLength(500);
+            e.Property(c => c.HealthCard).HasMaxLength(60);
+            e.Property(c => c.Notes).HasMaxLength(1000);
             e.Property(c => c.MedicalUpdatedBy).HasMaxLength(200);
             e.Ignore(c => c.FullName);
             e.Ignore(c => c.HasMedicalFlag);

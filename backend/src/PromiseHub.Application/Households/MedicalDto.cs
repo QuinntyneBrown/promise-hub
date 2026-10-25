@@ -6,5 +6,7 @@ public sealed record MedicalDto(
     string? Conditions,
     string? Doctor,
     bool RedAlert,
+    string? AlertInstruction,
+    string? HealthCard,
     DateTimeOffset? UpdatedAt,
     string? UpdatedBy);

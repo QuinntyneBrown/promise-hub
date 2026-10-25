@@ -42,7 +42,7 @@ public sealed class GetChildHandler(IPromiseHubDb db, IAuditWriter audit, ITenan
             household.Id,
             household.Name,
             medical
-                ? new MedicalDto(child.Allergies, child.Medication, child.Conditions, child.Doctor, child.RedAlert, child.MedicalUpdatedAt, child.MedicalUpdatedBy)
+                ? new MedicalDto(child.Allergies, child.Medication, child.Conditions, child.Doctor, child.RedAlert, child.AlertInstruction, child.HealthCard, child.MedicalUpdatedAt, child.MedicalUpdatedBy)
                 : null,
             !medical);
     }

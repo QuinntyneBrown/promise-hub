@@ -39,7 +39,9 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
         Guardian(Harbourview, rivera, "Carmen Rivera", "Mother", "905-555-0142", "carmen.rivera@example.com", "Spanish", primary: true);
         Guardian(Harbourview, rivera, "Luis Rivera", "Uncle or aunt", "905-555-0199", null, "Spanish");
         Kid(Harbourview, rivera, "Mateo", "Rivera", new DateOnly(2017, 3, 14), "Bennetto Elementary, Grade 4",
-            new MedicalDetails("Peanuts (anaphylaxis); tree nuts (hives)", "EpiPen 0.3 mg, carried", null, "Dr. Amrita Sethi · 905-555-0100", RedAlert: true));
+            new MedicalDetails("Peanuts (anaphylaxis); tree nuts (hives)", "EpiPen 0.3 mg, carried", null, "Dr. Amrita Sethi · 905-555-0100", RedAlert: true,
+                AlertInstruction: "EpiPen in backpack front pocket. Use it, call 911, then Carmen."),
+            healthCard: ("Ontario", "4471"), notes: "Sits with Jordan.");
         Kid(Harbourview, rivera, "Sofía", "Rivera", new DateOnly(2014, 6, 2), "Bennetto Elementary, Grade 7",
             new MedicalDetails(null, "Inhaler as needed", "Asthma", null, RedAlert: false));
 
@@ -168,13 +170,19 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
         Add(guardian);
     }
 
-    private void Kid(Guid organizationId, Guid householdId, string first, string last, DateOnly born, string? school, MedicalDetails? medical = null)
+    private void Kid(Guid organizationId, Guid householdId, string first, string last, DateOnly born, string? school, MedicalDetails? medical = null,
+        (string Province, string LastFour)? healthCard = null, string? notes = null)
     {
         var child = new Child(ChildId(organizationId, $"{first} {last}"), organizationId, householdId, first, last, born, school);
         if (medical is not null)
         {
             child.UpdateMedical(medical, "Carmen Rivera", SeedClock);
         }
+        if (healthCard is { } card)
+        {
+            child.RecordHealthCard(card.Province, card.LastFour);
+        }
+        child.UpdateNotes(notes);
         Add(child);
     }
 

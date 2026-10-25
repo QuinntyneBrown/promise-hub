@@ -262,6 +262,10 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("AlertInstruction")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Allergies")
                         .HasMaxLength(1000)
                         .HasColumnType("TEXT");
@@ -285,6 +289,10 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("HealthCard")
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("HouseholdId")
                         .HasColumnType("TEXT");
 
@@ -301,6 +309,10 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Medication")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
                         .HasMaxLength(1000)
                         .HasColumnType("TEXT");
 

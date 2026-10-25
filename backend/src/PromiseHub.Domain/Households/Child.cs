@@ -33,6 +33,15 @@ public sealed class Child : ITenantOwned, ISoftDeletable
     /// <summary>Show the allergy as a red alert at the top of the Quick Card.</summary>
     public bool RedAlert { get; private set; }
 
+    /// <summary>What staff do when the alert applies, such as "EpiPen in backpack front pocket. Use it, call 911, then Carmen."</summary>
+    public string? AlertInstruction { get; private set; }
+
+    /// <summary>The health card as it may be shown: province and the last four digits only.</summary>
+    public string? HealthCard { get; private set; }
+
+    /// <summary>Things staff should know that are not medical, such as "Sits with Jordan."</summary>
+    public string? Notes { get; private set; }
+
     public DateTimeOffset? MedicalUpdatedAt { get; private set; }
     public string? MedicalUpdatedBy { get; private set; }
     public DateTimeOffset? DeletedAt { get; private set; }
@@ -66,11 +75,16 @@ public sealed class Child : ITenantOwned, ISoftDeletable
         Conditions = details.Conditions;
         Doctor = details.Doctor;
         RedAlert = details.RedAlert;
+        AlertInstruction = details.AlertInstruction;
         MedicalUpdatedBy = updatedBy;
         MedicalUpdatedAt = now;
     }
 
-    public MedicalDetails Medical => new(Allergies, Medication, Conditions, Doctor, RedAlert);
+    public MedicalDetails Medical => new(Allergies, Medication, Conditions, Doctor, RedAlert, AlertInstruction);
+
+    public void RecordHealthCard(string province, string lastFour) => HealthCard = $"{province} ···· {lastFour}";
+
+    public void UpdateNotes(string? notes) => Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim();
 
     public void SoftDelete(DateTimeOffset now) => DeletedAt = now;
 }
