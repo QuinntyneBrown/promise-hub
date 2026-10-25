@@ -35,6 +35,7 @@ import {
   ToastService,
 } from '@promisehub/components';
 import { EMPTY, catchError, combineLatest, map } from 'rxjs';
+import { guardians } from '../channel-label';
 
 const MAX_LENGTH = 480;
 
@@ -185,7 +186,7 @@ export class NewMessagePage {
           tone: 'success',
           title: 'Message sent',
           text: p
-            ? `${p.recipientCount} guardians · ${p.textCount} text, ${p.emailCount} email`
+            ? `${guardians(p.recipientCount)} · ${p.textCount} text, ${p.emailCount} email`
             : undefined,
         });
         void this.router.navigate(['/messages', outcome.id]);

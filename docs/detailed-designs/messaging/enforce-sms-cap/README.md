@@ -17,6 +17,10 @@ Local terms:
 
 The slice spans the over-cap state of `new-message`, the SMS cap field on `settings-notifications`, the danger banner (`banner/danger`), the plan change dialog `change-plan` and the usage meter on `billing`.
 
+## Built so far
+
+Slice 10 delivered `SmsUsagePeriod` per local month with the plan cap, reservation before every text, email fallback or `Paused` at the cap, the preview's remaining segments and households falling back to email, `GET /messaging/sms-cap`, and the cap alerts on Messages and the composer with text choices off (ADR 0013). Raising the cap, resuming paused texts, the shell banner, metering history for Billing and operations alerts are not built yet.
+
 ## Description
 
 ### Frontend

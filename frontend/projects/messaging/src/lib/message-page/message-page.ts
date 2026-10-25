@@ -23,7 +23,7 @@ import {
   formatDateTime,
   formatTime,
 } from '@promisehub/components';
-import { channelLabel, deliveryChannel } from '../channel-label';
+import { channelLabel, deliveryChannel, guardians } from '../channel-label';
 
 const STATUS: Record<
   Delivery['status'],
@@ -100,7 +100,7 @@ export class MessagePage {
     return [
       `Sent by ${m.sentBy}`,
       formatDateTime(m.sentAt),
-      `${m.recipientCount} guardians`,
+      guardians(m.recipientCount),
       channelLabel(m.channel),
     ].join(' · ');
   }

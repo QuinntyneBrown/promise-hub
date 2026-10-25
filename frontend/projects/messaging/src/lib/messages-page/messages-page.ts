@@ -21,7 +21,7 @@ import {
   formatDateTime,
 } from '@promisehub/components';
 import { EMPTY, catchError } from 'rxjs';
-import { channelLabel } from '../channel-label';
+import { channelLabel, guardians } from '../channel-label';
 
 /** Messages (mock: messages): sent messages, newest first, with delivery and this month's SMS use. */
 @Component({
@@ -68,7 +68,7 @@ export class MessagesPage {
   protected meta(m: MessageRow): string {
     return [
       formatDateTime(m.sentAt),
-      `${m.recipientCount} guardians`,
+      guardians(m.recipientCount),
       m.audience,
       channelLabel(m.channel),
     ].join(' · ');

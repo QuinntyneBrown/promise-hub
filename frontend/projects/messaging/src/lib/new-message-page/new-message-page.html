@@ -90,7 +90,9 @@
   <div class="form-actions">
     <ph-button variant="ghost" link="/messages">Cancel</ph-button>
     <ph-button variant="primary" type="submit" [busy]="busy()" [disabled]="!canSend()"
-      >Send to {{ preview()?.recipientCount ?? 0 }} guardians</ph-button
+      >Send to {{ preview()?.recipientCount ?? 0 }} guardian{{
+        preview()?.recipientCount === 1 ? '' : 's'
+      }}</ph-button
     >
   </div>
 </form>

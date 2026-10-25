@@ -10,3 +10,8 @@ export function deliveryChannel(d: Delivery): string {
   const channel = d.channel === 'Sms' ? 'Text' : 'Email';
   return d.language && d.language !== 'English' ? `${channel} (${d.language})` : channel;
 }
+
+/** "1 guardian", "3 guardians". */
+export function guardians(n: number): string {
+  return `${n} guardian${n === 1 ? '' : 's'}`;
+}
