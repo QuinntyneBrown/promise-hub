@@ -98,3 +98,7 @@ export * from './lib/imports/import-summary';
 export * from './lib/imports/import-upload';
 export * from './lib/imports/imports-api';
 export * from './lib/imports/imports-api.token';
+export * from './lib/guardian/enrollment-draft';
+export * from './lib/guardian/enrollment-page';
+export * from './lib/guardian/guardian-enrollment-api';
+export * from './lib/guardian/guardian-enrollment-api.token';

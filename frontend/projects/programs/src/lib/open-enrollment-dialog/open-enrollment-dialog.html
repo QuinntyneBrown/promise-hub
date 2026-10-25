@@ -1,0 +1,27 @@
+<ph-dialog
+  [title]="url() ? 'Enrollment is open' : 'Open enrollment for ' + program.name + '?'"
+  [description]="
+    url()
+      ? 'Share this link by text, email or paper.'
+      : 'Families enroll through one link. You review every child before they join.'
+  "
+>
+  @if (url(); as link) {
+    <p class="link" data-testid="enrollment-link">{{ link }}</p>
+  } @else if (failed()) {
+    <ph-alert
+      tone="danger"
+      title="That didn’t go through"
+      text="Enrollment is still closed. Try again."
+    />
+  }
+  <ng-container ngProjectAs="[phDialogFooter]">
+    @if (url(); as link) {
+      <ph-button (click)="copy(link)">Copy link</ph-button>
+      <ph-button variant="primary" (click)="ref.close(true)">Done</ph-button>
+    } @else {
+      <ph-button (click)="ref.close(false)">Cancel</ph-button>
+      <ph-button variant="primary" [busy]="busy()" (click)="open()">Open enrollment</ph-button>
+    }
+  </ng-container>
+</ph-dialog>

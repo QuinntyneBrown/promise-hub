@@ -43,6 +43,22 @@ const IMPORT_SYNONYMS: [ImportField, string[]][] = [
   ['Notes', ['notes', 'note', 'comments']],
 ];
 
+interface FakeEnrollChild {
+  id: string | null;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string | null;
+  school: string | null;
+  allergies: string | null;
+  medication: string | null;
+  enroll: boolean;
+}
+
+interface FakeEnrollDraft {
+  household: { guardianName: string | null; mobile: string | null; email: string | null; language: string | null };
+  children: FakeEnrollChild[];
+}
+
 interface FakeSlip {
   id: string;
   eventId: string;
@@ -153,6 +169,10 @@ export class FakeApi {
   private messages: FakeMessage[] = [];
   private slips = new Map<string, FakeSlip>();
   private imports: FakeImport[] = [];
+  private enrollmentSlugs = new Map<string, string>();
+  private enrollmentRequests: { programId: string; status: 'WaitingReview' | 'Waitlisted'; position: number | null }[] = [];
+  /** The verified enrollment session of this browser: program, contact and draft (the HttpOnly cookie, in the fake). */
+  private enrollSession: { programId: string; contact: string; householdId: string | null; draft: FakeEnrollDraft | null; submitted: boolean } | null = null;
   /** Guardian links as texted with a sent slip: token → household, child and event. */
   private guardianLinks = new Map<string, { householdId: string; childId: string; eventId: string; expired?: boolean }>([
     ['tok-mateo', { householdId: 'hh-rivera', childId: 'c-mateo', eventId: 'e-rbg' }],
@@ -176,6 +196,26 @@ export class FakeApi {
   /** Makes the next calls to a route answer with the given status, as the real API would on a fault. */
   failNext(path: string, status: number): void {
     this.failures.set(path, status);
+  }
+
+  /** Opens a program's enrollment, as a director would; the link is /g/enroll/<program-name>. */
+  openEnrollment(programId: string): string {
+    const program = this.programs.find((x) => x.id === programId)!;
+    const slug = program.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    this.enrollmentSlugs.set(programId, slug);
+    program.enrollmentOpen = true;
+    return slug;
+  }
+
+  /** Closes a program's enrollment; its link stays the same. */
+  closeEnrollment(programId: string): void {
+    this.programs.find((x) => x.id === programId)!.enrollmentOpen = false;
+  }
+
+  /** Fills a program to capacity with accepted enrollments. */
+  fillProgram(programId: string): void {
+    const program = this.programs.find((x) => x.id === programId)!;
+    program.capacity = program.roster.length;
   }
 
   /** Takes away every way to reach a household: no mobile, and its email bounced. */
@@ -274,6 +314,14 @@ export class FakeApi {
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/walk-ins$/, (route, p) => this.addWalkIn(route, p['id']!)],
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/sign-outs$/, (route, p) => this.signChildOut(route, p['id']!)],
     ['GET', /^\/api\/children\/(?<id>[^/]+)\/pickups$/, (route, p) => this.pickups(route, p['id']!)],
+    ['POST', /^\/api\/programs\/(?<id>[^/]+)\/enrollment\/open$/, (route, p) => this.openEnrollmentRoute(route, p['id']!)],
+    ['POST', /^\/api\/programs\/(?<id>[^/]+)\/enrollment\/close$/, (route, p) => this.closeEnrollmentRoute(route, p['id']!)],
+    ['GET', /^\/api\/g\/enroll\/(?<slug>[^/]+)$/, (route, p) => this.enrollPage(route, p['slug']!)],
+    ['POST', /^\/api\/g\/enroll\/(?<slug>[^/]+)\/code$/, (route, p) => this.enrollCode(route, p['slug']!)],
+    ['POST', /^\/api\/g\/enroll\/(?<slug>[^/]+)\/verify$/, (route, p) => this.enrollVerify(route, p['slug']!)],
+    ['GET', /^\/api\/g\/enroll\/(?<slug>[^/]+)\/draft$/, (route, p) => this.enrollDraft(route, p['slug']!)],
+    ['PUT', /^\/api\/g\/enroll\/(?<slug>[^/]+)\/draft$/, (route, p) => this.enrollSave(route, p['slug']!)],
+    ['POST', /^\/api\/g\/enroll\/(?<slug>[^/]+)\/submit$/, (route, p) => this.enrollSubmit(route, p['slug']!)],
     ['POST', /^\/api\/imports$/, (route) => this.uploadImport(route)],
     ['PUT', /^\/api\/imports\/(?<id>[^/]+)\/mapping$/, (route, p) => this.mapImport(route, p['id']!)],
     ['POST', /^\/api\/imports\/(?<id>[^/]+)\/run$/, (route, p) => this.runImport(route, p['id']!)],
@@ -736,9 +784,13 @@ export class FakeApi {
       .sort((a, b) => a!.child.lastName.localeCompare(b!.child.lastName) || a!.child.firstName.localeCompare(b!.child.firstName))
       .map((x) => ({ id: x!.child.id, householdId: x!.household.id, name: `${x!.child.firstName} ${x!.child.lastName}`, age: ageOf(x!.child.dateOfBirth), householdName: x!.household.name }));
     const { roster: _, organizationId: __, ...rest } = p;
+    const slug = this.enrollmentSlugs.get(p.id);
     return route.fulfill({
       json: {
         ...rest,
+        enrollmentUrl: slug ? `http://localhost:4317/g/enroll/${slug}` : null,
+        pendingReviews: this.enrollmentRequests.filter((r) => r.programId === p.id && r.status === 'WaitingReview').length,
+        waitlisted: this.enrollmentRequests.filter((r) => r.programId === p.id && r.status === 'Waitlisted').length,
         enrolled: roster.length,
         roster,
         events: this.events
@@ -1305,6 +1357,147 @@ export class FakeApi {
     if (!m) return;
     const { cap, used, remaining } = this.capOf(m);
     return route.fulfill({ json: { cap, used, remaining, state: remaining === 0 ? 'Reached' : 'Ok', period: '2026-11' } });
+  }
+
+  private async openEnrollmentRoute(route: Route, id: string): Promise<void> {
+    const m = await this.rosterCaller(route);
+    if (!m) return;
+    if (!can.managePrograms(m)) return this.forbidden(route);
+    if (!this.ownProgram(m, id)) return route.fulfill({ status: 404 });
+    return route.fulfill({ json: { url: `http://localhost:4317/g/enroll/${this.openEnrollment(id)}` } });
+  }
+
+  private async closeEnrollmentRoute(route: Route, id: string): Promise<void> {
+    const m = await this.rosterCaller(route);
+    if (!m) return;
+    if (!can.managePrograms(m)) return this.forbidden(route);
+    const program = this.ownProgram(m, id);
+    if (!program) return route.fulfill({ status: 404 });
+    program.enrollmentOpen = false;
+    return route.fulfill({ status: 204 });
+  }
+
+  /** Resolves an enrollment link like the server: the program, and 404 when Roster is off. */
+  private async enrollScope(route: Route, slug: string) {
+    const programId = [...this.enrollmentSlugs.entries()].find(([, s]) => s === slug)?.[0];
+    const program = programId ? this.programs.find((x) => x.id === programId) : undefined;
+    const org = program ? organizations.find((o) => o.id === program.organizationId) : undefined;
+    if (!program || !org || !this.modules.get(org.id)!.includes('Roster')) {
+      await route.fulfill({ status: 404 });
+      return null;
+    }
+    return { program, org };
+  }
+
+  private enrollContact(typed: string): string | null {
+    const value = (typed ?? '').trim();
+    if (value.includes('@')) return value.toLowerCase();
+    const digits = value.replace(/\D/g, '').slice(-10);
+    return digits.length === 10 ? digits : null;
+  }
+
+  private async enrollPage(route: Route, slug: string): Promise<void> {
+    const scope = await this.enrollScope(route, slug);
+    if (!scope) return;
+    const { program, org } = scope;
+    return route.fulfill({ json: { program: program.name, organization: org.name, phone: '905-555-0100', open: program.enrollmentOpen, schedule: program.schedule, ages: program.ages, startsOn: program.startsOn } });
+  }
+
+  private async enrollCode(route: Route, slug: string): Promise<void> {
+    const scope = await this.enrollScope(route, slug);
+    if (!scope) return;
+    if (!scope.program.enrollmentOpen) return route.fulfill({ status: 409, json: { code: 'conflict' } });
+    const contact = this.enrollContact((route.request().postDataJSON() as { contact: string }).contact);
+    if (!contact) return route.fulfill({ status: 422, json: { errors: { contact: 'Enter a mobile number or an email.' } } });
+    return route.fulfill({ status: 202 });
+  }
+
+  private async enrollVerify(route: Route, slug: string): Promise<void> {
+    const scope = await this.enrollScope(route, slug);
+    if (!scope) return;
+    const b = route.request().postDataJSON() as { contact: string; code: string };
+    const contact = this.enrollContact(b.contact);
+    if (!contact || b.code !== this.guardianCode) return route.fulfill({ status: 422, json: { errors: { code: 'That code didn’t work. Check the latest text or email.' } } });
+    const household = this.households.find(
+      (h) => h.organizationId === scope.org.id && h.guardians.some((g) => (contact.includes('@') ? g.email?.toLowerCase() === contact : g.mobile?.replace(/\D/g, '') === contact)),
+    );
+    this.enrollSession = { programId: scope.program.id, contact, householdId: household?.id ?? null, draft: null, submitted: false };
+    return route.fulfill({ status: 204 });
+  }
+
+  private async enrollSessionFor(route: Route, slug: string) {
+    const scope = await this.enrollScope(route, slug);
+    if (!scope) return null;
+    if (!this.enrollSession || this.enrollSession.programId !== scope.program.id) {
+      await route.fulfill({ status: 401, json: { code: 'verification-required' } });
+      return null;
+    }
+    return { ...scope, session: this.enrollSession };
+  }
+
+  private async enrollDraft(route: Route, slug: string): Promise<void> {
+    const found = await this.enrollSessionFor(route, slug);
+    if (!found) return;
+    const { program, session } = found;
+    const code = (language: string | null) => (language === 'Spanish' ? 'es' : language === 'French' ? 'fr' : 'en');
+    if (session.draft) {
+      return route.fulfill({ json: { returning: !!session.householdId, language: code(session.draft.household.language), program: program.name, ...session.draft } });
+    }
+    const household = session.householdId ? this.households.find((h) => h.id === session.householdId) : undefined;
+    if (household) {
+      const g = this.sortedGuardians(household)[0]!;
+      return route.fulfill({
+        json: {
+          returning: true,
+          language: code(household.language),
+          program: program.name,
+          household: { guardianName: g.name, mobile: g.mobile, email: g.email, language: household.language },
+          children: [...household.children]
+            .sort((a, z) => a.firstName.localeCompare(z.firstName))
+            .map((c) => ({ id: c.id, firstName: c.firstName, lastName: c.lastName, dateOfBirth: c.dateOfBirth, school: c.school, allergies: c.medical.allergies, medication: c.medical.medication, enroll: true })),
+        },
+      });
+    }
+    const phone = session.contact.includes('@') ? null : `${session.contact.slice(0, 3)}-${session.contact.slice(3, 6)}-${session.contact.slice(6)}`;
+    return route.fulfill({ json: { returning: false, language: 'en', program: program.name, household: { guardianName: null, mobile: phone, email: phone ? null : session.contact, language: 'English' }, children: [] } });
+  }
+
+  private async enrollSave(route: Route, slug: string): Promise<void> {
+    const found = await this.enrollSessionFor(route, slug);
+    if (!found) return;
+    const draft = route.request().postDataJSON() as FakeEnrollDraft;
+    const errors: Record<string, string> = {};
+    if (!draft.household?.guardianName?.trim()) errors['guardianName'] = 'Enter your full name.';
+    if (!draft.household?.mobile?.trim() && !draft.household?.email?.trim()) errors['mobile'] = 'Add a mobile number or an email.';
+    const children = draft.children ?? [];
+    if (!children.some((c) => c.enroll)) errors['children'] = 'Add at least one child.';
+    children.forEach((c, i) => {
+      if (!c.enroll) return;
+      if (!c.firstName?.trim() || !c.lastName?.trim()) errors[`children[${i}].name`] = 'Enter the child’s first and last name.';
+      if (!c.dateOfBirth) errors[`children[${i}].dateOfBirth`] = 'Enter the child’s date of birth.';
+    });
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    found.session.draft = draft;
+    return route.fulfill({ status: 204 });
+  }
+
+  private async enrollSubmit(route: Route, slug: string): Promise<void> {
+    const found = await this.enrollSessionFor(route, slug);
+    if (!found) return;
+    const { program, session } = found;
+    if (session.submitted || !program.enrollmentOpen || !session.draft) return route.fulfill({ status: 409, json: { code: 'conflict' } });
+    if (!(route.request().postDataJSON() as { consent: boolean }).consent) return route.fulfill({ status: 422, json: { errors: { consent: 'Agree to the season consent to submit.' } } });
+    let waitlisted = this.enrollmentRequests.filter((r) => r.programId === program.id && r.status === 'Waitlisted').length;
+    let first: number | null = null;
+    const children = session.draft.children.filter((c) => c.enroll);
+    for (const _ of children) {
+      const full = program.roster.length >= program.capacity;
+      const position = full ? ++waitlisted : null;
+      first ??= position;
+      this.enrollmentRequests.push({ programId: program.id, status: full ? 'Waitlisted' : 'WaitingReview', position });
+    }
+    session.submitted = true;
+    return route.fulfill({ json: { status: first === null ? 'WaitingReview' : 'Waitlisted', position: first, children: children.length, program: program.name } });
   }
 
   /** Imports need the Roster module and household writing (admins and program directors). */

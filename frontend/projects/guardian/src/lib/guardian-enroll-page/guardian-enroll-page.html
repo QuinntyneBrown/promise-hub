@@ -1,0 +1,246 @@
+@let text = t();
+@let p = page();
+<ph-guardian-shell
+  [organization]="p?.organization ?? null"
+  [phone]="p?.phone ?? null"
+  [contactText]="g().footer(p?.organization ?? '')"
+  [skipLabel]="g().skip"
+>
+  @if (failed()) {
+    <ph-alert tone="danger" [title]="g().errorHeading" [text]="g().tryAgain" />
+  }
+  @switch (step()) {
+    @case ('loading') {
+      <h1>{{ g().loading }}</h1>
+    }
+    @case ('gone') {
+      <ph-empty-state
+        icon="lock"
+        [title]="g().notAvailable"
+        [text]="g().notAvailableText"
+        [headingLevel]="1"
+      />
+    }
+    @case ('error') {
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        [title]="g().errorHeading"
+        [text]="g().tryAgain"
+        [headingLevel]="1"
+      >
+        <ph-button variant="primary" (click)="load(slug())">{{ g().tryAgain }}</ph-button>
+      </ph-empty-state>
+    }
+    @case ('closed') {
+      <h1>{{ text.closedHeading(p?.program ?? '') }}</h1>
+      <ph-card>
+        <p>{{ text.closedText }}</p>
+      </ph-card>
+    }
+    @case ('contact') {
+      <h1>{{ text.enrollHeading(p?.program ?? '') }}</h1>
+      <p>{{ text.intro }}</p>
+      <form class="stack" novalidate (ngSubmit)="requestCode()">
+        <ph-text-field
+          inputId="contact"
+          [label]="g().contactLabel"
+          name="contact"
+          autocomplete="tel"
+          [error]="errors()['contact'] ?? null"
+          [(ngModel)]="contact"
+        />
+        <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
+          g().sendCode
+        }}</ph-button>
+      </form>
+    }
+    @case ('code') {
+      <h1>{{ g().codeHeading }}</h1>
+      <p>{{ g().codeText }}</p>
+      <form class="stack" novalidate (ngSubmit)="verify()">
+        <ph-text-field
+          inputId="code"
+          [label]="g().codeLabel"
+          name="code"
+          inputmode="numeric"
+          autocomplete="one-time-code"
+          [error]="errors()['code'] ?? null"
+          [(ngModel)]="code"
+        />
+        <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
+          g().continue
+        }}</ph-button>
+        <ph-button variant="ghost" (click)="step.set('contact')">{{
+          g().differentContact
+        }}</ph-button>
+      </form>
+    }
+    @case ('locked') {
+      <h1>{{ g().verifyHeading }}</h1>
+      <ph-alert tone="danger" [title]="g().locked" />
+    }
+    @case ('household') {
+      <h1>{{ text.householdHeading }}</h1>
+      <p>{{ text.householdText }}</p>
+      <form class="stack" novalidate (ngSubmit)="toChildren()">
+        <ph-card>
+          <div class="stack">
+            <ph-text-field
+              inputId="guardianName"
+              [label]="text.nameLabel"
+              name="guardianName"
+              autocomplete="name"
+              [error]="errors()['guardianName'] ?? null"
+              [(ngModel)]="household.guardianName"
+            />
+            <ph-text-field
+              inputId="mobile"
+              [label]="text.mobileLabel"
+              name="mobile"
+              type="tel"
+              autocomplete="tel"
+              [error]="errors()['mobile'] ?? null"
+              [(ngModel)]="household.mobile"
+            />
+            <ph-text-field
+              inputId="email"
+              [label]="text.emailLabel"
+              name="email"
+              type="email"
+              autocomplete="email"
+              [(ngModel)]="household.email"
+            />
+            <ph-select
+              inputId="language"
+              [label]="text.languageLabel"
+              name="language"
+              [options]="languages"
+              [(ngModel)]="household.language"
+            />
+          </div>
+        </ph-card>
+        <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
+          text.continue
+        }}</ph-button>
+      </form>
+    }
+    @case ('children') {
+      <h1>{{ text.childrenHeading }}</h1>
+      <p>{{ text.childrenText(p?.program ?? '') }}</p>
+      @if (errors()['children']; as message) {
+        <ph-alert tone="danger" [title]="message" />
+      }
+      <form class="stack" novalidate (ngSubmit)="toReview()">
+        @for (c of children; track $index; let i = $index) {
+          <ph-card>
+            <fieldset class="plain">
+              <legend class="legend">{{ text.child(i + 1) }}</legend>
+              <div class="stack">
+                <ph-switch
+                  [label]="text.enrollThis(c.firstName, p?.program ?? '')"
+                  [name]="'enroll-' + i"
+                  [(ngModel)]="c.enroll"
+                />
+                <div class="two-col">
+                  <ph-text-field
+                    [inputId]="'child-' + i + '-first'"
+                    [label]="text.firstName"
+                    [name]="'first-' + i"
+                    [error]="errors()['children[' + i + '].name'] ?? null"
+                    [(ngModel)]="c.firstName"
+                  />
+                  <ph-text-field
+                    [inputId]="'child-' + i + '-last'"
+                    [label]="text.lastName"
+                    [name]="'last-' + i"
+                    [(ngModel)]="c.lastName"
+                  />
+                </div>
+                <ph-text-field
+                  [inputId]="'child-' + i + '-dob'"
+                  [label]="text.dateOfBirth"
+                  type="date"
+                  [name]="'dob-' + i"
+                  [error]="errors()['children[' + i + '].dateOfBirth'] ?? null"
+                  [(ngModel)]="c.dateOfBirth"
+                />
+                <ph-text-field
+                  [inputId]="'child-' + i + '-school'"
+                  [label]="text.school"
+                  [name]="'school-' + i"
+                  [optional]="true"
+                  [(ngModel)]="c.school"
+                />
+                <ph-text-field
+                  [inputId]="'child-' + i + '-allergies'"
+                  [label]="text.allergies"
+                  [name]="'allergies-' + i"
+                  [optional]="true"
+                  [(ngModel)]="c.allergies"
+                />
+                <ph-text-field
+                  [inputId]="'child-' + i + '-medication'"
+                  [label]="text.medication"
+                  [name]="'medication-' + i"
+                  [optional]="true"
+                  [(ngModel)]="c.medication"
+                />
+              </div>
+            </fieldset>
+          </ph-card>
+        }
+        <ph-button variant="ghost" (click)="addChild()">{{ text.addChild }}</ph-button>
+        <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
+          text.continue
+        }}</ph-button>
+        <ph-button variant="ghost" (click)="step.set('household')">{{ text.back }}</ph-button>
+      </form>
+    }
+    @case ('review') {
+      <h1>{{ text.reviewHeading }}</h1>
+      <form class="stack" novalidate (ngSubmit)="submit()">
+        <ph-card [title]="text.you">
+          <ph-description-list [facts]="you()" />
+        </ph-card>
+        <ph-card [title]="text.enrolling">
+          <ul class="stack">
+            @for (c of enrolled(); track $index) {
+              <li>
+                {{ c.firstName }} {{ c.lastName }}
+                @if (c.allergies) {
+                  · {{ c.allergies }}
+                }
+              </li>
+            }
+          </ul>
+        </ph-card>
+        <ph-switch
+          [label]="text.consent"
+          name="consent"
+          [error]="errors()['consent'] ?? null"
+          [(ngModel)]="consent"
+        />
+        <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
+          text.submit
+        }}</ph-button>
+        <ph-button variant="ghost" (click)="step.set('children')">{{ text.back }}</ph-button>
+      </form>
+    }
+    @case ('done') {
+      @if (result(); as r) {
+        <div class="stack" role="status">
+          <h1>{{ text.doneHeading(firstName()) }}</h1>
+          <p>
+            {{
+              r.status === 'Waitlisted'
+                ? text.waitlisted(names(), r.position ?? 1)
+                : text.waiting(names(), enrolled().length > 1)
+            }}
+          </p>
+          <p>{{ text.doneText }}</p>
+        </div>
+      }
+    }
+  }
+</ph-guardian-shell>

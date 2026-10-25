@@ -35,6 +35,13 @@
           <ph-button variant="primary" (click)="restore(p)">Restore</ph-button>
         }
         @if (canManage() && !archived) {
+          @if (p.enrollmentOpen && p.enrollmentUrl) {
+            <ph-button hasPopup="dialog" (click)="closeEnrollment(p)">Close enrollment</ph-button>
+          } @else {
+            <ph-button variant="primary" hasPopup="dialog" (click)="openEnrollment(p)"
+              >Open enrollment</ph-button
+            >
+          }
           <ph-button [link]="['/programs', p.id, 'edit']">Edit</ph-button>
           <ph-button
             variant="ghost"
@@ -64,6 +71,12 @@
           [caption]="p.ages ? 'Ages ' + p.ages : null"
         />
         <ph-stat label="Events" [value]="'' + upcoming(p)" caption="scheduled" />
+        <ph-stat
+          label="Waiting review"
+          [value]="'' + p.pendingReviews"
+          [caption]="p.waitlisted ? p.waitlisted + ' waitlisted' : null"
+          data-testid="stat-pending"
+        />
       </div>
       <div class="split">
         <div class="stack">

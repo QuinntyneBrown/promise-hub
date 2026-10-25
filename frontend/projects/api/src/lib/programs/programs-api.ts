@@ -14,4 +14,7 @@ export interface ProgramsApi {
   restore(id: string): Observable<WriteOutcome>;
   enroll(id: string, childId: string): Observable<WriteOutcome>;
   removeFromRoster(id: string, childId: string, reason: string): Observable<WriteOutcome>;
+  /** Opens enrollment and returns the link to share; the link stays the same if it is closed and opened again. */
+  openEnrollment(id: string): Observable<LoadResult<{ url: string }>>;
+  closeEnrollment(id: string): Observable<WriteOutcome>;
 }
