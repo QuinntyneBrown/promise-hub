@@ -102,3 +102,7 @@ export * from './lib/guardian/enrollment-draft';
 export * from './lib/guardian/enrollment-page';
 export * from './lib/guardian/guardian-enrollment-api';
 export * from './lib/guardian/guardian-enrollment-api.token';
+export * from './lib/enrollment/enrollment-api';
+export * from './lib/enrollment/enrollment-api.token';
+export * from './lib/enrollment/enrollment-request';
+export * from './lib/enrollment/review-decision';

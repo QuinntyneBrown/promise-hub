@@ -1,0 +1,47 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    [title]="
+      (data.decision === 'Accept' ? 'Accept ' : 'Waitlist ') +
+      data.requests.length +
+      ' enrollments?'
+    "
+    [description]="
+      data.requests.length === 2 ? 'Both guardians are texted.' : 'Every guardian is texted.'
+    "
+  >
+    @if (errors()['decision']; as message) {
+      <ph-alert tone="danger" [title]="message" />
+    }
+    @if (failed()) {
+      <ph-alert
+        tone="danger"
+        title="That didn’t go through"
+        text="Nothing was changed. Try again."
+      />
+    }
+    <ph-list label="Selected enrollments">
+      @for (r of data.requests; track r.id) {
+        <ph-list-item
+          [title]="r.child"
+          [meta]="r.guardian + (r.returning ? ' · returning' : ' · new family')"
+          [avatar]="r.child"
+          avatarTint="peach"
+        />
+      }
+    </ph-list>
+    <ph-textarea
+      inputId="bulk-note"
+      label="Note to every guardian"
+      name="note"
+      [rows]="2"
+      [optional]="true"
+      [(ngModel)]="note"
+    />
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()"
+        >{{ data.decision }} {{ data.requests.length }}</ph-button
+      >
+    </ng-container>
+  </ph-dialog>
+</form>

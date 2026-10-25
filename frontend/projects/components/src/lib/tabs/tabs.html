@@ -1,7 +1,29 @@
-<nav class="tabs" [attr.aria-label]="label()">
-  @for (tab of links(); track tab.link) {
-    <a class="tab" [routerLink]="tab.link" routerLinkActive ariaCurrentWhenActive="page">{{
-      tab.label
-    }}</a>
-  }
-</nav>
+@if (items().length) {
+  <div class="tabs" role="tablist" [attr.aria-label]="label()">
+    @for (tab of items(); track tab.value; let i = $index) {
+      <button
+        class="tab"
+        type="button"
+        role="tab"
+        [id]="'tab-' + tab.value"
+        [attr.aria-selected]="tab.value === selected()"
+        [attr.tabindex]="tab.value === selected() ? 0 : -1"
+        (click)="selectedChange.emit(tab.value)"
+        (keydown)="move($event, i)"
+      >
+        {{ tab.label }}
+        @if (tab.count !== undefined) {
+          <span class="count">{{ tab.count }}</span>
+        }
+      </button>
+    }
+  </div>
+} @else {
+  <nav class="tabs" [attr.aria-label]="label()">
+    @for (tab of links(); track tab.link) {
+      <a class="tab" [routerLink]="tab.link" routerLinkActive ariaCurrentWhenActive="page">{{
+        tab.label
+      }}</a>
+    }
+  </nav>
+}

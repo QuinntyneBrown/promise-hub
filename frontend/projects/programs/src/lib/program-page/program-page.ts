@@ -57,6 +57,9 @@ export class ProgramPage {
   protected readonly canManage = computed(
     () => !!this.session() && can(this.session()!.role, 'managePrograms'),
   );
+  protected readonly canReview = computed(
+    () => !!this.session() && can(this.session()!.role, 'reviewEnrollments'),
+  );
   protected readonly result = toSignal<LoadResult<Program> | null>(
     toObservable(this.programId).pipe(
       switchMap((id) =>

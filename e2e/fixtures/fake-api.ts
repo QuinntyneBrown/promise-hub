@@ -170,7 +170,14 @@ export class FakeApi {
   private slips = new Map<string, FakeSlip>();
   private imports: FakeImport[] = [];
   private enrollmentSlugs = new Map<string, string>();
-  private enrollmentRequests: { programId: string; status: 'WaitingReview' | 'Waitlisted'; position: number | null }[] = [];
+  private enrollmentRequests: {
+    id?: string;
+    programId: string;
+    status: 'WaitingReview' | 'Waitlisted' | 'Accepted' | 'Declined';
+    position: number | null;
+    childId?: string;
+    submittedAt?: string;
+  }[] = [];
   /** The verified enrollment session of this browser: program, contact and draft (the HttpOnly cookie, in the fake). */
   private enrollSession: { programId: string; contact: string; householdId: string | null; draft: FakeEnrollDraft | null; submitted: boolean } | null = null;
   /** Guardian links as texted with a sent slip: token → household, child and event. */
@@ -205,6 +212,11 @@ export class FakeApi {
     this.enrollmentSlugs.set(programId, slug);
     program.enrollmentOpen = true;
     return slug;
+  }
+
+  /** A child of a seeded household who asked to enroll in a program, waiting for review. */
+  requestEnrollment(programId: string, childId: string, submittedAt = '2026-11-02T15:00:00Z'): void {
+    this.enrollmentRequests.push({ id: `er-${this.nextId++}`, programId, status: 'WaitingReview', position: null, childId, submittedAt });
   }
 
   /** Closes a program's enrollment; its link stays the same. */
@@ -314,6 +326,9 @@ export class FakeApi {
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/walk-ins$/, (route, p) => this.addWalkIn(route, p['id']!)],
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/sign-outs$/, (route, p) => this.signChildOut(route, p['id']!)],
     ['GET', /^\/api\/children\/(?<id>[^/]+)\/pickups$/, (route, p) => this.pickups(route, p['id']!)],
+    ['GET', /^\/api\/programs\/(?<id>[^/]+)\/enrollments$/, (route, p) => this.listEnrollmentRequests(route, p['id']!)],
+    ['POST', /^\/api\/enrollments\/review$/, (route) => this.reviewEnrollments(route, null)],
+    ['POST', /^\/api\/enrollments\/(?<id>[^/]+)\/review$/, (route, p) => this.reviewEnrollments(route, p['id']!)],
     ['POST', /^\/api\/programs\/(?<id>[^/]+)\/enrollment\/open$/, (route, p) => this.openEnrollmentRoute(route, p['id']!)],
     ['POST', /^\/api\/programs\/(?<id>[^/]+)\/enrollment\/close$/, (route, p) => this.closeEnrollmentRoute(route, p['id']!)],
     ['GET', /^\/api\/g\/enroll\/(?<slug>[^/]+)$/, (route, p) => this.enrollPage(route, p['slug']!)],
@@ -1357,6 +1372,63 @@ export class FakeApi {
     if (!m) return;
     const { cap, used, remaining } = this.capOf(m);
     return route.fulfill({ json: { cap, used, remaining, state: remaining === 0 ? 'Reached' : 'Ok', period: '2026-11' } });
+  }
+
+  private async reviewCaller(route: Route): Promise<Membership | null> {
+    const m = await this.rosterCaller(route);
+    if (!m) return null;
+    if (!['Admin', 'ProgramDirector'].includes(m.role)) {
+      await this.forbidden(route);
+      return null;
+    }
+    return m;
+  }
+
+  private async listEnrollmentRequests(route: Route, programId: string): Promise<void> {
+    const m = await this.reviewCaller(route);
+    if (!m) return;
+    if (!this.ownProgram(m, programId)) return route.fulfill({ status: 404 });
+    const status = new URL(route.request().url()).searchParams.get('status') ?? 'WaitingReview';
+    const enrolledAnywhere = new Set(this.programs.flatMap((x) => x.roster));
+    const requests = this.enrollmentRequests
+      .filter((r) => r.programId === programId && r.status === status && r.childId)
+      .map((r) => {
+        const { child, household } = this.childrenOf(m).find((x) => x.child.id === r.childId)!;
+        const g = this.sortedGuardians(household)[0];
+        const medical = [child.medical.allergies, child.medical.medication].filter(Boolean).join('; ');
+        return { id: r.id!, childId: child.id, householdId: household.id, child: `${child.firstName} ${child.lastName}`, age: ageOf(child.dateOfBirth), guardian: g?.name ?? '', phone: g?.mobile ?? null, language: household.language, medical: medical || null, returning: enrolledAnywhere.has(child.id), submittedAt: r.submittedAt!, status: r.status, position: r.position };
+      })
+      .sort((a, z) => (status === 'Waitlisted' ? (a.position ?? 0) - (z.position ?? 0) : a.child.localeCompare(z.child)));
+    return route.fulfill({ json: { requests } });
+  }
+
+  private async reviewEnrollments(route: Route, id: string | null): Promise<void> {
+    const m = await this.reviewCaller(route);
+    if (!m) return;
+    const b = route.request().postDataJSON() as { ids?: string[]; decision: 'Accept' | 'Waitlist' | 'Decline'; note?: string | null };
+    const ids = id ? [id] : (b.ids ?? []);
+    const requests = this.enrollmentRequests.filter((r) => r.id && ids.includes(r.id) && this.ownProgram(m, r.programId));
+    if (!requests.length || requests.length !== ids.length) return route.fulfill({ status: 404 });
+    if (requests.some((r) => r.status === 'Accepted' || r.status === 'Declined')) return route.fulfill({ status: 409, json: { code: 'conflict' } });
+    const note = b.note?.trim() || null;
+    if (b.decision === 'Decline' && !note) return route.fulfill({ status: 422, json: { errors: { note: 'Write a reason the guardian will read.' } } });
+    const program = this.programs.find((x) => x.id === requests[0]!.programId)!;
+    if (b.decision === 'Accept' && program.roster.length + requests.length > program.capacity) {
+      return route.fulfill({ status: 422, json: { errors: { decision: `${program.name} is full (${program.roster.length} of ${program.capacity}). Waitlist instead.` } } });
+    }
+    let position = Math.max(0, ...this.enrollmentRequests.filter((r) => r.programId === program.id && r.status === 'Waitlisted').map((r) => r.position ?? 0));
+    for (const r of requests) {
+      if (b.decision === 'Accept') {
+        r.status = 'Accepted';
+        if (!program.roster.includes(r.childId!)) program.roster.push(r.childId!);
+      } else if (b.decision === 'Waitlist') {
+        r.status = 'Waitlisted';
+        r.position = ++position;
+      } else {
+        r.status = 'Declined';
+      }
+    }
+    return route.fulfill({ status: 204 });
   }
 
   private async openEnrollmentRoute(route: Route, id: string): Promise<void> {

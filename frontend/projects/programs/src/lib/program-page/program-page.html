@@ -42,6 +42,9 @@
               >Open enrollment</ph-button
             >
           }
+          @if (canReview()) {
+            <ph-button [link]="['/programs', p.id, 'roster']">Review enrollments</ph-button>
+          }
           <ph-button [link]="['/programs', p.id, 'edit']">Edit</ph-button>
           <ph-button
             variant="ghost"

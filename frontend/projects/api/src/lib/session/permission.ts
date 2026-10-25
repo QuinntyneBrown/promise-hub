@@ -9,4 +9,5 @@ export type Permission =
   | 'cancelEvents'
   | 'runSessions'
   | 'sendMessages'
-  | 'manageSlips';
+  | 'manageSlips'
+  | 'reviewEnrollments';
