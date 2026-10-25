@@ -18,7 +18,7 @@ def g_footer() -> str:
 
 
 # ------------------------------------------------------------------ Guardian home (what the links land on without a token)
-@screen("guardian-home", "page", "Guardian home", route="/g", reqs=[R_ENROLL, R_PRIVACY], shell="guardian", na={"empty": "Static landing page.", "loading": "Static landing page."})
+@screen("guardian-home", "page", "Guardian home", route="/g", reqs=[R_ENROLL, R_PRIVACY], shell="guardian", na={"empty": "See the none state.", "loading": "Static landing page."})
 def guardian_home(S):
     body = (f'<h1>Harbourview Youth Collective on PromiseHub</h1>'
             '<p class="text-muted">No account, no app. Links arrive by text or email.</p>'
@@ -27,6 +27,15 @@ def guardian_home(S):
                             list_item("Lost a link?", "We’ll send a new one.", lead=f'<span class="icon-tile" aria-hidden="true">{icon("link")}</span>', href=page("enroll", "code"))], card=False), cls="card--flush")
             + card('<p>Your child’s name, birthday, allergies, medication and approved pickups, plus your phone and email. Never sold or shared. Ask for a copy or deletion any time.</p>', title="Your privacy", tid="priv") + g_footer())
     S.add("default", "What a guardian sees opening the organization’s PromiseHub address directly.", main=body)
+    status = (f'<h1>Hi Carmen</h1><p class="text-muted">Where your children stand at Harbourview.</p>'
+              + card(ul_list([list_item("Mateo Rivera · Winter Camp 2026", "Enrolled · starts Mon 21 Dec, 8 am. Welcome! Camp starts at 8 am.", end=badge("Enrolled", "success")),
+                              list_item("Sofía Rivera · Winter Camp 2026", "Number 2 on the waitlist. We’ll text you first if a place opens.", end=badge("Waitlist #2", "warning")),
+                              list_item("Sofía Rivera · After‑School Tutoring", "Waiting for review. We’ll text you when it’s decided.", end=badge("Waiting review"))], card=False, label="Your children’s enrollments"), cls="card--flush")
+              + g_footer())
+    S.add("status", "Opened from a decision text on a verified device: each child’s enrollment status, with the waitlist position and next step (L2-013).", main=status)
+    S.add("declined", "A declined enrollment shows the reason staff wrote.", main=f'<h1>Hi Carmen</h1><p class="text-muted">Where your children stand at Harbourview.</p>'
+          + card(ul_list([list_item("Sofía Rivera · Winter Camp 2026", "Not enrolled: Camp is for ages 6 to 12.", end=badge("Not enrolled", "danger"))], card=False, label="Your children’s enrollments"), cls="card--flush") + g_footer())
+    S.add("none", "A verified household with nothing enrolled or waiting.", main='<h1>Hi Carmen</h1><p class="text-muted">Where your children stand at Harbourview.</p>' + card('<p>No enrollments yet. Enroll from the link the program sends.</p>') + g_footer())
     S.add("error", "The organization address is wrong or the organization closed its account.", main='<h1>We can’t find that organization</h1><p class="text-muted">Check the link, or contact the program.</p>' + btn("Try again", "primary", icon_name="refresh", size="lg"))
 
 
