@@ -47,9 +47,13 @@ Every event belongs to one organization (`L2-001`). The events pages are served 
   - `Event` — entity with `Id`, `OrganizationId`, `ProgramId`, `Name`, `StartsAt`, `EndsAt`, `Place`, `RequiresSlip`, `NoShowAlertEnabled`, `StaffNotes`, `Status`, `CancelledAt`, `CancelledBy`, `CancellationMessage`. `Cancel(actor, now, message)` enforces the transition.
   - `EventStatus` — `Scheduled`, `Cancelled`.
   - `EventCreatedRequiringSlip` — domain event carrying `EventId`, `OrganizationId` and `StartsAt`.
-- **`PromiseHub.Infrastructure`** — `PromiseHubDbContext` maps `Events` with the organization filter; `AuditLog` records cancellation; the outbox or in-process dispatcher `<TO SUPPLY>` delivers domain events to application handlers; message delivery goes through the Messaging providers.
+- **`PromiseHub.Infrastructure`** — `PromiseHubDbContext` maps `Events` with the organization filter; `AuditLog` records cancellation; the draft slip is created in the same unit of work by `CreateEventHandler` (ADR 0008); message delivery goes through the Messaging providers.
 
-Undecided details: whether domain events dispatch in-process within the unit of work or through an outbox `<TO SUPPLY>`; the retention of a deleted event's audit entries `<TO SUPPLY>`.
+Undecided details: the retention of a deleted event's audit entries `<TO SUPPLY>` (deleting an event is deferred).
+
+## Built so far
+
+Slice 05 delivered `EventsListPage` (`EventsPage`, with upcoming, needs-slips and past filters, a program select and search), `EventPage` (slip state, details, cancelled state), `EventFormPage` for new and edit, `EventActionsDialog` and `CancelEventDialog` (keep as cancelled), `EVENTS_API`, the endpoints above and the draft `PermissionSlip` (ADR 0008). Messaging guardians on cancellation, the slip tabs and the day-of card arrive with Messages and Slips.
 
 ## Requirements
 

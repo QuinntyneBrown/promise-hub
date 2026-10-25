@@ -29,6 +29,12 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Families | `families` (default, empty, no-results, error) | `ph-page-header`, `ph-text-field` (search), `ph-chip`, `ph-list`, `ph-list-item`, `ph-badge`, `ph-flag`, `ph-card`, `ph-empty-state`, `ph-button` | Row meta text |
 | Household | `household` (default, forbidden) | `ph-breadcrumb`, `ph-page-header`, `ph-alert`, `ph-card` (titled), `ph-list`, `ph-list-item`, `ph-flag`, `ph-badge`, `ph-button` | — |
 | Child | `child` (default, forbidden) | `ph-breadcrumb`, `ph-page-header`, `ph-card` (titled), `ph-description-list`, `ph-button` | Medical facts |
+| Programs | `programs` (default, empty, error) | `ph-page-header`, `ph-chip`, `ph-list`, `ph-list-item`, `ph-badge`, `ph-card`, `ph-empty-state`, `ph-button` | — |
+| Program | `program` (default, archived) | `ph-breadcrumb`, `ph-page-header`, `ph-alert`, `ph-stat`, `ph-card` (titled), `ph-list`, `ph-list-item`, `ph-button` | Season and roster text |
+| Program form | `program-form` (default, invalid) | `ph-breadcrumb`, `ph-page-header`, `ph-card`, `ph-text-field`, `ph-radio-group`, `ph-switch`, `ph-alert`, `ph-button` | — |
+| Events | `events` (default, no-results, error) | `ph-page-header`, `ph-text-field` (search), `ph-chip`, `ph-select`, `ph-list`, `ph-list-item`, `ph-badge`, `ph-card`, `ph-empty-state`, `ph-button` | Times via `formatWhen` |
+| Event | `event` (default, empty, cancelled) | `ph-breadcrumb`, `ph-page-header`, `ph-alert`, `ph-card` (titled), `ph-badge`, `ph-description-list`, `ph-button` | — |
+| Event form | `event-form` (default, invalid) | `ph-breadcrumb`, `ph-page-header`, `ph-card`, `ph-text-field`, `ph-select`, `ph-radio-group`, `ph-switch`, `ph-textarea`, `ph-alert`, `ph-button` | Local time conversion |
 
 ## Dialogs
 
@@ -41,6 +47,11 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Edit medical | `edit-medical` | `ph-dialog`, `ph-textarea`, `ph-text-field`, `ph-radio-group`, `ph-button` |
 | Household actions | `household-actions` | `ph-dialog`, `ph-action-menu`, `ph-button` |
 | Delete household | `delete-household` (default, invalid, busy) | `ph-dialog`, `ph-radio-group`, `ph-text-field`, `ph-button` |
+| Add a child to a program | `enroll-in-program` | `ph-dialog`, `ph-text-field`, `ph-list`, `ph-list-item`, `ph-button` |
+| Remove from roster | `remove-from-roster` | `ph-dialog`, `ph-radio-group`, `ph-button` |
+| Program actions / Event actions | `program-actions`, `event-actions` | `ph-dialog`, `ph-action-menu`, `ph-button` |
+| Archive program | `archive-program` | `ph-dialog`, `ph-text-field`, `ph-button` |
+| Cancel event | `cancel-event` | `ph-dialog`, `ph-textarea`, `ph-switch`, `ph-button` |
 
 The toast region (`ph-toast-region`) sits once in the app root.
 

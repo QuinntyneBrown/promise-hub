@@ -1,7 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
+using PromiseHub.Application.Events;
 using PromiseHub.Application.Households;
 using PromiseHub.Application.Identity;
 using PromiseHub.Application.Organizations;
+using PromiseHub.Application.Programs;
 
 namespace PromiseHub.Application;
 
@@ -13,6 +15,7 @@ public static class DependencyInjection
         services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantContext>());
         services.AddScoped<GetSessionHandler>();
         services.AddScoped<GetChildHandler>();
+        services.AddScoped<FindChildrenHandler>();
         services.AddScoped<ListHouseholdsHandler>();
         services.AddScoped<GetHouseholdHandler>();
         services.AddScoped<CreateHouseholdHandler>();
@@ -22,6 +25,19 @@ public static class DependencyInjection
         services.AddScoped<UpdateChildHandler>();
         services.AddScoped<UpdateMedicalHandler>();
         services.AddScoped<DeleteHouseholdHandler>();
+        services.AddScoped<ListProgramsHandler>();
+        services.AddScoped<GetProgramHandler>();
+        services.AddScoped<CreateProgramHandler>();
+        services.AddScoped<UpdateProgramHandler>();
+        services.AddScoped<ArchiveProgramHandler>();
+        services.AddScoped<RestoreProgramHandler>();
+        services.AddScoped<EnrollChildHandler>();
+        services.AddScoped<RemoveFromRosterHandler>();
+        services.AddScoped<ListEventsHandler>();
+        services.AddScoped<GetEventHandler>();
+        services.AddScoped<CreateEventHandler>();
+        services.AddScoped<UpdateEventHandler>();
+        services.AddScoped<CancelEventHandler>();
         services.AddScoped<GetOrganizationSettingsHandler>();
         services.AddScoped<IModuleGate, ModuleGate>();
         services.AddScoped<GetModulesHandler>();

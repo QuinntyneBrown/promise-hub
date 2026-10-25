@@ -1,0 +1,89 @@
+@let editing = !!programId();
+<ph-breadcrumb
+  [items]="[
+    { label: 'Programs', link: '/programs' },
+    { label: editing ? 'Edit program' : 'New program' },
+  ]"
+/>
+<ph-page-header [title]="editing ? 'Edit program' : 'New program'" />
+@if (loaded()) {
+  <form class="form-page" novalidate (ngSubmit)="submit()">
+    <ph-card>
+      <div class="stack">
+        @if (failed()) {
+          <ph-alert
+            tone="danger"
+            title="We couldn’t save the program"
+            text="Try again in a minute."
+          />
+        }
+        <ph-text-field
+          inputId="name"
+          label="Program name"
+          name="name"
+          help="Shown to guardians."
+          [error]="errors()['name'] ?? null"
+          [(ngModel)]="fields.name"
+        />
+        <div class="two-col">
+          <ph-text-field
+            inputId="startsOn"
+            label="Starts"
+            type="date"
+            name="startsOn"
+            [error]="errors()['startsOn'] ?? null"
+            [(ngModel)]="fields.startsOn"
+          />
+          <ph-text-field
+            inputId="endsOn"
+            label="Ends"
+            type="date"
+            name="endsOn"
+            [error]="errors()['endsOn'] ?? null"
+            [(ngModel)]="fields.endsOn"
+          />
+        </div>
+        <ph-text-field
+          inputId="schedule"
+          label="Schedule"
+          name="schedule"
+          placeholder="Mon–Thu, 4–6 pm"
+          help="Free text."
+          [(ngModel)]="fields.schedule"
+        />
+        <div class="two-col">
+          <ph-text-field
+            inputId="capacity"
+            label="Capacity"
+            type="number"
+            inputmode="numeric"
+            name="capacity"
+            help="Enrollment stops when the program is full."
+            [error]="errors()['capacity'] ?? null"
+            [(ngModel)]="fields.capacity"
+          />
+          <ph-text-field inputId="ages" label="Ages" name="ages" [(ngModel)]="fields.ages" />
+        </div>
+        <ph-radio-group
+          legend="Enrollment"
+          name="enrollment"
+          [options]="enrollmentOptions"
+          [(ngModel)]="enrollment"
+        />
+        <ph-switch
+          label="Require a season consent form at enrollment"
+          name="seasonConsent"
+          [(ngModel)]="fields.seasonConsent"
+        />
+      </div>
+    </ph-card>
+    <div class="form-actions">
+      <ph-button variant="ghost" [link]="editing ? ['/programs', programId()] : '/programs'"
+        >Cancel</ph-button
+      >
+      <ph-button variant="primary" type="submit" [busy]="busy()">{{
+        editing ? 'Save program' : 'Create program'
+      }}</ph-button>
+    </div>
+  </form>
+}

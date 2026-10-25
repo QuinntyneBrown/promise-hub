@@ -3,6 +3,9 @@ using PromiseHub.Domain.Audit;
 using PromiseHub.Domain.Households;
 using PromiseHub.Domain.Identity;
 using PromiseHub.Domain.Organizations;
+using PromiseHub.Domain.Programs;
+using PromiseHub.Domain.Slips;
+using Event = PromiseHub.Domain.Events.Event;
 
 namespace PromiseHub.Application;
 
@@ -16,6 +19,10 @@ public interface IPromiseHubDb
     DbSet<Guardian> Guardians { get; }
     DbSet<Child> Children { get; }
     DbSet<AuditEntry> AuditEntries { get; }
+    DbSet<Domain.Programs.Program> Programs { get; }
+    DbSet<Enrollment> Enrollments { get; }
+    DbSet<Event> Events { get; }
+    DbSet<PermissionSlip> PermissionSlips { get; }
     DbSet<StaffUser> StaffUsers { get; }
     DbSet<SignInAttempt> SignInAttempts { get; }
 

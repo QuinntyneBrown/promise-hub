@@ -7,4 +7,7 @@ public enum Permission
     DeleteHouseholds,
     ReadMedical,
     WriteMedical,
+    ManagePrograms,
+    ManageEvents,
+    CancelEvents,
 }

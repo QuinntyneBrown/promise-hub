@@ -14,4 +14,7 @@ public enum AuditAction
     ModuleChanged,
     AccessDenied,
     SignedIn,
+    Archived,
+    Restored,
+    Cancelled,
 }

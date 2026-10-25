@@ -196,3 +196,27 @@ a[data-state='hover'] {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+/* A row of stats: two columns on phones, four from 768px. */
+.kpis {
+  display: grid;
+  gap: var(--layout-gutter);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (min-width: 48rem) {
+  .kpis {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+/* A form page's card width and its actions. */
+.form-page {
+  max-width: var(--layout-dialog-wide);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: flex-end;
+}

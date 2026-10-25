@@ -28,6 +28,7 @@ public static class HouseholdEndpoints
             (await handler.HandleAsync(id, command, ct)).ToHttp()).RequirePermission(Permission.DeleteHouseholds);
         roster.MapPut("/guardians/{id:guid}", async (Guid id, UpdateGuardianCommand command, UpdateGuardianHandler handler, CancellationToken ct) =>
             (await handler.HandleAsync(id, command, ct)).ToHttp()).RequirePermission(Permission.WriteHouseholds);
+        roster.MapGet("/children", (string? q, FindChildrenHandler handler, CancellationToken ct) => handler.HandleAsync(q, ct));
         roster.MapGet("/children/{id:guid}", async (Guid id, GetChildHandler handler, CancellationToken ct) =>
             await handler.HandleAsync(id, ct) is { } child ? Results.Ok(child) : Results.NotFound());
         roster.MapPut("/children/{id:guid}", async (Guid id, UpdateChildCommand command, UpdateChildHandler handler, CancellationToken ct) =>

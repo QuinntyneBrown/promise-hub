@@ -1,5 +1,6 @@
 import type { Page, Route } from '@playwright/test';
 import { type FakeHousehold, ageOf, hasMedicalFlag, medicalFlag, reachable, seedHouseholds } from './households';
+import { type FakeEvent, type FakeProgram, NOW, seedEvents, seedPrograms } from './programs';
 import { type Membership, type ModuleId, moduleCatalog, memberships, organizations, seededMfaCode, seededPassword } from './seed';
 
 /** Mirrors backend RolePermissions. */
@@ -8,6 +9,9 @@ const can = {
   deleteHouseholds: (m: Membership) => m.role === 'Admin',
   readMedical: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
   writeMedical: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
+  managePrograms: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
+  manageEvents: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
+  cancelEvents: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
 };
 
 type Handler = (route: Route, params: Record<string, string>) => Promise<void>;
@@ -28,6 +32,8 @@ export class FakeApi {
   // Per-organization module state, copied so tests never share changes.
   private modules = new Map(organizations.map((o) => [o.id, [...o.modules]]));
   private households: FakeHousehold[] = seedHouseholds();
+  private programs: FakeProgram[] = seedPrograms();
+  private events: FakeEvent[] = seedEvents();
   private nextId = 1;
 
   constructor(private membershipId: string | null) {}
@@ -75,6 +81,20 @@ export class FakeApi {
     ['POST', /^\/api\/households\/(?<id>[^/]+)\/children$/, (route, p) => this.addChild(route, p['id']!)],
     ['POST', /^\/api\/households\/(?<id>[^/]+)\/guardians$/, (route, p) => this.addGuardian(route, p['id']!)],
     ['PUT', /^\/api\/guardians\/(?<id>[^/]+)$/, (route, p) => this.updateGuardian(route, p['id']!)],
+    ['GET', /^\/api\/children$/, (route) => this.findChildren(route)],
+    ['GET', /^\/api\/programs$/, (route) => this.listPrograms(route)],
+    ['POST', /^\/api\/programs$/, (route) => this.saveProgram(route, null)],
+    ['GET', /^\/api\/programs\/(?<id>[^/]+)$/, (route, p) => this.getProgram(route, p['id']!)],
+    ['PUT', /^\/api\/programs\/(?<id>[^/]+)$/, (route, p) => this.saveProgram(route, p['id']!)],
+    ['POST', /^\/api\/programs\/(?<id>[^/]+)\/archive$/, (route, p) => this.archiveProgram(route, p['id']!)],
+    ['POST', /^\/api\/programs\/(?<id>[^/]+)\/restore$/, (route, p) => this.restoreProgram(route, p['id']!)],
+    ['POST', /^\/api\/programs\/(?<id>[^/]+)\/enrollments$/, (route, p) => this.enroll(route, p['id']!)],
+    ['DELETE', /^\/api\/programs\/(?<id>[^/]+)\/enrollments\/(?<child>[^/]+)$/, (route, p) => this.unenroll(route, p['id']!, p['child']!)],
+    ['GET', /^\/api\/events$/, (route) => this.listEvents(route)],
+    ['POST', /^\/api\/events$/, (route) => this.saveEvent(route, null)],
+    ['GET', /^\/api\/events\/(?<id>[^/]+)$/, (route, p) => this.getEvent(route, p['id']!)],
+    ['PUT', /^\/api\/events\/(?<id>[^/]+)$/, (route, p) => this.saveEvent(route, p['id']!)],
+    ['POST', /^\/api\/events\/(?<id>[^/]+)\/cancel$/, (route, p) => this.cancelEvent(route, p['id']!)],
     ['GET', /^\/api\/children\/(?<id>[^/]+)$/, (route, p) => this.getChild(route, p['id']!)],
     ['PUT', /^\/api\/children\/(?<id>[^/]+)$/, (route, p) => this.updateChild(route, p['id']!)],
     ['PUT', /^\/api\/children\/(?<id>[^/]+)\/medical$/, (route, p) => this.updateMedical(route, p['id']!)],
@@ -455,6 +475,249 @@ export class FakeApi {
       return route.fulfill({ status: 422, json: { errors: { confirmName: `Type ${h.name} to confirm.` } } });
     }
     this.households = this.households.filter((x) => x !== h);
+    return route.fulfill({ status: 204 });
+  }
+
+  private childrenOf(m: Membership) {
+    return this.households
+      .filter((h) => h.organizationId === m.organizationId)
+      .flatMap((h) => h.children.map((c) => ({ child: c, household: h })));
+  }
+
+  private async findChildren(route: Route): Promise<void> {
+    const m = await this.rosterCaller(route);
+    if (!m) return;
+    const q = (new URL(route.request().url()).searchParams.get('q') ?? '').trim().toLowerCase();
+    const children = !q
+      ? []
+      : this.childrenOf(m)
+          .filter(({ child }) => `${child.firstName} ${child.lastName}`.toLowerCase().includes(q))
+          .map(({ child, household }) => ({ id: child.id, name: `${child.firstName} ${child.lastName}`, age: ageOf(child.dateOfBirth), householdId: household.id, householdName: household.name }));
+    return route.fulfill({ json: { children } });
+  }
+
+  private ownProgram(m: Membership, id: string): FakeProgram | undefined {
+    return this.programs.find((p) => p.id === id && p.organizationId === m.organizationId);
+  }
+
+  private async listPrograms(route: Route): Promise<void> {
+    const m = await this.rosterCaller(route);
+    if (!m) return;
+    const status = new URL(route.request().url()).searchParams.get('status') === 'archived' ? 'Archived' : 'Active';
+    const own = this.programs.filter((p) => p.organizationId === m.organizationId).sort((a, b) => a.startsOn.localeCompare(b.startsOn) || a.name.localeCompare(b.name));
+    const active = own.filter((p) => p.status === 'Active');
+    return route.fulfill({
+      json: {
+        programs: own
+          .filter((p) => p.status === status)
+          .map((p) => ({ id: p.id, name: p.name, schedule: p.schedule, startsOn: p.startsOn, endsOn: p.endsOn, enrolled: p.roster.length, capacity: p.capacity, enrollmentOpen: p.enrollmentOpen, status: p.status })),
+        active: active.length,
+        archived: own.length - active.length,
+        enrolled: active.reduce((n, p) => n + p.roster.length, 0),
+      },
+    });
+  }
+
+  private async getProgram(route: Route, id: string): Promise<void> {
+    const m = await this.rosterCaller(route);
+    if (!m) return;
+    const p = this.ownProgram(m, id);
+    if (!p) return route.fulfill({ status: 404 });
+    const children = this.childrenOf(m);
+    const roster = p.roster
+      .map((cid) => children.find((x) => x.child.id === cid))
+      .filter((x) => !!x)
+      .sort((a, b) => a!.child.lastName.localeCompare(b!.child.lastName) || a!.child.firstName.localeCompare(b!.child.firstName))
+      .map((x) => ({ id: x!.child.id, householdId: x!.household.id, name: `${x!.child.firstName} ${x!.child.lastName}`, age: ageOf(x!.child.dateOfBirth), householdName: x!.household.name }));
+    const { roster: _, organizationId: __, ...rest } = p;
+    return route.fulfill({
+      json: {
+        ...rest,
+        enrolled: roster.length,
+        roster,
+        events: this.events
+          .filter((e) => e.programId === p.id)
+          .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
+          .map((e) => ({ id: e.id, name: e.name, startsAt: e.startsAt, endsAt: e.endsAt, status: e.status })),
+      },
+    });
+  }
+
+  private async saveProgram(route: Route, id: string | null): Promise<void> {
+    const m = await this.rosterCaller(route);
+    if (!m) return;
+    if (!can.managePrograms(m)) return this.forbidden(route);
+    const existing = id ? this.ownProgram(m, id) : undefined;
+    if (id && !existing) return route.fulfill({ status: 404 });
+    const b = route.request().postDataJSON() as { name: string; startsOn: string | null; endsOn: string | null; schedule: string; capacity: number; ages: string; enrollmentOpen: boolean; seasonConsent: boolean };
+    const errors: Record<string, string> = {};
+    if (!b.name?.trim()) errors['name'] = 'Enter the program name.';
+    if (!b.startsOn) errors['startsOn'] = 'Enter the start date.';
+    if (!b.endsOn) errors['endsOn'] = 'Enter the end date.';
+    else if (b.startsOn && b.endsOn < b.startsOn) errors['endsOn'] = 'End after it starts.';
+    if (!(b.capacity >= 1)) errors['capacity'] = 'Enter a capacity of 1 or more.';
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    const values = {
+      name: b.name.trim(),
+      startsOn: b.startsOn!,
+      endsOn: b.endsOn!,
+      schedule: b.schedule?.trim() || null,
+      capacity: b.capacity,
+      ages: b.ages?.trim() || null,
+      enrollmentOpen: b.enrollmentOpen,
+      seasonConsent: b.seasonConsent,
+    };
+    if (existing) {
+      Object.assign(existing, values);
+      return route.fulfill({ status: 204 });
+    }
+    const newId = `p-new-${this.nextId++}`;
+    this.programs.push({ id: newId, organizationId: m.organizationId, ...values, status: 'Active', archivedAt: null, archivedBy: null, roster: [] });
+    return route.fulfill({ status: 201, json: { id: newId } });
+  }
+
+  private async archiveProgram(route: Route, id: string): Promise<void> {
+    const m = await this.rosterCaller(route);
+    if (!m) return;
+    if (!can.managePrograms(m)) return this.forbidden(route);
+    const p = this.ownProgram(m, id);
+    if (!p) return route.fulfill({ status: 404 });
+    const { confirmName } = route.request().postDataJSON() as { confirmName: string };
+    if (confirmName?.trim().toLowerCase() !== p.name.toLowerCase()) {
+      return route.fulfill({ status: 422, json: { errors: { confirmName: `Type ${p.name} to confirm.` } } });
+    }
+    Object.assign(p, { status: 'Archived', enrollmentOpen: false, archivedAt: NOW.toISOString(), archivedBy: m.personName });
+    return route.fulfill({ status: 204 });
+  }
+
+  private async restoreProgram(route: Route, id: string): Promise<void> {
+    const m = await this.rosterCaller(route);
+    if (!m) return;
+    if (!can.managePrograms(m)) return this.forbidden(route);
+    const p = this.ownProgram(m, id);
+    if (!p) return route.fulfill({ status: 404 });
+    Object.assign(p, { status: 'Active', archivedAt: null, archivedBy: null });
+    return route.fulfill({ status: 204 });
+  }
+
+  private async enroll(route: Route, id: string): Promise<void> {
+    const m = await this.rosterCaller(route);
+    if (!m) return;
+    if (!can.managePrograms(m)) return this.forbidden(route);
+    const p = this.ownProgram(m, id);
+    if (!p) return route.fulfill({ status: 404 });
+    const { childId } = route.request().postDataJSON() as { childId: string };
+    const found = this.childrenOf(m).find((x) => x.child.id === childId);
+    const invalid = (message: string) => route.fulfill({ status: 422, json: { errors: { childId: message } } });
+    if (!found) return invalid('Choose a child from your roster.');
+    if (p.status === 'Archived') return invalid(`${p.name} is archived.`);
+    if (p.roster.includes(childId)) return invalid(`${found.child.firstName} ${found.child.lastName} is already enrolled.`);
+    if (p.roster.length >= p.capacity) return invalid(`${p.name} is full (${p.roster.length} of ${p.capacity}).`);
+    p.roster.push(childId);
+    return route.fulfill({ status: 201, json: { id: `en-${this.nextId++}` } });
+  }
+
+  private async unenroll(route: Route, id: string, childId: string): Promise<void> {
+    const m = await this.rosterCaller(route);
+    if (!m) return;
+    if (!can.managePrograms(m)) return this.forbidden(route);
+    const p = this.ownProgram(m, id);
+    if (!p || !p.roster.includes(childId)) return route.fulfill({ status: 404 });
+    p.roster = p.roster.filter((c) => c !== childId);
+    return route.fulfill({ status: 204 });
+  }
+
+  private ownEvent(m: Membership, id: string): FakeEvent | undefined {
+    return this.events.find((e) => e.id === id && e.organizationId === m.organizationId);
+  }
+
+  private eventSummary(e: FakeEvent) {
+    const p = this.programs.find((x) => x.id === e.programId)!;
+    return { id: e.id, name: e.name, programId: p.id, programName: p.name, startsAt: e.startsAt, endsAt: e.endsAt, place: e.place, rosterSize: p.roster.length, slipStatus: e.slipStatus, status: e.status };
+  }
+
+  private async listEvents(route: Route): Promise<void> {
+    const m = await this.rosterCaller(route);
+    if (!m) return;
+    const url = new URL(route.request().url());
+    const filter = url.searchParams.get('filter');
+    const programId = url.searchParams.get('programId');
+    const q = (url.searchParams.get('q') ?? '').trim().toLowerCase();
+    const now = NOW.toISOString();
+    const own = this.events.filter((e) => e.organizationId === m.organizationId);
+    const upcoming = own.filter((e) => e.endsAt >= now).sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+    const needSlips = upcoming.filter((e) => e.status === 'Scheduled' && e.slipStatus === 'Draft');
+    const chosen =
+      filter === 'past' ? own.filter((e) => e.endsAt < now).sort((a, b) => b.startsAt.localeCompare(a.startsAt)) : filter === 'needs-slips' ? needSlips : upcoming;
+    const events = chosen
+      .map((e) => this.eventSummary(e))
+      .filter((e) => !programId || e.programId === programId)
+      .filter((e) => !q || `${e.name} ${e.programName} ${e.place ?? ''}`.toLowerCase().includes(q));
+    return route.fulfill({ json: { events, upcoming: upcoming.length, needSlips: needSlips.length } });
+  }
+
+  private async getEvent(route: Route, id: string): Promise<void> {
+    const m = await this.rosterCaller(route);
+    if (!m) return;
+    const e = this.ownEvent(m, id);
+    if (!e) return route.fulfill({ status: 404 });
+    const { organizationId: _, ...rest } = e;
+    return route.fulfill({ json: { ...rest, programName: this.eventSummary(e).programName, rosterSize: this.eventSummary(e).rosterSize } });
+  }
+
+  private async saveEvent(route: Route, id: string | null): Promise<void> {
+    const m = await this.rosterCaller(route);
+    if (!m) return;
+    if (!can.manageEvents(m)) return this.forbidden(route);
+    const existing = id ? this.ownEvent(m, id) : undefined;
+    if (id && !existing) return route.fulfill({ status: 404 });
+    const b = route.request().postDataJSON() as { name: string; programId: string; startsAt: string | null; endsAt: string | null; place: string; requiresSlip: boolean; noShowAlert: boolean; staffNotes: string };
+    const errors: Record<string, string> = {};
+    if (!b.name?.trim()) errors['name'] = 'Enter the event name.';
+    const program = this.ownProgram(m, b.programId);
+    if (!program || program.status !== 'Active') errors['programId'] = 'Choose an active program.';
+    if (!b.startsAt) errors['startsAt'] = 'Enter when it starts.';
+    if (!b.endsAt) errors['endsAt'] = 'Enter when it ends.';
+    else if (b.startsAt && new Date(b.endsAt) <= new Date(b.startsAt)) errors['endsAt'] = 'End after it starts.';
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    const values = {
+      name: b.name.trim(),
+      programId: b.programId,
+      startsAt: new Date(b.startsAt!).toISOString(),
+      endsAt: new Date(b.endsAt!).toISOString(),
+      place: b.place?.trim() || null,
+      requiresSlip: b.requiresSlip,
+      noShowAlert: b.noShowAlert,
+      staffNotes: b.staffNotes?.trim() || null,
+    };
+    if (existing) {
+      Object.assign(existing, values, { slipStatus: values.requiresSlip ? (existing.slipStatus === 'NotNeeded' ? 'Draft' : existing.slipStatus) : 'NotNeeded' });
+      return route.fulfill({ status: 204 });
+    }
+    const newId = `e-new-${this.nextId++}`;
+    this.events.push({
+      id: newId,
+      organizationId: m.organizationId,
+      ...values,
+      status: 'Scheduled',
+      slipStatus: values.requiresSlip ? 'Draft' : 'NotNeeded',
+      cancelledAt: null,
+      cancelledBy: null,
+      cancellationMessage: null,
+      guardiansTold: false,
+    });
+    return route.fulfill({ status: 201, json: { id: newId } });
+  }
+
+  private async cancelEvent(route: Route, id: string): Promise<void> {
+    const m = await this.rosterCaller(route);
+    if (!m) return;
+    if (!can.cancelEvents(m)) return this.forbidden(route);
+    const e = this.ownEvent(m, id);
+    if (!e) return route.fulfill({ status: 404 });
+    const b = route.request().postDataJSON() as { message: string; tellGuardians: boolean };
+    if (b.tellGuardians && !b.message?.trim()) return route.fulfill({ status: 422, json: { errors: { message: 'Write the message to guardians.' } } });
+    Object.assign(e, { status: 'Cancelled', cancelledAt: NOW.toISOString(), cancelledBy: m.personName, cancellationMessage: b.message?.trim() || null, guardiansTold: b.tellGuardians });
     return route.fulfill({ status: 204 });
   }
 

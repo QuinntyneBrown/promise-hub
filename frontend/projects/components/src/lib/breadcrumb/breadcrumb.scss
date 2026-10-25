@@ -15,6 +15,9 @@ li + li::before {
   color: var(--color-fg-subtle);
 }
 a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
   color: var(--color-fg-muted);
   text-decoration: none;
 }

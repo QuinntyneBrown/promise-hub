@@ -1,0 +1,119 @@
+@let r = result();
+@switch (r?.status) {
+  @case ('not-found') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="search"
+        title="We can’t find that program"
+        text="It may belong to another organization."
+        [headingLevel]="1"
+      >
+        <ph-button variant="primary" link="/programs">Back to Programs</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('error') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load this program"
+        text="Try again."
+        [headingLevel]="1"
+      >
+        <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('loaded') {
+    @if (r?.status === 'loaded') {
+      @let p = r.value;
+      @let archived = p.status === 'Archived';
+      <ph-breadcrumb [items]="[{ label: 'Programs', link: '/programs' }, { label: p.name }]" />
+      <ph-page-header [title]="p.name" [subtitle]="subtitle(p)">
+        @if (canManage() && archived) {
+          <ph-button variant="primary" (click)="restore(p)">Restore</ph-button>
+        }
+        @if (canManage() && !archived) {
+          <ph-button [link]="['/programs', p.id, 'edit']">Edit</ph-button>
+          <ph-button
+            variant="ghost"
+            icon="menu"
+            [iconOnly]="true"
+            label="More actions"
+            hasPopup="dialog"
+            (click)="actions(p)"
+          />
+        }
+      </ph-page-header>
+      @if (archived) {
+        <ph-alert
+          tone="info"
+          title="This program is archived"
+          [text]="
+            'Roster, events and attendance are kept for reports' +
+            (p.archivedBy ? '. Archived by ' + p.archivedBy + '.' : '.')
+          "
+        />
+      }
+      <div class="kpis">
+        <ph-stat
+          data-testid="stat-enrolled"
+          label="Enrolled"
+          [value]="p.enrolled + ' / ' + p.capacity"
+          [caption]="p.ages ? 'Ages ' + p.ages : null"
+        />
+        <ph-stat label="Events" [value]="'' + upcoming(p)" caption="scheduled" />
+      </div>
+      <div class="split">
+        <div class="stack">
+          <ph-card [title]="'Roster · ' + p.enrolled" [flush]="true">
+            <ph-list label="Roster" [inset]="true">
+              @for (c of p.roster; track c.id) {
+                <ph-list-item
+                  [title]="c.name"
+                  [meta]="childMeta(c)"
+                  [link]="['/families', c.householdId, 'children', c.id]"
+                  [avatar]="c.name"
+                  avatarTint="peach"
+                >
+                  @if (canManage() && !archived) {
+                    <ph-button
+                      variant="ghost"
+                      size="sm"
+                      [label]="'Remove ' + c.name"
+                      (click)="remove(p, c)"
+                      >Remove</ph-button
+                    >
+                  }
+                </ph-list-item>
+              } @empty {
+                <ph-list-item title="Nobody enrolled yet" meta="Add children from your roster." />
+              }
+            </ph-list>
+            @if (canManage() && !archived) {
+              <div phCardFooter>
+                <ph-button variant="ghost" size="sm" (click)="enroll(p)">Add a child</ph-button>
+              </div>
+            }
+          </ph-card>
+          <ph-card title="Events" [flush]="true">
+            <ph-list label="Program events" [inset]="true">
+              @for (e of p.events; track e.id) {
+                <ph-list-item
+                  [title]="e.name"
+                  [meta]="
+                    when(e.startsAt, e.endsAt) + (e.status === 'Cancelled' ? ' · cancelled' : '')
+                  "
+                  [link]="['/events', e.id]"
+                />
+              } @empty {
+                <ph-list-item title="No events yet" meta="Create an event for this program." />
+              }
+            </ph-list>
+          </ph-card>
+        </div>
+      </div>
+    }
+  }
+}

@@ -1,0 +1,14 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    [title]="'Remove ' + data.child.name + ' from ' + data.program.name + '?'"
+    description="Attendance stays in reports."
+    icon="warning"
+    tone="danger"
+  >
+    <ph-radio-group legend="Why" name="reason" [options]="reasons" [(ngModel)]="reason" />
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="danger" type="submit" [busy]="busy()">Remove from roster</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

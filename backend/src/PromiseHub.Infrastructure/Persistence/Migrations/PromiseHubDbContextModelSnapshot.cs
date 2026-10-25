@@ -73,6 +73,71 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.ToTable("AuditEntries");
                 });
 
+            modelBuilder.Entity("PromiseHub.Domain.Events.Event", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CancellationMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("CancelledAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CancelledBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("EndsAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("GuardiansTold")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("NoShowAlert")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Place")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProgramId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("RequiresSlip")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("StaffNotes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("StartsAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("ProgramId");
+
+                    b.ToTable("Events");
+                });
+
             modelBuilder.Entity("PromiseHub.Domain.Households.Child", b =>
                 {
                     b.Property<Guid>("Id")
@@ -362,11 +427,148 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.ToTable("Organizations");
                 });
 
+            modelBuilder.Entity("PromiseHub.Domain.Programs.Enrollment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ChildId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EndReason")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("EndedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("EnrolledAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProgramId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChildId");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("ProgramId");
+
+                    b.ToTable("Enrollments");
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Programs.Program", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Ages")
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("ArchivedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ArchivedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Capacity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly>("EndsOn")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("EnrollmentOpen")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Schedule")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("SeasonConsent")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly>("StartsOn")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.ToTable("Programs");
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Slips.PermissionSlip", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("SignBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventId")
+                        .IsUnique();
+
+                    b.HasIndex("OrganizationId");
+
+                    b.ToTable("PermissionSlips");
+                });
+
             modelBuilder.Entity("PromiseHub.Domain.Audit.AuditEntry", b =>
                 {
                     b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
                         .WithMany()
                         .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Events.Event", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Programs.Program", null)
+                        .WithMany()
+                        .HasForeignKey("ProgramId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -421,6 +623,51 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("PromiseHub.Domain.Organizations.ModuleConfiguration", b =>
                 {
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Programs.Enrollment", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Households.Child", null)
+                        .WithMany()
+                        .HasForeignKey("ChildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Programs.Program", null)
+                        .WithMany()
+                        .HasForeignKey("ProgramId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Programs.Program", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Slips.PermissionSlip", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Events.Event", null)
+                        .WithMany()
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
                         .WithMany()
                         .HasForeignKey("OrganizationId")
