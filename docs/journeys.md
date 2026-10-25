@@ -26,7 +26,7 @@
 | Program director | Monitor today's work | See sessions, missing slips, alerts, and tasks in one place. | [2 days](detailed-designs/shell/compose-navigation/README.md) | 0% |
 | Admin / office manager | Set up an organization | Choose modules and create the first program, roster, staff, and slip. | [5 days](detailed-designs/organizations/set-up-organization/README.md) | 0% |
 | Admin / office manager | Import a roster | Map spreadsheet columns, review records, and create households and children. | [5 days](detailed-designs/imports/import-roster/README.md) | 75% · [video](videos/14-import-a-roster/README.md) |
-| Admin / office manager | Review enrollment | Accept, reject, or waitlist submitted children and update rosters. | [3 days](detailed-designs/enrollment/enroll-guardian/README.md) | 0% |
+| Admin / office manager | Review enrollment | Accept, reject, or waitlist submitted children and update rosters. | [3 days](detailed-designs/enrollment/enroll-guardian/README.md) | 80% · [video](videos/16-review-enrollment/README.md) |
 | Admin / office manager | Maintain households | Edit guardians, children, medical details, and approved pickups. | [5 days](detailed-designs/households/maintain-household/README.md) | 75% · [video](videos/04-maintain-households/README.md) |
 | Admin / office manager | Configure modules | Enable or disable modules while respecting dependencies and preserving data. | [4 days](detailed-designs/organizations/configure-modules/README.md) | 85% · [video](videos/03-configure-modules/README.md) |
 | Admin / office manager | Manage staff access | Invite staff, assign roles, and remove access when needed. | [7 days](detailed-designs/identity/authorize-request/README.md) | 0% |

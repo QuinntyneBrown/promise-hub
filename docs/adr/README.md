@@ -22,3 +22,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0016](0016-reminders-and-tablet.md) | Reminders fall in slots, and the tablet signs in the guardian's record format |
 | [0017](0017-roster-import.md) | Roster import reads CSV and XLSX itself, keeps the rows on the session, and runs in one request |
 | [0018](0018-guardian-enrollment.md) | Enrollment links are per program, contacts are verified by code, and submissions wait as requests |
+| [0019](0019-enrollment-review.md) | Enrollment requests are reviewed on the program roster, one by one or in bulk, and the guardian is texted |
