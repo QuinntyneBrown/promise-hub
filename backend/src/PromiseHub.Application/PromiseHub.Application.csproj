@@ -3,4 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="../PromiseHub.Domain/PromiseHub.Domain.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+  </ItemGroup>
 </Project>

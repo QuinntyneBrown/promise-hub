@@ -14,3 +14,8 @@ docs/design-system/.cache/
 
 # Video tooling output (timing, slide renders, recordings)
 .cache/
+
+# Local SQLite databases
+*.db
+*.db-shm
+*.db-wal
