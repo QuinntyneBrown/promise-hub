@@ -17,7 +17,9 @@ import {
   formatWhen,
 } from '@promisehub/components';
 import { EMPTY, Subject, catchError, startWith, switchMap } from 'rxjs';
+import { CloseEnrollmentDialog } from '../close-enrollment-dialog/close-enrollment-dialog';
 import { EnrollDialog } from '../enroll-dialog/enroll-dialog';
+import { OpenEnrollmentDialog } from '../open-enrollment-dialog/open-enrollment-dialog';
 import { ProgramActionsDialog } from '../program-actions-dialog/program-actions-dialog';
 import { RemoveFromRosterDialog } from '../remove-from-roster-dialog/remove-from-roster-dialog';
 
@@ -103,6 +105,22 @@ export class ProgramPage {
         { program: p, child },
       )
       .closed.subscribe((removed) => removed && this.reload());
+  }
+
+  protected openEnrollment(p: Program): void {
+    this.dialogs
+      .open<boolean, Program, OpenEnrollmentDialog>(OpenEnrollmentDialog, p)
+      .closed.subscribe((opened) => opened && this.reload());
+  }
+
+  protected closeEnrollment(p: Program): void {
+    this.dialogs
+      .open<boolean, Program, CloseEnrollmentDialog>(CloseEnrollmentDialog, p)
+      .closed.subscribe((closed) => {
+        if (!closed) return;
+        this.toasts.show({ tone: 'info', title: 'Enrollment closed', text: p.name });
+        this.reload();
+      });
   }
 
   protected actions(p: Program): void {

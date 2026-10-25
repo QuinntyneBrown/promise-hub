@@ -41,6 +41,8 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<GuardianLink> GuardianLinks => Set<GuardianLink>();
     public DbSet<SlipReminder> SlipReminders => Set<SlipReminder>();
     public DbSet<Domain.Imports.ImportSession> ImportSessions => Set<Domain.Imports.ImportSession>();
+    public DbSet<Domain.Enrollment.EnrollmentSession> EnrollmentSessions => Set<Domain.Enrollment.EnrollmentSession>();
+    public DbSet<Domain.Enrollment.EnrollmentRequest> EnrollmentRequests => Set<Domain.Enrollment.EnrollmentRequest>();
     public DbSet<GuardianVerification> GuardianVerifications => Set<GuardianVerification>();
     public DbSet<TrustedGuardianDevice> TrustedGuardianDevices => Set<TrustedGuardianDevice>();
     public DbSet<StaffUser> StaffUsers => Set<StaffUser>();
@@ -230,6 +232,24 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(s => s.TextHash).HasMaxLength(64);
             e.Property(s => s.Answers).HasMaxLength(500);
             e.Property(s => s.Reason).HasMaxLength(500);
+        });
+        modelBuilder.Entity<Domain.Enrollment.EnrollmentSession>(e =>
+        {
+            e.Property(s => s.Contact).HasMaxLength(320);
+            e.Property(s => s.CodeHash).HasMaxLength(64);
+            e.Property(s => s.TokenHash).HasMaxLength(64);
+            e.HasIndex(s => s.TokenHash).IsUnique();
+            e.Property(s => s.CodeExpiresAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.Property(s => s.LockedUntil).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.HasOne<Domain.Programs.Program>().WithMany().HasForeignKey(s => s.ProgramId);
+        });
+        modelBuilder.Entity<Domain.Enrollment.EnrollmentRequest>(e =>
+        {
+            e.Property(r => r.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(r => r.SubmittedBy).HasMaxLength(200);
+            e.HasOne<Domain.Programs.Program>().WithMany().HasForeignKey(r => r.ProgramId);
+            e.HasOne<Child>().WithMany().HasForeignKey(r => r.ChildId);
+            e.HasIndex(r => new { r.ProgramId, r.Status });
         });
         modelBuilder.Entity<Domain.Imports.ImportSession>(e =>
         {

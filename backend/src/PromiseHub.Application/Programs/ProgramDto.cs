@@ -15,4 +15,7 @@ public sealed record ProgramDto(
     IReadOnlyList<RosterChildDto> Roster,
     IReadOnlyList<ProgramEventDto> Events,
     DateTimeOffset? ArchivedAt,
-    string? ArchivedBy);
+    string? ArchivedBy,
+    string? EnrollmentUrl = null,
+    int PendingReviews = 0,
+    int Waitlisted = 0);

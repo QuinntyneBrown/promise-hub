@@ -21,3 +21,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0015](0015-guardian-links.md) | Guardian links carry a hashed token, a code trusts the device, and the link chooses the tenant |
 | [0016](0016-reminders-and-tablet.md) | Reminders fall in slots, and the tablet signs in the guardian's record format |
 | [0017](0017-roster-import.md) | Roster import reads CSV and XLSX itself, keeps the rows on the session, and runs in one request |
+| [0018](0018-guardian-enrollment.md) | Enrollment links are per program, contacts are verified by code, and submissions wait as requests |

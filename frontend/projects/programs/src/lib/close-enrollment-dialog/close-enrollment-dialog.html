@@ -1,0 +1,16 @@
+<ph-dialog
+  [title]="'Close enrollment for ' + program.name + '?'"
+  description="The link will say enrollment is closed. Children who already applied stay waiting for review."
+>
+  @if (failed()) {
+    <ph-alert
+      tone="danger"
+      title="That didn’t go through"
+      text="Enrollment is still open. Try again."
+    />
+  }
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close(false)">Keep it open</ph-button>
+    <ph-button variant="danger" [busy]="busy()" (click)="close()">Close enrollment</ph-button>
+  </ng-container>
+</ph-dialog>

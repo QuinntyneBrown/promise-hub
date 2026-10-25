@@ -15,6 +15,8 @@ import { HttpHouseholdsApi } from './households/http-households-api';
 import { HttpMessagingApi } from './messaging/http-messaging-api';
 import { MESSAGING_API } from './messaging/messaging-api.token';
 import { GUARDIAN_API } from './guardian/guardian-api.token';
+import { GUARDIAN_ENROLLMENT_API } from './guardian/guardian-enrollment-api.token';
+import { HttpGuardianEnrollmentApi } from './guardian/http-guardian-enrollment-api';
 import { HttpGuardianApi } from './guardian/http-guardian-api';
 import { HttpImportsApi } from './imports/http-imports-api';
 import { IMPORTS_API } from './imports/imports-api.token';
@@ -40,6 +42,7 @@ export function provideApi(): EnvironmentProviders {
     { provide: MESSAGING_API, useClass: HttpMessagingApi },
     { provide: SLIPS_API, useClass: HttpSlipsApi },
     { provide: GUARDIAN_API, useClass: HttpGuardianApi },
+    { provide: GUARDIAN_ENROLLMENT_API, useClass: HttpGuardianEnrollmentApi },
     { provide: IMPORTS_API, useClass: HttpImportsApi },
   ]);
 }

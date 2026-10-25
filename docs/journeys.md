@@ -1,6 +1,6 @@
 | Persona | Journey | Description | Effort | Complete |
 |---|---|---|---|---|
-| Guardian | Enroll a child | Verify a link, provide household and child details, and submit enrollment. | [5 days](detailed-designs/enrollment/enroll-guardian/README.md) | 0% |
+| Guardian | Enroll a child | Verify a link, provide household and child details, and submit enrollment. | [5 days](detailed-designs/enrollment/enroll-guardian/README.md) | 75% · [video](videos/15-enroll-a-child/README.md) |
 | Guardian | Sign a permission slip | Review event details and consent on a phone with a typed signature. | [3 days](detailed-designs/slips/sign-slip/README.md) | 75% · [video](videos/12-sign-a-permission-slip/README.md) |
 | Guardian | Update household details | Correct contact, medical, language, and child information through a verified link. | [3 days](detailed-designs/households/maintain-household/README.md) | 0% |
 | Guardian | Manage approved pickups | Add or remove adults authorized to collect a child. | [4 days](detailed-designs/attendance/manage-approved-pickups/README.md) | 0% |

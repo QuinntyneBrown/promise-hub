@@ -24,7 +24,7 @@ public interface IPromiseHubDb
     DbSet<Child> Children { get; }
     DbSet<AuditEntry> AuditEntries { get; }
     DbSet<Domain.Programs.Program> Programs { get; }
-    DbSet<Enrollment> Enrollments { get; }
+    DbSet<Domain.Programs.Enrollment> Enrollments { get; }
     DbSet<Event> Events { get; }
     DbSet<PermissionSlip> PermissionSlips { get; }
     DbSet<AttendanceRecord> AttendanceRecords { get; }
@@ -38,6 +38,8 @@ public interface IPromiseHubDb
     DbSet<GuardianLink> GuardianLinks { get; }
     DbSet<SlipReminder> SlipReminders { get; }
     DbSet<Domain.Imports.ImportSession> ImportSessions { get; }
+    DbSet<Domain.Enrollment.EnrollmentSession> EnrollmentSessions { get; }
+    DbSet<Domain.Enrollment.EnrollmentRequest> EnrollmentRequests { get; }
     DbSet<GuardianVerification> GuardianVerifications { get; }
     DbSet<TrustedGuardianDevice> TrustedGuardianDevices { get; }
     DbSet<StaffUser> StaffUsers { get; }

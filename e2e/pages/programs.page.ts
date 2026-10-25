@@ -91,4 +91,22 @@ export class ProgramsPage extends BasePage {
   get archivedNotice(): Locator {
     return this.page.getByRole('status').filter({ hasText: 'This program is archived' });
   }
+
+  async openEnrollment(): Promise<void> {
+    await this.page.getByRole('button', { name: 'Open enrollment' }).click();
+    await expect(this.dialog).toBeVisible();
+    await this.dialog.getByRole('button', { name: 'Open enrollment' }).click();
+  }
+
+  async closeDialog(): Promise<void> {
+    await this.dialog.getByRole('button', { name: 'Done' }).click();
+    await expect(this.dialog).toBeHidden();
+  }
+
+  async closeEnrollment(): Promise<void> {
+    await this.page.getByRole('button', { name: 'Close enrollment' }).click();
+    await expect(this.dialog).toBeVisible();
+    await this.dialog.getByRole('button', { name: 'Close enrollment' }).click();
+    await expect(this.dialog).toBeHidden();
+  }
 }

@@ -24,6 +24,10 @@ public static class ProgramEndpoints
             (await handler.HandleAsync(id, request.ConfirmName, ct)).ToHttp()).RequirePermission(Permission.ManagePrograms);
         programs.MapPost("/{id:guid}/restore", async (Guid id, RestoreProgramHandler handler, CancellationToken ct) =>
             (await handler.HandleAsync(id, ct)).ToHttp()).RequirePermission(Permission.ManagePrograms);
+        programs.MapPost("/{id:guid}/enrollment/open", async (Guid id, PromiseHub.Application.Enrollment.OpenEnrollmentHandler handler, CancellationToken ct) =>
+            await handler.OpenAsync(id, ct) is { } url ? Results.Ok(new { url }) : Results.NotFound()).RequirePermission(Permission.ManagePrograms);
+        programs.MapPost("/{id:guid}/enrollment/close", async (Guid id, PromiseHub.Application.Enrollment.OpenEnrollmentHandler handler, CancellationToken ct) =>
+            (await handler.CloseAsync(id, ct)).ToHttp()).RequirePermission(Permission.ManagePrograms);
         programs.MapPost("/{id:guid}/enrollments", async (Guid id, EnrollRequest request, EnrollChildHandler handler, CancellationToken ct) =>
             (await handler.HandleAsync(id, request.ChildId, ct)).ToHttp()).RequirePermission(Permission.ManagePrograms);
         programs.MapDelete("/{id:guid}/enrollments/{childId:guid}", async (Guid id, Guid childId, [FromBody] RemoveFromRosterRequest request, RemoveFromRosterHandler handler, CancellationToken ct) =>

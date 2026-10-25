@@ -104,7 +104,7 @@ public sealed class RunImportHandler(IPromiseHubDb db, ITenantContext tenant, Im
             }
             if (session.ProgramId is { } programId && enrolled.Add(childId))
             {
-                db.Enrollments.Add(new Enrollment(Guid.NewGuid(), tenant.OrganizationId, programId, childId, now));
+                db.Enrollments.Add(new Domain.Programs.Enrollment(Guid.NewGuid(), tenant.OrganizationId, programId, childId, now));
                 enrolments++;
             }
             imported++;

@@ -1,0 +1,126 @@
+import { GuardianLanguage } from './guardian-text';
+
+/** The enrollment pages' strings in English, Spanish and French (L2-027). */
+const TEXT = {
+  en: {
+    enrollHeading: (program: string) => `Enroll in ${program}`,
+    intro: 'First, check it’s you. We’ll text or email a six-digit code.',
+    householdHeading: 'Your household',
+    householdText: 'Changes reach staff when you submit.',
+    nameLabel: 'Your full name',
+    mobileLabel: 'Mobile number',
+    emailLabel: 'Email',
+    languageLabel: 'Language for messages',
+    continue: 'Continue',
+    back: 'Back',
+    childrenHeading: 'Your children',
+    childrenText: (program: string) => `Choose who to enroll in ${program}.`,
+    child: (n: number) => `Child ${n}`,
+    firstName: 'First name',
+    lastName: 'Last name',
+    dateOfBirth: 'Date of birth',
+    school: 'School and grade',
+    allergies: 'Allergies',
+    medication: 'Medication',
+    enrollThis: (name: string, program: string) => `Enroll ${name || 'this child'} in ${program}`,
+    addChild: 'Add another child',
+    reviewHeading: 'Check and submit',
+    you: 'You',
+    enrolling: 'Enrolling',
+    consent:
+      'I agree to the season consent: staff may give first aid and call emergency services if needed.',
+    submit: 'Submit',
+    doneHeading: (name: string) => `Thank you, ${name}`,
+    waiting: (names: string, many: boolean) =>
+      `${names} ${many ? 'are' : 'is'} waiting for review.`,
+    waitlisted: (names: string, position: number) =>
+      `${names} is on the waitlist, number ${position}.`,
+    doneText: 'We’ll let you know by text or email.',
+    closedHeading: (program: string) => `Enrollment for ${program} is closed`,
+    closedText: 'Call us to ask about a place.',
+    and: 'and',
+  },
+  es: {
+    enrollHeading: (program: string) => `Inscripción en ${program}`,
+    intro: 'Primero, confirme que es usted. Le enviaremos un código de seis dígitos.',
+    householdHeading: 'Su familia',
+    householdText: 'Los cambios llegan al personal cuando envíe.',
+    nameLabel: 'Su nombre completo',
+    mobileLabel: 'Número de celular',
+    emailLabel: 'Correo electrónico',
+    languageLabel: 'Idioma de los mensajes',
+    continue: 'Continuar',
+    back: 'Atrás',
+    childrenHeading: 'Sus hijos',
+    childrenText: (program: string) => `Elija a quién inscribir en ${program}.`,
+    child: (n: number) => `Niño ${n}`,
+    firstName: 'Nombre',
+    lastName: 'Apellido',
+    dateOfBirth: 'Fecha de nacimiento',
+    school: 'Escuela y grado',
+    allergies: 'Alergias',
+    medication: 'Medicamentos',
+    enrollThis: (name: string, program: string) =>
+      `Inscribir a ${name || 'este niño'} en ${program}`,
+    addChild: 'Agregar otro niño',
+    reviewHeading: 'Revise y envíe',
+    you: 'Usted',
+    enrolling: 'Inscribiendo',
+    consent:
+      'Acepto el consentimiento de la temporada: el personal puede dar primeros auxilios y llamar a emergencias si es necesario.',
+    submit: 'Enviar',
+    doneHeading: (name: string) => `Gracias, ${name}`,
+    waiting: (names: string, many: boolean) =>
+      `${names} ${many ? 'están' : 'está'} en espera de revisión.`,
+    waitlisted: (names: string, position: number) =>
+      `${names} está en la lista de espera, número ${position}.`,
+    doneText: 'Le avisaremos por mensaje o correo.',
+    closedHeading: (program: string) => `La inscripción para ${program} está cerrada`,
+    closedText: 'Llámenos para preguntar por un lugar.',
+    and: 'y',
+  },
+  fr: {
+    enrollHeading: (program: string) => `Inscription à ${program}`,
+    intro: 'D’abord, confirmez que c’est vous. Nous enverrons un code à six chiffres.',
+    householdHeading: 'Votre famille',
+    householdText: 'Les changements parviennent au personnel à l’envoi.',
+    nameLabel: 'Votre nom complet',
+    mobileLabel: 'Numéro de cellulaire',
+    emailLabel: 'Courriel',
+    languageLabel: 'Langue des messages',
+    continue: 'Continuer',
+    back: 'Retour',
+    childrenHeading: 'Vos enfants',
+    childrenText: (program: string) => `Choisissez qui inscrire à ${program}.`,
+    child: (n: number) => `Enfant ${n}`,
+    firstName: 'Prénom',
+    lastName: 'Nom',
+    dateOfBirth: 'Date de naissance',
+    school: 'École et année',
+    allergies: 'Allergies',
+    medication: 'Médicaments',
+    enrollThis: (name: string, program: string) => `Inscrire ${name || 'cet enfant'} à ${program}`,
+    addChild: 'Ajouter un enfant',
+    reviewHeading: 'Vérifiez et envoyez',
+    you: 'Vous',
+    enrolling: 'Inscription de',
+    consent:
+      'J’accepte le consentement de la saison : le personnel peut donner les premiers soins et appeler les services d’urgence au besoin.',
+    submit: 'Envoyer',
+    doneHeading: (name: string) => `Merci, ${name}`,
+    waiting: (names: string, many: boolean) =>
+      `${names} ${many ? 'attendent' : 'attend'} la révision.`,
+    waitlisted: (names: string, position: number) =>
+      `${names} est sur la liste d’attente, numéro ${position}.`,
+    doneText: 'Nous vous aviserons par texto ou courriel.',
+    closedHeading: (program: string) => `Les inscriptions à ${program} sont fermées`,
+    closedText: 'Appelez-nous pour demander une place.',
+    and: 'et',
+  },
+} as const;
+
+export type EnrollText = (typeof TEXT)['en'];
+
+export function enrollText(language: GuardianLanguage): EnrollText {
+  return TEXT[language] as EnrollText;
+}

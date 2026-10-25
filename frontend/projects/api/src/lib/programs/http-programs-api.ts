@@ -49,6 +49,16 @@ export class HttpProgramsApi implements ProgramsApi {
     return toWrite(this.http.post<null>(`${this.baseUrl}/programs/${id}/archive`, { confirmName }));
   }
 
+  openEnrollment(id: string): Observable<LoadResult<{ url: string }>> {
+    return toLoad(
+      this.http.post<{ url: string }>(`${this.baseUrl}/programs/${id}/enrollment/open`, {}),
+    );
+  }
+
+  closeEnrollment(id: string): Observable<WriteOutcome> {
+    return toWrite(this.http.post<null>(`${this.baseUrl}/programs/${id}/enrollment/close`, {}));
+  }
+
   restore(id: string): Observable<WriteOutcome> {
     return toWrite(this.http.post<null>(`${this.baseUrl}/programs/${id}/restore`, {}));
   }

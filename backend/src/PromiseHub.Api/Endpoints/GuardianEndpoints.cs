@@ -41,8 +41,34 @@ public static class GuardianEndpoints
             ToHttp(await handler.SignAsync(Request(token, http), body, ct)));
         g.MapPost("/slips/{token}/decline", async (string token, DeclineSlipRequest body, GuardianSlipHandler handler, HttpContext http, CancellationToken ct) =>
             ToHttp(await handler.DeclineAsync(Request(token, http), body, ct)));
+        var enroll = g.MapGroup("/enroll/{slug}");
+        enroll.MapGet("", async (string slug, PromiseHub.Application.Enrollment.GuardianEnrollmentHandler handler, CancellationToken ct) =>
+            ToHttp(await handler.PageAsync(slug, ct)));
+        enroll.MapPost("/code", async (string slug, PromiseHub.Application.Enrollment.EnrollmentCodeRequest request, PromiseHub.Application.Enrollment.GuardianEnrollmentHandler handler, CancellationToken ct) =>
+        {
+            var result = await handler.RequestCodeAsync(slug, request, ct);
+            return result.Outcome == GuardianOutcome.Done ? Results.Accepted() : ToHttp(result);
+        });
+        enroll.MapPost("/verify", async (string slug, PromiseHub.Application.Enrollment.EnrollmentVerifyRequest request, PromiseHub.Application.Enrollment.GuardianEnrollmentHandler handler, HttpContext http, CancellationToken ct) =>
+        {
+            var result = await handler.VerifyAsync(slug, request, ct);
+            if (result.Outcome == GuardianOutcome.Done && result.Value is string token)
+            {
+                http.Response.Cookies.Append(EnrollCookie, token, new CookieOptions { HttpOnly = true, Secure = http.Request.IsHttps, SameSite = SameSiteMode.Lax, Path = "/", MaxAge = TimeSpan.FromDays(7) });
+                return Results.NoContent();
+            }
+            return ToHttp(result);
+        });
+        enroll.MapGet("/draft", async (string slug, PromiseHub.Application.Enrollment.GuardianEnrollmentHandler handler, HttpContext http, CancellationToken ct) =>
+            ToHttp(await handler.DraftAsync(slug, http.Request.Cookies[EnrollCookie], ct)));
+        enroll.MapPut("/draft", async (string slug, PromiseHub.Application.Enrollment.EnrollmentDraft draft, PromiseHub.Application.Enrollment.GuardianEnrollmentHandler handler, HttpContext http, CancellationToken ct) =>
+            ToHttp(await handler.SaveAsync(slug, http.Request.Cookies[EnrollCookie], draft, ct)));
+        enroll.MapPost("/submit", async (string slug, PromiseHub.Application.Enrollment.EnrollmentSubmitRequest request, PromiseHub.Application.Enrollment.GuardianEnrollmentHandler handler, HttpContext http, CancellationToken ct) =>
+            ToHttp(await handler.SubmitAsync(slug, http.Request.Cookies[EnrollCookie], request, ct)));
         return app;
     }
+
+    public const string EnrollCookie = "ph_enroll_device";
 
     private static GuardianRequest Request(string token, HttpContext http) =>
         new(token, http.Request.Cookies[DeviceCookie], http.Request.Headers.UserAgent.ToString());

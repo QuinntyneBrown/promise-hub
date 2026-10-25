@@ -16,6 +16,10 @@ Terms used in this document:
 - **waitlist position** — one-based rank of a waitlisted enrollment within a program, ordered by submission time
 - **season consent** — typed-name signature that a guardian gives once per enrollment covering the program's standard permissions
 
+## Built so far
+
+Slice 15 delivered `OpenEnrollmentDialog` and `CloseEnrollmentDialog` on the program page with the waiting-review count, `GuardianEnrollPage` at `/g/enroll/:slug` (identify, code, household, children with medical details, review with the season consent, waiting-review, waitlisted and closed states, in English, Spanish and French), `GUARDIAN_ENROLLMENT_API`, the program enrollment endpoints, the `/g/enroll/{slug}` endpoints, `EnrollmentSession` and `EnrollmentRequest` (ADR 0018). Staff review, bulk review, notifications and pickups are not built yet.
+
 ## Description
 
 The feature spans the `programs`, `enrollment` and `guardian` frontend libraries and the `Enrollment` application folder.

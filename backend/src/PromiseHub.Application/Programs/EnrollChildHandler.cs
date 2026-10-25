@@ -34,7 +34,7 @@ public sealed class EnrollChildHandler(IPromiseHubDb db, ITenantContext tenant, 
         {
             return Result.Invalid(new Dictionary<string, string> { ["childId"] = $"{program.Name} is full ({active.Count} of {program.Capacity})." });
         }
-        var enrollment = new Enrollment(Guid.NewGuid(), tenant.OrganizationId, programId, childId, clock.GetUtcNow());
+        var enrollment = new Domain.Programs.Enrollment(Guid.NewGuid(), tenant.OrganizationId, programId, childId, clock.GetUtcNow());
         db.Enrollments.Add(enrollment);
         audit.Record(new AuditEvent(AuditAction.Created, "Enrollment", enrollment.Id, $"{child.FullName} · {program.Name}"));
         await db.SaveChangesAsync(cancellationToken);

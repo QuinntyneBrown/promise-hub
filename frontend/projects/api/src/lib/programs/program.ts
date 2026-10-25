@@ -17,4 +17,8 @@ export interface Program {
   events: ProgramEvent[];
   archivedAt: string | null;
   archivedBy: string | null;
+  /** The one link families use to enroll, once enrollment has been opened. */
+  enrollmentUrl: string | null;
+  pendingReviews: number;
+  waitlisted: number;
 }

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 15 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="15" data-video-title="Enroll a child" data-parts="Introduction|Promises|Open enrollment|A new family|Returning and closed|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 15</div>
+  <h1>Enroll a child</h1>
+  <p class="lead">One link per program, a code, and a few minutes on a phone</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="Each program has one enrollment link">
+  <h2>What enrollment promises</h2>
+  <ul>
+    <li>One link per program that never changes</li>
+    <li>A six-digit code to the contact the guardian types</li>
+    <li>Returning families filled in, in their language</li>
+    <li>Nothing joins the roster until staff review it</li>
+  </ul>
+</section>
+
+<section id="open" data-part="2" data-cue="Here is the Winter Camp program on Marisol's laptop." data-clip="clips/open-enrollment-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Open enrollment</h3><p>The link to share by text, email or paper.</p></div>
+</section>
+
+<section id="family" data-part="3" data-cue="Now Ngozi, new to Harbourview, opens the link" data-clip="clips/new-family-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Code, household, child, consent</h3><p>Ada is waiting for review.</p></div>
+</section>
+
+<section id="returning" data-part="4" data-cue="When Carmen opens the same link">
+  <h2>Returning families and closed links</h2>
+  <div class="cols">
+    <img class="shot" alt="Carmen's household filled in, in Spanish" src="shots/phone-returning.png">
+    <img class="shot" alt="Enrollment closed with the organization's number" src="shots/phone-closed.png">
+  </div>
+</section>
+
+<section id="testing" data-part="5" data-cue="Backend tests cover opening and closing">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Program full</td><td>Waitlisted with a position</td></tr>
+    <tr><td>No season consent</td><td>422</td></tr>
+    <tr><td>Three wrong codes</td><td>423 for 15 minutes</td></tr>
+    <tr><td>Site lead opens enrollment</td><td>403</td></tr>
+    <tr><td>Another organization / Roster off</td><td>Never matched / 404</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="6" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>One link per program</li><li>A code, and returning families filled in</li><li>Staff review before the roster</li></ul>
+  <p class="muted">Next: review the enrollments</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
