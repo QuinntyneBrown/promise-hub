@@ -2,7 +2,7 @@
 
 ## Overview
 
-PromiseHub stores children's medical details, household contacts and incident records for many organizations in one deployment. `L1-016` requires encryption in transit and at rest, server-side authorization on every request, defences against the OWASP Top 10, session expiry and secrets kept outside the repository. This feature designs the cross-cutting security posture of the `PromiseHub.Api` request pipeline, the storage configuration in `PromiseHub.Infrastructure`, and the input and output rules every handler and component follows.
+PromiseHub stores children's medical details, household contacts and incident records for every organization in one deployment. `L1-016` requires encryption in transit and at rest, server-side authorization on every request, defences against the OWASP Top 10, session expiry and secrets kept outside the repository. This feature designs the cross-cutting security posture of the `PromiseHub.Api` request pipeline, the storage configuration in `PromiseHub.Infrastructure`, and the input and output rules every handler and component follows.
 
 Tenant isolation (`L2-001`), role authorization (`L2-007`) and sign-in (`L2-006`) are designed in their own features. This feature covers what sits around them: the transport, the headers, the encoding, the anonymous-request behaviour and the secret handling.
 

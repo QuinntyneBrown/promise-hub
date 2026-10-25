@@ -1,0 +1,75 @@
+@startuml
+title UML sequence behaviour — Change plan with proration
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Admin" as actor
+participant "Payment processor" as processor
+box "Frontend — PromiseHub web app, administration library" #E0F2FE
+  participant "ChangePlanDialog" as dialog
+  participant "BillingApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "BillingEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "ChangePlanCommandHandler" as handler
+  participant "Subscription" as subscription
+  participant "AcceptEnrollmentCommandHandler" as accept
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "IPaymentProcessor" as port
+  participant "IAuditWriter" as audit
+  participant "ResumePausedTextsJob" as resume
+  database "PromiseHub database" as db
+end box
+
+actor -> dialog : Enter card, choose monthly or yearly, Start Standard plan
+dialog -> processor : Tokenize card in the hosted element (card data never reaches PromiseHub)
+alt card invalid
+  processor --> dialog : Field errors
+  dialog --> actor : Invalid state on card number or CVC
+else token issued
+  processor --> dialog : PaymentMethodToken
+  dialog -> client : changePlan(Standard, interval, token)
+  client -> endpoints : POST /billing/plan
+  endpoints -> endpoints : Authenticate, resolve organization, require Billing.Manage
+  endpoints -> handler : Send ChangePlanCommand
+  handler -> db : Load Subscription of the organization (L2-001)
+  db --> handler : Subscription (Free)
+  handler -> port : ChangeSubscription(id, Standard, interval, token, prorate = true) (L2-037 criterion 3)
+  port -> processor : Update subscription, prorate current period
+  alt card declined
+    processor --> port : Declined
+    port --> handler : PaymentDeclined
+    handler --> endpoints : Failure
+    endpoints --> client : 402 ProblemDetails
+    client --> dialog : Failed: "Card declined. Nothing was charged."
+  else accepted
+    processor --> port : Subscription active, prorated invoice, next invoice date
+    port --> handler : ProcessorSubscription
+    handler -> subscription : ChangePlan(Standard, interval); limits apply immediately
+    handler -> audit : Plan changed Free to Standard
+    handler -> db : Save in one unit of work
+    db --> handler : Committed
+    handler -> accept : Re-run acceptance for waiting enrollments that now fit
+    accept -> db : Accept up to the new limit
+    handler -> resume : Enqueue (PlanChanged raises the SMS cap, L2-022 criterion 3)
+    handler --> endpoints : ChangePlanResult (plan, accepted count, first invoice date)
+    endpoints --> client : 200
+    client --> dialog : Success state
+    dialog --> actor : "On Standard. n waiting enrollments accepted. First invoice: date"
+  end
+end
+@enduml

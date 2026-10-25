@@ -1,0 +1,142 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Meter the plan and usage
+
+enum PlanKind {
+  Free
+  Standard
+}
+
+enum SubscriptionStatus {
+  Active
+  PastDue
+  Suspended
+  Cancelled
+}
+
+enum BillingInterval {
+  Monthly
+  Yearly
+}
+
+class PlanLimits {
+  +PlanKind Plan
+  +int ActiveChildren
+  +int SmsSegmentsPerMonth
+  +Money MonthlyPrice
+  +{static} For(plan: PlanKind): PlanLimits
+}
+
+class Subscription {
+  +Guid Id
+  +Guid OrganizationId
+  +PlanKind Plan
+  +BillingInterval Interval
+  +string? ProcessorCustomerId
+  +string? ProcessorSubscriptionId
+  +SubscriptionStatus Status
+  +DateTimeOffset? CurrentPeriodEnd
+  +DateTimeOffset? GraceEndsAt
+  +string? PaymentMethodSummary
+  +ChangePlan(plan: PlanKind, interval: BillingInterval): void
+  +MarkPastDue(now: DateTimeOffset, graceDays: int = 14): void
+  +MarkPaid(): void
+  +Suspend(): void
+}
+
+class ActiveChildCounter {
+  +Count(organizationId: Guid, season: Season): Task<int>
+}
+
+interface IPlanGuard {
+  +CanAddActiveChildren(organizationId: Guid, count: int): Task<PlanGuardResult>
+}
+
+class PlanGuard {
+  +CanAddActiveChildren(organizationId: Guid, count: int): Task<PlanGuardResult>
+}
+
+class PlanGuardResult {
+  +bool Allowed
+  +int ActiveChildren
+  +int Limit
+  +string? Message
+}
+
+class GetBillingQueryHandler {
+  +Handle(query: GetBillingQuery): Task<BillingDto>
+}
+
+class BillingDto {
+  +PlanKind Plan
+  +int ActiveChildren
+  +int ActiveChildLimit
+  +int SmsSegmentsUsed
+  +int SmsSegmentCap
+  +Money NextInvoice
+  +Money SmsOverage
+  +string? PaymentMethodSummary
+  +SubscriptionStatus Status
+  +DateTimeOffset? GraceEndsAt
+  +int WaitingEnrollments
+}
+
+class ChangePlanCommand {
+  +PlanKind Plan
+  +BillingInterval Interval
+  +string PaymentMethodToken
+}
+
+class ChangePlanCommandHandler {
+  +Handle(command: ChangePlanCommand): Task<Result<ChangePlanResult>>
+}
+
+class RecordPaymentEventCommandHandler {
+  +Handle(command: RecordPaymentEventCommand): Task<Result>
+}
+
+class InvoicePreviewer {
+  +Preview(subscription: Subscription, smsUsed: int): Task<InvoicePreview>
+}
+
+interface IPaymentProcessor {
+  +CreateCustomer(organization: Organization): Task<string>
+  +ChangeSubscription(subscriptionId: string, plan: PlanKind, interval: BillingInterval, paymentMethodToken: string, prorate: bool): Task<ProcessorSubscription>
+  +UpcomingInvoice(subscriptionId: string): Task<Money>
+  +VerifyWebhook(payload: string, signature: string): PaymentEvent
+}
+
+class SuspendPastDueJob {
+  +Run(organizationId: Guid, now: DateTimeOffset): Task
+}
+
+Subscription --> PlanKind : has
+Subscription --> SubscriptionStatus : has
+Subscription --> BillingInterval : has
+PlanGuard ..|> IPlanGuard
+PlanGuard --> ActiveChildCounter : uses
+PlanGuard --> PlanLimits : uses
+PlanGuard ..> PlanGuardResult : returns
+GetBillingQueryHandler --> ActiveChildCounter : uses
+GetBillingQueryHandler --> InvoicePreviewer : uses
+GetBillingQueryHandler --> Subscription : reads
+GetBillingQueryHandler ..> BillingDto : returns
+ChangePlanCommandHandler ..> ChangePlanCommand : handles
+ChangePlanCommandHandler --> IPaymentProcessor : ChangeSubscription
+ChangePlanCommandHandler --> Subscription : ChangePlan
+RecordPaymentEventCommandHandler --> IPaymentProcessor : VerifyWebhook
+RecordPaymentEventCommandHandler --> Subscription : MarkPastDue / MarkPaid
+InvoicePreviewer --> IPaymentProcessor : UpcomingInvoice
+SuspendPastDueJob --> Subscription : Suspend
+@enduml

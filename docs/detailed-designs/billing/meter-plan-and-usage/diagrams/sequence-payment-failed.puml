@@ -1,0 +1,76 @@
+@startuml
+title UML sequence behaviour — Failed payment, grace period and suspension
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+participant "Payment processor" as processor
+box "Backend — PromiseHub API" #D1FADF
+  participant "BillingEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "RecordPaymentEventCommandHandler" as handler
+  participant "Subscription" as subscription
+  participant "Organization" as organization
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "IPaymentProcessor" as port
+  participant "INotificationPublisher" as notify
+  participant "SuspendPastDueJob" as job
+  participant "IAuditWriter" as audit
+  database "PromiseHub database" as db
+end box
+box "Frontend — PromiseHub web app, administration library" #E0F2FE
+  participant "BillingPage" as billing
+end box
+
+processor -> endpoints : POST /webhooks/payments (payment_failed)
+endpoints -> port : VerifyWebhook(payload, signature)
+alt signature invalid
+  port --> endpoints : Rejected
+  endpoints --> processor : 401
+else valid
+  port --> endpoints : PaymentEvent
+  endpoints -> handler : Send RecordPaymentEventCommand
+  handler -> db : Load Subscription by processor customer id
+  db --> handler : Subscription
+  alt event is payment_failed (L2-037 criterion 4)
+    handler -> subscription : MarkPastDue(now, 14 days)
+    subscription --> handler : Status PastDue, GraceEndsAt = now + 14 days
+    handler -> notify : Admin notification and email: payment failed, retry date, grace end
+    handler -> audit : Payment failed recorded
+  else event is payment_succeeded
+    handler -> subscription : MarkPaid()
+    subscription --> handler : Status Active, GraceEndsAt cleared
+    opt organization was Suspended for non-payment
+      handler -> organization : Reinstate
+    end
+    handler -> audit : Payment succeeded recorded
+  end
+  handler -> db : Save
+  db --> handler : Committed
+  handler --> endpoints : Result ok
+  endpoints --> processor : 200
+end
+
+billing -> billing : payment-failed state: danger alert with decline date, retry and grace end; service continues
+
+job -> db : Subscriptions with Status PastDue and GraceEndsAt <= now (L2-001)
+db --> job : Past-due subscriptions
+loop each subscription
+  job -> subscription : Suspend()
+  job -> organization : Suspend for non-payment (same path as L2-003: access and outbound messages blocked, no data deleted)
+  job -> audit : Suspended for non-payment
+end
+job -> db : Save
+@enduml

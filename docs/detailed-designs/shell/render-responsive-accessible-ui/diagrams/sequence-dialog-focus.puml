@@ -26,8 +26,8 @@ box "Frontend — Component library (frontend/projects/components)" #E0F2FE
 end box
 actor -> page : Activate button (Enter)
 page -> dialog : open()
-dialog -> bp : atLeast(From576)
-alt Phone (under 576 px)
+dialog -> bp : atLeast(From640)
+alt Phone (under 640 px)
   bp --> dialog : false
   dialog -> dialog : Bottom-sheet pane (L2-029)
 else Larger

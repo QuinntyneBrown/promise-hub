@@ -1,0 +1,78 @@
+@startuml
+title UML sequence behaviour — Answer the event survey
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Guardian" as actor
+box "Frontend — PromiseHub web app, guardian library" #E0F2FE
+  participant "GuardianShellComponent" as shell
+  participant "SurveyPage" as page
+  participant "SurveyApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "SurveyEndpoints" as endpoints
+  participant "GuardianLinkFilter" as filter
+end box
+box "Backend — PromiseHub Application and Domain (Surveys)" #ECFDF3
+  participant "GetSurveyQueryHandler" as get
+  participant "AnswerSurveyCommandHandler" as answer
+  participant "Survey / SurveyResponse" as domain
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "AuditLog" as audit
+  database "PromiseHub database" as db
+end box
+actor -> shell : Open /g/survey/{token} from the post-event text
+shell -> page : Render in the household language (L2-027)
+page -> client : get(token)
+client -> endpoints : GET /g/survey
+endpoints -> filter : Resolve link (purpose Survey) and device (L2-026)
+filter --> endpoints : GuardianContext
+endpoints -> get : Send GetSurveyQuery
+get -> db : Load survey for the event; existing response for this household
+db --> get : Survey, response or none
+alt already answered
+  get --> endpoints : AlreadyAnswered
+  endpoints --> client : 200 { answered }
+  client --> page : Answered
+  page --> actor : Thank-you (survey/success)
+else not answered
+  get --> endpoints : Two questions
+  endpoints --> client : 200
+  client --> page : Questions
+  page --> actor : Two questions, one primary "Send" button, contact in footer (L2-027)
+  actor -> page : Answer both, send
+  page -> client : answer(token, answer1, answer2)
+  client -> endpoints : POST /g/survey
+  endpoints -> filter : Resolve link and device
+  filter --> endpoints : GuardianContext
+  endpoints -> answer : Send AnswerSurveyCommand
+  answer -> answer : Validate both answers present
+  alt a question is unanswered
+    answer --> endpoints : ValidationFailed
+    endpoints --> client : 400 ProblemDetails
+    client --> page : Field errors
+    page --> actor : Inline errors (survey/invalid)
+  else valid
+    answer -> domain : Create SurveyResponse against the event and household (L2-027)
+    answer -> audit : Record survey submission
+    answer -> db : Save; reject a second response for the same link
+    db --> answer : Commit
+    answer --> endpoints : Done
+    endpoints --> client : 201
+    client --> page : Stored
+    page --> actor : Thank-you with a link to the family page (survey/success)
+  end
+end
+@enduml

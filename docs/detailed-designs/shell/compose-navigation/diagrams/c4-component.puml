@@ -6,8 +6,8 @@ title Components — Compose navigation
 Container_Boundary(web, "PromiseHub web app (promisehub application)") {
   Component(shell, "ShellComponent", "Angular component", "Hosts bars and router outlet")
   Component(nav, "NavigationModelService", "Angular service", "Derives primary, More and tab items from modules and role")
-  Component(topbar, "TopBarComponent", "Angular component", "Top bar from 768 px; search from 1200 px")
-  Component(tabbar, "TabBarComponent", "Angular component", "Phone tab bar under 576 px")
+  Component(topbar, "TopBarComponent", "Angular component", "Top bar from 768 px; search from 1280 px")
+  Component(tabbar, "TabBarComponent", "Angular component", "Phone tab bar under 640 px")
   Component(more, "MoreMenuComponent", "CDK Dialog drawer", "main-menu")
   Component(account, "AccountMenuComponent", "Menu", "account-menu")
   Component(sheet, "BottomSheetDialogService", "Angular service", "Bottom sheet on phones, focus trap, inert page")

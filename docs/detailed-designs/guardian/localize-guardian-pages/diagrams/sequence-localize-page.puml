@@ -1,0 +1,82 @@
+@startuml
+title UML sequence behaviour — Render a guardian page in the household language and change it
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Guardian (Carmen Rivera)" as actor
+box "Frontend — PromiseHub web app, guardian library" #E0F2FE
+  participant "GuardianShellComponent" as shell
+  participant "GuardianLocaleService" as locale
+  participant "SlipSignPage" as page
+  participant "GuardianApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "GuardianEndpoints" as endpoints
+  participant "GuardianLinkFilter" as filter
+end box
+box "Backend — PromiseHub Application and Domain (Guardian, Households)" #ECFDF3
+  participant "GetGuardianContextQueryHandler" as context
+  participant "SetHouseholdLanguageCommandHandler" as setlang
+  participant "Household" as household
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "AuditLog" as audit
+  database "PromiseHub database" as db
+end box
+== Render in the household language ==
+actor -> shell : Open slip link on a trusted device
+shell -> client : getContext(linkToken)
+client -> endpoints : GET /g/context
+endpoints -> filter : Resolve link and device (verify-guardian-link design, L2-026)
+filter --> endpoints : GuardianContext (household, organization)
+endpoints -> context : Send GetGuardianContextQuery
+context -> db : Load organization name, contact; household language
+db --> context : Context
+context --> endpoints : GuardianContextDto { language: es }
+endpoints --> client : 200
+client --> shell : Context
+shell -> locale : Apply language "es"
+locale -> locale : Load es locale data and translation bundle
+locale -> locale : Set document.documentElement.lang = "es" (L2-027)
+locale --> shell : Ready
+shell -> page : Render content area
+page -> client : Load slip (slips design)
+client --> page : Slip with Spanish body for this household
+page --> actor : Page, slip body and buttons in Spanish; one primary button; contact in footer (slip-sign/es) — L2-027
+== Change the language ==
+actor -> shell : Choose "English" in the language select
+shell -> client : setLanguage(linkToken, "en")
+client -> endpoints : PUT /g/language
+endpoints -> filter : Resolve link and device
+filter --> endpoints : GuardianContext
+endpoints -> setlang : Send SetHouseholdLanguageCommand
+setlang -> setlang : Validate against SupportedLanguages
+alt unsupported code
+  setlang --> endpoints : ValidationFailed
+  endpoints --> client : 400 ProblemDetails
+  client --> shell : Error
+  shell --> actor : Selection reverted
+else supported
+  setlang -> household : SetLanguage(en) — stored for future messages (L2-027)
+  setlang -> audit : Record language change
+  setlang -> db : Save
+  db --> setlang : Commit
+  setlang --> endpoints : Done
+  endpoints --> client : 204
+  client --> shell : Saved
+  shell -> shell : Reload route
+  shell -> locale : Apply language "en"; set html lang="en"
+  shell --> actor : Page reloads in English
+end
+@enduml

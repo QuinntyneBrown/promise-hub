@@ -1,0 +1,75 @@
+@startuml
+title UML sequence behaviour — Block the 51st active child on Free
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Admin" as actor
+box "Frontend — PromiseHub web app, enrollment and administration libraries" #E0F2FE
+  participant "ReviewEnrollmentDialog" as dialog
+  participant "BillingPage" as billing
+  participant "EnrollmentApi / BillingApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "EnrollmentEndpoints / BillingEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "AcceptEnrollmentCommandHandler" as accept
+  participant "PlanGuard" as guard
+  participant "ActiveChildCounter" as counter
+  participant "PlanLimits" as limits
+  participant "GetBillingQueryHandler" as getBilling
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+
+actor -> dialog : Accept Nikolai Petrov
+dialog -> client : acceptEnrollment(id)
+client -> endpoints : POST /enrollments/{id}/accept
+endpoints -> endpoints : Authenticate, resolve organization, check Roster module
+endpoints -> accept : Send AcceptEnrollmentCommand
+accept -> guard : CanAddActiveChildren(organizationId, 1)
+guard -> counter : Count(organizationId, current season)
+counter -> db : Distinct children with Accepted enrollment in a program of this season (L2-001, L2-037 criterion 5)
+db --> counter : 50
+counter --> guard : 50
+guard -> limits : For(Free)
+limits --> guard : ActiveChildren = 50
+alt 50 + 1 > 50 (L2-037 criterion 1)
+  guard --> accept : Not allowed, "Move to Standard or archive a program"
+  accept --> endpoints : Failure PlanLimitReached
+  endpoints --> client : 422 ProblemDetails with upgrade message
+  client --> dialog : Failed state with Move to Standard action
+  dialog --> actor : Enrollment stays waiting; nothing lost
+else fits within the limit
+  guard --> accept : Allowed
+  accept -> db : Enrollment Accepted, child joins roster
+  db --> accept : Committed
+  accept --> endpoints : Result ok
+  endpoints --> client : 200
+end
+
+actor -> billing : Open Billing
+billing -> client : getBilling()
+client -> endpoints : GET /billing
+endpoints -> getBilling : Send GetBillingQuery
+getBilling -> counter : Count(organizationId, season)
+counter --> getBilling : 50
+getBilling -> db : Waiting enrollments count, Subscription
+db --> getBilling : 3 waiting, Free
+getBilling --> endpoints : BillingDto (50 of 50, 3 waiting)
+endpoints --> client : 200
+client --> billing : BillingDto
+billing --> actor : limit-reached state with Move to Standard and Archive a program (L2-037 criterion 2)
+@enduml

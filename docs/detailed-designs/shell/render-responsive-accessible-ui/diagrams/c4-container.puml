@@ -12,6 +12,6 @@ System_Boundary(promisehub, "PromiseHub") {
 }
 Rel(staff, web, "Uses", "HTTPS")
 Rel(web, components, "Imports components and tokens")
-Rel(e2e, web, "Drives at 360, 576, 768, 992, 1200 and 1600 px")
+Rel(e2e, web, "Drives at 360, 640, 768, 1024, 1280 and 1600 px")
 Rel(web, api, "Calls", "JSON/HTTPS")
 @enduml

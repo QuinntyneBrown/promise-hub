@@ -45,7 +45,7 @@ endpoints --> client : 200 JSON
 client --> nav : ModuleConfiguration
 nav -> nav : Filter catalogue by module and role (L2-038, L2-005)
 nav --> shell : primary, more and tabs signals
-shell -> shell : Render top bar from 768 px or tab bar under 576 px (L2-029)
+shell -> shell : Render top bar from 768 px or tab bar under 640 px (L2-029)
 shell --> actor : Shell with only modules that are on
 alt Direct route to a module that is off
   actor -> guard : Navigate to /slips

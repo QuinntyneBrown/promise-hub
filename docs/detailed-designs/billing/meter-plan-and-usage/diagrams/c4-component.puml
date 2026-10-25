@@ -1,0 +1,45 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Meter the plan and usage
+
+Container_Boundary(api, "PromiseHub API and job runner") {
+  Component(endpoints, "BillingEndpoints", "Minimal API", "GET /billing, POST /billing/plan, PUT /billing/card, webhooks; Billing.Manage")
+  Component(getBilling, "GetBillingQueryHandler", "Query handler", "Plan, limits, meters, next invoice, grace state")
+  Component(changePlan, "ChangePlanCommandHandler", "Command handler", "Change subscription with proration; apply limits; re-run waiting enrollments")
+  Component(paymentEvent, "RecordPaymentEventCommandHandler", "Command handler", "PastDue with 14-day grace, or clear")
+  Component(counter, "ActiveChildCounter", "Domain service", "Distinct children with an accepted enrollment this season")
+  Component(guard, "PlanGuard", "Application service (IPlanGuard)", "CanAddActiveChildren against PlanLimits")
+  Component(limits, "PlanLimits", "Domain lookup", "Free 50, Standard 500; SMS cap; price")
+  Component(previewer, "InvoicePreviewer", "Application service", "Upcoming invoice plus SMS overage")
+  Component(subscription, "Subscription", "Domain entity", "Plan, status, grace end, processor ids")
+  Component(enrollHandler, "AcceptEnrollmentCommandHandler", "Command handler (enrollment)", "Asks PlanGuard before accepting")
+  Component(capService, "ISmsCapService", "Application interface (enforce-sms-cap)", "Segments used and cap")
+  Component(suspendJob, "SuspendPastDueJob", "Background job", "Suspends when GraceEndsAt passed")
+  Component(processorPort, "IPaymentProcessor", "Infrastructure interface", "Subscriptions, invoices, webhooks")
+  Component(audit, "IAuditWriter", "Application interface", "Plan and payment changes")
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "Tenant-filtered persistence")
+}
+System_Ext(processor, "Payment processor", "External")
+
+Rel(endpoints, getBilling, "Sends GetBillingQuery")
+Rel(endpoints, changePlan, "Sends ChangePlanCommand")
+Rel(endpoints, paymentEvent, "Sends RecordPaymentEventCommand")
+Rel(getBilling, counter, "Active children")
+Rel(getBilling, capService, "SMS used and cap")
+Rel(getBilling, previewer, "Next invoice")
+Rel(getBilling, subscription, "Reads")
+Rel(enrollHandler, guard, "CanAddActiveChildren")
+Rel(guard, counter, "Count")
+Rel(guard, limits, "Limit for plan")
+Rel(changePlan, processorPort, "ChangeSubscription(prorate)")
+Rel(changePlan, subscription, "Set plan immediately")
+Rel(changePlan, enrollHandler, "Re-run waiting enrollments")
+Rel(changePlan, audit, "Writes entry")
+Rel(paymentEvent, subscription, "PastDue + 14 days, or Active")
+Rel(suspendJob, subscription, "Suspend when past grace")
+Rel(previewer, processorPort, "Upcoming invoice")
+Rel(processorPort, processor, "HTTPS API")
+Rel(subscription, db, "Persisted by", "EF Core")
+Rel(counter, db, "Grouped query", "EF Core")
+@enduml

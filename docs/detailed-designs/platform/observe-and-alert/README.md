@@ -2,7 +2,7 @@
 
 ## Overview
 
-PromiseHub serves many organizations from one deployment and sends messages that families rely on. Operators shall be able to see what each request did, for which tenant, how long it took and whether it failed, and shall be told when the error rate or the job queue crosses a threshold. `L1-022` requires structured logs, request metrics and job outcomes per tenant and alerts on error-rate, queue-lag and SMS-cap conditions. Because the logs describe children's organizations, they shall never carry a child's name or a secret.
+PromiseHub serves every organization from one deployment and sends messages that families rely on. Operators shall be able to see what each request did, for which tenant, how long it took and whether it failed, and shall be told when the error rate or the job queue crosses a threshold. `L1-022` requires structured logs, request metrics and job outcomes per tenant and alerts on error-rate, queue-lag and SMS-cap conditions. Because the logs describe children's organizations, they shall never carry a child's name or a secret.
 
 This feature designs the logging pipeline in `PromiseHub.Api` and `PromiseHub.Infrastructure`, the metrics the API and job runner emit, the alert rules, and where request logging sits in the middleware order.
 

@@ -1,0 +1,22 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Meter the plan and usage
+
+Person(admin, "Admin", "Manages billing")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "administration library: BillingPage, ChangePlanDialog; shell PlanLimitBanner")
+  Container(api, "PromiseHub API", "ASP.NET Core", "BillingEndpoints, PlanGuard, ActiveChildCounter, ChangePlanCommandHandler")
+  Container(jobs, "Job runner", "PromiseHub.Infrastructure", "SuspendPastDueJob daily per tenant")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "Subscription, enrollments, SmsUsagePeriod, audit log")
+}
+System_Ext(processor, "Payment processor", "Cards, subscriptions, invoices")
+
+Rel(admin, web, "Uses", "HTTPS")
+Rel(web, api, "GET /billing, POST /billing/plan", "JSON/HTTPS")
+Rel(web, processor, "Card element tokenizes card data directly", "HTTPS")
+Rel(api, db, "Counts active children, reads and writes Subscription", "EF Core")
+Rel(api, processor, "Change subscription with proration, preview invoice", "HTTPS")
+Rel_Back(api, processor, "Payment events", "Webhook")
+Rel(jobs, db, "Suspends organizations past grace", "EF Core")
+@enduml

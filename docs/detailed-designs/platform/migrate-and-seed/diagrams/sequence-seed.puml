@@ -1,0 +1,66 @@
+@startuml
+title UML sequence behaviour — Run seed twice
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Developer" as actor
+box "Backend — PromiseHub.Cli" #D1FADF
+  participant "SeedCommand" as seed
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "IMigrationStatus" as status
+  participant "DatabaseSeeder" as seeder
+  participant "OrganizationsSeedStep and following steps" as steps
+  participant "SeedIds" as ids
+  database "PromiseHubDbContext" as db
+end box
+== First run ==
+actor -> seed : promisehub-cli seed --profile demo
+seed -> status : PendingAsync()
+alt Migrations pending
+  status --> seed : Pending list
+  seed --> actor : Exit 1: run migrate first (L2-042)
+else Schema current
+  status --> seed : none
+  seed -> seeder : SeedAsync(Demo)
+  loop steps in order
+    seeder -> steps : ApplyAsync(context, profile, report)
+    steps -> ids : Of("org:harbourview"), Of("org:<second>"), Of("person:jaylen-okafor"), ...
+    ids --> steps : Stable Guids
+    steps -> db : Find by id
+    db --> steps : Not found
+    steps -> db : Insert rows with OrganizationId
+    steps --> seeder : report.Created += n
+  end
+  seeder -> db : Commit (one transaction per organization)
+  seeder --> seed : SeedReport(Created = N, Unchanged = 0)
+  seed --> actor : Two organizations with distinct modules and plans; Harbourview cast (L2-042)
+end
+== Second run ==
+actor -> seed : promisehub-cli seed --profile demo
+seed -> seeder : SeedAsync(Demo)
+loop steps in order
+  seeder -> steps : ApplyAsync(...)
+  steps -> db : Find by stable id
+  db --> steps : Found
+  steps -> steps : Compare fields
+  alt Identical
+    steps --> seeder : report.Unchanged += n
+  else Differs and --repair not given
+    steps --> seeder : report.Drifted += n; row untouched
+  end
+end
+seeder --> seed : SeedReport(Created = 0)
+seed --> actor : Nothing created, nothing changed (L2-042)
+@enduml

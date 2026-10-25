@@ -2,7 +2,7 @@
 
 ## Overview
 
-PromiseHub serves many organizations from one deployment, and inside each organization staff hold one of six roles: program director, admin, site lead, youth worker, volunteer coordinator and platform admin. Child, medical and incident data are visible only to roles that need them. This feature covers how the server decides, on every request, whether the caller may reach an endpoint and which fields of a record the caller may see.
+PromiseHub serves all of its organizations from one deployment, and inside each organization staff hold one of six roles: program director, admin, site lead, youth worker, volunteer coordinator and platform admin. Child, medical and incident data are visible only to roles that need them. This feature covers how the server decides, on every request, whether the caller may reach an endpoint and which fields of a record the caller may see.
 
 Authorization is a server-side decision. The Angular pages reflect the decision by hiding actions and showing restricted states, but a hidden button never substitutes for a server check. A volunteer coordinator who requests a child's Quick Card receives the record with the medical fields omitted and sees the restricted state (`quick-card/forbidden`). A youth worker who requests the incident list receives only the incidents they reported. A site lead who calls any `/settings/*` endpoint receives 403 and the page shows the forbidden state (`staff/forbidden`). When an admin changes a person's role (`change-role`), the new permissions apply on that person's next request and the change is audited. When an admin removes a staff member (`remove-staff`), every subsequent request from that person answers 401.
 

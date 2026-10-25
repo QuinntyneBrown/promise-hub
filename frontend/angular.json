@@ -359,6 +359,7 @@
             "index": "projects/promisehub/src/index.html",
             "browser": "projects/promisehub/src/main.ts",
             "tsConfig": "projects/promisehub/tsconfig.app.json",
+            "assets": ["projects/promisehub/src/favicon.ico"],
             "styles": ["projects/promisehub/src/styles.css"]
           },
           "configurations": {

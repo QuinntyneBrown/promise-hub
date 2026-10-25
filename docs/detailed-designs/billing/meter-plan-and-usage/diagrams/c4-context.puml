@@ -1,0 +1,17 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Meter the plan and usage
+
+Person(admin, "Admin", "Reads usage, changes plan, updates card")
+Person(staff, "Program director", "Accepts enrollments that count toward the plan")
+System(promisehub, "PromiseHub", "Meters active children and SMS segments per organization")
+System_Ext(processor, "Payment processor", "Stores cards, charges subscriptions, prorates, reports events")
+System_Ext(email, "Email provider", "Delivers payment-failed notices")
+
+Rel(admin, promisehub, "Views Billing, changes plan", "HTTPS")
+Rel(staff, promisehub, "Accepts enrollments", "HTTPS")
+Rel(promisehub, processor, "Creates and changes subscriptions, previews invoices", "HTTPS API")
+Rel_Back(promisehub, processor, "Payment succeeded or failed", "Webhook")
+Rel(promisehub, email, "Emails admins on payment failure", "HTTPS API")
+@enduml

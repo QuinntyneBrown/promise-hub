@@ -20,11 +20,11 @@ enum Theme {
 }
 
 enum BreakpointRange {
-  Under576
-  From576
+  Under640
+  From640
   From768
-  From992
-  From1200
+  From1024
+  From1280
 }
 
 class ThemeService {
@@ -93,7 +93,7 @@ class AxeFixture {
 ThemeService --> Theme
 BreakpointService --> BreakpointRange
 GridComponent ..> BreakpointService
-DialogComponent ..> BreakpointService : bottom sheet under 576 px
+DialogComponent ..> BreakpointService : bottom sheet under 640 px
 ToastService --> "*" ToastComponent : creates
 ShellComponent ..> ThemeService
 ShellComponent *-- ToastComponent : live region

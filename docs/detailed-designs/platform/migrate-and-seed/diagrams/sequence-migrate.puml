@@ -1,0 +1,61 @@
+@startuml
+title UML sequence behaviour — Migrate, then start the API
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Developer or release pipeline" as actor
+box "Backend — PromiseHub.Cli" #D1FADF
+  participant "Program" as program
+  participant "MigrateCommand" as migrate
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "MigrationGuardHostedService" as guard
+  participant "Host" as host
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "IMigrationStatus" as status
+  database "PromiseHubDbContext" as db
+end box
+== API started against an unmigrated database ==
+actor -> host : Start PromiseHub.Api
+host -> guard : StartAsync()
+guard -> status : PendingAsync()
+status -> db : Compare assembly migrations with __EFMigrationsHistory
+db --> status : ["20261105_AddIncidentReview"]
+status --> guard : 1 pending
+guard -> guard : Log Critical: pending migration 20261105_AddIncidentReview (L2-042)
+guard -> host : StopApplication(); exit code 1
+host --> actor : Process exits; nothing served
+== Migrate through the CLI ==
+actor -> program : promisehub-cli migrate
+program -> migrate : ExecuteAsync()
+migrate -> status : PendingAsync()
+status --> migrate : ["20261105_AddIncidentReview"]
+alt --check
+  migrate --> program : Exit 3 (pending, nothing applied)
+else apply
+  migrate -> db : Database.MigrateAsync()
+  db --> migrate : Applied; history updated
+  migrate -> migrate : Log applied migration and current revision
+  migrate --> program : Exit 0 (L2-042)
+end
+program --> actor : Exit code
+== API started again ==
+actor -> host : Start PromiseHub.Api
+host -> guard : StartAsync()
+guard -> status : PendingAsync()
+status --> guard : none
+guard --> host : Continue
+host --> actor : Serving; /health/ready reports migrations current
+@enduml

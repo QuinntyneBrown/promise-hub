@@ -26,10 +26,10 @@ enum ModuleKey {
 
 enum Breakpoint {
   Phone
-  Sm576
+  Sm640
   Md768
-  Lg992
-  Xl1200
+  Lg1024
+  Xl1280
 }
 
 class NavigationItem {

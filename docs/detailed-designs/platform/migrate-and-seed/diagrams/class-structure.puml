@@ -1,0 +1,122 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Migrate and seed
+
+interface ICliCommand {
+  +string Name
+  +ExecuteAsync(args: string[], ct: CancellationToken): Task<int>
+}
+
+class MigrateCommand {
+  +Name = "migrate"
+  +ExecuteAsync(args: string[], ct: CancellationToken): Task<int>
+  -CheckOnly: bool
+}
+
+class SeedCommand {
+  +Name = "seed"
+  +ExecuteAsync(args: string[], ct: CancellationToken): Task<int>
+  -Profile: SeedProfile
+  -Repair: bool
+}
+
+class ResetCommand {
+  +Name = "reset"
+  +ExecuteAsync(args: string[], ct: CancellationToken): Task<int>
+  -IsAllowed(env: IHostEnvironment, config: IConfiguration): bool
+}
+
+enum SeedProfile {
+  Demo
+  Test
+}
+
+interface IMigrationStatus {
+  +PendingAsync(ct: CancellationToken): Task<IReadOnlyList<string>>
+  +AppliedAsync(ct: CancellationToken): Task<IReadOnlyList<string>>
+}
+
+class EfMigrationStatus {
+  -PromiseHubDbContext context
+  +PendingAsync(ct: CancellationToken): Task<IReadOnlyList<string>>
+  +AppliedAsync(ct: CancellationToken): Task<IReadOnlyList<string>>
+}
+
+class DatabaseSeeder {
+  -IReadOnlyList<ISeedStep> steps
+  +SeedAsync(profile: SeedProfile, repair: bool, ct: CancellationToken): Task<SeedReport>
+}
+
+interface ISeedStep {
+  +int Order
+  +ApplyAsync(context: PromiseHubDbContext, profile: SeedProfile, report: SeedReport, ct: CancellationToken): Task
+}
+
+class OrganizationsSeedStep
+class StaffSeedStep
+class HouseholdsSeedStep
+class ProgramsAndEventsSeedStep
+class SlipsAttendanceIncidentsSeedStep
+class UsageSeedStep
+
+class SeedIds {
+  {static} +Of(name: string): Guid
+}
+
+class SeedReport {
+  +int Created
+  +int Unchanged
+  +int Drifted
+  +int Repaired
+}
+
+class MigrationGuardHostedService {
+  -IMigrationStatus status
+  -IHostApplicationLifetime lifetime
+  +StartAsync(ct: CancellationToken): Task
+  +StopAsync(ct: CancellationToken): Task
+}
+
+class PromiseHubDbContext {
+  +DbSet<Organization> Organizations
+  +DbSet<Membership> Memberships
+  +DbSet<Household> Households
+  +DbSet<Child> Children
+  +DbSet<Program> Programs
+  +DbSet<Event> Events
+}
+
+ICliCommand <|.. MigrateCommand
+ICliCommand <|.. SeedCommand
+ICliCommand <|.. ResetCommand
+SeedCommand --> SeedProfile
+MigrateCommand ..> IMigrationStatus
+SeedCommand ..> IMigrationStatus : refuses when pending
+SeedCommand ..> DatabaseSeeder
+ResetCommand ..> MigrateCommand
+ResetCommand ..> SeedCommand
+IMigrationStatus <|.. EfMigrationStatus
+EfMigrationStatus --> PromiseHubDbContext
+DatabaseSeeder --> "*" ISeedStep : ordered
+DatabaseSeeder --> SeedReport
+ISeedStep <|.. OrganizationsSeedStep
+ISeedStep <|.. StaffSeedStep
+ISeedStep <|.. HouseholdsSeedStep
+ISeedStep <|.. ProgramsAndEventsSeedStep
+ISeedStep <|.. SlipsAttendanceIncidentsSeedStep
+ISeedStep <|.. UsageSeedStep
+ISeedStep ..> SeedIds
+ISeedStep ..> PromiseHubDbContext
+MigrationGuardHostedService ..> IMigrationStatus
+@enduml

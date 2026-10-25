@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="docs/design-system/assets/promisehub-mark-white.svg" alt="PromiseHub logo" width="128" height="128">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/design-system/assets/promisehub-mark-white.svg">
+    <img src="docs/design-system/assets/promisehub-mark-mono-teal-amber.svg" alt="PromiseHub logo" width="128" height="128">
+  </picture>
 </p>
 
 # PromiseHub

@@ -1,0 +1,33 @@
+# Estimates
+
+- Overall effort: 208 days
+- Complete: 0%
+
+| Subsystem | Effort | Complete |
+|---|---|---|
+| [identity](identity.md) | 11 days | 0% |
+| [organizations](organizations.md) | 34 days | 0% |
+| [platform](platform.md) | 24 days | 0% |
+| [shell](shell.md) | 9 days | 0% |
+| [households](households.md) | 6 days | 0% |
+| [programs](programs.md) | 5 days | 0% |
+| [staff](staff.md) | 5 days | 0% |
+| [enrollment](enrollment.md) | 5 days | 0% |
+| [events](events.md) | 5 days | 0% |
+| [attendance](attendance.md) | 27 days | 0% |
+| [messaging](messaging.md) | 14 days | 0% |
+| [slips](slips.md) | 17 days | 0% |
+| [guardian](guardian.md) | 9 days | 0% |
+| [incidents](incidents.md) | 6 days | 0% |
+| [reports](reports.md) | 10 days | 0% |
+| [imports](imports.md) | 5 days | 0% |
+| [billing](billing.md) | 10 days | 0% |
+| [audit](audit.md) | 6 days | 0% |
+
+## Roadmap
+
+1. Identity, organizations and platform foundations: sign-in, authorization, tenancy, migration, security and jobs.
+2. Shell, household, program and staff foundations: accessible navigation, shared records, program setup and onboarding.
+3. Enrollment, attendance and imports: guardian enrollment, roster import, session flow, pickup, Quick Cards and offline support.
+4. Messaging, permission slips and guardian experiences: delivery controls, signing, reminders, localized guardian pages and incidents.
+5. Reports, billing and audit: computation and export, plan metering and payments, then organization audit search.

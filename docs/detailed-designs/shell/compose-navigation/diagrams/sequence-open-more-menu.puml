@@ -23,7 +23,7 @@ box "Frontend — PromiseHub web app (promisehub shell)" #E0F2FE
 end box
 actor -> tabbar : Tap More (44 px target, L2-029)
 tabbar -> sheet : open(MoreMenuComponent)
-sheet -> sheet : Width under 576 px: bottom-sheet pane class
+sheet -> sheet : Width under 640 px: bottom-sheet pane class
 sheet -> sheet : Mark page root inert; trap focus (L2-029)
 sheet -> more : Create in CDK Dialog
 more -> nav : Read more signal and SessionContext
