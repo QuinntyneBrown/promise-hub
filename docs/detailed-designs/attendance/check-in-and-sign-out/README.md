@@ -65,6 +65,10 @@ The feature is a vertical slice from the check-in screen on a phone to the `Atte
 - **`IAuditLog`** — writes the attendance change with actor, organization, record, action, before and after values and time (`L2-032`).
 - **`IClock`** — supplies the server time used when `ArrivedAt` is absent.
 
+### Built so far
+
+Slice 06 delivered `CheckInPage` (default, empty "No sessions today", no-results with Add walk-in, error), the optimistic roster inside the page, `CheckInSheetDialog` (now, earlier, mark absent), `AddWalkInDialog`, `ATTENDANCE_API` with `today`, `roster`, `checkIn`, `markAbsent` and `addWalkIn`, `GET /sessions/today`, `GET /sessions/{id}/roster`, `POST /check-ins`, `/absences` and `/walk-ins` under Roll Call, `AttendanceRecord`, `AttendanceEvent` and `WalkIn`, and Today's session cards. A session is an event (ADR 0009). Sign-out and `ConfirmPickupDialog` arrive with slice 08, the absence text with Messages, the sync chip with offline check-in.
+
 ### Behavioural rules
 
 - The UI updates within 300 ms of a tap; the server confirms within 1 second at the 95th percentile (`L2-033`). On success the page shows a toast "Kevin Tran checked in · 32 of 48 now here" with **Undo**. On failure the row reverts and a danger toast names the child.

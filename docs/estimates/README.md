@@ -1,7 +1,7 @@
 # Estimates
 
 - Overall effort: 216 days
-- Complete: 15%
+- Complete: 17%
 
 | Subsystem | Effort | Complete |
 |---|---|---|
@@ -14,7 +14,7 @@
 | [staff](staff.md) | 5 days | 0% |
 | [enrollment](enrollment.md) | 5 days | 0% |
 | [events](events.md) | 5 days | 65% |
-| [attendance](attendance.md) | 27 days | 0% |
+| [attendance](attendance.md) | 27 days | 13% |
 | [messaging](messaging.md) | 14 days | 0% |
 | [notifications](notifications.md) | 8 days | 0% |
 | [slips](slips.md) | 17 days | 0% |
