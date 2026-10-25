@@ -88,4 +88,5 @@ Why now: Reaching families is core value and slips depend on it. At 9 days this 
 - The documentation agrees with the code, and the estimate and `docs/journeys.md` show the true percent complete.
 - `docs/videos/10-send-guardian-messages/10-send-guardian-messages.mp4` exists, with narration, the PromiseHub logo, real screen clips and screenshots, and background music.
 - The work is on a branch with a pull request to the default branch, and its checks are green. Fetch and rebase first.
+- At the end, `docs/journeys.md` is updated for this journey (status, percent complete and video link), and every change is committed and pushed to `origin`. Nothing is left uncommitted or unpushed.
 - Only then end the run, with a short summary of what was built, the decisions made along the way, and anything deferred.

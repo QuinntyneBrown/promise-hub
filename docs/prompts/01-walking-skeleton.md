@@ -100,4 +100,5 @@ Why now: Every journey needs tenancy, seed data, the shell and audit. Building t
 - The documentation agrees with the code, and the estimate and `docs/journeys.md` show the true percent complete.
 - `docs/videos/01-walking-skeleton/01-walking-skeleton.mp4` exists, with narration, the PromiseHub logo, real screen clips and screenshots, and background music.
 - The work is on a branch with a pull request to the default branch, and its checks are green. Fetch and rebase first.
+- At the end, `docs/journeys.md` is updated for this journey (status, percent complete and video link), and every change is committed and pushed to `origin`. Nothing is left uncommitted or unpushed.
 - Only then end the run, with a short summary of what was built, the decisions made along the way, and anything deferred.
