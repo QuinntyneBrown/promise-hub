@@ -42,7 +42,11 @@ Backend:
 - **`IPasswordHasher`**, **`ITotpVerifier`**, **`ISessionStore`** — infrastructure services in `PromiseHub.Infrastructure/Auth/`. `ISessionStore` is backed by `PromiseHubDbContext` so revocation is visible to every API instance on the next request; the 60-second revocation window in `L2-006` is met by the store, not by a cache.
 - **`AuditLog`** — infrastructure writer that records sign-in, MFA, lockout and sign-out-everywhere events as administrative actions.
 
-Decisions still open: the session cookie name and `SameSite` setting, the hashing algorithm parameters, the number of recovery codes generated per enrollment and the exact MFA enrollment deadline shown in the `account/mfa-off` banner are `<TO SUPPLY>`.
+ADR 0005 settles the cookie name (`.PromiseHub.Session`), `SameSite=Strict` and hashing (ASP.NET Core Identity PBKDF2). Still open: the number of recovery codes per enrollment and the MFA enrollment deadline shown in the `account/mfa-off` banner are `<TO SUPPLY>`.
+
+## Built so far
+
+Slice 02 delivered `SignInPage` (default, invalid, submitting, error, expired and locked) and `MfaPage` in `account`, the auth guard and account-menu sign-out in the shell, `POST /auth/sign-in`, `/auth/mfa` and `/auth/sign-out`, `SignInHandler`, `CompleteMfaHandler`, the attempt-based lockout, TOTP verification and audited sign-ins. Sessions are cookie tickets (ADR 0005), so `SessionMiddleware`, `ISessionStore`, `StaffSession`, recovery codes, trusted devices, sign-out-everywhere and the session-expired dialog that replays a form are deferred to `manage-sessions` and `recover-account-access`; today an expired session returns to sign-in with the destination kept.
 
 ## Requirements
 

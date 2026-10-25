@@ -41,6 +41,10 @@ Backend:
 
 Every integration test for an endpoint includes a role matrix case and a cross-tenant case, in line with `AGENTS.md`.
 
+## Built so far
+
+Slice 02 delivered `Permission`, `RolePermissions` (in `PromiseHub.Application/Identity/`, ADR 0003) and a `RequirePermission` extension backed by an ASP.NET Core authorization requirement that reads the role of the membership resolved for the request; `/settings/*` answers 403 for roles without `ManageSettings`. Field policies, row scopes, role changes and removals arrive with their features.
+
 ## Requirements
 
 The feature realizes the following level-2 (L2) requirements. Each L2 requirement refines a level-1 (L1) requirement, cited by identifier.

@@ -12,7 +12,11 @@ import {
 } from '@promisehub/components';
 import { safeReturnUrl } from '../safe-return-url';
 
-const timeFormat = new Intl.DateTimeFormat('en-CA', { hour: 'numeric', minute: '2-digit' });
+const timeFormat = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' });
+
+/** "4:27 pm", as the mocks write times. */
+const formatTime = (date: Date) =>
+  timeFormat.format(date).replace(/\s?([AP])M$/, (_, p: string) => ` ${p.toLowerCase()}m`);
 
 /** Sign in (mock: sign-in) in its default, invalid, submitting, error, expired and locked states. */
 @Component({
@@ -39,7 +43,7 @@ export class SignInPage {
 
   protected lockedText(): string {
     const until = this.lockedUntil();
-    const time = until ? timeFormat.format(new Date(until)) : null;
+    const time = until ? formatTime(new Date(until)) : null;
     return `Sign-in paused${time ? ' until ' + time : ' for 15 minutes'}. You can reset your password instead.`;
   }
 
