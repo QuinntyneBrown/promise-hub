@@ -1,0 +1,68 @@
+<ph-page-header title="Modules" />
+@switch (state()) {
+  @case ('forbidden') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="lock"
+        title="Admins configure modules"
+        text="Ask an admin or a program director."
+      >
+        <ph-button link="/">Back to Today</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('error') {
+    <div class="stack">
+      <ph-tabs label="Settings sections" [links]="sections" />
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="warning"
+          tone="error"
+          title="We couldn’t load modules"
+          text="Try again."
+        >
+          <ph-button variant="primary" (click)="load()">Try again</ph-button>
+        </ph-empty-state>
+      </ph-card>
+    </div>
+  }
+  @case ('loaded') {
+    <form class="stack form" novalidate (ngSubmit)="save()">
+      <ph-tabs label="Settings sections" [links]="sections" />
+      <div class="summary-row">
+        <p class="muted" data-testid="modules-summary">
+          {{ on().size }} of {{ catalog.length }} modules on
+        </p>
+        <div class="presets" role="group" aria-label="Presets">
+          @for (p of presets; track p.name) {
+            <ph-chip [pressed]="preset() === p.name" (click)="applyPreset(p.modules)">{{
+              p.name
+            }}</ph-chip>
+          }
+        </div>
+      </div>
+      <ph-list label="Modules">
+        @for (m of catalog; track m.id) {
+          <ph-list-item
+            [title]="m.name"
+            [meta]="m.description"
+            [caption]="on().has(m.id) ? needsCaption(m.needs) : null"
+            [error]="errors()[m.id] ?? null"
+            [muted]="!on().has(m.id)"
+          >
+            <ph-switch
+              [label]="m.name + ' on'"
+              [labelHidden]="true"
+              [name]="'m-' + m.id"
+              [ngModel]="on().has(m.id)"
+              (ngModelChange)="set(m.id, $event)"
+            />
+          </ph-list-item>
+        }
+      </ph-list>
+      <div>
+        <ph-button variant="primary" type="submit" [busy]="saving()">Save changes</ph-button>
+      </div>
+    </form>
+  }
+}

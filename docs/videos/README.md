@@ -10,6 +10,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 |---|---|---|---|
 | 01 | [The walking skeleton](01-walking-skeleton/README.md) | ~3.5 min | Tenancy, migrate and seed, audit recording, the shell |
 | 02 | [Sign in securely](02-sign-in-securely/README.md) | ~3 min | Sign-in, lockout, the code step, sessions and server-side roles |
+| 03 | [Configure modules](03-configure-modules/README.md) | ~3 min | Settings › Modules, dependencies, module gates and navigation |
 
 ## Making or updating a video
 

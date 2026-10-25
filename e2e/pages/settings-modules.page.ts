@@ -1,0 +1,50 @@
+import { expect, type Locator } from '@playwright/test';
+import { BasePage } from './base.page';
+
+/** Settings › Modules (mock: settings-modules). */
+export class SettingsModulesPage extends BasePage {
+  async open(): Promise<void> {
+    await super.open('/settings/modules');
+    await expect(this.page.getByRole('heading', { level: 1, name: 'Modules' })).toBeVisible();
+  }
+
+  get list(): Locator {
+    return this.page.getByRole('list', { name: 'Modules' });
+  }
+
+  get summary(): Locator {
+    return this.page.getByTestId('modules-summary');
+  }
+
+  get forbidden(): Locator {
+    return this.page.getByRole('heading', { name: 'Admins configure modules' });
+  }
+
+  get toast(): Locator {
+    return this.page.getByTestId('toast');
+  }
+
+  toggle(name: string): Locator {
+    return this.list.getByRole('switch', { name: `${name} on` });
+  }
+
+  error(name: string): Locator {
+    return this.list.getByRole('listitem').filter({ hasText: name }).getByTestId('module-error');
+  }
+
+  async moduleNames(): Promise<string[]> {
+    return (await this.list.getByTestId('module-title').allInnerTexts()).map((t) => t.trim());
+  }
+
+  async set(name: string, on: boolean): Promise<void> {
+    await this.toggle(name).setChecked(on);
+  }
+
+  async preset(name: string): Promise<void> {
+    await this.page.getByRole('group', { name: 'Presets' }).getByRole('button', { name }).click();
+  }
+
+  async save(): Promise<void> {
+    await this.page.getByRole('button', { name: 'Save changes' }).click();
+  }
+}

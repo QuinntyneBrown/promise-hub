@@ -14,6 +14,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
 {
     public DbSet<Organization> Organizations => Set<Organization>();
     public DbSet<Membership> Memberships => Set<Membership>();
+    public DbSet<ModuleConfiguration> ModuleConfigurations => Set<ModuleConfiguration>();
     public DbSet<Household> Households => Set<Household>();
     public DbSet<Child> Children => Set<Child>();
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
@@ -36,6 +37,13 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(m => m.PersonName).HasMaxLength(200);
             e.Property(m => m.Email).HasMaxLength(320);
             e.Property(m => m.Role).HasConversion<string>().HasMaxLength(40);
+        });
+        modelBuilder.Entity<ModuleConfiguration>(e =>
+        {
+            e.Property(c => c.ModulesOn).HasMaxLength(200);
+            e.Property(c => c.UpdatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Ignore(c => c.On);
+            e.HasIndex(c => c.OrganizationId).IsUnique();
         });
         modelBuilder.Entity<Household>(e => e.Property(h => h.Name).HasMaxLength(200));
         modelBuilder.Entity<Child>(e =>

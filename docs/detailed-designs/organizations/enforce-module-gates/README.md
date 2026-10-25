@@ -28,7 +28,7 @@ Turning a module off hides it and turning it on again restores every record unch
 
 ### Backend — `PromiseHub.Infrastructure`
 
-- **`ModuleConfigurationCache`** — per-organization in-memory cache with invalidation on save; the cache lifetime beyond invalidation is `<TO SUPPLY>`.
+- **`ModuleConfigurationCache`** — per-organization in-memory cache with invalidation on save; replaced by a per-request read (ADR 0006).
 - **`JobRunner`** — passes `IModuleGate` to each per-tenant job (see `isolate-tenant-data`).
 
 ### Frontend — `frontend/projects/promisehub/` (shell) and `frontend/projects/api/`
@@ -43,6 +43,10 @@ Turning a module off hides it and turning it on again restores every record unch
 ### Testing
 
 Each feature's acceptance suite includes the case where its module is off: the route redirects to Today, the API answers 404, and after turning the module back on every record created before is present (criterion 5).
+
+## Built so far
+
+Slice 03 delivered `IModuleGate` and `ModuleGate` (per-request read), the `RequireModule` endpoint filter (applied to `GET /children/{id}` for Roster), modules in `GET /me`, navigation composed in the shell from the session's modules (`navigationFor`), and `moduleRoute` with its `canMatch` guards for every module route. Guardian pages, Today's cards, search scopes and per-tenant jobs adopt the gate as they are built.
 
 ## Requirements
 

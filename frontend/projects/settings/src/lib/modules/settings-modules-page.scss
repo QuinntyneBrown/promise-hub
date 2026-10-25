@@ -1,0 +1,20 @@
+.form {
+  max-width: var(--layout-dialog-max);
+  padding-bottom: var(--space-6);
+}
+.summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+}
+.muted {
+  color: var(--color-fg-muted);
+  margin: 0;
+}
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}

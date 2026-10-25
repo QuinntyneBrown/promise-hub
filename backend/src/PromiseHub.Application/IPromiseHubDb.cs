@@ -11,6 +11,7 @@ public interface IPromiseHubDb
 {
     DbSet<Organization> Organizations { get; }
     DbSet<Membership> Memberships { get; }
+    DbSet<ModuleConfiguration> ModuleConfigurations { get; }
     DbSet<Household> Households { get; }
     DbSet<Child> Children { get; }
     DbSet<AuditEntry> AuditEntries { get; }

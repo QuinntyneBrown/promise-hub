@@ -25,5 +25,8 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 
 | Sign in | `sign-in` (default, invalid, submitting, error, expired, locked) | `ph-auth-card`, `ph-text-field`, `ph-switch`, `ph-alert`, `ph-button`, `ph-skip-link` | Return-path handling |
 | Enter your code | `sign-in/mfa` | `ph-auth-card`, `ph-text-field`, `ph-switch`, `ph-alert`, `ph-button`, `ph-skip-link` | — |
+| Settings › Modules | `settings-modules` (default, single, invalid, success, error, forbidden) | `ph-page-header`, `ph-tabs`, `ph-chip`, `ph-list`, `ph-list-item`, `ph-switch`, `ph-button`, `ph-card`, `ph-empty-state`, toast via `ToastService` | Presets and dependency captions from `MODULE_CATALOG` |
+
+The toast region (`ph-toast-region`) sits once in the app root.
 
 Deferred: `toast` and `banner` (first used by later slices); the account menu's theme switch.

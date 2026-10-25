@@ -2,7 +2,7 @@
 <div class="has-tabbar">
   @if (session(); as s) {
     <ph-top-bar
-      [items]="navigation"
+      [items]="navigation()"
       [personName]="s.personName"
       [menuOpen]="menuOpen()"
       (moreRequested)="openMenu(s)"
@@ -16,7 +16,7 @@
   </main>
   @if (session(); as s) {
     <ph-bottom-navigation
-      [items]="navigation"
+      [items]="navigation()"
       [menuOpen]="menuOpen()"
       (moreRequested)="openMenu(s)"
     />

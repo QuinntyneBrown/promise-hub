@@ -1,5 +1,5 @@
 import type { Page, Route } from '@playwright/test';
-import { memberships, organizations, seededMfaCode, seededPassword } from './seed';
+import { type ModuleId, moduleCatalog, memberships, organizations, seededMfaCode, seededPassword } from './seed';
 
 type Handler = (route: Route) => Promise<void>;
 
@@ -16,6 +16,8 @@ export class FakeApi {
   private signInFailures = new Map<string, number>();
   private mfaPending: string | null = null;
   private expired = false;
+  // Per-organization module state, copied so tests never share changes.
+  private modules = new Map(organizations.map((o) => [o.id, [...o.modules]]));
 
   constructor(private membershipId: string | null) {}
 
@@ -43,6 +45,8 @@ export class FakeApi {
     ['POST', /^\/api\/auth\/sign-in$/, (route) => this.signIn(route)],
     ['POST', /^\/api\/auth\/mfa$/, (route) => this.mfa(route)],
     ['POST', /^\/api\/auth\/sign-out$/, (route) => this.signOut(route)],
+    ['GET', /^\/api\/settings\/modules$/, (route) => this.getModules(route)],
+    ['PUT', /^\/api\/settings\/modules$/, (route) => this.saveModules(route)],
   ];
 
   private async handle(route: Route): Promise<void> {
@@ -79,6 +83,7 @@ export class FakeApi {
         organizationId: organization.id,
         organizationName: organization.name,
         plan: organization.plan,
+        modules: this.modules.get(organization.id),
       },
     });
   }
@@ -123,6 +128,53 @@ export class FakeApi {
     }
     this.membershipId = null;
     return route.fulfill({ status: 204 });
+  }
+
+  /** Modules on for the signed-in organization, or a 401/403 answer when the caller may not manage them. */
+  private async settingsCaller(route: Route): Promise<string | null> {
+    const membership = memberships.find((m) => m.id === this.membershipId);
+    if (!membership) {
+      await this.unauthenticated(route);
+      return null;
+    }
+    if (!['Admin', 'ProgramDirector'].includes(membership.role)) {
+      await route.fulfill({ status: 403, json: { code: 'forbidden' } });
+      return null;
+    }
+    return membership.organizationId;
+  }
+
+  private async getModules(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    const on = this.modules.get(organizationId)!;
+    return route.fulfill({
+      json: { modules: moduleCatalog.map((m) => ({ id: m.id, name: m.name, on: on.includes(m.id), needs: m.needs })) },
+    });
+  }
+
+  private async saveModules(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    const { on } = route.request().postDataJSON() as { on: ModuleId[] };
+    const errors: { module: string; message: string }[] = [];
+    const name = (id: ModuleId) => moduleCatalog.find((m) => m.id === id)!.name;
+    if (!on.includes('Roster')) {
+      const dependents = moduleCatalog.filter((m) => on.includes(m.id) && m.needs.includes('Roster')).map((m) => m.name);
+      if (dependents.length) {
+        const list = dependents.length === 1 ? dependents[0] : `${dependents.slice(0, -1).join(', ')} and ${dependents.at(-1)}`;
+        errors.push({ module: 'Roster', message: `${list} ${dependents.length === 1 ? 'needs' : 'need'} the roster.` });
+      }
+    }
+    for (const m of moduleCatalog.filter((c) => on.includes(c.id))) {
+      const missing = m.needs.filter((n) => n !== 'Roster' && !on.includes(n));
+      if (missing.length) errors.push({ module: m.id, message: `${m.name} needs ${missing.map(name).join(' and ')}.` });
+    }
+    if (errors.length) {
+      return route.fulfill({ status: 422, json: { errors } });
+    }
+    this.modules.set(organizationId, moduleCatalog.map((m) => m.id).filter((id) => on.includes(id)));
+    return route.fulfill({ json: { on: on.length } });
   }
 
   private startSession(membershipId: string): void {

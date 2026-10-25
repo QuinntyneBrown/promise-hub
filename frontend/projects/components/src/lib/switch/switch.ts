@@ -11,6 +11,8 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 })
 export class PhSwitch implements ControlValueAccessor {
   readonly label = input.required<string>();
+  /** Read by screen readers only, when the row around the switch already says what it controls. */
+  readonly labelHidden = input(false);
 
   protected readonly checked = signal(false);
   protected readonly disabled = signal(false);

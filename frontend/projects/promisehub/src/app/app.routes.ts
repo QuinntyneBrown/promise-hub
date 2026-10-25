@@ -1,10 +1,11 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './auth/auth.guard';
 import { ForbiddenPage } from './errors/forbidden/forbidden-page';
 import { MaintenancePage } from './errors/maintenance/maintenance-page';
 import { NotFoundPage } from './errors/not-found/not-found-page';
 import { OfflinePage } from './errors/offline/offline-page';
 import { ServerErrorPage } from './errors/server-error/server-error-page';
-import { authGuard } from './auth/auth.guard';
+import { moduleRoute } from './modules/module-route';
 import { Shell } from './shell/shell';
 
 export const routes: Routes = [
@@ -14,7 +15,35 @@ export const routes: Routes = [
     component: Shell,
     canActivate: [authGuard],
     children: [
-      { path: '', loadChildren: () => import('@promisehub/today').then((m) => m.routes) },
+      {
+        path: '',
+        pathMatch: 'full',
+        loadChildren: () => import('@promisehub/today').then((m) => m.routes),
+      },
+      {
+        path: 'settings',
+        loadChildren: () => import('@promisehub/settings').then((m) => m.routes),
+      },
+      ...moduleRoute('families', 'Roster', () =>
+        import('@promisehub/households').then((m) => m.routes),
+      ),
+      ...moduleRoute('check-in', 'RollCall', () =>
+        import('@promisehub/attendance').then((m) => m.routes),
+      ),
+      ...moduleRoute('events', 'Slips', () => import('@promisehub/events').then((m) => m.routes)),
+      ...moduleRoute('programs', 'Slips', () =>
+        import('@promisehub/programs').then((m) => m.routes),
+      ),
+      ...moduleRoute('slips', 'Slips', () => import('@promisehub/slips').then((m) => m.routes)),
+      ...moduleRoute('messages', 'Messages', () =>
+        import('@promisehub/messaging').then((m) => m.routes),
+      ),
+      ...moduleRoute('incidents', 'Incidents', () =>
+        import('@promisehub/incidents').then((m) => m.routes),
+      ),
+      ...moduleRoute('reports', 'Reports', () =>
+        import('@promisehub/reports').then((m) => m.routes),
+      ),
       { path: 'forbidden', component: ForbiddenPage, title: 'No access · PromiseHub' },
       {
         path: 'server-error',

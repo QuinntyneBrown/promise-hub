@@ -14,6 +14,9 @@ public static class DependencyInjection
         services.AddScoped<GetSessionHandler>();
         services.AddScoped<GetChildHandler>();
         services.AddScoped<GetOrganizationSettingsHandler>();
+        services.AddScoped<IModuleGate, ModuleGate>();
+        services.AddScoped<GetModulesHandler>();
+        services.AddScoped<SaveModulesHandler>();
         services.AddScoped<SignInHandler>();
         services.AddScoped<CompleteMfaHandler>();
         return services;

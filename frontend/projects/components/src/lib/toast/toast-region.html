@@ -1,0 +1,16 @@
+<div class="toast-region" role="status" aria-live="polite">
+  @for (toast of toasts.messages(); track toast.id) {
+    <div class="toast" [class]="'toast toast--' + toast.tone" data-testid="toast">
+      <ph-icon class="toast-icon" [name]="toast.tone === 'success' ? 'check-circle' : 'info'" />
+      <div class="body">
+        <div class="title">{{ toast.title }}</div>
+        @if (toast.text) {
+          <div class="text">{{ toast.text }}</div>
+        }
+      </div>
+      <button class="close" type="button" aria-label="Dismiss" (click)="toasts.dismiss(toast.id)">
+        <ph-icon name="close" size="sm" />
+      </button>
+    </div>
+  }
+</div>
