@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PromiseHub.Domain.Attendance;
 using PromiseHub.Domain.Audit;
+using PromiseHub.Domain.Guardian;
 using PromiseHub.Domain.Households;
 using PromiseHub.Domain.Messaging;
 using PromiseHub.Domain.Identity;
@@ -19,7 +20,7 @@ public interface IPromiseHubDb
     DbSet<Membership> Memberships { get; }
     DbSet<ModuleConfiguration> ModuleConfigurations { get; }
     DbSet<Household> Households { get; }
-    DbSet<Guardian> Guardians { get; }
+    DbSet<Domain.Households.Guardian> Guardians { get; }
     DbSet<Child> Children { get; }
     DbSet<AuditEntry> AuditEntries { get; }
     DbSet<Domain.Programs.Program> Programs { get; }
@@ -34,6 +35,9 @@ public interface IPromiseHubDb
     DbSet<Delivery> Deliveries { get; }
     DbSet<SmsUsagePeriod> SmsUsagePeriods { get; }
     DbSet<SlipSignature> SlipSignatures { get; }
+    DbSet<GuardianLink> GuardianLinks { get; }
+    DbSet<GuardianVerification> GuardianVerifications { get; }
+    DbSet<TrustedGuardianDevice> TrustedGuardianDevices { get; }
     DbSet<StaffUser> StaffUsers { get; }
     DbSet<SignInAttempt> SignInAttempts { get; }
 

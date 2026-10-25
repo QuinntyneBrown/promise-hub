@@ -1,4 +1,7 @@
-// Scaffold only. Overwrite or delete as implementation requires. No product logic is implemented.
 import { Routes } from '@angular/router';
+import { GuardianSlipPage } from './guardian-slip-page/guardian-slip-page';
 
-export const routes: Routes = [];
+/** Guardian pages: anonymous, outside the staff shell. */
+export const routes: Routes = [
+  { path: 'slip/:token', component: GuardianSlipPage, title: 'Permission slip' },
+];

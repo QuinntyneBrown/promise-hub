@@ -19,6 +19,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 09 | [Record attendance as a youth worker](09-record-attendance-as-youth-worker/README.md) | ~2.5 min | Staff assigned per session; youth workers run only their own, refused on the server |
 | 10 | [Send guardian messages](10-send-guardian-messages/README.md) | ~3.5 min | Compose by program or event, a live count and SMS price, per-household delivery, the SMS cap |
 | 11 | [Send permission slips](11-send-permission-slips/README.md) | ~3 min | Write, send or schedule, track answers per child, material edits re-open signing |
+| 12 | [Sign a permission slip](12-sign-a-permission-slip/README.md) | ~3 min | A texted link and a six-digit code, the family's language, typed-name signing and decline |
 
 ## Making or updating a video
 

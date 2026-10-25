@@ -14,6 +14,7 @@ builder.Services.AddHostedService<MigrationGuard>();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(connectionString);
 builder.Services.AddHostedService<PromiseHub.Api.Hosting.MessageDispatchHostedService>();
+builder.Services.AddSingleton(new PromiseHub.Application.Guardian.GuardianLinkOptions(builder.Configuration["Guardian:LinkBaseUrl"] ?? "http://localhost:4317"));
 // Enums travel as their names, as the DTOs already do.
 builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 builder.Services.AddStaffAuthentication();
@@ -40,6 +41,7 @@ app.MapEventEndpoints();
 app.MapAttendanceEndpoints();
 app.MapMessagingEndpoints();
 app.MapSlipEndpoints();
+app.MapGuardianEndpoints();
 app.MapSettingsEndpoints();
 
 app.Run();

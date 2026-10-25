@@ -40,6 +40,7 @@ export * from './lib/select/select';
 export * from './lib/select/select-option';
 export * from './lib/skip-link/skip-link';
 export * from './lib/error-summary/error-summary';
+export * from './lib/guardian-shell/guardian-shell';
 export * from './lib/error-summary/error-summary-item';
 export * from './lib/progress-bar/progress-bar';
 export * from './lib/recipient-count/recipient-count';

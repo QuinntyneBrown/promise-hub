@@ -18,6 +18,10 @@ Local terms used below:
 
 The Permission slips module gates the guardian slip endpoints (`L2-005`). Pages render in the household's language (`L2-027`).
 
+## Built so far
+
+Slice 12 delivered `GuardianSlipPage` at `/g/slip/:token` (code check, the slip pre-filled with the child's details, the questions, typed-name signing, decline with `DeclineSlipDialog`, receipt, already signed, declined, closed, expired and not-available states), `GUARDIAN_API`, `GET /g/slips/{token}`, `POST /g/slips/{token}/sign` and `/decline`, and the signature's name, time, device, language and text hash (ADR 0015). Notifying the site lead of a decline and the emailed receipt are not built yet.
+
 ## Description
 
 ### Frontend (`frontend/projects/guardian/`)

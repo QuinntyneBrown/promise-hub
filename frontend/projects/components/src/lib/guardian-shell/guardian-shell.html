@@ -1,0 +1,14 @@
+<a class="skip" href="#guardian-main">{{ skipLabel() }}</a>
+<header class="bar">
+  <ph-brand-mark />
+  <span class="org">{{ organization() ?? 'PromiseHub' }}</span>
+</header>
+<main id="guardian-main" class="main" tabindex="-1">
+  <ng-content />
+</main>
+@if (phone()) {
+  <footer class="footer">
+    {{ contactText() }}
+    <a [href]="'tel:' + phone()">{{ phone() }}</a>
+  </footer>
+}

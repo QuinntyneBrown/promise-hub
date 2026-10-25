@@ -9,7 +9,7 @@ namespace PromiseHub.Application.Messaging;
 /// </summary>
 public sealed class MessageWriter(IPromiseHubDb db, ITenantContext tenant, TimeProvider clock)
 {
-    public Message Queue(MessageSource source, string title, string body, ChannelChoice channel, Audience audience, AudienceRequest request)
+    public Message Queue(MessageSource source, string title, string body, ChannelChoice channel, Audience audience, AudienceRequest request, Func<Recipient, string?>? textFor = null)
     {
         var now = clock.GetUtcNow();
         var message = new Message(Guid.NewGuid(), tenant.OrganizationId, title, body, channel, audience.Label,
@@ -22,6 +22,10 @@ public sealed class MessageWriter(IPromiseHubDb db, ITenantContext tenant, TimeP
             if (r.Unreachable is { } reason)
             {
                 delivery.Fail(reason);
+            }
+            if (textFor?.Invoke(r) is { } text)
+            {
+                delivery.Personalize(text);
             }
             db.Deliveries.Add(delivery);
         }

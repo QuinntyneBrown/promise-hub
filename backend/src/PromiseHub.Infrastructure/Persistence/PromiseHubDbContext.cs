@@ -4,6 +4,7 @@ using PromiseHub.Application;
 using PromiseHub.Application.Organizations;
 using PromiseHub.Domain.Attendance;
 using PromiseHub.Domain.Audit;
+using PromiseHub.Domain.Guardian;
 using PromiseHub.Domain.Households;
 using PromiseHub.Domain.Messaging;
 using PromiseHub.Domain.Identity;
@@ -37,6 +38,9 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Delivery> Deliveries => Set<Delivery>();
     public DbSet<SmsUsagePeriod> SmsUsagePeriods => Set<SmsUsagePeriod>();
     public DbSet<SlipSignature> SlipSignatures => Set<SlipSignature>();
+    public DbSet<GuardianLink> GuardianLinks => Set<GuardianLink>();
+    public DbSet<GuardianVerification> GuardianVerifications => Set<GuardianVerification>();
+    public DbSet<TrustedGuardianDevice> TrustedGuardianDevices => Set<TrustedGuardianDevice>();
     public DbSet<StaffUser> StaffUsers => Set<StaffUser>();
     public DbSet<SignInAttempt> SignInAttempts => Set<SignInAttempt>();
 
@@ -205,6 +209,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(d => d.To).HasMaxLength(320);
             e.Property(d => d.FallbackEmail).HasMaxLength(320);
             e.Property(d => d.Reason).HasMaxLength(200);
+            e.Property(d => d.Text).HasMaxLength(1000);
             e.Property(d => d.Channel).HasConversion<string>().HasMaxLength(10);
             e.Property(d => d.Status).HasConversion<string>().HasMaxLength(20);
             e.Property(d => d.DueAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
@@ -218,6 +223,31 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(s => s.At).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.HasOne<PermissionSlip>().WithMany().HasForeignKey(s => s.SlipId);
             e.HasIndex(s => new { s.SlipId, s.ChildId });
+            e.Property(s => s.Device).HasMaxLength(300);
+            e.Property(s => s.Language).HasMaxLength(50);
+            e.Property(s => s.TextHash).HasMaxLength(64);
+            e.Property(s => s.Answers).HasMaxLength(500);
+            e.Property(s => s.Reason).HasMaxLength(500);
+        });
+        modelBuilder.Entity<GuardianLink>(e =>
+        {
+            e.Property(l => l.TokenHash).HasMaxLength(64);
+            e.HasIndex(l => l.TokenHash).IsUnique();
+            e.Property(l => l.LockedUntil).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.HasOne<Household>().WithMany().HasForeignKey(l => l.HouseholdId);
+        });
+        modelBuilder.Entity<GuardianVerification>(e =>
+        {
+            e.Property(v => v.CodeHash).HasMaxLength(64);
+            e.Property(v => v.ExpiresAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.HasOne<GuardianLink>().WithMany().HasForeignKey(v => v.LinkId);
+        });
+        modelBuilder.Entity<TrustedGuardianDevice>(e =>
+        {
+            e.Property(d => d.TokenHash).HasMaxLength(64);
+            e.HasIndex(d => d.TokenHash).IsUnique();
+            e.Property(d => d.ExpiresAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.HasOne<Household>().WithMany().HasForeignKey(d => d.HouseholdId);
         });
         modelBuilder.Entity<SmsUsagePeriod>(e =>
         {

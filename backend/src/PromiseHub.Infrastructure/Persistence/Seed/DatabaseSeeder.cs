@@ -21,8 +21,8 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
     public async Task<int> SeedAsync(SeedOptions? options = null, CancellationToken cancellationToken = default)
     {
         _options = options ?? SeedOptions.None;
-        Add(new Organization(Harbourview, "Harbourview Youth Collective", "Hamilton, Ontario", Plan.Standard));
-        Add(new Organization(Northgate, "Northgate Community Church Kids", "Burlington, Ontario", Plan.Free));
+        Add(new Organization(Harbourview, "Harbourview Youth Collective", "Hamilton, Ontario", Plan.Standard, phone: "905-555-0100"));
+        Add(new Organization(Northgate, "Northgate Community Church Kids", "Burlington, Ontario", Plan.Free, phone: "289-555-0190"));
 
         // Harbourview runs the whole suite; Northgate, on the Free plan, runs check-in only (L2-004, L2-005).
         Modules(Harbourview, ModuleCatalog.All);

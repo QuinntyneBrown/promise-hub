@@ -14,6 +14,10 @@ Terms used in this document:
 - **message template** — localized text for one kind of guardian message, such as a slip request, with placeholders filled per household
 - **event survey** — two-question form sent to guardians after an event, stored against that event
 
+## Built so far
+
+Slice 12 delivered the English, Spanish and French strings of the slip page, `html lang` from the household language, `ph-guardian-shell` with the organization's contact in the footer and one primary action per state (ADR 0015). The language selector, translated message bodies and the other guardian pages are not built yet.
+
 ## Description
 
 The feature lives in the `guardian` frontend library, the shared `components` library and the `Guardian`, `Surveys` and `Messaging` application folders.

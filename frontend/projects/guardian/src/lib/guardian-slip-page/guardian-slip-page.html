@@ -1,0 +1,198 @@
+@let r = result();
+@let text = t();
+<ph-guardian-shell
+  [organization]="organization()"
+  [phone]="phone()"
+  [contactText]="text.footer(organization() ?? '')"
+  [skipLabel]="text.skip"
+>
+  @switch (r?.status) {
+    @case (undefined) {
+      <h1>{{ text.loading }}</h1>
+    }
+    @case ('verify') {
+      @if (step() === 'locked') {
+        <h1>{{ text.verifyHeading }}</h1>
+        <ph-alert tone="danger" [title]="text.locked" />
+      } @else if (step() === 'code') {
+        <h1>{{ text.codeHeading }}</h1>
+        <p>{{ text.codeText }}</p>
+        <form class="stack" novalidate (ngSubmit)="verify()">
+          <ph-text-field
+            inputId="code"
+            [label]="text.codeLabel"
+            name="code"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            [error]="errors()['code'] ?? null"
+            [(ngModel)]="code"
+          />
+          <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
+            text.continue
+          }}</ph-button>
+          <ph-button variant="ghost" (click)="step.set('contact')">{{
+            text.differentContact
+          }}</ph-button>
+        </form>
+      } @else {
+        <h1>{{ text.verifyHeading }}</h1>
+        <p>{{ text.verifyText(organization() ?? '') }}</p>
+        <form class="stack" novalidate (ngSubmit)="requestCode()">
+          <ph-text-field
+            inputId="contact"
+            [label]="text.contactLabel"
+            name="contact"
+            autocomplete="tel"
+            [(ngModel)]="contact"
+          />
+          <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
+            text.sendCode
+          }}</ph-button>
+        </form>
+      }
+    }
+    @case ('gone') {
+      <h1>{{ text.expiredHeading }}</h1>
+      <ph-card>
+        <div class="stack">
+          <p>{{ text.expiredText(organization() ?? 'the organization') }}</p>
+          @if (phone(); as number) {
+            <div>
+              <ph-button variant="primary" icon="phone" [href]="'tel:' + number">{{
+                text.call(number)
+              }}</ph-button>
+            </div>
+          }
+        </div>
+      </ph-card>
+    }
+    @case ('not-found') {
+      <ph-empty-state
+        icon="lock"
+        [title]="text.notAvailable"
+        [text]="text.notAvailableText"
+        [headingLevel]="1"
+      />
+    }
+    @case ('error') {
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        [title]="text.errorHeading"
+        [text]="text.tryAgain"
+        [headingLevel]="1"
+      >
+        <ph-button variant="primary" (click)="load(token())">{{ text.tryAgain }}</ph-button>
+      </ph-empty-state>
+    }
+    @case ('loaded') {
+      @if (r?.status === 'loaded') {
+        @let s = r.value;
+        @switch (s.status) {
+          @case ('Signed') {
+            <div class="stack" role="status">
+              <h1>{{ justSigned() ? text.signedHeading(s.guardianName) : text.alreadySigned }}</h1>
+              <p>
+                {{
+                  justSigned()
+                    ? text.signedText(s.child.firstName)
+                    : text.alreadySignedText(s.child.firstName, s.answeredBy ?? '')
+                }}
+              </p>
+            </div>
+            <ph-card [title]="s.event.name">
+              <p>{{ when(s) }}</p>
+            </ph-card>
+          }
+          @case ('Declined') {
+            <h1>{{ text.declinedHeading(s.child.firstName) }}</h1>
+            <p>{{ text.declinedText }}</p>
+          }
+          @case ('Closed') {
+            <h1>{{ text.closedHeading }}</h1>
+            <ph-card [title]="s.event.name">
+              <p>{{ text.closedText }}</p>
+            </ph-card>
+          }
+          @default {
+            <div>
+              <h1>{{ text.slipHeading(s.child.firstName) }}</h1>
+              <p>{{ text.greeting(s.guardianName, signBy(s)) }}</p>
+            </div>
+            @if (failed()) {
+              <ph-alert tone="danger" [title]="text.signFailed" [text]="text.signFailedText" />
+            }
+            <form class="stack" novalidate (ngSubmit)="sign(s)">
+              <ph-card [title]="s.event.name">
+                <div class="stack">
+                  <p>
+                    {{ when(s) }}
+                    @if (s.event.place) {
+                      · {{ s.event.place }}
+                    }
+                  </p>
+                  <p>{{ s.body }}</p>
+                  @if (text.englishBinding) {
+                    <p>{{ text.englishBinding }}</p>
+                  }
+                </div>
+              </ph-card>
+              <ph-card [title]="text.check">
+                <ph-description-list [facts]="facts(s)" />
+              </ph-card>
+              @if (s.askPhotos || s.askLunch || s.askSwimming) {
+                <ph-card [title]="text.questions">
+                  <div class="stack">
+                    @if (s.askPhotos) {
+                      <ph-radio-group
+                        [legend]="text.photos"
+                        name="photos"
+                        [options]="photoOptions(s)"
+                        [(ngModel)]="photos"
+                      />
+                    }
+                    @if (s.askSwimming) {
+                      <ph-radio-group
+                        [legend]="text.swimming"
+                        name="swimming"
+                        [options]="swimOptions()"
+                        [(ngModel)]="swimming"
+                      />
+                    }
+                    @if (s.askLunch) {
+                      <ph-radio-group
+                        [legend]="text.lunch"
+                        name="lunch"
+                        [options]="lunchOptions()"
+                        [(ngModel)]="lunch"
+                      />
+                    }
+                  </div>
+                </ph-card>
+              }
+              <ph-card [title]="text.signCard">
+                <div class="stack">
+                  <p>{{ text.consent(s.child.name) }}</p>
+                  <ph-text-field
+                    inputId="name"
+                    [label]="text.nameLabel"
+                    name="name"
+                    autocomplete="name"
+                    [error]="errors()['name'] ?? null"
+                    [(ngModel)]="name"
+                  />
+                  <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
+                    text.signButton
+                  }}</ph-button>
+                  <ph-button variant="ghost" hasPopup="dialog" (click)="decline(s)">{{
+                    text.cantCome(s.child.firstName)
+                  }}</ph-button>
+                </div>
+              </ph-card>
+            </form>
+          }
+        }
+      }
+    }
+  }
+</ph-guardian-shell>
