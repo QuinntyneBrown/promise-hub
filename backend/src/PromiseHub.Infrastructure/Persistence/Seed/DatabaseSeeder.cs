@@ -32,11 +32,37 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
         Staff(Northgate, "Priya Raman", "priya@harbourview.example", Role.VolunteerCoordinator);
         Staff(Northgate, "Grace Mensah", "grace@northgate.example", Role.Admin);
 
-        Family(Harbourview, "Rivera", ("Mateo", "Rivera"), ("Sofía", "Rivera"));
-        Family(Harbourview, "Thompson", ("Ava", "Thompson"));
-        Family(Harbourview, "Tran", ("Minh", "Tran"));
+        var rivera = Family(Harbourview, "Rivera", "Spanish");
+        Guardian(Harbourview, rivera, "Carmen Rivera", "Mother", "905-555-0142", "carmen.rivera@example.com", "Spanish", primary: true);
+        Guardian(Harbourview, rivera, "Luis Rivera", "Uncle or aunt", "905-555-0199", null, "Spanish");
+        Kid(Harbourview, rivera, "Mateo", "Rivera", new DateOnly(2017, 3, 14), "Bennetto Elementary, Grade 4",
+            new MedicalDetails("Peanuts (anaphylaxis); tree nuts (hives)", "EpiPen 0.3 mg, carried", null, "Dr. Amrita Sethi · 905-555-0100", RedAlert: true));
+        Kid(Harbourview, rivera, "Sofía", "Rivera", new DateOnly(2014, 6, 2), "Bennetto Elementary, Grade 7",
+            new MedicalDetails(null, "Inhaler as needed", "Asthma", null, RedAlert: false));
+
+        var thompson = Family(Harbourview, "Thompson", "English");
+        Guardian(Harbourview, thompson, "Dana Thompson", "Mother", "905-555-0117", "dana.thompson@example.com", "English", primary: true);
+        Kid(Harbourview, thompson, "Jordan", "Thompson", new DateOnly(2015, 2, 20), "Hess Street School, Grade 6");
+
+        var tran = Family(Harbourview, "Tran", "English");
+        Guardian(Harbourview, tran, "Linh Tran", "Mother", "905-555-0163", null, "English", primary: true);
+        Kid(Harbourview, tran, "Kevin", "Tran", new DateOnly(2018, 5, 9), "Queen Victoria School, Grade 3");
+        Kid(Harbourview, tran, "Emily", "Tran", new DateOnly(2016, 8, 30), "Queen Victoria School, Grade 5");
+
+        var haddad = Family(Harbourview, "Haddad", "French");
+        Guardian(Harbourview, haddad, "Nour Haddad", "Mother", "905-555-0128", "nour.haddad@example.com", "French", primary: true);
+        Kid(Harbourview, haddad, "Yusuf", "Haddad", new DateOnly(2013, 9, 4), "École Pavillon de la jeunesse, Grade 8",
+            new MedicalDetails(null, "Methylphenidate at lunch", null, null, RedAlert: false));
+
+        // No mobile and a bounced email: the "Missing info" case (L2-011 criterion 3).
+        var okonkwo = Family(Harbourview, "Okonkwo", "English");
+        Guardian(Harbourview, okonkwo, "Chidi Okonkwo", "Father", null, "chidi.okonkwo@example.com", "English", primary: true, bounced: true);
+        Kid(Harbourview, okonkwo, "Amara", "Okonkwo", new DateOnly(2019, 4, 11), "Bennetto Elementary, Grade 2");
+
         // A second Mateo Rivera in another organization proves lookups stay in their tenant (L2-001).
-        Family(Northgate, "Rivera", ("Mateo", "Rivera"));
+        var northgateRivera = Family(Northgate, "Rivera", "Spanish");
+        Guardian(Northgate, northgateRivera, "Ana Rivera", "Mother", "289-555-0101", null, "Spanish", primary: true);
+        Kid(Northgate, northgateRivera, "Mateo", "Rivera", new DateOnly(2016, 10, 1), null);
 
         return await db.SaveChangesAsync(cancellationToken);
     }
@@ -65,14 +91,36 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
         }
     }
 
-    private void Family(Guid organizationId, string name, params (string First, string Last)[] children)
+    public static Guid HouseholdId(Guid organizationId, string name) => SeedIds.Of($"household:{organizationId}:{name}");
+
+    public static Guid GuardianId(Guid organizationId, string name) => SeedIds.Of($"guardian:{organizationId}:{name}");
+
+    private Guid Family(Guid organizationId, string name, string language)
     {
-        var householdId = SeedIds.Of($"household:{organizationId}:{name}");
-        Add(new Household(householdId, organizationId, name));
-        foreach (var (first, last) in children)
+        var id = HouseholdId(organizationId, name);
+        Add(new Household(id, organizationId, name, language));
+        return id;
+    }
+
+    private void Guardian(Guid organizationId, Guid householdId, string name, string relationship, string? mobile, string? email, string language, bool primary = false, bool bounced = false)
+    {
+        var guardian = new Guardian(GuardianId(organizationId, name), organizationId, householdId, name, relationship, mobile, email, language,
+            primary, canPickUp: true, canSign: primary);
+        if (bounced)
         {
-            Add(new Child(ChildId(organizationId, $"{first} {last}"), organizationId, householdId, first, last));
+            guardian.MarkEmailBounced();
         }
+        Add(guardian);
+    }
+
+    private void Kid(Guid organizationId, Guid householdId, string first, string last, DateOnly born, string? school, MedicalDetails? medical = null)
+    {
+        var child = new Child(ChildId(organizationId, $"{first} {last}"), organizationId, householdId, first, last, born, school);
+        if (medical is not null)
+        {
+            child.UpdateMedical(medical, "Carmen Rivera", SeedClock);
+        }
+        Add(child);
     }
 
     private void Add<T>(T entity)

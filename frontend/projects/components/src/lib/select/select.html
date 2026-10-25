@@ -1,0 +1,19 @@
+<label class="label" [for]="inputId()">{{ label() }}</label>
+<select
+  class="select"
+  [id]="inputId()"
+  [disabled]="disabled()"
+  [attr.aria-invalid]="error() ? 'true' : null"
+  [attr.aria-describedby]="error() ? inputId() + '-error' : null"
+  (change)="update($any($event.target).value)"
+  (blur)="onTouched()"
+>
+  @for (option of items(); track option.value) {
+    <option [value]="option.value" [selected]="option.value === value()">{{ option.label }}</option>
+  }
+</select>
+@if (error()) {
+  <div class="error" [id]="inputId() + '-error'" [attr.data-testid]="inputId() + '-error'">
+    {{ error() }}
+  </div>
+}

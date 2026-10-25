@@ -1,0 +1,18 @@
+<div class="panel" role="document">
+  <div class="header">
+    @if (icon(); as name) {
+      <div class="icon" [class.icon--danger]="tone() === 'danger'"><ph-icon [name]="name" /></div>
+    }
+    <div class="heading">
+      <h2 class="title" [id]="id + '-title'">{{ title() }}</h2>
+      @if (description()) {
+        <p class="description" [id]="id + '-desc'">{{ description() }}</p>
+      }
+    </div>
+    <button class="close" type="button" aria-label="Close" (click)="ref?.close()">
+      <ph-icon name="close" />
+    </button>
+  </div>
+  <div class="body"><ng-content /></div>
+  <div class="footer"><ng-content select="[phDialogFooter]" /></div>
+</div>

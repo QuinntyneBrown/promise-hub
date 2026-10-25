@@ -1,0 +1,104 @@
+@let r = result();
+@switch (r?.status) {
+  @case ('not-found') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="search"
+        title="We can’t find that household"
+        text="It may have been deleted or belong to another organization."
+        [headingLevel]="1"
+      >
+        <ph-button variant="primary" link="/families">Back to Families</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('error') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load this household"
+        text="Try again."
+        [headingLevel]="1"
+      >
+        <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('loaded') {
+    @if (r?.status === 'loaded') {
+      @let h = r.value;
+      <ph-breadcrumb [items]="[{ label: 'Families', link: '/families' }, { label: h.name }]" />
+      <ph-page-header [title]="h.name + ' household'" [subtitle]="subtitle(h)">
+        @if (canWrite()) {
+          <ph-button (click)="addChild(h)">Add child</ph-button>
+        }
+        <ph-button
+          variant="ghost"
+          icon="menu"
+          [iconOnly]="true"
+          label="More actions"
+          hasPopup="dialog"
+          (click)="actions(h)"
+        />
+      </ph-page-header>
+      @if (h.medicalRestricted) {
+        <ph-alert
+          tone="info"
+          title="Some details are hidden for your role"
+          text="Medical details need a staff role."
+        />
+      }
+      <div class="split">
+        <div class="stack">
+          <ph-card title="Children" [flush]="true">
+            <ph-list label="Children" [inset]="true">
+              @for (c of h.children; track c.id) {
+                <ph-list-item
+                  [title]="c.name"
+                  [meta]="childMeta(c.age, c.school)"
+                  [link]="['/families', h.id, 'children', c.id]"
+                  [avatar]="c.name"
+                  avatarTint="peach"
+                >
+                  @if (c.medicalFlag) {
+                    <ph-flag data-testid="medical-flag">{{ c.medicalFlag }}</ph-flag>
+                  }
+                </ph-list-item>
+              } @empty {
+                <ph-list-item title="No children yet" meta="Add the first child." />
+              }
+            </ph-list>
+          </ph-card>
+          <ph-card title="Guardians" [flush]="true">
+            <ph-list label="Guardians" [inset]="true">
+              @for (g of h.guardians; track g.id) {
+                <ph-list-item [title]="g.name" [meta]="guardianMeta(g)" [avatar]="g.name">
+                  @if (g.isPrimary) {
+                    <ph-badge tone="success">Primary</ph-badge>
+                  }
+                  @if (canWrite()) {
+                    <ph-button
+                      variant="ghost"
+                      size="sm"
+                      [label]="'Edit ' + g.name"
+                      (click)="editGuardian(g)"
+                      >Edit</ph-button
+                    >
+                  }
+                </ph-list-item>
+              }
+            </ph-list>
+            @if (canWrite()) {
+              <div phCardFooter>
+                <ph-button variant="ghost" size="sm" (click)="addGuardian(h)"
+                  >Add a guardian</ph-button
+                >
+              </div>
+            }
+          </ph-card>
+        </div>
+      </div>
+    }
+  }
+}

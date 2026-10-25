@@ -1,0 +1,83 @@
+@let r = result();
+<ph-page-header title="Families" [subtitle]="r?.status === 'loaded' ? subtitle(r.value) : null">
+  @if (canAdd()) {
+    <ph-button variant="primary" icon="families" (click)="addFamily()">Add family</ph-button>
+  }
+</ph-page-header>
+@switch (r?.status) {
+  @case ('error') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load families"
+        text="Try again."
+      >
+        <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('loaded') {
+    @if (r?.status === 'loaded' && r.value.counts.all === 0) {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="families"
+          title="No families yet"
+          text="Add a family or import a roster."
+        >
+          @if (canAdd()) {
+            <ph-button variant="primary" (click)="addFamily()">Add family</ph-button>
+          }
+        </ph-empty-state>
+      </ph-card>
+    } @else if (r?.status === 'loaded') {
+      <div class="toolbar">
+        <ph-text-field
+          class="search"
+          inputId="fam-q"
+          type="search"
+          label="Search families and children"
+          [labelHidden]="true"
+          placeholder="Search by child, guardian or phone"
+          [(ngModel)]="q"
+          (ngModelChange)="reload()"
+        />
+        <div class="chips" role="group" aria-label="Filter families">
+          @for (chip of chips; track chip.id) {
+            <ph-chip [pressed]="filter() === chip.id" (click)="setFilter(chip.id)"
+              >{{ chip.label }} {{ r.value.counts[chip.count] }}</ph-chip
+            >
+          }
+        </div>
+      </div>
+      @if (r.value.households.length === 0) {
+        <ph-card [flush]="true">
+          <ph-empty-state
+            icon="search"
+            title="No families match"
+            text="Try another name, phone or filter."
+          />
+        </ph-card>
+      } @else {
+        <ph-list label="Households">
+          @for (h of r.value.households; track h.id) {
+            <ph-list-item
+              [title]="h.name"
+              [meta]="meta(h)"
+              [link]="['/families', h.id]"
+              [avatar]="h.primaryGuardian ?? h.name"
+              avatarTint="peach"
+            >
+              @if (h.missingInfo) {
+                <ph-badge tone="warning">Missing info</ph-badge>
+              }
+              @if (h.medicalFlags) {
+                <ph-flag data-testid="medical-flag">{{ h.medicalFlags }} medical</ph-flag>
+              }
+            </ph-list-item>
+          }
+        </ph-list>
+      }
+    }
+  }
+}

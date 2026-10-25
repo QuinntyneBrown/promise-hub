@@ -1,0 +1,52 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    [title]="'Add a guardian to the ' + household.name + ' household'"
+    description="They get texts in their language."
+  >
+    <ph-text-field
+      inputId="name"
+      label="Name"
+      name="name"
+      [error]="errors()['name'] ?? null"
+      [(ngModel)]="guardian.name"
+    />
+    <ph-select
+      inputId="relationship"
+      label="Relationship"
+      name="relationship"
+      [options]="relationships"
+      [(ngModel)]="guardian.relationship"
+    />
+    <ph-text-field
+      inputId="mobile"
+      label="Mobile"
+      type="tel"
+      inputmode="tel"
+      name="mobile"
+      help="Phone or email."
+      [error]="errors()['mobile'] ?? null"
+      [(ngModel)]="guardian.mobile"
+    />
+    <ph-text-field
+      inputId="email"
+      label="Email"
+      type="email"
+      name="email"
+      [optional]="true"
+      [(ngModel)]="guardian.email"
+    />
+    <ph-select
+      inputId="language"
+      label="Language"
+      name="language"
+      [options]="languages"
+      [(ngModel)]="guardian.language"
+    />
+    <ph-switch label="Approved to pick up" name="canPickUp" [(ngModel)]="guardian.canPickUp" />
+    <ph-switch label="Can sign permission slips" name="canSign" [(ngModel)]="guardian.canSign" />
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Add guardian</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

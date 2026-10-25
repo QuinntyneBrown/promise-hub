@@ -1,0 +1,23 @@
+<label class="label" [for]="inputId()"
+  >{{ label() }}
+  @if (optional()) {
+    <span class="optional">(optional)</span>
+  }
+</label>
+<textarea
+  class="textarea"
+  [id]="inputId()"
+  [rows]="rows()"
+  [value]="value()"
+  [disabled]="disabled()"
+  [attr.placeholder]="placeholder()"
+  [attr.aria-invalid]="error() ? 'true' : null"
+  [attr.aria-describedby]="error() ? inputId() + '-error' : null"
+  (input)="update($any($event.target).value)"
+  (blur)="onTouched()"
+></textarea>
+@if (error()) {
+  <div class="error" [id]="inputId() + '-error'" [attr.data-testid]="inputId() + '-error'">
+    {{ error() }}
+  </div>
+}

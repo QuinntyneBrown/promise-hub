@@ -1,1 +1,12 @@
-<ng-content />
+@if (title()) {
+  <section class="region" [attr.aria-labelledby]="id">
+    <h2 class="title" [id]="id">{{ title() }}</h2>
+    <ng-container *ngTemplateOutlet="content" />
+  </section>
+} @else {
+  <ng-container *ngTemplateOutlet="content" />
+}
+<ng-template #content>
+  <div class="content"><ng-content /></div>
+  <div class="footer"><ng-content select="[phCardFooter]" /></div>
+</ng-template>

@@ -1,0 +1,24 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    [title]="'Delete the ' + household.name + ' household?'"
+    description="Deleted in 30 days; attendance counts stay without names."
+    icon="warning"
+    tone="danger"
+  >
+    <ph-radio-group legend="Why" name="reason" [options]="reasons" [(ngModel)]="reason" />
+    <ph-text-field
+      inputId="confirmName"
+      label="Type the household name to confirm"
+      name="confirmName"
+      [error]="error()"
+      [ngModel]="confirmName()"
+      (ngModelChange)="confirmName.set($event)"
+    />
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="danger" type="submit" [disabled]="!matches()" [busy]="busy()"
+        >Delete in 30 days</ph-button
+      >
+    </ng-container>
+  </ph-dialog>
+</form>

@@ -16,6 +16,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Membership> Memberships => Set<Membership>();
     public DbSet<ModuleConfiguration> ModuleConfigurations => Set<ModuleConfiguration>();
     public DbSet<Household> Households => Set<Household>();
+    public DbSet<Guardian> Guardians => Set<Guardian>();
     public DbSet<Child> Children => Set<Child>();
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
     public DbSet<StaffUser> StaffUsers => Set<StaffUser>();
@@ -45,11 +46,39 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Ignore(c => c.On);
             e.HasIndex(c => c.OrganizationId).IsUnique();
         });
-        modelBuilder.Entity<Household>(e => e.Property(h => h.Name).HasMaxLength(200));
+        modelBuilder.Entity<Household>(e =>
+        {
+            e.Property(h => h.Name).HasMaxLength(200);
+            e.Property(h => h.Language).HasMaxLength(40);
+            e.Property(h => h.DeletedAt).HasConversion(v => v.HasValue ? v.Value.UtcTicks : (long?)null, v => v.HasValue ? new DateTimeOffset(v.Value, TimeSpan.Zero) : null);
+            e.Property(h => h.PurgeAfter).HasConversion(v => v.HasValue ? v.Value.UtcTicks : (long?)null, v => v.HasValue ? new DateTimeOffset(v.Value, TimeSpan.Zero) : null);
+        });
+        modelBuilder.Entity<Guardian>(e =>
+        {
+            e.Property(g => g.Name).HasMaxLength(200);
+            e.Property(g => g.Relationship).HasMaxLength(60);
+            e.Property(g => g.Mobile).HasMaxLength(40);
+            e.Property(g => g.Email).HasMaxLength(320);
+            e.Property(g => g.Language).HasMaxLength(40);
+            e.Ignore(g => g.Reachable);
+            e.Property(g => g.DeletedAt).HasConversion(v => v.HasValue ? v.Value.UtcTicks : (long?)null, v => v.HasValue ? new DateTimeOffset(v.Value, TimeSpan.Zero) : null);
+            e.HasOne<Household>().WithMany().HasForeignKey(g => g.HouseholdId);
+        });
         modelBuilder.Entity<Child>(e =>
         {
             e.Property(c => c.FirstName).HasMaxLength(100);
             e.Property(c => c.LastName).HasMaxLength(100);
+            e.Property(c => c.School).HasMaxLength(200);
+            e.Property(c => c.Allergies).HasMaxLength(1000);
+            e.Property(c => c.Medication).HasMaxLength(1000);
+            e.Property(c => c.Conditions).HasMaxLength(1000);
+            e.Property(c => c.Doctor).HasMaxLength(300);
+            e.Property(c => c.MedicalUpdatedBy).HasMaxLength(200);
+            e.Ignore(c => c.FullName);
+            e.Ignore(c => c.HasMedicalFlag);
+            e.Ignore(c => c.Medical);
+            e.Property(c => c.MedicalUpdatedAt).HasConversion(v => v.HasValue ? v.Value.UtcTicks : (long?)null, v => v.HasValue ? new DateTimeOffset(v.Value, TimeSpan.Zero) : null);
+            e.Property(c => c.DeletedAt).HasConversion(v => v.HasValue ? v.Value.UtcTicks : (long?)null, v => v.HasValue ? new DateTimeOffset(v.Value, TimeSpan.Zero) : null);
             e.HasOne<Household>().WithMany().HasForeignKey(c => c.HouseholdId);
         });
         modelBuilder.Entity<AuditEntry>(e =>
@@ -83,12 +112,19 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
         }
     }
 
+    /// <summary>OrganizationId equals the tenant; for soft-deletable rows, also DeletedAt is null.</summary>
     private LambdaExpression TenantFilter(Type clrType)
     {
         var entity = Expression.Parameter(clrType, "e");
         var organizationId = Expression.Property(entity, nameof(ITenantOwned.OrganizationId));
         var current = Expression.Property(Expression.Constant(this), nameof(CurrentOrganizationId));
-        return Expression.Lambda(Expression.Equal(organizationId, current), entity);
+        Expression body = Expression.Equal(organizationId, current);
+        if (typeof(ISoftDeletable).IsAssignableFrom(clrType))
+        {
+            var deletedAt = Expression.Property(entity, nameof(ISoftDeletable.DeletedAt));
+            body = Expression.AndAlso(body, Expression.Equal(deletedAt, Expression.Constant(null, typeof(DateTimeOffset?))));
+        }
+        return Expression.Lambda(body, entity);
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

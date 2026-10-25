@@ -29,11 +29,11 @@ export class SettingsModulesPage extends BasePage {
   }
 
   error(name: string): Locator {
-    return this.list.getByRole('listitem').filter({ hasText: name }).getByTestId('module-error');
+    return this.list.getByRole('listitem').filter({ hasText: name }).getByTestId('list-error');
   }
 
   async moduleNames(): Promise<string[]> {
-    return (await this.list.getByTestId('module-title').allInnerTexts()).map((t) => t.trim());
+    return (await this.list.getByTestId('list-title').allInnerTexts()).map((t) => t.trim());
   }
 
   async set(name: string, on: boolean): Promise<void> {

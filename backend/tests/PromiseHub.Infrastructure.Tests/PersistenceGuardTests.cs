@@ -55,7 +55,7 @@ public sealed class PersistenceGuardTests : IDisposable
     {
         using var db = Context(Signed("jaylen@harbourview.example"));
 
-        db.Households.Add(new Household(Guid.NewGuid(), DatabaseSeeder.Northgate, "Intruder"));
+        db.Households.Add(new Household(Guid.NewGuid(), DatabaseSeeder.Northgate, "Intruder", "English"));
 
         Assert.Throws<InvalidOperationException>(() => db.SaveChanges());
     }

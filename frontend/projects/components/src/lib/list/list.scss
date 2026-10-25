@@ -10,3 +10,9 @@
   box-shadow: var(--shadow-1);
   overflow: hidden;
 }
+:host(.inset) .list {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}

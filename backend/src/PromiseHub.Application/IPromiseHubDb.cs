@@ -13,6 +13,7 @@ public interface IPromiseHubDb
     DbSet<Membership> Memberships { get; }
     DbSet<ModuleConfiguration> ModuleConfigurations { get; }
     DbSet<Household> Households { get; }
+    DbSet<Guardian> Guardians { get; }
     DbSet<Child> Children { get; }
     DbSet<AuditEntry> AuditEntries { get; }
     DbSet<StaffUser> StaffUsers { get; }

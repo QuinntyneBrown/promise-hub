@@ -19,7 +19,11 @@ import { PhIcon } from '../icon/icon';
 export class PhTextField implements ControlValueAccessor {
   readonly inputId = input.required<string>();
   readonly label = input.required<string>();
-  readonly type = input<'text' | 'email' | 'password' | 'search' | 'tel'>('text');
+  readonly type = input<'text' | 'email' | 'password' | 'search' | 'tel' | 'date'>('text');
+  readonly optional = input(false);
+  readonly labelHidden = input(false);
+  readonly placeholder = input<string | null>(null);
+  readonly help = input<string | null>(null);
   readonly autocomplete = input<string | null>(null);
   readonly inputmode = input<string | null>(null);
   readonly maxlength = input<number | null>(null);
@@ -30,6 +34,14 @@ export class PhTextField implements ControlValueAccessor {
   protected readonly revealed = signal(false);
   private onChange: (value: string) => void = () => undefined;
   protected onTouched: () => void = () => undefined;
+
+  protected describedBy(): string | null {
+    const ids = [
+      this.help() ? `${this.inputId()}-help` : null,
+      this.error() ? `${this.inputId()}-error` : null,
+    ].filter(Boolean);
+    return ids.length ? ids.join(' ') : null;
+  }
 
   protected inputType(): string {
     return this.type() === 'password' && this.revealed() ? 'text' : this.type();

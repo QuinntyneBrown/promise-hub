@@ -11,6 +11,7 @@
 .body {
   flex: 1;
   min-width: 0;
+  overflow-wrap: anywhere;
 }
 .title {
   font: var(--text-label);
@@ -38,4 +39,16 @@
 .error::before {
   content: '⚠';
   flex: none;
+}
+.row-link {
+  color: inherit;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 1;
+  min-width: 0;
+}
+.row-link:hover .title {
+  text-decoration: underline;
 }

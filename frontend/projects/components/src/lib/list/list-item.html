@@ -1,13 +1,23 @@
-<div class="body">
-  <div class="title" data-testid="module-title">{{ title() }}</div>
-  @if (meta()) {
-    <div class="meta">{{ meta() }}</div>
+<ng-template #lead>
+  @if (avatar(); as name) {
+    <ph-avatar [name]="name" size="sm" [tint]="avatarTint()" />
   }
-  @if (caption()) {
-    <span class="caption">{{ caption() }}</span>
-  }
-  @if (error()) {
-    <div class="error" data-testid="module-error">{{ error() }}</div>
-  }
-</div>
+  <div class="body">
+    <div class="title" data-testid="list-title">{{ title() }}</div>
+    @if (meta()) {
+      <div class="meta">{{ meta() }}</div>
+    }
+    @if (caption()) {
+      <span class="caption">{{ caption() }}</span>
+    }
+    @if (error()) {
+      <div class="error" data-testid="list-error">{{ error() }}</div>
+    }
+  </div>
+</ng-template>
+@if (link(); as target) {
+  <a class="row-link" [routerLink]="target"><ng-container *ngTemplateOutlet="lead" /></a>
+} @else {
+  <ng-container *ngTemplateOutlet="lead" />
+}
 <ng-content />

@@ -1,26 +1,49 @@
 using Microsoft.EntityFrameworkCore;
 using PromiseHub.Application.Audit;
+using PromiseHub.Application.Identity;
+using PromiseHub.Application.Organizations;
 using PromiseHub.Domain.Audit;
 
 namespace PromiseHub.Application.Households;
 
-
-public sealed class GetChildHandler(IPromiseHubDb db, IAuditWriter audit)
+public sealed class GetChildHandler(IPromiseHubDb db, IAuditWriter audit, ITenantContext tenant, TimeProvider clock)
 {
     /// <summary>Returns the child of the current organization, or null. A child of another organization is null too, and the attempt is audited.</summary>
     public async Task<ChildDto?> HandleAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var child = await db.Children.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
-        if (child is not null)
+        if (child is null)
         {
-            return new ChildDto(child.Id, $"{child.FirstName} {child.LastName}");
+            if (await db.Children.IgnoreQueryFilters().AnyAsync(c => c.Id == id && c.OrganizationId != tenant.OrganizationId, cancellationToken))
+            {
+                audit.Record(new AuditEvent(AuditAction.AccessDenied, "Child", id, "Requested a child of another organization"));
+                await db.SaveChangesAsync(cancellationToken);
+            }
+            return null;
         }
 
-        if (await db.Children.IgnoreQueryFilters().AnyAsync(c => c.Id == id, cancellationToken))
+        var household = await db.Households.AsNoTracking().FirstAsync(h => h.Id == child.HouseholdId, cancellationToken);
+        var medical = RolePermissions.Has(tenant.Role, Permission.ReadMedical);
+        if (medical)
         {
-            audit.Record(new AuditEvent(AuditAction.AccessDenied, "Child", id, "Requested a child of another organization"));
+            // Every view of medical details is recorded (L2-032 criterion 2).
+            audit.Record(new AuditEvent(AuditAction.Viewed, "ChildMedical", child.Id, $"{child.FullName} · medical details"));
             await db.SaveChangesAsync(cancellationToken);
         }
-        return null;
+        var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
+        return new ChildDto(
+            child.Id,
+            child.FullName,
+            child.FirstName,
+            child.LastName,
+            child.DateOfBirth,
+            child.AgeOn(today),
+            child.School,
+            household.Id,
+            household.Name,
+            medical
+                ? new MedicalDto(child.Allergies, child.Medication, child.Conditions, child.Doctor, child.RedAlert, child.MedicalUpdatedAt, child.MedicalUpdatedBy)
+                : null,
+            !medical);
     }
 }
