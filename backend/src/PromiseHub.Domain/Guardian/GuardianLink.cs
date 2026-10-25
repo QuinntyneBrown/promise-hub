@@ -3,14 +3,15 @@ using PromiseHub.Domain.Organizations;
 namespace PromiseHub.Domain.Guardian;
 
 /// <summary>
-/// A link texted or emailed to one household for one purpose (signing a child's slip). Only the token's hash is stored;
+/// A link texted or emailed to one household for one purpose: signing a child's slip, or the household's home page when
+/// there is no slip. Only the token's hash is stored;
 /// three wrong codes lock it for 15 minutes; a contact change revokes it (L2-026).
 /// </summary>
 public sealed class GuardianLink : ITenantOwned
 {
     public const int MaxFailedCodes = 3;
 
-    public GuardianLink(Guid id, Guid organizationId, Guid householdId, Guid slipId, Guid childId, string tokenHash, DateTimeOffset createdAt)
+    public GuardianLink(Guid id, Guid organizationId, Guid householdId, Guid? slipId, Guid? childId, string tokenHash, DateTimeOffset createdAt)
     {
         Id = id;
         OrganizationId = organizationId;
@@ -24,8 +25,8 @@ public sealed class GuardianLink : ITenantOwned
     public Guid Id { get; private set; }
     public Guid OrganizationId { get; private set; }
     public Guid HouseholdId { get; private set; }
-    public Guid SlipId { get; private set; }
-    public Guid ChildId { get; private set; }
+    public Guid? SlipId { get; private set; }
+    public Guid? ChildId { get; private set; }
     public string TokenHash { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset? RevokedAt { get; private set; }

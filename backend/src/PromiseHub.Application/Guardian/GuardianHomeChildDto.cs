@@ -1,0 +1,3 @@
+namespace PromiseHub.Application.Guardian;
+
+public sealed record GuardianHomeChildDto(string Name, string FirstName, IReadOnlyList<GuardianHomeEnrollmentDto> Enrollments);
