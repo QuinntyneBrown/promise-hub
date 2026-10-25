@@ -1,7 +1,7 @@
 # Estimates
 
 - Overall effort: 216 days
-- Complete: 33%
+- Complete: 35%
 
 | Subsystem | Effort | Complete |
 |---|---|---|
@@ -12,13 +12,13 @@
 | [households](households.md) | 6 days | 70% |
 | [programs](programs.md) | 5 days | 75% |
 | [staff](staff.md) | 5 days | 0% |
-| [enrollment](enrollment.md) | 5 days | 0% |
+| [enrollment](enrollment.md) | 5 days | 55% |
 | [events](events.md) | 5 days | 65% |
 | [attendance](attendance.md) | 27 days | 34% |
 | [messaging](messaging.md) | 14 days | 46% |
 | [notifications](notifications.md) | 8 days | 0% |
 | [slips](slips.md) | 17 days | 73% |
-| [guardian](guardian.md) | 9 days | 51% |
+| [guardian](guardian.md) | 9 days | 55% |
 | [incidents](incidents.md) | 6 days | 0% |
 | [reports](reports.md) | 10 days | 0% |
 | [imports](imports.md) | 5 days | 75% |

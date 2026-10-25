@@ -45,6 +45,7 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Guardian slip | `slip-sign` (default, invalid, submitting, success, error, expired, already-signed, es) | `ph-guardian-shell`, `ph-card` (titled), `ph-description-list`, `ph-radio-group`, `ph-text-field`, `ph-alert`, `ph-empty-state`, `ph-button` | Code check, language strings |
 | Sign on this tablet | `sign-on-tablet` | `ph-page-header`, `ph-card` (titled), `ph-text-field`, `ph-radio-group`, `ph-alert`, `ph-empty-state`, `ph-button` | A screen, mounted under check-in |
 | Import a roster | `import-roster` (default, mapping, invalid, success, error) | `ph-breadcrumb`, `ph-page-header`, `ph-stepper`, `ph-file-upload`, `ph-roster-mapping`, `ph-select`, `ph-error-summary`, `ph-alert`, `ph-switch`, `ph-stat`, `ph-card`, `ph-error-page`, `ph-button` | Wizard state |
+| Guardian enrollment | `enroll` (default, code, closed), `enroll-household`, `enroll-child`, `enroll-review` (default, success, waitlisted) | `ph-guardian-shell`, `ph-text-field`, `ph-select`, `ph-switch`, `ph-card`, `ph-description-list`, `ph-alert`, `ph-empty-state`, `ph-button` | Steps and language strings |
 
 ## Dialogs
 
@@ -68,6 +69,8 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Cancel send | `cancel-send` | `ph-dialog`, `ph-button` (danger) |
 | Decline slip | `decline-slip` | `ph-dialog`, `ph-textarea`, `ph-button` (danger) |
 | Send reminder | `send-reminder` | `ph-dialog`, `ph-list`, `ph-list-item`, `ph-badge` (danger), `ph-textarea`, `ph-alert`, `ph-button` |
+| Open enrollment | `open-enrollment` (default, success) | `ph-dialog`, `ph-alert`, `ph-button` |
+| Close enrollment | `close-enrollment` | `ph-dialog`, `ph-alert`, `ph-button` (danger) |
 | Add a walk-in | `add-walk-in` (default, invalid) | `ph-dialog`, `ph-text-field`, `ph-textarea`, `ph-button` |
 
 The toast region (`ph-toast-region`) sits once in the app root.
