@@ -48,6 +48,9 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Roster review | `roster` (default, empty, error, forbidden, selected, waitlist) | `ph-breadcrumb`, `ph-page-header`, `ph-tabs` (tablist), `ph-list`, `ph-list-item` (with lead), `ph-checkbox`, `ph-bulk-action-bar`, `ph-card`, `ph-empty-state`, `ph-error-page` (forbidden), `ph-button`, toast | Selection set |
 | Import a roster | `import-roster` (default, mapping, invalid, success, error) | `ph-breadcrumb`, `ph-page-header`, `ph-stepper`, `ph-file-upload`, `ph-roster-mapping`, `ph-select`, `ph-error-summary`, `ph-alert`, `ph-switch`, `ph-stat`, `ph-card`, `ph-error-page`, `ph-button` | Wizard state |
 | Guardian enrollment | `enroll` (default, code, closed), `enroll-household`, `enroll-child`, `enroll-review` (default, success, waitlisted) | `ph-guardian-shell`, `ph-text-field`, `ph-select`, `ph-switch`, `ph-card`, `ph-description-list`, `ph-alert`, `ph-empty-state`, `ph-button` | Steps and language strings |
+| Incident log | `incidents` (default, empty, error, forbidden) | `ph-page-header`, `ph-list`, `ph-list-item`, `ph-badge`, `ph-error-page` (forbidden), `ph-card`, `ph-empty-state`, `ph-button` | Log or own reports |
+| Report an incident | `new-incident` (default, invalid, submitting, error) | `ph-page-header`, `ph-error-summary`, `ph-card`, `ph-radio-group`, `ph-select`, `ph-text-field` (datetime-local), `ph-textarea`, `ph-alert` (info, danger), `ph-button`, toast | Form state |
+| Incident | `incident` (default, error, forbidden) | `ph-breadcrumb`, `ph-page-header`, `ph-badge`, `ph-card` (titled), `ph-description-list`, `ph-empty-state`, `ph-button` | — |
 
 ## Dialogs
 

@@ -16,7 +16,7 @@
 | Site lead | Resolve missing slips | See who lacks consent and collect a signature on a tablet. | [3 days](detailed-designs/slips/remind-and-clear/README.md) | 75% · [video](videos/13-resolve-missing-slips/README.md) |
 | Site lead | Follow up no-shows | Review missing children and guardian responses after alerts. | [5 days](detailed-designs/attendance/alert-no-show-and-end-session/README.md) | 0% |
 | Site lead | End a session | Reconcile attendance and close the day's session. | [3 days](detailed-designs/attendance/alert-no-show-and-end-session/README.md) | 0% |
-| Site lead | Report an incident | Record what happened and submit it for supervisor review. | [3 days](detailed-designs/incidents/report-and-review-incident/README.md) | 0% |
+| Site lead | Report an incident | Record what happened and submit it for supervisor review. | [3 days](detailed-designs/incidents/report-and-review-incident/README.md) | 80% · [video](videos/19-report-an-incident/README.md) |
 | Program director | Create programs and events | Set schedules, capacity, and event details for enrolled children. | [7 days](detailed-designs/programs/manage-programs/README.md) | 75% · [video](videos/05-create-programs-and-events/README.md) |
 | Program director | Send permission slips | Write event consent, contact guardians, and monitor signatures. | [7 days](detailed-designs/slips/write-and-send-slip/README.md) | 70% · [video](videos/11-send-permission-slips/README.md) |
 | Program director | Review incidents | Examine submitted reports and record follow-up decisions. | [3 days](detailed-designs/incidents/report-and-review-incident/README.md) | 0% |
@@ -36,7 +36,7 @@
 | Admin / office manager | Configure notifications | Set reminder, no-show, and messaging preferences. | [3 days](detailed-designs/notifications/notify-in-app/README.md) | 0% |
 | Youth worker | Start an invited shift | Accept an invitation, complete setup, and reach today's assigned session. | [4 days](detailed-designs/staff/invite-and-onboard-staff/README.md) | 0% |
 | Youth worker | Record attendance | Check children in or out within assigned permissions. | [3 days](detailed-designs/attendance/check-in-and-sign-out/README.md) | 75% · [video](videos/09-record-attendance-as-youth-worker/README.md) |
-| Youth worker | Report an incident | Submit a structured report for supervisor review. | [3 days](detailed-designs/incidents/report-and-review-incident/README.md) | 0% |
+| Youth worker | Report an incident | Submit a structured report for supervisor review. | [3 days](detailed-designs/incidents/report-and-review-incident/README.md) | 80% · [video](videos/19-report-an-incident/README.md) |
 | Youth worker | Use permitted child details | Find authorized roster details without exposing restricted records. | [3 days](detailed-designs/identity/authorize-request/README.md) | 0% |
 | Volunteer coordinator | Coordinate staff coverage | Invite volunteers and align them with sessions and permissions. | [3 days](detailed-designs/staff/invite-and-onboard-staff/README.md) | 0% |
 | Volunteer coordinator | Switch organizations | Select an active organization before working with its records. | [4 days](detailed-designs/organizations/switch-organization/README.md) | 0% |
