@@ -8,4 +8,5 @@ export type Permission =
   | 'manageEvents'
   | 'cancelEvents'
   | 'runSessions'
-  | 'sendMessages';
+  | 'sendMessages'
+  | 'manageSlips';

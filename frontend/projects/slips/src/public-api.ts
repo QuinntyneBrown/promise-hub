@@ -1,2 +1,1 @@
-// Scaffold only. Overwrite or delete as implementation requires. No product logic is implemented.
-export { routes } from './lib/slips.routes';
+export { routes, slipEditorRoutes } from './lib/slips.routes';

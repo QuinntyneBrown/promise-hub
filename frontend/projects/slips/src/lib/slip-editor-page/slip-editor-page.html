@@ -1,0 +1,249 @@
+@let r = result();
+@switch (r?.status) {
+  @case ('not-found') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="search"
+        title="This event has no slip"
+        text="It may not need one, or it belongs to another organization."
+        [headingLevel]="1"
+      >
+        <ph-button variant="primary" link="/events">Events</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('error') {
+    <ph-page-header title="Permission slip" />
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load this slip"
+        text="Try again."
+      >
+        <ph-button variant="primary" (click)="load(eventId())">Try again</ph-button>
+        <ph-button variant="ghost" [link]="['/events', eventId()]">Back to event</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('loaded') {
+    @if (r?.status === 'loaded') {
+      @let s = r.value;
+      <ph-breadcrumb
+        [items]="[
+          { label: 'Events', link: '/events' },
+          { label: s.eventName, link: '/events/' + s.eventId },
+          { label: 'Permission slip' },
+        ]"
+      />
+      <ph-page-header title="Permission slip" [subtitle]="subtitle(s)" />
+      @if (summary().length) {
+        <ph-error-summary [items]="summary()" />
+      }
+      @if (failed()) {
+        <ph-alert
+          tone="danger"
+          title="That didn’t go through"
+          text="Nothing was sent. Try again."
+        />
+      }
+      @if (!canWrite()) {
+        <ph-alert tone="info" title="Only directors and site leads write and send slips." />
+      }
+      @if (s.status === 'Sent') {
+        <div class="stack">
+          @if (emailOnly(s); as notice) {
+            <ph-alert tone="warning" title="The SMS cap was reached" [text]="notice" />
+          }
+          <ph-card title="Signatures">
+            <div class="stack">
+              <ph-progress-bar
+                [value]="s.signed"
+                [max]="s.children"
+                [label]="s.signed + ' of ' + s.children + ' signed'"
+                [caption]="s.signed + ' of ' + s.children + ' signed'"
+                [tone]="s.signed === s.children ? 'success' : 'accent'"
+              />
+              <div class="kpis" role="group" aria-label="Answers">
+                <ph-stat label="Signed" [value]="'' + s.signed" data-testid="count-Signed" />
+                <ph-stat label="Declined" [value]="'' + s.declined" data-testid="count-Declined" />
+                <ph-stat
+                  label="Outstanding"
+                  [value]="'' + s.outstanding"
+                  data-testid="count-Outstanding"
+                />
+              </div>
+            </div>
+          </ph-card>
+          <ph-card title="Answers" [flush]="true">
+            <ph-table
+              caption="Answers by child"
+              [columns]="columns"
+              [rows]="rows()"
+              [flush]="true"
+            />
+          </ph-card>
+          @if (canWrite()) {
+            @if (s.signed) {
+              <ph-alert
+                tone="warning"
+                [title]="signedNotice(s)"
+                text="Changing the terms re-opens signing for everyone."
+              />
+            }
+            <form class="form-page" novalidate (ngSubmit)="saveChanges(s)">
+              <ph-card title="Edit the slip">
+                <div class="stack">
+                  <ph-text-field
+                    inputId="title"
+                    label="Slip title"
+                    name="title"
+                    [error]="errors()['title'] ?? null"
+                    [(ngModel)]="fields.title"
+                  />
+                  <ph-textarea
+                    inputId="body"
+                    label="What guardians read before signing"
+                    name="body"
+                    [rows]="5"
+                    [count]="count()"
+                    [error]="errors()['body'] ?? null"
+                    [(ngModel)]="fields.body"
+                  />
+                  <ph-text-field
+                    inputId="signBy"
+                    label="Sign by"
+                    type="date"
+                    name="signBy"
+                    [error]="errors()['signBy'] ?? null"
+                    [(ngModel)]="fields.signBy"
+                  />
+                  <ph-switch
+                    label="This change is material: everyone signs again"
+                    name="material"
+                    [(ngModel)]="material"
+                  />
+                </div>
+              </ph-card>
+              <div class="form-actions">
+                <ph-button variant="primary" type="submit" [busy]="busy()">Save changes</ph-button>
+              </div>
+            </form>
+          }
+        </div>
+      } @else {
+        @if (s.status === 'Scheduled') {
+          <ph-alert
+            tone="info"
+            [title]="'Scheduled for ' + scheduledFor(s)"
+            text="Edit it until it sends."
+          >
+            @if (canWrite()) {
+              <ph-button size="sm" variant="primary" hasPopup="dialog" (click)="sendNow(s)"
+                >Send now</ph-button
+              >
+              <ph-button size="sm" hasPopup="dialog" (click)="cancelSend(s)">Cancel send</ph-button>
+            }
+          </ph-alert>
+        }
+        <form class="form-page" novalidate (ngSubmit)="submit(s)">
+          <fieldset class="plain" [disabled]="!canWrite()">
+            <div class="stack">
+              <ph-card title="The slip">
+                <div class="stack">
+                  <ph-text-field
+                    inputId="title"
+                    label="Slip title"
+                    name="title"
+                    [error]="errors()['title'] ?? null"
+                    [(ngModel)]="fields.title"
+                  />
+                  <ph-textarea
+                    inputId="body"
+                    label="What guardians read before signing"
+                    name="body"
+                    [rows]="5"
+                    help="Sent as written; guardians read it before signing."
+                    [count]="count()"
+                    [error]="errors()['body'] ?? null"
+                    [(ngModel)]="fields.body"
+                  />
+                  <div class="two-col">
+                    <ph-text-field
+                      inputId="signBy"
+                      label="Sign by"
+                      type="date"
+                      name="signBy"
+                      help="Unsigned children stay flagged until the event."
+                      [error]="errors()['signBy'] ?? null"
+                      [(ngModel)]="fields.signBy"
+                    />
+                    <ph-select
+                      inputId="reminders"
+                      label="Reminders"
+                      name="reminders"
+                      [options]="reminders"
+                      [(ngModel)]="fields.reminders"
+                    />
+                  </div>
+                </div>
+              </ph-card>
+              <ph-card title="What the guardian confirms">
+                <div class="stack">
+                  <p>
+                    Always: the child’s name, allergies and medication, and the emergency contact,
+                    pre-filled.
+                  </p>
+                  <ph-switch
+                    label="Photo permission for this trip"
+                    name="askPhotos"
+                    [(ngModel)]="fields.askPhotos"
+                  />
+                  <ph-switch
+                    label="Swimming ability"
+                    name="askSwimming"
+                    [(ngModel)]="fields.askSwimming"
+                  />
+                  <ph-switch label="Lunch needed" name="askLunch" [(ngModel)]="fields.askLunch" />
+                </div>
+              </ph-card>
+              <ph-card title="Delivery">
+                <div class="stack">
+                  <ph-radio-group
+                    legend="Send by"
+                    name="channel"
+                    [options]="channels"
+                    [(ngModel)]="fields.channel"
+                  />
+                  <ph-radio-group
+                    legend="When"
+                    name="when"
+                    [options]="timings"
+                    [(ngModel)]="when"
+                  />
+                  @if (when === 'later') {
+                    <ph-text-field
+                      inputId="at"
+                      label="Send at"
+                      type="datetime-local"
+                      name="at"
+                      [(ngModel)]="at"
+                    />
+                  }
+                </div>
+              </ph-card>
+            </div>
+          </fieldset>
+          @if (canWrite()) {
+            <div class="form-actions">
+              <ph-button variant="ghost" [link]="['/events', s.eventId]">Cancel</ph-button>
+              <ph-button variant="primary" type="submit" [busy]="busy()">{{
+                primaryLabel()
+              }}</ph-button>
+            </div>
+          }
+        </form>
+      }
+    }
+  }
+}

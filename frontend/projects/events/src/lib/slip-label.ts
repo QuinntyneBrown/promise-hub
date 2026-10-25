@@ -8,6 +8,8 @@ export function slipBadge(status: SlipStatus): {
   switch (status) {
     case 'Draft':
       return { label: 'Slip not written yet', tone: 'warning' };
+    case 'Scheduled':
+      return { label: 'Slip scheduled', tone: 'neutral' };
     case 'Sent':
       return { label: 'Slip sent', tone: 'success' };
     default:

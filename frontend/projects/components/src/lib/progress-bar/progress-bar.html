@@ -1,0 +1,13 @@
+<div
+  class="track"
+  role="progressbar"
+  [attr.aria-label]="label()"
+  [attr.aria-valuenow]="value()"
+  aria-valuemin="0"
+  [attr.aria-valuemax]="max()"
+>
+  <div class="fill" [class.fill--success]="tone() === 'success'" [style.width.%]="percent()"></div>
+</div>
+@if (caption()) {
+  <span class="caption">{{ caption() }}</span>
+}

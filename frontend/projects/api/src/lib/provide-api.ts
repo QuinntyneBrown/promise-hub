@@ -15,6 +15,8 @@ import { HttpHouseholdsApi } from './households/http-households-api';
 import { HttpMessagingApi } from './messaging/http-messaging-api';
 import { MESSAGING_API } from './messaging/messaging-api.token';
 import { HttpModulesApi } from './modules/http-modules-api';
+import { HttpSlipsApi } from './slips/http-slips-api';
+import { SLIPS_API } from './slips/slips-api.token';
 import { MODULES_API } from './modules/modules-api.token';
 import { HttpSessionApi } from './session/http-session-api';
 import { SESSION_API } from './session/session-api.token';
@@ -32,5 +34,6 @@ export function provideApi(): EnvironmentProviders {
     { provide: ATTENDANCE_API, useClass: HttpAttendanceApi },
     { provide: QUICK_CARD_API, useClass: HttpQuickCardApi },
     { provide: MESSAGING_API, useClass: HttpMessagingApi },
+    { provide: SLIPS_API, useClass: HttpSlipsApi },
   ]);
 }
