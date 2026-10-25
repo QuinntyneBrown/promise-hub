@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 25 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="25" data-video-title="Run check-in offline" data-parts="Introduction|Promises|No signal|Edge cases|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 25</div>
+  <h1>Run check-in offline</h1>
+  <p class="lead">No signal in the gym? Check-in keeps going</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="Once the roster has opened with signal">
+  <h2>What offline check-in promises</h2>
+  <ul>
+    <li>Tonight's roster and Quick Cards kept on the phone</li>
+    <li>Work without signal waits to sync</li>
+    <li>Sent in order, counted once</li>
+    <li>Conflicts kept and flagged</li>
+  </ul>
+</section>
+
+<section id="nosignal" data-part="2" data-cue="Here is tonight's roster on Jaylen's phone, opened with signal." data-clip="clips/offline-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Waiting to sync, then synced</h3><p>One queued, sent when signal returns.</p></div>
+</section>
+
+<section id="edges" data-part="3" data-cue="Mateo's Quick Card still opens without signal">
+  <h2>Quick Cards and the edge cases</h2>
+  <div class="cols">
+    <img class="shot" alt="Mateo's Quick Card saved on this phone" src="shots/phone-quick-card.png">
+    <img class="shot" alt="Nothing is saved on this phone" src="shots/phone-nothing-saved.png">
+  </div>
+</section>
+
+<section id="testing" data-part="4" data-cue="Backend tests send the same queued check-in twice">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Same action twice</td><td>Applied once</td></tr>
+    <tr><td>Older check-in after an absence</td><td>Present, conflict flagged</td></tr>
+    <tr><td>Signal returns</td><td>Queue sent in order</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="5" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Roster and cards on the phone</li><li>In order, once</li><li>Conflicts flagged, never lost</li></ul>
+  <p class="muted">Next: messaging families</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
