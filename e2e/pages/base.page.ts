@@ -15,6 +15,8 @@ export abstract class BasePage {
 
   /** WCAG 2.2 AA via axe on whatever the screen currently shows. */
   async expectAccessible(): Promise<void> {
+    // Let layout settle (focus moves, scrolls, toasts) so axe checks the page as it rests, not mid-frame.
+    await this.page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
     const results = await new AxeBuilder({ page: this.page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
       .analyze();
