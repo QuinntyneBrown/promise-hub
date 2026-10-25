@@ -2,4 +2,4 @@
 
 | Design | Effort | Complete |
 |---|---|---|
-| report-and-review-incident | 6 days | 0% |
+| report-and-review-incident | 6 days | 40% |

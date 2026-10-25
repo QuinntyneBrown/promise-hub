@@ -1,4 +1,11 @@
-// Scaffold only. Overwrite or delete as implementation requires. No product logic is implemented.
 import { Routes } from '@angular/router';
+import { IncidentPage } from './incident-page/incident-page';
+import { IncidentsPage } from './incidents-page/incidents-page';
+import { NewIncidentPage } from './new-incident-page/new-incident-page';
 
-export const routes: Routes = [];
+/** Mounted by the app at /incidents while the Incident log module is on. */
+export const routes: Routes = [
+  { path: '', component: IncidentsPage, title: 'Incidents · PromiseHub' },
+  { path: 'new', component: NewIncidentPage, title: 'Report an incident · PromiseHub' },
+  { path: ':id', component: IncidentPage, title: 'Incident · PromiseHub' },
+];

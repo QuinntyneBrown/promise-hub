@@ -43,6 +43,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Imports.ImportSession> ImportSessions => Set<Domain.Imports.ImportSession>();
     public DbSet<Domain.Enrollment.EnrollmentSession> EnrollmentSessions => Set<Domain.Enrollment.EnrollmentSession>();
     public DbSet<Domain.Enrollment.EnrollmentRequest> EnrollmentRequests => Set<Domain.Enrollment.EnrollmentRequest>();
+    public DbSet<Domain.Incidents.Incident> Incidents => Set<Domain.Incidents.Incident>();
     public DbSet<GuardianVerification> GuardianVerifications => Set<GuardianVerification>();
     public DbSet<TrustedGuardianDevice> TrustedGuardianDevices => Set<TrustedGuardianDevice>();
     public DbSet<StaffUser> StaffUsers => Set<StaffUser>();
@@ -253,6 +254,21 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.HasOne<Domain.Programs.Program>().WithMany().HasForeignKey(r => r.ProgramId);
             e.HasOne<Child>().WithMany().HasForeignKey(r => r.ChildId);
             e.HasIndex(r => new { r.ProgramId, r.Status });
+        });
+        modelBuilder.Entity<Domain.Incidents.Incident>(e =>
+        {
+            e.Property(i => i.Category).HasConversion<string>().HasMaxLength(30);
+            e.Property(i => i.GuardianContact).HasConversion<string>().HasMaxLength(20);
+            e.Property(i => i.Severity).HasConversion<string>().HasMaxLength(20);
+            e.Property(i => i.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(i => i.Place).HasMaxLength(100);
+            e.Property(i => i.WhatHappened).HasMaxLength(4000);
+            e.Property(i => i.ActionTaken).HasMaxLength(4000);
+            e.Property(i => i.ReportedBy).HasMaxLength(200);
+            e.Property(i => i.OccurredAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(i => i.ReportedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.HasOne<Child>().WithMany().HasForeignKey(i => i.ChildId);
+            e.HasIndex(i => i.ReporterId);
         });
         modelBuilder.Entity<Domain.Imports.ImportSession>(e =>
         {

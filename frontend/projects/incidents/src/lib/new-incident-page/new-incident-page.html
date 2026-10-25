@@ -1,0 +1,103 @@
+<ph-page-header
+  title="Report an incident"
+  subtitle="Facts only. Only supervisors and you can read it."
+/>
+@if (loadFailed()) {
+  <ph-card [flush]="true">
+    <ph-empty-state icon="warning" tone="error" title="Couldn’t load the form" text="Try again.">
+      <ph-button variant="primary" (click)="load()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <form class="stack" novalidate (ngSubmit)="submit()">
+    @if (summary().length) {
+      <ph-error-summary [items]="summary()" />
+    }
+    @if (failed()) {
+      <ph-alert
+        tone="danger"
+        title="That didn’t go through"
+        text="Your report is still here. Try again."
+      />
+    }
+    <ph-card>
+      <div class="stack">
+        <ph-radio-group
+          legend="Type"
+          name="category"
+          [options]="categories"
+          [error]="errors()['category'] ?? null"
+          [(ngModel)]="report.category"
+        />
+        <ph-select
+          inputId="childId"
+          label="Child involved"
+          name="childId"
+          [options]="children()"
+          [error]="errors()['childId'] ?? null"
+          [(ngModel)]="report.childId"
+        />
+        <ph-text-field
+          inputId="occurredAt"
+          label="When"
+          type="datetime-local"
+          name="occurredAt"
+          [error]="errors()['occurredAt'] ?? null"
+          [(ngModel)]="report.occurredAt"
+        />
+        <ph-select
+          inputId="place"
+          label="Where"
+          name="place"
+          [options]="places"
+          [(ngModel)]="report.place"
+        />
+      </div>
+    </ph-card>
+    <ph-card>
+      <div class="stack">
+        <ph-textarea
+          inputId="whatHappened"
+          label="What happened"
+          help="Facts only, in order."
+          name="whatHappened"
+          [rows]="4"
+          [error]="errors()['whatHappened'] ?? null"
+          [(ngModel)]="report.whatHappened"
+        />
+        <ph-textarea
+          inputId="actionTaken"
+          label="What you did"
+          help="First aid, who you called, when."
+          name="actionTaken"
+          [rows]="3"
+          [error]="errors()['actionTaken'] ?? null"
+          [(ngModel)]="report.actionTaken"
+        />
+        <ph-radio-group
+          legend="Guardian"
+          name="guardianContact"
+          [options]="guardianOptions"
+          [error]="errors()['guardianContact'] ?? null"
+          [(ngModel)]="report.guardianContact"
+        />
+        <ph-radio-group
+          legend="Severity"
+          name="severity"
+          [options]="severities"
+          [error]="errors()['severity'] ?? null"
+          [(ngModel)]="report.severity"
+        />
+      </div>
+    </ph-card>
+    <ph-alert
+      tone="info"
+      [title]="'Goes to ' + (form()?.supervisor ?? 'a supervisor')"
+      text="Emailed at once; only supervisors and you can read it."
+    />
+    <div class="cluster">
+      <ph-button link="/incidents">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Submit report</ph-button>
+    </div>
+  </form>
+}

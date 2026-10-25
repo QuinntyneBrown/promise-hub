@@ -44,6 +44,7 @@ app.MapSlipEndpoints();
 app.MapGuardianEndpoints();
 app.MapImportEndpoints();
 app.MapEnrollmentEndpoints();
+app.MapIncidentEndpoints();
 app.MapSettingsEndpoints();
 
 app.Run();

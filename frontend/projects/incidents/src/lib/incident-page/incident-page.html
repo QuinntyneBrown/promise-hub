@@ -1,0 +1,42 @@
+@switch (state()) {
+  @case ('not-found') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="search"
+        title="We can’t find that incident"
+        text="It may not exist, or only supervisors can read it."
+        [headingLevel]="1"
+      >
+        <ph-button variant="primary" link="/incidents">Incidents</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('error') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="Couldn’t load the incident"
+        text="Try again."
+        [headingLevel]="1"
+      >
+        <ph-button variant="primary" (click)="load(id())">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('loaded') {
+    @if (incident(); as i) {
+      <ph-breadcrumb [items]="[{ label: 'Incidents', link: '/incidents' }, { label: title(i) }]" />
+      <ph-page-header [title]="title(i)" [subtitle]="reported(i)">
+        <ph-badge
+          data-testid="incident-status"
+          [tone]="i.status === 'Closed' ? 'neutral' : 'warning'"
+          >{{ status[i.status] }}</ph-badge
+        >
+      </ph-page-header>
+      <ph-card title="Report">
+        <ph-description-list [facts]="facts(i)" />
+      </ph-card>
+    }
+  }
+}

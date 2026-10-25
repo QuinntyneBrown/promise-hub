@@ -24,3 +24,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0018](0018-guardian-enrollment.md) | Enrollment links are per program, contacts are verified by code, and submissions wait as requests |
 | [0019](0019-enrollment-review.md) | Enrollment requests are reviewed on the program roster, one by one or in bulk, and the guardian is texted |
 | [0020](0020-guardian-home-link.md) | Enrollment decisions text a household home link, verified like a slip link |
+| [0021](0021-incident-reporting.md) | Incidents are reported by any staff member and read by supervisors and the reporter only |

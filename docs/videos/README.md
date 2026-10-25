@@ -26,6 +26,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 16 | [Review enrollment](16-review-enrollment/README.md) | ~2 min | Accept, waitlist or decline enrollments one by one or in bulk, with every guardian texted |
 | 17 | [Track enrollment status](17-track-enrollment-status/README.md) | ~2 min | A home link in every decision text, a code, and each child's enrollment status |
 | 18 | [Manage waitlists](18-manage-waitlists/README.md) | ~2 min | Move waitlisted children in when places are free; everyone behind moves up |
+| 19 | [Report an incident](19-report-an-incident/README.md) | ~2 min | Facts in a fixed order, straight to the program director, read only by supervisors and the reporter |
 
 ## Making or updating a video
 

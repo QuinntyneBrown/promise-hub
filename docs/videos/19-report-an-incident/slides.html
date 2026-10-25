@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 19 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="19" data-video-title="Report an incident" data-parts="Introduction|Promises|Jaylen reports|Who reads it|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 19</div>
+  <h1>Report an incident</h1>
+  <p class="lead">The facts, while they are fresh, to the people who must know</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="Any staff member can report an incident.">
+  <h2>What incident reports promise</h2>
+  <ul>
+    <li>Facts in a fixed order</li>
+    <li>Nothing saved until every fact is there</li>
+    <li>Emailed at once to the program director</li>
+    <li>Supervisors and the reporter only; every view recorded</li>
+  </ul>
+</section>
+
+<section id="report" data-part="2" data-cue="Here is Jaylen's phone." data-clip="clips/report-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Injury · Mateo Rivera</h3><p>Needs review, sent to Marisol.</p></div>
+</section>
+
+<section id="readers" data-part="3" data-cue="Back in the log, Jaylen sees only the reports he wrote.">
+  <h2>Who can read it</h2>
+  <div class="cols">
+    <img class="shot" alt="Jaylen's own reports under the supervisors-only message" src="shots/phone-own-reports.png">
+    <img class="shot" alt="Marisol's incident log" src="shots/desktop-log.png">
+  </div>
+</section>
+
+<section id="testing" data-part="4" data-cue="Backend tests cover the form's children">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Missing facts</td><td>422, each named, nothing saved</td></tr>
+    <tr><td>Complete report</td><td>Needs review, emailed, audited</td></tr>
+    <tr><td>Someone else's report</td><td>404</td></tr>
+    <tr><td>Another organization / module off</td><td>404</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="5" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Facts in a fixed order</li><li>Straight to the program director</li><li>Restricted and audited</li></ul>
+  <p class="muted">Next: reviewing the report</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

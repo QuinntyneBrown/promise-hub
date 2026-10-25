@@ -1,0 +1,56 @@
+@switch (state()) {
+  @case ('error') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="Couldn’t load incidents"
+        text="Try again."
+        [headingLevel]="1"
+      >
+        <ph-button variant="primary" (click)="load()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('loaded') {
+    @if (canReadLog()) {
+      <ph-page-header title="Incident log" subtitle="Open first. Every view is recorded.">
+        <ph-button variant="primary" link="/incidents/new">Report an incident</ph-button>
+      </ph-page-header>
+      <ph-list label="Incidents">
+        @for (i of incidents(); track i.id) {
+          <ph-list-item [title]="title(i)" [meta]="meta(i)" [link]="['/incidents', i.id]">
+            <ph-badge [tone]="i.status === 'Closed' ? 'neutral' : 'warning'">{{
+              status[i.status]
+            }}</ph-badge>
+          </ph-list-item>
+        } @empty {
+          <ph-list-item
+            title="No incidents"
+            meta="Reports appear here as soon as they are submitted."
+          />
+        }
+      </ph-list>
+    } @else {
+      <ph-error-page
+        icon="lock"
+        title="Only supervisors can read the log"
+        text="You can report one; a program director reviews it."
+      >
+        <ph-button variant="primary" link="/incidents/new">Report an incident</ph-button>
+      </ph-error-page>
+      <h2>Your reports</h2>
+      <ph-list label="Your reports">
+        @for (i of incidents(); track i.id) {
+          <ph-list-item [title]="title(i)" [meta]="meta(i)" [link]="['/incidents', i.id]">
+            <ph-badge [tone]="i.status === 'Closed' ? 'neutral' : 'warning'">{{
+              status[i.status]
+            }}</ph-badge>
+          </ph-list-item>
+        } @empty {
+          <ph-list-item title="No reports yet" meta="Reports you submit appear here." />
+        }
+      </ph-list>
+    }
+  }
+}
