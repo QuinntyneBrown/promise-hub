@@ -1,0 +1,15 @@
+namespace PromiseHub.Application.Attendance;
+
+public sealed record SessionSummaryDto(
+    Guid Id,
+    string Name,
+    Guid ProgramId,
+    string ProgramName,
+    DateTimeOffset StartsAt,
+    DateTimeOffset EndsAt,
+    string? Place,
+    int Expected,
+    int CheckedIn,
+    int Absent,
+    int NotYet,
+    string Status);

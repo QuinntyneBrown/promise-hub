@@ -34,6 +34,7 @@ app.MapSessionEndpoints();
 app.MapHouseholdEndpoints();
 app.MapProgramEndpoints();
 app.MapEventEndpoints();
+app.MapAttendanceEndpoints();
 app.MapSettingsEndpoints();
 
 app.Run();

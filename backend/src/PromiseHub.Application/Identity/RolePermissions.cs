@@ -16,6 +16,7 @@ public static class RolePermissions
         Permission.ManagePrograms => role is Role.Admin or Role.ProgramDirector,
         Permission.ManageEvents => role is Role.Admin or Role.ProgramDirector or Role.SiteLead,
         Permission.CancelEvents => role is Role.Admin or Role.ProgramDirector,
+        Permission.RunSessions => role is Role.Admin or Role.ProgramDirector or Role.SiteLead or Role.YouthWorker,
         _ => false,
     };
 }

@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using PromiseHub.Application.Attendance;
 using PromiseHub.Application.Events;
 using PromiseHub.Application.Households;
 using PromiseHub.Application.Identity;
@@ -38,6 +39,13 @@ public static class DependencyInjection
         services.AddScoped<CreateEventHandler>();
         services.AddScoped<UpdateEventHandler>();
         services.AddScoped<CancelEventHandler>();
+        services.AddScoped<SessionReader>();
+        services.AddScoped<AttendanceWriter>();
+        services.AddScoped<TodaySessionsHandler>();
+        services.AddScoped<GetSessionRosterHandler>();
+        services.AddScoped<CheckInHandler>();
+        services.AddScoped<MarkAbsentHandler>();
+        services.AddScoped<AddWalkInHandler>();
         services.AddScoped<GetOrganizationSettingsHandler>();
         services.AddScoped<IModuleGate, ModuleGate>();
         services.AddScoped<GetModulesHandler>();
