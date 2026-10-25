@@ -9,3 +9,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0003](0003-plain-handlers-without-a-mediator.md) | Plain application handlers, no mediator library |
 | [0004](0004-e2e-suite-as-its-own-package.md) | The e2e suite is its own npm package with a fake API |
 | [0005](0005-cookie-sessions-and-totp.md) | Cookie sessions, a separate MFA ticket and TOTP |
+| [0006](0006-module-gates-and-navigation.md) | Module gates, navigation mapping and dependency details |

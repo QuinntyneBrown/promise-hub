@@ -28,7 +28,7 @@
 | Admin / office manager | Import a roster | Map spreadsheet columns, review records, and create households and children. | [5 days](detailed-designs/imports/import-roster/README.md) | 0% |
 | Admin / office manager | Review enrollment | Accept, reject, or waitlist submitted children and update rosters. | [3 days](detailed-designs/enrollment/enroll-guardian/README.md) | 0% |
 | Admin / office manager | Maintain households | Edit guardians, children, medical details, and approved pickups. | [5 days](detailed-designs/households/maintain-household/README.md) | 0% |
-| Admin / office manager | Configure modules | Enable or disable modules while respecting dependencies and preserving data. | [4 days](detailed-designs/organizations/configure-modules/README.md) | 0% |
+| Admin / office manager | Configure modules | Enable or disable modules while respecting dependencies and preserving data. | [4 days](detailed-designs/organizations/configure-modules/README.md) | 85% · [video](videos/03-configure-modules/README.md) |
 | Admin / office manager | Manage staff access | Invite staff, assign roles, and remove access when needed. | [7 days](detailed-designs/identity/authorize-request/README.md) | 0% |
 | Admin / office manager | Manage billing | Check child and SMS usage, review limits, and change plans. | [8 days](detailed-designs/billing/meter-plan-and-usage/README.md) | 0% |
 | Admin / office manager | Configure privacy | Set data residency, retention, and guardian data request handling. | [5 days](detailed-designs/organizations/set-privacy-and-residency/README.md) | 0% |

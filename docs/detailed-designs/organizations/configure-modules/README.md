@@ -8,7 +8,7 @@ Admins change the configuration on `settings-modules` or pick a preset on `onboa
 
 ## Description
 
-### Frontend — `frontend/projects/organizations/`
+### Frontend — `frontend/projects/settings/`
 
 - **`SettingsModulesPage`** — page for `/settings/modules` (`settings-modules`). It renders the eight modules as a `list` of rows with a `switch` each, the dependency caption ("Needs Roll Call") when a dependency is off, the preset chips and one Save. The `roleGuard` sends a site lead to the forbidden state (L2-004 criterion 5).
 - **`ModulePresetTilesComponent`** — the four `choice-tiles` used on `onboard-modules`; "Let me choose" expands the same module list as the settings page.
@@ -31,7 +31,7 @@ Admins change the configuration on `settings-modules` or pick a preset on `onboa
 ### Backend — `PromiseHub.Domain`
 
 - **`ModuleId`** — enumeration: `Roster`, `Slips`, `RollCall`, `QuickCards`, `Pickup`, `Messages`, `Incidents`, `Reports`.
-- **`ModuleCatalog`** — static declaration of each module's dependencies and of the presets. Pickup depends on Roll Call and Roster; every other module depends on Roster. Whether Quick Cards depends on Roll Call as well as Roster is `<TO SUPPLY>`.
+- **`ModuleCatalog`** — static declaration of each module's dependencies and of the presets. Pickup depends on Roll Call and Roster; every other module depends on Roster. Quick Cards depends on Roster only (ADR 0006).
 - **`ModulePreset`** — `WholeSuite`, `JustCheckIn`, `JustSlips`, `Custom`.
 - **`ModuleConfiguration`** — tenant-owned entity: `OrganizationId`, `ISet<ModuleId> On`, `UpdatedAt`. `Apply(flags)` validates against `ModuleCatalog` and throws `ModuleDependencyViolation` listing the violations. `IsOn(module)` is read by the gates.
 
@@ -40,6 +40,10 @@ Admins change the configuration on `settings-modules` or pick a preset on `onboa
 - **`PromiseHubDbContext`** — maps `ModuleConfigurations` with one row per organization. A module turned off leaves every other table untouched.
 - **`ModuleConfigurationCache`** — per-organization cache read by the endpoint filter in `enforce-module-gates`; the save handler invalidates it.
 - **`AuditLog`** — records each module change with before and after flags (L2-032).
+
+## Built so far
+
+Slice 03 delivered `SettingsModulesPage` in `frontend/projects/settings/` (default, invalid, error and forbidden states, presets applied in the page from `MODULE_PRESETS`), `MODULES_API`, `GET`/`PUT /settings/modules` (ADR 0006), `ModuleRules` (the validator), `SaveModulesHandler` with an audit entry per change, `ModuleConfiguration` and the seeded configurations. The onboarding preset tiles and `POST /modules/preset` arrive with `set-up-organization`; there is no cache to invalidate (ADR 0006).
 
 ## Requirements
 

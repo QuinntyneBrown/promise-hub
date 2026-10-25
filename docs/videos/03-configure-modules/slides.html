@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 03 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="03" data-video-title="Configure modules" data-parts="Introduction|Promises|Settings|Rules|Off means unreachable|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 03</div>
+  <h1>Configure modules</h1>
+  <p class="lead">From a single module to the whole suite, per organization</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="There are eight modules">
+  <h2>What modules promise</h2>
+  <ul>
+    <li>Eight modules; Roster is the data the others read</li>
+    <li>An off module's endpoints answer 404</li>
+    <li>Its sections leave the navigation, tab bar and More</li>
+    <li>Turning a module off deletes nothing</li>
+  </ul>
+</section>
+
+<section id="settings" data-part="2" data-cue="Here is Tom, Harbourview's admin, in Settings, Modules on a laptop." data-clip="clips/modules-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Pickup needs Roll Call</h3><p>Then the Just check-in preset, saved, and a smaller top bar.</p></div>
+</section>
+
+<section id="rules" data-part="3" data-cue="Every module needs the roster, and Pickup also needs Roll Call.">
+  <h2>The rules</h2>
+  <table class="facts">
+    <tr><th>Rule</th><th>Answer</th></tr>
+    <tr><td>A module on without what it needs</td><td>422, one message per module</td></tr>
+    <tr><td>Every save</td><td><code>ModuleChanged</code> audit, before and after</td></tr>
+    <tr><td>Site lead opens <code>/settings/modules</code></td><td>403 and who to ask</td></tr>
+  </table>
+</section>
+
+<section id="states" data-part="3" data-cue="Only admins and program directors may change modules">
+  <h2>Invalid and forbidden</h2>
+  <div class="cols">
+    <img class="shot" alt="Pickup needs Roll Call beside Pickup" src="shots/phone-invalid.png">
+    <img class="shot" alt="Admins configure modules" src="shots/phone-forbidden.png">
+  </div>
+</section>
+
+<section id="off" data-part="4" data-cue="Northgate Community Church Kids runs check-in only." data-clip="clips/check-in-only-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Check-in only</h3><p>Today, Check-in, Families. <code>/slips</code> lands on Today; the server answers 404.</p></div>
+</section>
+
+<section id="testing" data-part="5" data-cue="Backend tests save configurations">
+  <h2>How it is tested</h2>
+  <div class="cols">
+    <div class="card"><h3>Backend</h3><p>Dependencies, roles, cross-tenant isolation, audit, and the roster off and on again with its data intact.</p></div>
+    <div class="card"><h3>Browser</h3><p>Switches, inline errors, presets, and every off module's address at phone and desktop widths.</p></div>
+  </div>
+</section>
+
+<section id="recap" data-part="6" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Roster is the base; Pickup needs Roll Call</li><li>Off means 404 on the server and absent in the app</li><li>Nothing is ever deleted</li></ul>
+  <p class="muted">Next: maintain households</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
