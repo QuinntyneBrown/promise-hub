@@ -1,0 +1,19 @@
+:host {
+  --flag-bg: var(--color-danger-bg);
+  --flag-fg: var(--color-danger-fg);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0 var(--space-2);
+  min-height: var(--target-min);
+  border-radius: var(--radius-full);
+  font: var(--text-caption);
+  font-weight: var(--font-weight-medium);
+  background: var(--flag-bg);
+  color: var(--flag-fg);
+  white-space: nowrap;
+}
+:host(.flag--info) {
+  --flag-bg: var(--color-info-bg);
+  --flag-fg: var(--color-info-fg);
+}

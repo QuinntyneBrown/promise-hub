@@ -1,0 +1,44 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    title="Add a family"
+    description="The guardian finishes the rest from a link."
+    icon="families"
+  >
+    <ph-text-field
+      inputId="guardianName"
+      label="Guardian’s name"
+      name="guardianName"
+      [error]="errors()['guardianName'] ?? null"
+      [(ngModel)]="family.guardianName"
+    />
+    <ph-text-field
+      inputId="mobile"
+      label="Mobile"
+      type="tel"
+      inputmode="tel"
+      name="mobile"
+      help="Phone or email."
+      [error]="errors()['mobile'] ?? null"
+      [(ngModel)]="family.mobile"
+    />
+    <ph-text-field
+      inputId="email"
+      label="Email"
+      type="email"
+      name="email"
+      [optional]="true"
+      [(ngModel)]="family.email"
+    />
+    <ph-select
+      inputId="language"
+      label="Language"
+      name="language"
+      [options]="languages"
+      [(ngModel)]="family.language"
+    />
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Add family</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

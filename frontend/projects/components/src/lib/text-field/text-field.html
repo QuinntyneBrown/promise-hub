@@ -1,4 +1,9 @@
-<label class="label" [for]="inputId()">{{ label() }}</label>
+<label class="label" [class.visually-hidden]="labelHidden()" [for]="inputId()"
+  >{{ label() }}
+  @if (optional()) {
+    <span class="optional">(optional)</span>
+  }
+</label>
 <div class="group">
   <input
     class="input"
@@ -9,8 +14,9 @@
     [attr.autocomplete]="autocomplete()"
     [attr.inputmode]="inputmode()"
     [attr.maxlength]="maxlength()"
+    [attr.placeholder]="placeholder()"
     [attr.aria-invalid]="error() ? 'true' : null"
-    [attr.aria-describedby]="error() ? inputId() + '-error' : null"
+    [attr.aria-describedby]="describedBy()"
     (input)="update($any($event.target).value)"
     (blur)="onTouched()"
   />
@@ -26,6 +32,9 @@
     </button>
   }
 </div>
+@if (help()) {
+  <div class="help" [id]="inputId() + '-help'">{{ help() }}</div>
+}
 @if (error()) {
   <div class="error" [id]="inputId() + '-error'" [attr.data-testid]="inputId() + '-error'">
     {{ error() }}

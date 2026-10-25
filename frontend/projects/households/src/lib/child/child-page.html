@@ -1,0 +1,62 @@
+@let r = result();
+@switch (r?.status) {
+  @case ('not-found') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="search"
+        title="We can’t find that child"
+        text="They may have been removed or belong to another organization."
+        [headingLevel]="1"
+      >
+        <ph-button variant="primary" link="/families">Back to Families</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('error') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load this child"
+        text="Try again."
+        [headingLevel]="1"
+      >
+        <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('loaded') {
+    @if (r?.status === 'loaded') {
+      @let c = r.value;
+      <ph-breadcrumb
+        [items]="[
+          { label: 'Families', link: '/families' },
+          { label: c.householdName, link: '/families/' + c.householdId },
+          { label: c.name },
+        ]"
+      />
+      <ph-page-header [title]="c.name" [subtitle]="subtitle(c)">
+        @if (canWrite()) {
+          <ph-button (click)="edit(c)">Edit</ph-button>
+        }
+      </ph-page-header>
+      <div class="split">
+        <ph-card title="Medical and emergency">
+          @if (c.medical) {
+            <ph-description-list [facts]="facts(c)" />
+          } @else {
+            <p class="restricted">
+              Medical details are hidden for your role. Ask a site lead or program director.
+            </p>
+          }
+          @if (c.medical && canWriteMedical()) {
+            <div phCardFooter>
+              <ph-button variant="ghost" size="sm" (click)="editMedical(c)">Edit medical</ph-button>
+              · views logged
+            </div>
+          }
+        </ph-card>
+      </div>
+    }
+  }
+}

@@ -1,0 +1,38 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    [title]="'Edit ' + child.firstName + '’s medical information'"
+    description="Logged with your name and the time."
+  >
+    <ph-textarea
+      inputId="allergies"
+      label="Allergies"
+      name="allergies"
+      [error]="error()"
+      [(ngModel)]="changes.allergies"
+    />
+    <ph-textarea
+      inputId="medication"
+      label="Medication"
+      name="medication"
+      [(ngModel)]="changes.medication"
+    />
+    <ph-textarea
+      inputId="conditions"
+      label="Conditions"
+      name="conditions"
+      [rows]="1"
+      [(ngModel)]="changes.conditions"
+    />
+    <ph-text-field inputId="doctor" label="Doctor" name="doctor" [(ngModel)]="changes.doctor" />
+    <ph-radio-group
+      legend="Quick Card alert"
+      name="alert"
+      [options]="alertOptions"
+      [(ngModel)]="alert"
+    />
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Save medical details</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

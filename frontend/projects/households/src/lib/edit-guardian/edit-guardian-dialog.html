@@ -1,0 +1,35 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    [title]="'Edit ' + guardian.name"
+    description="Updates every Quick Card in the household."
+  >
+    <ph-text-field
+      inputId="name"
+      label="Name"
+      name="name"
+      [error]="errors()['name'] ?? null"
+      [(ngModel)]="changes.name"
+    />
+    <ph-select
+      inputId="relationship"
+      label="Relationship"
+      name="relationship"
+      [options]="relationships"
+      [(ngModel)]="changes.relationship"
+    />
+    <ph-text-field
+      inputId="mobile"
+      label="Mobile"
+      type="tel"
+      inputmode="tel"
+      name="mobile"
+      [(ngModel)]="changes.mobile"
+    />
+    <ph-switch label="Approved to pick up" name="canPickUp" [(ngModel)]="changes.canPickUp" />
+    <ph-switch label="Can sign permission slips" name="canSign" [(ngModel)]="changes.canSign" />
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Save</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

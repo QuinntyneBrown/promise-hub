@@ -10,3 +10,22 @@
   padding: 0;
   overflow: hidden;
 }
+.title {
+  font: var(--text-h4);
+  margin: 0 0 var(--space-4);
+}
+:host(.card--flush) .title {
+  padding: var(--space-6) var(--space-4) var(--space-2);
+  margin: 0;
+}
+.footer {
+  padding-top: var(--space-3);
+  font: var(--text-body-sm);
+  color: var(--color-fg-muted);
+}
+:host(.card--flush) .footer {
+  padding: var(--space-3) var(--space-4);
+}
+.footer:empty {
+  display: none;
+}

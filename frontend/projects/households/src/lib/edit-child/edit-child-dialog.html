@@ -1,0 +1,32 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog [title]="'Edit ' + child.name">
+    <ph-text-field
+      inputId="name"
+      label="Child’s name"
+      name="name"
+      [error]="errors()['name'] ?? null"
+      [(ngModel)]="changes.name"
+    />
+    <div class="two-col">
+      <ph-text-field
+        inputId="dateOfBirth"
+        label="Date of birth"
+        type="date"
+        name="dateOfBirth"
+        [error]="errors()['dateOfBirth'] ?? null"
+        [(ngModel)]="changes.dateOfBirth"
+      />
+      <ph-text-field
+        inputId="school"
+        label="School and grade"
+        name="school"
+        [optional]="true"
+        [(ngModel)]="changes.school"
+      />
+    </div>
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Save</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

@@ -1,0 +1,18 @@
+<ul class="menu" cdkMenu [attr.aria-label]="label()">
+  @for (item of items(); track item.id) {
+    @if (item.danger) {
+      <li class="divider" role="none"></li>
+    }
+    <li role="none">
+      <button
+        class="item"
+        [class.item--danger]="item.danger"
+        type="button"
+        cdkMenuItem
+        (cdkMenuItemTriggered)="selected.emit(item.id)"
+      >
+        {{ item.label }}
+      </button>
+    </li>
+  }
+</ul>

@@ -1,0 +1,33 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0 var(--space-2);
+  min-height: var(--target-min);
+  border-radius: var(--radius-full);
+  font: var(--text-overline);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  background: var(--color-bg-subtle);
+  color: var(--color-fg-muted);
+  white-space: nowrap;
+}
+:host::before {
+  content: '';
+  width: var(--space-2);
+  height: var(--space-2);
+  border-radius: var(--radius-full);
+  background: currentColor;
+}
+:host(.badge--info) {
+  background: var(--color-info-bg);
+  color: var(--color-info-fg);
+}
+:host(.badge--success) {
+  background: var(--color-success-bg);
+  color: var(--color-success-fg);
+}
+:host(.badge--warning) {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-fg);
+}

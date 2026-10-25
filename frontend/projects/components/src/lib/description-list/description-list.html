@@ -1,0 +1,8 @@
+<dl class="facts">
+  @for (fact of facts(); track fact.key) {
+    <div [attr.data-testid]="'fact-' + fact.key">
+      <dt>{{ fact.term }}</dt>
+      <dd>{{ fact.value }}</dd>
+    </div>
+  }
+</dl>

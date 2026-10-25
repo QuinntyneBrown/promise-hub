@@ -1,0 +1,15 @@
+import type { Permission } from './permission';
+import type { Role } from './role';
+
+const GRANTS: Record<Permission, Role[]> = {
+  manageSettings: ['Admin', 'ProgramDirector'],
+  writeHouseholds: ['Admin', 'ProgramDirector'],
+  deleteHouseholds: ['Admin'],
+  readMedical: ['Admin', 'ProgramDirector', 'SiteLead'],
+  writeMedical: ['Admin', 'ProgramDirector'],
+};
+
+/** Whether a role holds a permission, to hide actions it lacks. The server enforces the same map on every request. */
+export function can(role: Role, permission: Permission): boolean {
+  return GRANTS[permission].includes(role);
+}

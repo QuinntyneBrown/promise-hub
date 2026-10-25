@@ -1,0 +1,18 @@
+.facts {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+}
+.facts > div {
+  display: grid;
+  grid-template-columns: minmax(var(--space-24), var(--layout-search-min)) 1fr;
+  gap: var(--space-3);
+}
+dt {
+  color: var(--color-fg-muted);
+  font: var(--text-label);
+}
+dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
