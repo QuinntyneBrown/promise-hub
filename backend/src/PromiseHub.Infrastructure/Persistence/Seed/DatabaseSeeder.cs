@@ -20,6 +20,10 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
         Add(new Organization(Harbourview, "Harbourview Youth Collective", "Hamilton, Ontario", Plan.Standard));
         Add(new Organization(Northgate, "Northgate Community Church Kids", "Burlington, Ontario", Plan.Free));
 
+        // Harbourview runs the whole suite; Northgate, on the Free plan, runs check-in only (L2-004, L2-005).
+        Modules(Harbourview, ModuleCatalog.All);
+        Modules(Northgate, [ModuleId.Roster, ModuleId.RollCall, ModuleId.QuickCards]);
+
         Staff(Harbourview, "Jaylen Okafor", "jaylen@harbourview.example", Role.SiteLead);
         Staff(Harbourview, "Marisol Delgado", "marisol@harbourview.example", Role.ProgramDirector);
         Staff(Harbourview, "Tom Nguyen", "tom@harbourview.example", Role.Admin);
@@ -40,6 +44,12 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
     public static Guid MembershipId(Guid organizationId, string email) => SeedIds.Of($"membership:{organizationId}:{email}");
 
     public static Guid ChildId(Guid organizationId, string fullName) => SeedIds.Of($"child:{organizationId}:{fullName}");
+
+    private void Modules(Guid organizationId, IEnumerable<ModuleId> on) =>
+        Add(new ModuleConfiguration(SeedIds.Of($"modules:{organizationId}"), organizationId, ModuleConfiguration.Format(on), SeedClock));
+
+    // A fixed time keeps re-runs identical.
+    private static readonly DateTimeOffset SeedClock = new(2026, 9, 1, 12, 0, 0, TimeSpan.Zero);
 
     public static Guid UserId(string email) => SeedIds.Of($"user:{email}");
 

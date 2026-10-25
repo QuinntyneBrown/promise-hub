@@ -1,6 +1,7 @@
 using PromiseHub.Api.Authorization;
 using PromiseHub.Application.Identity;
 using PromiseHub.Application.Organizations;
+using PromiseHub.Domain.Organizations;
 
 namespace PromiseHub.Api.Endpoints;
 
@@ -10,6 +11,23 @@ public static class SettingsEndpoints
     {
         var settings = app.MapGroup("/settings").RequirePermission(Permission.ManageSettings);
         settings.MapGet("/organization", (GetOrganizationSettingsHandler handler, CancellationToken ct) => handler.HandleAsync(ct));
+        settings.MapGet("/modules", (GetModulesHandler handler, CancellationToken ct) => handler.HandleAsync(ct));
+        settings.MapPut("/modules", async (SaveModulesRequest request, SaveModulesHandler handler, CancellationToken ct) =>
+        {
+            var on = new HashSet<ModuleId>();
+            foreach (var id in request.On)
+            {
+                if (!Enum.TryParse<ModuleId>(id, out var module))
+                {
+                    return Results.Json(new { errors = new[] { new ModuleViolation(id, $"{id} is not a module.") } }, statusCode: StatusCodes.Status422UnprocessableEntity);
+                }
+                on.Add(module);
+            }
+            var result = await handler.HandleAsync(on, ct);
+            return result.Violations.Count > 0
+                ? Results.Json(new { errors = result.Violations }, statusCode: StatusCodes.Status422UnprocessableEntity)
+                : Results.Ok(new { on = result.On });
+        });
         return app;
     }
 }
