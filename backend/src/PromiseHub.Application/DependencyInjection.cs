@@ -64,6 +64,12 @@ public static class DependencyInjection
         services.AddScoped<Slips.CancelSlipSendHandler>();
         services.AddScoped<Slips.EditSlipHandler>();
         services.AddScoped<Slips.SendDueSlipsHandler>();
+        services.AddScoped<Guardian.GuardianAccess>();
+        services.AddScoped<Guardian.GuardianLinkIssuer>();
+        services.AddScoped<Guardian.GuardianContactChange>();
+        services.AddScoped<Guardian.RequestGuardianCodeHandler>();
+        services.AddScoped<Guardian.VerifyGuardianCodeHandler>();
+        services.AddScoped<Guardian.GuardianSlipHandler>();
         services.AddScoped<SignOutHandler>();
         services.AddScoped<GetPickupOptionsHandler>();
         services.AddScoped<MarkAbsentHandler>();

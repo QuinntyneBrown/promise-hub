@@ -1,0 +1,61 @@
+using PromiseHub.Application.Guardian;
+
+namespace PromiseHub.Api.Endpoints;
+
+/// <summary>
+/// Guardian pages: anonymous, reached by a link and a six-digit code, never a password (L2-026). The device cookie is
+/// HttpOnly; the page never reads it.
+/// </summary>
+public static class GuardianEndpoints
+{
+    public const string DeviceCookie = "ph_guardian_device";
+
+    public static IEndpointRouteBuilder MapGuardianEndpoints(this IEndpointRouteBuilder app)
+    {
+        var g = app.MapGroup("/g").AllowAnonymous();
+        g.MapPost("/auth/code", async (GuardianCodeRequest request, RequestGuardianCodeHandler handler, CancellationToken ct) =>
+        {
+            var result = await handler.HandleAsync(request, ct);
+            return result.Outcome == GuardianOutcome.Done ? Results.Accepted() : ToHttp(result);
+        });
+        g.MapPost("/auth/verify", async (GuardianVerifyRequest request, VerifyGuardianCodeHandler handler, HttpContext http, CancellationToken ct) =>
+        {
+            var result = await handler.HandleAsync(request, ct);
+            if (result.Outcome == GuardianOutcome.Done && result.Value is string device)
+            {
+                http.Response.Cookies.Append(DeviceCookie, device, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = http.Request.IsHttps,
+                    SameSite = SameSiteMode.Lax,
+                    Path = "/",
+                    MaxAge = VerifyGuardianCodeHandler.DeviceLifetime,
+                });
+                return Results.NoContent();
+            }
+            return ToHttp(result);
+        });
+        g.MapGet("/slips/{token}", async (string token, GuardianSlipHandler handler, HttpContext http, CancellationToken ct) =>
+            ToHttp(await handler.GetAsync(Request(token, http), ct)));
+        g.MapPost("/slips/{token}/sign", async (string token, SignSlipRequest body, GuardianSlipHandler handler, HttpContext http, CancellationToken ct) =>
+            ToHttp(await handler.SignAsync(Request(token, http), body, ct)));
+        g.MapPost("/slips/{token}/decline", async (string token, DeclineSlipRequest body, GuardianSlipHandler handler, HttpContext http, CancellationToken ct) =>
+            ToHttp(await handler.DeclineAsync(Request(token, http), body, ct)));
+        return app;
+    }
+
+    private static GuardianRequest Request(string token, HttpContext http) =>
+        new(token, http.Request.Cookies[DeviceCookie], http.Request.Headers.UserAgent.ToString());
+
+    private static IResult ToHttp(GuardianResult result) => result.Outcome switch
+    {
+        GuardianOutcome.Ok => Results.Ok(result.Value),
+        GuardianOutcome.Done => Results.NoContent(),
+        GuardianOutcome.Gone => Results.Json(result.Value, contentType: "application/problem+json", statusCode: StatusCodes.Status410Gone),
+        GuardianOutcome.VerificationRequired => Results.Json(result.Value, contentType: "application/problem+json", statusCode: StatusCodes.Status401Unauthorized),
+        GuardianOutcome.Locked => Results.Json(new { code = "locked" }, contentType: "application/problem+json", statusCode: StatusCodes.Status423Locked),
+        GuardianOutcome.NotFound => Results.NotFound(),
+        GuardianOutcome.Conflict => Results.Json(new { code = "conflict" }, contentType: "application/problem+json", statusCode: StatusCodes.Status409Conflict),
+        _ => Results.Json(new { errors = result.Errors }, statusCode: StatusCodes.Status422UnprocessableEntity),
+    };
+}

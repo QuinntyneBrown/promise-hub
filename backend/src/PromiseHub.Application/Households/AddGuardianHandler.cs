@@ -29,7 +29,7 @@ public sealed class AddGuardianHandler(IPromiseHubDb db, ITenantContext tenant, 
             return Result.Invalid(errors);
         }
 
-        var guardian = new Guardian(Guid.NewGuid(), tenant.OrganizationId, householdId, command.Name.Trim(), command.Relationship,
+        var guardian = new Domain.Households.Guardian(Guid.NewGuid(), tenant.OrganizationId, householdId, command.Name.Trim(), command.Relationship,
             string.IsNullOrWhiteSpace(command.Mobile) ? null : command.Mobile.Trim(),
             string.IsNullOrWhiteSpace(command.Email) ? null : command.Email.Trim(),
             HouseholdRules.Languages.Contains(command.Language) ? command.Language : household.Language,

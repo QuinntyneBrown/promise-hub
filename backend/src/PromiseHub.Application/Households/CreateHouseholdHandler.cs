@@ -28,7 +28,7 @@ public sealed class CreateHouseholdHandler(IPromiseHubDb db, ITenantContext tena
         var name = command.GuardianName.Trim();
         var (_, last) = PersonName.Split(name);
         var household = new Household(Guid.NewGuid(), tenant.OrganizationId, string.IsNullOrEmpty(last) ? name : last, language);
-        var guardian = new Guardian(Guid.NewGuid(), tenant.OrganizationId, household.Id, name, "Guardian",
+        var guardian = new Domain.Households.Guardian(Guid.NewGuid(), tenant.OrganizationId, household.Id, name, "Guardian",
             Clean(command.Mobile), Clean(command.Email), language, isPrimary: true, canPickUp: true, canSign: true);
         db.Households.Add(household);
         db.Guardians.Add(guardian);

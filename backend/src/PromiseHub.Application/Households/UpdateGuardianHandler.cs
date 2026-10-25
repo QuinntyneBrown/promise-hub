@@ -4,7 +4,7 @@ using PromiseHub.Domain.Audit;
 
 namespace PromiseHub.Application.Households;
 
-public sealed class UpdateGuardianHandler(IPromiseHubDb db, IAuditWriter audit)
+public sealed class UpdateGuardianHandler(IPromiseHubDb db, IAuditWriter audit, Guardian.GuardianContactChange contactChange)
 {
     public async Task<Result> HandleAsync(Guid id, UpdateGuardianCommand command, CancellationToken cancellationToken = default)
     {
@@ -19,6 +19,10 @@ public sealed class UpdateGuardianHandler(IPromiseHubDb db, IAuditWriter audit)
         }
         var before = new { guardian.Name, guardian.Relationship, guardian.Mobile, guardian.CanPickUp, guardian.CanSign };
         guardian.Update(command.Name.Trim(), command.Relationship, string.IsNullOrWhiteSpace(command.Mobile) ? null : command.Mobile.Trim(), command.CanPickUp, command.CanSign);
+        if (before.Mobile != guardian.Mobile)
+        {
+            await contactChange.RevokeAsync(guardian.HouseholdId, cancellationToken);
+        }
         audit.Record(new AuditEvent(AuditAction.Updated, "Guardian", guardian.Id, guardian.Name, before,
             new { guardian.Name, guardian.Relationship, guardian.Mobile, guardian.CanPickUp, guardian.CanSign }));
         await db.SaveChangesAsync(cancellationToken);

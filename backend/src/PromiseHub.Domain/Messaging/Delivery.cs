@@ -55,6 +55,11 @@ public sealed class Delivery : ITenantOwned
     public DateTimeOffset DueAt { get; private set; }
     public DateTimeOffset? SentAt { get; private set; }
 
+    /// <summary>This household's own text, such as the message with its children's slip links; the message body otherwise.</summary>
+    public string? Text { get; private set; }
+
+    public void Personalize(string text) => Text = text;
+
     public void Sent(DateTimeOffset at)
     {
         Status = DeliveryStatus.Sent;

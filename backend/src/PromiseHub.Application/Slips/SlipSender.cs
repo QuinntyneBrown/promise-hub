@@ -12,7 +12,7 @@ namespace PromiseHub.Application.Slips;
 /// The rules for a slip that goes to guardians: a title and text, a sign-by date before the event, then one message per
 /// household of the event's program through the message send job (L2-014 criteria 1, 2 and 4).
 /// </summary>
-public sealed class SlipSender(IPromiseHubDb db, IAuditWriter audit, AudienceResolver resolver, MessageWriter writer, TimeProvider clock)
+public sealed class SlipSender(IPromiseHubDb db, IAuditWriter audit, AudienceResolver resolver, MessageWriter writer, Guardian.GuardianLinkIssuer links, TimeProvider clock)
 {
     private static readonly System.Globalization.CultureInfo Culture = System.Globalization.CultureInfo.GetCultureInfo("en-CA");
 
@@ -42,7 +42,15 @@ public sealed class SlipSender(IPromiseHubDb db, IAuditWriter audit, AudienceRes
         var body = why == "edit"
             ? $"The permission slip for “{slip.Title}” has changed. Please read it and sign again by {signBy}."
             : $"Please sign the permission slip for “{slip.Title}” by {signBy}.";
-        var message = writer.Queue(MessageSource.Slips, $"Permission slip: {slip.Title}", body, request.Channel, audience, request);
+        var children = await (
+            from en in db.Enrollments.AsNoTracking()
+            where en.ProgramId == e.ProgramId && en.EndedAt == null
+            join c in db.Children.AsNoTracking() on en.ChildId equals c.Id
+            orderby c.FirstName
+            select new { c.Id, c.FirstName, c.HouseholdId }).ToListAsync(cancellationToken);
+        string LinksFor(Recipient r) =>
+            $"{body} " + string.Join(" · ", children.Where(c => c.HouseholdId == r.HouseholdId).Select(c => $"{c.FirstName}: {links.Issue(r.HouseholdId, slip.Id, c.Id)}"));
+        var message = writer.Queue(MessageSource.Slips, $"Permission slip: {slip.Title}", body, request.Channel, audience, request, LinksFor);
         if (why == "edit")
         {
             slip.Resent(message.Id);

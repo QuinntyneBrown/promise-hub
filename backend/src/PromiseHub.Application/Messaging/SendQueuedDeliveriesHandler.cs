@@ -39,11 +39,11 @@ public sealed class SendQueuedDeliveriesHandler(IPromiseHubDb db, ITenantContext
             var message = messages[delivery.MessageId];
             if (delivery.Channel == Channel.Sms)
             {
-                var text = SmsText.For(organization.Name, message.Body);
+                var text = SmsText.For(organization.Name, delivery.Text ?? message.Body);
                 var segments = SmsSegments.Count(text);
                 if (!period.TryReserve(segments))
                 {
-                    if (delivery.FallbackEmail is { } address && (await email.SendAsync(address, message.Title, message.Body, cancellationToken)).Ok)
+                    if (delivery.FallbackEmail is { } address && (await email.SendAsync(address, message.Title, delivery.Text ?? message.Body, cancellationToken)).Ok)
                     {
                         delivery.SentByEmailInstead(now);
                     }
@@ -62,7 +62,7 @@ public sealed class SendQueuedDeliveriesHandler(IPromiseHubDb db, ITenantContext
                     delivery.Refused(now, "The text provider refused it.");
                 }
             }
-            else if ((await email.SendAsync(delivery.To!, message.Title, message.Body, cancellationToken)).Ok)
+            else if ((await email.SendAsync(delivery.To!, message.Title, delivery.Text ?? message.Body, cancellationToken)).Ok)
             {
                 delivery.Sent(now);
             }

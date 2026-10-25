@@ -3,8 +3,9 @@ namespace PromiseHub.Domain.Organizations;
 /// <summary>The tenant root. Not itself tenant-owned.</summary>
 public sealed class Organization
 {
-    public Organization(Guid id, string name, string city, Plan plan, string timeZone = "America/Toronto")
+    public Organization(Guid id, string name, string city, Plan plan, string timeZone = "America/Toronto", string? phone = null)
     {
+        Phone = phone;
         TimeZone = timeZone;
         Id = id;
         Name = name;
@@ -19,4 +20,7 @@ public sealed class Organization
 
     /// <summary>IANA time zone the organization runs its sessions in; "today" is its local date.</summary>
     public string TimeZone { get; private set; }
+
+    /// <summary>The number guardians call, shown in the footer of every guardian page.</summary>
+    public string? Phone { get; private set; }
 }
