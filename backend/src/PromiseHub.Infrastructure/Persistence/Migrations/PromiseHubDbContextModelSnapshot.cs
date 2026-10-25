@@ -218,6 +218,10 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("HouseholdId")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("TEXT");
 
@@ -225,6 +229,13 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<Guid>("ProgramId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("ReviewedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReviewedBy")
+                        .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Status")

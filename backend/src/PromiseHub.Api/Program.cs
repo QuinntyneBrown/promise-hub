@@ -43,6 +43,7 @@ app.MapMessagingEndpoints();
 app.MapSlipEndpoints();
 app.MapGuardianEndpoints();
 app.MapImportEndpoints();
+app.MapEnrollmentEndpoints();
 app.MapSettingsEndpoints();
 
 app.Run();

@@ -78,6 +78,8 @@ public static class DependencyInjection
         services.AddScoped<Enrollment.EnrollmentLink>();
         services.AddScoped<Enrollment.OpenEnrollmentHandler>();
         services.AddScoped<Enrollment.GuardianEnrollmentHandler>();
+        services.AddScoped<Enrollment.ListEnrollmentRequestsHandler>();
+        services.AddScoped<Enrollment.ReviewEnrollmentHandler>();
         services.AddScoped<Guardian.GuardianAccess>();
         services.AddScoped<Guardian.GuardianLinkIssuer>();
         services.AddScoped<Guardian.GuardianContactChange>();

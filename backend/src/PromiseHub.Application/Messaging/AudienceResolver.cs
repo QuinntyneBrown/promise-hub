@@ -9,6 +9,19 @@ namespace PromiseHub.Application.Messaging;
 /// </summary>
 public sealed class AudienceResolver(IPromiseHubDb db)
 {
+    /// <summary>One household, reached through its primary guardian by text, or email when there is no mobile.</summary>
+    public async Task<Audience> ForHouseholdAsync(Guid householdId, CancellationToken cancellationToken)
+    {
+        var household = await db.Households.AsNoTracking().SingleAsync(h => h.Id == householdId, cancellationToken);
+        var g = await db.Guardians.AsNoTracking().Where(x => x.HouseholdId == householdId).OrderByDescending(x => x.IsPrimary).ThenBy(x => x.Name).FirstOrDefaultAsync(cancellationToken);
+        var mobile = string.IsNullOrWhiteSpace(g?.Mobile) ? null : g.Mobile;
+        var email = string.IsNullOrWhiteSpace(g?.Email) || g.EmailBounced ? null : g.Email;
+        var recipient = mobile is not null
+            ? new Recipient(household.Id, household.Name, g?.Name, household.Language, Channel.Sms, mobile, email, null)
+            : new Recipient(household.Id, household.Name, g?.Name, household.Language, Channel.Email, email, null, email is null ? "No mobile number or email" : null);
+        return new Audience($"{household.Name} household", [recipient]);
+    }
+
     public async Task<Audience> ResolveAsync(AudienceRequest request, CancellationToken cancellationToken)
     {
         var programId = request.ProgramId;
