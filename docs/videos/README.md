@@ -23,6 +23,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 13 | [Resolve missing slips](13-resolve-missing-slips/README.md) | ~3 min | Scheduled reminders once per slot, day-of clearance, tablet signing and texting the unsigned |
 | 14 | [Import a roster](14-import-a-roster/README.md) | ~3 min | CSV or XLSX upload, column mapping, duplicates and gaps reviewed, families created in one audited go |
 | 15 | [Enroll a child](15-enroll-a-child/README.md) | ~3 min | One enrollment link per program, a code to the typed contact, household and children, review before the roster |
+| 16 | [Review enrollment](16-review-enrollment/README.md) | ~2 min | Accept, waitlist or decline enrollments one by one or in bulk, with every guardian texted |
 
 ## Making or updating a video
 

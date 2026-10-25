@@ -1,1 +1,1 @@
-export { routes } from './lib/enrollment.routes';
+export { reviewRoutes, routes } from './lib/enrollment.routes';

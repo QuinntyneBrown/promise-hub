@@ -15,6 +15,7 @@
     }
   </div>
 </ng-template>
+<ng-content select="[phListLead]" />
 @if (link(); as target) {
   <a class="row-link" [routerLink]="target"><ng-container *ngTemplateOutlet="lead" /></a>
 } @else {

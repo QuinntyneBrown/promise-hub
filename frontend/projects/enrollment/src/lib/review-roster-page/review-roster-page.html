@@ -1,0 +1,147 @@
+@if (!allowed()) {
+  <ph-error-page
+    icon="lock"
+    title="Only admins and program directors review enrollments"
+    text="Ask Tom Nguyen or Marisol Delgado to review them."
+  >
+    <ph-button variant="primary" link="/programs">Programs</ph-button>
+  </ph-error-page>
+} @else {
+  @switch (state()) {
+    @case ('not-found') {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="search"
+          title="We can’t find that program"
+          text="It may belong to another organization."
+          [headingLevel]="1"
+        >
+          <ph-button variant="primary" link="/programs">Programs</ph-button>
+        </ph-empty-state>
+      </ph-card>
+    }
+    @case ('error') {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="warning"
+          tone="error"
+          title="Couldn’t load the roster"
+          text="Try again."
+          [headingLevel]="1"
+        >
+          <ph-button variant="primary" (click)="load(programId())">Try again</ph-button>
+        </ph-empty-state>
+      </ph-card>
+    }
+    @case ('loaded') {
+      @if (program(); as p) {
+        <ph-breadcrumb
+          [items]="[
+            { label: 'Programs', link: '/programs' },
+            { label: p.name, link: '/programs/' + p.id },
+            { label: 'Roster' },
+          ]"
+        />
+        <ph-page-header [title]="'Roster · ' + p.name" [subtitle]="subtitle(p)" />
+        <ph-tabs
+          label="Roster sections"
+          [items]="tabs()"
+          [selected]="section()"
+          (selectedChange)="section.set($any($event))"
+        />
+        <div role="tabpanel" [attr.aria-labelledby]="'tab-' + section()">
+          @switch (section()) {
+            @case ('review') {
+              @if (waiting().length === 0) {
+                <ph-card [flush]="true">
+                  <ph-empty-state
+                    icon="families"
+                    title="Nothing waiting review"
+                    text="New enrollments appear here."
+                  />
+                </ph-card>
+              } @else {
+                <ph-list label="Waiting review">
+                  @for (r of waiting(); track r.id) {
+                    <ph-list-item
+                      [title]="r.child"
+                      [meta]="meta(r)"
+                      [link]="['/families', r.householdId, 'children', r.childId]"
+                      [avatar]="r.child"
+                      avatarTint="peach"
+                    >
+                      <ph-checkbox
+                        phListLead
+                        [label]="'Select ' + r.child"
+                        [labelHidden]="true"
+                        [ngModel]="selected().has(r.id)"
+                        (ngModelChange)="toggle(r.id, $event)"
+                      />
+                      <ph-button
+                        variant="primary"
+                        size="sm"
+                        hasPopup="dialog"
+                        [label]="'Accept ' + r.child"
+                        (click)="review(r, 'Accept')"
+                        >Accept</ph-button
+                      >
+                      <ph-button
+                        size="sm"
+                        hasPopup="dialog"
+                        [label]="'Waitlist ' + r.child"
+                        (click)="review(r, 'Waitlist')"
+                        >Waitlist</ph-button
+                      >
+                    </ph-list-item>
+                  }
+                </ph-list>
+              }
+            }
+            @case ('enrolled') {
+              <ph-list label="Enrolled">
+                @for (c of p.roster; track c.id) {
+                  <ph-list-item
+                    [title]="c.name"
+                    [meta]="c.householdName + ' household'"
+                    [link]="['/families', c.householdId, 'children', c.id]"
+                    [avatar]="c.name"
+                    avatarTint="peach"
+                  />
+                } @empty {
+                  <ph-list-item title="Nobody enrolled yet" meta="Accepted children appear here." />
+                }
+              </ph-list>
+            }
+            @case ('waitlist') {
+              <ph-list label="Waitlist">
+                @for (r of waitlist(); track r.id) {
+                  <ph-list-item
+                    [title]="'#' + r.position + ' · ' + r.child"
+                    [meta]="r.guardian + ' · applied ' + r.submittedAt.slice(0, 10)"
+                    [avatar]="r.child"
+                    avatarTint="peach"
+                  />
+                } @empty {
+                  <ph-list-item
+                    title="Nobody on the waitlist"
+                    meta="Waitlisted children appear here in order."
+                  />
+                }
+              </ph-list>
+            }
+          }
+        </div>
+        @if (chosen().length) {
+          <ph-bulk-action-bar [count]="chosen().length" label="Selected enrollments">
+            <ph-button variant="primary" size="sm" hasPopup="dialog" (click)="bulk('Accept')"
+              >Accept {{ chosen().length }}</ph-button
+            >
+            <ph-button size="sm" hasPopup="dialog" (click)="bulk('Waitlist')"
+              >Waitlist {{ chosen().length }}</ph-button
+            >
+          </ph-bulk-action-bar>
+        }
+      }
+    }
+  }
+}

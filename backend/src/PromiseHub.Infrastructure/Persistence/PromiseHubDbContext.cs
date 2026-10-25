@@ -247,6 +247,9 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
         {
             e.Property(r => r.Status).HasConversion<string>().HasMaxLength(20);
             e.Property(r => r.SubmittedBy).HasMaxLength(200);
+            e.Property(r => r.ReviewedBy).HasMaxLength(200);
+            e.Property(r => r.Note).HasMaxLength(500);
+            e.Ignore(r => r.Open);
             e.HasOne<Domain.Programs.Program>().WithMany().HasForeignKey(r => r.ProgramId);
             e.HasOne<Child>().WithMany().HasForeignKey(r => r.ChildId);
             e.HasIndex(r => new { r.ProgramId, r.Status });

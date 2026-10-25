@@ -1,0 +1,10 @@
+<label class="checkbox">
+  <input
+    type="checkbox"
+    [checked]="checked()"
+    [disabled]="disabled()"
+    (change)="toggle($any($event.target).checked)"
+    (blur)="onTouched()"
+  />
+  <span class="text" [class.visually-hidden]="labelHidden()">{{ label() }}</span>
+</label>

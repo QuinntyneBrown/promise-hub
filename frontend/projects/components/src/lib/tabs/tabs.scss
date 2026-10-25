@@ -25,3 +25,17 @@
   color: var(--color-fg-accent);
   border-bottom-color: var(--color-accent);
 }
+.tab[aria-selected='true'] {
+  color: var(--color-fg-accent);
+  border-bottom-color: var(--color-accent);
+}
+.tab:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+.count {
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--color-bg-subtle);
+  font: var(--text-caption);
+}

@@ -21,6 +21,7 @@ public static class RolePermissions
         Permission.RunAnySession => role is Role.Admin or Role.ProgramDirector or Role.SiteLead,
         Permission.SendMessages => role is Role.Admin or Role.ProgramDirector or Role.SiteLead,
         Permission.ManageSlips => role is Role.Admin or Role.ProgramDirector or Role.SiteLead,
+        Permission.ReviewEnrollments => role is Role.Admin or Role.ProgramDirector,
         _ => false,
     };
 }

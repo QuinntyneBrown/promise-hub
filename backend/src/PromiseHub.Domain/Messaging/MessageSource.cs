@@ -5,4 +5,7 @@ public enum MessageSource
 {
     Messages,
     Slips,
+
+    /// <summary>Enrollment decisions to guardians; part of the Roster module.</summary>
+    Enrollment,
 }

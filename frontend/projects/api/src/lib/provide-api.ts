@@ -20,6 +20,8 @@ import { HttpGuardianEnrollmentApi } from './guardian/http-guardian-enrollment-a
 import { HttpGuardianApi } from './guardian/http-guardian-api';
 import { HttpImportsApi } from './imports/http-imports-api';
 import { IMPORTS_API } from './imports/imports-api.token';
+import { ENROLLMENT_API } from './enrollment/enrollment-api.token';
+import { HttpEnrollmentApi } from './enrollment/http-enrollment-api';
 import { HttpModulesApi } from './modules/http-modules-api';
 import { HttpSlipsApi } from './slips/http-slips-api';
 import { SLIPS_API } from './slips/slips-api.token';
@@ -44,5 +46,6 @@ export function provideApi(): EnvironmentProviders {
     { provide: GUARDIAN_API, useClass: HttpGuardianApi },
     { provide: GUARDIAN_ENROLLMENT_API, useClass: HttpGuardianEnrollmentApi },
     { provide: IMPORTS_API, useClass: HttpImportsApi },
+    { provide: ENROLLMENT_API, useClass: HttpEnrollmentApi },
   ]);
 }

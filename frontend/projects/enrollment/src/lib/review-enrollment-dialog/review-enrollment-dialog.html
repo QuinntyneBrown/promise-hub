@@ -1,0 +1,48 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    [title]="'Review ' + data.request.child"
+    [description]="
+      (data.request.returning ? 'Returning family' : 'New family') + ' · ' + data.places
+    "
+  >
+    <p>
+      {{ data.request.guardian }}{{ data.request.phone ? ' · ' + data.request.phone : '' }} ·
+      {{ data.request.language }} · medical: {{ data.request.medical ?? 'none' }}
+    </p>
+    @if (errors()['decision']; as message) {
+      <ph-alert tone="danger" [title]="message" />
+    }
+    @if (failed()) {
+      <ph-alert
+        tone="danger"
+        title="That didn’t go through"
+        text="Nothing was changed. Try again."
+      />
+    }
+    <ph-radio-group
+      legend="Decision"
+      name="decision"
+      [options]="options"
+      [ngModel]="decision()"
+      (ngModelChange)="decision.set($event)"
+    />
+    <ph-textarea
+      inputId="review-note"
+      [label]="decision() === 'Decline' ? 'Reason the guardian will read' : 'Note to the guardian'"
+      name="note"
+      [rows]="2"
+      [optional]="decision() !== 'Decline'"
+      [error]="errors()['note'] ?? null"
+      [(ngModel)]="note"
+    />
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button
+        [variant]="decision() === 'Decline' ? 'danger' : 'primary'"
+        type="submit"
+        [busy]="busy()"
+        >{{ primary() }}</ph-button
+      >
+    </ng-container>
+  </ph-dialog>
+</form>
