@@ -42,6 +42,7 @@ app.MapAttendanceEndpoints();
 app.MapMessagingEndpoints();
 app.MapSlipEndpoints();
 app.MapGuardianEndpoints();
+app.MapImportEndpoints();
 app.MapSettingsEndpoints();
 
 app.Run();

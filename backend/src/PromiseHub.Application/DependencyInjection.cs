@@ -71,6 +71,10 @@ public static class DependencyInjection
         services.AddScoped<Slips.GetUnsignedHandler>();
         services.AddScoped<Slips.GetClearanceHandler>();
         services.AddScoped<Slips.SignOnTabletHandler>();
+        services.AddScoped<Imports.ImportRows>();
+        services.AddScoped<Imports.UploadImportHandler>();
+        services.AddScoped<Imports.SaveMappingHandler>();
+        services.AddScoped<Imports.RunImportHandler>();
         services.AddScoped<Guardian.GuardianAccess>();
         services.AddScoped<Guardian.GuardianLinkIssuer>();
         services.AddScoped<Guardian.GuardianContactChange>();

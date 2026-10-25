@@ -40,6 +40,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<SlipSignature> SlipSignatures => Set<SlipSignature>();
     public DbSet<GuardianLink> GuardianLinks => Set<GuardianLink>();
     public DbSet<SlipReminder> SlipReminders => Set<SlipReminder>();
+    public DbSet<Domain.Imports.ImportSession> ImportSessions => Set<Domain.Imports.ImportSession>();
     public DbSet<GuardianVerification> GuardianVerifications => Set<GuardianVerification>();
     public DbSet<TrustedGuardianDevice> TrustedGuardianDevices => Set<TrustedGuardianDevice>();
     public DbSet<StaffUser> StaffUsers => Set<StaffUser>();
@@ -229,6 +230,13 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(s => s.TextHash).HasMaxLength(64);
             e.Property(s => s.Answers).HasMaxLength(500);
             e.Property(s => s.Reason).HasMaxLength(500);
+        });
+        modelBuilder.Entity<Domain.Imports.ImportSession>(e =>
+        {
+            e.Property(s => s.FileName).HasMaxLength(260);
+            e.Property(s => s.CreatedBy).HasMaxLength(200);
+            e.Property(s => s.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(s => s.CreatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
         });
         modelBuilder.Entity<SlipReminder>(e =>
         {
