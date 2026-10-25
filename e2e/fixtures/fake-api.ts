@@ -127,6 +127,19 @@ export class FakeApi {
   private actions = new Set<string>();
   private messages: FakeMessage[] = [];
   private slips = new Map<string, FakeSlip>();
+  /** Guardian links as texted with a sent slip: token → household, child and event. */
+  private guardianLinks = new Map<string, { householdId: string; childId: string; eventId: string; expired?: boolean }>([
+    ['tok-mateo', { householdId: 'hh-rivera', childId: 'c-mateo', eventId: 'e-rbg' }],
+    ['tok-sofia', { householdId: 'hh-rivera', childId: 'c-sofia', eventId: 'e-rbg' }],
+    ['tok-jordan', { householdId: 'hh-thompson', childId: 'c-jordan', eventId: 'e-rbg' }],
+    ['tok-expired', { householdId: 'hh-rivera', childId: 'c-mateo', eventId: 'e-rbg', expired: true }],
+  ]);
+  /** Households whose device has verified a code (the HttpOnly cookie, in the fake). */
+  private trustedHouseholds = new Set<string>();
+  private wrongCodes = new Map<string, number>();
+  private lockedLinks = new Set<string>();
+  /** The six-digit code the fake texts to a contact on file. */
+  readonly guardianCode = '482913';
   private smsUsed = new Map<string, number>();
   /** Who works each session; youth workers run only these (as seeded: Jaylen and Aisha tonight). */
   private sessionStaff = new Map<string, string[]>([['e-tutoring-today', ['m-jaylen', 'm-aisha']]]);
@@ -137,6 +150,11 @@ export class FakeApi {
   /** Makes the next calls to a route answer with the given status, as the real API would on a fault. */
   failNext(path: string, status: number): void {
     this.failures.set(path, status);
+  }
+
+  /** Trusts this browser for a household, as a verified code would. */
+  trustGuardianDevice(householdId: string): void {
+    this.trustedHouseholds.add(householdId);
   }
 
   /** A guardian's answer for one child, as the guardian slip page will record it. */
@@ -222,6 +240,11 @@ export class FakeApi {
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/walk-ins$/, (route, p) => this.addWalkIn(route, p['id']!)],
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/sign-outs$/, (route, p) => this.signChildOut(route, p['id']!)],
     ['GET', /^\/api\/children\/(?<id>[^/]+)\/pickups$/, (route, p) => this.pickups(route, p['id']!)],
+    ['POST', /^\/api\/g\/auth\/code$/, (route) => this.guardianCodeRoute(route)],
+    ['POST', /^\/api\/g\/auth\/verify$/, (route) => this.guardianVerify(route)],
+    ['GET', /^\/api\/g\/slips\/(?<token>[^/]+)$/, (route, p) => this.guardianSlip(route, p['token']!)],
+    ['POST', /^\/api\/g\/slips\/(?<token>[^/]+)\/sign$/, (route, p) => this.guardianAnswer(route, p['token']!, 'Signed')],
+    ['POST', /^\/api\/g\/slips\/(?<token>[^/]+)\/decline$/, (route, p) => this.guardianAnswer(route, p['token']!, 'Declined')],
     ['GET', /^\/api\/events\/(?<id>[^/]+)\/slip$/, (route, p) => this.getSlip(route, p['id']!)],
     ['PUT', /^\/api\/events\/(?<id>[^/]+)\/slip$/, (route, p) => this.saveSlip(route, p['id']!)],
     ['GET', /^\/api\/slips$/, (route) => this.listSlips(route)],
@@ -1241,6 +1264,103 @@ export class FakeApi {
     if (!m) return;
     const { cap, used, remaining } = this.capOf(m);
     return route.fulfill({ json: { cap, used, remaining, state: remaining === 0 ? 'Reached' : 'Ok', period: '2026-11' } });
+  }
+
+  private guardianLanguage(language: string): string {
+    return language === 'Spanish' ? 'es' : language === 'French' ? 'fr' : 'en';
+  }
+
+  /** Resolves a guardian link like the server: gone, module off, verification needed, or the page's data. */
+  private async guardianScope(route: Route, token: string) {
+    const link = this.guardianLinks.get(token);
+    const household = link ? this.households.find((h) => h.id === link.householdId) : undefined;
+    const org = household ? organizations.find((o) => o.id === household.organizationId)! : undefined;
+    const slip = link ? this.slips.get(link.eventId) : undefined;
+    if (!link || !household || !org || link.expired || slip?.status !== 'Sent') {
+      await route.fulfill({ status: 410, json: { code: 'link-expired', organization: org?.name ?? null, phone: org ? '905-555-0100' : null } });
+      return null;
+    }
+    if (!this.modules.get(org.id)!.includes('Slips')) {
+      await route.fulfill({ status: 404 });
+      return null;
+    }
+    if (!this.trustedHouseholds.has(household.id)) {
+      const contacts = household.guardians.filter((g) => g.mobile).map((g) => `•••-•••-${g.mobile!.slice(-4)}`);
+      await route.fulfill({ status: 401, json: { code: 'verification-required', language: this.guardianLanguage(household.language), organization: org.name, phone: '905-555-0100', contacts } });
+      return null;
+    }
+    const child = household.children.find((c) => c.id === link.childId)!;
+    const event = this.events.find((e) => e.id === link.eventId)!;
+    return { link, household, org, slip, child, event };
+  }
+
+  private async guardianCodeRoute(route: Route): Promise<void> {
+    const b = route.request().postDataJSON() as { token: string; contact: string };
+    const link = this.guardianLinks.get(b.token);
+    if (!link) return route.fulfill({ status: 410, json: { code: 'link-expired' } });
+    return route.fulfill({ status: 202 });
+  }
+
+  private async guardianVerify(route: Route): Promise<void> {
+    const b = route.request().postDataJSON() as { token: string; code: string };
+    const link = this.guardianLinks.get(b.token);
+    if (!link) return route.fulfill({ status: 410, json: { code: 'link-expired' } });
+    if (this.lockedLinks.has(b.token)) return route.fulfill({ status: 423, json: { code: 'locked' } });
+    if (b.code !== this.guardianCode) {
+      const wrong = (this.wrongCodes.get(b.token) ?? 0) + 1;
+      this.wrongCodes.set(b.token, wrong);
+      if (wrong >= 3) this.lockedLinks.add(b.token);
+      return route.fulfill({ status: 422, json: { errors: { code: 'That code didn’t work. Check the latest text or email.' } } });
+    }
+    this.trustedHouseholds.add(link.householdId);
+    return route.fulfill({ status: 204 });
+  }
+
+  private async guardianSlip(route: Route, token: string): Promise<void> {
+    const scope = await this.guardianScope(route, token);
+    if (!scope) return;
+    const { household, org, slip, child, event } = scope;
+    const primary = this.sortedGuardians(household)[0];
+    const answer = slip.answers.get(child.id);
+    const current = answer && answer.version === slip.version ? answer : null;
+    return route.fulfill({
+      json: {
+        language: this.guardianLanguage(household.language),
+        organization: org.name,
+        phone: '905-555-0100',
+        guardianName: primary?.name.split(' ')[0] ?? '',
+        event: { name: event.name, startsAt: event.startsAt, endsAt: event.endsAt, place: event.place },
+        child: { name: `${child.firstName} ${child.lastName}`, firstName: child.firstName, age: ageOf(child.dateOfBirth), allergies: child.medical.allergies, medication: child.medical.medication },
+        emergencyContact: primary ? { name: primary.name, phone: primary.mobile } : null,
+        title: slip.title || event.name,
+        body: slip.body,
+        signBy: slip.signBy,
+        askPhotos: slip.askPhotos,
+        askSwimming: slip.askSwimming,
+        askLunch: slip.askLunch,
+        status: current?.status ?? 'Open',
+        answeredAt: current ? NOW.toISOString() : null,
+        answeredBy: current?.by ?? null,
+      },
+    });
+  }
+
+  private async guardianAnswer(route: Route, token: string, status: 'Signed' | 'Declined'): Promise<void> {
+    const scope = await this.guardianScope(route, token);
+    if (!scope) return;
+    const { household, slip, child } = scope;
+    const current = slip.answers.get(child.id);
+    if (current && current.version === slip.version && (status === 'Signed' || current.status === 'Declined')) return route.fulfill({ status: 409, json: { code: 'conflict' } });
+    const b = route.request().postDataJSON() as { name?: string; reason?: string };
+    const typed = (b.name ?? '').trim().replace(/\s+/g, ' ');
+    const signer = household.guardians.find((g) => g.canSign && g.name.toLowerCase() === typed.toLowerCase());
+    if (status === 'Signed') {
+      if (!typed) return route.fulfill({ status: 422, json: { errors: { name: 'Type your full name to sign.' } } });
+      if (!signer) return route.fulfill({ status: 422, json: { errors: { name: `That name doesn’t match a guardian of ${child.firstName}.` } } });
+    }
+    const by = signer?.name ?? this.sortedGuardians(household)[0]!.name;
+    slip.answers.set(child.id, { status, by, version: slip.version });
+    return route.fulfill({ status: 204 });
   }
 
   /** An event's slip, created as a draft the first time it is read, as the server creates it with the event. */

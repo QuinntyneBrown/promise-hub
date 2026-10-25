@@ -1,0 +1,15 @@
+<form novalidate (ngSubmit)="ref.close(reason)">
+  <ph-dialog [title]="data.text.declineTitle(data.child)" [description]="data.text.declineText">
+    <ph-textarea
+      inputId="reason"
+      [label]="data.text.reasonLabel"
+      name="reason"
+      [rows]="3"
+      [(ngModel)]="reason"
+    />
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">{{ data.text.cancel }}</ph-button>
+      <ph-button variant="danger" type="submit">{{ data.text.decline }}</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>
