@@ -22,7 +22,7 @@ import {
   PhListItem,
   PhTextField,
 } from '@promisehub/components';
-import { guardianText, longDate } from '../guardian-text';
+import { guardianText, longDate, timeRange } from '../guardian-text';
 import { homeText } from '../home-text';
 
 type Enrollment = GuardianHome['children'][number]['enrollments'][number];
@@ -60,6 +60,7 @@ export class GuardianHomePage {
   protected readonly errors = signal<Record<string, string>>({});
   protected readonly failed = signal(false);
   protected readonly busy = signal(false);
+  protected readonly answered = signal<'OnTheWay' | 'Absent' | null>(null);
   protected contact = '';
   protected code = '';
 
@@ -133,6 +134,23 @@ export class GuardianHomePage {
       default:
         return { meta: h.waitingMeta, badge: h.waiting, tone: 'neutral' };
     }
+  }
+
+  protected startTime(startsAt: string): string {
+    return timeRange(startsAt, startsAt, this.language()).split('–')[0]!.trim();
+  }
+
+  /** Answers a no-show text from the page instead of replying 1 or 2 (L2-018 criterion 8). */
+  protected answerNoShow(eventId: string, reply: 'OnTheWay' | 'Absent'): void {
+    this.busy.set(true);
+    this.failed.set(false);
+    this.api.answerNoShow(this.token(), eventId, reply).subscribe((outcome) => {
+      this.busy.set(false);
+      if (outcome.status === 'saved') {
+        this.answered.set(reply);
+        this.load(this.token());
+      } else this.failed.set(true);
+    });
   }
 
   protected requestCode(): void {

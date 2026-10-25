@@ -405,6 +405,7 @@ export class FakeApi {
     ['POST', /^\/api\/incidents\/(?<id>[^/]+)\/reopen$/, (route, p) => this.reopenIncident(route, p['id']!)],
     ['POST', /^\/api\/incidents\/(?<id>[^/]+)\/notes$/, (route, p) => this.addIncidentNote(route, p['id']!)],
     ['GET', /^\/api\/g\/home\/(?<token>[^/]+)$/, (route, p) => this.guardianHome(route, p['token']!)],
+    ['POST', /^\/api\/g\/home\/(?<token>[^/]+)\/no-show$/, (route, p) => this.answerNoShow(route, p['token']!)],
     ['GET', /^\/api\/g\/slips\/(?<token>[^/]+)$/, (route, p) => this.guardianSlip(route, p['token']!)],
     ['POST', /^\/api\/g\/slips\/(?<token>[^/]+)\/sign$/, (route, p) => this.guardianAnswer(route, p['token']!, 'Signed')],
     ['POST', /^\/api\/g\/slips\/(?<token>[^/]+)\/decline$/, (route, p) => this.guardianAnswer(route, p['token']!, 'Declined')],
@@ -1919,7 +1920,34 @@ export class FakeApi {
         };
       });
     const primary = this.sortedGuardians(household)[0];
-    return route.fulfill({ json: { language: this.guardianLanguage(household.language), organization: org.name, phone: '905-555-0100', firstName: primary?.name.split(' ')[0] ?? '', children } });
+    return route.fulfill({ json: { language: this.guardianLanguage(household.language), organization: org.name, phone: '905-555-0100', firstName: primary?.name.split(' ')[0] ?? '', children, noShows: this.openNoShows(household) } });
+  }
+
+  /** The household's unanswered no-show texts, one per session, with the children's first names. */
+  private openNoShows(household: { id: string; organizationId: string; children: { id: string; firstName: string }[] }) {
+    if (!this.modules.get(household.organizationId)!.includes('RollCall')) return [];
+    const byEvent = new Map<string, string[]>();
+    for (const [key, v] of this.noShows) {
+      const [eventId, childId] = key.split(':') as [string, string];
+      const child = household.children.find((c) => c.id === childId);
+      if (child && v.state === 'TextSent') byEvent.set(eventId, [...(byEvent.get(eventId) ?? []), child.firstName].sort());
+    }
+    return [...byEvent].map(([eventId, children]) => {
+      const e = this.events.find((x) => x.id === eventId)!;
+      return { eventId, event: e.name, startsAt: e.startsAt, children };
+    });
+  }
+
+  private async answerNoShow(route: Route, token: string): Promise<void> {
+    const householdId = this.homeLinks.get(token);
+    const household = householdId ? this.households.find((h) => h.id === householdId) : undefined;
+    if (!household) return route.fulfill({ status: 410, json: { code: 'link-expired' } });
+    if (!this.trustedHouseholds.has(household.id)) return route.fulfill({ status: 401, json: { code: 'verification-required' } });
+    const b = route.request().postDataJSON() as { eventId: string; reply: 'OnTheWay' | 'Absent' };
+    const open = household.children.filter((c) => this.noShows.get(`${b.eventId}:${c.id}`)?.state === 'TextSent');
+    if (!open.length) return route.fulfill({ status: 404 });
+    for (const c of open) this.noShowAlert(b.eventId, c.id, b.reply, NOW.toISOString());
+    return route.fulfill({ status: 204 });
   }
 
   private async guardianScope(route: Route, token: string) {

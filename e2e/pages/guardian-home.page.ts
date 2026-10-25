@@ -29,6 +29,18 @@ export class GuardianHomePage extends BasePage {
     return this.page.getByRole('main').getByText(content);
   }
 
+  get noShowAlert(): Locator {
+    return this.page.getByRole('main').getByRole('status').filter({ hasText: /checked in|registrad|enregistr/ });
+  }
+
+  get answered(): Locator {
+    return this.page.getByRole('main').getByRole('status').filter({ hasText: /^(Thanks|Gracias|Merci)/ });
+  }
+
+  async answer(reply: 'On the way' | 'Absent tonight'): Promise<void> {
+    await this.noShowAlert.getByRole('button', { name: reply }).click();
+  }
+
   async verify(contact: string, code: string): Promise<void> {
     await this.page.getByRole('main').getByRole('textbox').fill(contact);
     await this.page.getByRole('button', { name: /^(Send me a code|Envíenme un código|Envoyez-moi un code)$/ }).click();

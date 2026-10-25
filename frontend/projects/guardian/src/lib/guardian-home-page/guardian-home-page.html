@@ -92,6 +92,29 @@
       @if (r?.status === 'loaded') {
         @let home = r.value;
         <h1>{{ h().heading(home.firstName) }}</h1>
+        @if (answered(); as reply) {
+          <ph-alert
+            tone="success"
+            [title]="reply === 'Absent' ? h().answeredAbsent : h().answeredOnTheWay"
+          />
+        }
+        @for (n of home.noShows; track n.eventId) {
+          <ph-alert
+            tone="warning"
+            [title]="h().noShow(n.children, n.event)"
+            [text]="h().noShowText(startTime(n.startsAt))"
+          >
+            <ph-button
+              variant="primary"
+              [busy]="busy()"
+              (click)="answerNoShow(n.eventId, 'OnTheWay')"
+              >{{ h().onTheWay }}</ph-button
+            >
+            <ph-button [busy]="busy()" (click)="answerNoShow(n.eventId, 'Absent')">{{
+              h().absent
+            }}</ph-button>
+          </ph-alert>
+        }
         <p>{{ h().intro(home.organization) }}</p>
         @let items = rows(home);
         @if (items.length) {
