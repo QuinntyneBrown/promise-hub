@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 17 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="17" data-video-title="Track enrollment status" data-parts="Introduction|Promises|Linh's page|Other answers|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 17</div>
+  <h1>Track enrollment status</h1>
+  <p class="lead">Did my child get in? One link, one code, each child's answer</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="Every decision text ends with a link">
+  <h2>What the status page promises</h2>
+  <ul>
+    <li>A link in every decision text, for one household</li>
+    <li>A six-digit code on a new phone</li>
+    <li>Enrolled, waiting, waitlist number, or the reason</li>
+    <li>In the family's language</li>
+  </ul>
+</section>
+
+<section id="linh" data-part="2" data-cue="Here is Linh Tran's phone." data-clip="clips/linh-home-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Code, then each child</h3><p>Kevin enrolled, Emily first on the waitlist.</p></div>
+</section>
+
+<section id="other" data-part="3" data-cue="For the Rivera family, the page is in Spanish.">
+  <h2>Other families and other answers</h2>
+  <div class="cols">
+    <img class="shot" alt="The Rivera home in Spanish with a declined reason" src="shots/phone-spanish.png">
+    <img class="shot" alt="An expired link with the organization's number" src="shots/phone-expired.png">
+  </div>
+</section>
+
+<section id="testing" data-part="4" data-cue="Backend tests cover the home link">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>New device</td><td>401, code asked in the family's language</td></tr>
+    <tr><td>Waitlisted / declined</td><td>Number / reason shown</td></tr>
+    <tr><td>Mobile changed</td><td>410, link revoked</td></tr>
+    <tr><td>Roster off</td><td>404</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="5" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>A link in every decision text</li><li>A code, then each child's status</li><li>Waitlisted children see their number</li></ul>
+  <p class="muted">Next: managing the waitlist</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
