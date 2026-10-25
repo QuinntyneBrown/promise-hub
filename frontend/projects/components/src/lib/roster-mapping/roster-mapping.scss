@@ -1,0 +1,52 @@
+.mapping {
+  display: flex;
+  flex-direction: column;
+}
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: var(--border-width-hairline) solid var(--color-border-default);
+}
+.head {
+  font: var(--text-overline);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
+}
+.source {
+  display: block;
+  font: var(--text-label);
+  color: var(--color-fg-default);
+  overflow-wrap: anywhere;
+}
+.sample {
+  display: block;
+  font: var(--text-caption);
+  color: var(--color-fg-muted);
+  overflow-wrap: anywhere;
+}
+.select {
+  width: 100%;
+  min-height: var(--target-min);
+  padding: 0 var(--space-3);
+  border: var(--border-width-hairline) solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface);
+  color: var(--color-fg-default);
+  font: var(--text-body);
+}
+.select:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

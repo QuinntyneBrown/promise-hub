@@ -1,0 +1,24 @@
+:host {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--text-label);
+  color: var(--color-fg-muted);
+}
+.dots {
+  display: inline-flex;
+  gap: var(--space-1);
+}
+.dot {
+  width: var(--space-2);
+  height: var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--color-border-strong);
+}
+.dot--done {
+  background: var(--color-accent);
+}
+.dot--current {
+  width: var(--space-6);
+  background: var(--color-accent);
+}

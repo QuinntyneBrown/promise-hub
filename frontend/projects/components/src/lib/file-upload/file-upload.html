@@ -1,0 +1,24 @@
+<div
+  class="dropzone"
+  [class.dropzone--over]="over()"
+  role="group"
+  [attr.aria-labelledby]="id + '-title'"
+  [attr.aria-busy]="busy() || null"
+  (dragover)="$event.preventDefault(); over.set(true)"
+  (dragleave)="over.set(false)"
+  (drop)="dropped($event)"
+>
+  <span class="tile" aria-hidden="true"><ph-icon name="upload" /></span>
+  <h2 class="title" [id]="id + '-title'">{{ title() }}</h2>
+  @if (text()) {
+    <p class="text">{{ text() }}</p>
+  }
+  <label class="button" [for]="id">{{ buttonLabel() }}</label>
+  <input
+    class="visually-hidden"
+    type="file"
+    [id]="id"
+    [attr.accept]="accept()"
+    (change)="picked($any($event.target))"
+  />
+</div>

@@ -1,6 +1,7 @@
 @let r = result();
 <ph-page-header title="Families" [subtitle]="r?.status === 'loaded' ? subtitle(r.value) : null">
   @if (canAdd()) {
+    <ph-button icon="upload" link="/import">Import a roster</ph-button>
     <ph-button variant="primary" icon="families" (click)="addFamily()">Add family</ph-button>
   }
 </ph-page-header>

@@ -18,6 +18,31 @@ const can = {
   manageSlips: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
 };
 
+type ImportField = 'ChildName' | 'DateOfBirth' | 'School' | 'GuardianName' | 'GuardianPhone' | 'GuardianEmail' | 'Allergies' | 'Language' | 'Notes' | 'Skip';
+
+interface FakeImport {
+  id: string;
+  organizationId: string;
+  fileName: string;
+  headers: string[];
+  rows: string[][];
+  mapping: Record<string, ImportField> | null;
+  programId: string | null;
+  done: boolean;
+}
+
+const IMPORT_SYNONYMS: [ImportField, string[]][] = [
+  ['ChildName', ['child', 'child name', 'student', 'student name', 'kid', 'name', 'participant']],
+  ['DateOfBirth', ['dob', 'date of birth', 'birthday', 'birth date', 'birthdate']],
+  ['School', ['school', 'grade', 'school and grade']],
+  ['GuardianName', ['parent', 'guardian', 'parent name', 'guardian name', 'parent/guardian', 'mother', 'father', 'contact name']],
+  ['GuardianPhone', ['cell', 'phone', 'mobile', 'parent phone', 'guardian phone', 'cell phone', 'phone number']],
+  ['GuardianEmail', ['email', 'e-mail', 'parent email', 'guardian email']],
+  ['Allergies', ['allergies', 'allergy', 'medical', 'allergies/meds', 'allergies and medication']],
+  ['Language', ['lang', 'language', 'home language']],
+  ['Notes', ['notes', 'note', 'comments']],
+];
+
 interface FakeSlip {
   id: string;
   eventId: string;
@@ -127,6 +152,7 @@ export class FakeApi {
   private actions = new Set<string>();
   private messages: FakeMessage[] = [];
   private slips = new Map<string, FakeSlip>();
+  private imports: FakeImport[] = [];
   /** Guardian links as texted with a sent slip: token → household, child and event. */
   private guardianLinks = new Map<string, { householdId: string; childId: string; eventId: string; expired?: boolean }>([
     ['tok-mateo', { householdId: 'hh-rivera', childId: 'c-mateo', eventId: 'e-rbg' }],
@@ -248,6 +274,9 @@ export class FakeApi {
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/walk-ins$/, (route, p) => this.addWalkIn(route, p['id']!)],
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/sign-outs$/, (route, p) => this.signChildOut(route, p['id']!)],
     ['GET', /^\/api\/children\/(?<id>[^/]+)\/pickups$/, (route, p) => this.pickups(route, p['id']!)],
+    ['POST', /^\/api\/imports$/, (route) => this.uploadImport(route)],
+    ['PUT', /^\/api\/imports\/(?<id>[^/]+)\/mapping$/, (route, p) => this.mapImport(route, p['id']!)],
+    ['POST', /^\/api\/imports\/(?<id>[^/]+)\/run$/, (route, p) => this.runImport(route, p['id']!)],
     ['POST', /^\/api\/g\/auth\/code$/, (route) => this.guardianCodeRoute(route)],
     ['POST', /^\/api\/g\/auth\/verify$/, (route) => this.guardianVerify(route)],
     ['GET', /^\/api\/g\/slips\/(?<token>[^/]+)$/, (route, p) => this.guardianSlip(route, p['token']!)],
@@ -1276,6 +1305,128 @@ export class FakeApi {
     if (!m) return;
     const { cap, used, remaining } = this.capOf(m);
     return route.fulfill({ json: { cap, used, remaining, state: remaining === 0 ? 'Reached' : 'Ok', period: '2026-11' } });
+  }
+
+  /** Imports need the Roster module and household writing (admins and program directors). */
+  private async importCaller(route: Route): Promise<Membership | null> {
+    const m = await this.rosterCaller(route);
+    if (!m) return null;
+    if (!can.writeHouseholds(m)) {
+      await this.forbidden(route);
+      return null;
+    }
+    return m;
+  }
+
+  /** Reads the uploaded file out of the multipart body: CSV only in the fake; anything else is refused like the server. */
+  private async uploadImport(route: Route): Promise<void> {
+    const m = await this.importCaller(route);
+    if (!m) return;
+    const raw = route.request().postDataBuffer()?.toString('utf-8') ?? '';
+    const fileName = /filename="([^"]+)"/.exec(raw)?.[1] ?? 'file';
+    const start = raw.indexOf('\r\n\r\n') + 4;
+    const end = raw.lastIndexOf('\r\n--');
+    const text = raw.slice(start, end > start ? end : undefined).replace(/^\uFEFF/, '');
+    const lines = text.split(/\r?\n/).filter((l) => l.trim());
+    if (!fileName.toLowerCase().endsWith('.csv') || text.includes('\u0000') || lines.length === 0 || !lines[0]!.includes(',')) {
+      return route.fulfill({ status: 422, json: { errors: { file: `We couldn’t read ${fileName}. Export it as CSV or XLSX and try again. Nothing was imported.` } } });
+    }
+    const [header, ...rows] = lines.map((l) => l.split(','));
+    const imp: FakeImport = { id: `imp-${this.nextId++}`, organizationId: m.organizationId, fileName, headers: header!.map((h) => h.trim()), rows, mapping: null, programId: null, done: false };
+    this.imports.push(imp);
+    const columns = imp.headers.map((name, i) => ({
+      name,
+      sample: rows.map((r) => r[i]).find((v) => v && v.trim()) ?? null,
+      field: IMPORT_SYNONYMS.find(([, names]) => names.includes(name.toLowerCase()))?.[0] ?? null,
+    }));
+    return route.fulfill({ status: 201, json: { id: imp.id, fileName, rowCount: rows.length, matched: columns.filter((c) => c.field).length, columns } });
+  }
+
+  private importRows(imp: FakeImport) {
+    const value = (row: string[], field: ImportField) => {
+      const column = Object.entries(imp.mapping ?? {}).find(([, f]) => f === field)?.[0];
+      const v = column ? row[imp.headers.indexOf(column)]?.trim() : undefined;
+      return v ? v : null;
+    };
+    return imp.rows.map((row, i) => ({
+      line: i + 2,
+      child: value(row, 'ChildName') ?? '',
+      dob: value(row, 'DateOfBirth'),
+      guardian: value(row, 'GuardianName'),
+      phone: value(row, 'GuardianPhone'),
+      email: value(row, 'GuardianEmail'),
+    }));
+  }
+
+  private importProblem(r: { child: string; phone: string | null; email: string | null }): string | null {
+    return !r.child ? 'No child name' : !r.phone && !r.email ? 'No phone or email' : !r.phone ? 'No mobile; email only' : null;
+  }
+
+  private importDuplicates(m: Membership, imp: FakeImport): Set<number> {
+    const existing = this.childrenOf(m).map(({ child }) => `${child.firstName} ${child.lastName}`.toLowerCase() + '|' + child.dateOfBirth);
+    return new Set(this.importRows(imp).filter((r) => existing.includes(`${r.child.toLowerCase()}|${r.dob}`)).map((r) => r.line));
+  }
+
+  private async mapImport(route: Route, id: string): Promise<void> {
+    const m = await this.importCaller(route);
+    if (!m) return;
+    const imp = this.imports.find((x) => x.id === id && x.organizationId === m.organizationId);
+    if (!imp) return route.fulfill({ status: 404 });
+    const b = route.request().postDataJSON() as { mapping: Record<string, ImportField>; programId: string | null };
+    const mapping = Object.fromEntries(Object.entries(b.mapping ?? {}).filter(([c, f]) => imp.headers.includes(c) && f !== 'Skip'));
+    const fields = Object.values(mapping);
+    const errors: Record<string, string> = {};
+    if (!fields.includes('ChildName')) errors['ChildName'] = 'Map the child’s name.';
+    if (!fields.includes('GuardianName')) errors['GuardianName'] = 'Map the guardian’s name.';
+    if (!fields.includes('GuardianPhone') && !fields.includes('GuardianEmail')) errors['GuardianContact'] = 'Map the guardian’s phone or email.';
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    Object.assign(imp, { mapping, programId: b.programId ?? null });
+    const rows = this.importRows(imp);
+    const duplicates = this.importDuplicates(m, imp);
+    return route.fulfill({
+      json: {
+        rows: rows.length,
+        duplicates: rows.filter((r) => duplicates.has(r.line)).map((r) => ({ row: r.line, child: r.child, reason: 'Already in PromiseHub: same name and date of birth' })),
+        needLook: rows.filter((r) => this.importProblem(r)).map((r) => ({ row: r.line, child: r.child, reason: this.importProblem(r) })),
+        programName: this.programs.find((p) => p.id === b.programId)?.name ?? null,
+      },
+    });
+  }
+
+  private async runImport(route: Route, id: string): Promise<void> {
+    const m = await this.importCaller(route);
+    if (!m) return;
+    const imp = this.imports.find((x) => x.id === id && x.organizationId === m.organizationId);
+    if (!imp) return route.fulfill({ status: 404 });
+    if (imp.done || !imp.mapping) return route.fulfill({ status: 409, json: { code: 'conflict' } });
+    const merge = new Set((route.request().postDataJSON() as { merge: number[] }).merge ?? []);
+    const duplicates = this.importDuplicates(m, imp);
+    const created = new Set<string>();
+    const updated = new Set<string>();
+    const toFix: { row: number; child: string; reason: string }[] = [];
+    let imported = 0;
+    let children = 0;
+    let skipped = 0;
+    for (const r of this.importRows(imp)) {
+      const problem = this.importProblem(r);
+      if (problem === 'No child name' || problem === 'No phone or email') {
+        toFix.push({ row: r.line, child: r.child, reason: problem });
+        continue;
+      }
+      if (duplicates.has(r.line) && !merge.has(r.line)) {
+        skipped++;
+        continue;
+      }
+      const onFile = this.households.find((h) => h.organizationId === m.organizationId && h.guardians.some((g) => g.mobile && r.phone && g.mobile === r.phone));
+      if (onFile) updated.add(onFile.id);
+      else created.add(r.phone ?? r.email ?? r.guardian ?? r.child);
+      if (!duplicates.has(r.line)) children++;
+      imported++;
+    }
+    imp.done = true;
+    return route.fulfill({
+      json: { fileName: imp.fileName, rows: imp.rows.length, imported, familiesCreated: created.size, familiesUpdated: updated.size, children, enrolled: imp.programId ? children : 0, skipped, needFix: toFix.length, toFix, programName: this.programs.find((p) => p.id === imp.programId)?.name ?? null },
+    });
   }
 
   private guardianLanguage(language: string): string {

@@ -16,6 +16,8 @@ import { HttpMessagingApi } from './messaging/http-messaging-api';
 import { MESSAGING_API } from './messaging/messaging-api.token';
 import { GUARDIAN_API } from './guardian/guardian-api.token';
 import { HttpGuardianApi } from './guardian/http-guardian-api';
+import { HttpImportsApi } from './imports/http-imports-api';
+import { IMPORTS_API } from './imports/imports-api.token';
 import { HttpModulesApi } from './modules/http-modules-api';
 import { HttpSlipsApi } from './slips/http-slips-api';
 import { SLIPS_API } from './slips/slips-api.token';
@@ -38,5 +40,6 @@ export function provideApi(): EnvironmentProviders {
     { provide: MESSAGING_API, useClass: HttpMessagingApi },
     { provide: SLIPS_API, useClass: HttpSlipsApi },
     { provide: GUARDIAN_API, useClass: HttpGuardianApi },
+    { provide: IMPORTS_API, useClass: HttpImportsApi },
   ]);
 }
