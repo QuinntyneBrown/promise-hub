@@ -67,6 +67,7 @@ export class GuardianHomePage {
   protected readonly failed = signal(false);
   protected readonly busy = signal(false);
   protected readonly answered = signal<'OnTheWay' | 'Absent' | null>(null);
+  protected readonly pickupAnswered = signal(false);
   protected contact = '';
   protected code = '';
 
@@ -173,6 +174,19 @@ export class GuardianHomePage {
         remove,
       })
       .closed.subscribe((done) => done && this.load(this.token()));
+  }
+
+  /** Approves or refuses someone not on the list who is waiting to collect a child (L2-020 criterion 7). */
+  protected decidePickup(requestId: string, approve: boolean): void {
+    this.busy.set(true);
+    this.failed.set(false);
+    this.api.decidePickup(this.token(), requestId, approve).subscribe((outcome) => {
+      this.busy.set(false);
+      if (outcome.status === 'saved') {
+        this.pickupAnswered.set(true);
+        this.load(this.token());
+      } else this.failed.set(true);
+    });
   }
 
   protected requestCode(): void {

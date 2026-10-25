@@ -385,6 +385,9 @@ export class FakeApi {
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/sign-outs$/, (route, p) => this.signChildOut(route, p['id']!)],
     ['GET', /^\/api\/children\/(?<id>[^/]+)\/pickups$/, (route, p) => this.pickups(route, p['id']!)],
     ['POST', /^\/api\/children\/(?<id>[^/]+)\/pickups$/, (route, p) => this.addPickup(route, p['id']!)],
+    ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/pickup-requests$/, (route, p) => this.askForPickup(route, p['id']!)],
+    ['GET', /^\/api\/pickup-requests\/(?<id>[^/]+)$/, (route, p) => this.pickupRequest(route, p['id']!)],
+    ['POST', /^\/api\/g\/home\/(?<token>[^/]+)\/pickup-requests\/(?<id>[^/]+)$/, (route, p) => this.guardianDecidesPickup(route, p['token']!, p['id']!)],
     ['DELETE', /^\/api\/children\/(?<id>[^/]+)\/pickups\/(?<pickup>[^/]+)$/, (route, p) => this.removePickup(route, p['id']!, p['pickup']!)],
     ['POST', /^\/api\/g\/home\/(?<token>[^/]+)\/children\/(?<id>[^/]+)\/pickups$/, (route, p) => this.guardianAddPickup(route, p['token']!, p['id']!)],
     ['DELETE', /^\/api\/g\/home\/(?<token>[^/]+)\/children\/(?<id>[^/]+)\/pickups\/(?<pickup>[^/]+)$/, (route, p) => this.guardianRemovePickup(route, p['token']!, p['id']!, p['pickup']!)],
@@ -438,6 +441,8 @@ export class FakeApi {
     ['PUT', /^\/api\/children\/(?<id>[^/]+)\/medical$/, (route, p) => this.updateMedical(route, p['id']!)],
   ];
 
+  /** Staff asked a guardian about an adult not on the approved list. */
+  private pickupRequests: { id: string; eventId: string; childId: string; householdId: string; collector: string; status: 'Pending' | 'Approved' | 'Refused'; decidedBy: string | null }[] = [];
   /** Approved adults besides the guardians, as added by staff or the family. */
   private extraPickups: { id: string; childId: string; householdId: string; name: string; relationship: string; removed: boolean }[] = [];
   /** While true, every API call fails as if the device had no signal (the app shell stays loaded). */
@@ -1323,6 +1328,52 @@ export class FakeApi {
     return id;
   }
 
+  /** The guardian answers the latest waiting pickup request from their phone, as the family page would. */
+  guardianDecides(approve: boolean): void {
+    const r = [...this.pickupRequests].reverse().find((x) => x.status === 'Pending')!;
+    const household = this.households.find((h) => h.id === r.householdId)!;
+    Object.assign(r, { status: approve ? 'Approved' : 'Refused', decidedBy: this.sortedGuardians(household)[0]?.name ?? null });
+  }
+
+  /** Someone waiting to collect a child of this household (seeded as the API would store it). */
+  waitingPickup(eventId: string, childId: string, collector: string): string {
+    const household = this.households.find((h) => h.children.some((c) => c.id === childId))!;
+    const id = `pr-${this.nextId++}`;
+    this.pickupRequests.push({ id, eventId, childId, householdId: household.id, collector, status: 'Pending', decidedBy: null });
+    return id;
+  }
+
+  private async askForPickup(route: Route, eventId: string): Promise<void> {
+    const m = await this.pickupCaller(route);
+    if (!m) return;
+    const e = this.ownEvent(m, eventId);
+    const b = route.request().postDataJSON() as { childId: string; collectorName: string };
+    const found = this.ownChild(m, b.childId);
+    if (!e || !found) return route.fulfill({ status: 404 });
+    if (this.sessionRecords(e.id).get(b.childId)?.status !== 'Present') return route.fulfill({ status: 422, json: { errors: { childId: 'Not checked in.' } } });
+    if (!b.collectorName?.trim()) return route.fulfill({ status: 422, json: { errors: { collectorName: 'Enter their name.' } } });
+    return route.fulfill({ status: 201, json: { id: this.waitingPickup(e.id, b.childId, b.collectorName.trim()) } });
+  }
+
+  private async pickupRequest(route: Route, id: string): Promise<void> {
+    const m = await this.pickupCaller(route);
+    if (!m) return;
+    const r = this.pickupRequests.find((x) => x.id === id);
+    if (!r) return route.fulfill({ status: 404 });
+    return route.fulfill({ json: { id: r.id, childId: r.childId, collectorName: r.collector, status: r.status, decidedBy: r.decidedBy, decidedAt: null, incidentId: r.status === 'Refused' ? 'inc-refused' : null } });
+  }
+
+  private async guardianDecidesPickup(route: Route, token: string, id: string): Promise<void> {
+    const household = this.guardianHousehold(token);
+    if (!household) return route.fulfill({ status: 410, json: { code: 'link-expired' } });
+    if (!this.trustedHouseholds.has(household.id)) return route.fulfill({ status: 401, json: { code: 'verification-required' } });
+    const r = this.pickupRequests.find((x) => x.id === id && x.householdId === household.id && x.status === 'Pending');
+    if (!r) return route.fulfill({ status: 404 });
+    const b = route.request().postDataJSON() as { approve: boolean };
+    Object.assign(r, { status: b.approve ? 'Approved' : 'Refused', decidedBy: this.sortedGuardians(household)[0]?.name ?? null });
+    return route.fulfill({ status: 204 });
+  }
+
   private activePickups(childId: string) {
     return this.extraPickups.filter((x) => x.childId === childId && !x.removed).sort((a, z) => a.name.localeCompare(z.name));
   }
@@ -2079,7 +2130,9 @@ export class FakeApi {
         };
       });
     const primary = this.sortedGuardians(household)[0];
-    return route.fulfill({ json: { language: this.guardianLanguage(household.language), organization: org.name, phone: '905-555-0100', firstName: primary?.name.split(' ')[0] ?? '', children, noShows: this.openNoShows(household) } });
+    return route.fulfill({ json: { language: this.guardianLanguage(household.language), organization: org.name, phone: '905-555-0100', firstName: primary?.name.split(' ')[0] ?? '', children, noShows: this.openNoShows(household), pickupRequests: this.pickupRequests
+          .filter((r) => r.householdId === household.id && r.status === 'Pending')
+          .map((r) => ({ id: r.id, child: household.children.find((c) => c.id === r.childId)!.firstName, collector: r.collector, event: this.events.find((x) => x.id === r.eventId)?.name ?? '', requestedAt: NOW.toISOString() })) } });
   }
 
   /** The household's unanswered no-show texts, one per session, with the children's first names. */

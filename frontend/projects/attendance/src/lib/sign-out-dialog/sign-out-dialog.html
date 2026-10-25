@@ -53,12 +53,47 @@
             [error]="errors()['otherName'] ?? null"
             [(ngModel)]="otherName"
           />
-          <ph-switch
-            name="guardianConfirmed"
-            [label]="p.primaryName + ' confirmed by phone'"
-            [error]="errors()['guardianConfirmed'] ?? null"
-            [(ngModel)]="guardianConfirmed"
-          />
+          @if (request(); as r) {
+            <div data-testid="guardian-answer">
+              @switch (r.status) {
+                @case ('Pending') {
+                  <ph-alert
+                    tone="info"
+                    [title]="'Waiting for ' + p.primaryName"
+                    [text]="
+                      'We texted them about ' + r.collectorName + '. Their answer shows here.'
+                    "
+                  />
+                }
+                @case ('Approved') {
+                  <ph-alert
+                    tone="success"
+                    [title]="(r.decidedBy ?? p.primaryName) + ' approved ' + r.collectorName"
+                    [text]="first + ' can go once you check photo ID.'"
+                  />
+                }
+                @case ('Refused') {
+                  <ph-alert
+                    tone="danger"
+                    [title]="(r.decidedBy ?? p.primaryName) + ' refused'"
+                    [text]="first + ' stays with staff. The refusal is logged as an incident.'"
+                  />
+                }
+              }
+            </div>
+          } @else {
+            <ph-switch
+              name="guardianConfirmed"
+              [label]="p.primaryName + ' confirmed by phone'"
+              [error]="errors()['guardianConfirmed'] ?? null"
+              [(ngModel)]="guardianConfirmed"
+            />
+            <div>
+              <ph-button [busy]="asking()" [disabled]="!otherName.trim()" (click)="askGuardian()"
+                >Ask {{ p.primaryName }} by text</ph-button
+              >
+            </div>
+          }
         }
         <ph-switch
           name="idChecked"
@@ -70,7 +105,9 @@
     }
     <ng-container ngProjectAs="[phDialogFooter]">
       <ph-button (click)="ref.close()">Cancel</ph-button>
-      <ph-button variant="primary" type="submit" [busy]="busy()">Sign out</ph-button>
+      <ph-button variant="primary" type="submit" [disabled]="refused()" [busy]="busy()"
+        >Sign out</ph-button
+      >
     </ng-container>
   </ph-dialog>
 </form>

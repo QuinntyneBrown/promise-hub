@@ -46,6 +46,14 @@ export class GuardianHomePage extends BasePage {
     await this.page.getByRole('dialog').getByRole('button', { name: /^(Remove|Quitar|Retirer)$/ }).click();
   }
 
+  get pickupRequest(): Locator {
+    return this.page.getByRole('main').getByRole('status').filter({ hasText: /to collect|para recoger|chercher/ });
+  }
+
+  async decidePickup(approve: boolean): Promise<void> {
+    await this.pickupRequest.getByRole('button', { name: approve ? /^(Approve|Aprobar|Approuver)$/ : /^(Refuse|Rechazar|Refuser)$/ }).click();
+  }
+
   get noShowAlert(): Locator {
     return this.page.getByRole('main').getByRole('status').filter({ hasText: /checked in|registrad|enregistr/ });
   }
