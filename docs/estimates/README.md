@@ -5,7 +5,7 @@
 
 | Subsystem | Effort | Complete |
 |---|---|---|
-| [identity](identity.md) | 11 days | 41% |
+| [identity](identity.md) | 11 days | 46% |
 | [organizations](organizations.md) | 34 days | 26% |
 | [platform](platform.md) | 24 days | 18% |
 | [shell](shell.md) | 9 days | 40% |
@@ -14,7 +14,7 @@
 | [staff](staff.md) | 5 days | 0% |
 | [enrollment](enrollment.md) | 5 days | 0% |
 | [events](events.md) | 5 days | 65% |
-| [attendance](attendance.md) | 27 days | 32% |
+| [attendance](attendance.md) | 27 days | 34% |
 | [messaging](messaging.md) | 14 days | 0% |
 | [notifications](notifications.md) | 8 days | 0% |
 | [slips](slips.md) | 17 days | 0% |

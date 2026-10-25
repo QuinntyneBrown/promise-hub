@@ -17,6 +17,8 @@ public static class RolePermissions
         Permission.ManageEvents => role is Role.Admin or Role.ProgramDirector or Role.SiteLead,
         Permission.CancelEvents => role is Role.Admin or Role.ProgramDirector,
         Permission.RunSessions => role is Role.Admin or Role.ProgramDirector or Role.SiteLead or Role.YouthWorker,
+        // Youth workers run only the sessions they are assigned to (L2-007 criterion 6).
+        Permission.RunAnySession => role is Role.Admin or Role.ProgramDirector or Role.SiteLead,
         _ => false,
     };
 }

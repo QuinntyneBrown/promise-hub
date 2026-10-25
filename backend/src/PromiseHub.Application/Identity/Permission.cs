@@ -11,4 +11,5 @@ public enum Permission
     ManageEvents,
     CancelEvents,
     RunSessions,
+    RunAnySession,
 }

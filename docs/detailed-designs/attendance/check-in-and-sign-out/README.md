@@ -67,7 +67,7 @@ The feature is a vertical slice from the check-in screen on a phone to the `Atte
 
 ### Built so far
 
-Slice 06 delivered `CheckInPage` (default, empty "No sessions today", no-results with Add walk-in, error), the optimistic roster inside the page, `CheckInSheetDialog` (now, earlier, mark absent), `AddWalkInDialog`, `ATTENDANCE_API` with `today`, `roster`, `checkIn`, `markAbsent` and `addWalkIn`, `GET /sessions/today`, `GET /sessions/{id}/roster`, `POST /check-ins`, `/absences` and `/walk-ins` under Roll Call, `AttendanceRecord`, `AttendanceEvent` and `WalkIn`, and Today's session cards. A session is an event (ADR 0009). Slice 08 added sign-out: `SignOutDialog` (the `confirm-pickup` mock: approved list primary first, someone else with the primary guardian's call link, name and phone okay, photo ID switch, invalid and failed states), the Sign out button on checked-in rows while Pickup is on, `pickups` and `signOut` on `ATTENDANCE_API`, `GET /children/{id}/pickups` and `POST /sessions/{id}/sign-outs` under Pickup, and the collector fields on `AttendanceRecord` (ADR 0011). The absence text and the someone-else notice arrive with Messages, the sync chip with offline check-in.
+Slice 06 delivered `CheckInPage` (default, empty "No sessions today", no-results with Add walk-in, error), the optimistic roster inside the page, `CheckInSheetDialog` (now, earlier, mark absent), `AddWalkInDialog`, `ATTENDANCE_API` with `today`, `roster`, `checkIn`, `markAbsent` and `addWalkIn`, `GET /sessions/today`, `GET /sessions/{id}/roster`, `POST /check-ins`, `/absences` and `/walk-ins` under Roll Call, `AttendanceRecord`, `AttendanceEvent` and `WalkIn`, and Today's session cards. A session is an event (ADR 0009). Slice 08 added sign-out: `SignOutDialog` (the `confirm-pickup` mock: approved list primary first, someone else with the primary guardian's call link, name and phone okay, photo ID switch, invalid and failed states), the Sign out button on checked-in rows while Pickup is on, `pickups` and `signOut` on `ATTENDANCE_API`, `GET /children/{id}/pickups` and `POST /sessions/{id}/sign-outs` under Pickup, and the collector fields on `AttendanceRecord` (ADR 0011). Slice 09 limited youth workers to their assigned sessions: Today lists only those, every other session answers 403, and the page shows "You’re not on this session" (ADR 0012). The absence text and the someone-else notice arrive with Messages, the sync chip with offline check-in.
 
 ### Behavioural rules
 
@@ -77,6 +77,7 @@ Slice 06 delivered `CheckInPage` (default, empty "No sessions today", no-results
 - Sign-out saves only when an approved adult is chosen, or when **Someone else** is explained with a name and the phone confirmation switch set. The attendance record stores the choice. The feature `manage-approved-pickups` covers notifying the household and reporting a refusal.
 - A walk-in is on tonight's roster only and is flagged for enrollment follow-up. Adding a walk-in creates no household and no enrollment.
 - Every write is audited. Every endpoint filters by the membership's organization (`L2-001`).
+- A youth worker opens and writes only the sessions they are assigned to; any other session answers 403 (`L2-007` criterion 6).
 
 ## Requirements
 

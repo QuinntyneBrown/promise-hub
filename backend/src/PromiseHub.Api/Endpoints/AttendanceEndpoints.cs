@@ -14,7 +14,10 @@ public static class AttendanceEndpoints
         var sessions = app.MapGroup("/sessions").RequireModule(ModuleId.RollCall);
         sessions.MapGet("/today", (TodaySessionsHandler handler, CancellationToken ct) => handler.HandleAsync(ct));
         sessions.MapGet("/{id:guid}/roster", async (Guid id, GetSessionRosterHandler handler, CancellationToken ct) =>
-            await handler.HandleAsync(id, ct) is { } roster ? Results.Ok(roster) : Results.NotFound());
+        {
+            var (status, roster) = await handler.HandleAsync(id, ct);
+            return roster is not null ? Results.Ok(roster) : new Application.Result(status).ToHttp();
+        });
         sessions.MapPost("/{id:guid}/check-ins", async (Guid id, CheckInCommand command, CheckInHandler handler, CancellationToken ct) =>
             Ok(await handler.HandleAsync(id, command, ct))).RequirePermission(Permission.RunSessions);
         sessions.MapPost("/{id:guid}/absences", async (Guid id, MarkAbsentCommand command, MarkAbsentHandler handler, CancellationToken ct) =>
