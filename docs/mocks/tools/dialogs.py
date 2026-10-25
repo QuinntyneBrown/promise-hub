@@ -123,6 +123,10 @@ simple("review-enrollment", "Accept Nikolai Petrov?", "roster", [R_ENROLL, R_NOT
        "Accept and text Elena", icon_name="check", na={"invalid": "Decision has a default; the note is optional."},
        extra_states={"decline": ("Declining with a required reason.", dialog_box("Decline Nikolai Petrov?", "Elena Petrova reads the reason.", fieldset("Decision", choice("dec", "Decline", checked=True)) + textarea("why", "Reason the guardian will read", rows=3, error="Write a reason.", value=""), footer("Decline and text Elena", danger=True, autofocus_cancel=True), icon_name="x-circle", danger=True, form=True))})
 
+simple("move-in", "Move Sofía Rivera in?", "roster", [R_ENROLL, R_NOTIFY], "Number 1 on the waitlist · 48 of 50 places taken.",
+       lambda e: textarea("why", "Note to the guardian", rows=2, optional=True, placeholder="A place opened. Camp starts at 8 am."),
+       "Move in and text Carmen", icon_name="check", na={"invalid": "The note is optional."})
+
 simple("bulk-review", "Accept 2 enrollments?", "roster", [R_ENROLL, R_NOTIFY], "Both guardians are texted.",
        lambda e: ul_list([list_item("Nikolai Petrov", "Elena Petrova · returning", person=CHILD["nikolai"]), list_item("Omar Siddiqui", "Farah Siddiqui · new family", person=CHILD["omar"])]) + textarea("why", "Note to both guardians", rows=2, optional=True, value="Welcome! Tutoring runs Mon–Thu, 4–6 pm."),
        "Accept 2", base_state="selected", icon_name="check", na={"invalid": "The note is optional."})

@@ -226,6 +226,7 @@
         "empty",
         "error",
         "no-results",
+        "waitlist",
         "selected",
         "long"
       ]
@@ -1484,6 +1485,24 @@
       ],
       "not_applicable": {
         "invalid": "Decision has a default; the note is optional."
+      }
+    },
+    {
+      "id": "move-in",
+      "kind": "dialog",
+      "title": "Move Sofía Rivera in?",
+      "opens_from": "roster",
+      "requirements": [
+        "L1-005",
+        "L1-010"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "invalid": "The note is optional."
       }
     },
     {
