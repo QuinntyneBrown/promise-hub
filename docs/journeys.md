@@ -5,7 +5,7 @@
 | Guardian | Update household details | Correct contact, medical, language, and child information through a verified link. | [3 days](detailed-designs/households/maintain-household/README.md) | 0% |
 | Guardian | Manage approved pickups | Add or remove adults authorized to collect a child. | [4 days](detailed-designs/attendance/manage-approved-pickups/README.md) | 0% |
 | Guardian | Confirm an exceptional pickup | Approve or reject a proposed collector outside the approved list. | [4 days](detailed-designs/attendance/manage-approved-pickups/README.md) | 0% |
-| Guardian | Respond to an absence alert | Tell staff whether an expected child will attend. | [3 days](detailed-designs/attendance/alert-no-show-and-end-session/README.md) | 0% |
+| Guardian | Respond to an absence alert | Tell staff whether an expected child will attend. | [3 days](detailed-designs/attendance/alert-no-show-and-end-session/README.md) | 60% · [video](videos/22-follow-up-no-shows/README.md) |
 | Guardian | Track enrollment status | See whether a child is accepted or waitlisted. | [2 days](detailed-designs/enrollment/enroll-guardian/README.md) | 90% · [video](videos/17-track-enrollment-status/README.md) |
 | Guardian | Request household data | Ask for an export or deletion of household information. | [4 days](detailed-designs/organizations/set-privacy-and-residency/README.md) | 0% |
 | Guardian | Complete a survey | Submit feedback or outcomes through a translated, verified page. | [3 days](detailed-designs/guardian/localize-guardian-pages/README.md) | 0% |
@@ -14,7 +14,7 @@
 | Site lead | Read a Quick Card | Find allergies, medication, emergency contacts, and pickup rules immediately. | [3 days](detailed-designs/attendance/show-quick-card/README.md) | 75% · [video](videos/07-read-a-quick-card/README.md) |
 | Site lead | Run check-in offline | Use the cached roster and sync queued attendance when connectivity returns. | [5 days](detailed-designs/attendance/sync-offline-queue/README.md) | 0% |
 | Site lead | Resolve missing slips | See who lacks consent and collect a signature on a tablet. | [3 days](detailed-designs/slips/remind-and-clear/README.md) | 75% · [video](videos/13-resolve-missing-slips/README.md) |
-| Site lead | Follow up no-shows | Review missing children and guardian responses after alerts. | [5 days](detailed-designs/attendance/alert-no-show-and-end-session/README.md) | 0% |
+| Site lead | Follow up no-shows | Review missing children and guardian responses after alerts. | [5 days](detailed-designs/attendance/alert-no-show-and-end-session/README.md) | 75% · [video](videos/22-follow-up-no-shows/README.md) |
 | Site lead | End a session | Reconcile attendance and close the day's session. | [3 days](detailed-designs/attendance/alert-no-show-and-end-session/README.md) | 0% |
 | Site lead | Report an incident | Record what happened and submit it for supervisor review. | [3 days](detailed-designs/incidents/report-and-review-incident/README.md) | 80% · [video](videos/19-report-an-incident/README.md) |
 | Program director | Create programs and events | Set schedules, capacity, and event details for enrolled children. | [7 days](detailed-designs/programs/manage-programs/README.md) | 75% · [video](videos/05-create-programs-and-events/README.md) |

@@ -16,6 +16,8 @@ This feature designs the job runner in `PromiseHub.Infrastructure`, the per-tena
 
 ## Built so far
 
+Slice 22 added the no-show alerts to the per-tenant send job (ADR 0022).
+
 Slice 10 delivered the first per-tenant job: the message send job, run by `MessageDispatchRunner` in each organization's scope and skipped when its module is off, with per-delivery idempotency and retry after 2 and 4 minutes (ADR 0013). The generic `Job` table, recurring schedules, dead-lettering, the maintenance flag and backups are not built yet.
 
 ## Description
