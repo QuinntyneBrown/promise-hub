@@ -195,6 +195,9 @@ export class FakeApi {
     severity: string;
     status: 'NeedsReview' | 'Open' | 'Closed';
     reportedAt: string;
+    review?: { note: string; outcome: string; by: string; at: string } | null;
+    followUps?: { text: string; by: string; at: string }[];
+    trail?: { text: string; at: string }[];
   }[] = [];
   /** Household home links as texted with an enrollment decision: token → household. */
   private homeLinks = new Map<string, string>([
@@ -390,6 +393,9 @@ export class FakeApi {
     ['GET', /^\/api\/incidents\/form$/, (route) => this.incidentForm(route)],
     ['GET', /^\/api\/incidents\/(?<id>[^/]+)$/, (route, p) => this.getIncident(route, p['id']!)],
     ['POST', /^\/api\/incidents$/, (route) => this.createIncident(route)],
+    ['POST', /^\/api\/incidents\/(?<id>[^/]+)\/review$/, (route, p) => this.reviewIncident(route, p['id']!)],
+    ['POST', /^\/api\/incidents\/(?<id>[^/]+)\/reopen$/, (route, p) => this.reopenIncident(route, p['id']!)],
+    ['POST', /^\/api\/incidents\/(?<id>[^/]+)\/notes$/, (route, p) => this.addIncidentNote(route, p['id']!)],
     ['GET', /^\/api\/g\/home\/(?<token>[^/]+)$/, (route, p) => this.guardianHome(route, p['token']!)],
     ['GET', /^\/api\/g\/slips\/(?<token>[^/]+)$/, (route, p) => this.guardianSlip(route, p['token']!)],
     ['POST', /^\/api\/g\/slips\/(?<token>[^/]+)\/sign$/, (route, p) => this.guardianAnswer(route, p['token']!, 'Signed')],
@@ -1801,8 +1807,9 @@ export class FakeApi {
     if (!m) return;
     const i = this.readableIncidents(m).find((x) => x.id === id);
     if (!i) return route.fulfill({ status: 404 });
+    i.trail = [...(i.trail ?? [{ text: `${i.reportedBy} submitted the report`, at: i.reportedAt }]), { text: `${m.personName} opened the report`, at: NOW.toISOString() }];
     const { organizationId: _, reporterId: __, ...rest } = i;
-    return route.fulfill({ json: { ...rest, child: this.childName(i.childId) } });
+    return route.fulfill({ json: { ...rest, review: i.review ?? null, followUps: i.followUps ?? [], child: this.childName(i.childId), canReview: ['Admin', 'ProgramDirector'].includes(m.role) } });
   }
 
   private async createIncident(route: Route): Promise<void> {
@@ -1822,6 +1829,52 @@ export class FakeApi {
     const id = `inc-${this.nextId++}`;
     this.incidents.push({ id, organizationId: m.organizationId, reporterId: m.id, reportedBy: m.personName, category: b['category']!, childId: child!.id, occurredAt: new Date(b['occurredAt']!).toISOString(), place: b['place'] || 'Other', whatHappened: b['whatHappened']!.trim(), actionTaken: b['actionTaken']!.trim(), guardianContact: b['guardianContact']!, severity: b['severity']!, status: 'NeedsReview', reportedAt: NOW.toISOString() });
     return route.fulfill({ status: 201, json: { id } });
+  }
+
+  private async incidentSupervisor(route: Route, id: string) {
+    const m = await this.incidentCaller(route);
+    if (!m) return null;
+    if (!['Admin', 'ProgramDirector'].includes(m.role)) {
+      await this.forbidden(route);
+      return null;
+    }
+    const i = this.readableIncidents(m).find((x) => x.id === id);
+    if (!i) {
+      await route.fulfill({ status: 404 });
+      return null;
+    }
+    return { m, i };
+  }
+
+  private async reviewIncident(route: Route, id: string): Promise<void> {
+    const found = await this.incidentSupervisor(route, id);
+    if (!found) return;
+    const { m, i } = found;
+    if (i.status === 'Closed') return route.fulfill({ status: 409, json: { code: 'conflict' } });
+    const b = route.request().postDataJSON() as { note?: string; outcome?: string };
+    if (!b.note?.trim()) return route.fulfill({ status: 422, json: { errors: { note: 'Write a review note.' } } });
+    i.review = { note: b.note.trim(), outcome: b.outcome ?? 'ClosedNoAction', by: m.personName, at: NOW.toISOString() };
+    i.status = b.outcome === 'KeepOpen' ? 'Open' : 'Closed';
+    return route.fulfill({ status: 204 });
+  }
+
+  private async reopenIncident(route: Route, id: string): Promise<void> {
+    const found = await this.incidentSupervisor(route, id);
+    if (!found) return;
+    if (found.i.status !== 'Closed') return route.fulfill({ status: 409, json: { code: 'conflict' } });
+    found.i.status = 'Open';
+    return route.fulfill({ status: 204 });
+  }
+
+  private async addIncidentNote(route: Route, id: string): Promise<void> {
+    const m = await this.incidentCaller(route);
+    if (!m) return;
+    const i = this.readableIncidents(m).find((x) => x.id === id);
+    if (!i) return route.fulfill({ status: 404 });
+    const b = route.request().postDataJSON() as { text?: string };
+    if (!b.text?.trim()) return route.fulfill({ status: 422, json: { errors: { text: 'Write the follow-up.' } } });
+    i.followUps = [...(i.followUps ?? []), { text: b.text.trim(), by: m.personName, at: NOW.toISOString() }];
+    return route.fulfill({ status: 204 });
   }
 
   /** A slip link or a home link: either picks the household. */

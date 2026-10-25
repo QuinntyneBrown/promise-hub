@@ -1,0 +1,13 @@
+<ul class="feed" [attr.aria-label]="label()">
+  @for (entry of entries(); track entry.key) {
+    <li>
+      <ph-avatar [name]="entry.actor" size="sm" tint="peach" />
+      <div class="body">
+        <strong>{{ entry.actor }}</strong> {{ entry.text }}
+        <div class="meta">{{ entry.meta }}</div>
+      </div>
+    </li>
+  } @empty {
+    <li class="none">{{ empty() }}</li>
+  }
+</ul>

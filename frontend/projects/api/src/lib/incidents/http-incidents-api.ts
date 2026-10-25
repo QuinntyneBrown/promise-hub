@@ -5,7 +5,7 @@ import { API_BASE_URL } from '../api-base-url';
 import { toLoad, toWrite } from '../http-results';
 import { LoadResult } from '../load-result';
 import { WriteOutcome } from '../write-outcome';
-import { Incident } from './incident';
+import { Incident, ReviewOutcome } from './incident';
 import { IncidentForm } from './incident-form';
 import { IncidentReport } from './incident-report';
 import { IncidentSummary } from './incident-summary';
@@ -34,5 +34,19 @@ export class HttpIncidentsApi implements IncidentsApi {
 
   report(report: IncidentReport): Observable<WriteOutcome> {
     return toWrite(this.http.post<{ id: string }>(`${this.baseUrl}/incidents`, report));
+  }
+
+  review(id: string, note: string, outcome: ReviewOutcome): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(`${this.baseUrl}/incidents/${id}/review`, { note, outcome }),
+    );
+  }
+
+  addFollowUp(id: string, text: string): Observable<WriteOutcome> {
+    return toWrite(this.http.post<null>(`${this.baseUrl}/incidents/${id}/notes`, { text }));
+  }
+
+  reopen(id: string): Observable<WriteOutcome> {
+    return toWrite(this.http.post<null>(`${this.baseUrl}/incidents/${id}/reopen`, {}));
   }
 }

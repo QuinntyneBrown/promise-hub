@@ -33,9 +33,35 @@
           [tone]="i.status === 'Closed' ? 'neutral' : 'warning'"
           >{{ status[i.status] }}</ph-badge
         >
+        @if (i.canReview && i.status !== 'Closed') {
+          <ph-button variant="primary" hasPopup="dialog" (click)="review(i)"
+            >Mark reviewed</ph-button
+          >
+        }
+        @if (i.canReview && i.status === 'Closed') {
+          <ph-button hasPopup="dialog" (click)="reopen(i)">Reopen</ph-button>
+        }
       </ph-page-header>
+      @if (i.review; as r) {
+        <ph-alert
+          [tone]="i.status === 'Closed' ? 'success' : 'info'"
+          [title]="i.status === 'Closed' ? 'Reviewed and closed' : 'Reviewed, kept open'"
+          [text]="r.by + ', ' + reviewedOn(r.at) + ': “' + r.note + '”'"
+        />
+      }
       <ph-card title="Report">
         <ph-description-list [facts]="facts(i)" />
+      </ph-card>
+      <ph-card title="Follow-up">
+        <div class="stack">
+          <ph-timeline label="Follow-up" [entries]="followUps(i)" empty="No follow-up yet." />
+          <div>
+            <ph-button hasPopup="dialog" (click)="addFollowUp(i)">Add follow-up</ph-button>
+          </div>
+        </div>
+      </ph-card>
+      <ph-card title="Trail">
+        <ph-timeline label="Trail" [entries]="trail(i)" />
       </ph-card>
     }
   }

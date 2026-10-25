@@ -1,0 +1,33 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    title="Mark as reviewed"
+    [description]="'Closes the report. ' + data.reporter + ' is told.'"
+  >
+    @if (failed()) {
+      <ph-alert
+        tone="danger"
+        title="That didn’t go through"
+        text="Nothing was changed. Try again."
+      />
+    }
+    <ph-textarea
+      inputId="review-note"
+      label="Review note"
+      name="note"
+      [rows]="3"
+      [error]="errors()['note'] ?? null"
+      [(ngModel)]="note"
+    />
+    <ph-radio-group
+      legend="Outcome"
+      name="outcome"
+      [options]="outcomes"
+      [error]="errors()['outcome'] ?? null"
+      [(ngModel)]="outcome"
+    />
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Mark reviewed</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>
