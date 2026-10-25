@@ -15,6 +15,10 @@ Local terms:
 
 The feature belongs to the `attendance` subsystem and the Pickup module. Pickup depends on Roll Call (`L2-004`); the server rejects a configuration with Pickup on and Roll Call off. The refusal path depends on the Incident log module. `<TO SUPPLY>`: what the refusal action offers when the Incident log module is off.
 
+## Built so far
+
+Slice 26 delivered `ApprovedPickup`, `ApprovedPickupsHandler`, the staff and guardian pickup endpoints, `AddPickupDialog` and `RemovePickupDialog` on `QuickCardPage`, `GuardianPickupDialog` and the pickups section on the guardian home, `PICKUP_API` and the guardian API methods (ADR 0024). Photo ID, refuse and report, and a household-page view are not built yet.
+
 ## Description
 
 ### Frontend — `frontend/projects/attendance/`

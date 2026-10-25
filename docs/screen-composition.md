@@ -72,6 +72,8 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Reopen incident | `reopen-incident` | `ph-dialog`, `ph-alert`, `ph-button` |
 | End session | `end-session` (default, busy, failed) | `ph-dialog`, `ph-radio-group`, `ph-alert`, `ph-button` |
 | Session notes | `session-notes` (default, busy, failed) | `ph-dialog`, `ph-textarea`, `ph-alert`, `ph-button` |
+| Add an approved adult | `add-pickup` (default, busy, invalid, failed) | `ph-dialog`, `ph-text-field`, `ph-radio-group`, `ph-alert`, `ph-button` |
+| Remove an approved adult | `remove-pickup` (default, busy, failed) | `ph-dialog`, `ph-alert`, `ph-button` (danger) |
 | Bulk review | `bulk-review` | `ph-dialog`, `ph-list`, `ph-list-item`, `ph-textarea`, `ph-alert`, `ph-button` |
 | Program actions / Event actions | `program-actions`, `event-actions` | `ph-dialog`, `ph-action-menu`, `ph-button` |
 | Archive program | `archive-program` | `ph-dialog`, `ph-text-field`, `ph-button` |
