@@ -54,3 +54,48 @@ Order: the highest-value journeys come first (check-in, Quick Cards, sign-out, m
 | 46 | [Recover account access](46-recover-account-access.md) | Staff | Journey | Needed but rarely used; no design exists yet. |
 | 47 | [Create, manage and suspend organizations](47-manage-organizations.md) | Platform admin | Journey | Seed data covers tenants until sales scale. |
 | 48 | [Operational readiness: observability and performance budgets](48-operational-readiness.md) | Everyone | Supporting | Hardening before wide launch. |
+
+## Merging Waypoint (49 to 81)
+
+These prompts bring Waypoint (`/Users/quinntynebrown/projects/waypoint`), a youth leadership platform, into PromiseHub, one Waypoint user journey per prompt. Waypoint's `promise-hub` branch already uses the PromiseHub tokens and the `ph` prefix, so its mocks, specs, designs and code are the source of behaviour; PromiseHub's `AGENTS.md` decides structure, tenancy, modules and tests. Prompt 49 records the mapping (`docs/adr/0019-merge-waypoint.md`), amends the tree, and adds the Learning, Mentoring and Public website modules and the Youth, Mentor and Volunteer roles. Run it first. Running it is the approval of the tree change it lists.
+
+Order: dependencies first (sign-in, invitations, consent, cohorts), then Waypoint's most valuable journeys (mentor dashboard, curriculum, lessons), then intake, assessment, engagement and the rest. Where a Waypoint journey overlaps a PromiseHub journey, the prompt extends the PromiseHub one rather than building a second.
+
+| # | Slice | Persona | Waypoint journey | Module |
+|---|---|---|---|---|
+| 49 | [Merge Waypoint: foundation](49-merge-waypoint-foundation.md) | Everyone | All | Learning, Mentoring, Public website |
+| 50 | [Sign in as a youth or mentor](50-sign-in-as-youth-or-mentor.md) | Youth and Mentor | Waypoint 3 Sign in | Always on |
+| 51 | [Accept an invitation as a youth or mentor](51-accept-an-invitation.md) | Youth and Mentor | Waypoint 4 Accept invitation | Always on |
+| 52 | [Give guardian consent for a youth](52-give-guardian-consent.md) | Guardian | Waypoint 5 Give guardian consent | Roster |
+| 53 | [Complete first-run onboarding](53-complete-first-run-onboarding.md) | Youth | Waypoint 27 First-run onboarding | Learning |
+| 54 | [Manage cohorts and assign mentors](54-manage-cohorts.md) | Program director | Waypoint 7 Manage cohorts | Roster |
+| 55 | [Use the mentor dashboard](55-use-the-mentor-dashboard.md) | Mentor | Waypoint 2 Mentor dashboard | Mentoring |
+| 56 | [Author curriculum](56-author-curriculum.md) | Program director | Waypoint 6 Author curriculum | Learning |
+| 57 | [Complete lessons](57-complete-lessons.md) | Youth | Waypoint 1 Complete lessons | Learning |
+| 58 | [Apply or refer a youth](58-apply-or-refer.md) | Guardian, youth or referrer | Waypoint 8 Apply or refer | Roster |
+| 59 | [Review and place applicants](59-review-and-place-applicants.md) | Admin / office manager | Waypoint 9 Review and place | Roster |
+| 60 | [Author quizzes and assignments](60-author-quizzes-and-assignments.md) | Program director | Waypoint 13 Author quizzes and assignments | Learning |
+| 61 | [Take quizzes](61-take-quizzes.md) | Youth | Waypoint 12 Take quizzes | Learning |
+| 62 | [Submit assignments](62-submit-assignments.md) | Youth | Waypoint 10 Submit assignments | Learning |
+| 63 | [Grade and assess](63-grade-and-assess.md) | Mentor | Waypoint 11 Grade and assess | Mentoring |
+| 64 | [Author badges and progression](64-author-badges-and-progression.md) | Program director | Waypoint 25 Author badges and progression | Learning |
+| 65 | [View journey and progress](65-view-journey-and-progress.md) | Youth | Waypoint 14 View journey and progress | Learning |
+| 66 | [Write reflections](66-write-reflections.md) | Youth | Waypoint 26 Write reflections | Learning |
+| 67 | [Record mentor check-ins](67-record-mentor-check-ins.md) | Mentor | Waypoint 15 Check in | Mentoring |
+| 68 | [Flag at-risk youth](68-flag-at-risk-youth.md) | Mentor | Waypoint 16 Flag at-risk youth | Mentoring |
+| 69 | [Assign work](69-assign-work.md) | Mentor | Waypoint 20 Assign work | Mentoring |
+| 70 | [Schedule sessions and RSVP](70-schedule-sessions-and-rsvp.md) | Program director and Youth | Waypoint 17 Schedule sessions and RSVP | Roster |
+| 71 | [Take attendance for cohort sessions](71-take-attendance-for-cohort-sessions.md) | Mentor and Site lead | Waypoint 18 Take attendance | Roll Call |
+| 72 | [Use the volunteer portal](72-use-the-volunteer-portal.md) | Volunteer | Waypoint 30 Volunteer portal | Roll Call |
+| 73 | [Use the guardian portal](73-use-the-guardian-portal.md) | Guardian | Waypoint 23 Guardian portal | Roster |
+| 74 | [Announce and message](74-announce-and-message.md) | Program director, Mentor and Youth | Waypoint 21 Announce and message | Messages |
+| 75 | [Receive notifications in real time](75-receive-notifications.md) | Everyone | Waypoint 22 Receive notifications | Always on |
+| 76 | [Manage people](76-manage-people.md) | Admin / office manager | Waypoint 19 Manage people | Always on |
+| 77 | [Reset a password as a youth or mentor](77-reset-a-password.md) | Youth and Mentor | Waypoint 24 Reset password | Always on |
+| 78 | [Manage personal settings](78-manage-personal-settings.md) | Everyone with an account | Waypoint 32 Manage personal settings | Always on |
+| 79 | [Configure the organization](79-configure-the-organization.md) | Admin / office manager | Waypoint 31 Configure organization | Always on |
+| 80 | [Report, export and import learning data](80-report-export-and-import.md) | Program director and Admin | Waypoint 29 Report, export and import | Reports |
+| 81 | [Explore the public website](81-explore-the-public-website.md) | Visitor | Waypoint 28 Explore public site | Public website |
+
+
+Deferred from Waypoint: the standalone help and support pages, the server-side rendered public site, Waypoint's traceability script and architecture tests (PromiseHub does not write them), and a real donation payment provider.
