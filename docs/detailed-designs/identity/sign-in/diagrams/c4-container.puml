@@ -1,0 +1,15 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Sign in
+
+Person(staff, "Staff member", "Signs in from a phone or laptop browser")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "account library: sign-in, MFA, session-expired and sign-out-all screens")
+  Container(api, "PromiseHub API", "ASP.NET Core minimal API", "Auth endpoints, session middleware, identity handlers")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "Staff users, sessions, MFA enrollments, recovery codes, audit log")
+}
+Rel(staff, web, "Uses", "HTTPS")
+Rel(web, api, "Calls /auth/* and carries the session cookie", "JSON/HTTPS")
+Rel(api, db, "Reads and writes identity and audit tables", "EF Core")
+@enduml

@@ -1,0 +1,71 @@
+@startuml
+title UML sequence behaviour — Suspend and reinstate an organization
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Platform admin" as admin
+actor "Staff or guardian of the suspended organization" as member
+box "Frontend — organizations library and guardian library" #E0F2FE
+  participant "SuspendOrganizationDialog" as dialog
+  participant "PlatformOrganizationsApi" as client
+  participant "Any tenant page or guardian link page" as tenantPage
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "PlatformOrganizationEndpoints" as endpoints
+  participant "SuspendedOrganizationMiddleware" as suspendedMw
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "SuspendOrganizationCommandHandler" as suspendHandler
+  participant "ReinstateOrganizationCommandHandler" as reinstateHandler
+  participant "Organization" as org
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "Message outbox" as outbox
+  participant "AuditLog" as audit
+end box
+admin -> dialog : Choose reason; "Suspend"
+dialog -> client : suspend(id, reason)
+client -> endpoints : POST /admin/organizations/{id}/suspend
+endpoints -> endpoints : Apply PlatformAdmin policy
+endpoints -> suspendHandler : Send SuspendOrganizationCommand
+suspendHandler -> db : Load organization
+db --> suspendHandler : Organization
+suspendHandler -> org : Suspend(reason)
+suspendHandler -> outbox : Publish OrganizationSuspended; outbound messages stop (L2-003 c3)
+suspendHandler -> audit : Record suspension with reason
+suspendHandler -> db : SaveChanges; no row deleted (L2-003 c3)
+suspendHandler --> endpoints : Result
+endpoints --> client : 204
+client --> dialog : Done
+dialog --> admin : Row shows "Suspended"
+member -> tenantPage : Next request or open guardian link
+tenantPage -> suspendedMw : HTTPS request
+suspendedMw -> db : Read organization status
+db --> suspendedMw : Suspended
+suspendedMw --> tenantPage : 403, reason suspended
+tenantPage --> member : "Suspended" message (L2-003 c3)
+admin -> dialog : "Reinstate"
+dialog -> client : reinstate(id)
+client -> endpoints : POST /admin/organizations/{id}/reinstate
+endpoints -> reinstateHandler : Send ReinstateOrganizationCommand
+reinstateHandler -> org : Reinstate()
+reinstateHandler -> outbox : Publish OrganizationReinstated
+reinstateHandler -> audit : Record reinstatement
+reinstateHandler -> db : SaveChanges
+reinstateHandler --> endpoints : Result
+endpoints --> client : 204
+client --> dialog : Done
+dialog --> admin : Access restored (L2-003 c3)
+@enduml

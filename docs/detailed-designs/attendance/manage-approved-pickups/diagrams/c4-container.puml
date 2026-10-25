@@ -1,0 +1,22 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Manage approved pickups
+
+Person(staff, "Site lead / admin", "Child profile and sign-out")
+Person_Ext(guardian, "Guardian", "Family page via verified link")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "attendance library: AddPickupDialog, RemovePickupDialog, ConfirmPickupDialog; guardian library: GuardianUpdatePage")
+  Container(api, "PromiseHub API", "ASP.NET Core", "PickupEndpoints, AttendanceEndpoints (sign-outs), IncidentEndpoints (drafts)")
+  ContainerDb(db, "PromiseHub database", "SQL", "ApprovedPickups, AttendanceRecords, Incidents, audit log")
+}
+System_Ext(sms, "SMS provider", "Texts")
+System_Ext(email, "Email provider", "Email")
+
+Rel(staff, web, "Uses", "HTTPS")
+Rel(guardian, web, "Uses guardian pages", "HTTPS")
+Rel(web, api, "GET/POST/DELETE /children/{id}/pickups; POST /sessions/{id}/sign-outs; POST /incidents/drafts", "JSON/HTTPS")
+Rel(api, db, "Reads and writes", "EF Core")
+Rel(api, sms, "Removal and someone-else notices", "HTTPS")
+Rel(api, email, "Same notices for email-only households", "API")
+@enduml

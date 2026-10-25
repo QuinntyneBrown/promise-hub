@@ -11,3 +11,6 @@ frontend/coverage/
 .husky/_/
 
 docs/design-system/.cache/
+
+# Video tooling output (timing, slide renders, recordings)
+.cache/

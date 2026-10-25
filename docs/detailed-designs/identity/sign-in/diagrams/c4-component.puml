@@ -1,0 +1,38 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Sign in
+
+Container(web, "PromiseHub web app", "Angular", "SignInPage, MfaPage, SessionExpiredDialog, SignOutAllDialog via AuthApi")
+Container_Boundary(api, "PromiseHub API") {
+  Component(endpoints, "AuthEndpoints", "Minimal API group", "POST /auth/sign-in, /auth/mfa, /auth/recovery-code, /auth/sign-out, /auth/sign-out-all")
+  Component(middleware, "SessionMiddleware", "ASP.NET Core middleware", "Resolves the session, rejects idle or revoked sessions with 401")
+  Component(signin, "SignInCommandHandler", "Application handler", "Applies lockout, verifies password, issues session or MFA challenge")
+  Component(mfa, "CompleteMfaCommandHandler", "Application handler", "Verifies TOTP or recovery code, registers trusted device")
+  Component(signoutall, "SignOutEverywhereCommandHandler", "Application handler", "Revokes every other session of the person")
+  Component(policy, "SignInAttemptPolicy", "Application service", "Counts failures per email in a 15-minute window")
+  Component(user, "StaffUser", "Domain entity", "Owns sessions, MFA enrollment, recovery codes, trusted devices")
+  Component(hasher, "IPasswordHasher / ITotpVerifier", "Infrastructure services", "Password hashing and time-based code verification")
+  Component(store, "ISessionStore", "Infrastructure service", "Session persistence and revocation through PromiseHubDbContext")
+  Component(audit, "AuditLog", "Infrastructure writer", "Records sign-in, lockout and revocation events")
+  ComponentDb(db, "PromiseHub database", "EF Core", "Identity and audit tables")
+}
+Rel(web, endpoints, "Calls", "JSON/HTTPS")
+Rel(web, middleware, "Carries session cookie on every other request", "HTTPS")
+Rel(endpoints, signin, "Sends SignInCommand")
+Rel(endpoints, mfa, "Sends CompleteMfaCommand / UseRecoveryCodeCommand")
+Rel(endpoints, signoutall, "Sends SignOutEverywhereCommand")
+Rel(signin, policy, "Checks lockout")
+Rel(signin, hasher, "Verifies password")
+Rel(mfa, hasher, "Verifies TOTP code")
+Rel(signin, user, "Loads")
+Rel(mfa, user, "Loads and mutates")
+Rel(signin, store, "Issues session")
+Rel(mfa, store, "Issues session")
+Rel(signoutall, store, "Revokes sessions")
+Rel(middleware, store, "Resolves and slides session")
+Rel(signin, audit, "Writes event")
+Rel(signoutall, audit, "Writes event")
+Rel(store, db, "Reads and writes", "EF Core")
+Rel(audit, db, "Appends", "EF Core")
+@enduml

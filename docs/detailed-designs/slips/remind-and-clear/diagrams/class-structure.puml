@@ -1,0 +1,148 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Remind and clear
+
+enum ClearanceStatus {
+  Cleared
+  MissingSlip
+  Declined
+  OnTheBus
+  Absent
+}
+
+enum ReminderKind {
+  Scheduled
+  Manual
+}
+
+enum HouseholdReachability {
+  Reachable
+  Unreachable
+}
+
+class PermissionSlip {
+  +Guid Id
+  +Guid EventId
+  +ReminderSchedule ReminderSchedule
+  +DateOnly SignBy
+}
+
+class ReminderSchedule <<value object>> {
+  +ReminderKind Kind
+  +DayOfWeek[] Days
+  +TimeOnly TimeOfDay
+  +NextDue(after: DateTimeOffset, tz: TimeZoneInfo): DateTimeOffset?
+}
+
+class Household {
+  +Guid Id
+  +string Language
+  +Channel PreferredChannel
+  +bool HasMobile
+  +bool EmailBounced
+  +HouseholdReachability Reachability
+}
+
+class ReminderRecord {
+  +Guid HouseholdId
+  +Guid SlipId
+  +DateTimeOffset SentAt
+  +Channel Channel
+  +string Language
+  +ReminderKind Kind
+  +string ScheduleSlot
+}
+
+class SignatureRecord {
+  +Guid ChildId
+  +Guid HouseholdId
+  +string TypedName
+  +DateTimeOffset SignedAt
+  +string Device
+  +string Language
+  +string SlipTextHash
+  +Guid? WitnessStaffId
+}
+
+class DayOfRosterRow <<read model>> {
+  +Guid ChildId
+  +string ChildName
+  +ClearanceStatus Status
+  +string GuardianName
+  +string GuardianPhone
+  +string Note
+}
+
+class DayOfRoster <<read model>> {
+  +int Cleared
+  +int MissingSlip
+  +int OnTheBus
+  +int Absent
+  +DayOfRosterRow[] Rows
+}
+
+class SendSlipRemindersCommand {
+  +Guid SlipId
+  +string ScheduleSlot
+}
+
+class SignOnTabletCommand {
+  +Guid SlipId
+  +Guid HouseholdId
+  +string TypedName
+  +SlipAnswer[] Answers
+}
+
+class GetDayOfRosterQueryHandler {
+  +Handle(query: GetDayOfRosterQuery): Task<DayOfRoster>
+}
+
+class SendSlipRemindersCommandHandler {
+  +Handle(command: SendSlipRemindersCommand): Task<ReminderSummary>
+}
+
+class SignOnTabletCommandHandler {
+  +Handle(command: SignOnTabletCommand): Task<Result>
+}
+
+class SlipReminderJob {
+  +RunAsync(tenant: Guid, now: DateTimeOffset): Task
+}
+
+interface ISmsCapService {
+  +SegmentsRemaining(organizationId: Guid): Task<int>
+}
+
+interface IGuardianMessenger {
+  +QueueReminder(household: Household, slip: PermissionSlip, body: string): Task
+  +QueueSignedCopy(household: Household, record: SignatureRecord): Task
+}
+
+PermissionSlip *-- ReminderSchedule : has
+Household "1" --> "*" ReminderRecord : reminded by
+Household --> HouseholdReachability : has
+ReminderRecord --> ReminderKind : kind
+DayOfRoster "1" *-- "*" DayOfRosterRow : rows
+DayOfRosterRow --> ClearanceStatus : has
+GetDayOfRosterQueryHandler ..> SignatureRecord : reads
+GetDayOfRosterQueryHandler --> DayOfRoster : builds
+SlipReminderJob ..> SendSlipRemindersCommand : dispatches per due slip
+SendSlipRemindersCommandHandler ..> SendSlipRemindersCommand : handles
+SendSlipRemindersCommandHandler --> ReminderRecord : appends
+SendSlipRemindersCommandHandler ..> ISmsCapService : checks cap
+SendSlipRemindersCommandHandler ..> IGuardianMessenger : queues
+SignOnTabletCommandHandler ..> SignOnTabletCommand : handles
+SignOnTabletCommandHandler --> SignatureRecord : creates per child
+SignOnTabletCommandHandler ..> IGuardianMessenger : texts copy
+@enduml

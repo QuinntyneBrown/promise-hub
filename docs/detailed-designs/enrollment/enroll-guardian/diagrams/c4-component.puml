@@ -1,0 +1,41 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Enroll a guardian
+
+Container(web, "PromiseHub web app", "Angular", "OpenEnrollmentDialog, RosterPage, BulkReviewDialog, Enroll* guardian pages via EnrollmentApi and GuardianEnrollmentApi")
+Container_Boundary(api, "PromiseHub API") {
+  Component(staffendpoints, "EnrollmentEndpoints", "Minimal API group", "open, close, list, review, bulk review (RequirePermission Enrollment.Review)")
+  Component(guardianendpoints, "GuardianEnrollmentEndpoints", "Minimal API group", "/g/enroll/{slug}: program, prefill, household, children, submit (guardian link filter)")
+  Component(openclose, "OpenEnrollment / CloseEnrollment handlers", "Application handlers", "Set EnrollmentPeriod and public slug")
+  Component(prefill, "GetEnrollmentPrefillQueryHandler", "Application handler", "Loads verified household and last season's children")
+  Component(draft, "SaveEnrollmentDraftCommandHandler", "Application handler", "Stores answers keyed by link token")
+  Component(submit, "SubmitEnrollmentCommandHandler", "Application handler", "Validates consent; WaitingReview or Waitlisted at capacity")
+  Component(review, "ReviewEnrollmentCommandHandler", "Application handler", "Accept, waitlist or decline; roster and counts; notify")
+  Component(domain, "Program / Enrollment / EnrollmentDraft / RosterEntry", "Domain", "Capacity, status, waitlist position, roster membership")
+  Component(household, "Household aggregate", "Domain (Households)", "Created or updated from the draft")
+  Component(notify, "INotificationDispatcher", "Infrastructure service", "SMS or email in the household's language")
+  Component(audit, "AuditLog", "Infrastructure writer", "Open, close, submit, review entries")
+  ComponentDb(db, "PromiseHub database", "EF Core", "Enrollment and household tables")
+}
+Rel(web, staffendpoints, "Calls", "JSON/HTTPS")
+Rel(web, guardianendpoints, "Calls with link and device tokens", "JSON/HTTPS")
+Rel(staffendpoints, openclose, "Sends commands")
+Rel(staffendpoints, review, "Sends ReviewEnrollmentCommand / BulkReviewEnrollmentsCommand")
+Rel(guardianendpoints, prefill, "Sends GetEnrollmentPrefillQuery")
+Rel(guardianendpoints, draft, "Sends SaveEnrollmentDraftCommand")
+Rel(guardianendpoints, submit, "Sends SubmitEnrollmentCommand")
+Rel(openclose, domain, "Mutates Program")
+Rel(prefill, household, "Reads")
+Rel(draft, domain, "Writes EnrollmentDraft")
+Rel(submit, domain, "Creates Enrollment; checks Capacity")
+Rel(submit, household, "Creates or updates")
+Rel(review, domain, "Mutates Enrollment; adds RosterEntry")
+Rel(review, notify, "Queues acceptance or waitlist message")
+Rel(openclose, audit, "Writes entry")
+Rel(submit, audit, "Writes entry")
+Rel(review, audit, "Writes entry")
+Rel(domain, db, "Persisted by", "EF Core")
+Rel(household, db, "Persisted by", "EF Core")
+Rel(audit, db, "Appends", "EF Core")
+@enduml

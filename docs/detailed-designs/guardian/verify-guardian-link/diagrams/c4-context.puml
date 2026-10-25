@@ -1,0 +1,14 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Verify a guardian link
+
+Person_Ext(guardian, "Guardian", "Opens a link from a text or email on a phone, no account")
+System(promisehub, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+System_Ext(sms, "SMS provider", "Delivers six-digit codes by text")
+System_Ext(email, "Email provider", "Delivers six-digit codes by email")
+
+Rel(guardian, promisehub, "Opens guardian link, enters contact and code", "HTTPS")
+Rel(promisehub, sms, "Sends code via", "API")
+Rel(promisehub, email, "Sends code via", "SMTP/API")
+@enduml

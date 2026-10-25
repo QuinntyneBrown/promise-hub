@@ -7,7 +7,7 @@ from pages_ops import form_actions, skeleton_form
 M = STAFF["marisol"]
 T = STAFF["tom"]
 J = STAFF["jaylen"]
-R_SEC, R_COST, R_TTV, R_COMPL = "PRD-NFR-SECURITY", "PRD-NFR-COST", "PRD-NFR-TTV", "PRD-NFR-COMPLIANCE"
+R_SEC, R_COST, R_TTV, R_COMPL = "L1-016", "L1-020", "L1-004", "L1-015"
 
 SETTINGS_TABS = [("Organization", "settings"), ("Modules", "settings-modules"), ("Staff and roles", "staff"), ("Notifications", "settings-notifications"), ("Privacy and data", "settings-privacy"), ("Billing", "billing")]
 
@@ -103,7 +103,7 @@ def audit_log(S):
     hdr = page_header("Audit log", "4,812 entries this season", btn("Export", "", icon_name="download", data_href=dialog("export-data"))) + settings_nav("settings-privacy")
     filters = (f'<div class="toolbar"><form role="search" class="input-group" style="flex: 1 1 14rem;"><label class="visually-hidden" for="au-q">Search the log</label><input class="input" id="au-q" type="search" placeholder="Child, staff member or action"><span class="input-group__btn btn btn--ghost btn--icon" aria-hidden="true">{icon("search")}</span></form>'
                f'{select("au-what", "Action", ["All actions", "Viewed medical", "Changed record", "Signed slip", "Exported", "Deleted"], visually_hidden_label=True)}{select("au-when", "Period", ["Last 7 days", "Last 30 days", "This season"], visually_hidden_label=True)}</div>')
-    rows = [["<span class=\"mono\">2026-11-05 15:41</span>", "Carmen Rivera (guardian)", "Signed slip", "Mateo Rivera · RBG trip", "Phone, Hamilton"], ["<span class=\"mono\">2026-11-05 13:10</span>", "Tom Nguyen", "Accepted enrollment", "3 children · After-School Tutoring", "Laptop"],
+    rows = [["<span class=\"mono\">2026-11-05 15:41</span>", "Carmen Rivera (guardian)", "Signed slip", "Mateo Rivera · RBG trip", "Phone, Hamilton"], ["<span class=\"mono\">2026-11-05 13:10</span>", "Tom Nguyen", "Accepted enrollment", "3 children · After‑School Tutoring", "Laptop"],
             ["<span class=\"mono\">2026-11-04 20:22</span>", "Nour Haddad (guardian)", "Changed medical", "Yusuf Haddad · medication note", "Phone, Hamilton"], ["<span class=\"mono\">2026-11-02 09:10</span>", "Tom Nguyen", "Viewed medical", "Mateo Rivera", "Laptop"],
             ["<span class=\"mono\">2026-11-01 17:30</span>", "Marisol Delgado", "Exported", "Reports · OTF template · 184 children", "Laptop"], ["<span class=\"mono\">2026-10-30 14:14</span>", "Priya Raman", "Sent message", "62 guardians · Saturday Sports cancelled", "Laptop"]]
     S.add("default", "Who viewed or changed what, when, from where.", nav="settings", user=M, main=hdr + filters + table("Audit log", ["When", "Who", "Action", "Record", "Device"], rows) +
@@ -143,7 +143,7 @@ def account(S):
     def form(err=None, busy=False, saved=False, mfa=True):
         e = err or {}
         return (f'<form class="stack form-width--md" action="#" method="post" novalidate>' + (form_summary([(k, m) for k, m in e.items()]) if e else "")
-                + card(f'<div class="cluster">{avatar(J, "lg")}<div><div class="section-title">Jaylen Okafor</div><div class="text-muted">Site lead · After-School Tutoring, Saturday Sports</div></div></div>'
+                + card(f'<div class="cluster">{avatar(J, "lg")}<div><div class="section-title">Jaylen Okafor</div><div class="text-muted">Site lead · After‑School Tutoring, Saturday Sports</div></div></div>'
                        + field("name", "Name", value="Jaylen Okafor", required=True) + field("email", "Email", type_="email", value="jaylen@harbourview.example", error=e.get("email", "")) + field("phone", "Mobile", type_="tel", value="905-555-0181"), title="Profile", tid="profile")
                 + card(field("pw1", "New password", type_="password", error=e.get("pw1", ""), help_="At least 12 characters.", autocomplete="new-password") + field("pw2", "Repeat it", type_="password", error=e.get("pw2", ""), autocomplete="new-password"), title="Password", tid="pw")
                 + card((f'<div class="cluster cluster--between"><div><div class="section-title">Authenticator app</div><div class="text-muted">Added Tue 2 Sep 2026 · required for admins</div></div>{badge("On", "success")}</div><div class="cluster" style="margin-top: var(--space-3);">{btn("Show recovery codes", "", icon_name="key", data_href=dialog("recovery-codes"))}{btn("Turn off", "ghost", data_href=dialog("recovery-codes"))}</div>' if mfa else
@@ -158,7 +158,7 @@ def account(S):
     S.add("invalid", "Passwords don’t match and the email is taken.", nav="", main=hdr + form(err={"email": "Email already in use.", "pw2": "Passwords don’t match."}))
     S.add("submitting", "Saving.", nav="", main=hdr + form(busy=True))
     S.add("success", "Saved.", nav="", main=hdr + form(saved=True), toast_html=toast_region(toast("success", "Account saved")))
-    S.add("mfa-off", "An admin without two-step sign-in sees the setup prompt.", nav="", user=T, main=alert("warning", "Admins must turn on two-step sign-in by 1 December", "Takes two minutes.", banner=True) + hdr.replace("2 devices", "1 device").replace("this phone", "a laptop") + form(mfa=False).replace("Jaylen Okafor", "Tom Nguyen").replace("Site lead · After-School Tutoring, Saturday Sports", "Admin").replace("jaylen@harbourview.example", "tom@harbourview.example").replace(avatar(J, "lg"), avatar(T, "lg")))
+    S.add("mfa-off", "An admin without two-step sign-in sees the setup prompt.", nav="", user=T, main=alert("warning", "Admins must turn on two-step sign-in by 1 December", "Takes two minutes.", banner=True) + hdr.replace("2 devices", "1 device").replace("this phone", "a laptop") + form(mfa=False).replace("Jaylen Okafor", "Tom Nguyen").replace("Site lead · After‑School Tutoring, Saturday Sports", "Admin").replace("jaylen@harbourview.example", "tom@harbourview.example").replace(avatar(J, "lg"), avatar(T, "lg")))
 
 
 # ------------------------------------------------------------------ Notification center
@@ -169,7 +169,7 @@ def notifications(S):
     items = [item(GUARDIANS["carmen"], "<strong>Carmen Rivera</strong> signed Mateo’s slip for the RBG trip.", "Today, 3:41 pm", True, f' <a href="{page("event")}">See slip status</a>'),
              item("flag", "<strong>Incident reported</strong> by Jaylen Okafor: Jordan Thompson, fall on the stairs.", "Today, 5:52 pm", True, f' <a href="{page("incident")}">Open report</a>'),
              item("alert-triangle", "<strong>Email bounced</strong> for Bola Adeyemi (Adeyemi household).", "Yesterday, 5:06 pm", False, f' <a href="{page("household")}">Fix email</a>'),
-             item(T, "<strong>Tom Nguyen</strong> accepted 3 enrollments for After-School Tutoring.", "Today, 1:10 pm"),
+             item(T, "<strong>Tom Nguyen</strong> accepted 3 enrollments for After‑School Tutoring.", "Today, 1:10 pm"),
              item("clipboard", "<strong>7 slips still unsigned</strong> for the RBG trip, due Thursday.", "Today, 6:00 am", False, f' <a href="{dialog("send-reminder")}">Send a reminder</a>'),
              item("check-circle", "<strong>Roster imported</strong>: 109 of 112 rows, 3 to fix.", "Mon 2 Nov, 9:40 am")]
     hdr = page_header("Notifications", "2 unread", btn("Mark all read", "", icon_name="check") + btn("Settings", "ghost", icon_name="settings", href=page("account")))
@@ -186,7 +186,7 @@ def search(S):
     def form_(q=""):
         return f'<form class="search-form input-group form-width--md" role="search" action="#"><label class="visually-hidden" for="q">Search children, families and events</label><input class="input input--lg" id="q" type="search" value="{esc(q)}" placeholder="Child, guardian, phone, event…" autofocus><span class="input-group__btn btn btn--ghost btn--icon" aria-hidden="true">{icon("search")}</span></form>'
     results = ('<div class="stack search-results">'
-               f'<section class="search-group" aria-labelledby="g-ch"><h2 id="g-ch" class="search-group__title">Children (2)</h2>{ul_list([list_item("Mateo <mark>Rivera</mark>", "9 · Rivera household · After-School Tutoring, Saturday Sports", person=CHILD["mateo"], href=page("child"), end=flag("Allergy")), list_item("Sofía <mark>Rivera</mark>", "12 · Rivera household · After-School Tutoring", person=CHILD["sofia"], href=page("child"), end=flag("Asthma"))])}</section>'
+               f'<section class="search-group" aria-labelledby="g-ch"><h2 id="g-ch" class="search-group__title">Children (2)</h2>{ul_list([list_item("Mateo <mark>Rivera</mark>", "9 · Rivera household · After‑School Tutoring, Saturday Sports", person=CHILD["mateo"], href=page("child"), end=flag("Allergy")), list_item("Sofía <mark>Rivera</mark>", "12 · Rivera household · After‑School Tutoring", person=CHILD["sofia"], href=page("child"), end=flag("Asthma"))])}</section>'
                f'<section class="search-group" aria-labelledby="g-fam"><h2 id="g-fam" class="search-group__title">Families (1)</h2>{ul_list([list_item("<mark>Rivera</mark> household", "Carmen Rivera, Luis Rivera · 905-555-0142 · Spanish", person=GUARDIANS["carmen"], href=page("household"))])}</section>'
                f'<section class="search-group" aria-labelledby="g-ev"><h2 id="g-ev" class="search-group__title">Events (0)</h2><p class="text-muted">No events match.</p></section></div>')
     S.add("default", "Results for “Rivera” grouped by children, families and events.", nav="", main=page_header("Search") + form_("Rivera") + '<p role="status" class="text-muted">3 results for “Rivera”</p>' + results)
@@ -216,7 +216,7 @@ def server_error(S):
     S.add("default", "500: not the user’s fault, a reference code, retry.", nav="", main=error_page("Something went wrong on our side", "Try again in a minute. Nothing was lost.", "alert-triangle", btn("Try again", "primary", icon_name="refresh") + btn("Go to Today", "", href=page("today")), extra='<p class="text-caption">Reference: 7f3c-21a9-4b0e</p>'))
 
 
-@screen("offline", "page", "Offline", route="/offline", reqs=["PRD-NFR-MOBILE", R_ROLL], na={"loading": "Static page.", "empty": "Static page.", "error": "This page is the error."})
+@screen("offline", "page", "Offline", route="/offline", reqs=["L1-014", R_ROLL], na={"loading": "Static page.", "empty": "Static page.", "error": "This page is the error."})
 def offline(S):
     S.add("default", "Offline with nothing cached for this page; what still works.", nav="", main=error_page("You’re offline", "This page isn’t saved on your phone. Check-in and Quick Cards still work.", "wifi-off", btn("Open check-in", "primary", href=page("check-in", "offline")) + btn("Try again", "", icon_name="refresh")))
 
@@ -229,7 +229,7 @@ def maintenance(S):
 # ------------------------------------------------------------------ Auth
 def auth_head(title: str, text: str = "") -> str:
     t = f'<p class="text-muted">{text}</p>' if text else ""
-    return f'<div class="stack" style="gap: var(--space-2); align-items: center; text-align: center;"><span class="ph-mark" aria-hidden="true" style="width: var(--size-avatar-lg); height: var(--size-avatar-lg);">{icon("heart-pulse")}</span><h1 style="font: var(--text-h2);">{title}</h1>{t}</div>'
+    return f'<div class="stack" style="gap: var(--space-2); align-items: center; text-align: center;"><span class="ph-mark" aria-hidden="true" style="width: var(--size-avatar-lg); height: var(--size-avatar-lg);"></span><h1 style="font: var(--text-h2);">{title}</h1>{t}</div>'
 
 
 @screen("sign-in", "page", "Sign in", route="/sign-in", reqs=[R_SEC], shell="auth", na={"loading": "The form is static.", "empty": "A form has no collection to be empty of."})
@@ -289,7 +289,7 @@ def accept_invite(S):
 
 
 # ------------------------------------------------------------------ First-run setup
-@screen("setup", "page", "Set up", route="/setup", reqs=[R_TTV, "PRD-NFR-INTEGRATION"], na={"empty": "The setup checklist is the empty state of the product.", "loading": "Static checklist."})
+@screen("setup", "page", "Set up", route="/setup", reqs=[R_TTV, "L1-004"], na={"empty": "The setup checklist is the empty state of the product.", "loading": "Static checklist."})
 def setup(S):
     def checklist(done: int):
         steps_ = [("Name your organization and pick a country", "Sets data residency.", page("onboard-org")), ("Import your roster from Sheets", "About ten minutes.", page("onboard-roster")), ("Invite the staff who run sessions", "They get check-in on their phones.", page("onboard-staff")), ("Send your first permission slip", "Create an event, write the slip, send.", page("onboard-first-event"))]

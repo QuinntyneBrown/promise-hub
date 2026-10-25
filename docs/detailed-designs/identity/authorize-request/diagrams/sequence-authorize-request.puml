@@ -1,0 +1,76 @@
+@startuml
+title UML sequence behaviour — Authorize an endpoint, field and row
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Staff member" as actor
+box "Frontend — PromiseHub web app, feature library" #E0F2FE
+  participant "Feature page (QuickCardPage, IncidentsPage, StaffPage)" as page
+  participant "Typed API client" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "SessionMiddleware" as middleware
+  participant "RequirePermission filter" as filter
+  participant "Feature endpoint" as endpoint
+end box
+box "Backend — PromiseHub Application and Domain (Identity)" #ECFDF3
+  participant "Query handler" as handler
+  participant "IAuthorizationService" as authz
+  participant "ChildFieldPolicy / RowScope" as policy
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "ISessionStore" as store
+  database "PromiseHub database" as db
+end box
+actor -> page : Open a screen
+page -> client : Typed request
+client -> middleware : HTTPS request with session cookie
+middleware -> store : Resolve session and membership
+store -> db : Load session, membership, role
+db --> store : Membership (or removed / none)
+alt no active session or membership removed
+  middleware --> client : 401 ProblemDetails (L2-007 removed staff)
+  client --> page : Unauthenticated
+  page --> actor : Redirect to sign-in
+else session and membership valid
+  middleware -> middleware : Build CallerContext from RolePermissionMap(role); organization from membership (L2-001)
+  middleware -> filter : Continue
+  filter -> filter : Check required permission for the endpoint
+  alt permission missing (e.g. site lead calls /settings/*)
+    filter --> client : 403 ProblemDetails (L2-007)
+    client --> page : Forbidden
+    page --> actor : Show forbidden state (staff/forbidden)
+  else permission held
+    filter -> endpoint : Invoke
+    endpoint -> handler : Send query with CallerContext
+    handler -> authz : Require(permission)
+    authz --> handler : Allowed
+    handler -> db : Query filtered by ActiveOrganizationId (L2-001)
+    db --> handler : Rows
+    alt child record and caller lacks Child.Medical.Read
+      handler -> policy : ChildFieldPolicy.Apply(dto, caller)
+      policy --> handler : DTO without medical fields, restricted marker (L2-007)
+    else incident list and caller holds Incident.ReadOwn only
+      handler -> policy : RowScope.ForIncidents(query, caller)
+      policy --> handler : Rows where ReportedBy == caller (L2-007)
+    else full access
+      handler -> handler : No projection
+    end
+    handler --> endpoint : Typed result
+    endpoint --> client : 200 JSON
+    client --> page : Feature result
+    page --> actor : Render; restricted card when medical fields are omitted (quick-card/forbidden)
+  end
+end
+@enduml

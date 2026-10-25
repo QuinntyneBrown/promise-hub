@@ -1,0 +1,56 @@
+@startuml
+title UML sequence behaviour — Create a program
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Program director" as actor
+box "Frontend — PromiseHub web app, programs library" #E0F2FE
+  participant "ProgramFormPage" as page
+  participant "ProgramsApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "ProgramEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain (Programs)" #ECFDF3
+  participant "CreateProgramCommandHandler" as handler
+  participant "ProgramValidator" as validator
+  participant "Program" as entity
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+end box
+actor -> page : Fill name, dates, schedule, capacity; Create program
+page -> client : create(request)
+client -> endpoints : POST /programs
+endpoints -> endpoints : Authenticate; organization from membership (L2-001); module on? (L2-005)
+endpoints -> handler : Send CreateProgramCommand
+handler -> validator : Validate(command)
+alt invalid: missing name, start after end, non-numeric capacity
+  validator --> handler : ValidationResult with field errors
+  handler --> endpoints : Validation failure
+  endpoints --> client : 400 ProblemDetails (field errors)
+  client --> page : Field errors
+  page --> actor : Error summary and inline errors; focus on summary
+else valid
+  validator --> handler : Valid
+  handler -> entity : new Program(organizationId, ...): 0 enrolled, enrollment per request (L2-012 AC1)
+  entity --> handler : Program
+  handler -> db : Add and SaveChanges in one unit of work
+  db --> handler : Commit result
+  handler --> endpoints : ProgramDto
+  endpoints --> client : 201 Created
+  client --> page : ProgramDto
+  page --> actor : Success card with enrollment link; program listed in Programs
+end
+@enduml

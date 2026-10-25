@@ -1,0 +1,21 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Enroll a guardian
+
+Person(staff, "Admin / Program director", "Opens enrollment and reviews")
+Person_Ext(guardian, "Guardian", "Enrolls from a phone")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "programs library: open/close enrollment; enrollment library: roster and review; guardian library: enroll pages")
+  Container(api, "PromiseHub API", "ASP.NET Core minimal API", "Enrollment and guardian enrollment endpoints and handlers")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "Programs, enrollment periods, drafts, enrollments, roster entries, households, audit")
+}
+System_Ext(sms, "SMS provider", "Codes and acceptance texts")
+System_Ext(email, "Email provider", "Acceptance emails")
+Rel(staff, web, "Uses", "HTTPS")
+Rel(guardian, web, "Opens /g/enroll/{program}", "HTTPS")
+Rel(web, api, "Calls staff and guardian enrollment endpoints", "JSON/HTTPS")
+Rel(api, db, "Reads and writes", "EF Core")
+Rel(api, sms, "Sends", "API")
+Rel(api, email, "Sends", "SMTP/API")
+@enduml

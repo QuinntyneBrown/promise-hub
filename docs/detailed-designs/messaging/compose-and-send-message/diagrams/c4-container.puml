@@ -1,0 +1,27 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Compose and send a message
+
+Person(director, "Program director", "Composes messages")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "messaging library: MessagesPage, NewMessagePage, MessagePage")
+  Container(api, "PromiseHub API", "ASP.NET Core", "MessagesEndpoints, Messaging handlers, domain")
+  Container(jobs, "Job runner", "PromiseHub.Infrastructure", "SendMessageJob, ScheduledMessageDispatcher per tenant")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "Messages, deliveries, replies, audit log")
+}
+System_Ext(sms, "SMS provider", "Texts")
+System_Ext(email, "Email provider", "Emails")
+System_Ext(push, "Push provider", "Push notifications")
+
+Rel(director, web, "Uses", "HTTPS")
+Rel(web, api, "Calls /messages", "JSON/HTTPS")
+Rel(api, db, "Reads and writes", "EF Core")
+Rel(api, jobs, "Enqueues SendMessageJob")
+Rel(jobs, db, "Loads deliveries, records status", "EF Core")
+Rel(jobs, sms, "Sends texts", "HTTPS")
+Rel(jobs, email, "Sends emails", "HTTPS")
+Rel(jobs, push, "Sends push", "HTTPS")
+Rel_Back(api, sms, "Delivery reports", "Webhook")
+Rel_Back(api, email, "Bounce reports", "Webhook")
+@enduml

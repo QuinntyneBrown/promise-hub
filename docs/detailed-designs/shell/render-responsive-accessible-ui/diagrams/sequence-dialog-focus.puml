@@ -1,0 +1,54 @@
+@startuml
+title UML sequence behaviour — Open a dialog with managed focus
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Staff member (keyboard)" as actor
+box "Frontend — PromiseHub web app (feature page)" #E0F2FE
+  participant "Feature page component" as page
+end box
+box "Frontend — Component library (frontend/projects/components)" #E0F2FE
+  participant "DialogComponent" as dialog
+  participant "BreakpointService" as bp
+  participant "FocusTrap (CDK)" as trap
+  participant "ToastService" as toast
+end box
+actor -> page : Activate button (Enter)
+page -> dialog : open()
+dialog -> bp : atLeast(From576)
+alt Phone (under 576 px)
+  bp --> dialog : false
+  dialog -> dialog : Bottom-sheet pane (L2-029)
+else Larger
+  bp --> dialog : true
+  dialog -> dialog : Centred pane
+end
+dialog -> dialog : Remember opener; set page root inert
+dialog -> trap : Attach; focus first control
+trap --> dialog : Focus inside dialog
+dialog --> actor : Dialog with role=dialog, aria-modal, labelled title
+actor -> dialog : Tab through controls
+trap --> actor : Focus cycles inside; visible focus ring (L2-035)
+alt Escape
+  actor -> dialog : Escape
+  dialog -> dialog : close(); remove inert; restoreFocus()
+  dialog --> actor : Focus back on the opener (L2-035)
+else Confirm
+  actor -> dialog : Activate primary action
+  dialog -> page : Result
+  dialog -> dialog : close(); restoreFocus()
+  page -> toast : show("Saved")
+  toast --> actor : role=status announced; focus unchanged
+end
+@enduml

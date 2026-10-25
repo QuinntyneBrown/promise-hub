@@ -1,0 +1,39 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Enforce the SMS cap
+
+Container_Boundary(api, "PromiseHub API and job runner") {
+  Component(msgEndpoints, "MessagesEndpoints", "Minimal API", "GET /messaging/sms-cap")
+  Component(settingsEndpoints, "SettingsEndpoints", "Minimal API", "PUT /settings/notifications/sms-cap")
+  Component(stateQuery, "GetSmsCapStateQueryHandler", "Query handler", "Cap, used, remaining, state, period")
+  Component(updateCap, "UpdateSmsCapCommandHandler", "Command handler", "Validates and raises or lowers the cap; publishes SmsCapRaised")
+  Component(capService, "SmsCapService", "Application service (ISmsCapService)", "Remaining, TryReserve, State")
+  Component(fallback, "SmsFallbackPolicy", "Domain rule", "Refused text to email or Paused")
+  Component(period, "SmsUsagePeriod", "Domain aggregate", "Cap and Used per organization and month")
+  Component(sendJob, "SendMessageJob / SlipReminderJob / NoShowAlertJob", "Background jobs", "Text senders that reserve before sending")
+  Component(resumeJob, "ResumePausedTextsJob", "Background job", "Re-queues Paused deliveries after a raise")
+  Component(meterJob, "SmsMeteringJob", "Background job", "Closes and opens periods on the first of the month")
+  Component(audit, "IAuditWriter", "Application interface", "Audit entries for cap changes")
+  Component(alerts, "IAlertSink", "Infrastructure interface", "Operations alert on cap reached")
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "Tenant-filtered persistence")
+}
+System_Ext(sms, "SMS provider", "Texts")
+System_Ext(email, "Email provider", "Emails")
+
+Rel(msgEndpoints, stateQuery, "Sends GetSmsCapStateQuery")
+Rel(settingsEndpoints, updateCap, "Sends UpdateSmsCapCommand")
+Rel(stateQuery, capService, "State, Remaining")
+Rel(updateCap, period, "Updates Cap")
+Rel(updateCap, audit, "Writes entry")
+Rel(updateCap, resumeJob, "Enqueues on SmsCapRaised")
+Rel(sendJob, capService, "TryReserve(segments)")
+Rel(sendJob, fallback, "Applies on refusal")
+Rel(capService, period, "Increments Used with concurrency token")
+Rel(capService, alerts, "Alert when state becomes Reached")
+Rel(resumeJob, sendJob, "Re-queues Paused deliveries")
+Rel(meterJob, period, "Close previous, open next")
+Rel(period, db, "Persisted by", "EF Core")
+Rel(sendJob, sms, "Sends reserved text", "HTTPS")
+Rel(sendJob, email, "Sends fallback email", "HTTPS")
+@enduml

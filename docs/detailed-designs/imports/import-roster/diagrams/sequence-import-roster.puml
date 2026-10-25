@@ -1,0 +1,132 @@
+@startuml
+title UML sequence behaviour — Upload, map and run an import
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Admin" as actor
+box "Frontend — PromiseHub web app, enrollment library" #E0F2FE
+  participant "ImportRosterPage" as page
+  participant "ImportsApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "ImportEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain (Imports)" #ECFDF3
+  participant "UploadImportFileCommandHandler" as upload
+  participant "SaveImportMappingCommandHandler" as mapping
+  participant "RunImportCommandHandler" as run
+  participant "ImportSession" as session
+  participant "Household aggregate" as household
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "IFileStorage / ISpreadsheetReader" as reader
+  participant "Job runner" as jobs
+  participant "AuditLog" as audit
+  database "PromiseHub database" as db
+end box
+== Step 1: upload ==
+actor -> page : Drop roster-fall-2026.csv
+page -> client : upload(file)
+client -> endpoints : POST /imports (multipart, RequirePermission Household.Write)
+endpoints -> upload : Send UploadImportFileCommand
+upload -> reader : Store file; detect format by content
+reader --> upload : Stored; CSV / XLSX / unsupported
+alt not a spreadsheet (L2-010)
+  upload --> endpoints : UnsupportedFormat
+  endpoints --> client : 415 ProblemDetails naming CSV and XLSX; nothing created
+  client --> page : Error
+  page --> actor : "We couldn't read roster-fall-2026.numbers" (import-roster/error)
+else spreadsheet
+  upload -> reader : Read header and row count
+  reader --> upload : Headers, 112 rows
+  alt more than 5,000 rows
+    upload --> endpoints : TooManyRows
+    endpoints --> client : 400 ProblemDetails
+    client --> page : Error
+    page --> actor : Row limit message
+  else within limit
+    upload -> upload : ColumnMatcher.Propose(headers, samples) — L2-010
+    upload -> session : Create with proposed mapping and unmatched columns
+    upload -> db : Insert ImportSession
+    db --> upload : Commit
+    upload --> endpoints : Preview (matched, unmatched, samples)
+    endpoints --> client : 201
+    client --> page : Mapping step
+    page --> actor : "7 of 8 columns matched automatically" (import-roster/mapping)
+  end
+end
+== Step 2: map columns ==
+actor -> page : Adjust mapping, choose program, continue
+page -> client : saveMapping(importId, mapping, programId)
+client -> endpoints : PUT /imports/{id}/mapping
+endpoints -> mapping : Send SaveImportMappingCommand
+mapping -> mapping : Validate child name and guardian phone or email mapped
+alt required column unmapped or rows without guardian contact
+  mapping --> endpoints : ValidationFailed with row numbers
+  endpoints --> client : 400 ProblemDetails
+  client --> page : Error summary
+  page --> actor : "Map Guardian phone or email; 3 rows have neither" (import-roster/invalid)
+else valid
+  mapping -> db : DuplicateDetector: match child name and date of birth to existing children (L2-010)
+  db --> mapping : Matches
+  mapping -> session : SetMapping; mark duplicate rows and need-a-look rows
+  mapping -> db : Save
+  db --> mapping : Commit
+  mapping --> endpoints : Review preview (duplicates, gaps)
+  endpoints --> client : 200
+  client --> page : Review step
+  page --> actor : Show duplicates with Skip or Merge, rows needing a look
+end
+== Step 3: review and run ==
+actor -> page : Confirm duplicate choices, import
+page -> client : run(importId, duplicateChoices)
+client -> endpoints : POST /imports/{id}/run
+endpoints -> jobs : Enqueue RunImportCommand for this tenant
+endpoints --> client : 202
+loop until completed
+  page -> client : getProgress(importId)
+  client -> endpoints : GET /imports/{id}/progress
+  endpoints --> client : { processed, total }
+  client --> page : Progress bar "Importing… 68 of 112" (import-roster/submitting)
+end
+jobs -> run : Handle RunImportCommand
+run -> reader : Stream rows
+loop each batch of rows
+  alt duplicate row with choice Skip (default)
+    run -> session : Count skipped (L2-010)
+  else duplicate row with choice Merge
+    run -> household : Update matched household and child
+  else new row
+    run -> household : Create Household, Guardian, Child, MedicalDetails, ApprovedPickups (L2-011)
+    alt guardian has no mobile
+      run -> session : Email-only contact; count in rows need a look (L2-010)
+    end
+  end
+  opt program chosen
+    run -> household : Add RosterEntry for each child
+  end
+  run -> session : Advance(processed)
+  run -> db : Save batch
+  db --> run : Commit
+end
+run -> session : Complete(summary)
+run -> audit : One entry: file name, row count, importer (L2-010, L2-032)
+run -> db : Save
+db --> run : Commit
+page -> client : getProgress(importId)
+client -> endpoints : GET /imports/{id}/progress
+endpoints --> client : Completed with summary
+client --> page : Summary
+page --> actor : "Imported 109 of 112 rows", counts match the file, 3 to fix (import-roster/success)
+@enduml

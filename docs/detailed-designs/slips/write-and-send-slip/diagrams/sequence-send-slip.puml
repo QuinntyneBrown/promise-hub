@@ -1,0 +1,78 @@
+@startuml
+title UML sequence behaviour — Send a slip
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Program director" as actor
+box "Frontend — PromiseHub web app, slips library" #E0F2FE
+  participant "SlipEditorPage" as page
+  participant "SlipsApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "SlipEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain (Slips)" #ECFDF3
+  participant "SendSlipCommandHandler" as handler
+  participant "SlipValidator" as validator
+  participant "PermissionSlip" as slip
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "SmsCapService" as cap
+  participant "GuardianMessenger" as messenger
+  participant "AuditLog" as audit
+end box
+actor -> page : Save and send
+page -> client : send(slipId, { channels })
+client -> endpoints : POST /slips/{id}/send
+endpoints -> endpoints : Authenticate; organization from membership (L2-001); Slips module on? (L2-005)
+endpoints -> handler : Send SendSlipCommand
+handler -> db : Load PermissionSlip with event
+db --> handler : PermissionSlip (Draft)
+handler -> validator : ValidateForSend(slip)
+alt body empty or sign-by after the event
+  validator --> handler : Field errors
+  handler --> endpoints : Validation failure; nothing sent (L2-014 AC1)
+  endpoints --> client : 400 ProblemDetails
+  client --> page : Field errors
+  page --> actor : Inline error and error summary
+else valid
+  validator --> handler : Valid
+  handler -> slip : Send(now): freeze SlipVersion with text hash; Status = Sent
+  slip --> handler : SlipVersion
+  handler -> db : Load enrolled households of the event's program with language and channel
+  db --> handler : Households (one per household, not per child)
+  handler -> cap : SegmentsRemaining(organizationId) (L2-022)
+  cap --> handler : Remaining segments
+  loop each household
+    alt channel is Sms and segments remain
+      handler -> slip : Add SlipDelivery(household, language, Sms)
+    else channel is Sms and cap reached
+      handler -> slip : Add SlipDelivery(household, language, Email, EmailOnlyFallback = true) (L2-014 AC4)
+    else channel is Email or Push
+      handler -> slip : Add SlipDelivery(household, language, channel)
+    end
+    handler -> messenger : QueueSlipLink(delivery, slip) in the household's language (L2-027, L2-014 AC2)
+    messenger --> handler : Queued
+  end
+  handler -> db : SaveChanges in one unit of work
+  db --> handler : Commit result
+  handler -> audit : Record send (L2-032)
+  audit --> handler : Recorded
+  handler --> endpoints : SendSummary (by text, by email, email-only fallbacks)
+  endpoints --> client : 200 OK
+  client --> page : SendSummary
+  page --> actor : "Slip sent to 48 households"; event shows 0 of 48 signed; email-only households listed
+end
+@enduml

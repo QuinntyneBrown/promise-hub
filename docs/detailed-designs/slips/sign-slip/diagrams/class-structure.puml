@@ -1,0 +1,128 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Sign a slip
+
+enum SignatureStatus {
+  Active
+  Superseded
+}
+
+class SlipLink {
+  +string Token
+  +Guid SlipId
+  +Guid HouseholdId
+  +Guid OrganizationId
+  +DateTimeOffset ExpiresAt
+  +DateTimeOffset? RevokedAt
+  +IsOpen(now: DateTimeOffset): bool
+}
+
+class PermissionSlip {
+  +Guid Id
+  +Guid EventId
+  +DateOnly SignBy
+  +int CurrentVersion
+}
+
+class SlipVersion {
+  +int Version
+  +string TextHash
+  +string BodyAsShown
+}
+
+class Household {
+  +Guid Id
+  +string Language
+}
+
+class Guardian {
+  +Guid Id
+  +string FullName
+}
+
+class SignatureRecord {
+  +Guid Id
+  +Guid SlipId
+  +int SlipVersion
+  +Guid ChildId
+  +Guid HouseholdId
+  +Guid GuardianId
+  +string TypedName
+  +DateTimeOffset SignedAt
+  +string Device
+  +string Language
+  +string SlipTextHash
+  +SignatureStatus Status
+}
+
+class SlipAnswer {
+  +string QuestionKey
+  +string Value
+}
+
+class SlipDecline {
+  +Guid ChildId
+  +Guid HouseholdId
+  +string Reason
+  +string Note
+  +DateTimeOffset DeclinedAt
+}
+
+class SignSlipCommand {
+  +string Token
+  +string TypedName
+  +string Device
+  +string Language
+  +SlipAnswer[] Answers
+}
+
+class DeclineSlipCommand {
+  +string Token
+  +Guid ChildId
+  +string Reason
+  +string Note
+}
+
+class SignSlipCommandHandler {
+  +Handle(command: SignSlipCommand): Task<Result<SignedReceipt>>
+}
+
+class DeclineSlipCommandHandler {
+  +Handle(command: DeclineSlipCommand): Task<Result>
+}
+
+class SlipLinkPolicy {
+  +ExpiresAt(signBy: DateOnly): DateTimeOffset
+}
+
+interface INotificationService {
+  +NotifySiteLead(eventId: Guid, message: string): Task
+}
+
+SlipLink --> PermissionSlip : opens
+SlipLink --> Household : for
+Household "1" --> "1..*" Guardian : has
+PermissionSlip "1" *-- "1..*" SlipVersion : versions
+SignatureRecord --> SlipVersion : bound to text hash
+SignatureRecord --> SignatureStatus : has
+SignatureRecord "1" *-- "*" SlipAnswer : answers
+SignSlipCommandHandler ..> SignSlipCommand : handles
+SignSlipCommandHandler --> SlipLink : resolves
+SignSlipCommandHandler ..> Guardian : matches typed name
+SignSlipCommandHandler --> SignatureRecord : creates per child
+SignSlipCommandHandler ..> SlipLinkPolicy : checks expiry
+DeclineSlipCommandHandler ..> DeclineSlipCommand : handles
+DeclineSlipCommandHandler --> SlipDecline : creates
+DeclineSlipCommandHandler ..> INotificationService : notifies
+@enduml

@@ -1,0 +1,22 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Remind and clear
+
+Person(sitelead, "Site lead", "Day-of roster; tablet sign-on")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "attendance library: check-in day-of; slips library: sign-on-tablet, send-reminder")
+  Container(api, "PromiseHub API", "ASP.NET Core", "Clearance endpoints; application handlers")
+  ContainerQueue(jobs, "Job runner", "Hosted service", "SlipReminderJob per tenant; message delivery")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "Slips, signatures, reminders, households, attendance, audit log")
+}
+System_Ext(sms, "SMS provider", "Delivers texts")
+System_Ext(email, "Email provider", "Delivers emails")
+Rel(sitelead, web, "Uses", "HTTPS")
+Rel(web, api, "Calls clearance and sign-on-tablet endpoints", "JSON/HTTPS")
+Rel(api, db, "Reads and writes", "EF Core")
+Rel(api, jobs, "Queues reminder and copy messages")
+Rel(jobs, db, "Reads due reminder slots; records ReminderRecord", "EF Core")
+Rel(jobs, sms, "Sends texts", "HTTPS API")
+Rel(jobs, email, "Sends emails", "SMTP / HTTPS API")
+@enduml

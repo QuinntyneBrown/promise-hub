@@ -1,0 +1,120 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Enforce the SMS cap
+
+enum SmsCapState {
+  Under
+  Warning
+  Reached
+}
+
+class SmsUsagePeriod {
+  +Guid Id
+  +Guid OrganizationId
+  +DateOnly PeriodStart
+  +DateOnly PeriodEnd
+  +int Cap
+  +int Used
+  +DateTimeOffset? ClosedAt
+  +byte[] RowVersion
+  +bool TryReserve(segments: int): bool
+  +void SetCap(cap: int)
+  +SmsCapState State(warningThreshold: decimal)
+  +void Close(at: DateTimeOffset)
+}
+
+class SmsReservation {
+  +Guid Id
+  +Guid OrganizationId
+  +Guid PeriodId
+  +Guid DeliveryId
+  +int Segments
+  +DateTimeOffset ReservedAt
+}
+
+class PlanLimits {
+  +PlanKind Plan
+  +int ActiveChildren
+  +int SmsSegmentsPerMonth
+}
+
+interface ISmsCapService {
+  +Remaining(organizationId: Guid): Task<int>
+  +TryReserve(organizationId: Guid, deliveryId: Guid, segments: int): Task<bool>
+  +State(organizationId: Guid): Task<SmsCapSnapshot>
+}
+
+class SmsCapService {
+  -IClock clock
+  -PromiseHubDbContext db
+  -IAlertSink alerts
+  +Remaining(organizationId: Guid): Task<int>
+  +TryReserve(organizationId: Guid, deliveryId: Guid, segments: int): Task<bool>
+  +State(organizationId: Guid): Task<SmsCapSnapshot>
+  -GetOrOpenCurrentPeriod(organizationId: Guid): Task<SmsUsagePeriod>
+}
+
+class SmsCapSnapshot {
+  +int Cap
+  +int Used
+  +int Remaining
+  +SmsCapState State
+  +DateOnly PeriodStart
+  +DateOnly PeriodEnd
+}
+
+class SmsFallbackPolicy {
+  +Apply(delivery: Delivery, household: HouseholdContact): FallbackOutcome
+}
+
+class UpdateSmsCapCommand {
+  +int Cap
+}
+
+class UpdateSmsCapCommandHandler {
+  +Handle(command: UpdateSmsCapCommand): Task<Result>
+}
+
+class GetSmsCapStateQueryHandler {
+  +Handle(query: GetSmsCapStateQuery): Task<SmsCapSnapshot>
+}
+
+class ResumePausedTextsJob {
+  +Run(organizationId: Guid): Task
+}
+
+class SmsMeteringJob {
+  +Run(organizationId: Guid, monthStart: DateOnly): Task
+}
+
+class SendMessageJob {
+  +Run(messageId: Guid): Task
+}
+
+SmsCapService ..|> ISmsCapService
+SmsCapService --> SmsUsagePeriod : loads and reserves
+SmsCapService --> SmsReservation : records
+SmsCapService ..> SmsCapSnapshot : returns
+SmsCapService --> PlanLimits : default cap
+SmsUsagePeriod --> SmsCapState : derives
+SmsUsagePeriod "1" o-- "*" SmsReservation : reconciled by
+UpdateSmsCapCommandHandler ..> UpdateSmsCapCommand : handles
+UpdateSmsCapCommandHandler --> SmsUsagePeriod : SetCap
+UpdateSmsCapCommandHandler ..> ResumePausedTextsJob : enqueues on raise
+GetSmsCapStateQueryHandler --> ISmsCapService : State
+SendMessageJob --> ISmsCapService : TryReserve
+SendMessageJob --> SmsFallbackPolicy : on refusal
+ResumePausedTextsJob ..> SendMessageJob : re-queues deliveries
+SmsMeteringJob --> SmsUsagePeriod : Close and open
+@enduml

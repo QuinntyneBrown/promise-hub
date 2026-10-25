@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Record and search the audit trail
+
+Person(admin, "Admin", "Searches and exports the audit log")
+Person(staff, "Staff member", "Changes records and views medical or incident data")
+Person_Ext(guardian, "Guardian", "Signs slips and updates details through links")
+System(promisehub, "PromiseHub", "Writes an immutable entry for every audited action")
+System_Ext(email, "Email provider", "Delivers large audit export links")
+
+Rel(admin, promisehub, "Filters, pages and exports the log", "HTTPS")
+Rel(staff, promisehub, "Actions are audited", "HTTPS")
+Rel(guardian, promisehub, "Actions are audited", "HTTPS")
+Rel(promisehub, email, "Emails background export link", "HTTPS API")
+@enduml

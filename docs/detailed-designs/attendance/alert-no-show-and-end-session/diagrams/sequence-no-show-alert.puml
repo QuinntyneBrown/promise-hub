@@ -1,0 +1,61 @@
+@startuml
+title UML sequence behaviour — Send no-show alerts
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+box "Frontend — PromiseHub web app, attendance library" #E0F2FE
+  participant "CheckInPage" as page
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "SendNoShowAlertsJob" as job
+  participant "Session / AttendanceRecord" as dom
+  participant "NoShowAlert" as alert
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "JobRunner" as runner
+  database "PromiseHubDbContext" as db
+  participant "ISmsSender" as sms
+  participant "IEmailSender" as email
+end box
+actor "Guardian" as guardian
+
+runner -> job : RunAsync(organizationId, now) — per tenant
+job -> db : Load NotificationSettings.NoShowDelayMinutes
+db --> job : Delay (e.g. 15)
+job -> db : Load Open sessions where StartsAt + delay <= now
+db --> job : Sessions
+loop each session
+  alt Event switch NoShowAlertsEnabled is off (L2-018)
+    job -> job : Skip session, log outcome
+  else Switch on
+    job -> db : Load rows with Status NotYet and no NoShowAlert
+    db --> job : Children and households
+    loop each household
+      job -> alert : Create NoShowAlert(SentAt = now, Reply = None)
+      job -> db : Save alert first (unique per session + child; retry-safe, L2-034)
+      db --> job : Commit
+      alt SMS cap not reached
+        job -> sms : Send "<Child> hasn't arrived at <Session>. Reply 1 on the way, 2 absent" in household language (L2-018)
+        sms --> job : Queued
+        sms -> guardian : Deliver text
+      else SMS cap reached (L2-022)
+        job -> email : Send the same alert by email
+        email --> job : Queued
+      end
+    end
+  end
+end
+job --> runner : JobOutcome (sent, skipped, failed)
+page -> page : Next roster refresh shows "guardian texted 4:15 pm" and the info toast
+@enduml

@@ -1,0 +1,27 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Show Quick Card
+
+Container(web, "PromiseHub web app", "Angular", "QuickCardPage via QuickCardApi; service worker cache")
+Container_Boundary(api, "PromiseHub API") {
+  Component(ep, "QuickCardEndpoints", "Minimal API", "/children/{id}/quick-card, /quick-cards/today; module and tenant checks; no-store")
+  Component(q, "GetQuickCardQueryHandler", "Query handler", "Assembles QuickCardDto, applies role filter, audits the open")
+  Component(qt, "GetTodayQuickCardsQueryHandler", "Query handler", "Cards for every child on today's sessions")
+  Component(perm, "QuickCardPermissions", "Permission check", "CanViewMedical(role)")
+  Component(dom, "Child / MedicalDetails / Guardian / ApprovedPickup", "Domain entities", "Source of the card; SevereAllergy()")
+  Component(audit, "IAuditLog", "Infrastructure", "Who opened which child's card and when")
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "Tenant-filtered read")
+}
+
+Rel(web, ep, "Calls", "JSON/HTTPS")
+Rel(ep, q, "Sends GetQuickCardQuery")
+Rel(ep, qt, "Sends GetTodayQuickCardsQuery")
+Rel(q, perm, "Asks CanViewMedical")
+Rel(qt, perm, "Asks CanViewMedical")
+Rel(q, dom, "Reads")
+Rel(qt, dom, "Reads")
+Rel(q, audit, "Writes view entry (L2-019)")
+Rel(qt, audit, "Writes entry per card")
+Rel(dom, db, "Loaded from", "EF Core")
+@enduml

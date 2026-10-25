@@ -1,0 +1,59 @@
+@startuml
+title UML sequence behaviour — Call an endpoint of a module that is off
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Any user of the organization" as actor
+box "Frontend — any feature library" #E0F2FE
+  participant "Typed client (e.g. ReportsApi)" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "TenantContextMiddleware" as middleware
+  participant "ModuleGateEndpointFilter" as filter
+  participant "ReportEndpoints [RequireModule(Reports)]" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "ModuleGate" as gate
+  participant "Feature handler" as handler
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "ModuleConfigurationCache" as cache
+  database "PromiseHubDbContext" as db
+end box
+actor -> client : Call a Reports endpoint
+client -> middleware : GET /reports/...
+middleware -> middleware : Resolve active membership and tenant
+middleware -> filter : Continue
+filter -> filter : Read RequireModuleAttribute = Reports
+filter -> gate : IsOn(Reports)
+gate -> cache : Get(organizationId)
+alt cache miss
+  cache -> db : Load ModuleConfiguration
+  db --> cache : ModuleConfiguration
+end
+cache --> gate : ModuleConfiguration
+gate --> filter : false or true
+alt Reports is off for this organization
+  filter --> client : 404, empty body; no handler runs (L2-005 c1)
+  client --> actor : Not found
+else Reports is on
+  filter -> endpoints : Invoke
+  endpoints -> handler : Send query
+  handler -> db : Read tenant-filtered data
+  db --> handler : Rows
+  handler --> endpoints : Result
+  endpoints --> client : 200
+  client --> actor : Report shown
+end
+@enduml

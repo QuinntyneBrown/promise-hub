@@ -1,0 +1,15 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Manage programs
+
+Person(director, "Program director", "Manages programs")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "Staff UI; programs feature library")
+  Container(api, "PromiseHub API", "ASP.NET Core", "Endpoints, application handlers, domain")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "Programs, enrollments, audit log")
+}
+Rel(director, web, "Uses", "HTTPS")
+Rel(web, api, "Calls /programs", "JSON/HTTPS")
+Rel(api, db, "Reads and writes", "EF Core")
+@enduml

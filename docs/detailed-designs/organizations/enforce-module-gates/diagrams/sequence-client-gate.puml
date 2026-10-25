@@ -1,0 +1,53 @@
+@startuml
+title UML sequence behaviour — Compose navigation and guard routes from the module configuration
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Staff member" as actor
+box "Frontend — promisehub shell, api library, today library" #E0F2FE
+  participant "SessionBootstrap" as bootstrap
+  participant "ModuleState" as state
+  participant "NavigationComposer" as composer
+  participant "moduleGuard" as guard
+  participant "TodayPage" as today
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "MembershipEndpoints (/me/modules)" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "GetSessionModulesQueryHandler" as handler
+  participant "ModuleGate" as gate
+end box
+actor -> bootstrap : Sign in or switch organization
+bootstrap -> endpoints : GET /me/modules (once per session)
+endpoints -> handler : Send GetSessionModulesQuery
+handler -> gate : On()
+gate --> handler : {Roster, RollCall}
+handler --> endpoints : SessionModulesDto
+endpoints --> bootstrap : 200
+bootstrap -> state : Set modules on
+composer -> state : Read modules on
+composer --> actor : Top bar, More menu, tab bar, search scopes show Today, Check-in, Families only (L2-005 c2)
+today -> state : isOn(Slips), isOn(Messages), isOn(Incidents), isOn(Reports)
+today --> actor : Check-in cards only; nothing of off modules rendered or prefetched (today/single-module)
+actor -> guard : Navigate directly to /slips
+guard -> state : isOn(Slips)
+alt Slips is off
+  state --> guard : false
+  guard --> actor : Route does not match; catch-all redirects to today; slips library not downloaded (L2-005 c3)
+else Slips is on
+  state --> guard : true
+  guard --> actor : Lazy-load slips library and render route
+end
+@enduml

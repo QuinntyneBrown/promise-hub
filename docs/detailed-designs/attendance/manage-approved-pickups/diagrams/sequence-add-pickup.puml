@@ -1,0 +1,66 @@
+@startuml
+title UML sequence behaviour — Add an approved adult (guardian)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Guardian (Carmen)" as g
+box "Frontend — PromiseHub web app, guardian library" #E0F2FE
+  participant "GuardianUpdatePage" as page
+  participant "GuardianPickupApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "PickupEndpoints (guardian link)" as ep
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "AddApprovedPickupCommandValidator" as val
+  participant "AddApprovedPickupCommandHandler" as h
+  participant "ApprovedPickup" as pk
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "IAuditLog" as audit
+end box
+box "Frontend — PromiseHub web app, attendance library" #E0F2FE
+  participant "QuickCardPage / ConfirmPickupDialog" as staffui
+end box
+
+g -> page : Add "Rosa Alvarez, grandmother"
+page -> client : addApprovedPickup(childId, {name, relationship, phone})
+client -> ep : POST /g/households/{token}/children/{id}/pickups
+ep -> ep : Verify guardian link (L2-026), Pickup module on, household owns child
+alt Link expired or child not in household
+  ep --> client : 404
+  client --> page : Expired / error state
+else Authorized
+  ep -> val : Validate
+  alt Name or relationship missing
+    val --> ep : 422
+    ep --> client : 422
+    client --> page : Inline errors (invalid)
+  else Valid
+    ep -> h : Send AddApprovedPickupCommand (AddedBy = Guardian)
+    h -> db : Load child in organization (L2-001)
+    db --> h : Child
+    h -> pk : Create ApprovedPickup(IsActive)
+    h -> audit : Write add with after values (L2-032)
+    h -> db : Save in one unit of work
+    db --> h : Commit
+    h --> ep : ApprovedPickupDto
+    ep --> client : 201
+    client --> page : Rosa listed
+    page --> g : Confirmation in household language
+  end
+end
+staffui -> staffui : Next load of Quick Card and sign-out list shows Rosa (L2-020)
+@enduml

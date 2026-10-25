@@ -1,0 +1,124 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Verify a guardian link
+
+enum LinkPurpose {
+  Enroll
+  SlipSign
+  FamilyPage
+  Survey
+  DataRequest
+}
+
+enum VerifyOutcome {
+  Verified
+  WrongCode
+  Expired
+  LockedOut
+}
+
+class GuardianLink {
+  +Guid Id
+  +Guid OrganizationId
+  +Guid HouseholdId
+  +LinkPurpose Purpose
+  +string TokenHash
+  +DateTimeOffset IssuedAt
+  +DateTimeOffset? ExpiresAt
+  +DateTimeOffset? RevokedAt
+  +DateTimeOffset? LockedUntil
+  +IsUsable(now: DateTimeOffset): bool
+  +Revoke(now: DateTimeOffset): void
+  +Lock(until: DateTimeOffset): void
+}
+
+class GuardianVerification {
+  +Guid Id
+  +Guid GuardianLinkId
+  +string CodeHash
+  +string ContactUsed
+  +DateTimeOffset ExpiresAt
+  +int FailedAttempts
+  +DateTimeOffset? VerifiedAt
+  +IsExpired(now: DateTimeOffset): bool
+  +RecordFailure(): int
+  +MarkVerified(now: DateTimeOffset): void
+}
+
+class TrustedGuardianDevice {
+  +Guid Id
+  +Guid HouseholdId
+  +string DeviceTokenHash
+  +DateTimeOffset ExpiresAt
+  +DateTimeOffset? RevokedAt
+  +IsValid(now: DateTimeOffset): bool
+}
+
+class GuardianContext {
+  +Guid OrganizationId
+  +Guid HouseholdId
+  +LinkPurpose Purpose
+}
+
+class RequestGuardianCodeCommand {
+  +string LinkToken
+  +string Contact
+}
+
+class RequestGuardianCodeCommandHandler {
+  +Handle(command: RequestGuardianCodeCommand): Task
+}
+
+class VerifyGuardianCodeCommand {
+  +string LinkToken
+  +string Code
+}
+
+class VerifyGuardianCodeCommandHandler {
+  +Handle(command: VerifyGuardianCodeCommand): Task<VerifyOutcome>
+}
+
+class IssueGuardianLinkCommand {
+  +Guid HouseholdId
+  +LinkPurpose Purpose
+  +DateTimeOffset? ExpiresAt
+}
+
+class RevokeGuardianLinksOnContactChange {
+  +Handle(event: GuardianContactChanged): Task
+}
+
+interface ITokenGenerator {
+  +CreateToken(bits: int): string
+  +CreateSixDigitCode(): string
+  +Hash(value: string): string
+}
+
+GuardianLink --> LinkPurpose
+GuardianLink "1" --> "*" GuardianVerification
+TrustedGuardianDevice ..> GuardianLink : trusts same household
+RequestGuardianCodeCommandHandler ..> RequestGuardianCodeCommand : handles
+RequestGuardianCodeCommandHandler --> GuardianLink : loads
+RequestGuardianCodeCommandHandler --> GuardianVerification : creates
+RequestGuardianCodeCommandHandler --> ITokenGenerator : uses
+VerifyGuardianCodeCommandHandler ..> VerifyGuardianCodeCommand : handles
+VerifyGuardianCodeCommandHandler --> GuardianVerification : checks / mutates
+VerifyGuardianCodeCommandHandler --> GuardianLink : locks after 3 failures
+VerifyGuardianCodeCommandHandler --> TrustedGuardianDevice : creates
+VerifyGuardianCodeCommandHandler ..> VerifyOutcome : returns
+IssueGuardianLinkCommand ..> GuardianLink : creates
+RevokeGuardianLinksOnContactChange --> GuardianLink : revokes
+RevokeGuardianLinksOnContactChange --> TrustedGuardianDevice : revokes
+GuardianContext ..> GuardianLink : built from
+@enduml

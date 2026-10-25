@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Switch organization
+
+Person(person, "Multi-organization staff member", "Admin in one organization, volunteer coordinator in another")
+System(promisehub, "PromiseHub", "Holds one active membership per session and reloads for the chosen organization")
+
+Rel(person, promisehub, "Signs in, views the organization switcher and picks an organization", "HTTPS")
+@enduml

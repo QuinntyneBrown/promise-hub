@@ -1,0 +1,61 @@
+@startuml
+title UML sequence behaviour — Load the shell and compose navigation
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Staff member" as actor
+box "Frontend — PromiseHub web app (promisehub shell)" #E0F2FE
+  participant "ShellComponent" as shell
+  participant "NavigationModelService" as nav
+  participant "ModuleRouteGuard" as guard
+  participant "ModulesApi / SessionApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "ModulesEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain (Organizations)" #ECFDF3
+  participant "GetModuleConfigurationQueryHandler" as handler
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+end box
+actor -> shell : Open /today after sign-in
+shell -> nav : load()
+nav -> client : getSession()
+client --> nav : SessionContext (person, role, organization)
+nav -> client : getCurrent()
+client -> endpoints : GET /organizations/current/modules
+endpoints -> endpoints : Authenticate; tenant from membership
+endpoints -> handler : Send GetModuleConfigurationQuery
+handler -> db : Load OrganizationModules by organization id
+db --> handler : Enabled modules
+handler --> endpoints : ModuleConfigurationDto
+endpoints --> client : 200 JSON
+client --> nav : ModuleConfiguration
+nav -> nav : Filter catalogue by module and role (L2-038, L2-005)
+nav --> shell : primary, more and tabs signals
+shell -> shell : Render top bar from 768 px or tab bar under 576 px (L2-029)
+shell --> actor : Shell with only modules that are on
+alt Direct route to a module that is off
+  actor -> guard : Navigate to /slips
+  guard -> nav : isOn(Slips)
+  nav --> guard : false
+  guard --> actor : Redirect to /today (L2-005); library never loaded
+else Module is on
+  actor -> guard : Navigate to /slips
+  guard -> nav : isOn(Slips)
+  nav --> guard : true
+  guard --> actor : Lazy-load slips library and render
+end
+@enduml

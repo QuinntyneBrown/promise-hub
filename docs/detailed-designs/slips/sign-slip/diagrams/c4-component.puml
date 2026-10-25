@@ -1,0 +1,36 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Sign a slip
+
+Container_Boundary(web, "PromiseHub web app (guardian library)") {
+  Component(page, "SlipSignPage", "Angular page", "Event, pre-filled details, questions, typed-name signature")
+  Component(decline, "DeclineSlipDialog", "CDK dialog", "Reason and note")
+  Component(client, "GuardianSlipsApi", "Typed client (GUARDIAN_SLIPS_API)", "Calls /g/slips/{token}")
+}
+Container_Boundary(api, "PromiseHub API") {
+  Component(endpoints, "GuardianSlipEndpoints", "Minimal API (anonymous opt-in)", "GET, sign, decline")
+  Component(verifier, "GuardianLinkVerifier", "Endpoint filter (Infrastructure)", "Token signature, household, verified device")
+  Component(load, "GetSlipByTokenQueryHandler", "Application handler (Slips)", "Expiry, pre-fill, language")
+  Component(sign, "SignSlipCommandHandler", "Application handler (Slips)", "Name match; SignatureRecord per child")
+  Component(declineh, "DeclineSlipCommandHandler", "Application handler (Slips)", "Records decline; notifies site lead")
+  Component(record, "SignatureRecord", "Domain entity", "Typed name, time, device, language, text hash")
+  Component(audit, "AuditLog", "Infrastructure", "Records signature and decline")
+  Component(notify, "NotificationService", "Infrastructure", "In-app notice to the site lead")
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "Links, signatures, declines")
+}
+Rel(page, client, "load, sign")
+Rel(decline, client, "decline")
+Rel(client, endpoints, "JSON/HTTPS")
+Rel(endpoints, verifier, "Runs before each handler")
+Rel(endpoints, load, "Sends GetSlipByTokenQuery")
+Rel(endpoints, sign, "Sends SignSlipCommand")
+Rel(endpoints, declineh, "Sends DeclineSlipCommand")
+Rel(sign, record, "Creates per child")
+Rel(sign, audit, "Writes entry")
+Rel(declineh, audit, "Writes entry")
+Rel(declineh, notify, "Notifies site lead")
+Rel(load, db, "Reads")
+Rel(sign, db, "Saves")
+Rel(declineh, db, "Saves")
+@enduml

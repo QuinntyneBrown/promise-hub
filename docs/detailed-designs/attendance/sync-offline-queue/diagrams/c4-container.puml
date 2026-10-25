@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Sync offline queue
+
+Person(lead, "Site lead", "Phone, signal comes and goes")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular + service worker", "attendance library: TodayRosterCache, AttendanceQueueStore, SyncService, OfflineQueueDialog")
+  ContainerDb(swcache, "Service worker cache", "Cache Storage on device", "Today's rosters and Quick Cards with savedAt")
+  ContainerQueue(queue, "Offline queue", "IndexedDB on device", "Ordered QueuedAction rows with client action ids")
+  Container(api, "PromiseHub API", "ASP.NET Core", "AttendanceEndpoints /sessions/{id}/sync, SyncAttendanceActionsCommandHandler")
+  ContainerDb(db, "PromiseHub database", "SQL", "AttendanceRecords, AttendanceEvents (unique ClientActionId), audit log")
+}
+
+Rel(lead, web, "Taps Check in offline", "HTTPS")
+Rel(web, swcache, "Fills while online, reads while offline")
+Rel(web, queue, "Enqueues actions offline, drains in order when online")
+Rel(web, api, "POST /sessions/{id}/sync (ordered batch); GET /sessions/today, /roster, /quick-cards/today", "JSON/HTTPS")
+Rel(api, db, "Appends events, resolves conflicts", "EF Core")
+@enduml

@@ -1,0 +1,67 @@
+@startuml
+title UML sequence behaviour — Log a request whose handler throws
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Staff member" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "Feature page" as page
+  participant "CorrelationInterceptor" as interceptor
+  participant "ServerErrorPageComponent" as errpage
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "CorrelationIdMiddleware" as corr
+  participant "RequestLoggingMiddleware" as reqlog
+  participant "ExceptionHandler" as exc
+  participant "Feature endpoint" as endpoint
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "Command handler" as handler
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "Enrichers + OpenTelemetry exporter" as pipeline
+  participant "RequestMetrics" as metrics
+end box
+actor -> page : Submit
+page -> interceptor : Request
+interceptor -> corr : HTTPS with X-Correlation-Id
+corr -> corr : Store id in HttpContext and Activity
+corr -> reqlog : Next
+reqlog -> reqlog : Start stopwatch
+reqlog -> exc : Next
+exc -> endpoint : Next
+endpoint -> handler : Send command
+alt Handler throws
+  handler --> endpoint : Exception
+  endpoint --> exc : Exception propagates
+  exc -> exc : 500 ProblemDetails with correlation id; no stack trace
+  exc --> reqlog : Response status 500
+else Handler succeeds
+  handler --> endpoint : Result
+  endpoint --> exc : 200
+  exc --> reqlog : Response status 200
+end
+reqlog -> reqlog : Stop stopwatch; tenant from membership; route template
+reqlog -> pipeline : RequestCompleted(tenant, route, status, duration, correlation id) (L2-041)
+pipeline -> pipeline : Enrich tenant; redact secrets; identifiers only, no child names (L2-041)
+reqlog -> metrics : Record(route, status class, tenant, ms)
+reqlog --> interceptor : Response with X-Correlation-Id
+alt 500
+  interceptor -> errpage : Route to /500 with correlation id
+  errpage --> actor : Server error page showing the id
+else Success
+  interceptor --> page : Typed result
+end
+note over metrics : Alert rule: status >= 500 over 1% of requests in 5 minutes raises to on-call (L2-041)
+@enduml

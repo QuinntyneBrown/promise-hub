@@ -1,0 +1,42 @@
+@startuml
+title UML sequence behaviour — Measure a cold page load in CI
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+participant "CI workflow (.github/workflows)" as ci
+participant "Lighthouse CI" as lhci
+participant "Fake API (e2e/fixtures)" as fake
+box "Frontend — PromiseHub web app (promisehub shell)" #E0F2FE
+  participant "ShellComponent" as shell
+  participant "Lazy feature library" as feature
+  participant "PerformanceMarksService" as marks
+end box
+ci -> lhci : Run with mobile emulation and simulated 4G (L2-033)
+loop Today, Check-in, Families, Events, Reports
+  lhci -> shell : Cold navigation, empty cache
+  shell -> shell : Paint shell from initial bundle
+  shell --> lhci : First contentful paint
+  shell -> feature : Lazy-load route chunk
+  feature -> fake : Load page data
+  fake --> feature : Seeded data
+  feature -> marks : mark("page-interactive")
+  feature --> lhci : Interactive
+  lhci -> lhci : Compare FCP to 1.5 s and TTI to 2.5 s
+end
+alt All pages within budget
+  lhci --> ci : Pass; report attached
+else Any page over budget
+  lhci --> ci : Fail build with the page and the measured value
+end
+@enduml

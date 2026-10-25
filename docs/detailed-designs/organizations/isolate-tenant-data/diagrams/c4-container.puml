@@ -1,0 +1,18 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Isolate tenant data
+
+Person(staff, "Staff member", "Signed in with an active membership")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "Sends session credentials only; carries no tenant id")
+  Container(api, "PromiseHub API", "ASP.NET Core minimal API", "Resolves tenant context from membership; global query filter; job runner")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "Every tenant-owned table carries OrganizationId")
+  ContainerDb(search, "Search index", "Infrastructure", "Documents tagged with OrganizationId")
+}
+
+Rel(staff, web, "Uses", "HTTPS")
+Rel(web, api, "Calls with session credentials", "JSON/HTTPS")
+Rel(api, db, "Reads and writes through the filtered DbContext", "EF Core")
+Rel(api, search, "Queries filtered by OrganizationId")
+@enduml

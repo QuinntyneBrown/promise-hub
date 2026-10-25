@@ -1,0 +1,42 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Compose and send a message
+
+Container_Boundary(api, "PromiseHub API") {
+  Component(endpoints, "MessagesEndpoints", "Minimal API", "Routes under /messages and the delivery webhook; module gate")
+  Component(preview, "PreviewAudienceQueryHandler", "Query handler", "Recipient count, channel split, segments, cap headroom")
+  Component(create, "CreateMessageCommandHandler", "Command handler", "Validates, snapshots audience, creates deliveries, queues or schedules")
+  Component(sendnow, "SendMessageNowCommandHandler", "Command handler", "Scheduled to Sending")
+  Component(cancel, "CancelScheduledMessageCommandHandler", "Command handler", "Scheduled to Cancelled")
+  Component(report, "RecordDeliveryReportCommandHandler", "Command handler", "Applies provider delivery and bounce reports")
+  Component(resolver, "AudienceResolver", "Domain service", "AudienceFilter to households of the organization")
+  Component(segments, "SegmentCalculator", "Domain service", "Characters and SMS segments per rendered body")
+  Component(cap, "ISmsCapService", "Application interface", "Remaining segments and reservations (enforce-sms-cap)")
+  Component(message, "Message", "Domain aggregate", "Owns Delivery and Reply; status machine")
+  Component(job, "SendMessageJob", "Background job", "Renders and sends each delivery; email fallback")
+  Component(audit, "IAuditWriter", "Application interface", "Audit entries for create, send, cancel, report")
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "Tenant-filtered persistence")
+}
+System_Ext(sms, "SMS provider", "Texts")
+System_Ext(email, "Email provider", "Emails")
+
+Rel(endpoints, preview, "Sends PreviewAudienceQuery")
+Rel(endpoints, create, "Sends CreateMessageCommand")
+Rel(endpoints, sendnow, "Sends SendMessageNowCommand")
+Rel(endpoints, cancel, "Sends CancelScheduledMessageCommand")
+Rel(endpoints, report, "Sends RecordDeliveryReportCommand")
+Rel(preview, resolver, "Resolves households")
+Rel(preview, segments, "Counts segments")
+Rel(preview, cap, "Reads remaining segments")
+Rel(create, resolver, "Resolves households")
+Rel(create, message, "Creates with deliveries")
+Rel(create, job, "Enqueues when sending now")
+Rel(create, audit, "Writes entry")
+Rel(job, cap, "TryReserve per text delivery")
+Rel(job, sms, "Sends text", "HTTPS")
+Rel(job, email, "Sends email", "HTTPS")
+Rel(report, message, "Updates delivery and aggregates")
+Rel(message, db, "Persisted by", "EF Core")
+Rel(job, db, "Loads and updates deliveries", "EF Core")
+@enduml

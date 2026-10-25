@@ -1,0 +1,15 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Compose navigation
+
+Person(staff, "Staff member", "Works in the staff shell")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular (promisehub application)", "Shell: top bar, tab bar, More menu, account menu; lazy-loads feature libraries")
+  Container(api, "PromiseHub API", "ASP.NET Core minimal APIs", "Serves session and module configuration")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "Organizations, memberships, module configuration")
+}
+Rel(staff, web, "Uses", "HTTPS")
+Rel(web, api, "GET /session, GET /organizations/current/modules", "JSON/HTTPS")
+Rel(api, db, "Reads organization modules and membership", "EF Core")
+@enduml

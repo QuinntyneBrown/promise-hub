@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Write and send a slip
+
+Person(director, "Program director", "Writes, sends and edits permission slips")
+Person_Ext(guardian, "Guardian", "Receives the slip link by text or email")
+System(promisehub, "PromiseHub", "Multi-tenant system of record for youth programs")
+System_Ext(sms, "SMS provider", "Delivers texts")
+System_Ext(email, "Email provider", "Delivers emails")
+System_Ext(push, "Push provider", "Delivers push notifications")
+
+Rel(director, promisehub, "Writes and sends slips using", "HTTPS")
+Rel(promisehub, sms, "Sends slip links via", "HTTPS API")
+Rel(promisehub, email, "Sends slip links via", "SMTP / HTTPS API")
+Rel(promisehub, push, "Sends slip links via", "HTTPS API")
+Rel(sms, guardian, "Delivers text to")
+Rel(email, guardian, "Delivers email to")
+Rel(push, guardian, "Delivers notification to")
+@enduml

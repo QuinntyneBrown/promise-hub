@@ -1,0 +1,152 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Set privacy and residency
+
+enum ConsentRetention {
+  SevenYearsAfterEvent
+  ThreeYearsAfterEvent
+  UntilDeletedByRequest
+}
+
+enum InactiveFamilyRetention {
+  TwoSeasonsThenAnonymize
+  UntilDeletedByRequest
+}
+
+enum DataRequestKind {
+  Export
+  Deletion
+}
+
+class Organization {
+  +Guid Id
+  +string Country
+  +string DataRegion
+  +ChangeRegion(region: string): void
+}
+
+class RetentionPolicy {
+  +Guid OrganizationId
+  +ConsentRetention ConsentRetention
+  +InactiveFamilyRetention InactiveFamilyRetention
+  +DateTimeOffset UpdatedAt
+}
+
+class DataRequest {
+  +Guid Id
+  +Guid OrganizationId
+  +Guid HouseholdId
+  +DataRequestKind Kind
+  +string SendTo
+  +DateTimeOffset RequestedAt
+  +DateTimeOffset? FulfilledAt
+  +Guid? FulfilledByMembershipId
+  +Fulfil(by: Guid): void
+}
+
+class Household {
+  +Guid Id
+  +Guid OrganizationId
+  +DateTimeOffset? DeletedAt
+  +DateTimeOffset? PurgeAfter
+  +SoftDelete(now: DateTimeOffset): void
+}
+
+class Slip {
+  +Guid Id
+  +Guid OrganizationId
+  +DateTimeOffset EventDate
+  +int SignedCount
+}
+
+class SlipSignature {
+  +Guid Id
+  +Guid SlipId
+  +Guid GuardianId
+  +DateTimeOffset SignedAt
+  +string SignatureDetail
+}
+
+class SaveRetentionPolicyCommand {
+  +ConsentRetention ConsentRetention
+  +InactiveFamilyRetention InactiveFamilyRetention
+}
+
+class SaveRetentionPolicyCommandHandler {
+  +Handle(command: SaveRetentionPolicyCommand): Task<Result>
+}
+
+class ChangeDataRegionCommand {
+  +Guid OrganizationId
+  +string Region
+}
+
+class ChangeDataRegionCommandHandler {
+  +Handle(command: ChangeDataRegionCommand): Task<Result>
+}
+
+class SubmitDataRequestCommand {
+  +string LinkToken
+  +DataRequestKind Kind
+  +string SendTo
+}
+
+class SubmitDataRequestCommandHandler {
+  +Handle(command: SubmitDataRequestCommand): Task<Result<Guid>>
+}
+
+class FulfilExportCommand {
+  +Guid RequestId
+}
+
+class FulfilExportCommandHandler {
+  +Handle(command: FulfilExportCommand): Task<Result>
+}
+
+class FulfilDeletionCommand {
+  +Guid RequestId
+}
+
+class FulfilDeletionCommandHandler {
+  +Handle(command: FulfilDeletionCommand): Task<Result>
+}
+
+class ApplyRetentionJob {
+  +Run(tenant: ITenantContext, now: DateTimeOffset): Task
+}
+
+class OutboundPayloadPolicy {
+  +Build(message: Message, recipient: Guardian): ProviderPayload
+}
+
+Organization "1" *-- "1" RetentionPolicy : owns
+RetentionPolicy --> ConsentRetention : has
+RetentionPolicy --> InactiveFamilyRetention : has
+DataRequest --> DataRequestKind : has
+DataRequest --> Household : for
+Slip "1" *-- "*" SlipSignature : has
+SaveRetentionPolicyCommandHandler ..> SaveRetentionPolicyCommand : handles
+SaveRetentionPolicyCommandHandler --> RetentionPolicy : updates
+ChangeDataRegionCommandHandler ..> ChangeDataRegionCommand : handles
+ChangeDataRegionCommandHandler --> Organization : ChangeRegion
+SubmitDataRequestCommandHandler ..> SubmitDataRequestCommand : handles
+SubmitDataRequestCommandHandler --> DataRequest : creates
+FulfilExportCommandHandler ..> FulfilExportCommand : handles
+FulfilExportCommandHandler --> DataRequest : fulfils
+FulfilDeletionCommandHandler ..> FulfilDeletionCommand : handles
+FulfilDeletionCommandHandler --> Household : SoftDelete
+ApplyRetentionJob --> RetentionPolicy : reads
+ApplyRetentionJob --> SlipSignature : deletes detail
+ApplyRetentionJob --> Household : purges after PurgeAfter
+@enduml

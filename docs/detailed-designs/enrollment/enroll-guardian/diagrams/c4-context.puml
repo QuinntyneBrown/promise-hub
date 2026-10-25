@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Enroll a guardian
+
+Person(staff, "Admin / Program director", "Opens enrollment, shares the link, reviews enrollments")
+Person_Ext(guardian, "Guardian", "Enrolls or re-confirms children from a phone, no account")
+System(promisehub, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+System_Ext(sms, "SMS provider", "Delivers codes and acceptance texts")
+System_Ext(email, "Email provider", "Delivers acceptance emails")
+
+Rel(staff, promisehub, "Opens and closes enrollment, accepts or waitlists", "HTTPS")
+Rel(guardian, promisehub, "Opens the enrollment link, confirms household, submits", "HTTPS")
+Rel(promisehub, sms, "Sends verification code and acceptance text via", "API")
+Rel(promisehub, email, "Sends acceptance email via", "SMTP/API")
+@enduml

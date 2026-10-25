@@ -1,0 +1,113 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Compose navigation
+
+enum ModuleKey {
+  Roster
+  Slips
+  RollCall
+  QuickCards
+  Pickup
+  Messages
+  Incidents
+  Reports
+}
+
+enum Breakpoint {
+  Phone
+  Sm576
+  Md768
+  Lg992
+  Xl1200
+}
+
+class NavigationItem {
+  +string route
+  +string label
+  +string icon
+  +ModuleKey? module
+  +Breakpoint inlineFrom
+  +boolean secondary
+  +Role[] roles
+}
+
+class ModuleConfiguration {
+  +ModuleKey[] modules
+}
+
+class SessionContext {
+  +string personName
+  +Role role
+  +string organizationId
+  +string organizationName
+  +boolean coversSeveralOrganizations
+}
+
+class NavigationModelService {
+  -NavigationItem[] catalogue
+  +Signal<NavigationItem[]> primary$
+  +Signal<NavigationItem[]> more$
+  +Signal<NavigationItem[]> tabs$
+  +load(): Promise<void>
+  +isOn(module: ModuleKey): boolean
+}
+
+class ShellComponent
+class TopBarComponent {
+  +openMore(): void
+  +openAccount(): void
+}
+class TabBarComponent {
+  +openMore(): void
+}
+class MoreMenuComponent
+class AccountMenuComponent {
+  +toggleTheme(): void
+  +signOut(): void
+}
+
+class BottomSheetDialogService {
+  +open<T>(component: Type<T>, config?: DialogConfig): DialogRef<T>
+  -paneClassFor(width: number): string
+}
+
+class ModuleRouteGuard {
+  +canMatch(route: Route): boolean | UrlTree
+}
+
+interface ModulesApi {
+  +getCurrent(): Observable<ModuleConfiguration>
+}
+
+interface SessionApi {
+  +getSession(): Observable<SessionContext>
+}
+
+NavigationModelService --> "*" NavigationItem : filters
+NavigationModelService ..> ModulesApi : MODULES_API
+NavigationModelService ..> SessionApi : SESSION_API
+NavigationModelService --> ModuleConfiguration
+NavigationModelService --> SessionContext
+NavigationItem --> ModuleKey
+NavigationItem --> Breakpoint
+ShellComponent *-- TopBarComponent
+ShellComponent *-- TabBarComponent
+TopBarComponent ..> NavigationModelService
+TabBarComponent ..> NavigationModelService
+TopBarComponent ..> MoreMenuComponent : opens
+TabBarComponent ..> MoreMenuComponent : opens
+TopBarComponent ..> AccountMenuComponent : opens
+MoreMenuComponent ..> BottomSheetDialogService
+ModuleRouteGuard ..> NavigationModelService
+@enduml

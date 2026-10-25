@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Run background jobs
+
+Person(admin, "Organization admin", "Sees failed jobs in the notification center")
+Person_Ext(guardian, "Guardian", "Receives reminders and no-show alerts")
+System(promisehub, "PromiseHub", "Per-tenant jobs: reminders, no-show alerts, exports, retention, backups")
+System_Ext(sms, "SMS provider", "Delivers texts")
+System_Ext(email, "Email provider", "Delivers email")
+System_Ext(push, "Push provider", "Delivers push notifications")
+System_Ext(backup, "Backup storage", "Encrypted daily snapshots")
+
+Rel(promisehub, sms, "Sends once per idempotency key", "HTTPS")
+Rel(promisehub, email, "Sends once per idempotency key", "HTTPS")
+Rel(promisehub, push, "Sends once per idempotency key", "HTTPS")
+Rel(promisehub, backup, "Writes daily snapshot; restores in drills")
+Rel(sms, guardian, "Delivers to")
+Rel(admin, promisehub, "Reviews dead-lettered jobs in", "HTTPS")
+@enduml

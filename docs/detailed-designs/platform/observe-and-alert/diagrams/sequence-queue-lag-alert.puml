@@ -1,0 +1,43 @@
+@startuml
+title UML sequence behaviour — Raise a queue-lag alert
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+box "Backend — PromiseHub Infrastructure (job runner)" #FFF4E5
+  participant "JobRunnerHostedService" as runner
+  participant "JobQueueMetrics" as metrics
+  database "PromiseHubDbContext" as db
+  participant "OpenTelemetry exporter" as otel
+end box
+participant "Telemetry collector" as collector
+participant "Alert rules (eng/infra)" as rules
+participant "On-call channel" as oncall
+loop every export interval
+  otel -> metrics : ObserveLag()
+  metrics -> db : Oldest Scheduled job with DueAt < now
+  db --> metrics : DueAt or none
+  metrics --> otel : queue_lag_seconds
+  otel -> collector : Export gauge
+end
+runner -> metrics : RecordOutcome(type, outcome, tenant)
+metrics -> otel : Counter increment
+otel -> collector : Export counter
+rules -> collector : Evaluate promisehub.jobs.queue_lag_seconds
+alt Lag over 600 seconds
+  collector --> rules : Breach
+  rules -> oncall : Alert: job queue older than 10 minutes (L2-041)
+else Within threshold
+  collector --> rules : No breach
+end
+@enduml

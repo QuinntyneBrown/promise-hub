@@ -1,0 +1,19 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Sign a slip
+
+Person_Ext(guardian, "Guardian", "Signs on a phone")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "guardian library: slip-sign page")
+  Container(api, "PromiseHub API", "ASP.NET Core", "Anonymous guardian endpoints; link verification; handlers")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "Slip links, signature records, declines, households, audit log")
+  ContainerQueue(jobs, "Job runner", "Hosted service", "Sends the receipt email")
+}
+System_Ext(email, "Email provider", "Delivers emails")
+Rel(guardian, web, "Opens /g/slip/:token", "HTTPS")
+Rel(web, api, "Calls /g/slips/{token}", "JSON/HTTPS")
+Rel(api, db, "Reads and writes", "EF Core")
+Rel(api, jobs, "Queues receipt")
+Rel(jobs, email, "Sends receipt", "SMTP / HTTPS API")
+@enduml

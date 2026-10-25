@@ -1,0 +1,105 @@
+@startuml
+title UML sequence behaviour — Preview the audience and send now
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Program director" as actor
+box "Frontend — PromiseHub web app, messaging library" #E0F2FE
+  participant "NewMessagePage" as page
+  participant "MessagingApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "MessagesEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "PreviewAudienceQueryHandler" as preview
+  participant "CreateMessageCommandHandler" as create
+  participant "AudienceResolver" as resolver
+  participant "SegmentCalculator" as segments
+  participant "Message" as message
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "SendMessageJob" as job
+  participant "ISmsCapService" as cap
+  participant "ISmsSender / IEmailSender" as senders
+  database "PromiseHub database" as db
+end box
+
+actor -> page : Change audience filter or body
+page -> client : previewAudience(filter, body, channels)
+client -> endpoints : POST /messages/preview
+endpoints -> endpoints : Authenticate, resolve organization, check Messages module (L2-005)
+endpoints -> preview : Send PreviewAudienceQuery
+preview -> resolver : Resolve(organizationId, filter) (L2-001)
+resolver -> db : Households matching program, age, language, slip status
+db --> resolver : Household contacts
+resolver --> preview : Households split by channel
+preview -> segments : Count(body, language, senderPrefix)
+segments --> preview : Characters, segments (L2-021 criteria 1 and 2)
+preview -> cap : Remaining(organizationId)
+cap --> preview : Remaining segments
+preview --> endpoints : AudiencePreview
+endpoints --> client : 200 AudiencePreview
+client --> page : Preview
+page --> actor : Recipient count, text/email split, segments, cap impact
+
+actor -> page : Choose "Now" and Send
+page -> client : createMessage(request)
+client -> endpoints : POST /messages
+endpoints -> create : Send CreateMessageCommand
+create -> create : Validate body and channel (CreateMessageCommandValidator)
+alt body empty or no channel
+  create --> endpoints : Validation failure
+  endpoints --> client : 422 ProblemDetails
+  client --> page : Field errors
+  page --> actor : Inline error and summary
+else valid
+  create -> resolver : Resolve(organizationId, filter)
+  resolver --> create : Households
+  alt zero households
+    create --> endpoints : Failure "no recipients"
+    endpoints --> client : 422 ProblemDetails
+    page --> actor : Send disabled with reason
+  else one or more households
+    create -> message : Create with one Delivery per household in its language and channel (L2-021 criterion 3)
+    create -> message : StartSending()
+    create -> db : Save message, deliveries and audit entry in one unit of work
+    db --> create : Committed
+    create -> job : Enqueue SendMessageJob(messageId)
+    create --> endpoints : Result<Guid>
+    endpoints --> client : 201 with message id
+    client --> page : Created
+    page --> actor : "Sent to n guardians" and link to message page
+  end
+end
+
+job -> db : Load queued deliveries
+loop each delivery
+  alt channel is Sms
+    job -> cap : TryReserve(organizationId, segments)
+    alt reserved
+      job -> senders : Send text in household language
+      senders --> job : Provider message id
+      job -> db : Delivery.MarkSent
+    else cap refused
+      job -> db : Delivery.FallBackToEmail
+      job -> senders : Send email instead
+    end
+  else channel is Email or Push
+    job -> senders : Send
+    job -> db : Delivery.MarkSent
+  end
+end
+job -> db : Message status Sent, audit entry
+@enduml

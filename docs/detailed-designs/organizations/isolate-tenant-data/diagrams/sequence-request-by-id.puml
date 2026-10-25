@@ -1,0 +1,63 @@
+@startuml
+title UML sequence behaviour — Request a record by id across tenants
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Staff of organization A" as actor
+box "Frontend — households library" #E0F2FE
+  participant "ChildPage" as page
+  participant "ChildrenApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "TenantContextMiddleware" as middleware
+  participant "ClientTenantValueFilter" as filter
+  participant "ChildrenEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "NotFoundOnCrossTenantBehavior" as behavior
+  participant "GetChildQueryHandler" as handler
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "AuditLog" as audit
+end box
+actor -> page : Open child by id
+page -> client : getChild(id)
+client -> middleware : GET /children/{id}
+middleware -> db : Load active membership from session
+db --> middleware : Membership (organization A)
+middleware -> middleware : Populate ITenantContext from membership (L2-001)
+middleware -> filter : Continue
+filter -> filter : Discard any client organizationId; use membership (L2-001 c3)
+filter -> endpoints : Invoke
+endpoints -> behavior : Send GetChildQuery
+behavior -> handler : Handle
+handler -> db : Children.FirstOrDefault(id) through global query filter
+alt child belongs to organization A
+  db --> handler : Child
+  handler --> behavior : ChildDto
+  behavior --> endpoints : ChildDto
+  endpoints --> client : 200
+  client --> page : Child
+  page --> actor : Child shown
+else child belongs to organization B
+  db --> handler : null (filtered out)
+  handler --> behavior : NotFound
+  behavior -> audit : Record CrossTenantAttempt (actor, organization A, record id, time) (L2-001 c2, L2-032)
+  behavior --> endpoints : NotFound
+  endpoints --> client : 404 ProblemDetails
+  client --> page : Not found
+  page --> actor : "Not found" state
+end
+@enduml

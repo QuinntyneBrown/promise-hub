@@ -1,0 +1,38 @@
+@startuml
+title UML sequence behaviour — Run a background job per tenant
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "JobRunner" as runner
+  database "PromiseHubDbContext" as db
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "TenantScope" as scope
+  participant "TenantContext" as context
+  participant "Per-tenant job handler" as job
+end box
+runner -> db : List organizations that are Active (IgnoreQueryFilters on Organizations)
+db --> runner : Organizations
+loop for each organization
+  runner -> scope : Open TenantScope(organizationId)
+  scope -> context : Set OrganizationId (L2-001)
+  runner -> job : Run
+  job -> db : Query tenant-owned rows through global query filter
+  db --> job : Rows of this organization only
+  job --> runner : Result
+  runner -> scope : Dispose
+  scope -> context : Clear
+end
+@enduml

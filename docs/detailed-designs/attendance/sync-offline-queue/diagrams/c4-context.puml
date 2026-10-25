@@ -1,0 +1,12 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Sync offline queue
+
+Person(lead, "Site lead", "Runs check-in on a phone with an intermittent connection")
+Person(other, "Second staff device", "Marks a child absent while the first device is offline")
+System(ph, "PromiseHub", "Roll Call and Quick Cards: cached roster, offline queue, ordered sync, conflict resolution")
+
+Rel(lead, ph, "Checks in offline; syncs when connected", "HTTPS when available")
+Rel(other, ph, "Marks absent online", "HTTPS")
+@enduml

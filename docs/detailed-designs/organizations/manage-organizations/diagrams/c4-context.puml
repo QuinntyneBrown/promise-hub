@@ -1,0 +1,14 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Manage organizations
+
+Person(platformAdmin, "Platform admin", "Operates the deployment; lists, adds, suspends and reinstates organizations")
+Person_Ext(firstAdmin, "First admin of a new organization", "Receives the welcome email and completes setup")
+System(promisehub, "PromiseHub", "Multi-tenant system of record; the organizations list is the only cross-tenant screen")
+System_Ext(email, "Email provider", "Delivers the welcome email")
+
+Rel(platformAdmin, promisehub, "Manages tenants using", "HTTPS")
+Rel(promisehub, email, "Sends welcome email via", "SMTP/API")
+Rel(email, firstAdmin, "Delivers welcome email to")
+@enduml

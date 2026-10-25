@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Isolate tenant data
+
+Person(staffA, "Staff of organization A", "Works with organization A's households, children and events")
+Person(staffB, "Staff of organization B", "Works with organization B's data in the same deployment")
+System(promisehub, "PromiseHub", "One deployment serving many organizations; filters every query by the active membership's organization")
+System_Ext(sms, "SMS provider", "Receives only the message payload for one tenant's guardians")
+System_Ext(email, "Email provider", "Receives only the message payload for one tenant's guardians")
+
+Rel(staffA, promisehub, "Reads and writes organization A data only", "HTTPS")
+Rel(staffB, promisehub, "Reads and writes organization B data only", "HTTPS")
+Rel(promisehub, sms, "Sends per-tenant messages via", "API")
+Rel(promisehub, email, "Sends per-tenant messages via", "SMTP/API")
+@enduml

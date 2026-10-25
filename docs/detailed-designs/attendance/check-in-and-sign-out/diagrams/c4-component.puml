@@ -1,0 +1,35 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Check-in and sign-out
+
+Container(web, "PromiseHub web app", "Angular", "CheckInPage and dialogs via AttendanceApi")
+Container_Boundary(api, "PromiseHub API") {
+  Component(ep, "AttendanceEndpoints", "Minimal API", "/sessions/{id}/roster, check-ins, absences, sign-outs, walk-ins; module and tenant checks")
+  Component(q, "GetSessionRosterQueryHandler", "Query handler", "Roster with status and totals")
+  Component(ci, "CheckInChildCommandHandler", "Command handler", "Applies check-in, idempotent on ClientActionId")
+  Component(ab, "MarkChildAbsentCommandHandler", "Command handler", "Marks absent, texts guardian unless already told")
+  Component(so, "SignOutChildCommandHandler", "Command handler", "Validates pickup confirmation, records sign-out")
+  Component(wi, "AddWalkInCommandHandler", "Command handler", "Adds tonight-only roster row, flags follow-up")
+  Component(rec, "Session / AttendanceRecord", "Domain entities", "Own status transitions and PickupConfirmation")
+  Component(sms, "ISmsSender", "Infrastructure", "SMS provider adapter, cap-aware")
+  Component(audit, "IAuditLog", "Infrastructure", "Writes who/what/when")
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "Tenant-filtered persistence")
+}
+
+Rel(web, ep, "Calls", "JSON/HTTPS")
+Rel(ep, q, "Sends GetSessionRosterQuery")
+Rel(ep, ci, "Sends CheckInChildCommand")
+Rel(ep, ab, "Sends MarkChildAbsentCommand")
+Rel(ep, so, "Sends SignOutChildCommand")
+Rel(ep, wi, "Sends AddWalkInCommand")
+Rel(ci, rec, "Loads and mutates")
+Rel(ab, rec, "Loads and mutates")
+Rel(so, rec, "Loads and mutates")
+Rel(wi, rec, "Creates walk-in record")
+Rel(ab, sms, "Queues text")
+Rel(ci, audit, "Writes entry")
+Rel(so, audit, "Writes entry")
+Rel(q, db, "Reads", "EF Core")
+Rel(rec, db, "Persisted by", "EF Core")
+@enduml

@@ -1,0 +1,134 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Import a roster
+
+enum ImportStatus {
+  Uploaded
+  Mapped
+  Running
+  Completed
+  Failed
+}
+
+enum ImportField {
+  ChildName
+  DateOfBirth
+  GuardianName
+  GuardianPhone
+  GuardianEmail
+  AllergiesAndMedication
+  ApprovedPickups
+  Language
+  Notes
+  Skip
+}
+
+enum DuplicateChoice {
+  Skip
+  Merge
+}
+
+class ImportSession {
+  +Guid Id
+  +Guid OrganizationId
+  +Guid ImportedById
+  +string FileName
+  +string StoragePath
+  +int RowCount
+  +ImportStatus Status
+  +Guid? EnrollProgramId
+  +ColumnMapping Mapping
+  +ImportSummary Summary
+  +int Processed
+  +SetMapping(mapping: ColumnMapping, programId: Guid?): void
+  +Advance(processed: int): void
+  +Complete(summary: ImportSummary): void
+}
+
+class ColumnMapping <<value object>> {
+  +IReadOnlyDictionary<string, ImportField> Columns
+  +HasRequiredFields(): bool
+}
+
+class ImportRow {
+  +int RowNumber
+  +IReadOnlyDictionary<string, string> Cells
+  +bool IsDuplicate
+  +Guid? MatchedChildId
+  +bool NeedsLook
+}
+
+class ImportSummary <<value object>> {
+  +int FamiliesCreated
+  +int FamiliesUpdated
+  +int Children
+  +int Enrolled
+  +int Skipped
+  +IReadOnlyList<int> RowsNeedLook
+}
+
+class UploadImportFileCommand {
+  +Stream File
+  +string FileName
+}
+
+class UploadImportFileCommandHandler {
+  +Handle(command: UploadImportFileCommand): Task<ImportPreview>
+}
+
+class SaveImportMappingCommand {
+  +Guid ImportId
+  +ColumnMapping Mapping
+  +Guid? EnrollProgramId
+}
+
+class RunImportCommand {
+  +Guid ImportId
+  +IReadOnlyDictionary<int, DuplicateChoice> DuplicateChoices
+}
+
+class RunImportCommandHandler {
+  +Handle(command: RunImportCommand): Task
+}
+
+class ColumnMatcher {
+  +Propose(headers: IReadOnlyList<string>, samples: IReadOnlyList<string>): ColumnMapping
+}
+
+class DuplicateDetector {
+  +Find(rows: IEnumerable<ImportRow>, organizationId: Guid): Task
+}
+
+interface ISpreadsheetReader {
+  +CanRead(stream: Stream): bool
+  +ReadHeader(stream: Stream): IReadOnlyList<string>
+  +ReadRows(stream: Stream): IAsyncEnumerable<ImportRow>
+}
+
+ImportSession --> ImportStatus
+ImportSession *-- ColumnMapping
+ImportSession *-- ImportSummary
+ImportSession "1" --> "*" ImportRow
+ColumnMapping --> ImportField
+UploadImportFileCommandHandler ..> UploadImportFileCommand : handles
+UploadImportFileCommandHandler --> ISpreadsheetReader : parses with
+UploadImportFileCommandHandler --> ColumnMatcher : proposes with
+UploadImportFileCommandHandler --> ImportSession : creates
+SaveImportMappingCommand ..> ImportSession : updates
+SaveImportMappingCommand ..> DuplicateDetector : previews with
+RunImportCommandHandler ..> RunImportCommand : handles
+RunImportCommandHandler --> ImportSession : runs and completes
+RunImportCommandHandler --> ISpreadsheetReader : streams rows
+RunImportCommandHandler ..> DuplicateChoice : applies
+@enduml

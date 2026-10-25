@@ -1,0 +1,17 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Maintain a household
+
+Person(admin, "Admin / Site lead", "Maintains household records")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "households library: families, household, child pages and dialogs")
+  Container(api, "PromiseHub API", "ASP.NET Core minimal API", "Household endpoints, handlers, field policy, audit")
+  Container(jobs, "Job runner", "Hosted service in the API process", "HouseholdPurgeJob per tenant")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "Households, guardians, children, medical details, pickups, audit log")
+}
+Rel(admin, web, "Uses", "HTTPS")
+Rel(web, api, "Calls /households, /children, /guardians", "JSON/HTTPS")
+Rel(api, db, "Reads and writes with organization and soft-delete filters", "EF Core")
+Rel(jobs, db, "Purges soft-deleted households after retention", "EF Core")
+@enduml

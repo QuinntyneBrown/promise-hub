@@ -1,0 +1,43 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Remind and clear
+
+Container_Boundary(web, "PromiseHub web app") {
+  Component(checkin, "CheckInPage (day-of)", "Angular page (attendance)", "Clearance counts, missing first, Sign on tablet")
+  Component(tablet, "SignOnTabletDialog", "CDK dialog (slips)", "Guardian types full name on the staff device")
+  Component(reminddlg, "SendReminderDialog", "CDK dialog (slips)", "Text the unsigned now")
+  Component(client, "SlipClearanceApi", "Typed client (SLIP_CLEARANCE_API)", "dayOfRoster, signOnTablet, sendReminderNow")
+}
+Container_Boundary(api, "PromiseHub API") {
+  Component(endpoints, "SlipClearanceEndpoints", "Minimal API", "Clearance, sign-on-tablet, remind-now")
+  Component(dayof, "GetDayOfRosterQueryHandler", "Application handler (Slips)", "Derives ClearanceStatus; missing first")
+  Component(signtab, "SignOnTabletCommandHandler", "Application handler (Slips)", "Same SignatureRecord; Device = staff tablet")
+  Component(remind, "SendSlipRemindersCommandHandler", "Application handler (Slips)", "Unsigned only; records reminder; unreachable list")
+  Component(job, "SlipReminderJob", "Job runner (Infrastructure)", "Per tenant; due schedule slots; retry with backoff")
+  Component(record, "SignatureRecord", "Domain entity", "Typed name, time, device, language, text hash")
+  Component(reminder, "ReminderRecord", "Domain entity", "Reminder on the household")
+  Component(cap, "SmsCapService", "Infrastructure", "Fallback to email at the cap")
+  Component(messenger, "GuardianMessenger", "Infrastructure", "Per-household message in its language and channel")
+  Component(audit, "AuditLog", "Infrastructure", "Records tablet signature")
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "Filtered by OrganizationId")
+}
+Rel(checkin, client, "dayOfRoster")
+Rel(tablet, client, "signOnTablet")
+Rel(reminddlg, client, "sendReminderNow")
+Rel(client, endpoints, "JSON/HTTPS")
+Rel(endpoints, dayof, "Sends GetDayOfRosterQuery")
+Rel(endpoints, signtab, "Sends SignOnTabletCommand")
+Rel(endpoints, remind, "Sends SendReminderNowCommand")
+Rel(job, remind, "Sends SendSlipRemindersCommand per due slip")
+Rel(signtab, record, "Creates per child")
+Rel(signtab, messenger, "Texts a copy to the household")
+Rel(signtab, audit, "Writes entry")
+Rel(remind, reminder, "Appends per household")
+Rel(remind, cap, "Segments remaining?")
+Rel(remind, messenger, "Queues reminder")
+Rel(dayof, db, "Reads signatures, declines, attendance")
+Rel(signtab, db, "Saves")
+Rel(remind, db, "Saves")
+Rel(job, db, "Reads due slots per tenant")
+@enduml

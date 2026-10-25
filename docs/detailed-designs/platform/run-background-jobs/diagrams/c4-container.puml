@@ -1,0 +1,21 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Run background jobs
+
+Person(admin, "Organization admin", "Browser")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "Maintenance, server-error and offline pages; admin notification center")
+  Container(api, "PromiseHub API", "ASP.NET Core", "Endpoints, MaintenanceMiddleware and JobRunnerHostedService")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "Jobs, OutboundMessageLog, tenant data")
+  ContainerDb(files, "File store", "Encrypted", "Export files")
+}
+System_Ext(providers, "SMS / email / push providers", "Message delivery")
+System_Ext(backup, "Backup storage", "Daily snapshots")
+Rel(admin, web, "Uses", "HTTPS")
+Rel(web, api, "Calls; receives 503 while in maintenance", "JSON/HTTPS")
+Rel(api, db, "Leases and updates jobs", "EF Core")
+Rel(api, files, "Writes exports")
+Rel(api, providers, "Sends messages", "HTTPS")
+Rel(api, backup, "Triggers and verifies daily backup")
+@enduml

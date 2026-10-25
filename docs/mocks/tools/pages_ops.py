@@ -6,7 +6,7 @@ from pages_core import R_ENROLL, R_SLIPS, R_ROLL, R_NOTIFY, R_INC, R_REPORTS, R_
 M = STAFF["marisol"]
 T = STAFF["tom"]
 J = STAFF["jaylen"]
-R_INTEG, R_TTV, R_COST = "PRD-NFR-INTEGRATION", "PRD-NFR-TTV", "PRD-NFR-COST"
+R_INTEG, R_TTV, R_COST = "L1-004", "L1-004", "L1-020"
 
 
 def form_actions(primary: str, cancel_href: str, *, busy=False, extra="") -> str:
@@ -36,9 +36,9 @@ def program_form(S):
     S.add("default", "Creating a program: name, dates, schedule, capacity, enrollment and consent options.", nav="programs", user=M,
           main=breadcrumb([("Programs", page("programs"))], "New program") + page_header("New program") + form())
     S.add("loading", "Editing an existing program: the form loads with skeleton fields.", nav="programs", user=M,
-          main=breadcrumb([("Programs", page("programs")), ("After-School Tutoring", page("program"))], "Edit") + page_header("Edit program") + skeleton_form())
+          main=breadcrumb([("Programs", page("programs")), ("After‑School Tutoring", page("program"))], "Edit") + page_header("Edit program") + skeleton_form())
     S.add("error", "The program to edit failed to load.", nav="programs", user=M,
-          main=breadcrumb([("Programs", page("programs")), ("After-School Tutoring", page("program"))], "Edit") + page_header("Edit program") +
+          main=breadcrumb([("Programs", page("programs")), ("After‑School Tutoring", page("program"))], "Edit") + page_header("Edit program") +
           card(empty("We couldn’t load this program", "Try again.", action=btn("Try again", "primary", icon_name="refresh") + btn("Back to program", "ghost", href=page("program")), error=True, icon_name="alert-triangle"), cls="card--flush form-width--md"))
     S.add("invalid", "Submitted with a missing name, a start after the end, and a non-numeric capacity: summary plus inline errors.", nav="programs", user=M,
           main=breadcrumb([("Programs", page("programs"))], "New program") + page_header("New program") +
@@ -52,21 +52,21 @@ def program_form(S):
                f'<div class="input-group"><label class="visually-hidden" for="new-link">Enrollment link</label><input class="input" id="new-link" type="url" readonly value="https://harbourview.promisehub.app/enroll/spring-break-2027"><button class="btn btn--ghost btn--icon input-group__btn" type="button" aria-label="Copy enrollment link">{icon("copy")}</button></div>'
                f'<div class="cluster">{btn("Open the program", "primary", href=page("program", "empty"))}{btn("Text families the link", "", icon_name="send", href=page("new-message"))}{btn("Add an event", "ghost", href=page("event-form"))}</div></div>', cls="card--success form-width--md page-start"),
           toast_html=toast_region(toast("success", "Program created", "Spring Break Camp 2027 · enrollment open")))
-    S.add("edit", "Editing After-School Tutoring with its current values.", nav="programs", user=M,
-          main=breadcrumb([("Programs", page("programs")), ("After-School Tutoring", page("program"))], "Edit") + page_header("Edit program", "After-School Tutoring") +
-          form(values=dict(name="After-School Tutoring", when="Mon–Thu, 4–6 pm", cap="50", start="2026-09-08", end="2027-06-24", ages="6–13"), edit=True))
+    S.add("edit", "Editing After‑School Tutoring with its current values.", nav="programs", user=M,
+          main=breadcrumb([("Programs", page("programs")), ("After‑School Tutoring", page("program"))], "Edit") + page_header("Edit program", "After‑School Tutoring") +
+          form(values=dict(name="After‑School Tutoring", when="Mon–Thu, 4–6 pm", cap="50", start="2026-09-08", end="2027-06-24", ages="6–13"), edit=True))
 
 
 # ------------------------------------------------------------------ Event form
 @screen("event-form", "page", "Event form", route="/events/new", reqs=[R_SLIPS, R_ROLL], na={"empty": "A form has no collection to be empty of."})
 def event_form(S):
     def form(err=None, busy=False, v=None, edit=False):
-        v = v or dict(name="", prog="After-School Tutoring", start="", end="", place="", notes="")
+        v = v or dict(name="", prog="After‑School Tutoring", start="", end="", place="", notes="")
         e = err or {}
         return (f'<form class="card stack form-width--md" action="#" method="post" novalidate>'
                 + (form_summary([(k, m) for k, m in e.items()]) if e else "")
                 + field("name", "Event name", value=v["name"], error=e.get("name", ""), required=True, autofocus=not edit, placeholder="Fall field trip: Royal Botanical Gardens")
-                + select("prog", "Program", ["After-School Tutoring", "Saturday Sports", "One-to-one Mentoring", "Winter Camp 2026"], selected=v["prog"], help_="Roster comes from the program.")
+                + select("prog", "Program", ["After‑School Tutoring", "Saturday Sports", "One-to-one Mentoring", "Winter Camp 2026"], selected=v["prog"], help_="Roster comes from the program.")
                 + f'<div class="two-col">{field("start", "Starts", type_="datetime-local", value=v["start"], required=True, error=e.get("start", ""))}{field("end", "Ends", type_="datetime-local", value=v["end"], required=True)}</div>'
                 + field("place", "Where", value=v["place"], help_="For trips, include the bus stop.")
                 + fieldset("Permission slip", choice("slip", "Not needed", small="Season consent covers it", checked=not v["name"].lower().startswith("fall")) + choice("slip", "Required", small="Write it next", checked=v["name"].lower().startswith("fall")), error=e.get("slip", ""), fid="slip")
@@ -78,7 +78,7 @@ def event_form(S):
     S.add("error", "The event to edit failed to load.", nav="events", main=breadcrumb([("Events", page("events")), ("Fall field trip", page("event"))], "Edit") + page_header("Edit event") +
           card(empty("We couldn’t load this event", "Try again.", action=btn("Try again", "primary", icon_name="refresh") + btn("Back to event", "ghost", href=page("event")), error=True, icon_name="alert-triangle"), cls="card--flush form-width--md"))
     S.add("invalid", "Missing name and an end before the start.", nav="events", main=breadcrumb([("Events", page("events"))], "New event") + page_header("New event") +
-          form(err={"name": "Enter an event name.", "start": "Must be before 3:00 pm."}, v=dict(name="", prog="After-School Tutoring", start="2026-11-14T16:00", end="2026-11-14T15:00", place="Royal Botanical Gardens", notes="")))
+          form(err={"name": "Enter an event name.", "start": "Must be before 3:00 pm."}, v=dict(name="", prog="After‑School Tutoring", start="2026-11-14T16:00", end="2026-11-14T15:00", place="Royal Botanical Gardens", notes="")))
     S.add("submitting", "Saving the event.", nav="events", main=breadcrumb([("Events", page("events"))], "New event") + page_header("New event") +
           form(busy=True, v=dict(name="Swim trip: Jimmy Thompson Pool", prog="Saturday Sports", start="2026-11-28T10:00", end="2026-11-28T13:00", place="Jimmy Thompson Memorial Pool · bus leaves the centre 9:30 am", notes="")))
     S.add("success", "Event created; a slip is required so the next step is writing it.", nav="events", main=breadcrumb([("Events", page("events"))], "Swim trip") +
@@ -86,7 +86,7 @@ def event_form(S):
                f'<div class="cluster">{btn("Write the slip", "primary", icon_name="clipboard", href=page("slip-editor"))}{btn("Open the event", "", href=page("event", "empty"))}</div></div>', cls="card--success form-width--md page-start"),
           toast_html=toast_region(toast("success", "Event created", "Swim trip: Jimmy Thompson Pool · Sat 28 Nov")))
     S.add("edit", "Editing the field trip.", nav="events", main=breadcrumb([("Events", page("events")), ("Fall field trip", page("event"))], "Edit") + page_header("Edit event", "Fall field trip: Royal Botanical Gardens") +
-          form(v=dict(name="Fall field trip: Royal Botanical Gardens", prog="After-School Tutoring", start="2026-11-14T09:00", end="2026-11-14T15:00", place="Royal Botanical Gardens, Burlington · bus from the centre, leaves 8:45 am sharp", notes="Lunch provided for 6 families on request. 4 volunteers confirmed."), edit=True))
+          form(v=dict(name="Fall field trip: Royal Botanical Gardens", prog="After‑School Tutoring", start="2026-11-14T09:00", end="2026-11-14T15:00", place="Royal Botanical Gardens, Burlington · bus from the centre, leaves 8:45 am sharp", notes="Lunch provided for 6 families on request. 4 volunteers confirmed."), edit=True))
 
 
 # ------------------------------------------------------------------ Slips list
@@ -99,7 +99,7 @@ def slips(S):
         return (f'<li class="list__item"><span class="icon-tile" aria-hidden="true">{icon("clipboard")}</span><div class="list__body"><a class="list__title" href="{page("event", state)}">{esc(name)}</a><div class="list__meta">{meta}</div>'
                 f'<div style="margin-top: var(--space-2); max-width: 24rem;">{progress(signed, total, f"{name}: {signed} of {total} signed", kind="success" if pct == 100 else "", show=f"{signed} of {total} · {pct}%")}</div></div>'
                 f'{badge("All signed", "success") if pct == 100 else badge(f"{total - signed} unsigned", "warning")}</li>')
-    rows = [row("Fall field trip: Royal Botanical Gardens", "Due Thu 12 Nov · After-School Tutoring · reminders Tue & Thu", 41, 48),
+    rows = [row("Fall field trip: Royal Botanical Gardens", "Due Thu 12 Nov · After‑School Tutoring · reminders Tue & Thu", 41, 48),
             row("Winter Camp · Day 1", "Due Fri 18 Dec · Winter Camp 2026 · sent Mon 2 Nov", 12, 35, "upcoming"),
             row("Season consent 2026–27", "No deadline · all programs · sent Tue 2 Sep", 184, 184, "upcoming"),
             row("Pumpkin patch trip", "Closed Fri 23 Oct · Saturday Sports", 60, 62, "cancelled")]
@@ -114,7 +114,7 @@ def slips(S):
 @screen("slip-editor", "page", "Slip editor", route="/events/:id/slip", reqs=[R_SLIPS, R_NOTIFY, R_COST], na={"empty": "A form has no collection to be empty of."})
 def slip_editor(S):
     def form(err=None, busy=False, v=None, edit=False):
-        v = v or dict(title="Fall field trip: Royal Botanical Gardens", intro="We’re taking the After-School Tutoring group to the Royal Botanical Gardens on Saturday 14 November. The bus leaves the centre at 8:45 am and returns by 3:00 pm. Please pack a nut-free lunch, a water bottle and a rain jacket.", due="2026-11-12")
+        v = v or dict(title="Fall field trip: Royal Botanical Gardens", intro="We’re taking the After‑School Tutoring group to the Royal Botanical Gardens on Saturday 14 November. The bus leaves the centre at 8:45 am and returns by 3:00 pm. Please pack a nut-free lunch, a water bottle and a rain jacket.", due="2026-11-12")
         e = err or {}
         fields_ = ('<ul class="list" style="margin: 0 calc(-1 * var(--space-6));">'
                    + list_item("Child’s name, allergies and medication", "Pre-filled; guardian confirms", lead=f'<span class="icon-tile icon-tile--sm" aria-hidden="true">{icon("heart-pulse", "icon--sm")}</span>', end=badge("Always", ""))
@@ -156,7 +156,7 @@ def messages(S):
 
     def row(title, meta, sender, d=badge("Delivered", "success")):
         return list_item(title, meta, person=sender, href=page("message"), end=d)
-    rows = [row("Trip reminder: sign by Thursday", "Yesterday, 5:05 pm · 7 guardians · After-School Tutoring · text", M),
+    rows = [row("Trip reminder: sign by Thursday", "Yesterday, 5:05 pm · 7 guardians · After‑School Tutoring · text", M),
             row("Saturday Sports is cancelled this week", "Fri 30 Oct, 2:14 pm · 62 guardians · text and email", STAFF["priya"], badge("1 bounced", "warning")),
             row("Recordatorio: la excursión al RBG", "Thu 29 Oct, 6:00 pm · 21 guardians · Spanish households · text", M),
             row("Winter Camp registration is open", "Mon 26 Oct, 9:00 am · 112 guardians · email", T),
@@ -170,7 +170,7 @@ def messages(S):
           f'<nav class="cluster cluster--between" aria-label="Pagination"><span class="text-caption">Showing 1–25 of 168</span><div class="cluster cluster--snug">{btn("Previous", "", disabled=True)}{btn("Next", "", icon_name="arrow-right")}</div></nav>')
 
 
-@screen("new-message", "page", "New message", route="/messages/new", reqs=[R_NOTIFY, R_COST, "PRD-NFR-ACCESS"], na={"empty": "A form has no collection to be empty of.", "loading": "The compose form is static; recipient counts load inline."})
+@screen("new-message", "page", "New message", route="/messages/new", reqs=[R_NOTIFY, R_COST, "L1-019"], na={"empty": "A form has no collection to be empty of.", "loading": "The compose form is static; recipient counts load inline."})
 def new_message(S):
     def form(err=None, busy=False, body="Reminder: RBG trip is Sat 14 Nov. Bus leaves 8:45 am sharp. Pack a nut-free lunch and a rain jacket.", count=48, none=False, over=False):
         e = err or {}
@@ -178,7 +178,7 @@ def new_message(S):
         chars = len(body) + 20
         segs = max(1, -(-chars // 153)) if chars > 160 else 1
         rc = (f'<div class="recipient-count" role="status"><strong>{n}</strong> guardians · {n and n - 4 or 0} by text, {n and 4 or 0} by email · about {n * segs} SMS segments</div>')
-        audience = card(select("prog", "Program", ["All programs", "After-School Tutoring", "Saturday Sports", "Winter Camp 2026"], selected="After-School Tutoring")
+        audience = card(select("prog", "Program", ["All programs", "After‑School Tutoring", "Saturday Sports", "Winter Camp 2026"], selected="After‑School Tutoring")
                         + f'<div class="two-col">{select("ages", "Ages", ["All ages", "6–9", "10–13"], selected="All ages")}{select("lang", "Language", ["All languages", "English", "Spanish", "French"], selected="All languages")}</div>'
                         + fieldset("Also narrow to", choice("f", "Guardians who haven’t signed the RBG slip", small="7 households", type_="checkbox", attrs=' name="f1"') + choice("f", "Children absent today", small="2 households", type_="checkbox", attrs=' name="f2"'))
                         + rc, title="Who", tid="who")
@@ -294,11 +294,11 @@ def incident(S):
 @screen("reports", "page", "Reports", route="/reports", reqs=[R_REPORTS, R_PRIVACY], na={})
 def reports(S):
     hdr = page_header("Reports", "Sep 2026 to today", btn("Export", "primary", icon_name="download", data_href=dialog("export-data")))
-    filters = (f'<div class="toolbar">{select("rp-range", "Period", ["This season (Sep 2026– )", "Last 30 days", "Last season (2025–26)", "Custom…"], visually_hidden_label=True)}{select("rp-prog", "Program", ["All programs", "After-School Tutoring", "Saturday Sports", "Winter Camp 2026"], visually_hidden_label=True)}{select("rp-funder", "Funder template", ["Standard", "Ontario Trillium Foundation", "United Way Halton & Hamilton", "City of Hamilton"], visually_hidden_label=True)}</div>')
-    numbers = kpis([("Children served", "184", "unique, this season"), ("Attendance rate", "89.4%", "across 312 sessions"), ("Sessions delivered", "312", "9 this week"), ("Slips signed digitally", "93%", "median 9 h to sign")])
+    filters = (f'<div class="toolbar">{select("rp-range", "Period", ["This season (Sep 2026– )", "Last 30 days", "Last season (2025–26)", "Custom…"], visually_hidden_label=True)}{select("rp-prog", "Program", ["All programs", "After‑School Tutoring", "Saturday Sports", "Winter Camp 2026"], visually_hidden_label=True)}{select("rp-funder", "Funder template", ["Standard", "Ontario Trillium Foundation", "United Way Halton & Hamilton", "City of Hamilton"], visually_hidden_label=True)}</div>')
+    numbers = kpis([("Children served", "184", "unique, this season"), ("Attendance rate", "89.4%", "across 312 sessions"), ("Sessions delivered", "312", "9 this week"), ("Signed online", "93%", "median 9 h to sign")])
     demo = card(table("Children by age and gender", ["Age", "#Girls", "#Boys", "#Non-binary / not said", "#Total"], [["6‑8", "31", "28", "2", "61"], ["9‑11", "38", "35", "1", "74"], ["12‑13", "24", "22", "3", "49"], ["<strong>Total</strong>", "<strong>93</strong>", "<strong>85</strong>", "<strong>6</strong>", "<strong>184</strong>"]], cls="table-wrap--flush table-wrap--fit") +
                 '<p class="hint" style="padding: var(--space-3) var(--space-4);">Exports show counts under 5 as “&lt;5”.</p>', title="Demographics", tid="demo", cls="card--flush")
-    att = card('<ul class="progress-chart">' + "".join(f'<li><span class="progress-row__label">{n}</span><div class="progress" role="progressbar" aria-valuenow="{v}" aria-valuemin="0" aria-valuemax="100" aria-label="{n}: {v}% attendance"><div class="progress__bar" style="--value: {v}%;"></div></div><span class="progress-row__label">{v}%</span></li>' for n, v in [("After-School Tutoring", 91), ("Saturday Sports", 88), ("One-to-one Mentoring", 94), ("Winter Camp 2026", 0)]) + "</ul>" +
+    att = card('<ul class="progress-chart">' + "".join(f'<li><span class="progress-row__label">{n}</span><div class="progress" role="progressbar" aria-valuenow="{v}" aria-valuemin="0" aria-valuemax="100" aria-label="{n}: {v}% attendance"><div class="progress__bar" style="--value: {v}%;"></div></div><span class="progress-row__label">{v}%</span></li>' for n, v in [("After‑School Tutoring", 91), ("Saturday Sports", 88), ("One-to-one Mentoring", 94), ("Winter Camp 2026", 0)]) + "</ul>" +
               '<p class="hint" style="margin-top: var(--space-3);">Winter Camp hasn’t started.</p>', title="Attendance by program", tid="att")
     lang = card('<ul class="progress-chart">' + "".join(f'<li><span class="progress-row__label">{n}</span><div class="progress" role="progressbar" aria-valuenow="{v}" aria-valuemin="0" aria-valuemax="112" aria-label="{n}: {v} households"><div class="progress__bar" style="--value: {round(100 * v / 112)}%;"></div></div><span class="progress-row__label">{v}</span></li>' for n, v in [("English", 82), ("Spanish", 21), ("French", 9)]) + "</ul>", title="Households by language", tid="lang")
     S.add("default", "The director’s report page: headline numbers, demographics table, attendance and language charts, one-click export.", nav="reports", user=M, main=hdr + filters + numbers + f'<div class="split"><div class="stack">{demo}</div><div class="stack">{att}{lang}</div></div>',
@@ -319,16 +319,16 @@ def reports(S):
 # ------------------------------------------------------------------ Attendance history
 @screen("attendance", "page", "Attendance", route="/programs/:id/attendance", reqs=[R_ROLL, R_REPORTS], na={})
 def attendance(S):
-    hdr = breadcrumb([("Programs", page("programs")), ("After-School Tutoring", page("program"))], "Attendance") + page_header("Attendance · After-School Tutoring", "34 sessions · 89% average · last recorded Today, 6:04 pm", btn("Export", "", icon_name="download", data_href=dialog("export-data")))
+    hdr = breadcrumb([("Programs", page("programs")), ("After‑School Tutoring", page("program"))], "Attendance") + page_header("Attendance", "After‑School Tutoring · 34 sessions · 89% average · last recorded Today, 6:04 pm", btn("Export", "", icon_name="download", data_href=dialog("export-data")))
     filters = f'<div class="toolbar">{select("at-view", "View", ["By session", "By child"], visually_hidden_label=True)}{select("at-month", "Month", ["November 2026", "October 2026", "September 2026"], visually_hidden_label=True)}</div>'
     rows = [[f'<a href="{page("check-in", "complete")}">Thu 5 Nov</a>', "Tutoring night", "46", "2", "0", badge("Recorded", "success")], [f'<a href="{page("check-in", "complete")}">Wed 4 Nov</a>', "Tutoring night", "44", "3", "1", badge("Recorded", "success")], [f'<a href="{page("check-in", "complete")}">Tue 3 Nov</a>', "Tutoring night", "47", "1", "0", badge("Recorded", "success")],
-            [f'<a href="{page("check-in", "complete")}">Mon 2 Nov</a>', "Tutoring night", "41", "6", "1", badge("Recorded", "success")], [f'<a href="{page("check-in", "default")}">Thu 29 Oct</a>', "Tutoring night", "—", "—", "—", badge("Not recorded", "danger")]]
+            [f'<a href="{page("check-in", "complete")}">Mon 2 Nov</a>', "Tutoring night", "41", "6", "1", badge("Recorded", "success")], [f'<a href="{page("check-in", "default")}">Thu 29 Oct</a>', "Tutoring night", "—", "—", "—", badge("Missing", "danger")]]
     S.add("default", "Attendance by session with present, absent and excused counts; one session was never recorded.", nav="programs", user=M, main=hdr + filters +
           alert("warning", "Thu 29 Oct has no attendance", "Record it or mark it cancelled.", actions=btn("Record now", "primary", size="sm", href=page("check-in")) + btn("Mark cancelled", "ghost", size="sm", data_href=dialog("end-session"))) +
-          table("Sessions", ["Date", "Session", "#Present", "#Absent", "#Excused", "Status"], rows))
-    S.add("loading", "Attendance loading.", nav="programs", main=breadcrumb([("Programs", page("programs")), ("After-School Tutoring", page("program"))], "Attendance") + page_header("Attendance · After-School Tutoring", "") + skeleton_list(6, "Loading sessions"))
+          table("Sessions", ["Date", "Session", "#Present", "#Absent", "#Excused", "Status"], rows, hide_sm={1, 4}, cls="table-wrap--fit"))
+    S.add("loading", "Attendance loading.", nav="programs", main=breadcrumb([("Programs", page("programs")), ("After‑School Tutoring", page("program"))], "Attendance") + page_header("Attendance", "After‑School Tutoring") + skeleton_list(6, "Loading sessions"))
     S.add("empty", "No sessions recorded yet.", nav="programs", user=M, main=breadcrumb([("Programs", page("programs")), ("Winter Camp 2026", page("program", "empty"))], "Attendance") + page_header("Attendance · Winter Camp 2026", "") + card(empty("No sessions yet", "First check-in is 21 December.", action=btn("Back to program", "", href=page("program", "empty")), icon_name="clipboard"), cls="card--flush"))
-    S.add("error", "Attendance failed to load.", nav="programs", main=breadcrumb([("Programs", page("programs")), ("After-School Tutoring", page("program"))], "Attendance") + page_header("Attendance · After-School Tutoring", "") + card(empty("We couldn’t load attendance", "Try again.", action=btn("Try again", "primary", icon_name="refresh"), error=True, icon_name="alert-triangle"), cls="card--flush"))
+    S.add("error", "Attendance failed to load.", nav="programs", main=breadcrumb([("Programs", page("programs")), ("After‑School Tutoring", page("program"))], "Attendance") + page_header("Attendance", "After‑School Tutoring") + card(empty("We couldn’t load attendance", "Try again.", action=btn("Try again", "primary", icon_name="refresh"), error=True, icon_name="alert-triangle"), cls="card--flush"))
     S.add("no-results", "A month with no sessions.", nav="programs", user=M, main=hdr + filters.replace('<option selected>November 2026</option>', '<option>November 2026</option>').replace('<option>September 2026</option>', '<option selected>August 2026</option>') + card(empty("No sessions in August 2026", "Runs September to June.", action=btn("Show November", ""), icon_name="calendar"), cls="card--flush"))
     S.add("long", "By child: 48 rows with a 30-session strip each.", nav="programs", user=M, main=hdr + filters.replace('<option selected>By session</option>', '<option>By session</option>').replace('<option>By child</option>', '<option selected>By child</option>') +
           table("Attendance by child", ["Child", "Rate", "Last 30 sessions", "#Absent", "Actions"], [[f'<a href="{page("child")}">{esc(c["name"])}</a>', f'{96 - i * 3}%', '<div class="dots" role="img" aria-label="Attendance strip">' + "".join('<span class="dots__dot dots__dot--present"></span>' if (j * 7 + i) % 11 else '<span class="dots__dot dots__dot--absent"></span>' for j in range(30)) + "</div>", str(i), f'<div class="row-actions">{btn("Message guardian", "ghost", size="sm", href=page("new-message"))}</div>'] for i, c in enumerate(CHILDREN[:8])]) +
@@ -349,13 +349,13 @@ def import_roster(S):
                + "</div>")
     S.add("default", "Step 1: drop the Sheets export; what columns are needed.", nav="families", user=T, main=breadcrumb([("Families", page("families"))], "Import") + page_header("Import a roster", "Sheets, Excel or CSV · about ten minutes") + steps(0) + f'<div class="card stack form-width--lg">{upload}</div>')
     S.add("mapping", "Step 2: columns matched automatically, each one adjustable; 112 rows previewed.", nav="families", user=T, main=breadcrumb([("Families", page("families"))], "Import") + page_header("Import a roster", "roster-fall-2026.csv · 112 rows · 8 columns") + steps(1) +
-          f'<form class="card stack form-width--lg" action="#" method="post">{alert("success", "7 of 8 columns matched automatically", "Check Pick-up OK and T-shirt, then choose a program.", role="status")}{mapping}{select("imp-prog", "Enroll everyone in", ["After-School Tutoring", "Saturday Sports", "Don’t enroll yet, just create families"], selected="After-School Tutoring", help_="Returning families are matched, not duplicated.")}<div class="form-actions cluster">{btn("Back", "ghost", href=page("import-roster"))}{btn("Import 112 rows", "primary", type_="submit")}</div></form>')
+          f'<form class="card stack form-width--lg" action="#" method="post">{alert("success", "7 of 8 columns matched automatically", "Check Pick-up OK and T-shirt, then choose a program.", role="status")}{mapping}{select("imp-prog", "Enroll everyone in", ["After‑School Tutoring", "Saturday Sports", "Don’t enroll yet, just create families"], selected="After‑School Tutoring", help_="Returning families are matched, not duplicated.")}<div class="form-actions cluster">{btn("Back", "ghost", href=page("import-roster"))}{btn("Import 112 rows", "primary", type_="submit")}</div></form>')
     S.add("invalid", "Step 2 with problems: a required column unmapped and 3 rows missing a guardian contact.", nav="families", user=T, main=breadcrumb([("Families", page("families"))], "Import") + page_header("Import a roster", "roster-fall-2026.csv · 112 rows · 8 columns") + steps(1) +
-          f'<form class="card stack form-width--lg" action="#" method="post">{form_summary([("map-3", "Map Guardian phone or email; 3 rows have neither."), ("imp-prog", "Choose a program.")])}{mapping.replace(select("map-3", "Map Cell", ["Guardian phone", "Guardian email", "Skip"], selected="Guardian phone", visually_hidden_label=True), select("map-3", "Map Cell", ["Guardian phone", "Guardian email", "Skip"], selected="Skip", visually_hidden_label=True, error="Rows 14, 57 and 91 have no contact."))}{select("imp-prog", "Enroll everyone in", ["Choose…", "After-School Tutoring", "Saturday Sports", "Don’t enroll yet, just create families"], selected="Choose…", error="Choose a program.")}<div class="form-actions cluster">{btn("Back", "ghost", href=page("import-roster"))}{btn("Import 112 rows", "primary", type_="submit")}</div></form>')
+          f'<form class="card stack form-width--lg" action="#" method="post">{form_summary([("map-3", "Map Guardian phone or email; 3 rows have neither."), ("imp-prog", "Choose a program.")])}{mapping.replace(select("map-3", "Map Cell", ["Guardian phone", "Guardian email", "Skip"], selected="Guardian phone", visually_hidden_label=True), select("map-3", "Map Cell", ["Guardian phone", "Guardian email", "Skip"], selected="Skip", visually_hidden_label=True, error="Rows 14, 57 and 91 have no contact."))}{select("imp-prog", "Enroll everyone in", ["Choose…", "After‑School Tutoring", "Saturday Sports", "Don’t enroll yet, just create families"], selected="Choose…", error="Choose a program.")}<div class="form-actions cluster">{btn("Back", "ghost", href=page("import-roster"))}{btn("Import 112 rows", "primary", type_="submit")}</div></form>')
     S.add("submitting", "Step 3: importing with a determinate progress bar.", nav="families", user=T, main=breadcrumb([("Families", page("families"))], "Import") + page_header("Import a roster", "roster-fall-2026.csv · 112 rows") + steps(2) +
           f'<div class="card stack form-width--lg" aria-busy="true"><h2 class="card__title" style="margin: 0;">Importing… 68 of 112</h2>{progress(68, 112, "Import progress", show="61%")}<p class="text-muted">About 20 seconds left. Keep this page open.</p></div>')
     S.add("success", "Done: what was created, what was merged, the 3 rows to fix, and the next step: send the first slip.", nav="families", user=T, main=breadcrumb([("Families", page("families"))], "Import") +
-          card(f'<div class="stack"><h1 class="empty__title">Imported 109 of 112 rows</h1>{kpis([("Families created", "71", ""), ("Families updated", "38", "matched by phone"), ("Children", "184", "47 with medical notes"), ("Enrolled", "184", "After-School Tutoring")])}'
+          card(f'<div class="stack"><h1 class="empty__title">Imported 109 of 112 rows</h1>{kpis([("Families created", "71", ""), ("Families updated", "38", "matched by phone"), ("Children", "184", "47 with medical notes"), ("Enrolled", "184", "After‑School Tutoring")])}'
                f'{alert("warning", "3 rows need a guardian phone or email", "Rows 14, 57 and 91 have no contact.", actions=btn("Fix the 3 families", "primary", size="sm", href=page("families", "edge")))}'
                f'<p class="text-muted measure">Next: open enrollment or send a slip.</p><div class="cluster">{btn("Send the first slip", "primary", icon_name="clipboard", href=page("event-form"))}{btn("See families", "", href=page("families"))}</div></div>', cls="card--success form-width--lg page-start"),
           toast_html=toast_region(toast("success", "Roster imported", "109 of 112 rows · 3 to fix")))

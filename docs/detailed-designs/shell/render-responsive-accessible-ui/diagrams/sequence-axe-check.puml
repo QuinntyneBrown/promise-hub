@@ -1,0 +1,50 @@
+@startuml
+title UML sequence behaviour — Apply the theme and run axe in Playwright
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+participant "Screen spec (e2e/tests)" as spec
+participant "Page object (e2e/pages)" as po
+participant "axe fixture (e2e/fixtures)" as axe
+participant "Fake API (e2e/fixtures)" as fake
+box "Frontend — PromiseHub web app (promisehub shell)" #E0F2FE
+  participant "ShellComponent" as shell
+  participant "ThemeService" as theme
+  participant "BreakpointService" as bp
+end box
+spec -> spec : Select viewport project (360 to 1600 px)
+spec -> po : goto()
+po -> shell : Navigate
+shell -> fake : API calls intercepted
+fake --> shell : Seeded data
+shell -> bp : Observe range
+bp --> shell : Range for the viewport (L2-036)
+shell --> po : Page ready (heading focused)
+loop light, then dark
+  spec -> theme : Set data-theme via page.evaluate
+  theme --> shell : Tokens switch
+  spec -> axe : checkPage(page, theme)
+  axe -> shell : Run axe-core with WCAG 2.2 AA tags
+  shell --> axe : Violations list
+  alt Zero violations
+    axe --> spec : Pass (L2-035)
+  else Violations
+    axe --> spec : Fail with rule ids and selectors
+  end
+end
+spec -> axe : assertNoHorizontalScroll(page)
+axe -> shell : documentElement.scrollWidth
+shell --> axe : Width
+axe --> spec : Equals viewport width (L2-029)
+@enduml

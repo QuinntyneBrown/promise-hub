@@ -1,0 +1,12 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Maintain a household
+
+Person(admin, "Admin / Site lead", "Adds families, edits guardians, children and medical details, deletes households")
+Person(volunteer, "Volunteer coordinator", "Reads contacts and pickups without medical fields")
+System(promisehub, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+
+Rel(admin, promisehub, "Maintains household records", "HTTPS")
+Rel(volunteer, promisehub, "Reads household records with medical fields omitted", "HTTPS")
+@enduml

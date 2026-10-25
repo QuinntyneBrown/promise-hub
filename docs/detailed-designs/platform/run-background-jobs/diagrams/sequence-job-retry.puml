@@ -1,0 +1,76 @@
+@startuml
+title UML sequence behaviour — A reminder job fails and retries with backoff
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+box "Backend — PromiseHub Infrastructure (job runner)" #FFF4E5
+  participant "JobRunnerHostedService" as runner
+  participant "RetryPolicy" as retry
+  participant "JobFailureNotifier" as notifier
+  database "PromiseHubDbContext" as db
+end box
+box "Backend — PromiseHub Application and Domain (Slips)" #ECFDF3
+  participant "SendSlipRemindersJobHandler" as handler
+  participant "IOutboundMessageSender" as sender
+end box
+box "Backend — PromiseHub Infrastructure (providers)" #FFF4E5
+  participant "SMS provider adapter" as sms
+end box
+runner -> db : Lease due jobs (Scheduled, DueAt <= now)
+db --> runner : Job(SendSlipReminders, organization Harbourview)
+runner -> db : Load TenantScope (modules, plan, SMS cap)
+db --> runner : Scope
+alt Slips module off for this organization
+  runner -> db : Succeed without effect (L1-002)
+else Module on
+  runner -> handler : Handle(payload, scope)
+  handler -> db : Unsigned slips due for reminder
+  db --> handler : Recipients
+  loop each recipient
+    handler -> sender : SendAsync(key = jobId + recipient + template)
+    sender -> db : Key already in OutboundMessageLog?
+    alt Key present (sent on an earlier attempt)
+      db --> sender : Found
+      sender --> handler : Skipped; never sent twice (L2-034)
+    else Key absent
+      db --> sender : Not found
+      sender -> sms : Send text
+      alt Provider success
+        sms --> sender : Message id
+        sender -> db : Insert OutboundMessageLog(key)
+        sender --> handler : Sent
+      else Provider failure
+        sms --> sender : Error
+        sender --> handler : Throw
+      end
+    end
+  end
+  alt Handler completed
+    handler --> runner : Done
+    runner -> db : Job.Succeed()
+  else Handler threw
+    handler --> runner : Exception
+    runner -> retry : NextDueAt(attempts + 1)
+    alt Attempts under 5
+      retry --> runner : now + backoff
+      runner -> db : Job.Fail(error, nextDueAt); Status = Scheduled (L2-034)
+    else Fifth failure
+      retry --> runner : Dead-letter
+      runner -> db : Status = DeadLettered
+      runner -> notifier : NotifyAdmins(job)
+      notifier -> db : Notification for organization admins (L2-034)
+    end
+  end
+end
+@enduml

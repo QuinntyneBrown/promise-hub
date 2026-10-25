@@ -1,0 +1,141 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Record and search the audit trail
+
+enum AuditAction {
+  Created
+  Updated
+  Deleted
+  Viewed
+  Signed
+  Exported
+  Imported
+  Sent
+  RoleChanged
+  ModuleChanged
+  AccessDenied
+}
+
+enum ActorKind {
+  Staff
+  Guardian
+  System
+}
+
+class AuditActor <<value object>> {
+  +ActorKind Kind
+  +Guid? StaffId
+  +Guid? HouseholdId
+  +string DisplayName
+  +string? JobName
+}
+
+class AuditEntry {
+  +Guid Id
+  +Guid OrganizationId
+  +DateTimeOffset OccurredAt
+  +AuditActor Actor
+  +AuditAction Action
+  +string RecordType
+  +Guid? RecordId
+  +string Summary
+  +string? BeforeJson
+  +string? AfterJson
+  +string Device
+  +string CorrelationId
+  +{static} Create(...): AuditEntry
+}
+
+class AuditEvent {
+  +AuditAction Action
+  +string RecordType
+  +Guid? RecordId
+  +string Summary
+  +object? Before
+  +object? After
+}
+
+interface IAuditWriter {
+  +Record(event: AuditEvent): void
+}
+
+class AuditWriter {
+  -PromiseHubDbContext db
+  -ActorResolver actors
+  -IRequestContext request
+  +Record(event: AuditEvent): void
+}
+
+class ActorResolver {
+  +Resolve(principal: ClaimsPrincipal): AuditActor
+}
+
+class AuditInterceptor {
+  +SavingChanges(eventData, result): InterceptionResult<int>
+  -Snapshot(entry: EntityEntry, role: Role): (string? before, string? after)
+}
+
+class FieldPolicy {
+  +VisibleFields(entityType: Type, role: Role): IReadOnlySet<string>
+}
+
+interface IAuditedView {
+  +string RecordType
+  +Guid RecordId
+}
+
+class ViewAuditBehaviour<TRequest, TResponse> {
+  +Handle(request, next): Task<TResponse>
+}
+
+class SearchAuditQuery {
+  +string? Text
+  +AuditAction? Action
+  +DateOnly From
+  +DateOnly To
+  +string? RecordType
+  +Guid? RecordId
+  +Guid? ActorStaffId
+  +int Page
+}
+
+class SearchAuditQueryHandler {
+  +{static} int PageSize = 50
+  +Handle(query: SearchAuditQuery): Task<PagedResult<AuditEntryDto>>
+}
+
+class ExportAuditCommandHandler {
+  +Handle(command: ExportAuditCommand): Task<Result<ExportDto>>
+}
+
+class AuditCsvSource {
+  +Rows(filter: SearchAuditQuery): IAsyncEnumerable<AuditCsvRow>
+}
+
+AuditEntry --> AuditActor : has
+AuditEntry --> AuditAction : has
+AuditActor --> ActorKind : has
+AuditWriter ..|> IAuditWriter
+AuditWriter ..> AuditEvent : consumes
+AuditWriter --> ActorResolver : uses
+AuditWriter --> AuditEntry : creates
+AuditInterceptor --> FieldPolicy : redacts with
+AuditInterceptor --> AuditEntry : creates
+AuditInterceptor --> ActorResolver : uses
+ViewAuditBehaviour ..> IAuditedView : matches
+ViewAuditBehaviour --> IAuditWriter : Record Viewed
+SearchAuditQueryHandler ..> SearchAuditQuery : handles
+SearchAuditQueryHandler --> AuditEntry : reads
+ExportAuditCommandHandler --> AuditCsvSource : streams
+@enduml

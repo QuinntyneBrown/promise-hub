@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Configure modules
+
+Person(admin, "Organization admin", "Switches modules on or off; picks a preset during onboarding")
+System(promisehub, "PromiseHub", "Stores one module configuration per organization and enforces module dependencies")
+
+Rel(admin, promisehub, "Configures modules using", "HTTPS")
+@enduml

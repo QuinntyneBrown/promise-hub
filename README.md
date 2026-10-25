@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/design-system/assets/promisehub-mark-white.svg" alt="PromiseHub logo" width="128" height="128">
+</p>
+
 # PromiseHub
 
 PromiseHub is a web app that helps youth-serving organizations keep their promises to the families they serve. It is phone-first for staff on site, works on a laptop for office tasks, and gives guardians lightweight pages to enroll, sign and stay informed.

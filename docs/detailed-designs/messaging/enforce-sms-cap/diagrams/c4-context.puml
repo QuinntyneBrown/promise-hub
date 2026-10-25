@@ -1,0 +1,19 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Enforce the SMS cap
+
+Person(admin, "Admin", "Sets the monthly SMS cap and changes the plan")
+Person(staff, "Program director", "Composes messages and sees cap warnings")
+Person_Ext(guardian, "Guardian", "Receives texts, or email when texts are paused")
+System(promisehub, "PromiseHub", "Meters SMS segments per organization and month")
+System_Ext(sms, "SMS provider", "Sends texts")
+System_Ext(email, "Email provider", "Sends emails")
+
+Rel(admin, promisehub, "Raises the cap, changes plan", "HTTPS")
+Rel(staff, promisehub, "Previews cost, sends messages", "HTTPS")
+Rel(promisehub, sms, "Sends texts while under the cap", "HTTPS API")
+Rel(promisehub, email, "Sends email, including texts that fell back", "HTTPS API")
+Rel(sms, guardian, "Delivers text")
+Rel(email, guardian, "Delivers email")
+@enduml

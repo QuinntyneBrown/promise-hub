@@ -1,0 +1,161 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Check-in and sign-out
+
+enum SessionStatus {
+  Scheduled
+  Open
+  Ended
+  Cancelled
+}
+
+enum AttendanceStatus {
+  NotYet
+  Present
+  Absent
+  Excused
+  SignedOut
+}
+
+enum AttendanceEventKind {
+  CheckedIn
+  MarkedAbsent
+  SignedOut
+}
+
+class Session {
+  +Guid Id
+  +Guid OrganizationId
+  +Guid EventId
+  +Guid ProgramId
+  +DateTimeOffset StartsAt
+  +DateTimeOffset EndsAt
+  +SessionStatus Status
+  +Open(): void
+}
+
+class AttendanceRecord {
+  +Guid Id
+  +Guid OrganizationId
+  +Guid SessionId
+  +Guid ChildId
+  +AttendanceStatus Status
+  +DateTimeOffset? CheckedInAt
+  +DateTimeOffset? SignedOutAt
+  +PickupConfirmation? Pickup
+  +bool IsWalkIn
+  +bool HasConflict
+  +CheckIn(at: DateTimeOffset, actor: Guid): AttendanceEvent
+  +MarkAbsent(actor: Guid): AttendanceEvent
+  +SignOut(pickup: PickupConfirmation, at: DateTimeOffset, actor: Guid): AttendanceEvent
+}
+
+class PickupConfirmation <<value object>> {
+  +Guid? ApprovedPickupId
+  +string? OtherName
+  +bool GuardianConfirmedByPhone
+  +bool IdChecked
+  +IsValid(): bool
+}
+
+class AttendanceEvent {
+  +Guid Id
+  +Guid RecordId
+  +AttendanceEventKind Kind
+  +DateTimeOffset OccurredAt
+  +Guid ActorStaffId
+  +string ClientActionId
+  +string DeviceId
+}
+
+class WalkIn {
+  +Guid Id
+  +Guid SessionId
+  +string ChildName
+  +string GuardianName
+  +string GuardianPhone
+  +string? MedicalNotes
+  +string FollowUpStatus
+}
+
+class CheckInChildCommand {
+  +Guid SessionId
+  +Guid ChildId
+  +DateTimeOffset? ArrivedAt
+  +string ClientActionId
+}
+
+class MarkChildAbsentCommand {
+  +Guid SessionId
+  +Guid ChildId
+  +string ClientActionId
+}
+
+class SignOutChildCommand {
+  +Guid SessionId
+  +Guid ChildId
+  +Guid? PickedUpByApprovedPickupId
+  +string? OtherPickupName
+  +bool GuardianConfirmedByPhone
+  +bool IdChecked
+  +DateTimeOffset SignedOutAt
+  +string ClientActionId
+}
+
+class AddWalkInCommand {
+  +Guid SessionId
+  +string ChildName
+  +string GuardianName
+  +string GuardianPhone
+  +string? MedicalNotes
+}
+
+class CheckInChildCommandHandler {
+  +Handle(command: CheckInChildCommand): Task<Result<RosterRowDto>>
+}
+class MarkChildAbsentCommandHandler {
+  +Handle(command: MarkChildAbsentCommand): Task<Result<RosterRowDto>>
+}
+class SignOutChildCommandHandler {
+  +Handle(command: SignOutChildCommand): Task<Result<RosterRowDto>>
+}
+class AddWalkInCommandHandler {
+  +Handle(command: AddWalkInCommand): Task<Result<RosterRowDto>>
+}
+
+interface ISmsSender {
+  +SendAsync(message: OutboundSms): Task<SendResult>
+}
+interface IAuditLog {
+  +WriteAsync(entry: AuditEntry): Task
+}
+
+Session "1" *-- "*" AttendanceRecord : roster
+AttendanceRecord --> AttendanceStatus : has
+AttendanceRecord --> PickupConfirmation : holds
+AttendanceRecord "1" --> "*" AttendanceEvent : history
+Session --> SessionStatus : has
+Session "1" o-- "*" WalkIn : tonight only
+CheckInChildCommandHandler ..> CheckInChildCommand : handles
+MarkChildAbsentCommandHandler ..> MarkChildAbsentCommand : handles
+SignOutChildCommandHandler ..> SignOutChildCommand : handles
+AddWalkInCommandHandler ..> AddWalkInCommand : handles
+CheckInChildCommandHandler --> AttendanceRecord : loads / mutates
+MarkChildAbsentCommandHandler --> AttendanceRecord : loads / mutates
+MarkChildAbsentCommandHandler ..> ISmsSender : texts guardian
+SignOutChildCommandHandler --> AttendanceRecord : loads / mutates
+AddWalkInCommandHandler --> WalkIn : creates
+CheckInChildCommandHandler ..> IAuditLog : audits
+SignOutChildCommandHandler ..> IAuditLog : audits
+@enduml

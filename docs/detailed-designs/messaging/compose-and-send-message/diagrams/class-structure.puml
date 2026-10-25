@@ -1,0 +1,178 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Compose and send a message
+
+enum MessageStatus {
+  Draft
+  Scheduled
+  Sending
+  Sent
+  Cancelled
+}
+
+enum DeliveryStatus {
+  Queued
+  Sent
+  Delivered
+  Bounced
+  Failed
+  FellBackToEmail
+}
+
+enum Channel {
+  Sms
+  Email
+  Push
+}
+
+class AudienceFilter <<value object>> {
+  +Guid? ProgramId
+  +AgeBand? AgeBand
+  +Language? Language
+  +Guid? UnsignedSlipEventId
+  +bool AbsentToday
+}
+
+class Message {
+  +Guid Id
+  +Guid OrganizationId
+  +string Title
+  +string Body
+  +AudienceFilter Audience
+  +ChannelPolicy ChannelPolicy
+  +MessageStatus Status
+  +DateTimeOffset? ScheduledFor
+  +DateTimeOffset? SentAt
+  +int RecipientCount
+  +int DeliveredCount
+  +int BouncedCount
+  +Guid CreatedByStaffId
+  +Schedule(at: DateTimeOffset): void
+  +StartSending(): void
+  +Cancel(): void
+  +RecomputeAggregates(): void
+}
+
+class Delivery {
+  +Guid Id
+  +Guid MessageId
+  +Guid HouseholdId
+  +Language Language
+  +Channel Channel
+  +int Segments
+  +DeliveryStatus Status
+  +string? Reason
+  +string? ProviderMessageId
+  +DateTimeOffset? UpdatedAt
+  +MarkSent(providerId: string): void
+  +Apply(report: DeliveryReport): void
+  +FallBackToEmail(): void
+}
+
+class Reply {
+  +Guid Id
+  +Guid MessageId
+  +Guid HouseholdId
+  +string Text
+  +DateTimeOffset ReceivedAt
+}
+
+class PreviewAudienceQuery {
+  +AudienceFilter Audience
+  +string Body
+  +ChannelPolicy ChannelPolicy
+}
+
+class AudiencePreview {
+  +int RecipientCount
+  +int TextCount
+  +int EmailOnlyCount
+  +int Characters
+  +int Segments
+  +int TotalSegments
+  +int RemainingSegments
+  +int HouseholdsFallingBackToEmail
+}
+
+class PreviewAudienceQueryHandler {
+  +Handle(query: PreviewAudienceQuery): Task<AudiencePreview>
+}
+
+class CreateMessageCommand {
+  +string Title
+  +string Body
+  +AudienceFilter Audience
+  +ChannelPolicy ChannelPolicy
+  +DateTimeOffset? ScheduledFor
+}
+
+class CreateMessageCommandHandler {
+  +Handle(command: CreateMessageCommand): Task<Result<Guid>>
+}
+
+class SendMessageNowCommandHandler {
+  +Handle(command: SendMessageNowCommand): Task<Result>
+}
+
+class CancelScheduledMessageCommandHandler {
+  +Handle(command: CancelScheduledMessageCommand): Task<Result>
+}
+
+class RecordDeliveryReportCommandHandler {
+  +Handle(command: RecordDeliveryReportCommand): Task<Result>
+}
+
+class AudienceResolver {
+  +Resolve(organizationId: Guid, filter: AudienceFilter): Task<IReadOnlyList<HouseholdContact>>
+}
+
+class SegmentCalculator {
+  +Count(body: string, language: Language, senderPrefix: string): SegmentCount
+}
+
+interface ISmsCapService {
+  +Remaining(organizationId: Guid): Task<int>
+  +TryReserve(organizationId: Guid, segments: int): Task<bool>
+}
+
+class SendMessageJob {
+  +Run(messageId: Guid): Task
+}
+
+class ScheduledMessageDispatcher {
+  +Run(organizationId: Guid, now: DateTimeOffset): Task
+}
+
+Message "1" *-- "*" Delivery : owns
+Message "1" *-- "*" Reply : owns
+Message --> AudienceFilter : snapshots
+Message --> MessageStatus : has
+Delivery --> DeliveryStatus : has
+Delivery --> Channel : has
+PreviewAudienceQueryHandler ..> PreviewAudienceQuery : handles
+PreviewAudienceQueryHandler ..> AudiencePreview : returns
+PreviewAudienceQueryHandler --> AudienceResolver : uses
+PreviewAudienceQueryHandler --> SegmentCalculator : uses
+PreviewAudienceQueryHandler --> ISmsCapService : reads remaining
+CreateMessageCommandHandler ..> CreateMessageCommand : handles
+CreateMessageCommandHandler --> AudienceResolver : uses
+CreateMessageCommandHandler --> Message : creates
+CreateMessageCommandHandler ..> SendMessageJob : enqueues
+ScheduledMessageDispatcher ..> SendMessageJob : enqueues when due
+SendMessageJob --> Delivery : renders and sends
+SendMessageJob --> ISmsCapService : TryReserve
+SendMessageNowCommandHandler --> Message : StartSending
+CancelScheduledMessageCommandHandler --> Message : Cancel
+RecordDeliveryReportCommandHandler --> Delivery : Apply
+@enduml

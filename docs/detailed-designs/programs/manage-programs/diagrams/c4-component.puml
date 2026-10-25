@@ -1,0 +1,41 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Manage programs
+
+Container_Boundary(web, "PromiseHub web app") {
+  Component(list, "ProgramsListPage", "Angular page", "Lists programs; Active / Archived filter")
+  Component(form, "ProgramFormPage", "Angular page", "Create and edit a program")
+  Component(detail, "ProgramPage", "Angular page", "Program detail; Restore when archived")
+  Component(dialog, "ArchiveProgramDialog", "CDK dialog", "Typed-name confirmation")
+  Component(client, "ProgramsApi", "Typed client (PROGRAMS_API)", "Calls /programs")
+}
+Container_Boundary(api, "PromiseHub API") {
+  Component(endpoints, "ProgramEndpoints", "Minimal API", "Routes /programs to handlers")
+  Component(create, "CreateProgramCommandHandler", "Application handler", "Validates and creates")
+  Component(archive, "ArchiveProgramCommandHandler", "Application handler", "Archives with confirmation")
+  Component(restore, "RestoreProgramCommandHandler", "Application handler", "Restores an archived program")
+  Component(query, "GetProgramsQueryHandler", "Application handler", "Lists by status")
+  Component(entity, "Program", "Domain entity", "Owns schedule, capacity, status transitions")
+  Component(audit, "AuditLog", "Infrastructure", "Records archive and restore")
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "Programs filtered by OrganizationId")
+}
+Rel(list, client, "list, archive filter")
+Rel(form, client, "create, update")
+Rel(detail, client, "get, restore")
+Rel(dialog, client, "archive")
+Rel(client, endpoints, "JSON/HTTPS")
+Rel(endpoints, create, "Sends CreateProgramCommand")
+Rel(endpoints, archive, "Sends ArchiveProgramCommand")
+Rel(endpoints, restore, "Sends RestoreProgramCommand")
+Rel(endpoints, query, "Sends GetProgramsQuery")
+Rel(create, entity, "Creates")
+Rel(archive, entity, "Archive()")
+Rel(restore, entity, "Restore()")
+Rel(archive, audit, "Writes entry")
+Rel(restore, audit, "Writes entry")
+Rel(create, db, "Saves")
+Rel(archive, db, "Saves")
+Rel(restore, db, "Saves")
+Rel(query, db, "Reads")
+@enduml

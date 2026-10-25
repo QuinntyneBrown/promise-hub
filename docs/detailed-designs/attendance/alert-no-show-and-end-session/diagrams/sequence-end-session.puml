@@ -1,0 +1,73 @@
+@startuml
+title UML sequence behaviour — End a session
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Site lead" as lead
+box "Frontend — PromiseHub web app, attendance library" #E0F2FE
+  participant "CheckInPage" as page
+  participant "EndSessionDialog" as dlg
+  participant "SessionCompletePage" as done
+  participant "AttendanceApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "AttendanceEndpoints" as ep
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "EndSessionCommandHandler" as h
+  participant "Session" as session
+  participant "AttendanceRecord" as rec
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "IAuditLog" as audit
+end box
+
+lead -> page : Tap End session
+page -> dlg : Open end-session ("15 not checked in", "31 not signed out")
+lead -> dlg : Choose Mark absent / Sign out at 6:00 pm, tap End session
+dlg -> client : endSession(sessionId, {notCheckedIn, notSignedOut})
+client -> ep : POST /sessions/{id}/end
+ep -> ep : Authenticate, resolve tenant, Roll Call on, role may run sessions
+ep -> h : Send EndSessionCommand
+h -> db : Load session with roster (L2-001)
+db --> h : Session, records
+alt Session already Ended
+  h --> ep : 409 ProblemDetails
+  ep --> client : 409
+  client --> dlg : "Session already ended" (failed)
+else Session Open
+  h -> session : End(notCheckedIn, notSignedOut, now, actor)
+  loop each roster row
+    alt Status NotYet and MarkAbsent
+      session -> rec : MarkAbsentAtEnd(actor) — no second text if alert already sent
+    else Status NotYet and LeaveNotRecorded
+      session -> rec : Leave as NotYet (gap in report)
+    else Status Present and SignOutAtEnd
+      session -> rec : SignOutAtEnd(session.EndsAt, actor)
+    else Status Present and LeaveUnsigned
+      session -> rec : Leave Present
+    end
+  end
+  session --> h : Events for every changed row; Status = Ended (L2-018)
+  h -> audit : One entry per changed record (L2-032)
+  h -> db : Save in one unit of work
+  db --> h : Commit
+  h --> ep : SessionSummaryDto (46 present, 2 absent)
+  ep --> client : 200
+  client --> dlg : Summary
+  dlg -> done : Navigate to check-in/complete
+  done --> lead : "Session recorded", totals, View attendance
+end
+@enduml

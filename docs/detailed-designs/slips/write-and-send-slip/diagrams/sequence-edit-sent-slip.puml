@@ -1,0 +1,64 @@
+@startuml
+title UML sequence behaviour — Edit a sent slip
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Program director" as actor
+box "Frontend — PromiseHub web app, slips library" #E0F2FE
+  participant "SlipEditorPage" as page
+  participant "SlipsApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "SlipEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain (Slips)" #ECFDF3
+  participant "EditSentSlipCommandHandler" as handler
+  participant "PermissionSlip" as slip
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "GuardianMessenger" as messenger
+  participant "AuditLog" as audit
+end box
+actor -> page : Open a sent slip to edit
+page --> actor : Warning: 41 guardians have already signed this text; re-sign only if marked material (L2-014 AC3)
+actor -> page : Change body; set or leave "material"; Save changes
+page -> client : edit(slipId, { body, isMaterial })
+client -> endpoints : PUT /slips/{id}
+endpoints -> endpoints : Authenticate; organization from membership (L2-001)
+endpoints -> handler : Send EditSentSlipCommand
+handler -> db : Load PermissionSlip (Sent) with signatures
+db --> handler : PermissionSlip
+alt isMaterial = false
+  handler -> slip : Edit(body, false, now): body updated in place; version unchanged
+  slip --> handler : No new version; signatures stand
+else isMaterial = true
+  handler -> slip : Edit(body, true, now): new SlipVersion with new text hash
+  slip --> handler : SlipVersion n+1
+  handler -> db : Mark existing SignatureRecords Superseded; re-open signing for every household
+  db --> handler : Updated
+  loop each household
+    handler -> messenger : Queue re-sign message in the household's language (L2-027)
+    messenger --> handler : Queued
+  end
+end
+handler -> db : SaveChanges in one unit of work
+db --> handler : Commit result
+handler -> audit : Record edit with before and after body (L2-032)
+audit --> handler : Recorded
+handler --> endpoints : Result
+endpoints --> client : 200 OK
+client --> page : Updated slip
+page --> actor : Saved; signed count unchanged, or reset to 0 of 48 when material
+@enduml

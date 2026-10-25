@@ -1,0 +1,63 @@
+@startuml
+title UML sequence behaviour — Complete the organization step
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "First admin" as actor
+box "Frontend — organizations library" #E0F2FE
+  participant "OnboardOrgPage" as page
+  participant "OnboardingApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "OnboardingEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "SaveOrganizationStepCommandHandler" as handler
+  participant "SaveOrganizationStepCommandValidator" as validator
+  participant "Organization" as org
+  participant "OnboardingProgress" as progress
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "AuditLog" as audit
+end box
+actor -> page : Submit name and country
+alt name empty (client side)
+  page --> actor : Inline error shown; nothing sent (L2-008 c2)
+else name present
+  page -> client : saveOrganizationStep(request)
+  client -> endpoints : PUT /onboarding/organization
+  endpoints -> endpoints : Authenticate; resolve active membership
+  endpoints -> handler : Send SaveOrganizationStepCommand
+  handler -> validator : Validate
+  alt invalid
+    validator --> handler : Field errors
+    handler --> endpoints : Validation failure
+    endpoints --> client : 422 ProblemDetails
+    client --> page : Field errors
+    page --> actor : Inline error; nothing saved (L2-008 c2)
+  else valid
+    handler -> db : Load Organization and OnboardingProgress for active tenant
+    db --> handler : Entities
+    handler -> org : Rename; SetCountry with derived data region
+    handler -> progress : Complete(Organization)
+    handler -> db : SaveChanges in one unit of work
+    handler -> audit : Record organization updated
+    handler --> endpoints : Result
+    endpoints --> client : 204
+    client --> page : Done
+    page --> actor : Continue to onboard-modules
+  end
+end
+@enduml

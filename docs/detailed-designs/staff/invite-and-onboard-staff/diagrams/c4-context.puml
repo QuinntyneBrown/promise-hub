@@ -1,0 +1,15 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Invite and onboard staff
+
+Person(admin, "Admin", "Invites colleagues and assigns roles")
+Person(invitee, "Invited staff member", "Accepts the invitation and gets ready on a phone")
+System(promisehub, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+System_Ext(email, "Email provider", "Delivers the invitation link")
+
+Rel(admin, promisehub, "Invites staff by email and role", "HTTPS")
+Rel(promisehub, email, "Sends invitation email via", "SMTP/API")
+Rel(email, invitee, "Delivers link valid for 14 days")
+Rel(invitee, promisehub, "Accepts invitation, completes phone and sessions steps", "HTTPS")
+@enduml

@@ -1,0 +1,67 @@
+@startuml
+title UML sequence behaviour — Download through an expiring link
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Program director" as actor
+box "Frontend — PromiseHub web app, reports library" #E0F2FE
+  participant "ReportsPage or email link" as page
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "ReportsEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "DownloadExportQueryHandler" as handler
+  participant "Export" as export
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "Signed URL verifier" as signer
+  participant "IFileStore" as files
+  participant "IAuditWriter" as audit
+  participant "ExpireExportsJob" as expire
+  database "PromiseHub database" as db
+end box
+
+actor -> page : Tap Download
+page -> endpoints : GET /reports/exports/{id}/download?sig
+endpoints -> endpoints : Authenticate, resolve organization, require Reports.Export
+endpoints -> handler : Send DownloadExportQuery
+handler -> db : Load Export by id and organization (L2-001)
+db --> handler : Export
+handler -> signer : Verify signature against fileKey and ExpiresAt
+alt signature invalid
+  signer --> handler : Invalid
+  handler --> endpoints : Forbidden
+  endpoints --> page : 403
+else ExpiresAt in the past (L2-025 criterion 3)
+  handler --> endpoints : Gone
+  endpoints --> page : 410 ProblemDetails
+  page --> actor : "Link expired" with Export again
+else valid
+  handler -> audit : Export downloaded by actor
+  handler -> files : Get(fileKey)
+  files --> handler : Stream
+  handler --> endpoints : FileStreamResult
+  endpoints --> page : 200 attachment
+  page --> actor : File saved
+end
+
+expire -> db : Exports with ExpiresAt <= now and Status Completed
+db --> expire : Expired exports
+loop each export
+  expire -> files : Delete(fileKey)
+  expire -> export : Expire()
+end
+expire -> db : Save; audit entries remain
+@enduml

@@ -7,8 +7,8 @@ M = STAFF["marisol"]
 T = STAFF["tom"]
 
 R_ENROLL, R_SLIPS, R_ROLL, R_QC, R_PICKUP, R_NOTIFY, R_INC, R_REPORTS = (
-    "PRD-ENROLL", "PRD-SLIPS", "PRD-ROLLCALL", "PRD-QUICKCARD", "PRD-PICKUP", "PRD-NOTIFY", "PRD-INCIDENT", "PRD-REPORTS")
-R_MOBILE, R_PRIVACY, R_DATA = "PRD-NFR-MOBILE", "PRD-NFR-PRIVACY", "PRD-DATA"
+    "L1-005", "L1-006", "L1-007", "L1-008", "L1-009", "L1-010", "L1-011", "L1-012")
+R_MOBILE, R_PRIVACY, R_DATA = "L1-014", "L1-015", "L1-005"
 
 
 def child_href(cid: str, state: str = "default") -> str:
@@ -34,7 +34,7 @@ def today(S):
             '<div class="stack">' + progress(31, 48, "Checked in: 31 of 48", kind="success", show="31 of 48 checked in") +
             f'<div class="cluster cluster--snug">{status("31 checked in", "success")}{status("2 absent, guardians told", "danger")}{status("15 not yet here", "")}</div>'
             f'<div class="cluster">{btn("Continue check-in", "primary", href=page("check-in"))}{btn("Quick Cards", "", icon_name="heart-pulse", href=page("quick-card"))}</div></div>',
-            title="Tutoring night · <span class=\"nowrap\">4:00–6:00 pm</span>, Room 2", tid="sess")
+            title="Tutoring night" + ' <span class="text-muted nowrap" style="font: var(--text-body-sm);">4:00–6:00 pm · Room 2</span>', tid="sess")
         if partial:
             slips = card(empty("Slips didn’t load", "Try again.",
                                action=btn("Try again", "", icon_name="refresh") + btn("Open events", "ghost", href=page("events")), error=True, icon_name="alert-triangle"),
@@ -55,9 +55,9 @@ def today(S):
                    f'<li>{avatar(T)}<div class="feed__body"><strong>Tom Nguyen</strong> accepted 3 Tutoring enrollments<div class="feed__meta">Today, 1:10 pm</div></div></li>'
                    f'<li>{avatar(GUARDIANS["nour"])}<div class="feed__body"><strong>Nour Haddad</strong> updated Yusuf’s medication<div class="feed__meta">Yesterday, 8:22 pm</div></div></li>'
                    f'<li>{avatar(M)}<div class="feed__body"><strong>Marisol Delgado</strong> reminded 7 guardians<div class="feed__meta">Yesterday, 5:05 pm</div></div></li>'
-                   '</ul>', title="Recent activity", tid="act", cls="stack")
+                   '</ul>', title="Recent activity", tid="act", cls="card--flush")
         return greeting + kpis([("Active children", "184", "+6 this month"), ("Households", "112", "3 waiting review"), ("Slips unsigned", "30", "across 2 events"), ("Sessions this week", "9", "7 attendance recorded")]) + \
-            f'<div class="split">{sess}{slips}</div><div class="split">{up}{act}</div>'
+            f'<div class="split"><div class="stack">{sess}{up}</div><div class="stack">{slips}{act}</div></div>'
 
     S.add("default", "Site lead’s home at 4:12 pm on a tutoring night: today’s session, slips due, upcoming events and recent activity.",
           nav="today", main=main_default(), checkin_badge=15)
@@ -81,7 +81,7 @@ def today(S):
           card('<div class="stack">' + progress(31, 48, "Checked in: 31 of 48", kind="success", show="31 of 48 checked in") +
                f'<div class="cluster cluster--snug">{status("31 checked in", "success")}{status("2 absent, guardians told", "danger")}{status("15 not yet here", "")}</div>'
                f'<div class="cluster">{btn("Continue check-in", "primary", href=page("check-in"))}{btn("Quick Cards", "", icon_name="heart-pulse", href=page("quick-card"))}</div></div>',
-               title='Tutoring night · <span class="nowrap">4:00–6:00 pm</span>, Room 2', tid="sess") +
+               title='Tutoring night <span class="text-muted nowrap" style="font: var(--text-body-sm);">4:00–6:00 pm · Room 2</span>', tid="sess") +
           card(empty("Only Roll Call is on", "Admins can turn modules on in Settings.",
                      action=btn("Open Modules", "", icon_name="settings", href=page("settings-modules", "single")), icon_name="settings"), cls="card--flush"),
           notes=note("Navigation, search scopes, the More menu and the phone tab bar all follow the module configuration; nothing that is off is reachable or mentioned.", "top: 5rem; right: 1rem;"))
@@ -204,7 +204,7 @@ def quick_card(S):
     c = CHILD["mateo"]
 
     def qc(alert_html="", medical=True, pickups=True, sync=f'<span class="sync-chip sync-chip--ok">{icon("check")}Saved on this phone · 3:58 pm</span>'):
-        head_ = (f'<div class="quick-card__head">{avatar(c, "lg")}<div><h1 class="quick-card__name">Mateo Rivera</h1><p class="text-muted">9 years · Grade 4 · After-School Tutoring, Saturday Sports</p>{sync}</div></div>')
+        head_ = (f'<div class="quick-card__head">{avatar(c, "lg")}<div><h1 class="quick-card__name">Mateo Rivera</h1><p class="text-muted">9 years · Grade 4 · After‑School Tutoring, Saturday Sports</p>{sync}</div></div>')
         al = alert_html if alert_html is not None else ""
         med = ""
         if medical:
@@ -220,7 +220,7 @@ def quick_card(S):
                  '</ol></section>')
         pk = ""
         if pickups:
-            pk = ('<section class="quick-card__section card" aria-labelledby="qc-pick"><h2 id="qc-pick">Approved to pick up</h2><ul class="list" style="margin: 0 calc(-1 * var(--space-6));">'
+            pk = ('<section class="quick-card__section card" aria-labelledby="qc-pick"><h2 id="qc-pick">Approved to pick up</h2><ul class="list">'
                   + list_item("Carmen Rivera", "Mother · photo ID on file", person=GUARDIANS["carmen"], end=badge("Primary", "success"))
                   + list_item("Luis Rivera", "Uncle · ask for ID", lead='<span class="avatar avatar--sm" aria-hidden="true">LR</span>')
                   + list_item("Rosa Alvarez", "Grandmother · ask for ID", lead='<span class="avatar avatar--sm" aria-hidden="true">RA</span>')
@@ -268,7 +268,7 @@ def events_toolbar(q=""):
     return (f'<div class="toolbar"><form role="search" class="input-group" style="flex: 1 1 14rem;"><label class="visually-hidden" for="ev-q">Search events</label>'
             f'<input class="input" id="ev-q" type="search" placeholder="Search events" value="{esc(q)}"><span class="input-group__btn btn btn--ghost btn--icon" aria-hidden="true">{icon("search")}</span></form>'
             + chips([("Upcoming", True), ("Needs slips", False), ("Past", False)], "Filter events")
-            + select("ev-prog", "Program", ["All programs", "After-School Tutoring", "Saturday Sports", "Winter Camp 2026"], visually_hidden_label=True).replace('class="field"', 'class="field toolbar__end"') + "</div>")
+            + select("ev-prog", "Program", ["All programs", "After‑School Tutoring", "Saturday Sports", "Winter Camp 2026"], visually_hidden_label=True).replace('class="field"', 'class="field toolbar__end"') + "</div>")
 
 
 @screen("events", "page", "Events", route="/events", reqs=[R_SLIPS, R_ROLL], na={})
@@ -313,13 +313,13 @@ def event(S):
                     '<div id="p-declined" role="tabpanel" aria-labelledby="t-declined" tabindex="0" hidden><p class="text-muted">None declined</p></div></div>',
                     title="Permission slip", tid="slip", footer=f'<a href="{page("slip-editor", "edit")}">Edit the slip</a> · <a href="{page("slip-sign")}">Preview as a guardian</a>')
 
-    details = card(facts([("When", "Saturday 14 November 2026, 9:00 am–3:00 pm"), ("Where", "Royal Botanical Gardens, Burlington · bus leaves 8:45 am"), ("Program", f'<a href="{page("program")}">After-School Tutoring</a>'),
+    details = card(facts([("When", "Saturday 14 November 2026, 9:00 am–3:00 pm"), ("Where", "Royal Botanical Gardens, Burlington · bus leaves 8:45 am"), ("Program", f'<a href="{page("program")}">After‑School Tutoring</a>'),
                           ("Staff", "Jaylen Okafor (lead), Aisha Bello, 4 volunteers"), ("Bring", "Nut-free lunch, water, rain jacket"), ("Cost", "Free")]), title="Details", tid="details")
     S.add("default", "Field trip ten days out: 41 of 48 slips signed, the unsigned list with one-tap resend, and the event details.", nav="events",
           main=hdr() + f'<div class="split">{slip_card()}<div class="stack">{details}{card(f"<p class=\"text-muted\">Check-in opens trip morning.</p><div class=\"cluster\" style=\"margin-top: var(--space-3);\">{btn("Open check-in", "", icon_name="clipboard", href=page("check-in", "day-of"))}</div>", title="Day of", tid="dayof")}</div></div>')
     S.add("loading", "Event loading.", nav="events", main=breadcrumb([("Events", page("events"))], "Loading") + f'<div class="page-header" aria-busy="true"><div>{skeleton_header()}</div></div><div class="split"><div class="card">{skeleton_header()}<span class="skeleton skeleton--card" aria-hidden="true" style="margin-top: var(--space-4); height: 12rem;"></span></div><div class="card">{skeleton_header()}</div></div><h1 class="visually-hidden">Event</h1>')
     S.add("empty", "An event that doesn’t need a slip yet: explain and offer to create one.", nav="events",
-          main=hdr(False).replace(e["name"], "Swim trip: Jimmy Thompson Pool").replace(e["when"], "Sat 28 Nov, 10:00 am–1:00 pm").replace("After-School Tutoring", "Saturday Sports").replace("48 on roster", "62 on roster") +
+          main=hdr(False).replace(e["name"], "Swim trip: Jimmy Thompson Pool").replace(e["when"], "Sat 28 Nov, 10:00 am–1:00 pm").replace("After‑School Tutoring", "Saturday Sports").replace("48 on roster", "62 on roster") +
           f'<div class="split">{card(empty("No permission slip yet", "A swim trip needs one.", action=btn("Create slip", "primary", icon_name="plus", href=page("slip-editor")) + btn("Use last year’s", "", icon_name="copy", href=page("slip-editor")), icon_name="clipboard"), cls="card--flush")}{details.replace("Royal Botanical Gardens, Burlington · bus leaves 8:45 am", "Jimmy Thompson Memorial Pool · bus leaves 9:30 am")}</div>')
     S.add("error", "Event failed to load.", nav="events", main=breadcrumb([("Events", page("events"))], "Event") + page_header("Fall field trip: Royal Botanical Gardens", "") + card(empty("Couldn’t load this event", "Try again.", action=btn("Try again", "primary", icon_name="refresh") + btn("All events", "ghost", href=page("events")), error=True, icon_name="alert-triangle"), cls="card--flush"))
     S.add("partial", "Details loaded but the slip status didn’t; the event stays usable.", nav="events",
@@ -393,8 +393,8 @@ def household(S):
         list_item("Luis Rivera", "Uncle · 905-555-0199 · approved pickup", lead='<span class="avatar avatar--sm" aria-hidden="true">LR</span>', end=btn("Edit", "ghost", size="sm", data_href=dialog("edit-guardian"))),
     ], card=False), title="Guardians", tid="guardians", cls="card--flush", footer=f'<a href="{dialog("add-guardian")}">Add a guardian</a>')
     children_card = card(ul_list([
-        list_item("Mateo Rivera", "9 · Grade 4 · After-School Tutoring, Saturday Sports", person=CHILD["mateo"], href=page("child"), end=flag("Allergy")),
-        list_item("Sofía Rivera", "12 · Grade 7 · After-School Tutoring", person=CHILD["sofia"], href=page("child"), end=flag("Asthma")),
+        list_item("Mateo Rivera", "9 · Grade 4 · After‑School Tutoring, Saturday Sports", person=CHILD["mateo"], href=page("child"), end=flag("Allergy")),
+        list_item("Sofía Rivera", "12 · Grade 7 · After‑School Tutoring", person=CHILD["sofia"], href=page("child"), end=flag("Asthma")),
     ], card=False), title="Children", tid="children", cls="card--flush")
     consent = card(facts([("Season consent", f'Signed by Carmen Rivera · Tue 2 Sep 2026 · <a href="{page("slip-sign", "success")}">View</a>'), ("Photo permission", "Program use only"), ("Language for messages", "Spanish"), ("Preferred channel", "Text"), ("Data residency", "Canada")]), title="Consent and preferences", tid="consent")
     audit = card('<ol class="audit">'
@@ -418,7 +418,7 @@ def household(S):
           f'<div class="split"><div class="stack">' + card(ul_list([
               list_item(LONG_CHILD, "9 · Grade 4 · Saturday Sports", lead='<span class="avatar avatar--sm avatar--sun" aria-hidden="true">AF</span>', href=page("child"), end=flag("Allergy")),
               list_item("Anastasia-Wilhelmina Fitzgerald-Vanderbroucke", "7 · Grade 2 · Saturday Sports", lead='<span class="avatar avatar--sm avatar--sun" aria-hidden="true">AF</span>', href=page("child")),
-              list_item("Maximilian Fitzgerald-Vanderbroucke", "11 · Grade 6 · After-School Tutoring", lead='<span class="avatar avatar--sm avatar--sun" aria-hidden="true">MF</span>', href=page("child")),
+              list_item("Maximilian Fitzgerald-Vanderbroucke", "11 · Grade 6 · After‑School Tutoring", lead='<span class="avatar avatar--sm avatar--sun" aria-hidden="true">MF</span>', href=page("child")),
               list_item("Theodora Fitzgerald-Vanderbroucke", "6 · Grade 1 · Saturday Sports", lead='<span class="avatar avatar--sm avatar--sun" aria-hidden="true">TF</span>', href=page("child")),
               list_item("Sebastian Fitzgerald-Vanderbroucke", "12 · Grade 7 · Mentoring", lead='<span class="avatar avatar--sm avatar--sun" aria-hidden="true">SF</span>', href=page("child")),
           ], card=False), title="Children", tid="children", cls="card--flush") + card(ul_list([
@@ -444,7 +444,7 @@ def child(S):
         list_item("Rosa Alvarez", "Grandmother · ask for ID", lead='<span class="avatar avatar--sm" aria-hidden="true">RA</span>', end=btn("Remove", "ghost", size="sm", data_href=dialog("remove-pickup"))),
     ], card=False), title="Approved pickups", tid="pick", cls="card--flush", footer=f'<a href="{dialog("add-pickup")}">Add an approved adult</a>')
     programs_card = card(ul_list([
-        list_item("After-School Tutoring", "Mon–Thu · enrolled Sep 2026 · 31 of 34 sessions", lead=f'<span class="icon-tile" aria-hidden="true">{icon("list")}</span>', href=page("program"), end=badge("Enrolled", "success")),
+        list_item("After‑School Tutoring", "Mon–Thu · enrolled Sep 2026 · 31 of 34 sessions", lead=f'<span class="icon-tile" aria-hidden="true">{icon("list")}</span>', href=page("program"), end=badge("Enrolled", "success")),
         list_item("Saturday Sports", "Sat · enrolled Sep 2026 · 8 of 9 sessions", lead=f'<span class="icon-tile" aria-hidden="true">{icon("calendar")}</span>', href=page("program"), end=badge("Enrolled", "success")),
     ], card=False), title="Programs", tid="prog", cls="card--flush")
     att = card(f'<div class="stack" style="gap: var(--space-3);"><p class="text-muted">39 of 43 sessions this season · 91%</p><div class="dots" role="img" aria-label="Last 30 sessions: 27 present, 2 absent, 1 excused">'
@@ -504,7 +504,7 @@ def program(S):
     enroll = card(f'<div class="stack" style="gap: var(--space-3);"><p>Enrollment is open.</p>'
                   f'<div class="input-group"><label class="visually-hidden" for="enroll-link">Enrollment link</label><input class="input" id="enroll-link" type="url" readonly value="https://harbourview.promisehub.app/enroll/tutoring"><button class="btn btn--ghost btn--icon input-group__btn" type="button" aria-label="Copy enrollment link">{icon("copy")}</button></div>'
                   f'<div class="cluster">{btn("Show QR", "", icon_name="qr", data_href=dialog("open-enrollment", "success"))}{btn("Text to families", "", icon_name="send", href=page("new-message"))}{btn("Close enrollment", "ghost", data_href=dialog("close-enrollment"))}</div></div>', title="Enrollment", tid="enroll")
-    S.add("default", "After-School Tutoring: numbers, roster with medical flags, events and the enrollment link.", nav="programs", user=M,
+    S.add("default", "After‑School Tutoring: numbers, roster with medical flags, events and the enrollment link.", nav="programs", user=M,
           main=hdr() + stats + f'<div class="split"><div class="stack">{roster}{events_c}</div><div class="stack">{enroll}</div></div>')
     S.add("loading", "Program loading.", nav="programs", main=breadcrumb([("Programs", page("programs"))], "Loading") + f'<div class="page-header" aria-busy="true"><div>{skeleton_header()}</div></div>{skeleton_kpis()}<div class="split">{skeleton_list(4, "Loading roster")}{skeleton_list(2, "Loading events")}</div><h1 class="visually-hidden">Program</h1>')
     S.add("empty", "A new program with no roster: open enrollment or import.", nav="programs", user=M,
@@ -519,7 +519,7 @@ def program(S):
 
 @screen("roster", "page", "Program roster", route="/programs/:id/roster", reqs=[R_ENROLL], na={})
 def roster(S):
-    hdr = breadcrumb([("Programs", page("programs")), ("After-School Tutoring", page("program"))], "Roster") + page_header("Roster · After-School Tutoring", "48 enrolled · 3 waiting review · 3 waitlisted · 50 places", btn("Add child", "", icon_name="plus", data_href=dialog("enroll-in-program")) + btn("Export", "", icon_name="download", data_href=dialog("export-data")))
+    hdr = breadcrumb([("Programs", page("programs")), ("After‑School Tutoring", page("program"))], "Roster") + page_header("Roster · After‑School Tutoring", "48 enrolled · 3 waiting review · 3 waitlisted · 50 places", btn("Add child", "", icon_name="plus", data_href=dialog("enroll-in-program")) + btn("Export", "", icon_name="download", data_href=dialog("export-data")))
     tabs_ = ('<div class="tabs" role="tablist" aria-label="Roster sections"><button class="tab" role="tab" type="button" id="t-review" aria-controls="p-review" aria-selected="true">Waiting review <span class="badge badge--info">3</span></button>'
              '<button class="tab" role="tab" type="button" id="t-enrolled" aria-controls="p-enrolled" aria-selected="false" tabindex="-1">Enrolled <span class="badge">48</span></button>'
              '<button class="tab" role="tab" type="button" id="t-wait" aria-controls="p-wait" aria-selected="false" tabindex="-1">Waitlist <span class="badge">3</span></button></div>')
@@ -536,9 +536,9 @@ def roster(S):
               '<div id="p-enrolled" role="tabpanel" aria-labelledby="t-enrolled" tabindex="0" hidden><p class="text-muted">48 enrolled</p></div>'
               '<div id="p-wait" role="tabpanel" aria-labelledby="t-wait" tabindex="0" hidden><p class="text-muted">3 waitlisted</p></div>')
     S.add("default", "Three enrollments waiting review with accept and waitlist on each row; enrolled and waitlist tabs.", nav="programs", user=T, main=hdr + tabs_ + panels)
-    S.add("loading", "Roster loading.", nav="programs", main=breadcrumb([("Programs", page("programs")), ("After-School Tutoring", page("program"))], "Roster") + page_header("Roster · After-School Tutoring", "") + skeleton_list(6, "Loading roster"))
+    S.add("loading", "Roster loading.", nav="programs", main=breadcrumb([("Programs", page("programs")), ("After‑School Tutoring", page("program"))], "Roster") + page_header("Roster · After‑School Tutoring", "") + skeleton_list(6, "Loading roster"))
     S.add("empty", "Nothing waiting review and nobody enrolled yet.", nav="programs", user=T, main=hdr.replace("48 enrolled · 3 waiting review · 3 waitlisted · 50 places", "Nobody enrolled yet · 50 places") + card(empty("No enrollments yet", "Share the enrollment link.", action=btn("Share enrollment link", "primary", icon_name="link", data_href=dialog("open-enrollment")), icon_name="inbox"), cls="card--flush"))
-    S.add("error", "Roster failed to load.", nav="programs", main=breadcrumb([("Programs", page("programs")), ("After-School Tutoring", page("program"))], "Roster") + page_header("Roster · After-School Tutoring", "") + card(empty("Couldn’t load the roster", "Try again.", action=btn("Try again", "primary", icon_name="refresh"), error=True, icon_name="alert-triangle"), cls="card--flush"))
+    S.add("error", "Roster failed to load.", nav="programs", main=breadcrumb([("Programs", page("programs")), ("After‑School Tutoring", page("program"))], "Roster") + page_header("Roster · After‑School Tutoring", "") + card(empty("Couldn’t load the roster", "Try again.", action=btn("Try again", "primary", icon_name="refresh"), error=True, icon_name="alert-triangle"), cls="card--flush"))
     S.add("no-results", "Filter on the enrolled tab with no match.", nav="programs", user=T, main=hdr + tabs_.replace('aria-selected="true">Waiting review', 'aria-selected="false" tabindex="-1">Waiting review').replace('aria-selected="false" tabindex="-1">Enrolled', 'aria-selected="true">Enrolled') +
           f'<div class="toolbar"><form role="search" class="input-group" style="flex: 1 1 14rem;"><label class="visually-hidden" for="ro-q">Search roster</label><input class="input" id="ro-q" type="search" value="Garcia"><span class="input-group__btn btn btn--ghost btn--icon" aria-hidden="true">{icon("search")}</span></form></div>' +
           card(empty("No “Garcia” enrolled", "Clear the search.", action=btn("Clear search", "") + btn("Search families", "ghost", href=page("families", "no-results")), icon_name="search"), cls="card--flush"))
@@ -546,7 +546,7 @@ def roster(S):
           main=hdr + tabs_ + panels.replace(ul_list(review_rows(), label="Waiting review"), ul_list(review_rows({0, 2}), label="Waiting review")) +
           f'<div class="bulk-bar" role="region" aria-label="Bulk actions"><span class="bulk-bar__count">2 selected</span>{btn("Accept 2", "primary", data_href=dialog("bulk-review"))}{btn("Waitlist 2", "", data_href=dialog("bulk-review"))}{btn("Clear", "ghost")}</div>')
     S.add("long", "A camp roster of 212 enrolled as a table with pagination.", nav="programs", user=T,
-          main=hdr.replace("After-School Tutoring", "Summer Camp 2026").replace("48 enrolled · 3 waiting review · 3 waitlisted · 50 places", "212 enrolled · 120 places · 2 sites") +
+          main=hdr.replace("After‑School Tutoring", "Summer Camp 2026").replace("48 enrolled · 3 waiting review · 3 waitlisted · 50 places", "212 enrolled · 120 places · 2 sites") +
           table("Enrolled children", ["Child", "Age", "Household", "Medical", "Slips", "Attendance", "Actions"],
                 [[f'<a href="{page("child")}">{esc(c["name"])}</a>', str(c["age"]), c["hh"], flag(c["flag"]) if c["flag"] else "", badge("Signed", "success"), f'{90 + i}%', f'<div class="row-actions">{btn("Remove", "ghost", size="sm", data_href=dialog("remove-from-roster"))}</div>'] for i, c in enumerate(CHILDREN[:8])])
           + f'<nav class="cluster cluster--between" aria-label="Pagination"><span class="text-caption">Showing 1–25 of 212</span><div class="cluster cluster--snug">{btn("Previous", "", disabled=True)}{btn("Next", "", icon_name="arrow-right")}</div></nav>')

@@ -1,0 +1,18 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Check-in and sign-out
+
+Person(lead, "Site lead", "Runs the session")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "attendance library: CheckInPage, CheckInSheetDialog, ConfirmPickupDialog, AddWalkInDialog")
+  Container(api, "PromiseHub API", "ASP.NET Core", "AttendanceEndpoints, Application handlers, Domain")
+  ContainerDb(db, "PromiseHub database", "SQL", "Sessions, AttendanceRecords, AttendanceEvents, WalkIns, audit log")
+}
+System_Ext(sms, "SMS provider", "Delivers texts")
+
+Rel(lead, web, "Taps Check in / Sign out", "HTTPS")
+Rel(web, api, "POST /sessions/{id}/check-ins, /sign-outs, /absences, /walk-ins", "JSON/HTTPS")
+Rel(api, db, "Reads roster, writes records and events", "EF Core")
+Rel(api, sms, "Queues absence text", "HTTPS")
+@enduml

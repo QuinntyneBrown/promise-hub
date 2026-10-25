@@ -1,0 +1,19 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Observe and alert
+
+Person(operator, "Operator (on-call)", "Watches dashboards and receives alerts")
+Person(staff, "Staff member", "Sees a correlation id on the server-error page")
+System(promisehub, "PromiseHub", "Emits structured logs, metrics and job outcomes per tenant")
+System_Ext(logs, "Log store", "Searchable structured log lines")
+System_Ext(metrics, "Metrics and dashboards", "Histograms, gauges, alert rules")
+System_Ext(oncall, "On-call channel", "Receives error-rate, queue-lag and backup alerts")
+
+Rel(staff, promisehub, "Uses", "HTTPS")
+Rel(promisehub, logs, "Ships JSON log lines")
+Rel(promisehub, metrics, "Exports metrics and traces", "OpenTelemetry")
+Rel(metrics, oncall, "Raises alerts")
+Rel(operator, metrics, "Reads")
+Rel(operator, logs, "Searches by correlation id")
+@enduml

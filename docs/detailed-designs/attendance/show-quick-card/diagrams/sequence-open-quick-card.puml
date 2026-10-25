@@ -1,0 +1,80 @@
+@startuml
+title UML sequence behaviour — Open a Quick Card
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Staff member" as staff
+box "Frontend — PromiseHub web app, attendance library" #E0F2FE
+  participant "CheckInPage" as roster
+  participant "QuickCardPage" as page
+  participant "QuickCardStore" as store
+  participant "Service worker cache" as cache
+  participant "QuickCardApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "QuickCardEndpoints" as ep
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "GetQuickCardQueryHandler" as h
+  participant "QuickCardPermissions" as perm
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "IAuditLog" as audit
+end box
+
+staff -> roster : Tap Mateo's name
+roster -> page : Navigate /children/{id}/quick-card
+page -> store : load(childId)
+store -> cache : Cached card for child on today's roster?
+alt Cached copy present
+  cache --> store : QuickCardDto + savedAt
+  store --> page : Render in under 1 s (L2-019), sync chip "Saved on this phone"
+  page --> staff : Allergy alert first, tel: links, pickups
+  opt Online
+    store -> client : getQuickCard(childId) — refresh and audit the open
+  end
+  opt Offline
+    store -> store : Queue recordOpen(childId, now) for reconnect
+  end
+else No cached copy
+  store -> client : getQuickCard(childId)
+end
+client -> ep : GET /children/{id}/quick-card
+ep -> ep : Authenticate, resolve tenant, Quick Cards module on
+alt Module off or child not in tenant
+  ep --> client : 404
+  client --> page : Error state with Try again and tel: from roster row
+else Served
+  ep -> h : Send GetQuickCardQuery
+  h -> db : Load child, medical, guardians, approved pickups (L2-001)
+  db --> h : Rows
+  h -> perm : CanViewMedical(role)
+  alt Role may view medical (site lead, director, admin)
+    perm --> h : true
+    h -> h : Build DTO with AllergyAlert and Medical, health card masked
+  else Role restricted (L2-007)
+    perm --> h : false
+    h -> h : Omit Medical and HealthCard, MedicalRestricted = true
+  end
+  h -> audit : Write "Quick Card opened" {actor, child, medicalIncluded, time} (L2-019)
+  audit --> h : Written
+  h --> ep : QuickCardDto
+  ep --> client : 200 (Cache-Control: no-store)
+  client --> store : DTO
+  store -> cache : Replace cached copy when child is on today's roster
+  store --> page : Render; forbidden state when MedicalRestricted
+  page --> staff : Card
+end
+@enduml

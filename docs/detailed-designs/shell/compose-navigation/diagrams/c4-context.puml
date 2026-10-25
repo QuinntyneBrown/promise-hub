@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Compose navigation
+
+Person(staff, "Staff member", "Site lead, director, admin or other role working in the shell")
+System(promisehub, "PromiseHub", "Multi-tenant platform for youth-serving organizations")
+
+Rel(staff, promisehub, "Navigates modules that are on through the shell", "HTTPS")
+@enduml

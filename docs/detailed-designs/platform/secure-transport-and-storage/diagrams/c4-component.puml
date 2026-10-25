@@ -1,0 +1,37 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Secure transport and storage
+
+Container_Boundary(api, "PromiseHub API") {
+  Component(https, "HttpsRedirection + HSTS", "ASP.NET Core middleware", "Redirects HTTP; Strict-Transport-Security")
+  Component(headers, "SecurityHeadersMiddleware", "Middleware", "CSP, frame-ancestors, nosniff, referrer and permissions policy")
+  Component(reqlog, "RequestLoggingMiddleware", "Middleware", "Outside the exception handler")
+  Component(exc, "ExceptionHandler + ProblemDetails", "Middleware", "No stack traces or secrets in bodies")
+  Component(auth, "Authentication + Authorization", "Fallback policy: authenticated", "401 for anonymous; AllowAnonymous opt-in")
+  Component(endpoints, "Feature endpoints", "Minimal APIs", "No business logic")
+}
+Container_Boundary(app, "PromiseHub Application") {
+  Component(validators, "FluentValidation validators", "Per command/query", "Bound length and shape; store text as text")
+  Component(perm, "IPermissionCheck", "Application service", "Runs before tenant data is read")
+  Component(handlers, "Command/query handlers", "Application", "Parameterised EF Core access")
+}
+Container_Boundary(infra, "PromiseHub Infrastructure") {
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "Connection string from configuration")
+  Component(dp, "Data Protection key ring", "ASP.NET Core", "Signs guardian links and recovery codes")
+  Component(redact, "SecretsRedactionEnricher", "Logging enricher", "Removes secrets and Authorization header")
+  Component(files, "IFileStorage", "Encrypted store client", "Signed, expiring links")
+}
+Rel(https, headers, "Next")
+Rel(headers, reqlog, "Next")
+Rel(reqlog, exc, "Next")
+Rel(exc, auth, "Next")
+Rel(auth, endpoints, "Authenticated request")
+Rel(endpoints, validators, "Validate")
+Rel(endpoints, handlers, "Send command/query")
+Rel(handlers, perm, "Check")
+Rel(handlers, db, "Read and write")
+Rel(handlers, files, "Store exports")
+Rel(handlers, dp, "Protect tokens")
+Rel(reqlog, redact, "Writes through")
+@enduml

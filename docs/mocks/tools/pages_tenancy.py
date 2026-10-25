@@ -9,7 +9,7 @@ M = STAFF["marisol"]
 T = STAFF["tom"]
 J = STAFF["jaylen"]
 P = STAFF["priya"]
-R_MODULES, R_TENANT = "PRD-NFR-MODULES", "PRD-NFR-MULTITENANT"
+R_MODULES, R_TENANT = "L1-002", "L1-001"
 
 # id, name, what it does, requirement, needs
 MODULES = [
@@ -96,7 +96,7 @@ def organizations(S):
     tb = (f'<div class="toolbar"><form role="search" class="input-group" style="flex: 1 1 14rem;"><label class="visually-hidden" for="org-q">Find an organization</label>'
           f'<input class="input" id="org-q" type="search" placeholder="Find an organization"><span class="input-group__btn btn btn--ghost btn--icon" aria-hidden="true">{icon("search")}</span></form>'
           + chips([("All 5", True), ("Standard 3", False), ("Free 2", False), ("Setting up 1", False), ("Suspended 1", False)], "Filter organizations") + "</div>")
-    tbl = table("Organizations", ["Organization", "Plan", "#Children", "#Modules", "Status", "Actions"], [org_row(o) for o in ORGS], hide_sm={1, 2, 3}, cls="table-wrap--fit")
+    tbl = table("Organizations", ["Organization", "Plan", "#Children", "#Modules", "Status", "Actions"], [org_row(o) for o in ORGS], hide_sm={1, 2, 3, 5}, cls="table-wrap--fit table-wrap--names")
     S.add("default", "The platform admin’s list of tenants: plan, size, how many modules are on, status; open or suspend.", nav="settings", user=T, unread=0, main=hdr + tb + tbl,
           notes=note("Each organization is a separate tenant; only platform admins see this list.", "top: 5rem; right: 1rem;"))
     S.add("loading", "Organizations loading.", nav="settings", user=T, unread=0, main=page_header("Organizations", "") + skeleton_list(5, "Loading organizations"))

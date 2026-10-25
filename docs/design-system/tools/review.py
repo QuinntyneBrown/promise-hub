@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / '.cache/shots'
 OUT.mkdir(parents=True, exist_ok=True)
 SELECTED = ['index.html','components/button.html','components/roster.html','components/dialog.html','foundations/color.html']
-MOCKS = ['pages/today/default.html','pages/check-in/default.html','pages/quick-card/default.html','pages/guardian-sign/default.html','dialogs/add-household/default.html']
+MOCKS = ['pages/today/default.html','pages/check-in/default.html','pages/quick-card/default.html','pages/slip-sign/default.html','dialogs/add-family/default.html']
 results=[]
 images=[]
 
@@ -39,13 +39,15 @@ with sync_playwright() as p:
                     page.screenshot(path=str(OUT/f'{file.stem}-{width}-{theme}.png'))
                     images.append((OUT/f'{file.stem}-{width}-{theme}.png',info['file'],width,theme))
                     if info['file']=='components/button.html':
-                        page.locator('#states details').first.evaluate('(e)=>e.open=true')
+                        page.locator('#states details').nth(0 if theme=='light' else 1).evaluate('(e)=>e.open=true')
                         page.locator('#states').evaluate('(e)=>e.scrollIntoView({behavior:"instant"})')
                         page.screenshot(path=str(OUT/f'button-states-{width}-{theme}.png'))
             for rel in MOCKS:
                 file=ROOT.parent/'mocks'/rel
                 if not file.exists():continue
                 page.goto(file.as_uri()+f'?theme={theme}&chrome=0')
+                page.wait_for_timeout(100)
+                page.evaluate('scrollTo(0,0)')
                 page.screenshot(path=str(OUT/f'mock-{file.parent.name}-{width}-{theme}.png'))
                 results.append(dict(file='mocks/'+rel,viewport=width,theme=theme,overflow=page.evaluate('document.documentElement.scrollWidth>innerWidth+1')))
             page.close()

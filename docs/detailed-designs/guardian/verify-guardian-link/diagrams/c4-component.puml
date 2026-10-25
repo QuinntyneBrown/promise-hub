@@ -1,0 +1,38 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Verify a guardian link
+
+Container(web, "PromiseHub web app", "Angular", "GuardianIdentifyPage, GuardianVerifyGate, GuardianExpiredPage via GuardianAuthApi")
+Container_Boundary(api, "PromiseHub API") {
+  Component(authendpoints, "GuardianAuthEndpoints", "Minimal API group", "GET /g/auth/status, POST /g/auth/code, POST /g/auth/verify")
+  Component(filter, "GuardianLinkFilter", "Endpoint filter", "Resolves link token; 410 when revoked; 401 verification-required without trusted device")
+  Component(contentendpoints, "Guardian content endpoints", "Minimal API groups", "Enroll, slip-sign, family page, survey (other designs)")
+  Component(request, "RequestGuardianCodeCommandHandler", "Application handler", "Matches contact, stores code hash with 10-minute expiry, sends")
+  Component(verify, "VerifyGuardianCodeCommandHandler", "Application handler", "Checks lockout, compares code, locks after three failures, trusts device 30 days")
+  Component(issue, "IssueGuardianLinkCommandHandler", "Application handler", "Mints a 128-bit single-household link")
+  Component(revoke, "RevokeGuardianLinksOnContactChange", "Domain event handler", "Revokes links and devices when contact changes")
+  Component(domain, "GuardianLink / GuardianVerification / TrustedGuardianDevice", "Domain entities", "Token hashes, codes, attempts, expiries")
+  Component(token, "ITokenGenerator", "Infrastructure service", "Cryptographic random tokens and codes")
+  Component(senders, "ISmsSender / IEmailSender", "Infrastructure services", "Provider adapters")
+  Component(audit, "AuditLog", "Infrastructure writer", "Code requests, lockouts, verifications")
+  ComponentDb(db, "PromiseHub database", "EF Core", "Guardian auth tables")
+}
+Rel(web, authendpoints, "Calls", "JSON/HTTPS")
+Rel(web, contentendpoints, "Calls with link and device tokens", "JSON/HTTPS")
+Rel(contentendpoints, filter, "Guarded by")
+Rel(filter, domain, "Resolves link and device")
+Rel(authendpoints, request, "Sends RequestGuardianCodeCommand")
+Rel(authendpoints, verify, "Sends VerifyGuardianCodeCommand")
+Rel(request, token, "Generates code")
+Rel(request, senders, "Sends code")
+Rel(request, domain, "Creates GuardianVerification")
+Rel(verify, domain, "Checks and mutates; creates TrustedGuardianDevice")
+Rel(issue, token, "Generates link secret")
+Rel(issue, domain, "Creates GuardianLink")
+Rel(revoke, domain, "Revokes")
+Rel(request, audit, "Writes entry")
+Rel(verify, audit, "Writes entry")
+Rel(domain, db, "Persisted by", "EF Core")
+Rel(audit, db, "Appends", "EF Core")
+@enduml

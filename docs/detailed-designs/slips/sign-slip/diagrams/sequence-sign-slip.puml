@@ -1,0 +1,84 @@
+@startuml
+title UML sequence behaviour — Sign a slip
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Guardian" as actor
+box "Frontend — PromiseHub web app, guardian library" #E0F2FE
+  participant "SlipSignPage" as page
+  participant "GuardianSlipsApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "GuardianSlipEndpoints" as endpoints
+  participant "GuardianLinkVerifier" as verifier
+end box
+box "Backend — PromiseHub Application and Domain (Slips)" #ECFDF3
+  participant "GetSlipByTokenQueryHandler" as load
+  participant "SignSlipCommandHandler" as sign
+  participant "SignatureRecord" as record
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "AuditLog" as audit
+  participant "Email provider (receipt)" as email
+end box
+actor -> page : Open slip link from text; verify code
+page -> client : load(token)
+client -> endpoints : GET /g/slips/{token}
+endpoints -> verifier : Validate token signature; household and organization from token; device verified? (L2-026)
+verifier --> endpoints : Link context
+endpoints -> load : Send GetSlipByTokenQuery
+load -> db : Load SlipLink, slip current version, household children, pre-filled details
+db --> load : Slip data
+alt now > SignBy + 30 days
+  load --> endpoints : SlipLinkExpired (L2-015 AC5)
+  endpoints --> client : 410 Gone
+  client --> page : Expired
+  page --> actor : Expired page offering to contact the organization
+else link open
+  load --> endpoints : SlipView in household language (L2-027)
+  endpoints --> client : 200 OK
+  client --> page : SlipView
+  page --> actor : Pre-filled child details, event, sign-by date, questions (L2-015 AC1)
+  actor -> page : Type full name; answer questions; Sign the slip
+  page -> client : sign(token, { typedName, answers, device, language })
+  client -> endpoints : POST /g/slips/{token}/sign
+  endpoints -> verifier : Validate token and device
+  verifier --> endpoints : Link context
+  endpoints -> sign : Send SignSlipCommand
+  sign -> db : Load household guardians, slip version
+  db --> sign : Guardians, SlipVersion
+  alt typed name matches no guardian of the child
+    sign --> endpoints : Rejected (L2-015 AC4)
+    endpoints --> client : 400 ProblemDetails (sig)
+    client --> page : Field error
+    page --> actor : Inline error on the name field
+  else name matches a guardian
+    loop each child of the household in the event
+      sign -> record : new SignatureRecord(typedName, now, device, language, version.TextHash) (L2-015 AC2)
+      record --> sign : Record
+    end
+    sign -> db : Mark delivery signed; increment event signed count; SaveChanges
+    db --> sign : Commit result
+    sign -> audit : Record signature (L2-032)
+    audit --> sign : Recorded
+    sign -> email : Queue receipt copy to the guardian
+    email --> sign : Queued
+    sign --> endpoints : SignedReceipt
+    endpoints --> client : 200 OK
+    client --> page : SignedReceipt
+    page --> actor : "Signed. Thank you"; child cleared; time and what to bring
+  end
+end
+@enduml

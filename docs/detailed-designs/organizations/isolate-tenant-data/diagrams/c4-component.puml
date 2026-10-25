@@ -1,0 +1,33 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Isolate tenant data
+
+Container(web, "PromiseHub web app", "Angular", "Typed clients send session credentials only")
+Container_Boundary(api, "PromiseHub API") {
+  Component(middleware, "TenantContextMiddleware", "ASP.NET Core middleware", "Loads the active membership and populates ITenantContext")
+  Component(filter, "ClientTenantValueFilter", "Endpoint filter", "Replaces any client-supplied organization id with the membership's")
+  Component(behavior, "NotFoundOnCrossTenantBehavior", "Pipeline behaviour", "Maps an empty filtered lookup to 404 and audits the attempt")
+  Component(context, "ITenantContext / TenantContext", "Application contract", "OrganizationId, MembershipId, Role")
+  Component(scope, "TenantScope", "Application", "Sets the tenant for one job run")
+  Component(handlers, "Feature handlers", "Application handlers", "Read ITenantContext; query through the DbContext")
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "Global query filter on ITenantOwned.OrganizationId")
+  Component(jobs, "JobRunner", "Infrastructure", "Runs each per-tenant job inside a TenantScope")
+  Component(audit, "AuditLog", "Infrastructure", "Records cross-tenant attempts")
+  Component(search, "SearchIndexer", "Infrastructure", "Filters documents by OrganizationId")
+}
+
+Rel(web, middleware, "Request with session credentials", "HTTPS")
+Rel(middleware, context, "Populates")
+Rel(middleware, filter, "Passes request to")
+Rel(filter, behavior, "Dispatches command or query")
+Rel(behavior, handlers, "Invokes")
+Rel(handlers, context, "Reads tenant")
+Rel(handlers, db, "Queries", "EF Core")
+Rel(db, context, "Reads OrganizationId in query filter")
+Rel(behavior, audit, "Writes CrossTenantAttempt on 404")
+Rel(jobs, scope, "Opens per organization")
+Rel(scope, context, "Sets")
+Rel(jobs, handlers, "Runs job handlers")
+Rel(handlers, search, "Searches")
+@enduml

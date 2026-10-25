@@ -1,0 +1,62 @@
+@startuml
+title UML sequence behaviour — Cancel a scheduled send
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Program director" as actor
+box "Frontend — PromiseHub web app, messaging library" #E0F2FE
+  participant "MessagePage" as page
+  participant "CancelSendDialog" as dialog
+  participant "MessagingApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "MessagesEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "CancelScheduledMessageCommandHandler" as handler
+  participant "Message" as message
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "ScheduledMessageDispatcher" as dispatcher
+  database "PromiseHub database" as db
+end box
+
+actor -> page : Open scheduled message, tap "Cancel send"
+page -> dialog : Open (CDK Dialog)
+actor -> dialog : Confirm
+dialog -> client : cancelScheduled(id)
+client -> endpoints : POST /messages/{id}/cancel
+endpoints -> endpoints : Authenticate, resolve organization, check module
+endpoints -> handler : Send CancelScheduledMessageCommand
+handler -> db : Load message by id and organization (L2-001)
+db --> handler : Message
+alt status is Scheduled
+  handler -> message : Cancel() (L2-021 criterion 4)
+  message --> handler : Status Cancelled, body kept as draft
+  handler -> db : Save and write audit entry
+  db --> handler : Committed
+  handler --> endpoints : Result ok
+  endpoints --> client : 200
+  client --> dialog : Done
+  dialog --> page : Close and refresh
+  page --> actor : Badge "Cancelled", nothing sent
+else status is Sending, Sent or Cancelled
+  handler --> endpoints : Conflict
+  endpoints --> client : 409 ProblemDetails
+  client --> dialog : Failed state with reason
+end
+
+dispatcher -> db : Find Scheduled messages with ScheduledFor <= now
+db --> dispatcher : Due messages (cancelled ones excluded)
+@enduml

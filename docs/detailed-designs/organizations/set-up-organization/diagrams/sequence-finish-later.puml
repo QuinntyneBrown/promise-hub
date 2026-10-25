@@ -1,0 +1,49 @@
+@startuml
+title UML sequence behaviour — Finish later and resume from the setup checklist
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "First admin" as actor
+box "Frontend — organizations library" #E0F2FE
+  participant "WizardLayoutComponent" as wizard
+  participant "SetupChecklistPage" as checklist
+  participant "OnboardingApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "OnboardingEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "GetOnboardingProgressQueryHandler" as handler
+  participant "OnboardingProgress" as progress
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+end box
+actor -> wizard : "Finish later"
+wizard -> checklist : Navigate to setup
+checklist -> client : getProgress()
+client -> endpoints : GET /onboarding/progress
+endpoints -> endpoints : Authenticate; resolve active membership
+endpoints -> handler : Send GetOnboardingProgressQuery
+handler -> db : Load OnboardingProgress for active tenant
+db --> handler : OnboardingProgress
+handler -> progress : Next()
+progress --> handler : Next step
+handler --> endpoints : OnboardingProgressDto
+endpoints --> client : 200
+client --> checklist : Steps with completed flags and next step
+checklist --> actor : Completed steps ticked; next step offered (L2-008 c3)
+actor -> checklist : Open next step
+checklist -> wizard : Navigate to that step page
+@enduml

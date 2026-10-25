@@ -1,0 +1,99 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Set up an organization
+
+enum OnboardingStep {
+  Organization
+  Modules
+  FirstProgram
+  Children
+  Staff
+  FirstSlip
+}
+
+enum OrganizationStatus {
+  SettingUp
+  Active
+  Suspended
+}
+
+class Organization {
+  +Guid Id
+  +string Name
+  +string Country
+  +string DataRegion
+  +OrganizationStatus Status
+  +DateTimeOffset CreatedAt
+  +Rename(name: string): void
+  +SetCountry(country: string, region: string): void
+  +Activate(): void
+}
+
+class OnboardingProgress {
+  +Guid OrganizationId
+  +ISet<OnboardingStep> CompletedSteps
+  +DateTimeOffset? CompletedAt
+  +Complete(step: OnboardingStep): void
+  +Next(): OnboardingStep?
+}
+
+class SaveOrganizationStepCommand {
+  +string Name
+  +string Country
+}
+
+class SaveOrganizationStepCommandValidator {
+  +Validate(command: SaveOrganizationStepCommand): ValidationResult
+}
+
+class SaveOrganizationStepCommandHandler {
+  +Handle(command: SaveOrganizationStepCommand): Task<Result>
+}
+
+class CompleteOnboardingStepCommand {
+  +OnboardingStep Step
+}
+
+class CompleteOnboardingStepCommandHandler {
+  +Handle(command: CompleteOnboardingStepCommand): Task<Result>
+}
+
+class GetOnboardingProgressQuery
+class GetOnboardingProgressQueryHandler {
+  +Handle(query: GetOnboardingProgressQuery): Task<OnboardingProgressDto>
+}
+
+class OnboardingProgressDto {
+  +IReadOnlyList<StepStateDto> Steps
+  +OnboardingStep? Next
+}
+
+class OnboardingPermission {
+  +Check(membership: Membership): Result
+}
+
+SaveOrganizationStepCommandHandler ..> SaveOrganizationStepCommand : handles
+SaveOrganizationStepCommandHandler ..> SaveOrganizationStepCommandValidator : uses
+SaveOrganizationStepCommandHandler ..> OnboardingPermission : checks
+SaveOrganizationStepCommandHandler --> Organization : loads / mutates
+SaveOrganizationStepCommandHandler --> OnboardingProgress : completes step
+CompleteOnboardingStepCommandHandler ..> CompleteOnboardingStepCommand : handles
+CompleteOnboardingStepCommandHandler --> OnboardingProgress : completes step
+CompleteOnboardingStepCommandHandler --> Organization : activates on last step
+GetOnboardingProgressQueryHandler ..> GetOnboardingProgressQuery : handles
+GetOnboardingProgressQueryHandler --> OnboardingProgressDto : returns
+Organization "1" *-- "1" OnboardingProgress : owns
+OnboardingProgress --> OnboardingStep : holds
+Organization --> OrganizationStatus : has
+@enduml

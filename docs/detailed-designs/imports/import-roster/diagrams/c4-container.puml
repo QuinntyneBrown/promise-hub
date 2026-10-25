@@ -1,0 +1,22 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Import a roster
+
+Person(admin, "Admin", "Imports a roster")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "enrollment library: import-roster wizard")
+  Container(api, "PromiseHub API", "ASP.NET Core minimal API", "Import endpoints, handlers, column matcher, duplicate detector")
+  Container(jobs, "Job runner", "Hosted service in the API process", "Runs the import in batches and reports progress")
+  Container(files, "File storage", "Blob storage adapter", "Uploaded spreadsheets for the life of the import session")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "Import sessions, households, children, guardians, roster entries, audit")
+}
+System_Ext(spreadsheet, "Spreadsheet file", "CSV or XLSX")
+Rel(admin, web, "Uses", "HTTPS")
+Rel(spreadsheet, web, "Dropped or chosen")
+Rel(web, api, "Uploads file; saves mapping; runs and polls", "multipart and JSON/HTTPS")
+Rel(api, files, "Stores and reads the file")
+Rel(api, jobs, "Enqueues RunImport")
+Rel(jobs, db, "Writes households and progress", "EF Core")
+Rel(api, db, "Reads and writes", "EF Core")
+@enduml

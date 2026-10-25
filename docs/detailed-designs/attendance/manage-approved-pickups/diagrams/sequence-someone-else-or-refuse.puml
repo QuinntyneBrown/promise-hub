@@ -1,0 +1,72 @@
+@startuml
+title UML sequence behaviour — Sign out to someone else, or refuse and report
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Site lead" as lead
+actor "Guardian (Carmen)" as g
+box "Frontend — PromiseHub web app, attendance library" #E0F2FE
+  participant "ConfirmPickupDialog (confirm state)" as dlg
+  participant "AttendanceApi" as client
+  participant "IncidentsApi" as iclient
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "AttendanceEndpoints" as ep
+  participant "IncidentEndpoints" as iep
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "SignOutChildCommandHandler" as so
+  participant "AttendanceRecord" as rec
+  participant "CreateIncidentDraftCommandHandler" as inc
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "IHouseholdNotifier" as notify
+  participant "IAuditLog" as audit
+end box
+
+lead -> dlg : Choose "Someone else"
+dlg --> lead : Warning "Not on the approved list", tel: Call Carmen 905-555-0142
+lead -> g : Phone call
+alt Carmen confirms by phone
+  g --> lead : Okay
+  lead -> dlg : Name "Daniel Rivera", switch "Carmen confirmed by phone", ID checked
+  dlg -> client : signOut({childId, otherPickupName, guardianConfirmedByPhone: true, guardianConfirmedAt, idChecked})
+  client -> ep : POST /sessions/{id}/sign-outs
+  ep -> so : Send SignOutChildCommand
+  so -> db : Load record and active pickups (L2-001)
+  db --> so : Record
+  so -> rec : SignOut(PickupConfirmation{OtherName, GuardianConfirmedByPhone}, at, actor)
+  rec --> so : AttendanceEvent SignedOut
+  so -> audit : Write attendance change
+  so -> notify : "Mateo was signed out at 5:58 pm to Daniel Rivera after Carmen's okay by phone" (L2-020)
+  so -> db : Save in one unit of work
+  db --> so : Commit
+  so --> ep : RosterRowDto
+  ep --> client : 200
+  client --> dlg : Saved
+  dlg --> lead : Row shows "Signed out"
+else Carmen does not confirm, or cannot be reached
+  lead -> dlg : Tap "Refuse and report"
+  dlg -> iclient : createDraft({childId, occurredAt: now, category: Pickup, summary})
+  iclient -> iep : POST /incidents/drafts
+  iep -> inc : Send CreateIncidentDraftCommand
+  inc -> db : Create IncidentDraft pre-filled with child and time (L2-020)
+  db --> inc : Draft id
+  inc --> iep : Draft id
+  iep --> iclient : 201
+  iclient --> dlg : Draft id
+  dlg --> lead : Close without sign-out; open new-incident pre-filled
+end
+@enduml

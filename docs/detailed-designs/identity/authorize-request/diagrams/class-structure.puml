@@ -1,0 +1,120 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Authorize a request
+
+enum Role {
+  ProgramDirector
+  Admin
+  SiteLead
+  YouthWorker
+  VolunteerCoordinator
+  PlatformAdmin
+}
+
+enum Permission {
+  Household.Read
+  Household.Write
+  Child.Medical.Read
+  Child.Medical.Write
+  Incident.ReadOwn
+  Incident.ReadAll
+  Settings.Manage
+  Staff.Manage
+  Organizations.Manage
+}
+
+class Membership {
+  +Guid Id
+  +Guid StaffUserId
+  +Guid OrganizationId
+  +Role Role
+  +DateTimeOffset? RemovedAt
+  +ChangeRole(role: Role): void
+  +Remove(now: DateTimeOffset): void
+}
+
+class RolePermissionMap {
+  +{static} PermissionsFor(role: Role): IReadOnlySet<Permission>
+}
+
+class CallerContext {
+  +Guid StaffUserId
+  +Guid ActiveOrganizationId
+  +Role Role
+  +IReadOnlySet<Permission> Permissions
+  +Has(permission: Permission): bool
+}
+
+interface IAuthorizationService {
+  +Require(permission: Permission): void
+  +Has(permission: Permission): bool
+}
+
+class RequirePermissionFilter {
+  +Permission Permission
+  +InvokeAsync(context, next): ValueTask<object?>
+}
+
+class ChildFieldPolicy {
+  +Apply(dto: ChildDto, caller: CallerContext): ChildDto
+}
+
+class RowScope {
+  +{static} ForIncidents(query: IQueryable<Incident>, caller: CallerContext): IQueryable<Incident>
+}
+
+class ChangeRoleCommand {
+  +Guid MembershipId
+  +Role NewRole
+}
+
+class ChangeRoleCommandHandler {
+  +Handle(command: ChangeRoleCommand): Task
+}
+
+class RemoveStaffCommand {
+  +Guid MembershipId
+}
+
+class RemoveStaffCommandHandler {
+  +Handle(command: RemoveStaffCommand): Task
+}
+
+class AuditEntry {
+  +Guid OrganizationId
+  +Guid ActorId
+  +string RecordType
+  +Guid RecordId
+  +string Action
+  +string BeforeJson
+  +string AfterJson
+  +DateTimeOffset At
+}
+
+Membership --> Role : holds
+RolePermissionMap ..> Role
+RolePermissionMap ..> Permission
+CallerContext --> Role
+CallerContext --> "*" Permission
+RequirePermissionFilter ..> CallerContext : reads
+IAuthorizationService ..> CallerContext : reads
+ChildFieldPolicy ..> CallerContext : reads
+RowScope ..> CallerContext : reads
+ChangeRoleCommandHandler ..> ChangeRoleCommand : handles
+ChangeRoleCommandHandler --> Membership : loads / mutates
+ChangeRoleCommandHandler --> AuditEntry : writes
+RemoveStaffCommandHandler ..> RemoveStaffCommand : handles
+RemoveStaffCommandHandler --> Membership : loads / mutates
+RemoveStaffCommandHandler --> AuditEntry : writes
+@enduml

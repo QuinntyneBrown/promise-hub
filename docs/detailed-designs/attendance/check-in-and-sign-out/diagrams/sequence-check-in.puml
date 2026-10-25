@@ -1,0 +1,88 @@
+@startuml
+title UML sequence behaviour — Check in a child
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Site lead" as lead
+box "Frontend — PromiseHub web app, attendance library" #E0F2FE
+  participant "CheckInPage / RosterStore" as page
+  participant "CheckInSheetDialog" as sheet
+  participant "AttendanceApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "AttendanceEndpoints" as ep
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "CheckInChildCommandHandler" as ci
+  participant "MarkChildAbsentCommandHandler" as ab
+  participant "AttendanceRecord" as rec
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "ISmsSender" as sms
+  participant "IAuditLog" as audit
+end box
+
+lead -> page : Tap Check in on Kevin
+page -> sheet : Open check-in sheet (Now / Earlier / Mark absent)
+lead -> sheet : Confirm choice
+sheet --> page : Choice and optional time
+alt Now or Earlier
+  page -> page : L2-017 mark Present, increment "Checked in" within 300 ms
+  page -> client : checkIn(sessionId, {childId, arrivedAt?, clientActionId})
+  client -> ep : POST /sessions/{id}/check-ins
+  ep -> ep : Authenticate, resolve tenant, Roll Call module on
+  ep -> ci : Send CheckInChildCommand
+  ci -> db : Load session and record (tenant filter, L2-001)
+  db --> ci : Current state
+  alt ClientActionId already stored
+    ci --> ep : Stored result (idempotent)
+  else New action
+    ci -> rec : CheckIn(at = arrivedAt or now, actor)
+    rec --> ci : AttendanceEvent CheckedIn
+    ci -> audit : Write attendance change
+    ci -> db : Save in one unit of work
+    db --> ci : Commit
+    ci --> ep : RosterRowDto
+  end
+  ep --> client : 200 or ProblemDetails
+  alt Success
+    client --> page : Confirmed row
+    page --> lead : Toast "Kevin Tran checked in · 32 of 48" with Undo
+  else Failure
+    client --> page : Error
+    page -> page : Revert row and totals
+    page --> lead : Danger toast "Check-in not saved"
+  end
+else Mark absent instead
+  page -> page : Mark Absent, increment "Absent"
+  page -> client : markAbsent(sessionId, {childId, clientActionId})
+  client -> ep : POST /sessions/{id}/absences
+  ep -> ab : Send MarkChildAbsentCommand
+  ab -> db : Load record and household contact
+  db --> ab : Record, guardian, language
+  ab -> rec : MarkAbsent(actor)
+  rec --> ab : AttendanceEvent MarkedAbsent
+  opt Guardian has not already told the organization (L2-017)
+    ab -> sms : Send "marked absent" text in household language
+    sms --> ab : Queued
+  end
+  ab -> db : Save in one unit of work
+  db --> ab : Commit
+  ab --> ep : RosterRowDto
+  ep --> client : 200
+  client --> page : Confirmed row
+  page --> lead : Row shows "Absent · guardian texted"
+end
+@enduml

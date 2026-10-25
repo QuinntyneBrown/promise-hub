@@ -1,0 +1,12 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Manage programs
+
+Person(director, "Program director", "Creates, edits, archives and restores programs")
+Person(sitelead, "Site lead", "Reads programs and rosters")
+System(promisehub, "PromiseHub", "Multi-tenant system of record for youth programs")
+
+Rel(director, promisehub, "Manages programs using", "HTTPS")
+Rel(sitelead, promisehub, "Reads programs using", "HTTPS")
+@enduml

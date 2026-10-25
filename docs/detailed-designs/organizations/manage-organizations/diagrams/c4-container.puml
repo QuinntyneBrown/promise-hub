@@ -1,0 +1,18 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Manage organizations
+
+Person(platformAdmin, "Platform admin", "Manages tenants")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "OrganizationsPage, AddOrganizationDialog, SuspendOrganizationDialog")
+  Container(api, "PromiseHub API", "ASP.NET Core minimal API", "/admin/organizations with PlatformAdmin policy; suspended-organization middleware")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "Organizations across tenants; memberships; audit log")
+}
+System_Ext(email, "Email provider", "Welcome email")
+
+Rel(platformAdmin, web, "Uses", "HTTPS")
+Rel(web, api, "Calls /admin/organizations", "JSON/HTTPS")
+Rel(api, db, "Reads and writes", "EF Core")
+Rel(api, email, "Sends welcome email", "SMTP/API")
+@enduml

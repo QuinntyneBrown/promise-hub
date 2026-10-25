@@ -1,0 +1,33 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Render responsive, accessible UI
+
+Container_Boundary(components, "Component library (frontend/projects/components)") {
+  Component(tokens, "Design tokens", "CSS custom properties", "Light on :root, dark on [data-theme=dark]; gutter 16/24/32 px; container 1280 px")
+  Component(layout, "Container, Grid, Stack", "Angular components", "Gutter rhythm, stats per row, columns by breakpoint")
+  Component(bp, "BreakpointService", "Angular service", "576, 768, 992, 1200 px ranges over CDK BreakpointObserver")
+  Component(theme, "ThemeService", "Angular service", "OS default, stored preference, toggle")
+  Component(dialog, "DialogComponent / DrawerComponent", "CDK Dialog hosts", "Focus trap, inert page, Escape, focus restore")
+  Component(toast, "ToastService / ToastComponent", "Live region", "role=status, polite; alert for errors")
+  Component(summary, "ErrorSummaryComponent", "Angular component", "Linked errors; receives focus on submit")
+  Component(skip, "SkipLinkComponent", "Angular component", "First focusable, targets main")
+}
+Container_Boundary(web, "PromiseHub web app (promisehub shell)") {
+  Component(shell, "ShellComponent", "Angular component", "Landmarks, lang, heading focus on route change")
+  Component(account, "AccountMenuComponent", "Menu", "Switch theme")
+}
+Container_Boundary(e2e, "Playwright suite (e2e)") {
+  Component(axe, "axe fixture", "@axe-core/playwright", "WCAG 2.2 AA tags in both themes")
+  Component(viewports, "Viewport projects", "playwright.config.ts", "Six widths; scrollWidth assertion")
+}
+Rel(layout, tokens, "Reads --layout-gutter, --layout-container-max")
+Rel(layout, bp, "Reads current range")
+Rel(theme, tokens, "Switches via data-theme")
+Rel(shell, skip, "Renders first")
+Rel(shell, toast, "Hosts live region")
+Rel(account, theme, "toggle()")
+Rel(dialog, bp, "Bottom sheet under 576 px")
+Rel(axe, shell, "Audits rendered page")
+Rel(viewports, shell, "Renders at each width")
+@enduml

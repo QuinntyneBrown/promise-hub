@@ -1,0 +1,89 @@
+@startuml
+title UML sequence behaviour — Start an export, inline or in the background
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Program director" as actor
+box "Frontend — PromiseHub web app, reports library" #E0F2FE
+  participant "ExportDialog" as dialog
+  participant "ReportsPage" as page
+  participant "ReportsApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "ReportsEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "StartExportCommandHandler" as handler
+  participant "ExportPipeline" as pipeline
+  participant "SmallCountSuppressor" as suppressor
+  participant "IExportWriter" as writer
+  participant "Export" as export
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "ExportJob" as job
+  participant "IFileStore" as files
+  participant "IEmailSender" as email
+  participant "IAuditWriter" as audit
+  database "PromiseHub database" as db
+end box
+
+actor -> dialog : Choose format and includes, tap Export
+dialog -> client : startExport(request)
+client -> endpoints : POST /reports/exports
+endpoints -> endpoints : Authenticate, resolve organization, check Reports module
+alt caller lacks Reports.Export
+  endpoints --> client : 403 ProblemDetails (L2-025 criterion 4)
+  client --> dialog : Failed state
+else authorized
+  endpoints -> handler : Send StartExportCommand
+  handler -> handler : Validate format, template and includes
+  handler -> db : COUNT export rows for period and scope of the organization (L2-001)
+  db --> handler : RowCount
+  handler -> export : Create Requested
+  handler -> db : Save Export
+  alt RowCount <= 10,000
+    handler -> pipeline : Run(export) inline
+    pipeline -> db : Aggregates and streamed rows
+    pipeline -> suppressor : Apply(cells, exact = false)
+    suppressor --> pipeline : Cells under 5 written as "<5" (L2-024 criterion 3)
+    pipeline -> writer : Write(source, stream) in template or CSV layout (L2-025 criterion 1)
+    pipeline -> files : Put(fileKey, stream, residency region)
+    pipeline -> export : Complete(fileName, fileKey, now); ExpiresAt = now + 7 days
+    pipeline -> audit : Export: requester, template, row count (L2-025 criterion 3)
+    pipeline -> db : Save
+    handler --> endpoints : ExportDto Completed with signed link
+    endpoints --> client : 201
+    client --> dialog : Success state: file name, counts, Download
+  else RowCount > 10,000 (L2-025 criterion 2)
+    handler -> job : Enqueue ExportJob(exportId)
+    handler --> endpoints : ExportDto Running
+    endpoints --> client : 202 with export id
+    client --> dialog : Close; page shows progress
+    loop until Completed or Failed
+      page -> client : getExport(id)
+      client -> endpoints : GET /reports/exports/{id}
+      endpoints --> client : Status and ProgressPercent
+      client --> page : Update progress bar; page stays usable
+    end
+    job -> pipeline : Run(export, progress)
+    pipeline -> db : Streamed rows, progress updates per sheet
+    pipeline -> files : Put(fileKey, stream)
+    pipeline -> export : Complete; ExpiresAt = now + 7 days
+    pipeline -> audit : Export entry
+    job -> email : Download link to requester
+    job -> db : In-app notification for requester
+    page --> actor : Success alert: Download, "Emailed to" requester
+  end
+end
+@enduml

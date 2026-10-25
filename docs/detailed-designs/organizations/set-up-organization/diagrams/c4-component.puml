@@ -1,0 +1,33 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Set up an organization
+
+Container(web, "PromiseHub web app", "Angular", "OnboardOrgPage, OnboardModulesPage, SetupChecklistPage, OnboardingApi")
+Container_Boundary(api, "PromiseHub API") {
+  Component(endpoints, "OnboardingEndpoints", "Minimal API group", "/onboarding routes; authenticates and dispatches")
+  Component(saveHandler, "SaveOrganizationStepCommandHandler", "Application handler", "Sets name, country and data region; completes step 1")
+  Component(completeHandler, "CompleteOnboardingStepCommandHandler", "Application handler", "Marks a step complete")
+  Component(progressHandler, "GetOnboardingProgressQueryHandler", "Application query handler", "Returns completed and next steps")
+  Component(permission, "OnboardingPermission", "Permission check", "Admin or program director of the active organization")
+  Component(org, "Organization", "Domain entity", "Tenant root")
+  Component(progress, "OnboardingProgress", "Domain entity", "Completed steps per organization")
+  Component(other, "Modules, Programs, Imports, Staff, Slips handlers", "Application handlers of other subsystems", "Do the work of steps 2 to 6")
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "Organizations, OnboardingProgress")
+  Component(audit, "AuditLog", "Infrastructure", "Records each step")
+}
+
+Rel(web, endpoints, "Calls", "JSON/HTTPS")
+Rel(endpoints, saveHandler, "Sends SaveOrganizationStepCommand")
+Rel(endpoints, completeHandler, "Sends CompleteOnboardingStepCommand")
+Rel(endpoints, progressHandler, "Sends GetOnboardingProgressQuery")
+Rel(saveHandler, permission, "Checks")
+Rel(saveHandler, org, "Mutates")
+Rel(saveHandler, progress, "Completes Organization step")
+Rel(completeHandler, progress, "Completes step")
+Rel(progressHandler, progress, "Reads")
+Rel(web, other, "Calls through their own endpoints for steps 2 to 6")
+Rel(saveHandler, db, "Saves", "EF Core")
+Rel(completeHandler, db, "Saves", "EF Core")
+Rel(saveHandler, audit, "Writes entry")
+@enduml

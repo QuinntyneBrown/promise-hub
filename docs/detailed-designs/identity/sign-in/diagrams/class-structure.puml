@@ -1,0 +1,124 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Sign in
+
+enum SignInOutcome {
+  SessionIssued
+  MfaRequired
+  InvalidCredentials
+  LockedOut
+}
+
+class StaffUser {
+  +Guid Id
+  +string Email
+  +string PasswordHash
+  +bool MfaRequired
+  +VerifyPassword(hasher: IPasswordHasher, password: string): bool
+  +IssueSession(deviceLabel: string, now: DateTimeOffset): StaffSession
+  +RevokeOtherSessions(current: Guid, now: DateTimeOffset): int
+}
+
+class StaffSession {
+  +Guid Id
+  +Guid StaffUserId
+  +Guid ActiveOrganizationId
+  +DateTimeOffset CreatedAt
+  +DateTimeOffset LastActivityAt
+  +DateTimeOffset? RevokedAt
+  +IsIdle(now: DateTimeOffset, idle: TimeSpan): bool
+  +Touch(now: DateTimeOffset): void
+  +Revoke(now: DateTimeOffset): void
+}
+
+class MfaEnrollment {
+  +Guid StaffUserId
+  +byte[] SecretProtected
+  +DateTimeOffset EnrolledAt
+}
+
+class RecoveryCode {
+  +Guid Id
+  +string CodeHash
+  +DateTimeOffset? UsedAt
+  +MarkUsed(now: DateTimeOffset): void
+}
+
+class TrustedDevice {
+  +Guid Id
+  +string DeviceTokenHash
+  +DateTimeOffset ExpiresAt
+}
+
+class SignInAttempt {
+  +string EmailNormalized
+  +DateTimeOffset At
+  +bool Succeeded
+}
+
+class SignInAttemptPolicy {
+  +IsLockedOut(email: string, now: DateTimeOffset): bool
+  +RecordFailure(email: string, now: DateTimeOffset): void
+}
+
+class SignInCommand {
+  +string Email
+  +string Password
+  +bool RememberDevice
+}
+
+class SignInCommandHandler {
+  +Handle(command: SignInCommand): Task<SignInResult>
+}
+
+class CompleteMfaCommand {
+  +string ChallengeToken
+  +string Code
+  +bool TrustThisDevice
+}
+
+class CompleteMfaCommandHandler {
+  +Handle(command: CompleteMfaCommand): Task<SignInResult>
+}
+
+class SignOutEverywhereCommand {
+  +Guid CurrentSessionId
+}
+
+class SignOutEverywhereCommandHandler {
+  +Handle(command: SignOutEverywhereCommand): Task<int>
+}
+
+interface ISessionStore {
+  +Save(session: StaffSession): Task
+  +Resolve(cookie: string): Task<StaffSession?>
+  +RevokeAllExcept(userId: Guid, sessionId: Guid): Task<int>
+}
+
+StaffUser "1" *-- "*" StaffSession
+StaffUser "1" o-- "0..1" MfaEnrollment
+StaffUser "1" *-- "*" RecoveryCode
+StaffUser "1" *-- "*" TrustedDevice
+SignInCommandHandler ..> SignInCommand : handles
+SignInCommandHandler --> StaffUser : loads
+SignInCommandHandler --> SignInAttemptPolicy : checks lockout
+SignInCommandHandler ..> SignInOutcome : returns
+SignInAttemptPolicy --> SignInAttempt : reads / appends
+CompleteMfaCommandHandler ..> CompleteMfaCommand : handles
+CompleteMfaCommandHandler --> StaffUser : loads / mutates
+SignOutEverywhereCommandHandler ..> SignOutEverywhereCommand : handles
+SignOutEverywhereCommandHandler --> ISessionStore : revokes
+SignInCommandHandler --> ISessionStore : saves
+CompleteMfaCommandHandler --> ISessionStore : saves
+@enduml

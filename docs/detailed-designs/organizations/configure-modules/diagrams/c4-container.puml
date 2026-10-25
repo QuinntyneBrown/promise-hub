@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Configure modules
+
+Person(admin, "Organization admin", "Configures modules")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "SettingsModulesPage, ModulePresetTilesComponent, ModulesApi")
+  Container(api, "PromiseHub API", "ASP.NET Core minimal API", "/modules endpoints; dependency validation; configuration cache")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "ModuleConfigurations, audit log")
+}
+
+Rel(admin, web, "Uses", "HTTPS")
+Rel(web, api, "GET /modules, PUT /modules, POST /modules/preset", "JSON/HTTPS")
+Rel(api, db, "Reads and writes", "EF Core")
+@enduml

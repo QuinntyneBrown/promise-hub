@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Show Quick Card
+
+Person(lead, "Site lead", "Opens the card")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "attendance library: QuickCardPage, QuickCardStore; service worker cache of today's cards")
+  Container(api, "PromiseHub API", "ASP.NET Core", "QuickCardEndpoints, GetQuickCardQueryHandler, QuickCardPermissions")
+  ContainerDb(db, "PromiseHub database", "SQL", "Children, medical details, guardians, approved pickups, audit log")
+}
+
+Rel(lead, web, "Taps a child's name", "HTTPS")
+Rel(web, api, "GET /children/{id}/quick-card, GET /quick-cards/today", "JSON/HTTPS")
+Rel(api, db, "Reads child data, writes view audit entry", "EF Core")
+@enduml

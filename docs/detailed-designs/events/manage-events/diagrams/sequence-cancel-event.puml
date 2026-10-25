@@ -1,0 +1,71 @@
+@startuml
+title UML sequence behaviour — Cancel an event and tell guardians
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Program director" as actor
+box "Frontend — PromiseHub web app, events library" #E0F2FE
+  participant "EventPage" as page
+  participant "CancelEventDialog" as dialog
+  participant "EventsApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "EventEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain (Events, Messaging)" #ECFDF3
+  participant "CancelEventCommandHandler" as handler
+  participant "Event" as entity
+  participant "SendMessageCommandHandler" as messenger
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "AuditLog" as audit
+  database "PromiseHubDbContext" as db
+  participant "Message queue (job runner)" as queue
+end box
+actor -> page : More actions > Cancel event…
+page -> dialog : Open
+dialog --> actor : Message to guardians; Keep as cancelled / Delete entirely
+actor -> dialog : Write message; Cancel event and tell guardians
+dialog -> client : cancel(id, { message, tellGuardians: true, delete: false })
+client -> endpoints : POST /events/{id}/cancel
+endpoints -> endpoints : Authenticate; director or admin only (L2-007)
+endpoints -> handler : Send CancelEventCommand
+handler -> db : Load Event within organization (L2-001)
+db --> handler : Event (Scheduled)
+alt TellGuardians and message empty
+  handler --> endpoints : Validation failure "Tell guardians why"
+  endpoints --> client : 400 ProblemDetails
+  client --> dialog : Field error
+  dialog --> actor : Inline error
+else valid
+  handler -> entity : Cancel(actor, now, message) (L2-012 AC4)
+  entity --> handler : Status = Cancelled; signed slips kept
+  handler -> db : Load enrolled households of the program with language and channel
+  db --> handler : Households
+  opt TellGuardians
+    handler -> messenger : SendMessageCommand(householdIds, body)
+    messenger -> queue : Queue one message per household in its language and channel (L2-027)
+    queue --> messenger : Queued
+    messenger --> handler : SendSummary
+  end
+  handler -> db : SaveChanges in one unit of work
+  db --> handler : Commit result
+  handler -> audit : Record cancellation (L2-032)
+  audit --> handler : Recorded
+  handler --> endpoints : Result
+  endpoints --> client : 204 No Content
+  client --> dialog : Done
+  dialog --> actor : Event shows Cancelled; roster shows the event as cancelled; guardians told
+end
+@enduml

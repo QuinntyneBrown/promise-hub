@@ -1,0 +1,23 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Meet performance budgets
+
+Person(sitelead, "Site lead", "Phone")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "Bundle budgets, lazy libraries, virtualized roster, optimistic check-in")
+  Container(api, "PromiseHub API", "ASP.NET Core", "One-round-trip check-in, compression, ETags, request metrics")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "Tenant-first composite indexes")
+}
+System_Boundary(measure, "Measurement") {
+  Container(ci, "CI runner", "GitHub Actions", "Lighthouse CI and Playwright timing specs")
+  Container(load, "Load test", "k6 in eng/loadtest", "sessions-50-orgs.js against staging")
+  Container(dash, "Metrics dashboard", "Observability backend", "p95 latency per route and tenant")
+}
+Rel(sitelead, web, "Uses", "HTTPS over 4G")
+Rel(web, api, "POST /attendance/check-ins, GET roster", "JSON/HTTPS, Brotli")
+Rel(api, db, "Indexed reads and writes", "EF Core, pooled")
+Rel(ci, web, "Measures cold loads")
+Rel(load, api, "Drives 50 organizations")
+Rel(api, dash, "Exports duration histograms")
+@enduml

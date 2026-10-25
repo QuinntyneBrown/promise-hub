@@ -1,0 +1,21 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Compose and send a message
+
+Person(director, "Program director", "Composes messages to guardians")
+Person_Ext(guardian, "Guardian", "Receives texts, emails and push notifications")
+System(promisehub, "PromiseHub", "Multi-tenant system of record for youth programs")
+System_Ext(sms, "SMS provider", "Sends texts and reports delivery")
+System_Ext(email, "Email provider", "Sends emails and reports bounces")
+System_Ext(push, "Push provider", "Delivers push notifications")
+
+Rel(director, promisehub, "Composes, previews, sends and tracks messages", "HTTPS")
+Rel(promisehub, sms, "Sends text deliveries", "HTTPS API")
+Rel(promisehub, email, "Sends email deliveries", "HTTPS API")
+Rel(promisehub, push, "Sends push deliveries", "HTTPS API")
+Rel_Back(promisehub, sms, "Delivery and failure reports", "Webhook")
+Rel_Back(promisehub, email, "Delivery and bounce reports", "Webhook")
+Rel(sms, guardian, "Delivers text")
+Rel(email, guardian, "Delivers email")
+@enduml

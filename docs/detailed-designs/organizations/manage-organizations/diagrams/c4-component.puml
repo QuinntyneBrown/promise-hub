@@ -1,0 +1,39 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Manage organizations
+
+Container(web, "PromiseHub web app", "Angular", "OrganizationsPage and dialogs; PlatformOrganizationsApi")
+Container_Boundary(api, "PromiseHub API") {
+  Component(endpoints, "PlatformOrganizationEndpoints", "Minimal API group", "/admin/organizations; PlatformAdmin policy answers 403 otherwise")
+  Component(suspendedMw, "SuspendedOrganizationMiddleware", "Middleware", "Refuses tenant and guardian-link requests of a Suspended organization")
+  Component(listHandler, "ListOrganizationsQueryHandler", "Application query handler", "All organizations with plan, children, modules on, status")
+  Component(createHandler, "CreateOrganizationCommandHandler", "Application handler", "Creates tenant, preset, first admin, welcome email")
+  Component(suspendHandler, "SuspendOrganizationCommandHandler", "Application handler", "Sets Suspended with reason; publishes OrganizationSuspended")
+  Component(reinstateHandler, "ReinstateOrganizationCommandHandler", "Application handler", "Restores status; publishes OrganizationReinstated")
+  Component(permission, "PlatformAdminPermission", "Permission check", "ITenantContext.IsPlatformAdmin")
+  Component(org, "Organization", "Domain entity", "Suspend(reason), Reinstate()")
+  Component(modules, "ModuleConfiguration", "Domain entity", "ApplyPreset")
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "Organizations without tenant filter")
+  Component(emailSender, "IEmailSender", "Infrastructure", "Welcome email")
+  Component(audit, "AuditLog", "Infrastructure", "Create, suspend, reinstate entries")
+}
+
+Rel(web, endpoints, "Calls", "JSON/HTTPS")
+Rel(endpoints, listHandler, "Sends ListOrganizationsQuery")
+Rel(endpoints, createHandler, "Sends CreateOrganizationCommand")
+Rel(endpoints, suspendHandler, "Sends SuspendOrganizationCommand")
+Rel(endpoints, reinstateHandler, "Sends ReinstateOrganizationCommand")
+Rel(createHandler, permission, "Checks")
+Rel(suspendHandler, permission, "Checks")
+Rel(createHandler, org, "Creates")
+Rel(createHandler, modules, "ApplyPreset")
+Rel(createHandler, emailSender, "Sends welcome email")
+Rel(suspendHandler, org, "Suspend(reason)")
+Rel(reinstateHandler, org, "Reinstate()")
+Rel(listHandler, db, "Reads", "EF Core")
+Rel(createHandler, db, "Saves", "EF Core")
+Rel(suspendHandler, db, "Saves", "EF Core")
+Rel(suspendHandler, audit, "Writes entry")
+Rel(suspendedMw, db, "Reads organization status")
+@enduml

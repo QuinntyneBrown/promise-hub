@@ -1,0 +1,98 @@
+@startuml
+title UML sequence behaviour — Invite and accept
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Admin" as admin
+actor "Invited staff member" as invitee
+box "Frontend — PromiseHub web app, administration and account libraries" #E0F2FE
+  participant "InviteStaffDialog" as dialog
+  participant "StaffApi / InvitationsApi" as client
+  participant "AcceptInvitePage" as acceptpage
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "InvitationEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain (Staff, Identity)" #ECFDF3
+  participant "InviteStaffCommandHandler" as invite
+  participant "PreviewInvitationQueryHandler" as preview
+  participant "AcceptInvitationCommandHandler" as accept
+  participant "Invitation" as invitation
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "ITokenGenerator" as token
+  participant "IEmailSender" as email
+  participant "ISessionStore" as store
+  participant "AuditLog" as audit
+  database "PromiseHub database" as db
+end box
+== Invite ==
+admin -> dialog : Enter email and role, send
+dialog -> client : invite(email, role)
+client -> endpoints : POST /staff/invitations (RequirePermission Staff.Manage)
+endpoints -> invite : Send InviteStaffCommand
+invite -> token : Create secret and hash
+token --> invite : token, tokenHash
+invite -> invitation : Create with ExpiresAt = now + 14 days (L2-009)
+invite -> db : Insert invitation
+db --> invite : Commit
+invite -> email : Send link /invite/{token}
+email --> invite : Queued
+invite -> audit : Record invitation
+invite --> endpoints : Invitation id
+endpoints --> client : 201
+client --> dialog : Sent
+dialog --> admin : "Email link, valid 14 days"
+== Accept ==
+invitee -> acceptpage : Open /invite/{token}
+acceptpage -> client : preview(token)
+client -> endpoints : GET /invitations/{token} (anonymous)
+endpoints -> preview : Send PreviewInvitationQuery
+preview -> db : Load invitation by token hash
+db --> preview : Invitation or none
+alt expired (older than 14 days) or withdrawn
+  preview --> endpoints : Expired
+  endpoints --> client : 410 ProblemDetails with inviter contact
+  client --> acceptpage : Expired
+  acceptpage --> invitee : Show expired state, "Email Tom" (accept-invite/error) — L2-009
+else open
+  preview --> endpoints : Organization, inviter, role, email
+  endpoints --> client : 200
+  client --> acceptpage : Preview
+  acceptpage --> invitee : Show read-only email, ask name and password (L2-009)
+  invitee -> acceptpage : Enter name and password, join
+  acceptpage -> client : accept(token, name, password)
+  client -> endpoints : POST /invitations/{token}/accept (anonymous)
+  endpoints -> accept : Send AcceptInvitationCommand
+  accept -> db : Load invitation, existing StaffUser by email
+  db --> accept : Invitation, user or none
+  alt validation fails (name missing, password under 12 characters)
+    accept --> endpoints : ValidationFailed
+    endpoints --> client : 400 ProblemDetails
+    client --> acceptpage : Field errors
+    acceptpage --> invitee : Inline errors (accept-invite/invalid)
+  else valid
+    accept -> invitation : Accept(now)
+    accept -> db : Create or link StaffUser, create Membership and StaffProfile
+    accept -> store : Issue session
+    store -> db : Insert session
+    db --> store : Commit
+    accept -> audit : Record membership created
+    accept --> endpoints : Accepted
+    endpoints --> client : 204 with session cookie
+    client --> acceptpage : Joined
+    acceptpage --> invitee : Welcome; continue to onboard-staff-phone (accept-invite/success)
+  end
+end
+@enduml

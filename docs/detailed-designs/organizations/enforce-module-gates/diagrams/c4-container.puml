@@ -1,0 +1,18 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Enforce module gates
+
+Person(staff, "Staff member", "Uses the staff app")
+Person_Ext(guardian, "Guardian", "Opens guardian links")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "Shell loads modules once per session; NavigationComposer and moduleGuard; guardian library")
+  Container(api, "PromiseHub API", "ASP.NET Core minimal API", "ModuleGateEndpointFilter answers 404 for off modules; GET /me/modules")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "ModuleConfigurations")
+}
+
+Rel(staff, web, "Uses", "HTTPS")
+Rel(guardian, web, "Opens guardian pages", "HTTPS")
+Rel(web, api, "GET /me/modules once per session; feature calls", "JSON/HTTPS")
+Rel(api, db, "Reads module configuration (cached)", "EF Core")
+@enduml

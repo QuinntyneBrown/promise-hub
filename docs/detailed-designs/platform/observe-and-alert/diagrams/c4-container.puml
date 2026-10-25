@@ -1,0 +1,25 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Observe and alert
+
+Person(operator, "Operator (on-call)", "")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "Sends X-Correlation-Id; shows it on server-error; reports client errors")
+  Container(api, "PromiseHub API", "ASP.NET Core", "Correlation and request logging middleware; metrics; job runner")
+  ContainerDb(db, "PromiseHub database", "SQL", "Jobs table read for queue lag")
+}
+System_Boundary(obs, "Observability platform") {
+  Container(collector, "Telemetry collector", "OpenTelemetry", "Receives logs, metrics, traces")
+  Container(store, "Log store and dashboards", "Vendor <TO SUPPLY>", "Search and visualisation")
+  Container(rules, "Alert rules", "Code in eng/infra", "Error rate over 1% in 5 min; queue lag over 10 min")
+}
+System_Ext(oncall, "On-call channel", "Paging or chat")
+Rel(web, api, "Requests with correlation id", "HTTPS")
+Rel(api, db, "Reads oldest overdue job", "EF Core")
+Rel(api, collector, "Exports", "OTLP")
+Rel(collector, store, "Stores")
+Rel(rules, store, "Evaluates metrics")
+Rel(rules, oncall, "Notifies")
+Rel(operator, store, "Reads")
+@enduml

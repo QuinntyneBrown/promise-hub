@@ -1,0 +1,99 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Enforce module gates
+
+enum ModuleId {
+  Roster
+  Slips
+  RollCall
+  QuickCards
+  Pickup
+  Messages
+  Incidents
+  Reports
+}
+
+class ModuleConfiguration {
+  +Guid OrganizationId
+  +ISet<ModuleId> On
+  +IsOn(module: ModuleId): bool
+}
+
+class RequireModuleAttribute {
+  +ModuleId Module
+}
+
+interface IModuleGate {
+  +IsOn(module: ModuleId): bool
+  +On(): IReadOnlySet<ModuleId>
+}
+
+class ModuleGate {
+  -ITenantContext _tenant
+  -ModuleConfigurationCache _cache
+  +IsOn(module: ModuleId): bool
+  +On(): IReadOnlySet<ModuleId>
+}
+
+class ModuleGateEndpointFilter {
+  +InvokeAsync(ctx: EndpointFilterInvocationContext, next: EndpointFilterDelegate): ValueTask<object?>
+}
+
+class ModuleConfigurationCache {
+  +Get(organizationId: Guid): ModuleConfiguration
+  +Invalidate(organizationId: Guid): void
+}
+
+class GetSessionModulesQuery
+class GetSessionModulesQueryHandler {
+  +Handle(query: GetSessionModulesQuery): Task<SessionModulesDto>
+}
+
+class SessionModulesDto {
+  +IReadOnlyList<ModuleId> On
+}
+
+class "ModuleState (Angular)" as ModuleState {
+  +on: Signal<ReadonlySet<ModuleId>>
+  +isOn(module: ModuleId): boolean
+}
+
+class "SessionBootstrap (Angular)" as SessionBootstrap {
+  +load(): Promise<void>
+}
+
+class "NavigationComposer (Angular)" as NavigationComposer {
+  +topBar(): NavItem[]
+  +moreMenu(): NavItem[]
+  +tabBar(): NavItem[]
+  +searchScopes(): Scope[]
+}
+
+class "moduleGuard (Angular)" as moduleGuard {
+  +canMatch(module: ModuleId): boolean
+}
+
+IModuleGate <|.. ModuleGate
+ModuleGate --> ModuleConfigurationCache : reads
+ModuleConfigurationCache --> ModuleConfiguration : caches
+ModuleConfiguration --> ModuleId : holds
+ModuleGateEndpointFilter ..> RequireModuleAttribute : reads
+ModuleGateEndpointFilter ..> IModuleGate : asks
+GetSessionModulesQueryHandler ..> IModuleGate : On()
+GetSessionModulesQueryHandler --> SessionModulesDto : returns
+SessionBootstrap ..> SessionModulesDto : loads
+SessionBootstrap --> ModuleState : sets
+NavigationComposer ..> ModuleState : reads
+moduleGuard ..> ModuleState : reads
+@enduml

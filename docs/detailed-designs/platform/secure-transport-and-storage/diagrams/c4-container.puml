@@ -1,0 +1,19 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Secure transport and storage
+
+Person(staff, "Staff member", "Browser")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "Bearer token in memory; text-only rendering of user data")
+  Container(api, "PromiseHub API", "ASP.NET Core minimal APIs", "HTTPS redirect, security headers, 401 for anonymous, validation")
+  ContainerDb(db, "PromiseHub database", "SQL, encrypted at rest", "Tenant data, data-protection keys")
+  ContainerDb(files, "File store", "Encrypted bucket or container", "Exports and uploaded rosters, signed expiring links")
+}
+System_Ext(secrets, "Platform secret store", "Secrets outside the repository")
+Rel(staff, web, "Uses", "HTTPS")
+Rel(web, api, "Calls with Authorization: Bearer", "JSON/HTTPS")
+Rel(api, db, "Reads and writes", "EF Core over TLS")
+Rel(api, files, "Stores and signs links", "TLS")
+Rel(api, secrets, "Binds configuration", "Environment")
+@enduml

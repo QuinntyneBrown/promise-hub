@@ -1,0 +1,24 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Alert no-show and end session
+
+Person(lead, "Site lead", "Ends the session")
+Person_Ext(guardian, "Guardian", "Replies to the alert")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "attendance library: EndSessionDialog, SessionCompletePage, AttendanceHistoryPage")
+  Container(api, "PromiseHub API", "ASP.NET Core", "AttendanceEndpoints, GuardianSmsEndpoints, handlers, job runner hosting SendNoShowAlertsJob")
+  ContainerDb(db, "PromiseHub database", "SQL", "Sessions, AttendanceRecords, NoShowAlerts, NotificationSettings, audit log")
+}
+System_Ext(sms, "SMS provider", "Outbound texts and inbound webhook")
+System_Ext(email, "Email provider", "Fallback at SMS cap")
+
+Rel(lead, web, "Ends session, views history", "HTTPS")
+Rel(web, api, "POST /sessions/{id}/end, GET /programs/{id}/attendance", "JSON/HTTPS")
+Rel(api, db, "Reads sessions and settings, writes alerts and records", "EF Core")
+Rel(api, sms, "Sends no-show text", "HTTPS")
+Rel(sms, api, "POST /webhooks/sms/inbound (signed)", "HTTPS")
+Rel(api, email, "Sends alert by email at cap", "API")
+Rel(sms, guardian, "Delivers text")
+Rel(guardian, sms, "Replies 1 or 2")
+@enduml

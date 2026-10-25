@@ -1,0 +1,14 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Check-in and sign-out
+
+Person(lead, "Site lead", "Runs tonight's session from a phone")
+Person_Ext(guardian, "Guardian", "Receives the absence text")
+System(ph, "PromiseHub", "Roll Call: roster, check-in, sign-out, attendance")
+System_Ext(sms, "SMS provider", "Delivers texts to guardians")
+
+Rel(lead, ph, "Checks children in and out using", "HTTPS")
+Rel(ph, sms, "Sends 'marked absent' text via", "HTTPS API")
+Rel(sms, guardian, "Delivers text to")
+@enduml

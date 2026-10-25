@@ -1,0 +1,50 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Report and review an incident
+
+Container_Boundary(web, "PromiseHub web app") {
+  Component(newpage, "NewIncidentPage", "Angular page", "Structured report form")
+  Component(list, "IncidentsListPage", "Angular page", "Open first; forbidden state for youth workers")
+  Component(detail, "IncidentPage", "Angular page", "Report, follow-up, trail")
+  Component(review, "ReviewIncidentDialog", "CDK dialog", "Review note and outcome")
+  Component(client, "IncidentsApi", "Typed client (INCIDENTS_API)", "Calls /incidents")
+}
+Container_Boundary(api, "PromiseHub API") {
+  Component(endpoints, "IncidentEndpoints", "Minimal API", "Routes /incidents; 404 on policy denial")
+  Component(report, "ReportIncidentCommandHandler", "Application handler (Incidents)", "Validates; NeedsReview; routes")
+  Component(get, "GetIncidentQueryHandler", "Application handler (Incidents)", "Policy; masks names; audits view")
+  Component(listh, "GetIncidentsQueryHandler", "Application handler (Incidents)", "All for directors; own for others")
+  Component(reviewh, "ReviewIncidentCommandHandler", "Application handler (Incidents)", "Closes or keeps open; notifies reporter")
+  Component(policy, "IncidentAccessPolicy", "Application service", "CanRead, CanSeeNames, CanReview")
+  Component(router, "IncidentRouter", "Application service", "Notifies supervisors and reporter")
+  Component(entity, "Incident", "Domain aggregate", "Category, children, status, review, notes")
+  Component(audit, "AuditLog", "Infrastructure", "Create, review, note and every view")
+  Component(notify, "NotificationService", "Infrastructure", "Email and in-app notices")
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "Incidents filtered by OrganizationId")
+}
+Rel(newpage, client, "report, saveDraft")
+Rel(list, client, "list")
+Rel(detail, client, "get, addNote")
+Rel(review, client, "review, reopen")
+Rel(client, endpoints, "JSON/HTTPS")
+Rel(endpoints, report, "Sends ReportIncidentCommand")
+Rel(endpoints, get, "Sends GetIncidentQuery")
+Rel(endpoints, listh, "Sends GetIncidentsQuery")
+Rel(endpoints, reviewh, "Sends ReviewIncidentCommand")
+Rel(report, entity, "Creates; Submit()")
+Rel(report, router, "Notify supervisors")
+Rel(report, audit, "Writes entry")
+Rel(get, policy, "CanRead? CanSeeNames?")
+Rel(get, audit, "Writes IncidentViewed")
+Rel(listh, policy, "Filters by reader")
+Rel(reviewh, policy, "CanReview?")
+Rel(reviewh, entity, "Review()")
+Rel(reviewh, router, "Notify reporter")
+Rel(reviewh, audit, "Writes entry")
+Rel(router, notify, "Sends")
+Rel(report, db, "Saves")
+Rel(get, db, "Reads")
+Rel(listh, db, "Reads")
+Rel(reviewh, db, "Saves")
+@enduml

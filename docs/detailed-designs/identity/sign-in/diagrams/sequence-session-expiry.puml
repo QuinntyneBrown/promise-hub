@@ -1,0 +1,81 @@
+@startuml
+title UML sequence behaviour — Expired session and sign out everywhere
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Staff member" as actor
+box "Frontend — PromiseHub web app, feature page and account library" #E0F2FE
+  participant "Any feature page (e.g. NewIncidentPage)" as page
+  participant "SessionExpiredDialog" as dialog
+  participant "SignOutAllDialog" as soadialog
+  participant "AuthApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "SessionMiddleware" as middleware
+  participant "AuthEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain (Identity)" #ECFDF3
+  participant "SignInCommandHandler" as signin
+  participant "SignOutEverywhereCommandHandler" as handler
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "ISessionStore" as store
+  participant "AuditLog" as audit
+  database "PromiseHub database" as db
+end box
+== Expired session on form submit ==
+actor -> page : Submit form after 12 hours idle
+page -> client : Typed request with session cookie
+client -> middleware : HTTPS request
+middleware -> store : Resolve session
+store -> db : Load session
+db --> store : Session with LastActivityAt
+store --> middleware : StaffSession
+alt idle longer than 12 hours or revoked (L2-006)
+  middleware --> client : 401 ProblemDetails type "session-expired"
+  client -> dialog : Open SessionExpiredDialog, hold pending payload on device
+  dialog --> actor : Ask to sign in again (session-expired)
+  actor -> dialog : Enter password (and MFA when required)
+  dialog -> client : signIn(...)
+  client -> endpoints : POST /auth/sign-in
+  endpoints -> signin : Send SignInCommand
+  signin -> store : Save new session
+  store -> db : Insert session
+  db --> store : Commit
+  signin --> endpoints : SessionIssued
+  endpoints --> client : 204 with new session cookie
+  client -> middleware : Replay the held request
+  middleware -> store : Resolve and touch session
+  store --> middleware : Active session
+  middleware --> client : Original endpoint response
+  client --> page : Submission completed
+  page --> actor : Show success for the original form
+else session active
+  middleware -> store : Touch LastActivityAt
+  middleware --> client : Continue to endpoint
+end
+== Sign out everywhere ==
+actor -> soadialog : Confirm "Sign out everywhere" (sign-out-all)
+soadialog -> client : signOutEverywhere()
+client -> endpoints : POST /auth/sign-out-all
+endpoints -> handler : Send SignOutEverywhereCommand(currentSessionId)
+handler -> store : RevokeAllExcept(userId, currentSessionId)
+store -> db : Set RevokedAt on other sessions
+db --> store : Rows affected
+handler -> audit : Record sign-out-everywhere with count
+handler --> endpoints : Revoked count
+endpoints --> client : 200 { revoked }
+client --> soadialog : Done
+soadialog --> actor : "Every other device is signed out" — effective on next request, within 60 seconds (L2-006)
+@enduml

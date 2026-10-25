@@ -1,0 +1,25 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Compute a report
+
+Container_Boundary(api, "PromiseHub API") {
+  Component(endpoints, "ReportsEndpoints", "Minimal API", "GET /reports, GET /reports/options; module gate and Reports.View permission")
+  Component(handler, "GetReportQueryHandler", "Query handler", "Validates period, resolves scope, aggregates, suppresses")
+  Component(options, "GetReportOptionsQueryHandler", "Query handler", "Seasons, programs, suppression mode")
+  Component(aggregator, "ReportAggregator", "Domain service", "Set-based grouped queries per KPI and table")
+  Component(suppressor, "SmallCountSuppressor", "Domain rule", "Masks demographic cells under the threshold by role")
+  Component(readmodel, "ReportReadModel", "EF Core keyless entities", "Grouped query projections")
+  Component(audit, "IAuditWriter", "Application interface", "Records each report view")
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "Tenant-filtered persistence")
+}
+
+Rel(endpoints, handler, "Sends GetReportQuery")
+Rel(endpoints, options, "Sends GetReportOptionsQuery")
+Rel(handler, aggregator, "Aggregate(organizationId, period, scope)")
+Rel(handler, suppressor, "Apply(demographics, role)")
+Rel(handler, audit, "Writes view entry")
+Rel(aggregator, readmodel, "Queries")
+Rel(readmodel, db, "Executes grouped SQL", "EF Core")
+Rel(options, db, "Reads seasons and programs", "EF Core")
+@enduml

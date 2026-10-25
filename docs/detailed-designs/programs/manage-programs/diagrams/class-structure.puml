@@ -1,0 +1,102 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Manage programs
+
+enum ProgramStatus {
+  Active
+  Archived
+}
+
+enum EnrollmentState {
+  Open
+  Closed
+}
+
+class ProgramSchedule <<value object>> {
+  +DateOnly StartsOn
+  +DateOnly EndsOn
+  +DayOfWeek[] Days
+  +TimeOnly StartTime
+  +TimeOnly EndTime
+}
+
+class Program {
+  +Guid Id
+  +Guid OrganizationId
+  +string Name
+  +ProgramSchedule Schedule
+  +int Capacity
+  +string AgeRange
+  +EnrollmentState EnrollmentState
+  +bool RequiresSeasonConsent
+  +ProgramStatus Status
+  +DateTimeOffset? ArchivedAt
+  +Guid? ArchivedBy
+  +Archive(actor: Guid, now: DateTimeOffset): void
+  +Restore(actor: Guid, now: DateTimeOffset): void
+  +OpenEnrollment(): void
+  +CloseEnrollment(): void
+}
+
+class CreateProgramCommand {
+  +string Name
+  +ProgramSchedule Schedule
+  +int Capacity
+  +string AgeRange
+  +bool OpenEnrollmentNow
+  +bool RequiresSeasonConsent
+}
+
+class ArchiveProgramCommand {
+  +Guid ProgramId
+  +string ConfirmName
+}
+
+class RestoreProgramCommand {
+  +Guid ProgramId
+}
+
+class CreateProgramCommandHandler {
+  +Handle(command: CreateProgramCommand): Task<Result<ProgramDto>>
+}
+
+class ArchiveProgramCommandHandler {
+  +Handle(command: ArchiveProgramCommand): Task<Result>
+}
+
+class RestoreProgramCommandHandler {
+  +Handle(command: RestoreProgramCommand): Task<Result>
+}
+
+class ProgramValidator {
+  +Validate(command: CreateProgramCommand): ValidationResult
+}
+
+interface IAuditLog {
+  +Record(entry: AuditEntry): Task
+}
+
+Program *-- ProgramSchedule : owns
+Program --> ProgramStatus : has
+Program --> EnrollmentState : has
+CreateProgramCommandHandler ..> CreateProgramCommand : handles
+CreateProgramCommandHandler ..> ProgramValidator : validates with
+CreateProgramCommandHandler --> Program : creates
+ArchiveProgramCommandHandler ..> ArchiveProgramCommand : handles
+ArchiveProgramCommandHandler --> Program : loads / Archive()
+ArchiveProgramCommandHandler ..> IAuditLog : records
+RestoreProgramCommandHandler ..> RestoreProgramCommand : handles
+RestoreProgramCommandHandler --> Program : loads / Restore()
+RestoreProgramCommandHandler ..> IAuditLog : records
+@enduml

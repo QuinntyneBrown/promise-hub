@@ -1,0 +1,21 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Report and review an incident
+
+Person(reporter, "Site lead or youth worker", "Reports")
+Person(supervisor, "Program director", "Reviews")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "incidents feature library")
+  Container(api, "PromiseHub API", "ASP.NET Core", "Endpoints, access policy, handlers")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "Incidents, notes, audit log")
+  ContainerQueue(jobs, "Job runner", "Hosted service", "Delivers notifications")
+}
+System_Ext(email, "Email provider", "Delivers emails")
+Rel(reporter, web, "Uses", "HTTPS")
+Rel(supervisor, web, "Uses", "HTTPS")
+Rel(web, api, "Calls /incidents", "JSON/HTTPS")
+Rel(api, db, "Reads and writes; audits every view", "EF Core")
+Rel(api, jobs, "Queues supervisor and reporter notifications")
+Rel(jobs, email, "Sends emails", "SMTP / HTTPS API")
+@enduml

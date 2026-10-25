@@ -1,0 +1,115 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Enroll a guardian
+
+enum EnrollmentStatus {
+  WaitingReview
+  Accepted
+  Waitlisted
+  Declined
+}
+
+class Program {
+  +Guid Id
+  +Guid OrganizationId
+  +string Name
+  +int Capacity
+  +int EnrolledCount
+  +EnrollmentPeriod? Enrollment
+  +OpenEnrollment(slug: string, now: DateTimeOffset): void
+  +CloseEnrollment(now: DateTimeOffset): void
+  +IsAtCapacity(): bool
+}
+
+class EnrollmentPeriod <<value object>> {
+  +string PublicSlug
+  +DateTimeOffset OpenedAt
+  +DateTimeOffset? ClosedAt
+  +IsOpen(now: DateTimeOffset): bool
+}
+
+class EnrollmentDraft {
+  +Guid Id
+  +Guid ProgramId
+  +string LinkTokenHash
+  +HouseholdAnswers Household
+  +IReadOnlyList<ChildAnswers> Children
+  +Save(answers): void
+}
+
+class Enrollment {
+  +Guid Id
+  +Guid OrganizationId
+  +Guid ProgramId
+  +Guid HouseholdId
+  +IReadOnlyList<Guid> ChildIds
+  +EnrollmentStatus Status
+  +int? WaitlistPosition
+  +string ConsentSignedName
+  +DateTimeOffset SubmittedAt
+  +Accept(): void
+  +Waitlist(position: int): void
+  +Decline(): void
+}
+
+class RosterEntry {
+  +Guid ProgramId
+  +Guid ChildId
+  +Guid EnrollmentId
+  +DateTimeOffset JoinedAt
+}
+
+class SubmitEnrollmentCommand {
+  +string LinkToken
+  +string ConsentSignedName
+}
+
+class SubmitEnrollmentCommandHandler {
+  +Handle(command: SubmitEnrollmentCommand): Task<SubmitResult>
+}
+
+class ReviewEnrollmentCommand {
+  +Guid EnrollmentId
+  +EnrollmentStatus Decision
+}
+
+class BulkReviewEnrollmentsCommand {
+  +IReadOnlyList<Guid> EnrollmentIds
+  +EnrollmentStatus Decision
+}
+
+class ReviewEnrollmentCommandHandler {
+  +Handle(command: ReviewEnrollmentCommand): Task
+}
+
+interface INotificationDispatcher {
+  +Send(householdId: Guid, template: string, data: object): Task
+}
+
+Program *-- EnrollmentPeriod
+Program "1" --> "*" Enrollment
+Program "1" --> "*" RosterEntry
+Enrollment --> EnrollmentStatus
+Enrollment "1" --> "0..*" RosterEntry : accepted into
+EnrollmentDraft ..> Enrollment : becomes on submit
+SubmitEnrollmentCommandHandler ..> SubmitEnrollmentCommand : handles
+SubmitEnrollmentCommandHandler --> EnrollmentDraft : loads
+SubmitEnrollmentCommandHandler --> Program : checks capacity
+SubmitEnrollmentCommandHandler --> Enrollment : creates
+ReviewEnrollmentCommandHandler ..> ReviewEnrollmentCommand : handles
+ReviewEnrollmentCommandHandler ..> BulkReviewEnrollmentsCommand : handles per id
+ReviewEnrollmentCommandHandler --> Enrollment : mutates
+ReviewEnrollmentCommandHandler --> RosterEntry : creates
+ReviewEnrollmentCommandHandler --> INotificationDispatcher : notifies
+@enduml

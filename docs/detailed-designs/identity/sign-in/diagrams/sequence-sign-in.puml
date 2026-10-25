@@ -1,0 +1,104 @@
+@startuml
+title UML sequence behaviour — Sign in with password and MFA
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Staff member" as actor
+box "Frontend — PromiseHub web app, account library" #E0F2FE
+  participant "SignInPage" as page
+  participant "MfaPage" as mfapage
+  participant "AuthApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "AuthEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain (Identity)" #ECFDF3
+  participant "SignInCommandHandler" as handler
+  participant "SignInAttemptPolicy" as policy
+  participant "CompleteMfaCommandHandler" as mfahandler
+  participant "StaffUser" as user
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "IPasswordHasher / ITotpVerifier" as hasher
+  participant "ISessionStore" as store
+  participant "AuditLog" as audit
+  database "PromiseHub database" as db
+end box
+actor -> page : Submit email and password
+page -> client : signIn(email, password, remember)
+client -> endpoints : POST /auth/sign-in (anonymous)
+endpoints -> handler : Send SignInCommand
+handler -> policy : IsLockedOut(email) — L2-006 five failures in 15 minutes
+policy -> db : Count failed attempts in window
+db --> policy : Count
+alt locked out
+  policy --> handler : LockedOut
+  handler -> audit : Record lockout
+  handler --> endpoints : LockedOut (same shape as invalid credentials)
+  endpoints --> client : 423 ProblemDetails without revealing email existence
+  client --> page : Locked result
+  page --> actor : Show "Too many tries" alert (sign-in/locked)
+else not locked out
+  handler -> db : Load StaffUser by normalized email
+  db --> handler : StaffUser or none
+  handler -> hasher : Verify password hash
+  hasher --> handler : Match or mismatch
+  alt unknown email or wrong password
+    handler -> policy : RecordFailure(email)
+    handler --> endpoints : InvalidCredentials
+    endpoints --> client : 401 ProblemDetails (single message)
+    client --> page : Invalid result
+    page --> actor : Show inline error (sign-in/invalid)
+  else credentials valid and MFA required (admin)
+    handler --> endpoints : MfaRequired with short-lived challenge token
+    endpoints --> client : 200 { mfaRequired, challengeToken }
+    client --> page : MFA required
+    page -> mfapage : Route to sign-in/mfa
+    actor -> mfapage : Enter six-digit code, choose trust device
+    mfapage -> client : completeMfa(challengeToken, code, trust)
+    client -> endpoints : POST /auth/mfa (anonymous)
+    endpoints -> mfahandler : Send CompleteMfaCommand
+    mfahandler -> hasher : Verify TOTP against enrollment secret
+    hasher --> mfahandler : Valid or invalid
+    alt code invalid
+      mfahandler --> endpoints : InvalidCode
+      endpoints --> client : 401 ProblemDetails
+      client --> mfapage : Invalid code
+      mfapage --> actor : Show inline error, offer recovery code
+    else code valid
+      mfahandler -> user : IssueSession(device, now); add TrustedDevice when chosen
+      user --> mfahandler : StaffSession
+      mfahandler -> store : Save session
+      store -> db : Insert session, trusted device
+      db --> store : Commit
+      mfahandler -> audit : Record sign-in
+      mfahandler --> endpoints : SessionIssued
+      endpoints --> client : 204 with session cookie
+      client --> mfapage : Signed in
+      mfapage --> actor : Navigate to Today
+    end
+  else credentials valid and no MFA required
+    handler -> user : IssueSession(device, now)
+    user --> handler : StaffSession
+    handler -> store : Save session
+    store -> db : Insert session
+    db --> store : Commit
+    handler -> audit : Record sign-in
+    handler --> endpoints : SessionIssued
+    endpoints --> client : 204 with session cookie
+    client --> page : Signed in
+    page --> actor : Navigate to Today within 2 seconds (L2-006)
+  end
+end
+@enduml

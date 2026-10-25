@@ -1,0 +1,87 @@
+@startuml
+title UML sequence behaviour — Reserve segments and fall back to email
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+box "Frontend — PromiseHub web app, shell and messaging library" #E0F2FE
+  participant "SmsCapBanner" as banner
+  participant "MessagingApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "MessagesEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "GetSmsCapStateQueryHandler" as stateQuery
+  participant "SmsCapService" as cap
+  participant "SmsFallbackPolicy" as fallback
+  participant "SmsUsagePeriod" as period
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "SendMessageJob / SlipReminderJob / NoShowAlertJob" as job
+  participant "ISmsSender" as smsSender
+  participant "IEmailSender" as emailSender
+  participant "IAlertSink" as alerts
+  database "PromiseHub database" as db
+end box
+
+job -> db : Load queued text deliveries for the organization (L2-001)
+db --> job : Deliveries
+loop each text delivery
+  job -> cap : TryReserve(organizationId, deliveryId, segments)
+  cap -> db : Load current SmsUsagePeriod (open if missing)
+  db --> cap : Period with RowVersion
+  cap -> period : TryReserve(segments)
+  alt Used + segments <= Cap
+    period --> cap : true, Used incremented
+    cap -> db : Save period and SmsReservation (concurrency token)
+    alt concurrency conflict
+      db --> cap : DbUpdateConcurrencyException
+      cap -> cap : Reload and retry once
+    end
+    cap --> job : Reserved
+    job -> smsSender : Send text
+    smsSender --> job : Provider id
+    job -> db : Delivery.MarkSent
+  else cap would be exceeded (L2-022 criterion 2)
+    period --> cap : false
+    opt state changes to Reached
+      cap -> alerts : Cap reached for organization (L1-022)
+    end
+    cap --> job : Refused
+    job -> fallback : Apply(delivery, household)
+    alt household has email
+      fallback --> job : FellBackToEmail, reason SmsCapReached
+      job -> emailSender : Send email copy
+      job -> db : Delivery status FellBackToEmail
+    else no email
+      fallback --> job : Paused
+      job -> db : Delivery status Paused
+    end
+  end
+end
+
+banner -> client : getSmsCapState()
+client -> endpoints : GET /messaging/sms-cap
+endpoints -> stateQuery : Send GetSmsCapStateQuery
+stateQuery -> cap : State(organizationId)
+cap --> stateQuery : SmsCapSnapshot
+stateQuery --> endpoints : Snapshot
+endpoints --> client : 200
+client --> banner : Snapshot
+alt state is Reached
+  banner -> banner : Render danger banner (banner/danger) with "Raise the cap"
+else state is Under or Warning
+  banner -> banner : Render nothing
+end
+@enduml

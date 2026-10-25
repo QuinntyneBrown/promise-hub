@@ -1,0 +1,33 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Record and search the audit trail
+
+Container_Boundary(api, "PromiseHub API") {
+  Component(endpoints, "AuditEndpoints", "Minimal API", "GET /audit, POST /audit/exports; Audit.Read permission")
+  Component(search, "SearchAuditQueryHandler", "Query handler", "Tenant filter, action, period, record, actor, text; newest first; 50 per page")
+  Component(exportCmd, "ExportAuditCommandHandler", "Command handler", "Reuses ExportPipeline with AuditCsvSource")
+  Component(writer, "IAuditWriter", "Application interface", "Record(AuditEvent) into the current unit of work")
+  Component(viewBehaviour, "ViewAuditBehaviour", "MediatR pipeline behaviour", "Viewed entries for IAuditedView queries")
+  Component(interceptor, "AuditInterceptor", "EF Core SaveChangesInterceptor", "Created, Updated, Deleted entries for [Audited] entities with redacted snapshots")
+  Component(actor, "ActorResolver", "Application service", "Staff, guardian or job actor from the principal")
+  Component(policy, "FieldPolicy", "Domain rule", "Which fields a role may see; applied to snapshots")
+  Component(entry, "AuditEntry", "Domain entity", "Immutable; no mutators")
+  Component(otherHandlers, "Feature handlers", "Command and query handlers", "Households, Attendance, Incidents, Slips, Settings, Staff")
+  Component(pipeline, "ExportPipeline", "Application service (export-report)", "Inline or background, 7-day link")
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "Rejects Update and Remove on AuditEntry")
+}
+
+Rel(endpoints, search, "Sends SearchAuditQuery")
+Rel(endpoints, exportCmd, "Sends ExportAuditCommand")
+Rel(exportCmd, pipeline, "Runs with AuditCsvSource")
+Rel(otherHandlers, writer, "Record views and non-entity actions")
+Rel(viewBehaviour, writer, "Record Viewed")
+Rel(interceptor, entry, "Creates on SaveChanges")
+Rel(interceptor, policy, "Redacts snapshots")
+Rel(writer, actor, "Resolves actor")
+Rel(writer, entry, "Creates")
+Rel(entry, db, "Appended by", "EF Core")
+Rel(search, db, "Reads entries", "EF Core")
+Rel(interceptor, db, "Hooks SaveChanges")
+@enduml

@@ -1,0 +1,133 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Maintain a household
+
+enum Language {
+  English
+  Spanish
+  French
+}
+
+class Household {
+  +Guid Id
+  +Guid OrganizationId
+  +string Name
+  +Language Language
+  +DateTimeOffset? DeletedAt
+  +DateTimeOffset? PurgeAfter
+  +bool MissingInfo
+  +AddGuardian(guardian: Guardian): void
+  +AddChild(child: Child): void
+  +SoftDelete(now: DateTimeOffset, retention: TimeSpan): void
+}
+
+class Guardian {
+  +Guid Id
+  +Guid HouseholdId
+  +string Name
+  +string Relationship
+  +string? Mobile
+  +string? Email
+  +bool EmailBounced
+  +bool CanPickUp
+  +Update(name, relationship, mobile, email, canPickUp): void
+  +IsReachable(): bool
+}
+
+class Child {
+  +Guid Id
+  +Guid HouseholdId
+  +string Name
+  +DateOnly DateOfBirth
+  +string School
+  +string Notes
+  +MedicalDetails Medical
+  +UpdateProfile(name, dateOfBirth, school, notes): void
+  +UpdateMedical(details: MedicalDetails): MedicalDetails
+}
+
+class MedicalDetails <<value object>> {
+  +string Allergies
+  +string Medication
+  +string Conditions
+  +string EmergencyNotes
+  +string? HealthCardNumber
+}
+
+class ApprovedPickup {
+  +Guid Id
+  +Guid ChildId
+  +string Name
+  +string? Phone
+}
+
+class CreateHouseholdCommand {
+  +string HouseholdName
+  +Guardian FirstGuardian
+  +Child FirstChild
+}
+
+class UpdateMedicalCommand {
+  +Guid ChildId
+  +MedicalDetails Details
+}
+
+class UpdateMedicalCommandHandler {
+  +Handle(command: UpdateMedicalCommand): Task
+}
+
+class DeleteHouseholdCommand {
+  +Guid HouseholdId
+  +string TypedName
+}
+
+class DeleteHouseholdCommandHandler {
+  +Handle(command: DeleteHouseholdCommand): Task
+}
+
+class ListHouseholdsQuery {
+  +string? Search
+  +IReadOnlyList<string> Chips
+}
+
+class AuditEntry {
+  +Guid OrganizationId
+  +Guid ActorId
+  +string RecordType
+  +Guid RecordId
+  +string Action
+  +string BeforeJson
+  +string AfterJson
+  +DateTimeOffset At
+}
+
+class HouseholdPurgeJob {
+  +Run(organizationId: Guid, now: DateTimeOffset): Task
+}
+
+Household "1" *-- "1..*" Guardian
+Household "1" *-- "*" Child
+Household --> Language
+Child *-- MedicalDetails
+Child "1" *-- "*" ApprovedPickup
+UpdateMedicalCommandHandler ..> UpdateMedicalCommand : handles
+UpdateMedicalCommandHandler --> Child : loads / mutates
+UpdateMedicalCommandHandler --> AuditEntry : writes before/after
+DeleteHouseholdCommandHandler ..> DeleteHouseholdCommand : handles
+DeleteHouseholdCommandHandler --> Household : SoftDelete
+DeleteHouseholdCommandHandler --> AuditEntry : writes
+CreateHouseholdCommand ..> Household : creates
+ListHouseholdsQuery ..> Household : reads
+HouseholdPurgeJob ..> Household : purges past PurgeAfter
+@enduml

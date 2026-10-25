@@ -1,0 +1,14 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Render responsive, accessible UI
+
+Person(staff, "Staff member", "Phone at 360 px or laptop up to 1600 px")
+Person_Ext(guardian, "Guardian", "Phone browser, no account")
+System(promisehub, "PromiseHub", "Web app with light and dark themes meeting WCAG 2.2 AA")
+System_Ext(axe, "axe-core in Playwright", "Accessibility rules run on every screen")
+
+Rel(staff, promisehub, "Uses at any viewport", "HTTPS")
+Rel(guardian, promisehub, "Opens guardian pages", "HTTPS")
+Rel(axe, promisehub, "Audits rendered screens", "Chromium")
+@enduml

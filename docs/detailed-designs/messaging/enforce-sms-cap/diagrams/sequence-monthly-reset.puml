@@ -1,0 +1,51 @@
+@startuml
+title UML sequence behaviour — Monthly reset of the SMS counter
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "Job scheduler" as scheduler
+  participant "SmsMeteringJob" as job
+  participant "IAuditWriter" as audit
+  database "PromiseHub database" as db
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "SmsUsagePeriod (previous)" as prev
+  participant "SmsUsagePeriod (next)" as next
+  participant "PlanLimits" as limits
+end box
+box "Frontend — PromiseHub web app, administration library" #E0F2FE
+  participant "BillingPage" as billing
+end box
+
+scheduler -> job : Run(organizationId, first of month in organization time zone)
+job -> db : Load open SmsUsagePeriod for the organization (L2-001)
+db --> job : Previous period
+alt period already closed for this month
+  job --> scheduler : No-op (idempotent re-run)
+else open period found
+  job -> prev : Close(now)
+  prev --> job : ClosedAt set, Used and Cap kept (L2-022 criterion 4)
+  job -> limits : SmsSegmentsPerMonth for the organization plan
+  limits --> job : Plan cap
+  job -> next : Create with Used = 0, Cap = min(plan cap, admin override)
+  job -> audit : Period closed and opened
+  job -> db : Save both periods in one unit of work
+  db --> job : Committed
+  job -> job : Publish SmsCapStateChanged (banner clears, paused texts eligible)
+  job --> scheduler : Done
+end
+
+billing -> db : Later: BillingPage reads closed periods as monthly history
+@enduml

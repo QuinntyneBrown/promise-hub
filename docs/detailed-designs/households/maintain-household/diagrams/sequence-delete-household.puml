@@ -1,0 +1,66 @@
+@startuml
+title UML sequence behaviour — Delete a household
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Admin" as actor
+box "Frontend — PromiseHub web app, households library" #E0F2FE
+  participant "HouseholdPage" as page
+  participant "DeleteHouseholdDialog" as dialog
+  participant "HouseholdsApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "HouseholdEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain (Households)" #ECFDF3
+  participant "DeleteHouseholdCommandHandler" as handler
+  participant "Household" as household
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "AuditLog" as audit
+  participant "HouseholdPurgeJob" as purge
+  database "PromiseHub database" as db
+end box
+actor -> page : More actions, Delete household
+page -> dialog : Open DeleteHouseholdDialog
+actor -> dialog : Type the household name, confirm
+dialog -> dialog : Enable confirm only when typed text equals the name
+dialog -> client : delete(householdId, typedName)
+client -> endpoints : DELETE /households/{id} (RequirePermission Household.Delete)
+endpoints -> handler : Send DeleteHouseholdCommand
+handler -> db : Load Household in caller's organization
+db --> handler : Household
+alt typed name does not match
+  handler --> endpoints : ValidationFailed
+  endpoints --> client : 400 ProblemDetails
+  client --> dialog : Error
+  dialog --> actor : "Type the household name to confirm"
+else match
+  handler -> household : SoftDelete(now, retention) — sets DeletedAt and PurgeAfter (L2-011)
+  household --> handler : Children marked with the household
+  handler -> audit : Record delete with actor and time (L2-032)
+  handler -> db : Save in one unit of work
+  db --> handler : Commit
+  handler --> endpoints : Done
+  endpoints --> client : 204
+  client --> dialog : Deleted
+  dialog --> actor : Return to Families; household excluded from every list and export (L2-011)
+end
+== Retention purge (job runner, per tenant) ==
+purge -> db : Select households where PurgeAfter <= now
+db --> purge : Rows
+purge -> db : Hard-delete households, guardians, children, medical; keep aggregate attendance counts without names
+db --> purge : Commit
+purge -> audit : Record purge count
+@enduml

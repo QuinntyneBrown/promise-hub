@@ -1,0 +1,62 @@
+@startuml
+title UML sequence behaviour — Add a walk-in
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Site lead" as lead
+box "Frontend — PromiseHub web app, attendance library" #E0F2FE
+  participant "CheckInPage (no-results)" as page
+  participant "AddWalkInDialog" as dlg
+  participant "AttendanceApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "AttendanceEndpoints" as ep
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "AddWalkInCommandValidator" as val
+  participant "AddWalkInCommandHandler" as h
+  participant "WalkIn / AttendanceRecord" as rec
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "In-app notifications" as notif
+end box
+
+lead -> page : Search "Petrov" finds nobody
+page --> lead : Empty state: Clear search / Add walk-in (L2-017)
+lead -> page : Tap Add walk-in
+page -> dlg : Open add-walk-in
+lead -> dlg : Child name, guardian name and phone, medical notes
+dlg -> client : addWalkIn(sessionId, request)
+client -> ep : POST /sessions/{id}/walk-ins
+ep -> ep : Authenticate, resolve tenant, Roll Call on
+ep -> val : Validate
+alt Guardian name or phone missing
+  val --> ep : 422
+  ep --> client : 422
+  client --> dlg : "Enter a guardian name and phone number"
+else Valid
+  ep -> h : Send AddWalkInCommand
+  h -> rec : Create WalkIn, roster row IsWalkIn = true, CheckIn(now)
+  rec --> h : Row for tonight only
+  h -> notif : Raise "enrollment follow-up" for the office
+  h -> db : Save in one unit of work
+  db --> h : Commit
+  h --> ep : RosterRowDto
+  ep --> client : 201
+  client --> dlg : Saved
+  dlg --> page : Close, row appears with walk-in flag
+  page --> lead : Totals update
+end
+@enduml

@@ -5,7 +5,7 @@ from pages_core import R_SLIPS, R_ROLL, R_NOTIFY, R_INC, R_ENROLL
 from pages_admin import R_COST
 from dialogs import base
 
-R_MOBILE = "PRD-NFR-MOBILE"
+R_MOBILE = "L1-014"
 
 
 def on(sid: str, state: str = "default", **extra) -> dict:
@@ -60,7 +60,7 @@ def bell(S):
 
 
 # ------------------------------------------------------------------ Inline alerts
-@screen("inline-alert", "notification", "Inline alert", opens_from="event", reqs=[R_SLIPS, R_ROLL, "PRD-QUICKCARD"], na={})
+@screen("inline-alert", "notification", "Inline alert", opens_from="event", reqs=[R_SLIPS, R_ROLL, "L1-008"], na={})
 def inline(S):
     def inject(sid, state, html, after='<div class="split">', **kw):
         k = on(sid, state, **kw)
@@ -74,7 +74,7 @@ def inline(S):
 
 
 # ------------------------------------------------------------------ Texts the guardian receives (shown as phone notifications over the guardian page)
-@screen("guardian-sms", "notification", "Guardian text", opens_from="guardian-update", reqs=[R_NOTIFY, R_SLIPS, R_ROLL, "PRD-NFR-ACCESS"], na={})
+@screen("guardian-sms", "notification", "Guardian text", opens_from="guardian-update", reqs=[R_NOTIFY, R_SLIPS, R_ROLL, "L1-019"], na={})
 def guardian_sms(S):
     def region(p):
         return f'<div class="push-region" role="status" aria-live="polite">{p}</div>'

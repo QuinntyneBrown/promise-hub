@@ -1,0 +1,73 @@
+@startuml
+title UML sequence behaviour — Open enrollment and review in bulk
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Admin" as actor
+box "Frontend — PromiseHub web app, programs and enrollment libraries" #E0F2FE
+  participant "ProgramPage / OpenEnrollmentDialog" as program
+  participant "RosterPage / BulkReviewDialog" as roster
+  participant "EnrollmentApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "EnrollmentEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain (Enrollment)" #ECFDF3
+  participant "OpenEnrollmentCommandHandler" as open
+  participant "ReviewEnrollmentCommandHandler" as review
+  participant "Program / Enrollment / RosterEntry" as domain
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "INotificationDispatcher" as notify
+  participant "AuditLog" as audit
+  database "PromiseHub database" as db
+end box
+== Open enrollment ==
+actor -> program : Open enrollment
+program -> client : openEnrollment(programId)
+client -> endpoints : POST /programs/{id}/enrollment/open (RequirePermission Enrollment.Review)
+endpoints -> open : Send OpenEnrollmentCommand
+open -> db : Load Program in caller's organization
+db --> open : Program
+open -> domain : OpenEnrollment(slug, now)
+open -> audit : Record open
+open -> db : Save
+db --> open : Commit
+open --> endpoints : Public link
+endpoints --> client : 200 { link }
+client --> program : Link and QR code (open-enrollment/success) — L2-013
+== Bulk review ==
+actor -> roster : Select 3 waiting review, Accept
+roster -> client : bulkReview(ids, Accepted)
+client -> endpoints : POST /enrollments/review
+endpoints -> review : Send BulkReviewEnrollmentsCommand
+loop each enrollment id, one unit of work
+  review -> db : Load Enrollment and Program
+  db --> review : Enrollment, Program
+  alt enrollment not WaitingReview or not in this organization
+    review --> endpoints : Skipped with reason
+  else accept
+    review -> domain : Enrollment.Accept(); add RosterEntry per child; Program.EnrolledCount += children (L2-013)
+    review -> notify : Queue acceptance message to guardians in household language
+    notify --> review : Queued
+    review -> audit : Record review decision
+  end
+end
+review -> db : Save changes
+db --> review : Commit
+review --> endpoints : Accepted count, skipped list
+endpoints --> client : 200
+client --> roster : Result
+roster --> actor : Children on roster, enrolled count updated, "Both guardians are texted" (bulk-review)
+@enduml

@@ -1,0 +1,21 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Record and search the audit trail
+
+Person(admin, "Admin", "Searches the log")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "administration library: AuditLogPage")
+  Container(api, "PromiseHub API", "ASP.NET Core", "AuditEndpoints, SearchAuditQueryHandler, AuditInterceptor, ViewAuditBehaviour")
+  Container(jobs, "Job runner", "PromiseHub.Infrastructure", "Jobs write entries for sends, reminders, exports")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "AuditEntry table: INSERT and SELECT only for the app login")
+}
+System_Ext(email, "Email provider", "Export links")
+
+Rel(admin, web, "Uses", "HTTPS")
+Rel(web, api, "GET /audit, POST /audit/exports", "JSON/HTTPS")
+Rel(api, db, "Appends and reads entries", "EF Core")
+Rel(jobs, db, "Appends entries", "EF Core")
+Rel(api, jobs, "Enqueues background audit export")
+Rel(jobs, email, "Emails link", "HTTPS")
+@enduml

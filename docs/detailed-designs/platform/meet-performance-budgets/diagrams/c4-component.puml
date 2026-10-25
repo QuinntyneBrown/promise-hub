@@ -1,0 +1,36 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Meet performance budgets
+
+Container_Boundary(web, "PromiseHub web app") {
+  Component(store, "CheckInStore", "Signals store (attendance library)", "Optimistic check-in, revert on 4xx")
+  Component(roster, "RosterListComponent", "cdk-virtual-scroll-viewport", "Fixed-height rows; 212 children at 60 fps")
+  Component(search, "RosterSearchComponent", "Angular component", "In-memory filter on precomputed keys")
+  Component(marks, "PerformanceMarksService", "Angular service", "performance.mark; sampled reporting")
+  Component(attApi, "AttendanceApi", "Typed client (frontend/projects/api)", "POST /attendance/check-ins")
+  Component(telApi, "TelemetryApi", "Typed client", "POST /telemetry/web-vitals")
+}
+Container_Boundary(api, "PromiseHub API") {
+  Component(attEndpoints, "AttendanceEndpoints", "Minimal API", "Dispatches CheckInChildCommand")
+  Component(telEndpoints, "TelemetryEndpoints", "Minimal API", "Accepts sampled marks")
+  Component(compress, "Response compression + ETag", "Middleware", "Brotli JSON, roster revalidation")
+}
+Container_Boundary(app, "PromiseHub Application (Attendance)") {
+  Component(handler, "CheckInChildCommandHandler", "Handler", "One read, one insert, one unit of work")
+}
+Container_Boundary(infra, "PromiseHub Infrastructure") {
+  ComponentDb(db, "PromiseHubDbContext", "EF Core, pooled", "Composite (OrganizationId, SessionId) index")
+  Component(metrics, "RequestMetrics", "Duration histogram", "Per route and tenant")
+}
+Rel(roster, store, "Reads roster signal")
+Rel(search, store, "Filters roster")
+Rel(store, attApi, "checkIn()")
+Rel(marks, telApi, "Reports marks")
+Rel(attApi, attEndpoints, "POST", "JSON/HTTPS")
+Rel(telApi, telEndpoints, "POST", "JSON/HTTPS")
+Rel(attEndpoints, handler, "Send command")
+Rel(handler, db, "Load and insert AttendanceRecord")
+Rel(attEndpoints, metrics, "Duration recorded by")
+Rel(attEndpoints, compress, "Response through")
+@enduml

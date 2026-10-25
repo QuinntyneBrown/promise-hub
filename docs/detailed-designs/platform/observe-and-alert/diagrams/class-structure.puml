@@ -1,0 +1,93 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Observe and alert
+
+class CorrelationIdMiddleware {
+  +HeaderName = "X-Correlation-Id"
+  +InvokeAsync(context: HttpContext): Task
+}
+
+class RequestLoggingMiddleware {
+  -RequestDelegate next
+  -ILogger logger
+  -RequestMetrics metrics
+  +InvokeAsync(context: HttpContext): Task
+}
+
+class RequestCompletedLog {
+  +Guid? TenantId
+  +string RouteTemplate
+  +string Method
+  +int StatusCode
+  +double DurationMs
+  +string CorrelationId
+  +string? UserRole
+}
+
+class TenantLogEnricher {
+  +Enrich(logEvent: LogEvent): void
+}
+
+class SecretsRedactionEnricher {
+  +Enrich(logEvent: LogEvent): void
+}
+
+class PiiDestructuringPolicy {
+  -Type[] protectedTypes
+  +TryDestructure(value: object, out result: LogEventPropertyValue): bool
+}
+
+class RequestMetrics {
+  -Histogram<double> duration
+  -Counter<long> count
+  +Record(route: string, statusClass: string, tenant: Guid?, ms: double): void
+}
+
+class JobQueueMetrics {
+  -ObservableGauge<double> queueLagSeconds
+  -Counter<long> completed
+  +ObserveLag(): double
+  +RecordOutcome(type: string, outcome: string, tenant: Guid): void
+}
+
+class SmsUsageMetrics {
+  -ObservableGauge<double> segmentsUsedRatio
+}
+
+class AlertRule <<eng/infra>> {
+  +string Name
+  +string Expression
+  +TimeSpan Window
+  +string Destination
+}
+
+class CorrelationInterceptor <<Angular>> {
+  +intercept(req: HttpRequest, next: HttpHandler): Observable<HttpEvent>
+}
+
+class ClientErrorReporter <<Angular ErrorHandler>> {
+  +handleError(error: unknown): void
+}
+
+RequestLoggingMiddleware --> RequestCompletedLog : writes
+RequestLoggingMiddleware --> RequestMetrics
+CorrelationIdMiddleware ..> RequestLoggingMiddleware : precedes
+RequestCompletedLog ..> TenantLogEnricher : enriched by
+RequestCompletedLog ..> SecretsRedactionEnricher : filtered by
+RequestCompletedLog ..> PiiDestructuringPolicy : filtered by
+AlertRule ..> RequestMetrics : error rate over 1% in 5 min
+AlertRule ..> JobQueueMetrics : lag over 10 min
+AlertRule ..> SmsUsageMetrics : cap approaching
+CorrelationInterceptor ..> CorrelationIdMiddleware : header
+@enduml

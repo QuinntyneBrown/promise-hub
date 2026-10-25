@@ -1,0 +1,14 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Show Quick Card
+
+Person(lead, "Site lead", "Opens a child's Quick Card during a session")
+Person(volunteer, "Volunteer coordinator", "Sees the restricted card")
+Person_Ext(guardian, "Guardian", "Called from the card")
+System(ph, "PromiseHub", "Quick Cards: emergency card per child, cached for today's roster")
+
+Rel(lead, ph, "Opens Quick Card in", "HTTPS")
+Rel(volunteer, ph, "Opens restricted Quick Card in", "HTTPS")
+Rel(lead, guardian, "Calls via tel: link on the card", "Phone")
+@enduml

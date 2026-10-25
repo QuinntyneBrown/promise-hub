@@ -1,0 +1,75 @@
+@startuml
+title UML sequence behaviour — Sign out a child
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Site lead" as lead
+box "Frontend — PromiseHub web app, attendance library" #E0F2FE
+  participant "CheckInPage / RosterStore" as page
+  participant "ConfirmPickupDialog" as dlg
+  participant "PickupApi" as pclient
+  participant "AttendanceApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "AttendanceEndpoints" as ep
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "SignOutChildCommandValidator" as val
+  participant "SignOutChildCommandHandler" as so
+  participant "AttendanceRecord" as rec
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "IAuditLog" as audit
+end box
+
+lead -> page : Tap Sign out on Mateo
+page -> dlg : Open confirm-pickup
+dlg -> pclient : getApprovedPickups(childId)
+pclient --> dlg : Carmen, Luis, Rosa
+dlg --> lead : Approved list, "Someone else", ID switch, time
+lead -> dlg : Choose person, tap Sign out
+alt Nobody chosen
+  dlg --> lead : Inline error "Choose who is taking Mateo home" (invalid)
+else Approved adult chosen
+  dlg -> client : signOut({childId, approvedPickupId, idChecked, signedOutAt, clientActionId})
+else Someone else
+  dlg --> lead : Warning "Not on the approved list", tel: Call Carmen
+  lead -> dlg : Enter name, set "Carmen confirmed by phone"
+  dlg -> client : signOut({childId, otherPickupName, guardianConfirmedByPhone, ...})
+end
+client -> ep : POST /sessions/{id}/sign-outs
+ep -> ep : Authenticate, resolve tenant, Pickup and Roll Call on
+ep -> val : Validate SignOutChildCommand
+alt Neither approved pickup nor explained other person (L2-017)
+  val --> ep : 422 ProblemDetails
+  ep --> client : 422
+  client --> dlg : Field errors
+  dlg --> lead : Inline error, dialog stays open
+else Valid
+  ep -> so : Send SignOutChildCommand
+  so -> db : Load record and child's approved pickups (L2-001)
+  db --> so : Record, list
+  so -> rec : SignOut(pickup, at, actor) — requires Present
+  rec --> so : AttendanceEvent SignedOut
+  so -> audit : Write attendance change (L2-032)
+  so -> db : Save in one unit of work
+  db --> so : Commit
+  so --> ep : RosterRowDto
+  ep --> client : 200
+  client --> dlg : Saved
+  dlg --> page : Close, row shows "Signed out"
+  page --> lead : Totals update live
+end
+@enduml

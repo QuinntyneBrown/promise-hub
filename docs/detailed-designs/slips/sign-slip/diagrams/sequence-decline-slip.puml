@@ -1,0 +1,66 @@
+@startuml
+title UML sequence behaviour — Decline a slip
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Guardian" as actor
+box "Frontend — PromiseHub web app, guardian library" #E0F2FE
+  participant "SlipSignPage" as page
+  participant "DeclineSlipDialog" as dialog
+  participant "GuardianSlipsApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "GuardianSlipEndpoints" as endpoints
+  participant "GuardianLinkVerifier" as verifier
+end box
+box "Backend — PromiseHub Application and Domain (Slips)" #ECFDF3
+  participant "DeclineSlipCommandHandler" as handler
+  participant "SlipDecline" as decline
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "AuditLog" as audit
+  participant "NotificationService" as notify
+end box
+actor -> page : Tap "Mateo can't come"
+page -> dialog : Open
+dialog --> actor : Reason and optional note
+actor -> dialog : Choose reason; Tell staff he can't come
+dialog -> client : decline(token, { childId, reason, note })
+client -> endpoints : POST /g/slips/{token}/decline
+endpoints -> verifier : Validate token and device (L2-026)
+verifier --> endpoints : Link context
+endpoints -> handler : Send DeclineSlipCommand
+handler -> db : Load slip, household, child enrolment
+db --> handler : Context
+alt link expired or child not in this household
+  handler --> endpoints : Rejected
+  endpoints --> client : 404 Not Found
+  client --> dialog : Failed
+  dialog --> actor : Error state
+else valid
+  handler -> decline : new SlipDecline(childId, reason, note, now)
+  decline --> handler : Decline
+  handler -> db : Mark child declined on the event roster; SaveChanges (L2-015 AC3)
+  db --> handler : Commit result
+  handler -> audit : Record decline (L2-032)
+  audit --> handler : Recorded
+  handler -> notify : Notify site lead of the event
+  notify --> handler : Queued
+  handler --> endpoints : Result
+  endpoints --> client : 200 OK
+  client --> dialog : Done
+  dialog --> actor : Confirmation; change of mind allowed until the sign-by date
+end
+@enduml

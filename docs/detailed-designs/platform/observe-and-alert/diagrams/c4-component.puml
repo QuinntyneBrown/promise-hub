@@ -1,0 +1,43 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Observe and alert
+
+Container_Boundary(api, "PromiseHub API") {
+  Component(corr, "CorrelationIdMiddleware", "Middleware", "Reads or creates X-Correlation-Id; echoes it")
+  Component(reqlog, "RequestLoggingMiddleware", "Middleware", "One RequestCompleted line with final status")
+  Component(exc, "ExceptionHandler + ProblemDetails", "Middleware", "Inside request logging; adds correlation id to body")
+  Component(health, "Health endpoints", "Minimal API", "/health liveness and readiness")
+  Component(endpoints, "Feature endpoints", "Minimal API", "")
+}
+Container_Boundary(infra, "PromiseHub Infrastructure") {
+  Component(tenantEnrich, "TenantLogEnricher", "Log enricher", "TenantId and CorrelationId on every line")
+  Component(redact, "SecretsRedactionEnricher", "Log enricher", "Removes secrets")
+  Component(pii, "PiiDestructuringPolicy", "Destructuring policy", "Entities become identifiers; no child names")
+  Component(reqMetrics, "RequestMetrics", "Histogram and counter", "Route, status class, tenant")
+  Component(jobMetrics, "JobQueueMetrics", "Gauge and counter", "Queue lag; job outcomes")
+  Component(smsMetrics, "SmsUsageMetrics", "Gauge", "Segments used ratio per tenant")
+  Component(otel, "OpenTelemetry exporter", "OTLP", "Ships to the collector")
+  Component(runner, "JobRunnerHostedService", "BackgroundService", "Reports lag and outcomes")
+}
+Container_Boundary(web, "PromiseHub web app") {
+  Component(interceptor, "CorrelationInterceptor", "HTTP interceptor (frontend/projects/api)", "Sends X-Correlation-Id")
+  Component(errpage, "ServerErrorPageComponent", "Angular component", "Shows correlation id")
+  Component(reporter, "ClientErrorReporter", "ErrorHandler", "POST /telemetry/client-errors")
+}
+Rel(interceptor, corr, "X-Correlation-Id", "HTTPS")
+Rel(corr, reqlog, "Next")
+Rel(reqlog, exc, "Next")
+Rel(exc, endpoints, "Next")
+Rel(reqlog, tenantEnrich, "Writes through")
+Rel(tenantEnrich, redact, "Then")
+Rel(redact, pii, "Then")
+Rel(pii, otel, "Then")
+Rel(reqlog, reqMetrics, "Records")
+Rel(runner, jobMetrics, "Records")
+Rel(reqMetrics, otel, "Exported by")
+Rel(jobMetrics, otel, "Exported by")
+Rel(smsMetrics, otel, "Exported by")
+Rel(exc, errpage, "500 ProblemDetails with correlation id")
+Rel(reporter, endpoints, "Reports client errors")
+@enduml

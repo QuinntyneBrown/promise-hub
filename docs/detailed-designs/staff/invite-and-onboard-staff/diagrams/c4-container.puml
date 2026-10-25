@@ -1,0 +1,19 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Invite and onboard staff
+
+Person(admin, "Admin", "Invites staff")
+Person(invitee, "Invited staff member", "Accepts and onboards")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "administration library: invite-staff; account library: accept-invite and onboard-staff-* wizard")
+  Container(api, "PromiseHub API", "ASP.NET Core minimal API", "Invitation and staff profile endpoints and handlers")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "Invitations, staff users, memberships, profiles, audit log")
+}
+System_Ext(email, "Email provider", "Delivers invitation emails")
+Rel(admin, web, "Uses", "HTTPS")
+Rel(invitee, web, "Opens the link and uses the wizard", "HTTPS")
+Rel(web, api, "Calls /staff/invitations, /invitations/{token}, /me/*", "JSON/HTTPS")
+Rel(api, db, "Reads and writes", "EF Core")
+Rel(api, email, "Sends invitation", "SMTP/API")
+@enduml

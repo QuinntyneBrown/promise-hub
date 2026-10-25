@@ -1,0 +1,25 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Enforce the SMS cap
+
+Person(admin, "Admin", "Raises the cap")
+Person(staff, "Program director", "Sees cap warnings")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "SmsCapBanner, NewMessagePage over-cap state, NotificationSettingsPage, BillingPage")
+  Container(api, "PromiseHub API", "ASP.NET Core", "GET /messaging/sms-cap, PUT /settings/notifications/sms-cap, SmsCapService")
+  Container(jobs, "Job runner", "PromiseHub.Infrastructure", "SendMessageJob, SlipReminderJob, NoShowAlertJob, ResumePausedTextsJob, SmsMeteringJob")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "SmsUsagePeriod, SmsReservation, deliveries, audit log")
+}
+System_Ext(sms, "SMS provider", "Texts")
+System_Ext(email, "Email provider", "Emails")
+
+Rel(admin, web, "Uses", "HTTPS")
+Rel(staff, web, "Uses", "HTTPS")
+Rel(web, api, "Reads cap state, updates cap", "JSON/HTTPS")
+Rel(api, db, "Reads and writes usage periods", "EF Core")
+Rel(api, jobs, "Enqueues ResumePausedTextsJob on raise")
+Rel(jobs, db, "Reserves segments, records fallbacks", "EF Core")
+Rel(jobs, sms, "Sends reserved texts", "HTTPS")
+Rel(jobs, email, "Sends email fallbacks", "HTTPS")
+@enduml

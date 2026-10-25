@@ -1,0 +1,90 @@
+@startuml
+title UML sequence behaviour — Submit and fulfil a guardian data request
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Guardian" as guardian
+actor "Organization admin" as admin
+box "Frontend — guardian library and organizations library" #E0F2FE
+  participant "GuardianDataRequestDialog" as dialog
+  participant "GuardianDataRequestsApi" as gclient
+  participant "SettingsPrivacyPage" as page
+  participant "PrivacyApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "GuardianDataRequestEndpoints" as gendpoints
+  participant "PrivacyEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "SubmitDataRequestCommandHandler" as submitHandler
+  participant "FulfilExportCommandHandler" as exportHandler
+  participant "FulfilDeletionCommandHandler" as deleteHandler
+  participant "DataRequest" as request
+  participant "Household" as household
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "ExportWriter / IFileStorage" as files
+  participant "VerifiedLinkService" as link
+  participant "IEmailSender" as email
+  participant "AuditLog" as audit
+end box
+guardian -> dialog : Choose copy or deletion; email; "Send request"
+alt email empty
+  dialog --> guardian : Inline error "Enter an email."
+else valid
+  dialog -> gclient : submit(token, request)
+  gclient -> gendpoints : POST /g/{token}/data-requests
+  gendpoints -> gendpoints : Verify guardian link; resolve household and tenant
+  gendpoints -> submitHandler : Send SubmitDataRequestCommand
+  submitHandler -> request : Create for household
+  submitHandler -> db : SaveChanges
+  submitHandler -> email : Notify organization admins
+  submitHandler -> audit : Record data request
+  submitHandler --> gendpoints : Request id
+  gendpoints --> gclient : 201
+  gclient --> dialog : Done
+  dialog --> guardian : "Received"; admin will respond within 30 days
+end
+admin -> page : Open request; fulfil
+alt kind is Export
+  page -> client : fulfilExport(requestId)
+  client -> endpoints : POST /privacy/data-requests/{id}/export
+  endpoints -> exportHandler : Send FulfilExportCommand
+  exportHandler -> db : Load household's records only (tenant-filtered, household-scoped)
+  db --> exportHandler : Household data
+  exportHandler -> files : Write PDF and spreadsheet
+  exportHandler -> link : Issue verified download link
+  exportHandler -> email : Send link to request SendTo (L2-030 c4)
+  exportHandler -> request : Fulfil(by admin)
+  exportHandler -> audit : Record export fulfilled
+  exportHandler -> db : SaveChanges
+  exportHandler --> endpoints : Result
+  endpoints --> client : 204
+  client --> page : Done
+  page --> admin : Request marked fulfilled
+else kind is Deletion
+  page -> client : fulfilDeletion(requestId)
+  client -> endpoints : POST /privacy/data-requests/{id}/delete
+  endpoints -> deleteHandler : Send FulfilDeletionCommand
+  deleteHandler -> household : SoftDelete(now); PurgeAfter = now + 30 days (L2-030 c4)
+  deleteHandler -> request : Fulfil(by admin)
+  deleteHandler -> audit : Record deletion scheduled
+  deleteHandler -> db : SaveChanges
+  deleteHandler --> endpoints : Result
+  endpoints --> client : 204
+  client --> page : Done
+  page --> admin : Household hidden; purge scheduled
+end
+@enduml

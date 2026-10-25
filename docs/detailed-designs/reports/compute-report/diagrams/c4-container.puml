@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Compute a report
+
+Person(director, "Program director", "Reads reports")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "reports library: ReportsPage, ReportFilterState")
+  Container(api, "PromiseHub API", "ASP.NET Core", "ReportsEndpoints, GetReportQueryHandler, ReportAggregator")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "Sessions, attendance records, enrollments, slips, households")
+}
+
+Rel(director, web, "Uses", "HTTPS")
+Rel(web, api, "GET /reports with period and programs", "JSON/HTTPS")
+Rel(api, db, "Grouped aggregate queries", "EF Core")
+@enduml

@@ -1,0 +1,123 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Run background jobs
+
+enum JobStatus {
+  Scheduled
+  Leased
+  Succeeded
+  Failed
+  DeadLettered
+}
+
+class Job {
+  +Guid Id
+  +Guid OrganizationId
+  +string Type
+  +string Payload
+  +DateTimeOffset DueAt
+  +int Attempts
+  +JobStatus Status
+  +DateTimeOffset? LeaseUntil
+  +string? LastError
+  +Guid CorrelationId
+  +Lease(until: DateTimeOffset): void
+  +Succeed(): void
+  +Fail(error: string, nextDueAt: DateTimeOffset?): void
+}
+
+class TenantScope {
+  +Guid OrganizationId
+  +ModuleKey[] Modules
+  +Plan Plan
+  +int SmsSegmentsRemaining
+}
+
+interface IJobHandler<TPayload> {
+  +Handle(payload: TPayload, scope: TenantScope, ct: CancellationToken): Task
+}
+
+class SendSlipRemindersJobHandler
+class NoShowAlertJobHandler
+class BuildExportJobHandler
+class RetentionPurgeJobHandler
+class DailyBackupJobHandler
+
+interface IJobScheduler {
+  +Enqueue<TPayload>(organizationId: Guid, payload: TPayload, dueAt: DateTimeOffset): Task<Guid>
+}
+
+interface IOutboundMessageSender {
+  +SendAsync(key: IdempotencyKey, message: OutboundMessage, ct: CancellationToken): Task<SendOutcome>
+}
+
+class IdempotencyKey {
+  +Guid JobId
+  +Guid RecipientId
+  +string TemplateId
+}
+
+class OutboundMessageLog {
+  +Guid OrganizationId
+  +IdempotencyKey Key
+  +DateTimeOffset SentAt
+  +string ProviderMessageId
+}
+
+class JobRunnerHostedService {
+  -int batchSize
+  -TimeSpan pollInterval
+  -TimeSpan leaseLength
+  +ExecuteAsync(ct: CancellationToken): Task
+  -LeaseDueJobs(): Task<Job[]>
+  -Dispatch(job: Job): Task
+}
+
+class RetryPolicy {
+  +int MaxAttempts = 5
+  +NextDueAt(attempt: int, now: DateTimeOffset): DateTimeOffset
+  +ShouldDeadLetter(attempt: int): bool
+}
+
+class JobFailureNotifier {
+  +NotifyAdmins(job: Job): Task
+}
+
+class MaintenanceOptions {
+  +bool Enabled
+  +DateTimeOffset? ExpectedEndAt
+}
+
+class MaintenanceMiddleware {
+  +InvokeAsync(context: HttpContext): Task
+}
+
+Job --> JobStatus
+IJobHandler <|.. SendSlipRemindersJobHandler
+IJobHandler <|.. NoShowAlertJobHandler
+IJobHandler <|.. BuildExportJobHandler
+IJobHandler <|.. RetentionPurgeJobHandler
+IJobHandler <|.. DailyBackupJobHandler
+JobRunnerHostedService --> "*" Job : leases
+JobRunnerHostedService --> TenantScope : builds
+JobRunnerHostedService ..> IJobHandler : dispatches
+JobRunnerHostedService --> RetryPolicy
+RetryPolicy ..> JobFailureNotifier : after 5th failure
+SendSlipRemindersJobHandler ..> IOutboundMessageSender
+NoShowAlertJobHandler ..> IOutboundMessageSender
+IOutboundMessageSender --> IdempotencyKey
+IOutboundMessageSender --> OutboundMessageLog : records
+IJobScheduler ..> Job : creates
+MaintenanceMiddleware --> MaintenanceOptions
+@enduml

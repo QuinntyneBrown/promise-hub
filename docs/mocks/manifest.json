@@ -26,9 +26,9 @@
       "title": "Today",
       "route": "/",
       "requirements": [
-        "PRD-ROLLCALL",
-        "PRD-SLIPS",
-        "PRD-NOTIFY"
+        "L1-007",
+        "L1-006",
+        "L1-010"
       ],
       "states": [
         "default",
@@ -46,9 +46,9 @@
       "title": "Check-in",
       "route": "/check-in",
       "requirements": [
-        "PRD-ROLLCALL",
-        "PRD-PICKUP",
-        "PRD-NFR-MOBILE"
+        "L1-007",
+        "L1-009",
+        "L1-014"
       ],
       "states": [
         "default",
@@ -68,9 +68,9 @@
       "title": "Quick Card",
       "route": "/children/:id/quick-card",
       "requirements": [
-        "PRD-QUICKCARD",
-        "PRD-NFR-PRIVACY",
-        "PRD-NFR-MOBILE"
+        "L1-008",
+        "L1-015",
+        "L1-014"
       ],
       "states": [
         "default",
@@ -88,8 +88,8 @@
       "title": "Events",
       "route": "/events",
       "requirements": [
-        "PRD-SLIPS",
-        "PRD-ROLLCALL"
+        "L1-006",
+        "L1-007"
       ],
       "states": [
         "default",
@@ -106,9 +106,9 @@
       "title": "Event",
       "route": "/events/:id",
       "requirements": [
-        "PRD-SLIPS",
-        "PRD-ROLLCALL",
-        "PRD-NOTIFY"
+        "L1-006",
+        "L1-007",
+        "L1-010"
       ],
       "states": [
         "default",
@@ -126,8 +126,8 @@
       "title": "Families",
       "route": "/families",
       "requirements": [
-        "PRD-ENROLL",
-        "PRD-NFR-PRIVACY"
+        "L1-005",
+        "L1-015"
       ],
       "states": [
         "default",
@@ -145,9 +145,9 @@
       "title": "Household",
       "route": "/families/:id",
       "requirements": [
-        "PRD-ENROLL",
-        "PRD-NFR-PRIVACY",
-        "PRD-DATA"
+        "L1-005",
+        "L1-015",
+        "L1-005"
       ],
       "states": [
         "default",
@@ -164,11 +164,11 @@
       "title": "Child",
       "route": "/children/:id",
       "requirements": [
-        "PRD-ENROLL",
-        "PRD-QUICKCARD",
-        "PRD-PICKUP",
-        "PRD-NFR-PRIVACY",
-        "PRD-DATA"
+        "L1-005",
+        "L1-008",
+        "L1-009",
+        "L1-015",
+        "L1-005"
       ],
       "states": [
         "default",
@@ -185,7 +185,7 @@
       "title": "Programs",
       "route": "/programs",
       "requirements": [
-        "PRD-ENROLL"
+        "L1-005"
       ],
       "states": [
         "default",
@@ -201,8 +201,8 @@
       "title": "Program",
       "route": "/programs/:id",
       "requirements": [
-        "PRD-ENROLL",
-        "PRD-REPORTS"
+        "L1-005",
+        "L1-012"
       ],
       "states": [
         "default",
@@ -218,7 +218,7 @@
       "title": "Program roster",
       "route": "/programs/:id/roster",
       "requirements": [
-        "PRD-ENROLL"
+        "L1-005"
       ],
       "states": [
         "default",
@@ -236,7 +236,7 @@
       "title": "Program form",
       "route": "/programs/new",
       "requirements": [
-        "PRD-ENROLL"
+        "L1-005"
       ],
       "states": [
         "default",
@@ -257,8 +257,8 @@
       "title": "Event form",
       "route": "/events/new",
       "requirements": [
-        "PRD-SLIPS",
-        "PRD-ROLLCALL"
+        "L1-006",
+        "L1-007"
       ],
       "states": [
         "default",
@@ -279,7 +279,7 @@
       "title": "Slips",
       "route": "/slips",
       "requirements": [
-        "PRD-SLIPS"
+        "L1-006"
       ],
       "states": [
         "default",
@@ -295,9 +295,9 @@
       "title": "Slip editor",
       "route": "/events/:id/slip",
       "requirements": [
-        "PRD-SLIPS",
-        "PRD-NOTIFY",
-        "PRD-NFR-COST"
+        "L1-006",
+        "L1-010",
+        "L1-020"
       ],
       "states": [
         "default",
@@ -318,8 +318,8 @@
       "title": "Messages",
       "route": "/messages",
       "requirements": [
-        "PRD-NOTIFY",
-        "PRD-NFR-COST"
+        "L1-010",
+        "L1-020"
       ],
       "states": [
         "default",
@@ -336,9 +336,9 @@
       "title": "New message",
       "route": "/messages/new",
       "requirements": [
-        "PRD-NOTIFY",
-        "PRD-NFR-COST",
-        "PRD-NFR-ACCESS"
+        "L1-010",
+        "L1-020",
+        "L1-019"
       ],
       "states": [
         "default",
@@ -360,7 +360,7 @@
       "title": "Message",
       "route": "/messages/:id",
       "requirements": [
-        "PRD-NOTIFY"
+        "L1-010"
       ],
       "states": [
         "default",
@@ -379,8 +379,8 @@
       "title": "Incidents",
       "route": "/incidents",
       "requirements": [
-        "PRD-INCIDENT",
-        "PRD-NFR-PRIVACY"
+        "L1-011",
+        "L1-015"
       ],
       "states": [
         "default",
@@ -397,7 +397,7 @@
       "title": "Report incident",
       "route": "/incidents/new",
       "requirements": [
-        "PRD-INCIDENT"
+        "L1-011"
       ],
       "states": [
         "default",
@@ -417,9 +417,9 @@
       "title": "Incident",
       "route": "/incidents/:id",
       "requirements": [
-        "PRD-INCIDENT",
-        "PRD-NFR-PRIVACY",
-        "PRD-DATA"
+        "L1-011",
+        "L1-015",
+        "L1-005"
       ],
       "states": [
         "default",
@@ -438,8 +438,8 @@
       "title": "Reports",
       "route": "/reports",
       "requirements": [
-        "PRD-REPORTS",
-        "PRD-NFR-PRIVACY"
+        "L1-012",
+        "L1-015"
       ],
       "states": [
         "default",
@@ -457,8 +457,8 @@
       "title": "Attendance",
       "route": "/programs/:id/attendance",
       "requirements": [
-        "PRD-ROLLCALL",
-        "PRD-REPORTS"
+        "L1-007",
+        "L1-012"
       ],
       "states": [
         "default",
@@ -475,9 +475,9 @@
       "title": "Import roster",
       "route": "/import",
       "requirements": [
-        "PRD-NFR-INTEGRATION",
-        "PRD-NFR-TTV",
-        "PRD-ENROLL"
+        "L1-004",
+        "L1-004",
+        "L1-005"
       ],
       "states": [
         "default",
@@ -498,8 +498,8 @@
       "title": "Settings",
       "route": "/settings",
       "requirements": [
-        "PRD-NFR-COMPLIANCE",
-        "PRD-NFR-TTV"
+        "L1-015",
+        "L1-004"
       ],
       "states": [
         "default",
@@ -519,8 +519,8 @@
       "title": "Staff and roles",
       "route": "/settings/staff",
       "requirements": [
-        "PRD-NFR-PRIVACY",
-        "PRD-NFR-SECURITY"
+        "L1-015",
+        "L1-016"
       ],
       "states": [
         "default",
@@ -536,9 +536,9 @@
       "title": "Notification settings",
       "route": "/settings/notifications",
       "requirements": [
-        "PRD-NOTIFY",
-        "PRD-ROLLCALL",
-        "PRD-NFR-COST"
+        "L1-010",
+        "L1-007",
+        "L1-020"
       ],
       "states": [
         "default",
@@ -558,10 +558,10 @@
       "title": "Privacy and data",
       "route": "/settings/privacy",
       "requirements": [
-        "PRD-NFR-PRIVACY",
-        "PRD-NFR-COMPLIANCE",
-        "PRD-NFR-SECURITY",
-        "PRD-DATA"
+        "L1-015",
+        "L1-015",
+        "L1-016",
+        "L1-005"
       ],
       "states": [
         "default",
@@ -580,9 +580,9 @@
       "title": "Audit log",
       "route": "/settings/audit",
       "requirements": [
-        "PRD-NFR-PRIVACY",
-        "PRD-NFR-SECURITY",
-        "PRD-DATA"
+        "L1-015",
+        "L1-016",
+        "L1-005"
       ],
       "states": [
         "default",
@@ -599,7 +599,7 @@
       "title": "Billing",
       "route": "/settings/billing",
       "requirements": [
-        "PRD-NFR-COST"
+        "L1-020"
       ],
       "states": [
         "default",
@@ -619,7 +619,7 @@
       "title": "Your account",
       "route": "/account",
       "requirements": [
-        "PRD-NFR-SECURITY"
+        "L1-016"
       ],
       "states": [
         "default",
@@ -640,9 +640,9 @@
       "title": "Notifications",
       "route": "/notifications",
       "requirements": [
-        "PRD-NOTIFY",
-        "PRD-SLIPS",
-        "PRD-INCIDENT"
+        "L1-010",
+        "L1-006",
+        "L1-011"
       ],
       "states": [
         "default",
@@ -658,7 +658,7 @@
       "title": "Search",
       "route": "/search",
       "requirements": [
-        "PRD-ENROLL"
+        "L1-005"
       ],
       "states": [
         "default",
@@ -688,7 +688,7 @@
       "title": "Forbidden",
       "route": "/403",
       "requirements": [
-        "PRD-NFR-PRIVACY"
+        "L1-015"
       ],
       "states": [
         "default"
@@ -719,8 +719,8 @@
       "title": "Offline",
       "route": "/offline",
       "requirements": [
-        "PRD-NFR-MOBILE",
-        "PRD-ROLLCALL"
+        "L1-014",
+        "L1-007"
       ],
       "states": [
         "default"
@@ -751,7 +751,7 @@
       "title": "Sign in",
       "route": "/sign-in",
       "requirements": [
-        "PRD-NFR-SECURITY"
+        "L1-016"
       ],
       "states": [
         "default",
@@ -773,7 +773,7 @@
       "title": "Forgot password",
       "route": "/forgot-password",
       "requirements": [
-        "PRD-NFR-SECURITY"
+        "L1-016"
       ],
       "states": [
         "default",
@@ -793,7 +793,7 @@
       "title": "Reset password",
       "route": "/reset-password",
       "requirements": [
-        "PRD-NFR-SECURITY"
+        "L1-016"
       ],
       "states": [
         "default",
@@ -813,8 +813,8 @@
       "title": "Accept invitation",
       "route": "/invite/:token",
       "requirements": [
-        "PRD-NFR-SECURITY",
-        "PRD-NFR-TTV"
+        "L1-016",
+        "L1-004"
       ],
       "states": [
         "default",
@@ -834,8 +834,8 @@
       "title": "Set up",
       "route": "/setup",
       "requirements": [
-        "PRD-NFR-TTV",
-        "PRD-NFR-INTEGRATION"
+        "L1-004",
+        "L1-004"
       ],
       "states": [
         "default",
@@ -853,7 +853,7 @@
       "title": "Welcome",
       "route": "/welcome",
       "requirements": [
-        "PRD-NFR-TTV"
+        "L1-004"
       ],
       "states": [
         "default"
@@ -870,8 +870,8 @@
       "title": "Set up: organization",
       "route": "/welcome/organization",
       "requirements": [
-        "PRD-NFR-TTV",
-        "PRD-NOTIFY"
+        "L1-004",
+        "L1-010"
       ],
       "states": [
         "default",
@@ -890,8 +890,8 @@
       "title": "Set up: modules",
       "route": "/welcome/modules",
       "requirements": [
-        "PRD-NFR-TTV",
-        "PRD-NFR-MODULES"
+        "L1-004",
+        "L1-002"
       ],
       "states": [
         "default",
@@ -910,8 +910,8 @@
       "title": "Set up: first program",
       "route": "/welcome/program",
       "requirements": [
-        "PRD-NFR-TTV",
-        "PRD-ROLLCALL"
+        "L1-004",
+        "L1-007"
       ],
       "states": [
         "default",
@@ -930,8 +930,8 @@
       "title": "Set up: children",
       "route": "/welcome/children",
       "requirements": [
-        "PRD-NFR-TTV",
-        "PRD-ENROLL"
+        "L1-004",
+        "L1-005"
       ],
       "states": [
         "default",
@@ -951,8 +951,8 @@
       "title": "Set up: staff",
       "route": "/welcome/staff",
       "requirements": [
-        "PRD-NFR-TTV",
-        "PRD-NFR-SECURITY"
+        "L1-004",
+        "L1-016"
       ],
       "states": [
         "default",
@@ -971,8 +971,8 @@
       "title": "Set up: first slip",
       "route": "/welcome/first-slip",
       "requirements": [
-        "PRD-NFR-TTV",
-        "PRD-SLIPS"
+        "L1-004",
+        "L1-006"
       ],
       "states": [
         "default",
@@ -991,7 +991,7 @@
       "title": "Set up: done",
       "route": "/welcome/done",
       "requirements": [
-        "PRD-NFR-TTV"
+        "L1-004"
       ],
       "states": [
         "default"
@@ -1008,9 +1008,9 @@
       "title": "Get ready: your phone",
       "route": "/welcome/phone",
       "requirements": [
-        "PRD-NFR-TTV",
-        "PRD-NOTIFY",
-        "PRD-NFR-MOBILE"
+        "L1-004",
+        "L1-010",
+        "L1-014"
       ],
       "states": [
         "default",
@@ -1029,8 +1029,8 @@
       "title": "Get ready: your sessions",
       "route": "/welcome/sessions",
       "requirements": [
-        "PRD-NFR-TTV",
-        "PRD-ROLLCALL"
+        "L1-004",
+        "L1-007"
       ],
       "states": [
         "default",
@@ -1049,9 +1049,9 @@
       "title": "Get ready: done",
       "route": "/welcome/ready",
       "requirements": [
-        "PRD-NFR-TTV",
-        "PRD-ROLLCALL",
-        "PRD-NFR-MOBILE"
+        "L1-004",
+        "L1-007",
+        "L1-014"
       ],
       "states": [
         "default"
@@ -1068,8 +1068,8 @@
       "title": "Modules",
       "route": "/settings/modules",
       "requirements": [
-        "PRD-NFR-MODULES",
-        "PRD-NFR-COMPLIANCE"
+        "L1-002",
+        "L1-015"
       ],
       "states": [
         "default",
@@ -1091,9 +1091,9 @@
       "title": "Organizations",
       "route": "/admin/organizations",
       "requirements": [
-        "PRD-NFR-MULTITENANT",
-        "PRD-NFR-SECURITY",
-        "PRD-NFR-COST"
+        "L1-001",
+        "L1-016",
+        "L1-020"
       ],
       "states": [
         "default",
@@ -1110,8 +1110,8 @@
       "title": "Switch organization",
       "opens_from": "today",
       "requirements": [
-        "PRD-NFR-MULTITENANT",
-        "PRD-NFR-SECURITY"
+        "L1-001",
+        "L1-016"
       ],
       "states": [
         "default"
@@ -1127,8 +1127,8 @@
       "title": "Add organization",
       "opens_from": "organizations",
       "requirements": [
-        "PRD-NFR-MULTITENANT",
-        "PRD-NFR-COST"
+        "L1-001",
+        "L1-020"
       ],
       "states": [
         "default",
@@ -1144,8 +1144,8 @@
       "title": "Suspend organization",
       "opens_from": "organizations",
       "requirements": [
-        "PRD-NFR-MULTITENANT",
-        "PRD-NFR-SECURITY"
+        "L1-001",
+        "L1-016"
       ],
       "states": [
         "default",
@@ -1162,8 +1162,8 @@
       "title": "Guardian home",
       "route": "/g",
       "requirements": [
-        "PRD-ENROLL",
-        "PRD-NFR-PRIVACY"
+        "L1-005",
+        "L1-015"
       ],
       "states": [
         "default",
@@ -1180,9 +1180,9 @@
       "title": "Enroll: identify",
       "route": "/g/enroll/:program",
       "requirements": [
-        "PRD-ENROLL",
-        "PRD-NFR-ACCESS",
-        "PRD-NFR-PRIVACY"
+        "L1-005",
+        "L1-019",
+        "L1-015"
       ],
       "states": [
         "default",
@@ -1204,8 +1204,8 @@
       "title": "Enroll: household",
       "route": "/g/enroll/:program/household",
       "requirements": [
-        "PRD-ENROLL",
-        "PRD-NFR-ACCESS"
+        "L1-005",
+        "L1-019"
       ],
       "states": [
         "default",
@@ -1225,10 +1225,10 @@
       "title": "Enroll: children",
       "route": "/g/enroll/:program/children",
       "requirements": [
-        "PRD-ENROLL",
-        "PRD-PICKUP",
-        "PRD-NFR-PRIVACY",
-        "PRD-NFR-ACCESS"
+        "L1-005",
+        "L1-009",
+        "L1-015",
+        "L1-019"
       ],
       "states": [
         "default",
@@ -1246,9 +1246,9 @@
       "title": "Enroll: review",
       "route": "/g/enroll/:program/review",
       "requirements": [
-        "PRD-ENROLL",
-        "PRD-SLIPS",
-        "PRD-NFR-PRIVACY"
+        "L1-005",
+        "L1-006",
+        "L1-015"
       ],
       "states": [
         "default",
@@ -1269,9 +1269,9 @@
       "title": "Permission slip",
       "route": "/g/slip/:token",
       "requirements": [
-        "PRD-SLIPS",
-        "PRD-NFR-ACCESS",
-        "PRD-NFR-PRIVACY"
+        "L1-006",
+        "L1-019",
+        "L1-015"
       ],
       "states": [
         "default",
@@ -1294,10 +1294,10 @@
       "title": "Family page",
       "route": "/g/:household",
       "requirements": [
-        "PRD-ENROLL",
-        "PRD-PICKUP",
-        "PRD-NOTIFY",
-        "PRD-NFR-PRIVACY"
+        "L1-005",
+        "L1-009",
+        "L1-010",
+        "L1-015"
       ],
       "states": [
         "default",
@@ -1313,7 +1313,7 @@
       "title": "Survey",
       "route": "/g/survey/:token",
       "requirements": [
-        "PRD-NOTIFY"
+        "L1-010"
       ],
       "states": [
         "default",
@@ -1334,8 +1334,8 @@
       "title": "Check in Kevin Tran",
       "opens_from": "check-in",
       "requirements": [
-        "PRD-ROLLCALL",
-        "PRD-QUICKCARD"
+        "L1-007",
+        "L1-008"
       ],
       "states": [
         "default",
@@ -1352,8 +1352,8 @@
       "title": "Sign out Mateo Rivera",
       "opens_from": "check-in",
       "requirements": [
-        "PRD-PICKUP",
-        "PRD-ROLLCALL"
+        "L1-009",
+        "L1-007"
       ],
       "states": [
         "default",
@@ -1369,7 +1369,7 @@
       "title": "Sign on this tablet",
       "opens_from": "check-in",
       "requirements": [
-        "PRD-SLIPS"
+        "L1-006"
       ],
       "states": [
         "default",
@@ -1385,8 +1385,8 @@
       "title": "End Tutoring night?",
       "opens_from": "check-in",
       "requirements": [
-        "PRD-ROLLCALL",
-        "PRD-REPORTS"
+        "L1-007",
+        "L1-012"
       ],
       "states": [
         "default",
@@ -1403,7 +1403,7 @@
       "title": "Session notes",
       "opens_from": "check-in",
       "requirements": [
-        "PRD-ROLLCALL"
+        "L1-007"
       ],
       "states": [
         "default",
@@ -1420,8 +1420,8 @@
       "title": "Add a walk-in to tonight",
       "opens_from": "check-in",
       "requirements": [
-        "PRD-ROLLCALL",
-        "PRD-ENROLL"
+        "L1-007",
+        "L1-005"
       ],
       "states": [
         "default",
@@ -1433,11 +1433,11 @@
     {
       "id": "open-enrollment",
       "kind": "dialog",
-      "title": "Open enrollment for After-School Tutoring",
+      "title": "Open enrollment for After‑School Tutoring",
       "opens_from": "program",
       "requirements": [
-        "PRD-ENROLL",
-        "PRD-NFR-TTV"
+        "L1-005",
+        "L1-004"
       ],
       "states": [
         "default",
@@ -1453,7 +1453,7 @@
       "title": "Close enrollment?",
       "opens_from": "program",
       "requirements": [
-        "PRD-ENROLL"
+        "L1-005"
       ],
       "states": [
         "default",
@@ -1470,8 +1470,8 @@
       "title": "Accept Nikolai Petrov?",
       "opens_from": "roster",
       "requirements": [
-        "PRD-ENROLL",
-        "PRD-NOTIFY"
+        "L1-005",
+        "L1-010"
       ],
       "states": [
         "default",
@@ -1489,8 +1489,8 @@
       "title": "Accept 2 enrollments?",
       "opens_from": "roster",
       "requirements": [
-        "PRD-ENROLL",
-        "PRD-NOTIFY"
+        "L1-005",
+        "L1-010"
       ],
       "states": [
         "default",
@@ -1504,10 +1504,10 @@
     {
       "id": "enroll-in-program",
       "kind": "dialog",
-      "title": "Add a child to After-School Tutoring",
+      "title": "Add a child to After‑School Tutoring",
       "opens_from": "roster",
       "requirements": [
-        "PRD-ENROLL"
+        "L1-005"
       ],
       "states": [
         "default",
@@ -1522,8 +1522,8 @@
       "title": "Remove Lily Chen from Summer Camp 2026?",
       "opens_from": "roster",
       "requirements": [
-        "PRD-ENROLL",
-        "PRD-DATA"
+        "L1-005",
+        "L1-005"
       ],
       "states": [
         "default",
@@ -1540,7 +1540,7 @@
       "title": "Add a family",
       "opens_from": "families",
       "requirements": [
-        "PRD-ENROLL"
+        "L1-005"
       ],
       "states": [
         "default",
@@ -1555,8 +1555,8 @@
       "title": "Add a child to the Rivera household",
       "opens_from": "household",
       "requirements": [
-        "PRD-ENROLL",
-        "PRD-QUICKCARD"
+        "L1-005",
+        "L1-008"
       ],
       "states": [
         "default",
@@ -1571,8 +1571,8 @@
       "title": "Add a guardian to the Rivera household",
       "opens_from": "household",
       "requirements": [
-        "PRD-ENROLL",
-        "PRD-PICKUP"
+        "L1-005",
+        "L1-009"
       ],
       "states": [
         "default",
@@ -1587,8 +1587,8 @@
       "title": "Edit Luis Rivera",
       "opens_from": "household",
       "requirements": [
-        "PRD-ENROLL",
-        "PRD-PICKUP"
+        "L1-005",
+        "L1-009"
       ],
       "states": [
         "default",
@@ -1603,8 +1603,8 @@
       "title": "Edit Mateo Rivera",
       "opens_from": "child",
       "requirements": [
-        "PRD-ENROLL",
-        "PRD-DATA"
+        "L1-005",
+        "L1-005"
       ],
       "states": [
         "default",
@@ -1619,9 +1619,9 @@
       "title": "Edit Mateo’s medical information",
       "opens_from": "child",
       "requirements": [
-        "PRD-QUICKCARD",
-        "PRD-NFR-PRIVACY",
-        "PRD-DATA"
+        "L1-008",
+        "L1-015",
+        "L1-005"
       ],
       "states": [
         "default",
@@ -1636,7 +1636,7 @@
       "title": "Add an approved adult for Mateo",
       "opens_from": "child",
       "requirements": [
-        "PRD-PICKUP"
+        "L1-009"
       ],
       "states": [
         "default",
@@ -1651,8 +1651,8 @@
       "title": "Remove Luis Rivera from Mateo’s approved pickups?",
       "opens_from": "child",
       "requirements": [
-        "PRD-PICKUP",
-        "PRD-DATA"
+        "L1-009",
+        "L1-005"
       ],
       "states": [
         "default",
@@ -1669,8 +1669,8 @@
       "title": "More actions for the Rivera household",
       "opens_from": "household",
       "requirements": [
-        "PRD-NFR-PRIVACY",
-        "PRD-DATA"
+        "L1-015",
+        "L1-005"
       ],
       "states": [
         "default"
@@ -1687,8 +1687,8 @@
       "title": "More actions for Mateo Rivera",
       "opens_from": "child",
       "requirements": [
-        "PRD-ENROLL",
-        "PRD-DATA"
+        "L1-005",
+        "L1-005"
       ],
       "states": [
         "default"
@@ -1702,11 +1702,11 @@
     {
       "id": "program-actions",
       "kind": "dialog",
-      "title": "More actions for After-School Tutoring",
+      "title": "More actions for After‑School Tutoring",
       "opens_from": "program",
       "requirements": [
-        "PRD-ENROLL",
-        "PRD-REPORTS"
+        "L1-005",
+        "L1-012"
       ],
       "states": [
         "default"
@@ -1720,12 +1720,12 @@
     {
       "id": "archive-program",
       "kind": "dialog",
-      "title": "Archive After-School Tutoring?",
+      "title": "Archive After‑School Tutoring?",
       "opens_from": "program",
       "requirements": [
-        "PRD-ENROLL",
-        "PRD-REPORTS",
-        "PRD-DATA"
+        "L1-005",
+        "L1-012",
+        "L1-005"
       ],
       "states": [
         "default",
@@ -1741,8 +1741,8 @@
       "title": "More actions for the field trip",
       "opens_from": "event",
       "requirements": [
-        "PRD-SLIPS",
-        "PRD-NOTIFY"
+        "L1-006",
+        "L1-010"
       ],
       "states": [
         "default"
@@ -1759,8 +1759,8 @@
       "title": "Cancel the field trip?",
       "opens_from": "event",
       "requirements": [
-        "PRD-SLIPS",
-        "PRD-NOTIFY"
+        "L1-006",
+        "L1-010"
       ],
       "states": [
         "default",
@@ -1776,9 +1776,9 @@
       "title": "Text the 7 unsigned",
       "opens_from": "event",
       "requirements": [
-        "PRD-SLIPS",
-        "PRD-NOTIFY",
-        "PRD-NFR-COST"
+        "L1-006",
+        "L1-010",
+        "L1-020"
       ],
       "states": [
         "default",
@@ -1793,7 +1793,7 @@
       "title": "Send “Winter Camp: pack list” now?",
       "opens_from": "message",
       "requirements": [
-        "PRD-NOTIFY"
+        "L1-010"
       ],
       "states": [
         "default",
@@ -1810,7 +1810,7 @@
       "title": "Cancel the scheduled send?",
       "opens_from": "message",
       "requirements": [
-        "PRD-NOTIFY"
+        "L1-010"
       ],
       "states": [
         "default",
@@ -1827,8 +1827,8 @@
       "title": "Mateo can’t come?",
       "opens_from": "slip-sign",
       "requirements": [
-        "PRD-SLIPS",
-        "PRD-NOTIFY"
+        "L1-006",
+        "L1-010"
       ],
       "states": [
         "default",
@@ -1845,8 +1845,8 @@
       "title": "Ask for a copy of your family’s data",
       "opens_from": "guardian-update",
       "requirements": [
-        "PRD-NFR-PRIVACY",
-        "PRD-NFR-COMPLIANCE"
+        "L1-015",
+        "L1-015"
       ],
       "states": [
         "default",
@@ -1862,7 +1862,7 @@
       "title": "Mark as reviewed",
       "opens_from": "incident",
       "requirements": [
-        "PRD-INCIDENT"
+        "L1-011"
       ],
       "states": [
         "default",
@@ -1877,8 +1877,8 @@
       "title": "Export",
       "opens_from": "reports",
       "requirements": [
-        "PRD-REPORTS",
-        "PRD-NFR-PRIVACY"
+        "L1-012",
+        "L1-015"
       ],
       "states": [
         "default",
@@ -1896,8 +1896,8 @@
       "title": "Invite staff",
       "opens_from": "staff",
       "requirements": [
-        "PRD-NFR-SECURITY",
-        "PRD-NFR-PRIVACY"
+        "L1-016",
+        "L1-015"
       ],
       "states": [
         "default",
@@ -1913,8 +1913,8 @@
       "title": "Change Priya Raman’s role",
       "opens_from": "staff",
       "requirements": [
-        "PRD-NFR-SECURITY",
-        "PRD-NFR-PRIVACY"
+        "L1-016",
+        "L1-015"
       ],
       "states": [
         "default",
@@ -1931,8 +1931,8 @@
       "title": "Remove Aisha Bello?",
       "opens_from": "staff",
       "requirements": [
-        "PRD-NFR-SECURITY",
-        "PRD-NFR-PRIVACY"
+        "L1-016",
+        "L1-015"
       ],
       "states": [
         "default",
@@ -1948,9 +1948,9 @@
       "title": "Delete the Rivera household?",
       "opens_from": "household",
       "requirements": [
-        "PRD-NFR-PRIVACY",
-        "PRD-NFR-COMPLIANCE",
-        "PRD-DATA"
+        "L1-015",
+        "L1-015",
+        "L1-005"
       ],
       "states": [
         "default",
@@ -1966,7 +1966,7 @@
       "title": "Move to Standard",
       "opens_from": "billing",
       "requirements": [
-        "PRD-NFR-COST"
+        "L1-020"
       ],
       "states": [
         "default",
@@ -1982,7 +1982,7 @@
       "title": "Recovery codes",
       "opens_from": "account",
       "requirements": [
-        "PRD-NFR-SECURITY"
+        "L1-016"
       ],
       "states": [
         "default"
@@ -1999,7 +1999,7 @@
       "title": "Sign out everywhere?",
       "opens_from": "account",
       "requirements": [
-        "PRD-NFR-SECURITY"
+        "L1-016"
       ],
       "states": [
         "default",
@@ -2016,7 +2016,7 @@
       "title": "Main menu",
       "opens_from": "today",
       "requirements": [
-        "PRD-NFR-MOBILE"
+        "L1-014"
       ],
       "states": [
         "default",
@@ -2033,7 +2033,7 @@
       "title": "Account menu",
       "opens_from": "today",
       "requirements": [
-        "PRD-NFR-SECURITY"
+        "L1-016"
       ],
       "states": [
         "default"
@@ -2049,7 +2049,7 @@
       "title": "Session expired",
       "opens_from": "new-incident",
       "requirements": [
-        "PRD-NFR-SECURITY"
+        "L1-016"
       ],
       "states": [
         "default",
@@ -2064,8 +2064,8 @@
       "title": "Waiting to sync",
       "opens_from": "check-in",
       "requirements": [
-        "PRD-NFR-MOBILE",
-        "PRD-ROLLCALL"
+        "L1-014",
+        "L1-007"
       ],
       "states": [
         "default",
@@ -2083,9 +2083,9 @@
       "title": "Toast",
       "opens_from": "check-in",
       "requirements": [
-        "PRD-ROLLCALL",
-        "PRD-SLIPS",
-        "PRD-NOTIFY"
+        "L1-007",
+        "L1-006",
+        "L1-010"
       ],
       "states": [
         "info",
@@ -2102,9 +2102,9 @@
       "title": "Banner",
       "opens_from": "today",
       "requirements": [
-        "PRD-NFR-MOBILE",
-        "PRD-NFR-COST",
-        "PRD-ENROLL"
+        "L1-014",
+        "L1-020",
+        "L1-005"
       ],
       "states": [
         "info",
@@ -2121,9 +2121,9 @@
       "title": "Bell panel",
       "opens_from": "today",
       "requirements": [
-        "PRD-NOTIFY",
-        "PRD-SLIPS",
-        "PRD-INCIDENT"
+        "L1-010",
+        "L1-006",
+        "L1-011"
       ],
       "states": [
         "unread",
@@ -2143,9 +2143,9 @@
       "title": "Inline alert",
       "opens_from": "event",
       "requirements": [
-        "PRD-SLIPS",
-        "PRD-ROLLCALL",
-        "PRD-QUICKCARD"
+        "L1-006",
+        "L1-007",
+        "L1-008"
       ],
       "states": [
         "info",
@@ -2161,10 +2161,10 @@
       "title": "Guardian text",
       "opens_from": "guardian-update",
       "requirements": [
-        "PRD-NOTIFY",
-        "PRD-SLIPS",
-        "PRD-ROLLCALL",
-        "PRD-NFR-ACCESS"
+        "L1-010",
+        "L1-006",
+        "L1-007",
+        "L1-019"
       ],
       "states": [
         "info",

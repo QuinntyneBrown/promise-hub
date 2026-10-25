@@ -1,0 +1,69 @@
+@startuml
+title UML sequence behaviour — A request passes the security middleware
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Staff member" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "Feature page" as page
+  participant "AuthInterceptor" as interceptor
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "HttpsRedirection + HSTS" as https
+  participant "SecurityHeadersMiddleware" as headers
+  participant "RequestLoggingMiddleware" as reqlog
+  participant "Authentication / Authorization" as auth
+  participant "Feature endpoint" as endpoint
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "Validator" as validator
+  participant "Command handler" as handler
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "SecretsRedactionEnricher" as redact
+  database "PromiseHubDbContext (encrypted at rest)" as db
+end box
+actor -> page : Save a note containing "<script>"
+page -> interceptor : POST /children/{id}/notes
+interceptor -> https : HTTPS request with Authorization: Bearer
+alt Request arrived over HTTP
+  https --> interceptor : 307 redirect to HTTPS (L2-031)
+else HTTPS
+  https -> headers : Next
+  headers -> headers : Add HSTS, CSP, frame-ancestors, nosniff (L2-031)
+  headers -> reqlog : Next
+  reqlog -> auth : Next (logging outside exception handler, L2-041)
+  alt No valid bearer session
+    auth --> reqlog : 401 ProblemDetails (L2-031)
+    reqlog -> redact : Log line without Authorization header
+    reqlog --> interceptor : 401
+    interceptor --> page : Clear session; route to session-expired
+  else Cookie-only or form POST (cross-site)
+    auth --> interceptor : 401 or 415; no cookie authentication (L2-031)
+  else Valid session
+    auth -> endpoint : Authenticated principal
+    endpoint -> validator : Validate command
+    validator --> endpoint : Valid; text kept verbatim
+    endpoint -> handler : Send command
+    handler -> db : Parameterised insert; tenant filter (L2-001)
+    db --> handler : Saved
+    handler --> endpoint : Result
+    endpoint --> reqlog : 201
+    reqlog -> redact : Structured line (tenant, route, status, duration)
+    reqlog --> interceptor : 201 with security headers
+    interceptor --> page : Typed result
+    page --> actor : Note rendered as text, not executed (L2-031)
+  end
+end
+@enduml

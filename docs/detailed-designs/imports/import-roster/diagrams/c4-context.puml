@@ -1,0 +1,12 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Import a roster
+
+Person(admin, "Admin", "Imports the organization's roster on day one")
+System(promisehub, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+System_Ext(spreadsheet, "Spreadsheet file", "CSV or XLSX export from Sheets or Excel, up to 5,000 rows")
+
+Rel(admin, promisehub, "Uploads, maps columns, reviews the import", "HTTPS")
+Rel(spreadsheet, promisehub, "Is read by", "multipart upload")
+@enduml

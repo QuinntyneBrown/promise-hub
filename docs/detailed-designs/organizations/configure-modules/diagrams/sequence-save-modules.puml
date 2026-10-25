@@ -1,0 +1,68 @@
+@startuml
+title UML sequence behaviour — Save the module configuration
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Organization admin" as actor
+box "Frontend — organizations library" #E0F2FE
+  participant "SettingsModulesPage" as page
+  participant "ModulesApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "ModuleEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "SaveModuleConfigurationCommandHandler" as handler
+  participant "SaveModuleConfigurationCommandValidator" as validator
+  participant "ModuleCatalog" as catalog
+  participant "ModuleConfiguration" as config
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "ModuleConfigurationCache" as cache
+  participant "AuditLog" as audit
+end box
+actor -> page : Toggle switches; "Save"
+page -> client : save(flags)
+client -> endpoints : PUT /modules
+endpoints -> endpoints : Authenticate; resolve active membership
+alt caller is a site lead or other non-admin role
+  endpoints --> client : 403 ProblemDetails (L2-004 c5)
+  client --> page : Forbidden
+  page --> actor : Forbidden state
+else caller is admin or program director
+  endpoints -> handler : Send SaveModuleConfigurationCommand
+  handler -> validator : Validate
+  validator -> catalog : DependenciesOf / DependentsOf for each changed module
+  catalog --> validator : Dependency sets
+  alt a module on needs a module that is off, or Roster off while others need it
+    validator --> handler : Violations, e.g. "Pickup needs Roll Call"
+    handler --> endpoints : Validation failure naming each missing dependency
+    endpoints --> client : 422 ProblemDetails (L2-004 c2, c3)
+    client --> page : Field errors per module
+    page --> actor : Inline errors; nothing saved
+  else valid
+    handler -> db : Load ModuleConfiguration for active tenant
+    db --> handler : ModuleConfiguration
+    handler -> config : Apply(flags)
+    handler -> db : SaveChanges in one unit of work
+    handler -> cache : Invalidate(organizationId)
+    handler -> audit : Record before and after flags
+    handler --> endpoints : Count of modules on
+    endpoints --> client : 200 with count
+    client --> page : Count on
+    page --> actor : Toast confirms modules on (L2-004 c1)
+  end
+end
+@enduml

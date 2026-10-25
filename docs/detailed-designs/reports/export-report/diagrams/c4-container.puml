@@ -1,0 +1,24 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Export a report
+
+Person(director, "Program director", "Exports reports")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "reports library: ExportDialog, ReportsPage submitting and success states")
+  Container(api, "PromiseHub API", "ASP.NET Core", "ReportsEndpoints, StartExportCommandHandler, ExportPipeline")
+  Container(jobs, "Job runner", "PromiseHub.Infrastructure", "ExportJob for exports over 10,000 rows; ExpireExportsJob")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "Exports, templates, report source tables, audit log")
+  ContainerDb(files, "File store", "Object storage", "Export files, 7-day retention")
+}
+System_Ext(email, "Email provider", "Emails the link")
+
+Rel(director, web, "Uses", "HTTPS")
+Rel(web, api, "POST /reports/exports, polls, downloads", "JSON/HTTPS")
+Rel(api, db, "Reads report rows, writes Export", "EF Core")
+Rel(api, files, "Writes inline exports, streams downloads", "HTTPS")
+Rel(api, jobs, "Enqueues ExportJob")
+Rel(jobs, db, "Streams rows, updates progress", "EF Core")
+Rel(jobs, files, "Writes background exports", "HTTPS")
+Rel(jobs, email, "Sends download link", "HTTPS")
+@enduml

@@ -1,0 +1,18 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Set privacy and residency
+
+Person(admin, "Organization admin", "Sets retention; fulfils guardian data requests")
+Person(platformAdmin, "Platform admin", "The only role that changes a data region")
+Person_Ext(guardian, "Guardian", "Requests a copy or deletion of the household's data")
+System(promisehub, "PromiseHub", "Stores each organization's data in its region; applies retention; fulfils data requests")
+System_Ext(sms, "SMS provider", "Receives recipient, text and link token only")
+System_Ext(email, "Email provider", "Receives recipient, text and link only")
+
+Rel(admin, promisehub, "Sets retention and fulfils requests using", "HTTPS")
+Rel(platformAdmin, promisehub, "Changes data region using", "HTTPS")
+Rel(guardian, promisehub, "Submits data request from a verified link", "HTTPS")
+Rel(promisehub, sms, "Sends message payloads via", "API")
+Rel(promisehub, email, "Sends export link and notifications via", "SMTP/API")
+@enduml

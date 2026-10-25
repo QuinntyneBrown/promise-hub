@@ -1,0 +1,103 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Configure modules
+
+enum ModuleId {
+  Roster
+  Slips
+  RollCall
+  QuickCards
+  Pickup
+  Messages
+  Incidents
+  Reports
+}
+
+enum ModulePreset {
+  WholeSuite
+  JustCheckIn
+  JustSlips
+  Custom
+}
+
+class ModuleCatalog <<static>> {
+  +DependenciesOf(module: ModuleId): IReadOnlySet<ModuleId>
+  +DependentsOf(module: ModuleId): IReadOnlySet<ModuleId>
+  +Preset(preset: ModulePreset): IReadOnlySet<ModuleId>
+}
+
+class ModuleConfiguration {
+  +Guid OrganizationId
+  +ISet<ModuleId> On
+  +DateTimeOffset UpdatedAt
+  +IsOn(module: ModuleId): bool
+  +Apply(flags: IReadOnlyDictionary<ModuleId, bool>): void
+  +ApplyPreset(preset: ModulePreset): void
+}
+
+class ModuleDependencyViolation {
+  +ModuleId Module
+  +IReadOnlyList<ModuleId> Missing
+  +string Message
+}
+
+class GetModuleConfigurationQuery
+class GetModuleConfigurationQueryHandler {
+  +Handle(query: GetModuleConfigurationQuery): Task<ModuleConfigurationDto>
+}
+
+class ModuleConfigurationDto {
+  +IReadOnlyList<ModuleStateDto> Modules
+  +int CountOn
+}
+
+class SaveModuleConfigurationCommand {
+  +IReadOnlyDictionary<ModuleId, bool> Modules
+}
+
+class SaveModuleConfigurationCommandValidator {
+  +Validate(command: SaveModuleConfigurationCommand): ValidationResult
+}
+
+class SaveModuleConfigurationCommandHandler {
+  +Handle(command: SaveModuleConfigurationCommand): Task<Result<int>>
+}
+
+class ApplyModulePresetCommand {
+  +ModulePreset Preset
+}
+
+class ApplyModulePresetCommandHandler {
+  +Handle(command: ApplyModulePresetCommand): Task<Result<int>>
+}
+
+class ModulesPermission {
+  +Check(context: ITenantContext): Result
+}
+
+ModuleConfiguration --> ModuleId : holds set of
+ModuleConfiguration ..> ModuleCatalog : validates against
+ModuleConfiguration ..> ModuleDependencyViolation : throws
+ModuleCatalog --> ModulePreset : defines
+SaveModuleConfigurationCommandHandler ..> SaveModuleConfigurationCommand : handles
+SaveModuleConfigurationCommandHandler ..> SaveModuleConfigurationCommandValidator : uses
+SaveModuleConfigurationCommandHandler ..> ModulesPermission : checks
+SaveModuleConfigurationCommandHandler --> ModuleConfiguration : loads / applies
+SaveModuleConfigurationCommandValidator ..> ModuleCatalog : reads
+ApplyModulePresetCommandHandler ..> ApplyModulePresetCommand : handles
+ApplyModulePresetCommandHandler ..> ModuleCatalog : Preset
+ApplyModulePresetCommandHandler ..> SaveModuleConfigurationCommandHandler : reuses
+GetModuleConfigurationQueryHandler ..> GetModuleConfigurationQuery : handles
+GetModuleConfigurationQueryHandler --> ModuleConfigurationDto : returns
+@enduml

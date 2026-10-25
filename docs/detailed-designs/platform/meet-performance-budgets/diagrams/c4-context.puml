@@ -1,0 +1,14 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Meet performance budgets
+
+Person(sitelead, "Site lead", "Mid-range Android phone over 4G at the door")
+System(promisehub, "PromiseHub", "Pages interactive under 2.5 s; check-in under 300 ms")
+System_Ext(lighthouse, "Lighthouse CI", "Measures FCP and interactivity on the CI runner with 4G emulation")
+System_Ext(k6, "k6 load test", "50 concurrent organizations running sessions against staging")
+
+Rel(sitelead, promisehub, "Runs check-in from", "HTTPS over 4G")
+Rel(lighthouse, promisehub, "Loads budgeted pages", "Chromium, simulated 4G")
+Rel(k6, promisehub, "Drives API at scale", "HTTPS")
+@enduml

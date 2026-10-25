@@ -1,0 +1,17 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Manage events
+
+Person(director, "Program director", "Creates, edits and cancels events")
+Person_Ext(guardian, "Guardian", "Receives cancellation messages")
+System(promisehub, "PromiseHub", "Multi-tenant system of record for youth programs")
+System_Ext(sms, "SMS provider", "Delivers texts")
+System_Ext(email, "Email provider", "Delivers emails")
+
+Rel(director, promisehub, "Manages events using", "HTTPS")
+Rel(promisehub, sms, "Sends cancellation texts via", "HTTPS API")
+Rel(promisehub, email, "Sends cancellation emails via", "SMTP / HTTPS API")
+Rel(sms, guardian, "Delivers text to")
+Rel(email, guardian, "Delivers email to")
+@enduml

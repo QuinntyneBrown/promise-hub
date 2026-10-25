@@ -1,0 +1,54 @@
+@startuml
+title UML sequence behaviour — Membership removed while active
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Staff member" as actor
+box "Frontend — promisehub shell and api library" #E0F2FE
+  participant "Any page" as page
+  participant "SessionInterceptor" as interceptor
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "TenantContextMiddleware" as middleware
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "ActiveMembershipResolver" as resolver
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "SessionStore" as session
+end box
+actor -> page : Any action after an admin removed the membership
+page -> interceptor : HTTP request
+interceptor -> middleware : Request with session
+middleware -> session : Read ActiveMembershipId
+session --> middleware : Membership id
+middleware -> resolver : Resolve(personId, membershipId)
+resolver -> db : Load membership
+db --> resolver : null or IsActive = false
+resolver --> middleware : Removed
+middleware -> db : First remaining active membership of person
+db --> middleware : Membership or none
+alt a remaining membership exists
+  middleware -> session : Set ActiveMembershipId to remaining membership
+  middleware --> interceptor : 401, reason membership-removed, next: today
+  interceptor -> page : Clear client state; reload to today
+  page --> actor : Today for the remaining organization (L2-002 c4)
+else no remaining membership
+  middleware -> session : Clear session
+  middleware --> interceptor : 401, reason membership-removed, next: sign-in
+  interceptor -> page : Clear client state; navigate to sign-in
+  page --> actor : Sign-in page (L2-002 c4)
+end
+@enduml

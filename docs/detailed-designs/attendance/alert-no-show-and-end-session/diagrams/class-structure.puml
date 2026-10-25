@@ -1,0 +1,155 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Alert no-show and end session
+
+enum SessionStatus {
+  Scheduled
+  Open
+  Ended
+  Cancelled
+}
+
+enum RecordingStatus {
+  Recorded
+  NotRecorded
+  Missing
+  Cancelled
+}
+
+enum NoShowReply {
+  None
+  OnTheWay
+  Absent
+  Unmatched
+}
+
+enum NotCheckedInAction {
+  MarkAbsent
+  LeaveNotRecorded
+}
+
+enum NotSignedOutAction {
+  SignOutAtEnd
+  LeaveUnsigned
+}
+
+class Session {
+  +Guid Id
+  +Guid OrganizationId
+  +Guid EventId
+  +Guid ProgramId
+  +DateTimeOffset StartsAt
+  +DateTimeOffset EndsAt
+  +SessionStatus Status
+  +bool NoShowAlertsEnabled
+  +DateTimeOffset? EndedAt
+  +Guid? EndedByStaffId
+  +End(notCheckedIn: NotCheckedInAction, notSignedOut: NotSignedOutAction, at: DateTimeOffset, actor: Guid): IReadOnlyList<AttendanceEvent>
+  +Cancel(actor: Guid): void
+  +RecordingStatus(now: DateTimeOffset): RecordingStatus
+}
+
+class AttendanceRecord {
+  +Guid Id
+  +Guid SessionId
+  +Guid ChildId
+  +AttendanceStatus Status
+  +bool GuardianInformed
+  +MarkAbsentAtEnd(actor: Guid): AttendanceEvent
+  +SignOutAtEnd(at: DateTimeOffset, actor: Guid): AttendanceEvent
+  +MarkAbsentByGuardian(at: DateTimeOffset): AttendanceEvent
+}
+
+class NoShowAlert {
+  +Guid Id
+  +Guid OrganizationId
+  +Guid SessionId
+  +Guid ChildId
+  +Guid HouseholdId
+  +DateTimeOffset SentAt
+  +string Channel
+  +NoShowReply Reply
+  +DateTimeOffset? RepliedAt
+  +ApplyReply(body: string, at: DateTimeOffset): NoShowReply
+}
+
+class NotificationSettings {
+  +Guid OrganizationId
+  +int NoShowDelayMinutes
+}
+
+class SendNoShowAlertsJob {
+  +RunAsync(organizationId: Guid, now: DateTimeOffset): Task<JobOutcome>
+}
+
+class HandleGuardianSmsReplyCommand {
+  +string FromPhone
+  +string Body
+  +DateTimeOffset ReceivedAt
+  +string ProviderMessageId
+}
+
+class HandleGuardianSmsReplyCommandHandler {
+  +Handle(command: HandleGuardianSmsReplyCommand): Task<Result>
+}
+
+class EndSessionCommand {
+  +Guid SessionId
+  +NotCheckedInAction NotCheckedIn
+  +NotSignedOutAction NotSignedOut
+}
+
+class EndSessionCommandHandler {
+  +Handle(command: EndSessionCommand): Task<Result<SessionSummaryDto>>
+}
+
+class GetAttendanceHistoryQuery {
+  +Guid ProgramId
+  +YearMonth Month
+}
+
+class GetAttendanceHistoryQueryHandler {
+  +Handle(query: GetAttendanceHistoryQuery): Task<AttendanceHistoryDto>
+}
+
+interface ISmsSender {
+  +SendAsync(message: OutboundSms): Task<SendResult>
+}
+interface IEmailSender {
+  +SendAsync(message: OutboundEmail): Task<SendResult>
+}
+interface IAuditLog {
+  +WriteAsync(entry: AuditEntry): Task
+}
+
+Session "1" *-- "*" AttendanceRecord : roster
+Session "1" --> "*" NoShowAlert : alerts sent
+Session --> SessionStatus : has
+NoShowAlert --> NoShowReply : stores
+EndSessionCommand --> NotCheckedInAction
+EndSessionCommand --> NotSignedOutAction
+SendNoShowAlertsJob --> NotificationSettings : reads delay
+SendNoShowAlertsJob --> Session : selects Open past delay
+SendNoShowAlertsJob --> NoShowAlert : creates
+SendNoShowAlertsJob ..> ISmsSender : sends
+SendNoShowAlertsJob ..> IEmailSender : fallback at cap
+HandleGuardianSmsReplyCommandHandler ..> HandleGuardianSmsReplyCommand : handles
+HandleGuardianSmsReplyCommandHandler --> NoShowAlert : matches / applies
+HandleGuardianSmsReplyCommandHandler --> AttendanceRecord : marks absent on "2"
+EndSessionCommandHandler ..> EndSessionCommand : handles
+EndSessionCommandHandler --> Session : End()
+EndSessionCommandHandler ..> IAuditLog : audits each change
+GetAttendanceHistoryQueryHandler ..> GetAttendanceHistoryQuery : handles
+GetAttendanceHistoryQueryHandler --> Session : derives RecordingStatus
+@enduml

@@ -1,0 +1,75 @@
+@startuml
+title UML sequence behaviour — Compute a report
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Program director" as actor
+box "Frontend — PromiseHub web app, reports library" #E0F2FE
+  participant "ReportsPage" as page
+  participant "ReportFilterState" as filter
+  participant "ReportsApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "ReportsEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "GetReportQueryHandler" as handler
+  participant "ReportAggregator" as aggregator
+  participant "SmallCountSuppressor" as suppressor
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "IAuditWriter" as audit
+  database "PromiseHub database" as db
+end box
+
+actor -> page : Open Reports or change period / programs
+page -> filter : Update period and scope, sync query string
+filter -> client : getReport(period, programIds) (debounced)
+client -> endpoints : GET /reports?periodKind&from&to&programIds
+endpoints -> endpoints : Authenticate, resolve organization, check Reports module (L2-005)
+alt caller lacks Reports.View
+  endpoints --> client : 403 ProblemDetails (L2-007)
+  client --> page : Forbidden state
+else module off
+  endpoints --> client : 404
+else authorized
+  endpoints -> handler : Send GetReportQuery
+  handler -> handler : Resolve ReportPeriod; validate custom range
+  alt invalid range
+    handler --> endpoints : Validation failure
+    endpoints --> client : 422 ProblemDetails
+    client --> page : Inline error on the date fields
+  else valid
+    handler -> db : Resolve programIds to programs of the organization (L2-001)
+    db --> handler : Program scope
+    handler -> aggregator : Aggregate(organizationId, period, scope)
+    aggregator -> db : Grouped queries: children served, attendance rate, sessions, slips, demographics, by program, by language (L2-024 criterion 1)
+    db --> aggregator : Aggregates equal to database counts
+    aggregator --> handler : ReportAggregate
+    alt no sessions in the period
+      handler --> endpoints : ReportDto with HasSessions = false
+      endpoints --> client : 200
+      client --> page : No-results state offering the season (L2-024 criterion 2)
+    else sessions found
+      handler -> suppressor : Apply(demographics, exact = caller is program director)
+      suppressor --> handler : Cells with counts under 5 masked for other roles (L2-024 criterion 3)
+      handler -> audit : Report viewed (period, scope, actor)
+      handler --> endpoints : ReportDto
+      endpoints --> client : 200 ReportDto
+      client --> page : Report
+      page --> actor : KPIs, demographics table, attendance and language charts
+    end
+  end
+end
+@enduml

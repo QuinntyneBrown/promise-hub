@@ -1,0 +1,104 @@
+@startuml
+title UML sequence behaviour — Guardian enrolls through the link
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Guardian" as actor
+box "Frontend — PromiseHub web app, guardian library" #E0F2FE
+  participant "EnrollIdentifyPage" as identify
+  participant "EnrollHouseholdPage / EnrollChildPage" as forms
+  participant "EnrollReviewPage" as review
+  participant "GuardianEnrollmentApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "GuardianEnrollmentEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain (Enrollment)" #ECFDF3
+  participant "GetEnrollmentPrefillQueryHandler" as prefill
+  participant "SaveEnrollmentDraftCommandHandler" as draft
+  participant "SubmitEnrollmentCommandHandler" as submit
+  participant "Program / Enrollment" as domain
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "AuditLog" as audit
+  database "PromiseHub database" as db
+end box
+actor -> identify : Open /g/enroll/tutoring
+identify -> client : getProgram(slug)
+client -> endpoints : GET /g/enroll/{slug}
+endpoints -> db : Load program and enrollment period
+db --> endpoints : Program
+alt enrollment closed (L2-013)
+  endpoints --> client : 200 { closed, organization contact }
+  client --> identify : Closed
+  identify --> actor : Show closed message with contact (enroll/closed)
+else open
+  endpoints --> client : 200 { program, open }
+  identify --> actor : Ask for number or email on file
+  actor -> identify : Enter contact, receive and enter code (verify-guardian-link design, L2-026)
+  identify -> client : prefill()
+  client -> endpoints : GET /g/enroll/{slug}/prefill (guardian link filter)
+  endpoints -> prefill : Send GetEnrollmentPrefillQuery
+  prefill -> db : Load household and children for verified contact
+  db --> prefill : Household or none
+  alt returning household
+    prefill --> endpoints : Last season's household and children
+    endpoints --> client : 200 prefilled draft
+    client --> forms : Pre-filled for confirmation (L2-013)
+  else new guardian
+    prefill --> endpoints : Empty draft
+    endpoints --> client : 200 empty draft
+    client --> forms : Empty forms
+  end
+  actor -> forms : Confirm or enter household, children, medical, pickups
+  forms -> client : saveHousehold / saveChildren
+  client -> endpoints : PUT /g/enroll/{slug}/household, /children
+  endpoints -> draft : Send SaveEnrollmentDraftCommand
+  draft -> db : Upsert EnrollmentDraft by link token
+  db --> draft : Commit
+  draft --> endpoints : Done
+  endpoints --> client : 204
+  forms -> review : Navigate to enroll-review
+  actor -> review : Check summary, type name for season consent, submit
+  review -> client : submit(consentName)
+  client -> endpoints : POST /g/enroll/{slug}/submit
+  endpoints -> submit : Send SubmitEnrollmentCommand
+  submit -> db : Load draft, program with accepted count (serializable)
+  db --> submit : Draft, program
+  alt draft incomplete or consent name empty
+    submit --> endpoints : ValidationFailed
+    endpoints --> client : 400 ProblemDetails
+    client --> review : Errors
+    review --> actor : Inline errors
+  else program at capacity (L2-013)
+    submit -> domain : Create or update Household (L2-011); Enrollment.Waitlist(position)
+    submit -> audit : Record submit
+    submit -> db : Save in one unit of work
+    db --> submit : Commit
+    submit --> endpoints : Waitlisted with position
+    endpoints --> client : 201 { status: waitlisted, position }
+    client --> review : Waitlisted
+    review --> actor : "You're 2nd on the waitlist" (enroll-review/waitlisted)
+  else places available
+    submit -> domain : Create or update Household; Enrollment with WaitingReview
+    submit -> audit : Record submit
+    submit -> db : Save in one unit of work
+    db --> submit : Commit
+    submit --> endpoints : WaitingReview; roster pending count incremented (L2-013)
+    endpoints --> client : 201 { status: waitingReview, familyLink }
+    client --> review : Submitted
+    review --> actor : Success with the family link (enroll-review/success)
+  end
+end
+@enduml

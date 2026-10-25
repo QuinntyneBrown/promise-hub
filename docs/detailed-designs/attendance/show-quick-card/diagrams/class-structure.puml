@@ -1,0 +1,132 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Show Quick Card
+
+class Child {
+  +Guid Id
+  +Guid OrganizationId
+  +Guid HouseholdId
+  +string FirstName
+  +string LastName
+  +DateOnly DateOfBirth
+  +string? Grade
+  +string? School
+  +string? Notes
+}
+
+class MedicalDetails {
+  +Guid ChildId
+  +IReadOnlyList<Allergy> Allergies
+  +string? Medication
+  +string? Conditions
+  +string? HealthCardNumber
+  +string? Doctor
+  +SevereAllergy(): Allergy?
+}
+
+class Allergy <<value object>> {
+  +string Name
+  +string Reaction
+  +bool Severe
+  +string? Instruction
+}
+
+class Guardian {
+  +Guid Id
+  +string Name
+  +string Relationship
+  +string Phone
+  +string Language
+  +bool IsPrimary
+  +int CallOrder
+}
+
+class ApprovedPickup {
+  +Guid Id
+  +Guid ChildId
+  +string Name
+  +string Relationship
+  +bool PhotoIdOnFile
+  +DateTimeOffset? RemovedAt
+}
+
+class QuickCardDto {
+  +ChildHeadDto Child
+  +AllergyAlertDto? AllergyAlert
+  +MedicalDto? Medical
+  +IReadOnlyList<ContactDto> CallOrder
+  +IReadOnlyList<PickupDto> ApprovedPickups
+  +NotesDto Notes
+  +bool MedicalRestricted
+  +DateTimeOffset GeneratedAt
+}
+
+class GetQuickCardQuery {
+  +Guid ChildId
+}
+
+class GetTodayQuickCardsQuery {
+  +DateOnly Date
+}
+
+class GetQuickCardQueryHandler {
+  +Handle(query: GetQuickCardQuery): Task<Result<QuickCardDto>>
+}
+
+class GetTodayQuickCardsQueryHandler {
+  +Handle(query: GetTodayQuickCardsQuery): Task<IReadOnlyList<QuickCardDto>>
+}
+
+class QuickCardPermissions {
+  +CanViewMedical(role: StaffRole): bool
+}
+
+interface IAuditLog {
+  +WriteAsync(entry: AuditEntry): Task
+}
+
+class QuickCardPage <<Angular>> {
+  +childId: Signal<string>
+  +card: Signal<QuickCardDto | null>
+  +savedAt: Signal<Date | null>
+  +state: Signal<'loading'|'default'|'empty'|'error'|'offline'|'forbidden'>
+}
+
+class QuickCardStore <<Angular>> {
+  +load(childId: string): void
+  +refresh(): void
+}
+
+interface QuickCardApi <<Angular, QUICK_CARD_API>> {
+  +getQuickCard(childId: string): Observable<QuickCardDto>
+  +getTodayQuickCards(date: string): Observable<QuickCardDto[]>
+  +recordOpen(childId: string, openedAt: string): Observable<void>
+}
+
+Child "1" --> "0..1" MedicalDetails : has
+MedicalDetails "1" *-- "*" Allergy
+Child "1" --> "*" Guardian : household contacts
+Child "1" --> "*" ApprovedPickup : may be collected by
+GetQuickCardQueryHandler ..> GetQuickCardQuery : handles
+GetTodayQuickCardsQueryHandler ..> GetTodayQuickCardsQuery : handles
+GetQuickCardQueryHandler --> QuickCardDto : builds
+GetTodayQuickCardsQueryHandler --> QuickCardDto : builds many
+GetQuickCardQueryHandler ..> QuickCardPermissions : asks
+GetQuickCardQueryHandler ..> IAuditLog : audits every open
+GetQuickCardQueryHandler --> Child : reads
+GetQuickCardQueryHandler --> MedicalDetails : reads when permitted
+QuickCardPage --> QuickCardStore : uses
+QuickCardStore ..> QuickCardApi : calls
+QuickCardStore --> QuickCardDto : caches
+@enduml

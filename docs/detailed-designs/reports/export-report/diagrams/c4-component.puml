@@ -1,0 +1,42 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Export a report
+
+Container_Boundary(api, "PromiseHub API and job runner") {
+  Component(endpoints, "ReportsEndpoints", "Minimal API", "POST /reports/exports, GET /reports/exports/{id}, GET .../download; Reports.Export permission")
+  Component(start, "StartExportCommandHandler", "Command handler", "Validates, counts rows, inline or background")
+  Component(get, "GetExportQueryHandler", "Query handler", "Status, progress, signed link")
+  Component(download, "DownloadExportQueryHandler", "Query handler", "Verifies signature and expiry, audits, streams")
+  Component(pipeline, "ExportPipeline", "Application service", "Aggregate, read rows, suppress, write, store")
+  Component(aggregator, "ReportAggregator", "Domain service", "Report aggregates (compute-report)")
+  Component(suppressor, "SmallCountSuppressor", "Domain rule", "Writes cells under 5 as <5")
+  Component(csv, "CsvExportWriter", "IExportWriter", "Plain spreadsheet")
+  Component(xlsx, "FunderTemplateXlsxWriter", "IExportWriter", "Fills ExportTemplate sheets")
+  Component(export, "Export", "Domain entity", "Status, progress, file key, expiry")
+  Component(job, "ExportJob", "Background job", "Runs pipeline, emails link, notifies")
+  Component(files, "IFileStore", "Infrastructure interface", "Put, Get, Delete, SignUrl")
+  Component(audit, "IAuditWriter", "Application interface", "Requester, template, row count; downloads")
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "Tenant-filtered persistence")
+}
+System_Ext(email, "Email provider", "Emails")
+
+Rel(endpoints, start, "Sends StartExportCommand")
+Rel(endpoints, get, "Sends GetExportQuery")
+Rel(endpoints, download, "Sends DownloadExportQuery")
+Rel(start, export, "Creates Requested")
+Rel(start, pipeline, "Runs inline when rows <= 10,000")
+Rel(start, job, "Enqueues when rows > 10,000")
+Rel(job, pipeline, "Runs")
+Rel(job, email, "Sends download link", "HTTPS")
+Rel(pipeline, aggregator, "Aggregates")
+Rel(pipeline, suppressor, "Applies always")
+Rel(pipeline, csv, "Writes")
+Rel(pipeline, xlsx, "Writes")
+Rel(pipeline, files, "Put file")
+Rel(pipeline, export, "Updates progress, completes with 7-day expiry")
+Rel(pipeline, audit, "Writes entry")
+Rel(download, files, "Get stream")
+Rel(download, audit, "Writes download entry")
+Rel(export, db, "Persisted by", "EF Core")
+@enduml

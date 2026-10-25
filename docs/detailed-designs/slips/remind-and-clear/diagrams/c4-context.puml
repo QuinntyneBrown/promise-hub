@@ -1,0 +1,18 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Remind and clear
+
+Person(sitelead, "Site lead", "Sees the day-of roster; takes tablet signatures at the bus door")
+Person_Ext(guardian, "Guardian", "Receives reminders; signs on the tablet")
+System(promisehub, "PromiseHub", "Multi-tenant system of record for youth programs")
+System_Ext(sms, "SMS provider", "Delivers reminder texts and tablet-signature copies")
+System_Ext(email, "Email provider", "Delivers reminder emails")
+
+Rel(sitelead, promisehub, "Opens day-of roster; signs on tablet using", "HTTPS")
+Rel(guardian, promisehub, "Signs on the staff tablet")
+Rel(promisehub, sms, "Sends reminders via", "HTTPS API")
+Rel(promisehub, email, "Sends reminders via", "SMTP / HTTPS API")
+Rel(sms, guardian, "Delivers text to")
+Rel(email, guardian, "Delivers email to")
+@enduml

@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Set up an organization
+
+Person(admin, "First admin", "Confirms the welcome email and configures the new organization")
+System(promisehub, "PromiseHub", "Multi-tenant system of record for youth-serving non-profits")
+System_Ext(email, "Email provider", "Delivers the welcome email and staff invitations")
+System_Ext(sms, "SMS provider", "Delivers the first permission slip to guardians")
+System_Ext(sheet, "Spreadsheet file", "Roster imported in the children step")
+
+Rel(admin, promisehub, "Completes the six setup steps using", "HTTPS")
+Rel(promisehub, email, "Sends welcome email and invitations via", "SMTP/API")
+Rel(promisehub, sms, "Sends the first slip via", "API")
+Rel(promisehub, sheet, "Reads roster rows from", "Upload")
+@enduml

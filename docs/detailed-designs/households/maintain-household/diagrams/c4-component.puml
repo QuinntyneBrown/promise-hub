@@ -1,0 +1,40 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Maintain a household
+
+Container(web, "PromiseHub web app", "Angular", "FamiliesPage, HouseholdPage, ChildPage and dialogs via HouseholdsApi")
+Container_Boundary(api, "PromiseHub API") {
+  Component(endpoints, "HouseholdEndpoints", "Minimal API group", "/households, /households/{id}/children, /guardians/{id}, /children/{id}/medical, DELETE /households/{id}")
+  Component(list, "ListHouseholdsQueryHandler", "Application handler", "Search, chips, Missing info flag; excludes soft-deleted")
+  Component(get, "GetHouseholdQueryHandler / GetChildQueryHandler", "Application handlers", "Apply ChildFieldPolicy; audit medical views")
+  Component(writes, "CreateHousehold / AddChild / AddGuardian / UpdateGuardian / UpdateChild handlers", "Application handlers", "Mutate the aggregate and audit")
+  Component(medical, "UpdateMedicalCommandHandler", "Application handler", "Requires Child.Medical.Write; audits before and after")
+  Component(delete, "DeleteHouseholdCommandHandler", "Application handler", "Requires Household.Delete; soft-deletes the aggregate")
+  Component(fieldpolicy, "ChildFieldPolicy", "Application projection", "Omits medical fields for roles without Child.Medical.Read")
+  Component(household, "Household / Guardian / Child", "Domain aggregate", "Owns guardians, children, medical details, pickups; SoftDelete")
+  Component(dbctx, "PromiseHubDbContext", "EF Core", "Global filters: OrganizationId, DeletedAt == null")
+  Component(audit, "AuditLog", "Infrastructure writer", "Create, update, delete and medical view entries")
+  Component(purge, "HouseholdPurgeJob", "Infrastructure job", "Hard-deletes households past PurgeAfter per tenant")
+  ComponentDb(db, "PromiseHub database", "SQL", "Household tables and audit")
+}
+Rel(web, endpoints, "Calls", "JSON/HTTPS")
+Rel(endpoints, list, "Sends ListHouseholdsQuery")
+Rel(endpoints, get, "Sends GetHouseholdQuery / GetChildQuery")
+Rel(endpoints, writes, "Sends write commands")
+Rel(endpoints, medical, "Sends UpdateMedicalCommand")
+Rel(endpoints, delete, "Sends DeleteHouseholdCommand")
+Rel(get, fieldpolicy, "Projects DTOs")
+Rel(get, audit, "Records medical view")
+Rel(writes, household, "Loads and mutates")
+Rel(medical, household, "Loads and mutates Child")
+Rel(delete, household, "SoftDelete")
+Rel(writes, audit, "Writes entry")
+Rel(medical, audit, "Writes entry with before/after")
+Rel(delete, audit, "Writes entry")
+Rel(list, dbctx, "Queries")
+Rel(household, dbctx, "Persisted by")
+Rel(dbctx, db, "Reads and writes")
+Rel(audit, db, "Appends")
+Rel(purge, db, "Deletes past retention")
+@enduml

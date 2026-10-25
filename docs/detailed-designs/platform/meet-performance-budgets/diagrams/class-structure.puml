@@ -1,0 +1,99 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Meet performance budgets
+
+class RosterRow {
+  +string childId
+  +string displayName
+  +string searchKey
+  +AttendanceState state
+  +boolean pending
+}
+
+enum AttendanceState {
+  NotCheckedIn
+  CheckedIn
+  SignedOut
+}
+
+class CheckInStore {
+  +Signal<RosterRow[]> roster$
+  +Signal<string> query$
+  +Signal<RosterRow[]> filtered$
+  +load(sessionId: string): Promise<void>
+  +checkIn(childId: string): Promise<void>
+  -applyOptimistic(childId: string): void
+  -revert(childId: string, reason: string): void
+}
+
+class RosterListComponent {
+  +rowHeight: number
+  +trackById(row: RosterRow): string
+}
+
+class RosterSearchComponent {
+  +onInput(value: string): void
+}
+
+class PerformanceMarksService {
+  +mark(name: string): void
+  +measure(name: string, start: string, end: string): number
+  -reportSampled(entry: PerformanceEntry): void
+}
+
+interface AttendanceApi {
+  +checkIn(sessionId: string, childId: string): Observable<AttendanceRecordDto>
+}
+
+interface TelemetryApi {
+  +postWebVitals(marks: WebVitalsDto): Observable<void>
+}
+
+class CheckInChildCommand {
+  +Guid SessionId
+  +Guid ChildId
+}
+
+class CheckInChildCommandHandler {
+  +Handle(command: CheckInChildCommand): Task<Result<AttendanceRecordDto>>
+}
+
+class AttendanceRecord {
+  +Guid Id
+  +Guid OrganizationId
+  +Guid SessionId
+  +Guid ChildId
+  +DateTimeOffset CheckedInAt
+}
+
+class RequestMetrics {
+  +Record(route: string, tenant: Guid, status: int, duration: TimeSpan): void
+}
+
+class LoadTestScenario <<k6>> {
+  +organizations: 50
+  +thresholdP95Ms: 500
+}
+
+CheckInStore --> "*" RosterRow
+RosterRow --> AttendanceState
+CheckInStore ..> AttendanceApi : ATTENDANCE_API
+RosterListComponent ..> CheckInStore
+RosterSearchComponent ..> CheckInStore
+PerformanceMarksService ..> TelemetryApi : TELEMETRY_API
+CheckInChildCommandHandler ..> CheckInChildCommand : handles
+CheckInChildCommandHandler --> AttendanceRecord : creates
+RequestMetrics ..> CheckInChildCommandHandler : times route
+LoadTestScenario ..> CheckInChildCommand : drives
+@enduml

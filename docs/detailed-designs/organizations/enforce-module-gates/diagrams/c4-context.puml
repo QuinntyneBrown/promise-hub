@@ -1,0 +1,12 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Enforce module gates
+
+Person(staff, "Staff member", "Sees only the modules that are on for the active organization")
+Person_Ext(guardian, "Guardian", "Opens guardian links; sees only sections whose modules are on")
+System(promisehub, "PromiseHub", "Answers 404 for off modules and renders nothing of them")
+
+Rel(staff, promisehub, "Uses the staff app", "HTTPS")
+Rel(guardian, promisehub, "Opens guardian pages", "HTTPS")
+@enduml

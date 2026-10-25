@@ -1,0 +1,83 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Secure transport and storage
+
+class SecurityHeaderOptions {
+  +string ContentSecurityPolicy
+  +string FrameAncestors
+  +string ReferrerPolicy
+  +string PermissionsPolicy
+  +TimeSpan HstsMaxAge
+}
+
+class SecurityHeadersMiddleware {
+  -RequestDelegate next
+  -SecurityHeaderOptions options
+  +InvokeAsync(context: HttpContext): Task
+}
+
+class SecurityOptions {
+  +string[] AllowedOrigins
+  +long MaxRequestBodyBytes
+  +string[] SecretKeys
+}
+
+class SecretsRedactionEnricher {
+  -ISet<string> secretValues
+  +Enrich(logEvent: LogEvent): void
+}
+
+class AuthenticationSetup {
+  +AddPromiseHubAuthentication(services: IServiceCollection, config: IConfiguration): IServiceCollection
+  +FallbackPolicy: AuthorizationPolicy
+}
+
+class ProblemDetailsSetup {
+  +Configure(options: ProblemDetailsOptions): void
+  -Sanitize(details: ProblemDetails, env: IHostEnvironment): void
+}
+
+interface IFileStorage {
+  +PutAsync(path: string, content: Stream): Task<StoredFile>
+  +SignedLink(file: StoredFile, ttl: TimeSpan): Uri
+}
+
+class EncryptedBlobFileStorage {
+  +PutAsync(path: string, content: Stream): Task<StoredFile>
+  +SignedLink(file: StoredFile, ttl: TimeSpan): Uri
+}
+
+class GuardianLinkProtector {
+  -IDataProtector protector
+  +Protect(linkId: Guid, expires: DateTimeOffset): string
+  +Unprotect(token: string): GuardianLink?
+}
+
+abstract class AbstractValidator<T> {
+  +Validate(instance: T): ValidationResult
+}
+
+class AuthInterceptor <<Angular>> {
+  +intercept(req: HttpRequest, next: HttpHandler): Observable<HttpEvent>
+  -on401(): void
+}
+
+SecurityHeadersMiddleware --> SecurityHeaderOptions
+SecretsRedactionEnricher ..> SecurityOptions : secret keys
+AuthenticationSetup ..> SecurityOptions
+IFileStorage <|.. EncryptedBlobFileStorage
+GuardianLinkProtector ..> "IDataProtector" : uses
+AbstractValidator ..> "command / query" : bounds
+AuthInterceptor ..> AuthenticationSetup : Bearer header
+@enduml

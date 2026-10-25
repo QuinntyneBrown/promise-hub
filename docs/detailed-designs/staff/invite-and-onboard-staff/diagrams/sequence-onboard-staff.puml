@@ -1,0 +1,81 @@
+@startuml
+title UML sequence behaviour — Onboard a staff member on a phone
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "New staff member" as actor
+box "Frontend — PromiseHub web app, account library" #E0F2FE
+  participant "OnboardStaffPhonePage" as phone
+  participant "OnboardStaffSessionsPage" as sessions
+  participant "OnboardStaffReadyPage" as ready
+  participant "StaffProfileApi" as client
+  participant "RosterCache" as cache
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "StaffProfileEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain (Staff)" #ECFDF3
+  participant "SaveStaffMobileCommandHandler" as mobilehandler
+  participant "SaveStaffSessionsCommandHandler" as sessionshandler
+  participant "StaffProfile" as profile
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+== Step 1: phone ==
+actor -> phone : Enter mobile number, continue
+alt skip
+  phone -> sessions : Navigate; setting stays available from the account (L2-009)
+else submit
+  phone -> client : saveMobile(number)
+  client -> endpoints : PUT /me/mobile
+  endpoints -> mobilehandler : Send SaveStaffMobileCommand
+  mobilehandler -> mobilehandler : Validate: area code present (L2-009)
+  alt number without area code
+    mobilehandler --> endpoints : ValidationFailed
+    endpoints --> client : 400 ProblemDetails
+    client --> phone : Field error
+    phone --> actor : Inline error
+  else valid mobile
+    mobilehandler -> profile : SetMobile(number) — used for alerts, never shown to guardians
+    mobilehandler -> db : Save
+    db --> mobilehandler : Commit
+    mobilehandler --> endpoints : Done
+    endpoints --> client : 204
+    client --> phone : Saved
+    phone -> sessions : Navigate
+  end
+end
+== Step 2: sessions ==
+actor -> sessions : Pick After-School Tutoring and Saturday Sports
+sessions -> client : saveSessions(programIds)
+client -> endpoints : PUT /me/sessions
+endpoints -> sessionshandler : Send SaveStaffSessionsCommand
+sessionshandler -> profile : SetSessions(programIds)
+sessionshandler -> db : Save
+db --> sessionshandler : Commit
+sessionshandler --> endpoints : Today's sessions for those programs
+endpoints --> client : 200
+client -> cache : Cache rosters for the chosen programs on the device (L2-009)
+cache --> client : Cached
+client --> sessions : Saved
+sessions -> ready : Navigate
+== Step 3: ready ==
+ready --> actor : Show tonight's session with one action "Open check-in" (L2-009)
+actor -> ready : Open check-in
+ready -> client : completeOnboarding()
+client -> endpoints : POST /me/onboarding/complete
+endpoints --> client : 204
+ready --> actor : Navigate to check-in
+@enduml

@@ -1,0 +1,80 @@
+@startuml
+title UML sequence behaviour — Schedule, send now and cancel a send
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Program director" as actor
+box "Frontend — PromiseHub web app, slips library" #E0F2FE
+  participant "SlipEditorPage" as page
+  participant "SendNowDialog" as sendnow
+  participant "CancelSendDialog" as cancel
+  participant "SlipsApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "SlipEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain (Slips)" #ECFDF3
+  participant "ScheduleSlipSendCommandHandler" as schedule
+  participant "SendSlipNowCommandHandler" as now
+  participant "CancelScheduledSendCommandHandler" as cancelh
+  participant "SendSlipCommandHandler" as send
+  participant "PermissionSlip" as slip
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "Job runner (ScheduledSlipSendJob)" as job
+end box
+actor -> page : Save with a send time
+page -> client : schedule(slipId, at)
+client -> endpoints : POST /slips/{id}/schedule
+endpoints -> schedule : Send ScheduleSlipSendCommand
+schedule -> slip : Schedule(at): Status = Scheduled
+slip --> schedule : Scheduled
+schedule -> db : SaveChanges
+db --> schedule : Commit result
+schedule --> endpoints : Result
+endpoints --> client : 200 OK
+client --> page : Scheduled
+page --> actor : Shows the scheduled time
+alt director sends now
+  actor -> sendnow : Send now
+  sendnow -> client : sendNow(slipId)
+  client -> endpoints : POST /slips/{id}/send-now
+  endpoints -> now : Send SendSlipNowCommand
+  now -> send : Dispatch SendSlipCommand (see Send a slip)
+  send --> now : SendSummary
+  now --> endpoints : Result
+  endpoints --> client : 200 OK
+  client --> sendnow : Sent
+  sendnow --> actor : Sent to N households
+else director cancels the send
+  actor -> cancel : Cancel send
+  cancel -> client : cancelScheduledSend(slipId)
+  client -> endpoints : POST /slips/{id}/cancel-send
+  endpoints -> cancelh : Send CancelScheduledSendCommand
+  cancelh -> slip : CancelSchedule(): Status = Draft; nothing sent
+  slip --> cancelh : Draft
+  cancelh -> db : SaveChanges
+  db --> cancelh : Commit result
+  cancelh --> endpoints : Result
+  endpoints --> client : 200 OK
+  client --> cancel : Cancelled
+  cancel --> actor : Slip stays a draft
+else scheduled time arrives
+  job -> db : Load slips with Status = Scheduled and ScheduledFor <= now, per tenant (L2-034)
+  db --> job : Scheduled slips
+  job -> send : Dispatch SendSlipCommand per slip
+  send --> job : SendSummary
+end
+@enduml

@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Export a report
+
+Person(director, "Program director", "Exports CSV or a funder template")
+System(promisehub, "PromiseHub", "Produces, stores and audits report exports")
+System_Ext(funder, "Funder template", "XLSX layout accepted by a funder")
+System_Ext(email, "Email provider", "Delivers the download link")
+System_Ext(storage, "Object storage", "Holds export files in the residency region")
+
+Rel(director, promisehub, "Requests, tracks and downloads exports", "HTTPS")
+Rel(promisehub, funder, "Shapes XLSX to", "Template definition")
+Rel(promisehub, email, "Emails download link", "HTTPS API")
+Rel(promisehub, storage, "Writes and reads files", "HTTPS")
+@enduml

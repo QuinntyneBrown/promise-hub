@@ -1,0 +1,92 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Switch organization
+
+enum Role {
+  ProgramDirector
+  Admin
+  SiteLead
+  YouthWorker
+  VolunteerCoordinator
+  PlatformAdmin
+}
+
+class Person {
+  +Guid Id
+  +string Email
+}
+
+class Membership {
+  +Guid Id
+  +Guid PersonId
+  +Guid OrganizationId
+  +Role Role
+  +bool IsActive
+  +DateTimeOffset CreatedAt
+  +Deactivate(): void
+}
+
+class Organization {
+  +Guid Id
+  +string Name
+  +OrganizationStatus Status
+}
+
+class Session {
+  +Guid PersonId
+  +Guid? ActiveMembershipId
+}
+
+class ListMyMembershipsQuery
+class ListMyMembershipsQueryHandler {
+  +Handle(query: ListMyMembershipsQuery): Task<IReadOnlyList<MembershipDto>>
+}
+
+class MembershipDto {
+  +Guid MembershipId
+  +Guid OrganizationId
+  +string OrganizationName
+  +string Mark
+  +Role Role
+  +bool IsActive
+}
+
+class ActivateMembershipCommand {
+  +Guid MembershipId
+}
+
+class ActivateMembershipCommandHandler {
+  +Handle(command: ActivateMembershipCommand): Task<Result<Membership>>
+}
+
+class ActiveMembershipResolver {
+  +Resolve(personId: Guid, membershipId: Guid?): Task<ResolvedMembership>
+}
+
+class TenantContextMiddleware {
+  +InvokeAsync(http: HttpContext): Task
+}
+
+Person "1" --> "1..*" Membership : holds
+Membership --> Organization : in
+Membership --> Role : with
+Session --> Membership : active
+ListMyMembershipsQueryHandler ..> ListMyMembershipsQuery : handles
+ListMyMembershipsQueryHandler --> MembershipDto : returns
+ActivateMembershipCommandHandler ..> ActivateMembershipCommand : handles
+ActivateMembershipCommandHandler --> Membership : validates
+ActivateMembershipCommandHandler --> Organization : checks not Suspended
+TenantContextMiddleware ..> ActiveMembershipResolver : uses
+TenantContextMiddleware --> Session : reads / rewrites
+@enduml

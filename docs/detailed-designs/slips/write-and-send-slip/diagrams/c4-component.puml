@@ -1,0 +1,47 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Write and send a slip
+
+Container_Boundary(web, "PromiseHub web app") {
+  Component(editor, "SlipEditorPage", "Angular page", "Body, questions, sign-by, reminders, delivery, preview")
+  Component(list, "SlipsListPage", "Angular page", "Every slip with progress and deadline")
+  Component(sendnow, "SendNowDialog", "CDK dialog", "Send a scheduled slip at once")
+  Component(cancelsend, "CancelSendDialog", "CDK dialog", "Cancel a scheduled send")
+  Component(client, "SlipsApi", "Typed client (SLIPS_API)", "Calls /slips")
+}
+Container_Boundary(api, "PromiseHub API") {
+  Component(endpoints, "SlipEndpoints", "Minimal API", "Routes /slips to handlers")
+  Component(draft, "SaveSlipDraftCommandHandler", "Application handler (Slips)", "Creates or updates a Draft")
+  Component(send, "SendSlipCommandHandler", "Application handler (Slips)", "Validates, freezes version, creates deliveries, queues messages")
+  Component(edit, "EditSentSlipCommandHandler", "Application handler (Slips)", "Material edit re-opens signing")
+  Component(schedule, "CancelScheduledSendCommandHandler", "Application handler (Slips)", "Scheduled back to Draft")
+  Component(entity, "PermissionSlip", "Domain aggregate", "Versions, questions, deliveries, status")
+  Component(cap, "SmsCapService", "Infrastructure", "Monthly SMS segment cap per organization")
+  Component(messenger, "GuardianMessenger", "Infrastructure", "Renders per-household message and queues it")
+  Component(audit, "AuditLog", "Infrastructure", "Records send and material edit")
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "Slips filtered by OrganizationId")
+}
+Rel(editor, client, "saveDraft, send, edit, previewDelivery")
+Rel(list, client, "list")
+Rel(sendnow, client, "sendNow")
+Rel(cancelsend, client, "cancelScheduledSend")
+Rel(client, endpoints, "JSON/HTTPS")
+Rel(endpoints, draft, "Sends SaveSlipDraftCommand")
+Rel(endpoints, send, "Sends SendSlipCommand")
+Rel(endpoints, edit, "Sends EditSentSlipCommand")
+Rel(endpoints, schedule, "Sends CancelScheduledSendCommand")
+Rel(draft, entity, "Creates / updates")
+Rel(send, entity, "Send(): freeze SlipVersion, add SlipDelivery per household")
+Rel(edit, entity, "Edit(isMaterial)")
+Rel(schedule, entity, "CancelSchedule()")
+Rel(send, cap, "Segments remaining?")
+Rel(send, messenger, "Queue one message per household")
+Rel(edit, messenger, "Queue re-sign message when material")
+Rel(send, audit, "Writes entry")
+Rel(edit, audit, "Writes entry")
+Rel(draft, db, "Saves")
+Rel(send, db, "Saves")
+Rel(edit, db, "Saves")
+Rel(schedule, db, "Saves")
+@enduml

@@ -1,0 +1,60 @@
+@startuml
+title UML sequence behaviour — Record a delivery report or bounce
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+participant "Email or SMS provider" as provider
+box "Backend — PromiseHub API" #D1FADF
+  participant "MessagesEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "RecordDeliveryReportCommandHandler" as handler
+  participant "Delivery" as delivery
+  participant "Message" as message
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "Webhook signature verifier" as verifier
+  participant "INotificationPublisher" as notify
+  database "PromiseHub database" as db
+end box
+box "Frontend — PromiseHub web app, messaging library" #E0F2FE
+  participant "MessagePage" as page
+end box
+
+provider -> endpoints : POST /webhooks/{provider}/delivery
+endpoints -> verifier : Verify signature
+alt signature invalid
+  verifier --> endpoints : Rejected
+  endpoints --> provider : 401
+else signature valid
+  endpoints -> handler : Send RecordDeliveryReportCommand
+  handler -> db : Find Delivery by provider message id
+  db --> handler : Delivery with Message
+  handler -> delivery : Apply(report)
+  alt report is delivered
+    delivery --> handler : Status Delivered
+  else report is bounce or failure
+    delivery --> handler : Status Bounced or Failed with reason (L2-021 criterion 5)
+    handler -> db : Flag household contact as bounced
+    handler -> notify : Bounce notification for admins
+  end
+  handler -> message : RecomputeAggregates()
+  handler -> db : Save delivery, message and audit entry
+  db --> handler : Committed
+  handler --> endpoints : Result ok
+  endpoints --> provider : 200
+end
+
+page -> page : Next load shows "n bounced" and affected households with reason
+@enduml

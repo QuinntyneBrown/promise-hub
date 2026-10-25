@@ -3,7 +3,7 @@ from kit import *  # noqa: F401,F403
 from reg import screen
 from pages_core import R_ENROLL, R_SLIPS, R_PICKUP, R_NOTIFY, R_PRIVACY
 
-R_ACCESS = "PRD-NFR-ACCESS"
+R_ACCESS = "L1-019"
 G = GUARDIANS["carmen"]
 NA_G = {"empty": "A guardian page is always about one household."}
 
@@ -33,7 +33,7 @@ def guardian_home(S):
 # ------------------------------------------------------------------ Enroll: identify
 @screen("enroll", "page", "Enroll: identify", route="/g/enroll/:program", reqs=[R_ENROLL, R_ACCESS, R_PRIVACY], shell="guardian", na={"empty": "Static form.", "loading": "Static form."})
 def enroll(S):
-    intro = '<h1>Enroll in After-School Tutoring</h1><p class="text-muted">Mon–Thu, 4–6 pm · Harbourview Community Centre · Sep 2026 to Jun 2027 · free</p>'
+    intro = '<h1>Enroll in After‑School Tutoring</h1><p class="text-muted">Mon–Thu, 4–6 pm · Harbourview Community Centre · Sep 2026 to Jun 2027 · free</p>'
 
     def identify(err=None, busy=False):
         e = err or {}
@@ -46,7 +46,7 @@ def enroll(S):
     S.add("invalid", "An incomplete phone number.", main=intro + identify(err={"contact": "Enter a full mobile number or an email."}))
     S.add("submitting", "Sending the code.", main=intro + identify(busy=True))
     S.add("error", "The code couldn’t be sent (SMS provider down): offer email.", main=intro + alert("danger", "We couldn’t text you", "Try your email, or try again in a few minutes.") + identify())
-    S.add("closed", "Enrollment is closed or the program is full: offer the waitlist.", main='<h1>After-School Tutoring is full</h1><p class="text-muted">All 50 places are taken.</p>' + card(f'<div class="stack"><p>We’ll text you if a place opens.</p>{field("wl-contact", "Mobile number or email", value="", inputmode="email")}{btn("Join the waitlist", "primary", type_="submit", size="lg")}</div>', tag="form") + f'<p class="center"><a href="{page("guardian-home")}">See other programs</a></p>' + g_footer())
+    S.add("closed", "Enrollment is closed or the program is full: offer the waitlist.", main='<h1>After‑School Tutoring is full</h1><p class="text-muted">All 50 places are taken.</p>' + card(f'<div class="stack"><p>We’ll text you if a place opens.</p>{field("wl-contact", "Mobile number or email", value="", inputmode="email")}{btn("Join the waitlist", "primary", type_="submit", size="lg")}</div>', tag="form") + f'<p class="center"><a href="{page("guardian-home")}">See other programs</a></p>' + g_footer())
     S.add("expired", "The code is wrong or expired.", main=intro + f'<form class="card stack" action="#" method="post" novalidate><p>Code texted to <strong>905-555-0142</strong>.</p>{field("code", "6-digit code", value="481 2", inputmode="numeric", autocomplete="one-time-code", attrs=" maxlength=\"6\"", error="Wrong or expired code. Send a new one.")}{btn("Continue", "primary", type_="submit", size="lg")}<p class="center"><button class="btn btn--ghost" type="button">Send a new code</button></p></form>' + g_footer())
 
 
@@ -100,7 +100,7 @@ def enroll_child(S):
 # ------------------------------------------------------------------ Enroll: review and submit
 @screen("enroll-review", "page", "Enroll: review", route="/g/enroll/:program/review", reqs=[R_ENROLL, R_SLIPS, R_PRIVACY], shell="guardian", na={"empty": "A review page always has content.", "loading": "Content comes from the previous steps on the device."})
 def enroll_review(S):
-    summary = card('<div class="summary">' + "".join(f'<div class="summary__row"><span class="summary__label">{k}</span><span class="summary__value">{v}</span></div>' for k, v in [("Program", "After-School Tutoring · Mon–Thu, 4–6 pm"), ("You", "Carmen Rivera · 905-555-0142 · Spanish"), ("Second adult", "Luis Rivera · 905-555-0199"), ("Children", "Mateo (9), Sofía (12)"), ("Allergies on file", "Mateo: peanuts, tree nuts · Sofía: none"), ("Approved pickups", "Luis Rivera, Rosa Alvarez"), ("Photos", "Okay for both")]) + "</div>" + f'<p class="hint" style="margin-top: var(--space-3);"><a href="{page("enroll-household")}">Change household</a> · <a href="{page("enroll-child")}">Change children</a></p>', title="Check everything", tid="sum")
+    summary = card('<div class="summary">' + "".join(f'<div class="summary__row"><span class="summary__label">{k}</span><span class="summary__value">{v}</span></div>' for k, v in [("Program", "After‑School Tutoring · Mon–Thu, 4–6 pm"), ("You", "Carmen Rivera · 905-555-0142 · Spanish"), ("Second adult", "Luis Rivera · 905-555-0199"), ("Children", "Mateo (9), Sofía (12)"), ("Allergies on file", "Mateo: peanuts, tree nuts · Sofía: none"), ("Approved pickups", "Luis Rivera, Rosa Alvarez"), ("Photos", "Okay for both")]) + "</div>" + f'<p class="hint" style="margin-top: var(--space-3);"><a href="{page("enroll-household")}">Change household</a> · <a href="{page("enroll-child")}">Change children</a></p>', title="Check everything", tid="sum")
 
     def consent(err="", busy=False, name="Carmen Rivera"):
         return card(f'<div class="stack"><p>By signing the <a href="#sig-name">season consent</a>, staff may give first aid, call emergency services and release your children only to the adults listed.</p>'

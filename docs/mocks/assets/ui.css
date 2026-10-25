@@ -21,4 +21,11 @@
 /* A ghost button that starts an alert's action row lines its label up with the text above it. */
 .alert .btn--ghost:first-child { margin-inline-start: calc(-1 * var(--space-3)); }
 /* Wizard footer on phones: with no Back button, Skip sits at the right like every other step. */
-@media (max-width: 39.99rem) { .onboarding .wizard-card__footer .btn--ghost:first-child:nth-last-child(2) { margin-inline: auto 0; } }
+.onboarding .wizard-card__footer .wizard-skip:first-child { margin-inline: auto 0; }
+/* Flush and padded cards start their heading at the same height. */
+.card--flush > .card__title { padding: var(--space-6) var(--space-4) var(--space-2); }
+/* Name-first tables keep the name on one line from tablet widths. */
+@media (min-width: 40rem) { .table-wrap--names td:first-child { min-width: 11rem; } }
+@media (min-width: 40rem) and (max-width: 63.99rem) { .table-wrap--names th, .table-wrap--names td { padding-inline: var(--space-2); } }
+/* A feed inside a flush card keeps the card's inset. */
+.card--flush > .feed > li { padding-inline: var(--space-4); }

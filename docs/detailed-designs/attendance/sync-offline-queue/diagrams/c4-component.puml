@@ -1,0 +1,43 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Sync offline queue
+
+Container_Boundary(web, "PromiseHub web app (attendance library, on device)") {
+  Component(page, "CheckInPage / QuickCardPage", "Angular pages", "offline, error and queued states")
+  Component(roster, "RosterStore", "Signal store", "Optimistic rows; enqueues when offline; disables sign-out while check-in unsent")
+  Component(cache, "TodayRosterCache", "Service", "Fills and reads today's rosters and Quick Cards; exposes savedAt")
+  Component(qstore, "AttendanceQueueStore", "IndexedDB store", "Ordered QueuedAction rows")
+  Component(sync, "SyncService", "Service", "Drains queue in order on reconnect; applies results")
+  Component(dlg, "OfflineQueueDialog", "CDK dialog", "What is waiting; busy / failed / success")
+  Component(client, "AttendanceApi", "Typed client (api library)", "sync(batch), getTodaySessions()")
+}
+Container_Boundary(api, "PromiseHub API") {
+  Component(ep, "AttendanceEndpoints", "Minimal API", "/sessions/{id}/sync, /sessions/today")
+  Component(h, "SyncAttendanceActionsCommandHandler", "Command handler", "Replays each action in order; Applied / Duplicate / Rejected")
+  Component(ci, "CheckInChildCommandHandler", "Command handler", "OccurredAt = deviceTime")
+  Component(res, "AttendanceConflictResolver", "Domain service", "Keeps both events, present wins, HasConflict = true")
+  Component(rec, "AttendanceRecord / AttendanceEvent", "Domain entities", "Event history per record")
+  Component(audit, "IAuditLog", "Infrastructure", "Conflict entry lists both events")
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "Unique (OrganizationId, ClientActionId)")
+}
+
+Rel(page, roster, "Binds")
+Rel(page, cache, "Reads savedAt and cached data")
+Rel(roster, qstore, "Enqueue when offline")
+Rel(roster, cache, "Loads roster when offline")
+Rel(sync, qstore, "Peek, markSent, markRejected")
+Rel(sync, client, "sync(batch)")
+Rel(sync, roster, "Applies results to rows")
+Rel(dlg, qstore, "Lists pending")
+Rel(dlg, sync, "Retry")
+Rel(cache, client, "Fills while online")
+Rel(client, ep, "JSON/HTTPS")
+Rel(ep, h, "Sends SyncAttendanceActionsCommand")
+Rel(h, ci, "Dispatches per action")
+Rel(ci, res, "On newer conflicting event")
+Rel(ci, rec, "Appends event")
+Rel(res, rec, "ResolveConflict")
+Rel(res, audit, "Writes conflict entry")
+Rel(rec, db, "Persisted by", "EF Core")
+@enduml

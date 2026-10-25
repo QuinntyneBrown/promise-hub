@@ -1,0 +1,22 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Write and send a slip
+
+Person(director, "Program director", "Writes and sends slips")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "Staff UI; slips feature library")
+  Container(api, "PromiseHub API", "ASP.NET Core", "Endpoints, application handlers, domain")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "Slips, versions, deliveries, households, SMS counters, audit log")
+  ContainerQueue(jobs, "Job runner", "Hosted service", "Sends queued slip messages; sends scheduled slips at their time")
+}
+System_Ext(sms, "SMS provider", "Delivers texts")
+System_Ext(email, "Email provider", "Delivers emails")
+Rel(director, web, "Uses", "HTTPS")
+Rel(web, api, "Calls /slips", "JSON/HTTPS")
+Rel(api, db, "Reads and writes", "EF Core")
+Rel(api, jobs, "Queues one message per household")
+Rel(jobs, db, "Reads scheduled slips; records delivery status", "EF Core")
+Rel(jobs, sms, "Sends texts", "HTTPS API")
+Rel(jobs, email, "Sends emails", "SMTP / HTTPS API")
+@enduml

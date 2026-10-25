@@ -1,0 +1,111 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Isolate tenant data
+
+interface ITenantOwned {
+  +Guid OrganizationId
+}
+
+interface ITenantContext {
+  +Guid OrganizationId
+  +Guid MembershipId
+  +Role Role
+  +bool IsPlatformAdmin
+}
+
+class TenantContext {
+  +Guid OrganizationId
+  +Guid MembershipId
+  +Role Role
+  +bool IsPlatformAdmin
+  +Set(membership: Membership): void
+}
+
+class TenantScope {
+  +TenantScope(context: TenantContext, organizationId: Guid)
+  +Dispose(): void
+}
+
+class Membership {
+  +Guid Id
+  +Guid PersonId
+  +Guid OrganizationId
+  +Role Role
+  +bool IsActive
+}
+
+class Organization {
+  +Guid Id
+  +string Name
+  +OrganizationStatus Status
+}
+
+class Child {
+  +Guid Id
+  +Guid OrganizationId
+  +string Name
+}
+
+class Household {
+  +Guid Id
+  +Guid OrganizationId
+}
+
+class AuditEntry {
+  +Guid Id
+  +Guid OrganizationId
+  +Guid ActorMembershipId
+  +AuditAction Action
+  +string RecordType
+  +Guid RecordId
+  +DateTimeOffset At
+}
+
+class TenantContextMiddleware {
+  +InvokeAsync(http: HttpContext): Task
+}
+
+class ClientTenantValueFilter {
+  +InvokeAsync(ctx: EndpointFilterInvocationContext): ValueTask<object?>
+}
+
+class NotFoundOnCrossTenantBehavior<TRequest, TResponse> {
+  +Handle(request: TRequest, next: Func<Task<TResponse>>): Task<TResponse>
+}
+
+class PromiseHubDbContext {
+  -ITenantContext _tenant
+  +OnModelCreating(builder: ModelBuilder): void
+  +SaveChangesAsync(): Task<int>
+}
+
+class JobRunner {
+  +RunForEachTenant(job: ITenantJob): Task
+}
+
+ITenantContext <|.. TenantContext
+ITenantOwned <|.. Child
+ITenantOwned <|.. Household
+ITenantOwned <|.. Membership
+ITenantOwned <|.. AuditEntry
+Organization "1" --> "*" Membership : has
+TenantContextMiddleware --> Membership : loads active
+TenantContextMiddleware --> TenantContext : populates
+ClientTenantValueFilter ..> ITenantContext : overrides client value with
+NotFoundOnCrossTenantBehavior ..> AuditEntry : writes CrossTenantAttempt
+PromiseHubDbContext --> ITenantContext : filters by
+PromiseHubDbContext ..> ITenantOwned : applies HasQueryFilter to
+TenantScope --> TenantContext : sets / restores
+JobRunner ..> TenantScope : opens per organization
+@enduml

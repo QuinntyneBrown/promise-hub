@@ -1,0 +1,44 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Run background jobs
+
+Container_Boundary(api, "PromiseHub API") {
+  Component(maint, "MaintenanceMiddleware", "Middleware", "503 with Retry-After and expectedEndAt while the flag is on")
+}
+Container_Boundary(app, "PromiseHub Application") {
+  Component(scheduler, "IJobScheduler", "Application service", "Enqueue per organization with due time")
+  Component(scope, "TenantScope", "Value object", "Modules, plan and SMS cap of the job's organization")
+  Component(reminders, "SendSlipRemindersJobHandler", "IJobHandler", "Slips module")
+  Component(noshow, "NoShowAlertJobHandler", "IJobHandler", "Roll Call module")
+  Component(export, "BuildExportJobHandler", "IJobHandler", "Reports module")
+  Component(retention, "RetentionPurgeJobHandler", "IJobHandler", "Privacy settings")
+  Component(backupJob, "DailyBackupJobHandler", "IJobHandler", "Platform")
+  Component(sender, "IOutboundMessageSender", "Application service", "Idempotency key per recipient and template")
+}
+Container_Boundary(infra, "PromiseHub Infrastructure") {
+  Component(runner, "JobRunnerHostedService", "BackgroundService", "Leases due jobs and dispatches handlers")
+  Component(retry, "RetryPolicy", "Infrastructure", "Backoff; dead-letter after 5 attempts")
+  Component(recurring, "RecurringJobScheduler", "Hosted service", "Cron per organization")
+  Component(notifier, "JobFailureNotifier", "Infrastructure", "Posts to admin notification center")
+  Component(metrics, "JobQueueMetrics", "Infrastructure", "Queue lag for alerts")
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "Jobs, OutboundMessageLog")
+  Component(providers, "SMS / email / push adapters", "Provider clients", "Deliver messages")
+}
+Rel(recurring, scheduler, "Enqueues recurring jobs")
+Rel(scheduler, db, "Inserts Job")
+Rel(runner, db, "Leases due jobs")
+Rel(runner, scope, "Loads per job")
+Rel(runner, reminders, "Dispatches")
+Rel(runner, noshow, "Dispatches")
+Rel(runner, export, "Dispatches")
+Rel(runner, retention, "Dispatches")
+Rel(runner, backupJob, "Dispatches")
+Rel(runner, retry, "On failure")
+Rel(retry, notifier, "After 5th failure")
+Rel(reminders, sender, "Send with key")
+Rel(noshow, sender, "Send with key")
+Rel(sender, db, "Records OutboundMessageLog")
+Rel(sender, providers, "Calls once per key")
+Rel(runner, metrics, "Reports lag")
+@enduml

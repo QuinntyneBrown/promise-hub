@@ -12,6 +12,14 @@ description: >-
 
 # Creating narrated videos
 
+## Background music (MANDATORY)
+
+Every narrated video has background music under its narration: the one track kept at `docs/videos/assets/music/on-the-beach-intro-outro.mp3`. Every deck names it with `<body data-music="../assets/music/on-the-beach-intro-outro.mp3">`; the builder loops it under the narration at `data-music-db` (default −10.8 dB) with a fade in, holds the last slide 3 s so the music fades out, and refuses a deck with no `data-music`. Do not pick another track, drop the music or change the level unless the user asks. Provenance lives in `docs/videos/assets/music/README.md`.
+
+## No captions by default (MANDATORY)
+
+Videos are produced WITHOUT captions or subtitles unless the user explicitly asks for them in that request. Do not burn captions into the video, do not draw an on-screen caption overlay, and do not generate `.vtt`/`.srt` files or a `<track>` element by default. Narration audio and the script/narration text stay. Where this skill's instructions below mention captions, treat them as applying only when captions were explicitly requested.
+
 A video is **narration audio + a slide deck timed to it + captions**, all generated from text files checked into one folder. You author three text files; tooling turns them into media.
 
 ```
@@ -111,6 +119,7 @@ Rules:
 
 - **Every slide except the first has a `data-cue`**: a phrase copied *verbatim* from `script.md` (a heading or the start of a sentence), unique in the script, with cues in **narration order**. A slide appears when narration reaches its cue.
 - `data-part` indexes `data-parts` (header label and progress bar); parts line up with `##` sections.
+- **Every deck names the background music**: `<body data-music="../assets/music/on-the-beach-intro-outro.mp3">` (see the mandate above).
 - Roughly one slide every 20-40 seconds. Cue changes inside a section are estimated from word counts (within a second or two); section boundaries are exact.
 - Slides support the narration, they don't transcribe it: a heading, 3-5 short bullets, a diagram, or a short code excerpt.
 - Code: `<pre class="code" data-lang="cs|ts|json|yaml|sql|sh|md|xml" data-mark="2,5">` (escape `<`, `>`, `&`); add `tight` for longer excerpts. Keep excerpts to ~16 lines, copied from the real file.
@@ -123,23 +132,23 @@ Rules:
 Keep two small scripts under `tools/` (language of the repo's choice; a .NET single-file app, Node or Python all work):
 
 - **Audio generator** (`tools/video-audio/`): parses `script.md` strictly; `--dry-run` validates and estimates length without network. Otherwise it uses the `edge-tts` Python package or `python -m edge_tts` CLI with plain text per paragraph: a neural narrator voice (e.g. `en-US-AndrewMultilingualNeural`) and a second voice for other speakers (e.g. `en-US-AvaMultilingualNeural`). Check available voices with `python -m edge_tts --list-voices`. Edge does not support custom SSML: apply `pronunciations.json` as spoken text replacements before synthesis, synthesize speaker paragraphs separately, and insert `[pause 5s]` as ffmpeg-generated silence. Normalize clips to a common audio format, measure their actual durations with ffprobe, concatenate clips and silence into the MP3, and write the timing manifest from those durations.
-- **Video builder** (`tools/video-build/`): opens `slides.html` in headless Chrome/Edge, resolves each `data-cue` to a time using the manifest (section boundaries exact, in-section by word count), screenshots each slide at 1920x1080, writes an SRT/ASS caption file from the script, and runs ffmpeg (libx264, aac) to produce the MP4 with burned-in captions. Supports `--check` and `--slides-only`.
+- **Video builder** (`tools/video-build/`): opens `slides.html` in headless Chrome/Edge, resolves each `data-cue` to a time using the manifest (section boundaries exact, in-section by word count), screenshots each slide at 1920x1080, writes an SRT/ASS caption file from the script, mixes the deck's `data-music` track under the narration, and runs ffmpeg (libx264, aac) to produce the MP4 with burned-in captions. Supports `--check` and `--slides-only`.
 
-Prefer an existing equivalent if the repo already has one. With Node tools in the layout above, run from the repo root (Edge is the default engine, so `--engine edge` is optional):
+This repository has both tools under `tools/` and the shared slide assets and music under `docs/videos/assets/`. Run from the repo root (Edge is the default engine, so `--engine edge` is optional):
 
 ```sh
 # Use the same Python interpreter for installation and the generator.
 export PYTHON=python3
 python3 -m pip install edge-tts
 node tools/video-audio/generate-audio.mjs docs/videos/NN-kebab-topic --dry-run
-node tools/video-audio/generate-audio.mjs --say "<product name>" --out .cache/pronunciation-test.wav
+node tools/video-audio/generate-audio.mjs --say "PromiseHub" --out .cache/pronunciation-test.wav
 node tools/video-audio/generate-audio.mjs docs/videos/NN-kebab-topic
 node tools/video-build/build-video.mjs docs/videos/NN-kebab-topic --check
 node tools/video-build/build-video.mjs docs/videos/NN-kebab-topic --slides-only
 node tools/video-build/build-video.mjs docs/videos/NN-kebab-topic
 ```
 
-In PowerShell, set the interpreter with `$env:PYTHON = "python"` and use `python` in place of `python3`. Replace `NN-kebab-topic` with the actual folder and `<product name>` with a word the narrator must pronounce correctly. `EDGE_VOICE` and `EDGE_VOICE_2` override the narrator and second-speaker voices. For package usage and supported options, see the [edge-tts documentation](https://github.com/rany2/edge-tts). A working implementation of both tools and the shared slide assets, written for one product, is in the [Saturdaze repository](https://github.com/QuinntyneBrown/saturdaze) under `tools/video-audio/`, `tools/video-build/` and `docs/videos/assets/`; adapt its branding and pronunciation lexicon rather than copying them unchanged.
+In PowerShell, set the interpreter with `$env:PYTHON = "python"` and use `python` in place of `python3`. Replace `NN-kebab-topic` with the actual folder. `EDGE_VOICE` and `EDGE_VOICE_2` override the narrator and second-speaker voices. For package usage and supported options, see the [edge-tts documentation](https://github.com/rany2/edge-tts). A working implementation of both tools and the shared slide assets, written for one product, is in the [Saturdaze repository](https://github.com/QuinntyneBrown/saturdaze) under `tools/video-audio/`, `tools/video-build/` and `docs/videos/assets/`; adapt its branding and pronunciation lexicon rather than copying them unchanged.
 
 ## Quality checklist
 

@@ -1,0 +1,125 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Manage events
+
+enum EventStatus {
+  Scheduled
+  Cancelled
+}
+
+enum SlipStatus {
+  Draft
+  Scheduled
+  Sent
+  Closed
+}
+
+class Program {
+  +Guid Id
+  +Guid OrganizationId
+  +string Name
+}
+
+class Event {
+  +Guid Id
+  +Guid OrganizationId
+  +Guid ProgramId
+  +string Name
+  +DateTimeOffset StartsAt
+  +DateTimeOffset EndsAt
+  +string Place
+  +bool RequiresSlip
+  +bool NoShowAlertEnabled
+  +string StaffNotes
+  +EventStatus Status
+  +DateTimeOffset? CancelledAt
+  +Guid? CancelledBy
+  +string CancellationMessage
+  +Cancel(actor: Guid, now: DateTimeOffset, message: string): void
+}
+
+class EventCreatedRequiringSlip <<domain event>> {
+  +Guid EventId
+  +Guid OrganizationId
+  +DateTimeOffset StartsAt
+}
+
+class PermissionSlip {
+  +Guid Id
+  +Guid OrganizationId
+  +Guid EventId
+  +string Title
+  +string Body
+  +DateOnly SignBy
+  +SlipStatus Status
+}
+
+class CreateEventCommand {
+  +Guid ProgramId
+  +string Name
+  +DateTimeOffset StartsAt
+  +DateTimeOffset EndsAt
+  +string Place
+  +bool RequiresSlip
+  +bool NoShowAlertEnabled
+  +string StaffNotes
+}
+
+class CancelEventCommand {
+  +Guid EventId
+  +string MessageToGuardians
+  +bool TellGuardians
+  +bool Delete
+  +string DeleteConfirmation
+}
+
+class CreateEventCommandHandler {
+  +Handle(command: CreateEventCommand): Task<Result<EventDto>>
+}
+
+class CreateDraftSlipOnEventCreatedHandler {
+  +Handle(event: EventCreatedRequiringSlip): Task
+}
+
+class CancelEventCommandHandler {
+  +Handle(command: CancelEventCommand): Task<Result>
+}
+
+class EventValidator {
+  +Validate(command: CreateEventCommand): ValidationResult
+}
+
+interface IGuardianMessenger {
+  +SendToHouseholds(householdIds: Guid[], body: string): Task<SendSummary>
+}
+
+interface IAuditLog {
+  +Record(entry: AuditEntry): Task
+}
+
+Program "1" --> "*" Event : holds
+Event --> EventStatus : has
+Event "1" --> "0..1" PermissionSlip : has
+PermissionSlip --> SlipStatus : has
+CreateEventCommandHandler ..> CreateEventCommand : handles
+CreateEventCommandHandler ..> EventValidator : validates with
+CreateEventCommandHandler --> Event : creates
+CreateEventCommandHandler ..> EventCreatedRequiringSlip : raises when RequiresSlip
+CreateDraftSlipOnEventCreatedHandler ..> EventCreatedRequiringSlip : handles
+CreateDraftSlipOnEventCreatedHandler --> PermissionSlip : creates Draft
+CancelEventCommandHandler ..> CancelEventCommand : handles
+CancelEventCommandHandler --> Event : loads / Cancel()
+CancelEventCommandHandler ..> IGuardianMessenger : messages households
+CancelEventCommandHandler ..> IAuditLog : records
+@enduml

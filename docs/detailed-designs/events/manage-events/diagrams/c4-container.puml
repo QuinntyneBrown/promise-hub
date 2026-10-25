@@ -1,0 +1,21 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Manage events
+
+Person(director, "Program director", "Manages events")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "Staff UI; events feature library")
+  Container(api, "PromiseHub API", "ASP.NET Core", "Endpoints, application handlers, domain")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "Events, slips, households, audit log")
+  ContainerQueue(jobs, "Job runner", "Hosted service", "Delivers queued guardian messages")
+}
+System_Ext(sms, "SMS provider", "Delivers texts")
+System_Ext(email, "Email provider", "Delivers emails")
+Rel(director, web, "Uses", "HTTPS")
+Rel(web, api, "Calls /events", "JSON/HTTPS")
+Rel(api, db, "Reads and writes", "EF Core")
+Rel(api, jobs, "Queues cancellation messages")
+Rel(jobs, sms, "Sends texts", "HTTPS API")
+Rel(jobs, email, "Sends emails", "SMTP / HTTPS API")
+@enduml

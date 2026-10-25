@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Authorize a request
+
+Person(director, "Program director / Admin", "Full access within the organization; manages staff roles")
+Person(sitelead, "Site lead / Youth worker", "Runs sessions; sees children and own incidents, no settings")
+Person(coordinator, "Volunteer coordinator", "Sees contacts and pickups, never medical fields")
+Person(platform, "Platform admin", "Manages tenants across organizations")
+System(promisehub, "PromiseHub", "Authorizes every request on the server by role, endpoint and field")
+
+Rel(director, promisehub, "Changes roles, removes staff, reads all incidents", "HTTPS")
+Rel(sitelead, promisehub, "Checks in children, reports incidents", "HTTPS")
+Rel(coordinator, promisehub, "Opens Quick Cards without medical fields", "HTTPS")
+Rel(platform, promisehub, "Manages organizations", "HTTPS")
+@enduml

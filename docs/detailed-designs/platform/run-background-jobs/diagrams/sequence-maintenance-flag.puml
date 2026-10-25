@@ -1,0 +1,47 @@
+@startuml
+title UML sequence behaviour — The maintenance flag is set
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Staff member or guardian" as actor
+box "Frontend — PromiseHub web app (promisehub shell / guardian library)" #E0F2FE
+  participant "Feature or guardian page" as page
+  participant "MaintenanceInterceptor" as interceptor
+  participant "MaintenancePageComponent" as maintpage
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "RequestLoggingMiddleware" as reqlog
+  participant "MaintenanceMiddleware" as maint
+  participant "Endpoint" as endpoint
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "MaintenanceOptions (configuration)" as options
+end box
+actor -> page : Open any page or guardian link
+page -> interceptor : API request
+interceptor -> reqlog : HTTPS request
+reqlog -> maint : Next
+maint -> options : Enabled? ExpectedEndAt?
+alt Flag on
+  options --> maint : Enabled, ends 6:30 am
+  maint --> reqlog : 503, Retry-After, ProblemDetails with expectedEndAt (L2-034)
+  reqlog --> interceptor : 503 logged with status
+  interceptor -> maintpage : Route to /maintenance with expectedEndAt
+  maintpage --> actor : "Back at 6:30 am"; check-in and Quick Cards work offline
+else Flag off
+  options --> maint : Disabled
+  maint -> endpoint : Next
+  endpoint --> page : Normal response
+end
+@enduml

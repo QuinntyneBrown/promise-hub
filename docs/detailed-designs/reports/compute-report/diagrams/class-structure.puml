@@ -1,0 +1,117 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Compute a report
+
+enum PeriodKind {
+  Season
+  Month
+  Custom
+}
+
+enum AgeBand {
+  SixToEight
+  NineToEleven
+  TwelveToThirteen
+}
+
+class ReportPeriod <<value object>> {
+  +PeriodKind Kind
+  +DateOnly From
+  +DateOnly To
+  +{static} Season(settings: OrganizationSettings): ReportPeriod
+  +{static} Month(year: int, month: int): ReportPeriod
+  +{static} Custom(from: DateOnly, to: DateOnly): Result<ReportPeriod>
+}
+
+class GetReportQuery {
+  +PeriodKind PeriodKind
+  +DateOnly? From
+  +DateOnly? To
+  +IReadOnlyList<Guid> ProgramIds
+}
+
+class GetReportQueryHandler {
+  +Handle(query: GetReportQuery): Task<Result<ReportDto>>
+}
+
+class GetReportOptionsQueryHandler {
+  +Handle(query: GetReportOptionsQuery): Task<ReportOptionsDto>
+}
+
+class ReportAggregator {
+  +Aggregate(organizationId: Guid, period: ReportPeriod, programIds: IReadOnlyList<Guid>): Task<ReportAggregate>
+  -ChildrenServed(): Task<int>
+  -AttendanceRate(): Task<decimal>
+  -SessionsDelivered(): Task<int>
+  -SlipsSignedDigitallyRate(): Task<decimal>
+  -Demographics(): Task<IReadOnlyList<DemographicCell>>
+  -AttendanceByProgram(): Task<IReadOnlyList<ProgramAttendance>>
+  -HouseholdsByLanguage(): Task<IReadOnlyList<LanguageCount>>
+}
+
+class ReportAggregate {
+  +int ChildrenServed
+  +decimal AttendanceRate
+  +int SessionsDelivered
+  +decimal SlipsSignedDigitallyRate
+  +IReadOnlyList<DemographicCell> Demographics
+  +IReadOnlyList<ProgramAttendance> AttendanceByProgram
+  +IReadOnlyList<LanguageCount> HouseholdsByLanguage
+  +bool HasSessions
+}
+
+class DemographicCell {
+  +AgeBand AgeBand
+  +Gender Gender
+  +int Count
+}
+
+class SuppressedCell {
+  +AgeBand AgeBand
+  +Gender Gender
+  +int? Count
+  +bool Suppressed
+}
+
+class SmallCountSuppressor {
+  +{static} int Threshold = 5
+  +Apply(cells: IReadOnlyList<DemographicCell>, exact: bool): IReadOnlyList<SuppressedCell>
+}
+
+class ReportDto {
+  +ReportPeriod Period
+  +IReadOnlyList<Guid> ProgramIds
+  +int ChildrenServed
+  +decimal AttendanceRate
+  +int SessionsDelivered
+  +decimal SlipsSignedDigitallyRate
+  +IReadOnlyList<SuppressedCell> Demographics
+  +IReadOnlyList<ProgramAttendance> AttendanceByProgram
+  +IReadOnlyList<LanguageCount> HouseholdsByLanguage
+  +bool CountsSuppressed
+}
+
+GetReportQueryHandler ..> GetReportQuery : handles
+GetReportQueryHandler --> ReportPeriod : resolves
+GetReportQueryHandler --> ReportAggregator : uses
+GetReportQueryHandler --> SmallCountSuppressor : uses
+GetReportQueryHandler ..> ReportDto : returns
+ReportAggregator ..> ReportAggregate : returns
+ReportAggregate "1" *-- "*" DemographicCell
+ReportDto "1" *-- "*" SuppressedCell
+SmallCountSuppressor ..> DemographicCell : reads
+SmallCountSuppressor ..> SuppressedCell : produces
+ReportPeriod --> PeriodKind
+DemographicCell --> AgeBand
+@enduml

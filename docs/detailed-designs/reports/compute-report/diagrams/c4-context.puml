@@ -1,0 +1,12 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Compute a report
+
+Person(director, "Program director", "Reads grant-ready numbers for a period and program")
+Person(staff, "Other staff with Reports permission", "Reads reports with small counts suppressed")
+System(promisehub, "PromiseHub", "Aggregates attendance, enrollment, slips and households per organization")
+
+Rel(director, promisehub, "Filters and reads reports", "HTTPS")
+Rel(staff, promisehub, "Reads suppressed reports", "HTTPS")
+@enduml

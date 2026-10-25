@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Report and review an incident
+
+Person(reporter, "Site lead or youth worker", "Reports an incident from a phone")
+Person(supervisor, "Program director", "Reviews and closes incidents")
+System(promisehub, "PromiseHub", "Multi-tenant system of record for youth programs")
+System_Ext(email, "Email provider", "Delivers supervisor and reporter notifications")
+
+Rel(reporter, promisehub, "Reports incidents using", "HTTPS")
+Rel(supervisor, promisehub, "Reviews incidents using", "HTTPS")
+Rel(promisehub, email, "Sends notifications via", "SMTP / HTTPS API")
+Rel(email, supervisor, "Delivers new-incident notice to")
+Rel(email, reporter, "Delivers review notice to")
+@enduml

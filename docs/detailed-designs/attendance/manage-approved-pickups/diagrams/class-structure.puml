@@ -1,0 +1,146 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Manage approved pickups
+
+enum PickupAddedBy {
+  Guardian
+  Staff
+}
+
+class Child {
+  +Guid Id
+  +Guid OrganizationId
+  +Guid HouseholdId
+  +string Name
+}
+
+class ApprovedPickup {
+  +Guid Id
+  +Guid OrganizationId
+  +Guid ChildId
+  +string Name
+  +string Relationship
+  +string? Phone
+  +bool PhotoIdOnFile
+  +PickupAddedBy AddedBy
+  +Guid AddedByActorId
+  +DateTimeOffset AddedAt
+  +DateTimeOffset? RemovedAt
+  +Guid? RemovedByActorId
+  +bool IsActive
+  +Remove(actor: Guid, at: DateTimeOffset): void
+}
+
+class PickupConfirmation <<value object>> {
+  +Guid? ApprovedPickupId
+  +string? OtherName
+  +bool GuardianConfirmedByPhone
+  +DateTimeOffset? GuardianConfirmedAt
+  +bool IdChecked
+  +IsValid(): bool
+}
+
+class AttendanceRecord {
+  +Guid Id
+  +Guid ChildId
+  +AttendanceStatus Status
+  +PickupConfirmation? Pickup
+  +SignOut(pickup: PickupConfirmation, at: DateTimeOffset, actor: Guid): AttendanceEvent
+}
+
+class PickupRefusal <<value object>> {
+  +Guid ChildId
+  +string PersonName
+  +DateTimeOffset OccurredAt
+  +Guid StaffId
+}
+
+class IncidentDraft {
+  +Guid Id
+  +Guid ChildId
+  +string Category
+  +DateTimeOffset OccurredAt
+  +string Summary
+}
+
+class GetApprovedPickupsQuery {
+  +Guid ChildId
+}
+class AddApprovedPickupCommand {
+  +Guid ChildId
+  +string Name
+  +string Relationship
+  +string? Phone
+  +bool PhotoIdOnFile
+}
+class RemoveApprovedPickupCommand {
+  +Guid ChildId
+  +Guid PickupId
+}
+class CreateIncidentDraftCommand {
+  +Guid ChildId
+  +DateTimeOffset OccurredAt
+  +string Category
+  +string Summary
+}
+
+class GetApprovedPickupsQueryHandler {
+  +Handle(query: GetApprovedPickupsQuery): Task<IReadOnlyList<ApprovedPickupDto>>
+}
+class AddApprovedPickupCommandHandler {
+  +Handle(command: AddApprovedPickupCommand): Task<Result<ApprovedPickupDto>>
+}
+class RemoveApprovedPickupCommandHandler {
+  +Handle(command: RemoveApprovedPickupCommand): Task<Result>
+}
+class SignOutChildCommandHandler {
+  +Handle(command: SignOutChildCommand): Task<Result<RosterRowDto>>
+}
+class CreateIncidentDraftCommandHandler {
+  +Handle(command: CreateIncidentDraftCommand): Task<Result<Guid>>
+}
+
+class PickupPermissions {
+  +CanManage(role: StaffRole): bool
+  +OwnsChild(linkToken: GuardianLink, childId: Guid): bool
+}
+
+interface IAuditLog {
+  +WriteAsync(entry: AuditEntry): Task
+}
+interface IHouseholdNotifier {
+  +NotifyAsync(householdId: Guid, template: string, args: object): Task
+}
+
+Child "1" --> "*" ApprovedPickup : may be collected by
+ApprovedPickup --> PickupAddedBy
+AttendanceRecord --> PickupConfirmation : stores at sign-out
+PickupConfirmation "0..1" --> "0..1" ApprovedPickup : references active
+PickupRefusal ..> IncidentDraft : pre-fills
+GetApprovedPickupsQueryHandler ..> GetApprovedPickupsQuery : handles
+AddApprovedPickupCommandHandler ..> AddApprovedPickupCommand : handles
+RemoveApprovedPickupCommandHandler ..> RemoveApprovedPickupCommand : handles
+CreateIncidentDraftCommandHandler ..> CreateIncidentDraftCommand : handles
+AddApprovedPickupCommandHandler --> ApprovedPickup : creates
+RemoveApprovedPickupCommandHandler --> ApprovedPickup : Remove()
+AddApprovedPickupCommandHandler ..> PickupPermissions
+RemoveApprovedPickupCommandHandler ..> PickupPermissions
+AddApprovedPickupCommandHandler ..> IAuditLog
+RemoveApprovedPickupCommandHandler ..> IAuditLog
+RemoveApprovedPickupCommandHandler ..> IHouseholdNotifier : texts guardian
+SignOutChildCommandHandler --> AttendanceRecord : SignOut()
+SignOutChildCommandHandler --> ApprovedPickup : verifies active
+SignOutChildCommandHandler ..> IHouseholdNotifier : someone-else notice
+CreateIncidentDraftCommandHandler --> IncidentDraft : creates
+@enduml

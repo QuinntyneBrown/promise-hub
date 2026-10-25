@@ -1,0 +1,57 @@
+@startuml
+title UML sequence behaviour — Apply retention per tenant
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "JobRunner" as runner
+  database "PromiseHubDbContext" as db
+  participant "AuditLog" as audit
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "TenantScope" as scope
+  participant "ApplyRetentionJob" as job
+  participant "RetentionPolicy" as policy
+  participant "Slip" as slip
+  participant "Household" as household
+end box
+runner -> scope : Open TenantScope(organizationId)
+runner -> job : Run(tenant, now)
+job -> db : Load RetentionPolicy
+db --> job : RetentionPolicy
+job -> policy : ConsentRetention
+alt ConsentRetention is a period
+  job -> db : Signed slips with EventDate older than the period
+  db --> job : Slips and signatures
+  loop each slip
+    job -> slip : Keep SignedCount aggregate
+    job -> db : Delete SlipSignature detail rows (L2-030 c2)
+    job -> audit : Record retention deletion
+  end
+else UntilDeletedByRequest
+  job -> job : Skip consent retention
+end
+job -> db : Households with PurgeAfter earlier than now
+db --> job : Soft-deleted households
+loop each household
+  job -> household : Purge children, guardians, consents, messages
+  job -> db : Hard delete (L2-030 c4)
+  job -> audit : Record purge
+end
+job -> db : Inactive households past InactiveFamilyRetention
+db --> job : Households
+job -> db : Anonymize as configured
+job --> runner : Done
+runner -> scope : Dispose
+@enduml

@@ -1,0 +1,67 @@
+@startuml
+title UML sequence behaviour — Create an event that needs a permission slip
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Program director" as actor
+box "Frontend — PromiseHub web app, events library" #E0F2FE
+  participant "EventFormPage" as page
+  participant "EventsApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "EventEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain (Events, Slips)" #ECFDF3
+  participant "CreateEventCommandHandler" as handler
+  participant "EventValidator" as validator
+  participant "Event" as entity
+  participant "CreateDraftSlipOnEventCreatedHandler" as drafter
+  participant "PermissionSlip" as slip
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+end box
+actor -> page : Fill name, program, times, place; Permission slip = Required; Create event
+page -> client : create(request)
+client -> endpoints : POST /events
+endpoints -> endpoints : Authenticate; organization from membership (L2-001); module on? (L2-005)
+endpoints -> handler : Send CreateEventCommand
+handler -> validator : Validate(command)
+alt invalid: missing name or end before start
+  validator --> handler : Field errors
+  handler --> endpoints : Validation failure
+  endpoints --> client : 400 ProblemDetails
+  client --> page : Field errors
+  page --> actor : Error summary and inline errors
+else valid
+  validator --> handler : Valid
+  handler -> db : Load Program (Active, same organization)
+  db --> handler : Program
+  handler -> entity : new Event(..., RequiresSlip = true)
+  entity --> handler : Event
+  opt RequiresSlip
+    handler -> drafter : Publish EventCreatedRequiringSlip (L2-012 AC2)
+    drafter -> slip : new PermissionSlip(eventId, Status = Draft, SignBy default = event date)
+    slip --> drafter : Draft slip
+    drafter -> db : Add slip
+    drafter --> handler : Draft created
+  end
+  handler -> db : SaveChanges in one unit of work
+  db --> handler : Commit result
+  handler --> endpoints : EventDto (slipStatus = Draft)
+  endpoints --> client : 201 Created
+  client --> page : EventDto
+  page --> actor : "Swim trip is on the calendar"; Write the slip; event shows "slip not written yet"
+end
+@enduml

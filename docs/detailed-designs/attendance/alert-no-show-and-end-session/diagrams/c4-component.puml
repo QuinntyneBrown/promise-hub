@@ -1,0 +1,37 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Alert no-show and end session
+
+Container(web, "PromiseHub web app", "Angular", "EndSessionDialog, AttendanceHistoryPage via AttendanceApi")
+System_Ext(sms, "SMS provider", "Texts and inbound webhook")
+Container_Boundary(api, "PromiseHub API") {
+  Component(ep, "AttendanceEndpoints", "Minimal API", "/sessions/{id}/end, /summary, /programs/{id}/attendance")
+  Component(hook, "GuardianSmsEndpoints", "Minimal API, anonymous", "/webhooks/sms/inbound with provider signature check")
+  Component(job, "SendNoShowAlertsJob", "Recurring job per tenant", "Selects NotYet rows past the delay, records alert, sends")
+  Component(reply, "HandleGuardianSmsReplyCommandHandler", "Command handler", "Matches reply to latest alert; 1 = on the way, 2 = absent")
+  Component(end, "EndSessionCommandHandler", "Command handler", "Resolves every roster row, closes the session")
+  Component(hist, "GetAttendanceHistoryQueryHandler", "Query handler", "Sessions with counts and Recorded / Not recorded / Missing")
+  Component(dom, "Session / AttendanceRecord / NoShowAlert", "Domain entities", "End(), MarkAbsentAtEnd(), SignOutAtEnd(), reply state")
+  Component(settings, "NotificationSettings", "Domain entity (settings)", "NoShowDelayMinutes per organization")
+  Component(runner, "JobRunner", "Infrastructure", "Per-tenant schedule, retry with backoff")
+  Component(smsport, "ISmsSender / IEmailSender", "Infrastructure", "Provider adapters, cap-aware")
+  Component(audit, "IAuditLog", "Infrastructure", "One entry per changed record")
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "Tenant-filtered persistence")
+}
+
+Rel(web, ep, "Calls", "JSON/HTTPS")
+Rel(sms, hook, "Posts inbound reply", "HTTPS")
+Rel(runner, job, "Runs on schedule per tenant")
+Rel(job, settings, "Reads delay")
+Rel(job, dom, "Reads NotYet rows, creates NoShowAlert")
+Rel(job, smsport, "Sends text or email")
+Rel(hook, reply, "Sends HandleGuardianSmsReplyCommand")
+Rel(reply, dom, "Updates NoShowAlert and record")
+Rel(ep, end, "Sends EndSessionCommand")
+Rel(ep, hist, "Sends GetAttendanceHistoryQuery")
+Rel(end, dom, "Calls Session.End")
+Rel(end, audit, "Writes entries")
+Rel(hist, db, "Reads", "EF Core")
+Rel(dom, db, "Persisted by", "EF Core")
+@enduml

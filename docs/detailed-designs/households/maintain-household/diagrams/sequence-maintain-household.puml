@@ -1,0 +1,83 @@
+@startuml
+title UML sequence behaviour — Add a family and edit medical details
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Admin" as actor
+box "Frontend — PromiseHub web app, households library" #E0F2FE
+  participant "FamiliesPage / ChildPage" as page
+  participant "AddFamilyDialog / EditMedicalDialog" as dialog
+  participant "HouseholdsApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "HouseholdEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain (Households)" #ECFDF3
+  participant "CreateHouseholdCommandHandler" as create
+  participant "UpdateMedicalCommandHandler" as medical
+  participant "Household / Child" as entity
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "AuditLog" as audit
+  database "PromiseHub database" as db
+end box
+== Add a family ==
+actor -> page : Add family
+page -> dialog : Open AddFamilyDialog
+actor -> dialog : Enter household name, one guardian, one child; save
+dialog -> client : create(household)
+client -> endpoints : POST /households (RequirePermission Household.Write)
+endpoints -> create : Send CreateHouseholdCommand
+create -> create : Validate: guardian has mobile or email, child has name and date of birth
+alt validation fails
+  create --> endpoints : ValidationFailed
+  endpoints --> client : 400 ProblemDetails
+  client --> dialog : Field errors
+  dialog --> actor : Inline errors
+else valid
+  create -> entity : Create Household in caller's organization; AddGuardian; AddChild (L2-011)
+  entity --> create : Aggregate
+  create -> audit : Record create (household, guardian, child) — L2-032
+  create -> db : Save in one unit of work
+  db --> create : Commit
+  create --> endpoints : Household id
+  endpoints --> client : 201
+  client --> dialog : Created
+  dialog --> actor : Household appears in Families with child and guardian linked (L2-011)
+end
+== Edit medical details ==
+actor -> page : Open child, Edit medical
+page -> dialog : Open EditMedicalDialog
+actor -> dialog : Change allergies and medication; save
+dialog -> client : updateMedical(childId, details)
+client -> endpoints : PUT /children/{id}/medical (RequirePermission Child.Medical.Write)
+endpoints -> medical : Send UpdateMedicalCommand
+medical -> db : Load Child within caller's organization (L2-001)
+db --> medical : Child or none
+alt child not found in this organization
+  medical --> endpoints : NotFound
+  endpoints --> client : 404 ProblemDetails
+  client --> dialog : Error
+else found
+  medical -> entity : UpdateMedical(details)
+  entity --> medical : Previous MedicalDetails
+  medical -> audit : Record medical update with editor, time, before and after (L2-011, L2-032)
+  medical -> db : Save in one unit of work
+  db --> medical : Commit
+  medical --> endpoints : Done
+  endpoints --> client : 204
+  client --> dialog : Saved
+  dialog --> actor : Medical card updated; Quick Card reflects it on next load (L2-011)
+end
+@enduml

@@ -1,0 +1,19 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Manage approved pickups
+
+Person(staff, "Site lead / admin", "Maintains the list from the child profile; confirms pickups at sign-out")
+Person_Ext(guardian, "Guardian", "Maintains the list from the family page; confirms by phone")
+Person_Ext(adult, "Adult at the door", "Approved, or someone else")
+System(ph, "PromiseHub", "Pickup: approved adults per child, checked at sign-out")
+System_Ext(sms, "SMS provider", "Texts the guardian on removal and someone-else sign-out")
+System_Ext(email, "Email provider", "Channel for email-only households")
+
+Rel(staff, ph, "Adds, removes, confirms pickups in", "HTTPS")
+Rel(guardian, ph, "Adds and removes pickups via family link", "HTTPS")
+Rel(staff, guardian, "Calls before releasing to someone else", "Phone")
+Rel(adult, staff, "Presents at sign-out")
+Rel(ph, sms, "Sends notice via", "HTTPS API")
+Rel(ph, email, "Sends notice via", "API")
+@enduml

@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Set up an organization
+
+Person(admin, "First admin", "Configures the new organization")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "Wizard pages in the organizations library; shell routes")
+  Container(api, "PromiseHub API", "ASP.NET Core minimal API", "Onboarding endpoints; Application and Domain layers")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "Organizations, onboarding progress, audit log")
+}
+System_Ext(email, "Email provider", "Welcome email, invitations")
+System_Ext(sms, "SMS provider", "First slip")
+
+Rel(admin, web, "Uses", "HTTPS")
+Rel(web, api, "Calls /onboarding, /modules, /programs, /imports, /staff, /slips", "JSON/HTTPS")
+Rel(api, db, "Reads and writes", "EF Core")
+Rel(api, email, "Sends", "SMTP/API")
+Rel(api, sms, "Sends", "API")
+@enduml

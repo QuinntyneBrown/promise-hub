@@ -1,0 +1,160 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Report and review an incident
+
+enum IncidentCategory {
+  Injury
+  IllnessOrAllergicReaction
+  Behaviour
+  PickupOrSafeguarding
+  Other
+}
+
+enum IncidentSeverity {
+  Minor
+  Moderate
+  Serious
+}
+
+enum IncidentStatus {
+  Draft
+  NeedsReview
+  Open
+  Closed
+}
+
+enum ReviewOutcome {
+  ClosedNoAction
+  ClosedPolicyChange
+  KeepOpen
+}
+
+enum GuardianContactStatus {
+  CalledAndReached
+  LeftMessage
+  NotYetContacted
+}
+
+class GuardianContact <<value object>> {
+  +GuardianContactStatus Status
+  +Guid? GuardianId
+  +DateTimeOffset? ContactedAt
+}
+
+class IncidentChild {
+  +Guid ChildId
+  +string DisplayName
+}
+
+class IncidentNote {
+  +Guid AuthorId
+  +string Text
+  +DateTimeOffset WrittenAt
+}
+
+class Incident {
+  +Guid Id
+  +Guid OrganizationId
+  +IncidentCategory Category
+  +DateTimeOffset OccurredAt
+  +string Place
+  +string WhatHappened
+  +string ActionTaken
+  +GuardianContact GuardianContact
+  +IncidentSeverity Severity
+  +IncidentStatus Status
+  +Guid ReporterId
+  +DateTimeOffset ReportedAt
+  +Guid? SessionId
+  +string Witnesses
+  +bool NamesRestricted
+  +Guid? ReviewedBy
+  +DateTimeOffset? ReviewedAt
+  +ReviewOutcome? ReviewOutcome
+  +Submit(now: DateTimeOffset): void
+  +Review(actor: Guid, note: string, outcome: ReviewOutcome, now: DateTimeOffset): void
+  +AddNote(actor: Guid, text: string, now: DateTimeOffset): void
+  +Reopen(actor: Guid, now: DateTimeOffset): void
+}
+
+class ReportIncidentCommand {
+  +IncidentCategory Category
+  +Guid[] ChildIds
+  +DateTimeOffset OccurredAt
+  +string Place
+  +string WhatHappened
+  +string ActionTaken
+  +GuardianContact GuardianContact
+  +IncidentSeverity Severity
+  +bool NamesRestricted
+}
+
+class ReviewIncidentCommand {
+  +Guid IncidentId
+  +string Note
+  +ReviewOutcome Outcome
+}
+
+class GetIncidentQuery {
+  +Guid IncidentId
+}
+
+class ReportIncidentCommandHandler {
+  +Handle(command: ReportIncidentCommand): Task<Result<IncidentDto>>
+}
+
+class GetIncidentQueryHandler {
+  +Handle(query: GetIncidentQuery): Task<Result<IncidentDto>>
+}
+
+class ReviewIncidentCommandHandler {
+  +Handle(command: ReviewIncidentCommand): Task<Result>
+}
+
+class IncidentAccessPolicy {
+  +CanRead(incident: Incident, actor: Actor): bool
+  +CanSeeNames(incident: Incident, actor: Actor): bool
+  +CanReview(actor: Actor): bool
+}
+
+class IncidentRouter {
+  +NotifySupervisors(incident: Incident): Task
+  +NotifyReporter(incident: Incident): Task
+}
+
+interface IAuditLog {
+  +Record(entry: AuditEntry): Task
+}
+
+Incident --> IncidentCategory : has
+Incident --> IncidentSeverity : has
+Incident --> IncidentStatus : has
+Incident --> ReviewOutcome : has
+Incident *-- GuardianContact : has
+Incident "1" *-- "1..*" IncidentChild : involves
+Incident "1" *-- "*" IncidentNote : notes
+GuardianContact --> GuardianContactStatus : has
+ReportIncidentCommandHandler ..> ReportIncidentCommand : handles
+ReportIncidentCommandHandler --> Incident : creates / Submit()
+ReportIncidentCommandHandler ..> IncidentRouter : notifies supervisors
+ReportIncidentCommandHandler ..> IAuditLog : records
+GetIncidentQueryHandler ..> GetIncidentQuery : handles
+GetIncidentQueryHandler ..> IncidentAccessPolicy : CanRead / CanSeeNames
+GetIncidentQueryHandler ..> IAuditLog : records view
+ReviewIncidentCommandHandler ..> ReviewIncidentCommand : handles
+ReviewIncidentCommandHandler ..> IncidentAccessPolicy : CanReview
+ReviewIncidentCommandHandler --> Incident : loads / Review()
+ReviewIncidentCommandHandler ..> IncidentRouter : notifies reporter
+ReviewIncidentCommandHandler ..> IAuditLog : records
+@enduml

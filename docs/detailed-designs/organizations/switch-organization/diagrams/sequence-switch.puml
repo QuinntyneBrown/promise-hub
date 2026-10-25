@@ -1,0 +1,70 @@
+@startuml
+title UML sequence behaviour — Switch the active organization
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Multi-organization staff member" as actor
+box "Frontend — organizations library in the shell top bar" #E0F2FE
+  participant "OrganizationSwitcherComponent" as switcher
+  participant "SwitchOrganizationAction" as action
+  participant "MembershipsApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "MembershipEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "ListMyMembershipsQueryHandler" as listHandler
+  participant "ActivateMembershipCommandHandler" as activateHandler
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "SessionStore" as session
+  participant "AuditLog" as audit
+end box
+actor -> switcher : Sign in; shell loads
+switcher -> client : listMine()
+client -> endpoints : GET /me/memberships
+endpoints -> listHandler : Send ListMyMembershipsQuery
+listHandler -> db : Memberships by PersonId (IgnoreQueryFilters)
+db --> listHandler : Memberships
+listHandler --> endpoints : MembershipDto list
+endpoints --> client : 200
+client --> switcher : Memberships
+alt one membership
+  switcher --> actor : No switcher rendered (L2-002 c3)
+else more than one membership
+  switcher --> actor : Switcher with active organization checked (L2-002 c1)
+  actor -> switcher : Pick another organization
+  switcher -> action : switch(membershipId)
+  action -> client : activate(membershipId)
+  client -> endpoints : POST /me/memberships/{id}/activate
+  endpoints -> activateHandler : Send ActivateMembershipCommand
+  activateHandler -> db : Load membership
+  db --> activateHandler : Membership
+  alt membership not the caller's, inactive, or organization Suspended
+    activateHandler --> endpoints : NotFound or Forbidden
+    endpoints --> client : 404 or 403 ProblemDetails
+    client --> action : Error
+    action --> actor : Inline error; active organization unchanged
+  else valid
+    activateHandler -> audit : Record switch (person, from, to)
+    activateHandler --> endpoints : Membership
+    endpoints -> session : Set ActiveMembershipId
+    endpoints --> client : 204
+    client --> action : Done
+    action -> action : Full application reload to today (L2-002 c2)
+    action --> actor : Today for the chosen organization with that role
+  end
+end
+@enduml

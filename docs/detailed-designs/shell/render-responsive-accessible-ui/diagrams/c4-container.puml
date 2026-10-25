@@ -1,0 +1,17 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Render responsive, accessible UI
+
+Person(staff, "Staff member", "Any viewport")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular (promisehub, feature libraries, guardian)", "Composes screens from the component library")
+  Container(components, "Component library", "Angular library (frontend/projects/components)", "Design tokens, layout primitives, dialogs, toasts, theme")
+  Container(e2e, "Playwright suite", "TypeScript, Chromium only", "axe, viewport, keyboard and layout specs with a fake backend")
+  Container(api, "PromiseHub API", "ASP.NET Core", "Faked in e2e; real in production")
+}
+Rel(staff, web, "Uses", "HTTPS")
+Rel(web, components, "Imports components and tokens")
+Rel(e2e, web, "Drives at 360, 576, 768, 992, 1200 and 1600 px")
+Rel(web, api, "Calls", "JSON/HTTPS")
+@enduml

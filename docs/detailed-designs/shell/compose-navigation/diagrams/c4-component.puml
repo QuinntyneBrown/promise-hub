@@ -1,0 +1,35 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Compose navigation
+
+Container_Boundary(web, "PromiseHub web app (promisehub application)") {
+  Component(shell, "ShellComponent", "Angular component", "Hosts bars and router outlet")
+  Component(nav, "NavigationModelService", "Angular service", "Derives primary, More and tab items from modules and role")
+  Component(topbar, "TopBarComponent", "Angular component", "Top bar from 768 px; search from 1200 px")
+  Component(tabbar, "TabBarComponent", "Angular component", "Phone tab bar under 576 px")
+  Component(more, "MoreMenuComponent", "CDK Dialog drawer", "main-menu")
+  Component(account, "AccountMenuComponent", "Menu", "account-menu")
+  Component(sheet, "BottomSheetDialogService", "Angular service", "Bottom sheet on phones, focus trap, inert page")
+  Component(guard, "ModuleRouteGuard", "CanMatch guard", "Redirects routes of modules that are off to Today")
+  Component(modulesApi, "ModulesApi", "Typed client (frontend/projects/api)", "GET /organizations/current/modules")
+}
+Container_Boundary(api, "PromiseHub API") {
+  Component(endpoints, "ModulesEndpoints", "Minimal API", "Authenticated endpoint, no business logic")
+  Component(handler, "GetModuleConfigurationQueryHandler", "Application handler", "Loads OrganizationModules for the tenant")
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "OrganizationModules filtered by organization id")
+}
+Rel(shell, topbar, "Renders")
+Rel(shell, tabbar, "Renders")
+Rel(topbar, nav, "Reads primary and more signals")
+Rel(tabbar, nav, "Reads tabs signal")
+Rel(topbar, more, "Opens")
+Rel(tabbar, more, "Opens")
+Rel(more, sheet, "Presented by")
+Rel(topbar, account, "Opens")
+Rel(guard, nav, "Checks module is on")
+Rel(nav, modulesApi, "Loads once per session")
+Rel(modulesApi, endpoints, "GET", "JSON/HTTPS")
+Rel(endpoints, handler, "Sends GetModuleConfigurationQuery")
+Rel(handler, db, "Reads", "EF Core")
+@enduml

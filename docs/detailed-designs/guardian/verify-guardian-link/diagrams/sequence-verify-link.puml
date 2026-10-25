@@ -1,0 +1,129 @@
+@startuml
+title UML sequence behaviour — Verify a guardian device with a code
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Guardian" as actor
+box "Frontend — PromiseHub web app, guardian library" #E0F2FE
+  participant "GuardianVerifyGate" as gate
+  participant "GuardianIdentifyPage" as identify
+  participant "Target guardian page" as target
+  participant "GuardianAuthApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "GuardianAuthEndpoints" as endpoints
+  participant "GuardianLinkFilter" as filter
+end box
+box "Backend — PromiseHub Application and Domain (Guardian)" #ECFDF3
+  participant "RequestGuardianCodeCommandHandler" as request
+  participant "VerifyGuardianCodeCommandHandler" as verify
+  participant "GuardianLink / GuardianVerification" as link
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "ITokenGenerator" as token
+  participant "ISmsSender / IEmailSender" as sender
+  participant "AuditLog" as audit
+  database "PromiseHub database" as db
+end box
+actor -> gate : Open /g/... link
+gate -> client : status(linkToken)
+client -> endpoints : GET /g/auth/status (link token, device cookie)
+endpoints -> filter : Resolve
+filter -> db : Load GuardianLink by token hash; load TrustedGuardianDevice by cookie hash
+db --> filter : Link, device or none
+alt link unknown or revoked (contact changed) — L2-026
+  filter --> client : 410 ProblemDetails
+  client --> gate : Revoked
+  gate --> actor : Expired state, "Text me a code" to the masked current contact (guardian-update/expired)
+else trusted device for the same household within 30 days — L2-026
+  filter --> client : 200 { verified }
+  client --> gate : Verified
+  gate -> target : Render target page without a code
+else verification required
+  filter --> client : 401 ProblemDetails type "verification-required"
+  client --> gate : Needs code
+  gate -> identify : Route to enroll (default)
+  actor -> identify : Enter number or email on file
+  identify -> client : requestCode(linkToken, contact)
+  client -> endpoints : POST /g/auth/code
+  endpoints -> request : Send RequestGuardianCodeCommand
+  request -> db : Load link, household guardians
+  db --> request : Link, contacts
+  request -> link : Check LockedUntil
+  alt link locked
+    request --> endpoints : LockedOut
+    endpoints --> client : 423 ProblemDetails "try again in 15 minutes"
+    client --> identify : Locked
+    identify --> actor : Locked message
+  else contact matches a guardian on file
+    request -> token : CreateSixDigitCode and hash
+    token --> request : code, hash
+    request -> link : Create GuardianVerification, ExpiresAt = now + 10 minutes (L2-026)
+    request -> sender : Send code to that contact
+    sender --> request : Queued
+    request -> audit : Record code request
+    request -> db : Save
+    db --> request : Commit
+    request --> endpoints : Sent
+    endpoints --> client : 202 (same shape as non-match)
+    client --> identify : Code step
+    identify --> actor : "Code texted to 905-555-0142, valid for 10 minutes" (enroll/code)
+  else contact does not match
+    request -> audit : Record non-matching request
+    request --> endpoints : Sent (identical response, nothing sent)
+    endpoints --> client : 202
+    client --> identify : Code step
+  end
+  actor -> identify : Enter six-digit code
+  identify -> client : verifyCode(linkToken, code)
+  client -> endpoints : POST /g/auth/verify
+  endpoints -> verify : Send VerifyGuardianCodeCommand
+  verify -> db : Load link and latest verification
+  db --> verify : Link, verification
+  alt code expired (older than 10 minutes)
+    verify --> endpoints : Expired
+    endpoints --> client : 400 ProblemDetails
+    client --> identify : Expired
+    identify --> actor : Offer "Send a new code"
+  else wrong code
+    verify -> link : RecordFailure()
+    alt third failure
+      verify -> link : Lock(now + 15 minutes) — L2-026
+      verify -> audit : Record lockout
+      verify --> endpoints : LockedOut
+      endpoints --> client : 423 ProblemDetails
+      client --> identify : Locked
+      identify --> actor : Locked for 15 minutes
+    else fewer than three failures
+      verify -> db : Save attempt count
+      verify --> endpoints : WrongCode
+      endpoints --> client : 400 ProblemDetails
+      client --> identify : Wrong code
+      identify --> actor : Inline error
+    end
+  else code correct
+    verify -> link : MarkVerified(now)
+    verify -> token : CreateToken(128) for device
+    token --> verify : device token, hash
+    verify -> db : Insert TrustedGuardianDevice, ExpiresAt = now + 30 days (L2-026)
+    db --> verify : Commit
+    verify -> audit : Record verification
+    verify --> endpoints : Verified
+    endpoints --> client : 204 with HttpOnly device cookie scoped to /g/
+    client --> gate : Verified
+    gate -> target : Render target page
+    target --> actor : Guardian page
+  end
+end
+@enduml

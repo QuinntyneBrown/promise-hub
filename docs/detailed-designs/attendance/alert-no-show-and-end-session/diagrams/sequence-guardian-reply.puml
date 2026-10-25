@@ -1,0 +1,65 @@
+@startuml
+title UML sequence behaviour — Handle a guardian reply
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Guardian" as guardian
+participant "SMS provider" as provider
+box "Backend — PromiseHub API" #D1FADF
+  participant "GuardianSmsEndpoints" as hook
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "HandleGuardianSmsReplyCommandHandler" as h
+  participant "NoShowAlert" as alert
+  participant "AttendanceRecord" as rec
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "IAuditLog" as audit
+end box
+box "Frontend — PromiseHub web app, attendance library" #E0F2FE
+  participant "CheckInPage" as page
+end box
+
+guardian -> provider : Reply "2"
+provider -> hook : POST /webhooks/sms/inbound {from, body, messageId}
+hook -> hook : Verify provider signature (anonymous route)
+alt Signature invalid
+  hook --> provider : 401
+else Signature valid
+  hook -> h : Send HandleGuardianSmsReplyCommand
+  h -> db : Resolve phone to guardian and organization
+  db --> h : Guardian, household
+  h -> db : Latest NoShowAlert for household with Reply None in session window
+  db --> h : Alert (or none)
+  alt No open alert for this number
+    h -> db : Store unmatched inbound for staff follow-up
+    h --> hook : Accepted
+  else Body is "1"
+    h -> alert : ApplyReply("1") -> OnTheWay
+    h -> db : Save; row stays NotYet, roster meta "on the way"
+    h --> hook : Accepted
+  else Body is "2" (L2-018)
+    h -> alert : ApplyReply("2") -> Absent
+    h -> rec : MarkAbsentByGuardian(at) — GuardianInformed = true
+    rec --> h : AttendanceEvent MarkedAbsent
+    h -> audit : Write attendance change
+    h -> db : Save in one unit of work
+    db --> h : Commit
+    h --> hook : Accepted
+  end
+  hook --> provider : 200
+end
+page -> page : Next refresh shows Kevin "Absent"; no further alert or absence text is sent
+@enduml

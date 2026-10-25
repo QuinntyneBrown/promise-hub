@@ -1,0 +1,39 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Authorize a request
+
+Container(web, "PromiseHub web app", "Angular", "PermissionsApi, StaffApi, ForbiddenPage, ChangeRoleDialog, RemoveStaffDialog")
+Container_Boundary(api, "PromiseHub API") {
+  Component(middleware, "SessionMiddleware", "ASP.NET Core middleware", "Resolves session and membership; builds CallerContext")
+  Component(filter, "RequirePermission", "Endpoint filter", "Answers 401 without session, 403 without permission")
+  Component(endpoints, "Feature endpoints", "Minimal API groups", "QuickCardEndpoints, IncidentEndpoints, SettingsEndpoints, StaffEndpoints")
+  Component(authz, "IAuthorizationService", "Application service", "Require(permission) / Has(permission) inside handlers")
+  Component(fieldpolicy, "ChildFieldPolicy", "Application projection", "Removes medical fields for roles without Child.Medical.Read")
+  Component(rowscope, "RowScope", "Query extension", "Narrows incidents to the reporter for Incident.ReadOwn")
+  Component(changerole, "ChangeRoleCommandHandler", "Application handler", "Changes a membership role and audits")
+  Component(remove, "RemoveStaffCommandHandler", "Application handler", "Removes a membership and revokes sessions")
+  Component(membership, "Membership / RolePermissionMap", "Domain", "Role per organization and the permissions it grants")
+  Component(store, "ISessionStore", "Infrastructure service", "Session and membership lookup, revocation")
+  Component(audit, "AuditLog", "Infrastructure writer", "Role change and removal entries")
+  ComponentDb(db, "PromiseHub database", "EF Core", "Memberships, sessions, tenant records, audit")
+}
+Rel(web, middleware, "Every request", "HTTPS")
+Rel(middleware, store, "Resolve session and membership")
+Rel(middleware, membership, "Expand role into permissions")
+Rel(middleware, filter, "Passes CallerContext")
+Rel(filter, endpoints, "Allows when permission held")
+Rel(endpoints, authz, "Handlers re-check permission")
+Rel(endpoints, fieldpolicy, "Project child DTOs")
+Rel(endpoints, rowscope, "Scope incident queries")
+Rel(endpoints, changerole, "Sends ChangeRoleCommand")
+Rel(endpoints, remove, "Sends RemoveStaffCommand")
+Rel(changerole, membership, "Loads and mutates")
+Rel(remove, membership, "Loads and mutates")
+Rel(remove, store, "Revokes sessions")
+Rel(changerole, audit, "Writes entry")
+Rel(remove, audit, "Writes entry")
+Rel(store, db, "Reads and writes", "EF Core")
+Rel(audit, db, "Appends", "EF Core")
+Rel(rowscope, db, "Filtered query", "EF Core")
+@enduml

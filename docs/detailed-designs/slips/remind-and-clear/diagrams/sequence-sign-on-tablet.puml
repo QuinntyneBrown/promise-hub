@@ -1,0 +1,79 @@
+@startuml
+title UML sequence behaviour — Day-of roster and sign on tablet
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Site lead" as actor
+actor "Guardian at the bus door" as guardian
+box "Frontend — PromiseHub web app, attendance and slips libraries" #E0F2FE
+  participant "CheckInPage (day-of)" as page
+  participant "SignOnTabletDialog" as dialog
+  participant "SlipClearanceApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "SlipClearanceEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain (Slips)" #ECFDF3
+  participant "GetDayOfRosterQueryHandler" as dayof
+  participant "SignOnTabletCommandHandler" as sign
+  participant "SignatureRecord" as record
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "AuditLog" as audit
+  participant "GuardianMessenger" as messenger
+end box
+actor -> page : Open check-in on the trip morning
+page -> client : dayOfRoster(sessionId)
+client -> endpoints : GET /sessions/{sessionId}/clearance
+endpoints -> endpoints : Authenticate; site lead or above (L2-007); Slips and Roll Call on (L2-005)
+endpoints -> dayof : Send GetDayOfRosterQuery
+dayof -> db : Roster joined with Active signatures, declines, attendance
+db --> dayof : Rows
+dayof -> dayof : Derive ClearanceStatus; counts; MissingSlip first (L2-016 AC2)
+dayof --> endpoints : DayOfRoster (cleared 41, missing 7, on the bus 29)
+endpoints --> client : 200 OK
+client --> page : DayOfRoster
+page --> actor : Totals, warning, missing children first with "Sign on tablet"
+actor -> page : Tap "Sign on tablet" on a missing row
+page -> dialog : Navigate to sign-on-tablet route (household)
+dialog --> guardian : Event block, consent sentence, name field
+guardian -> dialog : Type full name; answer photo question; Sign
+dialog -> client : signOnTablet(slipId, householdId, { typedName, answers })
+client -> endpoints : POST /slips/{id}/sign-on-tablet
+endpoints -> sign : Send SignOnTabletCommand
+sign -> db : Load household guardians, children in the event, slip version
+db --> sign : Context
+alt typed name matches no guardian
+  sign --> endpoints : Rejected (as L2-015 AC4)
+  endpoints --> client : 400 ProblemDetails (sig)
+  client --> dialog : Field error
+  dialog --> guardian : "The guardian needs to type their full name"
+else name matches
+  loop each child of the household in the event
+    sign -> record : new SignatureRecord(typedName, now, Device = "staff tablet", language, text hash, witness = site lead) (L2-016 AC3)
+    record --> sign : Record
+  end
+  sign -> db : Children cleared at once; SaveChanges
+  db --> sign : Commit result
+  sign -> audit : Record tablet signature (L2-032)
+  audit --> sign : Recorded
+  sign -> messenger : QueueSignedCopy to the household's mobile
+  messenger --> sign : Queued
+  sign --> endpoints : Result
+  endpoints --> client : 200 OK
+  client --> dialog : Done
+  dialog --> actor : "Kevin and Emily are cleared. Copy texted"; roster rows move to Cleared
+end
+@enduml

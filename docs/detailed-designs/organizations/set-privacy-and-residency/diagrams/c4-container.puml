@@ -1,0 +1,22 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Set privacy and residency
+
+Person(admin, "Organization admin", "Sets retention; fulfils requests")
+Person_Ext(guardian, "Guardian", "Submits a data request")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "SettingsPrivacyPage; guardian library GuardianDataRequestDialog")
+  Container(api, "PromiseHub API", "ASP.NET Core minimal API", "Privacy, guardian data request and platform region endpoints; job runner")
+  ContainerDb(db, "PromiseHub database (organization's region)", "SQL via EF Core", "RetentionPolicies, DataRequests, households, slips, audit log")
+  ContainerDb(files, "File storage (organization's region)", "Infrastructure", "Household exports")
+}
+System_Ext(email, "Email provider", "Delivers verified export link and admin notifications")
+
+Rel(admin, web, "Uses", "HTTPS")
+Rel(guardian, web, "Opens guardian page", "HTTPS")
+Rel(web, api, "Calls /privacy and /g/{token}/data-requests", "JSON/HTTPS")
+Rel(api, db, "Reads and writes", "EF Core")
+Rel(api, files, "Writes exports")
+Rel(api, email, "Sends", "SMTP/API")
+@enduml

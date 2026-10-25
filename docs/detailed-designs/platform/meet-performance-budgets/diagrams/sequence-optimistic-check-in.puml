@@ -1,0 +1,59 @@
+@startuml
+title UML sequence behaviour — Check-in within the 300 ms budget
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Site lead" as actor
+box "Frontend — PromiseHub web app (attendance library)" #E0F2FE
+  participant "RosterListComponent" as roster
+  participant "CheckInStore" as store
+  participant "AttendanceApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "AttendanceEndpoints" as endpoints
+  participant "RequestMetrics" as metrics
+end box
+box "Backend — PromiseHub Application and Domain (Attendance)" #ECFDF3
+  participant "CheckInChildCommandHandler" as handler
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+end box
+actor -> roster : Tap Check in on a virtualized row
+roster -> store : checkIn(childId)
+store -> store : applyOptimistic(childId)
+store --> roster : Row shows checked in (under 300 ms, L2-033)
+roster --> actor : Total updates live
+store -> client : checkIn(sessionId, childId)
+client -> endpoints : POST /attendance/check-ins
+endpoints -> handler : Send CheckInChildCommand
+handler -> db : Load session and child (tenant index seek)
+db --> handler : State
+alt Valid
+  handler -> db : Insert AttendanceRecord; SaveChanges (one unit of work)
+  db --> handler : Committed
+  handler --> endpoints : AttendanceRecordDto
+  endpoints -> metrics : Record duration (p95 under 1 s, L2-033)
+  endpoints --> client : 201 JSON
+  client --> store : Server record
+  store --> roster : Clear pending flag
+else Refused (4xx)
+  handler --> endpoints : Result failure
+  endpoints -> metrics : Record duration and status
+  endpoints --> client : 4xx ProblemDetails
+  client --> store : Error
+  store -> store : revert(childId, reason)
+  store --> roster : Row returns to not checked in with inline message
+end
+@enduml

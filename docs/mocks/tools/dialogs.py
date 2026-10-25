@@ -74,7 +74,7 @@ def simple(sid, title, opens_from, reqs, desc, body_fn, primary, *, icon_name=""
 
 
 # ------------------------------------------------------------------ Check-in and pickup
-simple("check-in-sheet", "Check in Kevin Tran", "check-in", [R_ROLL, "PRD-QUICKCARD"], "Grade 3 · not yet here · no medical notes",
+simple("check-in-sheet", "Check in Kevin Tran", "check-in", [R_ROLL, "L1-008"], "Grade 3 · not yet here · no medical notes",
        lambda e: f'<div class="cluster">{avatar(CHILD["kevin"], "lg")}<div><div class="section-title">Kevin Tran</div><div class="text-muted">8 · Tran household · Linh Tran 289-555-0119</div></div></div>'
                  + fieldset("Arrived", choice("arr", "Now, 4:14 pm", checked=True) + choice("arr", "Earlier", small="Pick a time") + choice("arr", "Mark absent instead", small="Guardian is texted"))
                  + f'<p class="hint"><a href="{page("quick-card", "empty")}">Open Kevin’s Quick Card</a></p>',
@@ -106,7 +106,7 @@ simple("add-walk-in", "Add a walk-in to tonight", "check-in", [R_ROLL, R_ENROLL]
        "Check in for tonight", base_state="no-results", icon_name="plus", invalid_err={"g": "Enter a guardian name and phone number."})
 
 # ------------------------------------------------------------------ Enrollment and roster
-simple("open-enrollment", "Open enrollment for After-School Tutoring", "program", [R_ENROLL, "PRD-NFR-TTV"], "One link and a QR code for all families.",
+simple("open-enrollment", "Open enrollment for After‑School Tutoring", "program", [R_ENROLL, "L1-004"], "One link and a QR code for all families.",
        lambda e: f'<div class="two-col">{field("cap", "Places", type_="number", value="50", inputmode="numeric", error=(e or {}).get("cap", ""))}{field("close", "Close on", type_="date", value="2026-09-30", optional=True, help_="Leave empty to keep it open.")}</div>'
                  + fieldset("When full", choice("full", "Waitlist in order of application", checked=True) + choice("full", "Close the link"))
                  + fieldset("Review", choice("rev", "I accept each enrollment", small="Listed under Waiting review", checked=True) + choice("rev", "Accept automatically until full")),
@@ -127,7 +127,7 @@ simple("bulk-review", "Accept 2 enrollments?", "roster", [R_ENROLL, R_NOTIFY], "
        lambda e: ul_list([list_item("Nikolai Petrov", "Elena Petrova · returning", person=CHILD["nikolai"]), list_item("Omar Siddiqui", "Farah Siddiqui · new family", person=CHILD["omar"])]) + textarea("why", "Note to both guardians", rows=2, optional=True, value="Welcome! Tutoring runs Mon–Thu, 4–6 pm."),
        "Accept 2", base_state="selected", icon_name="check", na={"invalid": "The note is optional."})
 
-simple("enroll-in-program", "Add a child to After-School Tutoring", "roster", [R_ENROLL], "Search existing children first.",
+simple("enroll-in-program", "Add a child to After‑School Tutoring", "roster", [R_ENROLL], "Search existing children first.",
        lambda e: field("q", "Child’s name", value="Grace Ad", autofocus=True, error=(e or {}).get("q", "")) + ul_list([list_item("Grace Adeyemi, 11", "Adeyemi household · waiting review for this program", person=CHILD["grace"], end=btn("Choose", "", size="sm"))]) + f'<p class="hint">Not them? <a href="{dialog("add-family")}">Create a new family</a>.</p>',
        "Add to roster", icon_name="plus", invalid_err={"q": "Choose a child from the list, or create a new family."})
 
@@ -139,7 +139,7 @@ simple("add-family", "Add a family", "families", [R_ENROLL], "The guardian finis
        lambda e: field("g", "Guardian’s name", value="" if e else "Farah Siddiqui", required=True, autofocus=True, error=(e or {}).get("g", "")) + field("ph", "Mobile", type_="tel", value="905-555-0170", inputmode="tel", error=(e or {}).get("ph", ""), help_="Phone or email.") + field("em", "Email", type_="email", value="", optional=True) + select("lang", "Language", ["English", "Spanish", "French"], selected="English") + switch("send", "Text them the enrollment link now", checked=True),
        "Add family", icon_name="users", invalid_err={"g": "Enter the guardian’s name.", "ph": "Enter a mobile number or an email."})
 
-simple("add-child", "Add a child to the Rivera household", "household", [R_ENROLL, "PRD-QUICKCARD"], "Carmen can add allergies and pickups from her link.",
+simple("add-child", "Add a child to the Rivera household", "household", [R_ENROLL, "L1-008"], "Carmen can add allergies and pickups from her link.",
        lambda e: field("name", "Child’s name", value="" if e else "Lucía Rivera", required=True, autofocus=True, error=(e or {}).get("name", "")) + f'<div class="two-col">{field("dob", "Date of birth", type_="date", value="2020-01-18", required=True, error=(e or {}).get("dob", ""))}{field("school", "School and grade", value="Bennetto Elementary, Kindergarten", optional=True)}</div>' + textarea("allergy", "Allergies and medical", rows=2, placeholder="Write “none” if there are none", optional=True) + switch("ask", "Text Carmen to confirm allergies and pickups", checked=True),
        "Add child", icon_name="plus", invalid_err={"name": "Enter the child’s name.", "dob": "Enter a date of birth."})
 
@@ -155,7 +155,7 @@ simple("edit-child", "Edit Mateo Rivera", "child", [R_ENROLL, R_DATA], "Medical 
        lambda e: field("name", "Name", value="Mateo Rivera", required=True, error=(e or {}).get("name", "")) + f'<div class="two-col">{field("dob", "Date of birth", type_="date", value="2017-03-14", required=True)}{field("school", "School and grade", value="Bennetto Elementary, Grade 4")}</div>' + textarea("notes", "Notes for staff", value="Quiet first ten minutes; sits with Jordan.", rows=2, optional=True),
        "Save", icon_name="edit", invalid_err={"name": "Enter the child’s name."})
 
-simple("edit-medical", "Edit Mateo’s medical information", "child", ["PRD-QUICKCARD", R_PRIVACY, R_DATA], "Carmen Rivera is told. Logged.",
+simple("edit-medical", "Edit Mateo’s medical information", "child", ["L1-008", R_PRIVACY, R_DATA], "Carmen Rivera is told. Logged.",
        lambda e: textarea("allergy", "Allergies", value="Peanuts (anaphylaxis); tree nuts (hives)", rows=2, error=(e or {}).get("allergy", "")) + textarea("meds", "Medication", value="EpiPen 0.3 mg, carried in backpack", rows=2) + textarea("cond", "Conditions", value="None", rows=1) + field("doc", "Doctor", value="Dr. Amrita Sethi · 905-555-0100") + fieldset("Quick Card alert", choice("sev", "Red alert on the Quick Card", small="Life-threatening", checked=True) + choice("sev", "List it under Medical only")),
        "Save and notify Carmen", icon_name="heart-pulse", invalid_err={"allergy": "Write the allergies, or “none”."})
 
@@ -184,7 +184,7 @@ simple("child-actions", "More actions for Mateo Rivera", "child", [R_ENROLL, R_D
                   f'<li role="none"><button class="menu__item menu__item--danger" role="menuitem" type="button" data-href="{dialog("remove-from-roster")}">{icon("x-circle")}Remove from a roster…</button></li></ul>'),
        "Close", form=False, cancel="Close", na={"busy": "A menu has no submit.", "invalid": "A menu has no inputs.", "failed": "A menu makes no server call."})
 
-simple("program-actions", "More actions for After-School Tutoring", "program", [R_ENROLL, R_REPORTS], "",
+simple("program-actions", "More actions for After‑School Tutoring", "program", [R_ENROLL, R_REPORTS], "",
        lambda e: ('<ul class="menu menu--static" role="menu" aria-label="Program actions">'
                   f'<li role="none"><a class="menu__item" role="menuitem" href="{page("attendance")}">{icon("chart")}Attendance</a></li>'
                   f'<li role="none"><a class="menu__item" role="menuitem" href="{page("reports")}">{icon("download")}Report for a funder</a></li>'
@@ -193,10 +193,10 @@ simple("program-actions", "More actions for After-School Tutoring", "program", [
                   f'<li role="none"><button class="menu__item" role="menuitem" type="button" data-href="{dialog("archive-program")}">{icon("inbox")}Archive at season end…</button></li></ul>'),
        "Close", form=False, cancel="Close", na={"busy": "A menu has no submit.", "invalid": "A menu has no inputs.", "failed": "A menu makes no server call."})
 
-simple("archive-program", "Archive After-School Tutoring?", "program", [R_ENROLL, R_REPORTS, R_DATA], "Roster, attendance and slips are kept. No check-in or messages until restored.",
+simple("archive-program", "Archive After‑School Tutoring?", "program", [R_ENROLL, R_REPORTS, R_DATA], "Roster, attendance and slips are kept. No check-in or messages until restored.",
        lambda e: field("confirm", "Type the program name to confirm", value="" if not e else "After School", error=(e or {}).get("confirm", ""), autofocus=True),
-       "Archive program", icon_name="inbox", danger=True, invalid_err={"confirm": "Type “After-School Tutoring” exactly."},
-       confirm_body=alert("warning", "48 children are still enrolled", "Their enrollment ends today.") + field("confirm", "Type the program name to confirm", value="After-School Tutoring"))
+       "Archive program", icon_name="inbox", danger=True, invalid_err={"confirm": "Type “After‑School Tutoring” exactly."},
+       confirm_body=alert("warning", "48 children are still enrolled", "Their enrollment ends today.") + field("confirm", "Type the program name to confirm", value="After‑School Tutoring"))
 
 # ------------------------------------------------------------------ Events, slips, messages
 simple("event-actions", "More actions for the field trip", "event", [R_SLIPS, R_NOTIFY], "",
@@ -229,7 +229,7 @@ simple("decline-slip", "Mateo can’t come?", "slip-sign", [R_SLIPS, R_NOTIFY], 
        lambda e: fieldset("Reason", choice("r", "Away that day", checked=True) + choice("r", "Not feeling well") + choice("r", "Prefer not to say")) + textarea("note", "Note for staff", rows=2, optional=True, placeholder="Back at tutoring Thursday."),
        "Tell staff he can’t come", icon_name="x-circle", na={"invalid": "Reason has a default; the note is optional."})
 
-simple("guardian-data-request", "Ask for a copy of your family’s data", "guardian-update", [R_PRIVACY, "PRD-NFR-COMPLIANCE"], "Emailed within 30 days.",
+simple("guardian-data-request", "Ask for a copy of your family’s data", "guardian-update", [R_PRIVACY, "L1-015"], "Emailed within 30 days.",
        lambda e: fieldset("Request", choice("req", "A copy of our data", small="PDF and spreadsheet", checked=True) + choice("req", "Delete our data", small="After your children leave")) + field("em", "Send it to", type_="email", value="carmen.rivera@example.com", required=True, error=(e or {}).get("em", "")),
        "Send request", icon_name="shield", invalid_err={"em": "Enter an email."},
        success_body="<p>Received Thu 5 Nov. Tom Nguyen will email you within 30 days.</p>")
@@ -247,7 +247,7 @@ simple("export-data", "Export", "reports", [R_REPORTS, R_PRIVACY], "For the peri
        success_body=f'<p>harbourview-otf-2026-27-season.xlsx is ready (184 children, 312 sessions). Emailed to marisol@harbourview.example.</p><div class="cluster">{btn("Download", "primary", icon_name="download")}</div>')
 
 simple("invite-staff", "Invite staff", "staff", [R_SEC, R_PRIVACY], "Email link, valid 14 days.",
-       lambda e: field("em", "Work email", type_="email", value="" if e else "sam.lee@example.org", required=True, autofocus=True, error=(e or {}).get("em", "")) + select("role", "Role", ["Youth worker", "Site lead", "Volunteer coordinator", "Admin", "Program director"], selected="Youth worker", help_="Youth workers see medical cards and report incidents.", error=(e or {}).get("role", "")) + fieldset("Programs", choice("p", "After-School Tutoring", type_="checkbox", checked=True, attrs=' name="p1"') + choice("p", "Saturday Sports", type_="checkbox", attrs=' name="p2"') + choice("p", "Winter Camp 2026", type_="checkbox", attrs=' name="p3"')),
+       lambda e: field("em", "Work email", type_="email", value="" if e else "sam.lee@example.org", required=True, autofocus=True, error=(e or {}).get("em", "")) + select("role", "Role", ["Youth worker", "Site lead", "Volunteer coordinator", "Admin", "Program director"], selected="Youth worker", help_="Youth workers see medical cards and report incidents.", error=(e or {}).get("role", "")) + fieldset("Programs", choice("p", "After‑School Tutoring", type_="checkbox", checked=True, attrs=' name="p1"') + choice("p", "Saturday Sports", type_="checkbox", attrs=' name="p2"') + choice("p", "Winter Camp 2026", type_="checkbox", attrs=' name="p3"')),
        "Send invitation", icon_name="mail", invalid_err={"em": "Enter a work email."},
        success_body="<p>Sent to sam.lee@example.org. Valid 14 days.</p>")
 
@@ -259,10 +259,10 @@ simple("remove-staff", "Remove Aisha Bello?", "staff", [R_SEC, R_PRIVACY], "Sign
        lambda e: fieldset("Her sessions", choice("s", "Reassign tonight’s Tutoring night to Jaylen Okafor", checked=True) + choice("s", "Leave unassigned")) + field("confirm", "Type her name to confirm", value="", error=(e or {}).get("confirm", ""), autofocus=True),
        "Remove Aisha", icon_name="trash", danger=True, invalid_err={"confirm": "Type “Aisha Bello” exactly."}, confirm_body=field("confirm", "Type her name to confirm", value="Aisha Bello") + alert("warning", "She is on the roster for tonight", "Jaylen alone would have 48 children. Check your ratio."))
 
-simple("delete-household", "Delete the Rivera household?", "household", [R_PRIVACY, "PRD-NFR-COMPLIANCE", R_DATA], "Carmen Rivera asked on Thu 5 Nov. Deleted in 30 days; attendance counts stay without names.",
+simple("delete-household", "Delete the Rivera household?", "household", [R_PRIVACY, "L1-015", R_DATA], "Carmen Rivera asked on Thu 5 Nov. Deleted in 30 days; attendance counts stay without names.",
        lambda e: fieldset("Why", choice("why", "Guardian asked (right to deletion)", checked=True) + choice("why", "Duplicate household") + choice("why", "Created by mistake")) + field("confirm", "Type the household name to confirm", value="" if not e else "Rivera household", error=(e or {}).get("confirm", ""), autofocus=True),
        "Delete in 30 days", icon_name="trash", danger=True, invalid_err={"confirm": "Type “Rivera” exactly."},
-       confirm_body=alert("warning", "Mateo and Sofía are enrolled", "Removed from After-School Tutoring and Saturday Sports today.") + field("confirm", "Type the household name to confirm", value="Rivera") + switch("now", "Delete immediately instead of in 30 days", desc="No undo."))
+       confirm_body=alert("warning", "Mateo and Sofía are enrolled", "Removed from After‑School Tutoring and Saturday Sports today.") + field("confirm", "Type the household name to confirm", value="Rivera") + switch("now", "Delete immediately instead of in 30 days", desc="No undo."))
 
 simple("change-plan", "Move to Standard", "billing", [R_COST], "$89 a month · 500 children · 2,000 SMS segments. Cancel any time.",
        lambda e: field("card", "Card number", value="" if e else "4242 4242 4242 4242", inputmode="numeric", autocomplete="cc-number", error=(e or {}).get("card", "")) + f'<div class="two-col">{field("exp", "Expiry", value="08/28", inputmode="numeric", autocomplete="cc-exp")}{field("cvc", "CVC", value="123", inputmode="numeric", autocomplete="cc-csc", error=(e or {}).get("cvc", ""))}</div>' + field("holder", "Name on card", value="Tom Nguyen", autocomplete="cc-name") + fieldset("Billing", choice("bill", "Monthly, $89", checked=True) + choice("bill", "Yearly, $890 <small>Two months free</small>")),
@@ -277,7 +277,7 @@ simple("sign-out-all", "Sign out everywhere?", "account", [R_SEC], "Every other 
        lambda e: "", "Sign out other devices", icon_name="log-out")
 
 # ------------------------------------------------------------------ Shell: main menu, account menu, session expired, offline queue
-@screen("main-menu", "dialog", "Main menu", opens_from="today", reqs=["PRD-NFR-MOBILE"], na={"busy": "A menu has no submit.", "invalid": "A menu has no inputs."})
+@screen("main-menu", "dialog", "Main menu", opens_from="today", reqs=["L1-014"], na={"busy": "A menu has no submit.", "invalid": "A menu has no inputs."})
 def main_menu(S):
     def drawer(user=STAFF["jaylen"], current="today"):
         links = [("today", "Today", "home"), ("check-in", "Check-in", "clipboard"), ("quick-card", "Quick Cards", "heart-pulse"), ("families", "Families", "users"), ("events", "Events", "calendar"), ("slips", "Slips", "clipboard"), ("programs", "Programs", "list"), ("messages", "Messages", "message"), ("reports", "Reports", "chart"), ("incidents", "Incidents", "flag"), ("attendance", "Attendance", "table"), ("settings", "Settings", "settings"), ("notifications", "Notifications", "bell"), ("account", "Your account", "user")]
@@ -316,7 +316,7 @@ def session_expired(S):
     S.add("failed", "No connection; the report is still safe.", **over("new-incident", "error", overlays=box(alert_html=alert("danger", "Couldn’t reach PromiseHub", "Try again when you have signal."))))
 
 
-@screen("offline-queue", "dialog", "Waiting to sync", opens_from="check-in", reqs=["PRD-NFR-MOBILE", R_ROLL], na={"invalid": "No inputs."})
+@screen("offline-queue", "dialog", "Waiting to sync", opens_from="check-in", reqs=["L1-014", R_ROLL], na={"invalid": "No inputs."})
 def offline_queue(S):
     def box(busy=False, alert_html="", rows=None):
         rows = rows if rows is not None else [list_item("Jordan Thompson checked in", "4:05 pm · waiting", person=CHILD["jordan"], end=badge("Queued", "warning")), list_item("Kevin Tran checked in", "4:16 pm · waiting", person=CHILD["kevin"], end=badge("Queued", "warning"))]

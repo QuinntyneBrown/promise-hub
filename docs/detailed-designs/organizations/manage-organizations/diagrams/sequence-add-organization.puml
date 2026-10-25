@@ -1,0 +1,70 @@
+@startuml
+title UML sequence behaviour — Add an organization
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Platform admin" as actor
+box "Frontend — organizations library" #E0F2FE
+  participant "OrganizationsPage" as page
+  participant "AddOrganizationDialog" as dialog
+  participant "PlatformOrganizationsApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "PlatformOrganizationEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "CreateOrganizationCommandHandler" as handler
+  participant "CreateOrganizationCommandValidator" as validator
+  participant "Organization" as org
+  participant "ModuleConfiguration" as modules
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "IEmailSender" as email
+  participant "AuditLog" as audit
+end box
+actor -> page : "Add organization"
+page -> dialog : Open add-organization
+actor -> dialog : Name, first admin email, plan, preset; "Create and invite"
+dialog -> client : create(request)
+client -> endpoints : POST /admin/organizations
+endpoints -> endpoints : Authenticate; apply PlatformAdmin policy
+alt caller is not a platform admin
+  endpoints --> client : 403 ProblemDetails (L2-003 c4)
+  client --> dialog : Forbidden
+  dialog --> actor : Forbidden state
+else caller is a platform admin
+  endpoints -> handler : Send CreateOrganizationCommand
+  handler -> validator : Validate
+  alt invalid
+    validator --> handler : Field errors
+    handler --> endpoints : Validation failure
+    endpoints --> client : 422 ProblemDetails
+    client --> dialog : Field errors
+    dialog --> actor : Inline errors
+  else valid
+    handler -> org : Create in SettingUp with plan
+    handler -> modules : ApplyPreset(preset)
+    handler -> db : Add Organization, ModuleConfiguration, Person, Membership(Admin)
+    handler -> email : Send welcome email to first admin
+    handler -> audit : Record organization created
+    handler -> db : SaveChanges in one unit of work
+    handler --> endpoints : New organization id
+    endpoints --> client : 201
+    client --> dialog : Created
+    dialog --> page : Close; refresh list
+    page --> actor : Row shows "Setting up" (L2-003 c2)
+  end
+end
+@enduml

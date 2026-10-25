@@ -1,0 +1,42 @@
+@startuml
+title UML sequence behaviour — Open the More menu on a phone
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Staff member" as actor
+box "Frontend — PromiseHub web app (promisehub shell)" #E0F2FE
+  participant "TabBarComponent" as tabbar
+  participant "BottomSheetDialogService" as sheet
+  participant "MoreMenuComponent" as more
+  participant "NavigationModelService" as nav
+end box
+actor -> tabbar : Tap More (44 px target, L2-029)
+tabbar -> sheet : open(MoreMenuComponent)
+sheet -> sheet : Width under 576 px: bottom-sheet pane class
+sheet -> sheet : Mark page root inert; trap focus (L2-029)
+sheet -> more : Create in CDK Dialog
+more -> nav : Read more signal and SessionContext
+nav --> more : Modules that are on, Settings, Notifications, account
+more --> actor : Drawer (main-menu) with focus on Close
+alt Escape or Close
+  actor -> more : Escape
+  more -> sheet : close()
+  sheet -> sheet : Remove inert; restore focus to More button (L2-038)
+  sheet --> actor : Drawer closed
+else Link chosen
+  actor -> more : Tap a module link
+  more -> sheet : close()
+  more --> actor : Router navigates to the module
+end
+@enduml

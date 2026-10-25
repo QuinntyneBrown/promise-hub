@@ -1,0 +1,56 @@
+@startuml
+title UML sequence behaviour — Apply a module preset during onboarding
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "First admin" as actor
+box "Frontend — organizations library" #E0F2FE
+  participant "OnboardModulesPage" as page
+  participant "ModulesApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "ModuleEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "ApplyModulePresetCommandHandler" as presetHandler
+  participant "ModuleCatalog" as catalog
+  participant "SaveModuleConfigurationCommandHandler" as saveHandler
+  participant "ModuleConfiguration" as config
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "ModuleConfigurationCache" as cache
+end box
+actor -> page : Choose "Just check-in"; "Continue"
+alt "Let me choose"
+  page --> actor : Expand module list; continue with the save path of settings-modules
+else named preset
+  page -> client : applyPreset(JustCheckIn)
+  client -> endpoints : POST /modules/preset
+  endpoints -> presetHandler : Send ApplyModulePresetCommand
+  presetHandler -> catalog : Preset(JustCheckIn)
+  catalog --> presetHandler : Roster, RollCall, QuickCards (L2-004 c4)
+  presetHandler -> saveHandler : SaveModuleConfigurationCommand(flags)
+  saveHandler -> db : Load ModuleConfiguration
+  db --> saveHandler : ModuleConfiguration
+  saveHandler -> config : Apply(flags)
+  saveHandler -> db : SaveChanges
+  saveHandler -> cache : Invalidate(organizationId)
+  saveHandler --> presetHandler : Count on
+  presetHandler --> endpoints : Count on
+  endpoints --> client : 200
+  client --> page : Done
+  page --> actor : Continue to onboard-program
+end
+@enduml

@@ -1,0 +1,89 @@
+@startuml
+title UML sequence behaviour — Change a role and remove a staff member
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Admin" as admin
+actor "Affected staff member" as other
+box "Frontend — PromiseHub web app, administration library" #E0F2FE
+  participant "StaffPage" as page
+  participant "ChangeRoleDialog / RemoveStaffDialog" as dialog
+  participant "StaffApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "StaffEndpoints" as endpoints
+  participant "SessionMiddleware" as middleware
+end box
+box "Backend — PromiseHub Application and Domain (Identity)" #ECFDF3
+  participant "ChangeRoleCommandHandler" as changehandler
+  participant "RemoveStaffCommandHandler" as removehandler
+  participant "Membership" as membership
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "ISessionStore" as store
+  participant "AuditLog" as audit
+  database "PromiseHub database" as db
+end box
+== Change role ==
+admin -> page : Open Staff and choose Change role
+page -> dialog : Open ChangeRoleDialog
+admin -> dialog : Pick new role, save
+dialog -> client : changeRole(membershipId, role)
+client -> endpoints : PUT /staff/{membershipId}/role (RequirePermission Staff.Manage)
+endpoints -> changehandler : Send ChangeRoleCommand
+changehandler -> db : Load Membership in caller's organization
+db --> changehandler : Membership
+alt membership not in caller's organization
+  changehandler --> endpoints : NotFound (L2-001)
+  endpoints --> client : 404 ProblemDetails
+  client --> dialog : Error
+else found
+  changehandler -> membership : ChangeRole(newRole)
+  membership --> changehandler : Updated
+  changehandler -> audit : Record role change (before, after, actor) — L2-007, L2-032
+  changehandler -> db : Save changes in one unit of work
+  db --> changehandler : Commit
+  changehandler --> endpoints : Done
+  endpoints --> client : 204
+  client --> dialog : Saved
+  dialog --> admin : "Takes effect on her next page load"
+end
+other -> middleware : Any later request
+middleware -> store : Resolve session and membership
+store -> db : Load membership with new role
+db --> store : Membership
+middleware --> other : CallerContext built from the new role (L2-007)
+== Remove staff ==
+admin -> dialog : Confirm Remove
+dialog -> client : remove(membershipId)
+client -> endpoints : DELETE /staff/{membershipId} (RequirePermission Staff.Manage)
+endpoints -> removehandler : Send RemoveStaffCommand
+removehandler -> db : Load Membership
+db --> removehandler : Membership
+removehandler -> membership : Remove(now)
+removehandler -> store : Revoke all sessions of that user in this organization
+store -> db : Set RevokedAt
+db --> store : Rows affected
+removehandler -> audit : Record removal — reports and audit entries stay
+removehandler -> db : Save changes
+db --> removehandler : Commit
+removehandler --> endpoints : Done
+endpoints --> client : 204
+client --> dialog : Removed
+dialog --> admin : Staff list updated
+other -> middleware : Any later request
+middleware -> store : Resolve session
+store --> middleware : Revoked / membership removed
+middleware --> other : 401 (L2-007)
+@enduml

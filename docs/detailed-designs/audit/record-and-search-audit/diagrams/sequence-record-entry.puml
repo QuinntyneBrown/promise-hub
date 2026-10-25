@@ -1,0 +1,75 @@
+@startuml
+title UML sequence behaviour — Record a change and a view
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Staff member" as actor
+box "Frontend — PromiseHub web app, households and attendance libraries" #E0F2FE
+  participant "EditMedicalDialog / QuickCardPage" as page
+  participant "HouseholdsApi / AttendanceApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "HouseholdsEndpoints / AttendanceEndpoints" as endpoints
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "ViewAuditBehaviour" as behaviour
+  participant "UpdateChildMedicalCommandHandler" as updateHandler
+  participant "GetQuickCardQueryHandler" as viewHandler
+  participant "IAuditWriter" as writer
+  participant "FieldPolicy" as policy
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  participant "AuditInterceptor" as interceptor
+  database "PromiseHub database" as db
+end box
+
+== Change: edit medical details ==
+actor -> page : Save medical details
+page -> client : updateMedical(childId, fields)
+client -> endpoints : PUT /children/{id}/medical
+endpoints -> endpoints : Authenticate, resolve organization, check role
+endpoints -> updateHandler : Send UpdateChildMedicalCommand
+updateHandler -> db : Load Child of the organization (L2-001)
+db --> updateHandler : Child
+updateHandler -> updateHandler : Apply changes to the Child entity
+updateHandler -> db : SaveChanges
+db -> interceptor : SavingChanges (tracked [Audited] entities)
+interceptor -> policy : VisibleFields(Child, actor role)
+policy --> interceptor : Fields the role may see
+interceptor -> interceptor : Snapshot before and after, redacted
+interceptor -> db : Append AuditEntry Updated: actor, organization, record, before, after, time (L2-032 criterion 1)
+db --> updateHandler : Committed in one unit of work
+alt commit fails
+  db --> updateHandler : Rolled back; no entry exists
+end
+updateHandler --> endpoints : Result ok
+endpoints --> client : 200
+client --> page : Saved
+
+== View: open a Quick Card ==
+actor -> page : Open Quick Card
+page -> client : getQuickCard(childId)
+client -> endpoints : GET /children/{id}/quick-card
+endpoints -> behaviour : Send GetQuickCardQuery (IAuditedView)
+behaviour -> viewHandler : next()
+viewHandler -> db : Load Quick Card with role-filtered fields
+db --> viewHandler : Quick Card
+viewHandler --> behaviour : QuickCardDto
+behaviour -> writer : Record(Viewed, Child, childId, summary) (L2-032 criterion 2, L2-019 criterion 4)
+writer -> db : Append AuditEntry Viewed with no values
+db --> writer : Committed
+behaviour --> endpoints : QuickCardDto
+endpoints --> client : 200
+client --> page : Quick Card
+@enduml

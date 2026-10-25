@@ -50,7 +50,7 @@ LONG_GUARDIAN = "Mary-Katherine Fitzgerald-Vanderbroucke"
 LONG_CHILD = "Alexander-Christopher Fitzgerald-Vanderbroucke III"
 
 PROGRAMS = [
-    dict(id="tutoring", name="After-School Tutoring", when="Mon–Thu, 4–6 pm", enrolled=48, capacity=50, waitlist=3, status="Enrolling"),
+    dict(id="tutoring", name="After‑School Tutoring", when="Mon–Thu, 4–6 pm", enrolled=48, capacity=50, waitlist=3, status="Enrolling"),
     dict(id="sports", name="Saturday Sports", when="Sat, 10 am–12 pm", enrolled=62, capacity=80, waitlist=0, status="Enrolling"),
     dict(id="mentoring", name="One-to-one Mentoring", when="Weekly, by match", enrolled=19, capacity=25, waitlist=0, status="Open"),
     dict(id="winter-camp", name="Winter Camp 2026", when="21–23 Dec, 8 am–5 pm", enrolled=35, capacity=60, waitlist=0, status="Enrolling"),
@@ -58,8 +58,8 @@ PROGRAMS = [
 ]
 
 EVENTS = [
-    dict(id="tutoring-today", name="Tutoring night", program="After-School Tutoring", when="Today, 4:00–6:00 pm", place="Harbourview Community Centre, Room 2", roster=48, signed=48, cleared=48, slip=False),
-    dict(id="rbg-trip", name="Fall field trip: Royal Botanical Gardens", program="After-School Tutoring", when="Sat 14 Nov, 9:00 am–3:00 pm", place="Bus leaves from the centre at 8:45 am", roster=48, signed=41, cleared=41, slip=True),
+    dict(id="tutoring-today", name="Tutoring night", program="After‑School Tutoring", when="Today, 4:00–6:00 pm", place="Harbourview Community Centre, Room 2", roster=48, signed=48, cleared=48, slip=False),
+    dict(id="rbg-trip", name="Fall field trip: Royal Botanical Gardens", program="After‑School Tutoring", when="Sat 14 Nov, 9:00 am–3:00 pm", place="Bus leaves from the centre at 8:45 am", roster=48, signed=41, cleared=41, slip=True),
     dict(id="sports-sat", name="Saturday Sports", program="Saturday Sports", when="Sat 7 Nov, 10:00 am–12:00 pm", place="Bennetto School gym", roster=62, signed=62, cleared=62, slip=False),
     dict(id="winter-camp-day1", name="Winter Camp · Day 1", program="Winter Camp 2026", when="Mon 21 Dec, 8:00 am–5:00 pm", place="Harbourview Community Centre", roster=35, signed=12, cleared=12, slip=True),
     dict(id="swim-trip", name="Swim trip: Jimmy Thompson Pool", program="Saturday Sports", when="Sat 28 Nov, 10:00 am–1:00 pm", place="Bus leaves from the centre at 9:30 am", roster=62, signed=0, cleared=0, slip=True),
@@ -495,7 +495,7 @@ TABBAR = [("today", "Today", "home"), ("check-in", "Check-in", "clipboard"), ("f
 
 
 def brand(href: str, name: str = "PromiseHub") -> str:
-    return (f'<a class="topbar__brand" href="{href}" aria-label="{esc(name)} home"><span class="ph-mark" aria-hidden="true">{icon("heart-pulse")}</span>'
+    return (f'<a class="topbar__brand" href="{href}" aria-label="{esc(name)} home"><span class="ph-mark" aria-hidden="true"></span>'
             f'<span class="topbar__brand-name">{esc(name)}</span></a>')
 
 
@@ -523,7 +523,7 @@ def topbar(current: str, user: dict, *, unread: int = 2, kind: str = "page", men
     return (f'<header class="topbar">{brand(rel(kind, "page", "today"))}{switcher}<span class="ph-org">{esc(ORG_SHORT)}</span>'
             f'<nav class="topbar__nav" aria-label="Primary">{"".join(links)}</nav><span class="topbar__spacer"></span>'
             f'<form class="topbar__search" role="search" action="{rel(kind, "page", "search")}"><label class="visually-hidden" for="global-q">Search children, families and events</label>'
-            f'<input class="input input--sm" id="global-q" name="q" type="search" placeholder="Search children, families, events"></form>'
+            f'<input class="input input--sm" id="global-q" name="q" type="search" placeholder="Search"></form>'
             f'<div class="bell-anchor"><button class="btn btn--ghost btn--icon" type="button" aria-label="{bell_label}" aria-haspopup="dialog" aria-expanded="false" data-href="{rel(kind, "notification", "bell", "unread" if unread else "empty")}">{icon("bell")}{bell_badge}</button></div>'
             f'<button class="avatar-trigger" type="button" aria-haspopup="menu" aria-expanded="{"true" if menu_open else "false"}" aria-label="Account menu for {esc(user["name"])}" data-href="{rel(kind, "dialog", "account-menu")}">{avatar(user)}</button></header>')
 
@@ -553,9 +553,9 @@ def head(title: str, kind: str, sid: str, state: str, reqs: list[str], desc: str
 def mock_bar(title: str, states: list[str], state: str, depth: int = 2) -> str:
     up = "../" * depth
     lis = "".join(f'<li><a href="{s}.html"{" aria-current=\"page\"" if s == state else ""}>{s}</a></li>' for s in states)
-    return (f'<nav class="mock-bar" aria-label="Mock navigation"><a class="mock-bar__home" href="{up}index.html" aria-label="All mocks">âŒ‚</a>'
+    return (f'<nav class="mock-bar" aria-label="Mock navigation"><a class="mock-bar__home" href="{up}index.html" aria-label="All mocks">⌂</a>'
             f'<span class="mock-bar__screen">{esc(title)}</span><ul class="mock-bar__states">{lis}</ul>'
-            f'<button type="button" data-theme-toggle aria-pressed="false">â˜¾ Dark</button>'
+            f'<button type="button" data-theme-toggle aria-pressed="false">☾ Dark</button>'
             f'<button type="button" data-chrome-toggle aria-label="Hide mock chrome">×</button></nav>\n<script src="{up}assets/mock.js"></script>\n</body>\n</html>\n')
 
 
@@ -575,7 +575,7 @@ def staff_doc(*, kind: str, sid: str, state: str, title: str, desc: str, reqs: l
 def guardian_bar(kind: str = "page", lang: str = "English", *, help_href: str = "") -> str:
     langs = ["English", "Español", "Français"]
     opts = "".join(f'<option{" selected" if o == lang else ""}>{o}</option>' for o in langs)
-    return (f'<header class="guardian-bar"><a class="guardian-bar__brand" href="{rel(kind, "page", "guardian-home")}"><span class="ph-mark" aria-hidden="true">{icon("heart-pulse")}</span>{esc(ORG)}</a>'
+    return (f'<header class="guardian-bar"><a class="guardian-bar__brand" href="{rel(kind, "page", "guardian-home")}"><span class="ph-mark" aria-hidden="true"></span>{esc(ORG)}</a>'
             f'<div class="field"><label class="visually-hidden" for="lang">Language</label>{icon("language", "icon--sm")}<select class="select" id="lang" name="lang">{opts}</select></div></header>')
 
 

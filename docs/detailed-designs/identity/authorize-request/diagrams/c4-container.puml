@@ -1,0 +1,15 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Authorize a request
+
+Person(staff, "Staff member", "Any role in the active organization")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "Pages reflect permissions; administration library holds change-role and remove-staff")
+  Container(api, "PromiseHub API", "ASP.NET Core minimal API", "Session middleware, RequirePermission filter, handlers with field and row policies")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "Memberships, sessions, tenant-owned records, audit log")
+}
+Rel(staff, web, "Uses", "HTTPS")
+Rel(web, api, "Calls with session cookie; receives 200, 401 or 403", "JSON/HTTPS")
+Rel(api, db, "Reads memberships; filters every query by organization", "EF Core")
+@enduml

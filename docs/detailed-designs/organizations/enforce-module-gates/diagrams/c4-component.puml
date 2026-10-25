@@ -1,0 +1,41 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Enforce module gates
+
+Container_Boundary(web, "PromiseHub web app") {
+  Component(bootstrap, "SessionBootstrap", "api library service", "Loads GET /me/modules once per session")
+  Component(state, "ModuleState", "api library store behind MODULE_STATE", "isOn(module), on()")
+  Component(composer, "NavigationComposer", "shell service", "Top bar, More menu, tab bar, search scopes from modules on")
+  Component(guard, "moduleGuard", "shell CanMatch guard", "Off module route does not match; redirect to today")
+  Component(today, "TodayPage", "today library", "Cards only for modules on")
+  Component(guardianShell, "GuardianShell", "guardian library", "Sections only for modules on")
+}
+Container_Boundary(api, "PromiseHub API") {
+  Component(filter, "ModuleGateEndpointFilter", "Endpoint filter", "Reads RequireModuleAttribute; 404 when off")
+  Component(attr, "RequireModuleAttribute", "Endpoint metadata", "ModuleId per feature endpoint group")
+  Component(featureEndpoints, "Feature endpoint groups", "Minimal API groups", "Slips, Reports, Messages, ...")
+  Component(gate, "IModuleGate / ModuleGate", "Application service", "IsOn(module) for the active tenant")
+  Component(sessionModules, "GetSessionModulesQueryHandler", "Application query handler", "Modules on for /me/modules")
+  Component(config, "ModuleConfiguration", "Domain entity", "IsOn(module)")
+  Component(cache, "ModuleConfigurationCache", "Infrastructure", "Per-organization cache")
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "ModuleConfigurations")
+  Component(jobs, "JobRunner", "Infrastructure", "Passes IModuleGate to per-tenant jobs")
+}
+
+Rel(bootstrap, sessionModules, "GET /me/modules", "JSON/HTTPS")
+Rel(bootstrap, state, "Sets")
+Rel(composer, state, "Reads")
+Rel(guard, state, "Reads")
+Rel(today, state, "Reads")
+Rel(guardianShell, state, "Reads from link payload")
+Rel(filter, attr, "Reads metadata of")
+Rel(attr, featureEndpoints, "Decorates")
+Rel(filter, gate, "IsOn(module)")
+Rel(filter, featureEndpoints, "Invokes when on; 404 when off")
+Rel(gate, cache, "Reads")
+Rel(cache, db, "Loads on miss", "EF Core")
+Rel(gate, config, "IsOn")
+Rel(sessionModules, gate, "On()")
+Rel(jobs, gate, "Checks per tenant")
+@enduml

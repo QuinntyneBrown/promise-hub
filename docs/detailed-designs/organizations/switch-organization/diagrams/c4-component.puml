@@ -1,0 +1,39 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Switch organization
+
+Container_Boundary(web, "PromiseHub web app") {
+  Component(switcher, "OrganizationSwitcherComponent", "Angular component", "Lists memberships; shown only when more than one")
+  Component(action, "SwitchOrganizationAction", "Angular service", "Activates a membership then reloads to Today")
+  Component(client, "MembershipsApi", "Typed client behind MEMBERSHIPS_API", "listMine, activate, current")
+  Component(interceptor, "SessionInterceptor", "HTTP interceptor", "Handles 401 membership-removed")
+}
+Container_Boundary(api, "PromiseHub API") {
+  Component(endpoints, "MembershipEndpoints", "Minimal API group", "/me/memberships routes")
+  Component(middleware, "TenantContextMiddleware", "Middleware", "Resolves the active membership on every request")
+  Component(listHandler, "ListMyMembershipsQueryHandler", "Application query handler", "Memberships of the signed-in person across organizations")
+  Component(activateHandler, "ActivateMembershipCommandHandler", "Application handler", "Validates ownership, activity and organization status")
+  Component(resolver, "ActiveMembershipResolver", "Application service", "Returns membership or Removed")
+  Component(membership, "Membership", "Domain entity", "Person, organization, role")
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "Memberships")
+  Component(session, "SessionStore", "Infrastructure", "ActiveMembershipId")
+  Component(audit, "AuditLog", "Infrastructure", "Records the switch")
+}
+
+Rel(switcher, client, "listMine()")
+Rel(switcher, action, "Pick organization")
+Rel(action, client, "activate(id)")
+Rel(client, endpoints, "Calls", "JSON/HTTPS")
+Rel(endpoints, listHandler, "Sends ListMyMembershipsQuery")
+Rel(endpoints, activateHandler, "Sends ActivateMembershipCommand")
+Rel(endpoints, session, "Rewrites ActiveMembershipId")
+Rel(listHandler, db, "Reads with IgnoreQueryFilters by PersonId")
+Rel(activateHandler, membership, "Validates")
+Rel(activateHandler, db, "Reads", "EF Core")
+Rel(activateHandler, audit, "Writes entry")
+Rel(middleware, resolver, "Resolve active membership")
+Rel(resolver, db, "Loads", "EF Core")
+Rel(middleware, session, "Reads and clears")
+Rel(interceptor, client, "Observes 401 responses of")
+@enduml

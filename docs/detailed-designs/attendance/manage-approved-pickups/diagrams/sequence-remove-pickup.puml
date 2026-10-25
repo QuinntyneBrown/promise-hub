@@ -1,0 +1,61 @@
+@startuml
+title UML sequence behaviour — Remove an approved adult (staff)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Admin (Tom)" as staff
+box "Frontend — PromiseHub web app, attendance library" #E0F2FE
+  participant "RemovePickupDialog" as dlg
+  participant "PickupApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "PickupEndpoints" as ep
+end box
+box "Backend — PromiseHub Application and Domain" #ECFDF3
+  participant "RemoveApprovedPickupCommandHandler" as h
+  participant "PickupPermissions" as perm
+  participant "ApprovedPickup" as pk
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "IAuditLog" as audit
+  participant "IHouseholdNotifier" as notify
+end box
+
+staff -> dlg : Confirm "Remove Luis Rivera from Mateo's approved pickups?"
+dlg -> client : removeApprovedPickup(childId, pickupId)
+client -> ep : DELETE /children/{id}/pickups/{pickupId}
+ep -> ep : Authenticate, resolve tenant, Pickup module on
+ep -> h : Send RemoveApprovedPickupCommand
+h -> perm : CanManage(role)
+alt Role not allowed
+  perm --> h : false
+  h --> ep : 403
+  ep --> client : 403
+  client --> dlg : Forbidden (failed)
+else Allowed
+  perm --> h : true
+  h -> db : Load active pickup for child in organization (L2-001)
+  db --> h : ApprovedPickup
+  h -> pk : Remove(actor, now) — soft removal
+  h -> audit : Write removal with before values (L2-020, L2-032)
+  h -> notify : Text primary guardian "Luis Rivera was removed from Mateo's pickups" in household language
+  h -> db : Save in one unit of work
+  db --> h : Commit
+  h --> ep : Ok
+  ep --> client : 204
+  client --> dlg : Removed
+  dlg --> staff : Close; list no longer shows Luis
+end
+@enduml

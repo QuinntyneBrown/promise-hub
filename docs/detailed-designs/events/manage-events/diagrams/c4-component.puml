@@ -1,0 +1,40 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Manage events
+
+Container_Boundary(web, "PromiseHub web app") {
+  Component(list, "EventsListPage", "Angular page", "Upcoming events with slip status")
+  Component(form, "EventFormPage", "Angular page", "Create and edit; needs a permission slip")
+  Component(detail, "EventPage", "Angular page", "Slip card, details, day-of")
+  Component(dialog, "CancelEventDialog", "CDK dialog", "Message to guardians; keep or delete")
+  Component(client, "EventsApi", "Typed client (EVENTS_API)", "Calls /events")
+}
+Container_Boundary(api, "PromiseHub API") {
+  Component(endpoints, "EventEndpoints", "Minimal API", "Routes /events to handlers")
+  Component(create, "CreateEventCommandHandler", "Application handler (Events)", "Validates, creates, raises EventCreatedRequiringSlip")
+  Component(draft, "CreateDraftSlipOnEventCreatedHandler", "Application handler (Slips)", "Creates a Draft PermissionSlip")
+  Component(cancel, "CancelEventCommandHandler", "Application handler (Events)", "Cancels; messages households")
+  Component(send, "SendMessageCommandHandler", "Application handler (Messaging)", "One message per household in its language and channel")
+  Component(entity, "Event", "Domain entity", "Owns schedule, slip requirement, status")
+  Component(slip, "PermissionSlip", "Domain entity", "Draft slip for the event")
+  Component(audit, "AuditLog", "Infrastructure", "Records cancellation")
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "Events and slips filtered by OrganizationId")
+}
+Rel(list, client, "list")
+Rel(form, client, "create, update")
+Rel(detail, client, "get")
+Rel(dialog, client, "cancel")
+Rel(client, endpoints, "JSON/HTTPS")
+Rel(endpoints, create, "Sends CreateEventCommand")
+Rel(endpoints, cancel, "Sends CancelEventCommand")
+Rel(create, entity, "Creates")
+Rel(create, draft, "Publishes EventCreatedRequiringSlip")
+Rel(draft, slip, "Creates Draft")
+Rel(cancel, entity, "Cancel()")
+Rel(cancel, send, "Sends SendMessageCommand when TellGuardians")
+Rel(cancel, audit, "Writes entry")
+Rel(create, db, "Saves")
+Rel(draft, db, "Saves")
+Rel(cancel, db, "Saves")
+@enduml

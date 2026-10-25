@@ -1,0 +1,36 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Configure modules
+
+Container(web, "PromiseHub web app", "Angular", "SettingsModulesPage, ModulePresetTilesComponent, ModulesApi")
+Container_Boundary(api, "PromiseHub API") {
+  Component(endpoints, "ModuleEndpoints", "Minimal API group", "/modules; admin roles only, 403 otherwise")
+  Component(getHandler, "GetModuleConfigurationQueryHandler", "Application query handler", "Flags and dependencies")
+  Component(saveHandler, "SaveModuleConfigurationCommandHandler", "Application handler", "Applies flags; returns count on")
+  Component(validator, "SaveModuleConfigurationCommandValidator", "Validator", "One error per dependency violation")
+  Component(presetHandler, "ApplyModulePresetCommandHandler", "Application handler", "Maps preset to flags; reuses save path")
+  Component(permission, "ModulesPermission", "Permission check", "Admin or program director")
+  Component(config, "ModuleConfiguration", "Domain entity", "Set of modules on; Apply validates")
+  Component(catalog, "ModuleCatalog", "Domain static", "Dependencies and presets")
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "ModuleConfigurations")
+  Component(cache, "ModuleConfigurationCache", "Infrastructure", "Per-organization cache read by the gates")
+  Component(audit, "AuditLog", "Infrastructure", "Before and after flags")
+}
+
+Rel(web, endpoints, "Calls", "JSON/HTTPS")
+Rel(endpoints, getHandler, "Sends GetModuleConfigurationQuery")
+Rel(endpoints, saveHandler, "Sends SaveModuleConfigurationCommand")
+Rel(endpoints, presetHandler, "Sends ApplyModulePresetCommand")
+Rel(saveHandler, permission, "Checks")
+Rel(saveHandler, validator, "Validates with")
+Rel(validator, catalog, "Reads dependencies")
+Rel(presetHandler, catalog, "Preset(preset)")
+Rel(presetHandler, saveHandler, "Reuses")
+Rel(saveHandler, config, "Apply(flags)")
+Rel(config, catalog, "Validates against")
+Rel(getHandler, db, "Reads", "EF Core")
+Rel(saveHandler, db, "Saves", "EF Core")
+Rel(saveHandler, cache, "Invalidates")
+Rel(saveHandler, audit, "Writes entry")
+@enduml

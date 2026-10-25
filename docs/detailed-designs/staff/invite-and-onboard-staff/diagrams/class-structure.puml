@@ -1,0 +1,113 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Invite and onboard staff
+
+enum InvitationStatus {
+  Pending
+  Accepted
+  Withdrawn
+  Expired
+}
+
+class Invitation {
+  +Guid Id
+  +Guid OrganizationId
+  +string Email
+  +Role Role
+  +Guid InvitedById
+  +string TokenHash
+  +DateTimeOffset IssuedAt
+  +DateTimeOffset ExpiresAt
+  +InvitationStatus Status
+  +IsOpen(now: DateTimeOffset): bool
+  +Accept(now: DateTimeOffset): void
+  +Withdraw(): void
+  +Reissue(tokenHash: string, now: DateTimeOffset): void
+}
+
+class StaffUser {
+  +Guid Id
+  +string Email
+  +string DisplayName
+  +string PasswordHash
+}
+
+class Membership {
+  +Guid Id
+  +Guid StaffUserId
+  +Guid OrganizationId
+  +Role Role
+}
+
+class StaffProfile {
+  +Guid MembershipId
+  +string? MobileNumber
+  +IReadOnlyList<Guid> SessionProgramIds
+  +DateTimeOffset? OnboardingCompletedAt
+  +SetMobile(number: string): void
+  +SetSessions(programIds: IEnumerable<Guid>): void
+  +CompleteOnboarding(now: DateTimeOffset): void
+}
+
+class InviteStaffCommand {
+  +string Email
+  +Role Role
+}
+
+class InviteStaffCommandHandler {
+  +Handle(command: InviteStaffCommand): Task<Guid>
+}
+
+class AcceptInvitationCommand {
+  +string Token
+  +string Name
+  +string Password
+}
+
+class AcceptInvitationCommandHandler {
+  +Handle(command: AcceptInvitationCommand): Task<AcceptResult>
+}
+
+class SaveStaffMobileCommand {
+  +string MobileNumber
+}
+
+class SaveStaffSessionsCommand {
+  +IReadOnlyList<Guid> ProgramIds
+}
+
+interface IEmailSender {
+  +Send(message: EmailMessage): Task
+}
+
+interface ITokenGenerator {
+  +Create(): string
+  +Hash(token: string): string
+}
+
+Invitation --> InvitationStatus
+InviteStaffCommandHandler ..> InviteStaffCommand : handles
+InviteStaffCommandHandler --> Invitation : creates
+InviteStaffCommandHandler --> ITokenGenerator : uses
+InviteStaffCommandHandler --> IEmailSender : sends via
+AcceptInvitationCommandHandler ..> AcceptInvitationCommand : handles
+AcceptInvitationCommandHandler --> Invitation : validates / accepts
+AcceptInvitationCommandHandler --> StaffUser : creates or links
+AcceptInvitationCommandHandler --> Membership : creates
+AcceptInvitationCommandHandler --> StaffProfile : creates
+StaffUser "1" --> "*" Membership
+Membership "1" *-- "1" StaffProfile
+SaveStaffMobileCommand ..> StaffProfile : updates
+SaveStaffSessionsCommand ..> StaffProfile : updates
+@enduml

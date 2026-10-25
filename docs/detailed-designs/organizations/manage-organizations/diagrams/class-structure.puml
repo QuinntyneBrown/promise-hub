@@ -1,0 +1,130 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Manage organizations
+
+enum OrganizationStatus {
+  SettingUp
+  Active
+  Suspended
+}
+
+enum SuspensionReason {
+  UnpaidInvoice
+  RequestedByOrganization
+  SafeguardingReview
+}
+
+class Organization {
+  +Guid Id
+  +string Name
+  +string Country
+  +string DataRegion
+  +Plan Plan
+  +OrganizationStatus Status
+  +SuspensionReason? SuspensionReason
+  +DateTimeOffset? SuspendedAt
+  +DateTimeOffset CreatedAt
+  +Suspend(reason: SuspensionReason): void
+  +Reinstate(onboardingComplete: bool): void
+}
+
+class ModuleConfiguration {
+  +Guid OrganizationId
+  +ApplyPreset(preset: ModulePreset): void
+}
+
+class Membership {
+  +Guid PersonId
+  +Guid OrganizationId
+  +Role Role
+}
+
+class ListOrganizationsQuery {
+  +Plan? Plan
+  +OrganizationStatus? Status
+  +string? Search
+}
+
+class ListOrganizationsQueryHandler {
+  +Handle(query: ListOrganizationsQuery): Task<IReadOnlyList<OrganizationRowDto>>
+}
+
+class OrganizationRowDto {
+  +Guid Id
+  +string Name
+  +Plan Plan
+  +int ActiveChildren
+  +int ModulesOn
+  +OrganizationStatus Status
+}
+
+class CreateOrganizationCommand {
+  +string Name
+  +string FirstAdminEmail
+  +Plan Plan
+  +ModulePreset ModulePreset
+}
+
+class CreateOrganizationCommandValidator {
+  +Validate(command: CreateOrganizationCommand): ValidationResult
+}
+
+class CreateOrganizationCommandHandler {
+  +Handle(command: CreateOrganizationCommand): Task<Result<Guid>>
+}
+
+class SuspendOrganizationCommand {
+  +Guid OrganizationId
+  +SuspensionReason Reason
+}
+
+class SuspendOrganizationCommandHandler {
+  +Handle(command: SuspendOrganizationCommand): Task<Result>
+}
+
+class ReinstateOrganizationCommand {
+  +Guid OrganizationId
+}
+
+class ReinstateOrganizationCommandHandler {
+  +Handle(command: ReinstateOrganizationCommand): Task<Result>
+}
+
+class PlatformAdminPermission {
+  +Check(context: ITenantContext): Result
+}
+
+class SuspendedOrganizationMiddleware {
+  +InvokeAsync(http: HttpContext): Task
+}
+
+Organization --> OrganizationStatus : has
+Organization --> SuspensionReason : records
+Organization "1" *-- "1" ModuleConfiguration : owns
+Organization "1" --> "*" Membership : has
+ListOrganizationsQueryHandler ..> ListOrganizationsQuery : handles
+ListOrganizationsQueryHandler --> OrganizationRowDto : returns
+CreateOrganizationCommandHandler ..> CreateOrganizationCommand : handles
+CreateOrganizationCommandHandler ..> CreateOrganizationCommandValidator : uses
+CreateOrganizationCommandHandler ..> PlatformAdminPermission : checks
+CreateOrganizationCommandHandler --> Organization : creates
+CreateOrganizationCommandHandler --> ModuleConfiguration : applies preset
+CreateOrganizationCommandHandler --> Membership : creates first admin
+SuspendOrganizationCommandHandler ..> SuspendOrganizationCommand : handles
+SuspendOrganizationCommandHandler ..> PlatformAdminPermission : checks
+SuspendOrganizationCommandHandler --> Organization : Suspend
+ReinstateOrganizationCommandHandler ..> ReinstateOrganizationCommand : handles
+ReinstateOrganizationCommandHandler --> Organization : Reinstate
+SuspendedOrganizationMiddleware --> Organization : reads Status
+@enduml

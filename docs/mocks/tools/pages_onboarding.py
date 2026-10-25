@@ -46,7 +46,7 @@ def wiz(steps, cur: int, title: str, lead: str, body: str, *, primary: str, back
             f'{progress(cur + 1, total, f"Step {cur + 1} of {total}", show=" ")}</div>')
     tag = "form" if form else "div"
     attrs = ' action="#" method="post" novalidate' if form else ""
-    footer_left = (btn("Back", "ghost", icon_name="arrow-left", href=back) if back else "") + (f'<a class="btn btn--ghost" href="{skip}">Skip for now</a>' if skip else "")
+    footer_left = (btn("Back", "ghost", icon_name="arrow-left", href=back) if back else "") + (f'<a class="btn btn--ghost wizard-skip" href="{skip}">Skip for now</a>' if skip else "")
     card_ = (f'<{tag} class="card wizard-card"{attrs}><div class="wizard-card__body"><div class="stack">'
              f'{alert_html}{HEAD} class="wizard-card__title">{title}</h1><p class="wizard-card__lead">{lead}</p></div>{body}</div></div>'
              f'<div class="wizard-card__footer">{footer_left}{primary}</div></{tag}>')
@@ -106,7 +106,7 @@ def onboard_org(S):
           main=failed(form(), "We couldn’t save that", "Try again. Nothing is lost."))
 
 
-@screen("onboard-modules", "page", "Set up: modules", route="/welcome/modules", reqs=[R_TTV, "PRD-NFR-MODULES"], shell="wizard",
+@screen("onboard-modules", "page", "Set up: modules", route="/welcome/modules", reqs=[R_TTV, "L1-002"], shell="wizard",
         na={"loading": "The choice is static.", "empty": "The step offers presets; nothing to be empty of."})
 def onboard_modules(S):
     def form(choice="suite", invalid=False, busy=False):
@@ -127,7 +127,7 @@ def onboard_modules(S):
 
 @screen("onboard-program", "page", "Set up: first program", route="/welcome/program", reqs=[R_TTV, R_ROLL], shell="wizard", na=NA_FORM)
 def onboard_program(S):
-    def form(err=None, busy=False, name="After-School Tutoring"):
+    def form(err=None, busy=False, name="After‑School Tutoring"):
         e = err or {}
         body = (field("prog", "Program name", value=name, autofocus=True, error=e.get("prog", ""), help_="A club, class or camp.")
                 + day_chips()
@@ -149,7 +149,7 @@ def onboard_roster(S):
                  + tile("how", "Add one family by hand", "For a handful of children.", checked=choice == "manual", invalid=invalid)
                  + tile("how", "Let guardians enroll themselves", "Send a link; families sign up.", checked=choice == "link", invalid=invalid)
                  + "</div>" + ('<div class="field__error">Pick one to continue.</div>' if invalid else "") + "</fieldset>")
-        return wiz(ORG_STEPS, 3, "Who comes to After-School Tutoring?", "Pick one way to start.", tiles,
+        return wiz(ORG_STEPS, 3, "Who comes to After‑School Tutoring?", "Pick one way to start.", tiles,
                    primary=btn("Continue", "primary", type_="submit", icon_name="arrow-right", busy=busy), back=page("onboard-program"), skip=page("onboard-staff"))
     S.add("default", "Step 4 of 6: three ways to fill the roster, import recommended.", user=M, exit_href=page("setup"), org=ORG, main=form(),
           notes=note("Continue with Import opens the import wizard (import-roster) inside the same shell, then returns here as the success state.", "top: 5rem; right: 1rem;"))
@@ -211,8 +211,7 @@ def onboard_done(S):
     S.add("default", "Everything configured; the first slip is out and signatures will arrive.", user=M, exit_href="", org=ORG,
           main=hero("check-circle", "Harbourview is ready", "The slip is on its way to 48 households.",
                     btn("Open Today", "primary", size="lg", href=page("today")) + btn("Watch signatures arrive", "", href=page("event")),
-                    extra=receipt(["Harbourview Youth Collective · Canada", "Whole suite: 8 modules on", "After-School Tutoring · Mon–Thu, 4:00–6:00 pm", "48 children from 32 households", "2 staff invited", "Slip sent to 48 households for the RBG trip"])),
-          toast_html=toast_region(toast("success", "Slip sent", "48 households")))
+                    extra=receipt(["Harbourview Youth Collective · Canada", "Whole suite: 8 modules on", "After‑School Tutoring · Mon–Thu, 4:00–6:00 pm", "48 children from 32 households", "2 staff invited", "Slip sent to 48 households for the RBG trip"])))
 
 
 # ---------------------------------------------------------------- Staff flow (after accept-invite)
@@ -236,7 +235,7 @@ def onboard_staff_phone(S):
 def onboard_staff_sessions(S):
     def form(invalid=False, busy=False, on=("tutoring", "sports")):
         tiles = ('<fieldset class="field"><legend class="field__label">Programs you help run</legend><div class="choice-tiles">'
-                 + tile("prog", "After-School Tutoring", "Mon–Thu, 4:00–6:00 pm · 48 children", checked="tutoring" in on, type_="checkbox", invalid=invalid)
+                 + tile("prog", "After‑School Tutoring", "Mon–Thu, 4:00–6:00 pm · 48 children", checked="tutoring" in on, type_="checkbox", invalid=invalid)
                  + tile("prog", "Saturday Sports", "Sat, 10:00 am–12:00 pm · 62 children", checked="sports" in on, type_="checkbox", invalid=invalid)
                  + tile("prog", "One-to-one Mentoring", "By appointment · 19 children", checked="mentoring" in on, type_="checkbox", invalid=invalid)
                  + "</div>" + ('<div class="field__error">Pick at least one, or skip.</div>' if invalid else "") + "</fieldset>"
@@ -256,5 +255,5 @@ def onboard_staff_ready(S):
     S.add("default", "Step 3 of 3: ready; tonight’s session is one tap away.", user=SAM, exit_href="", org=ORG,
           main=hero("clipboard", "You’re ready, Sam", "Tutoring night starts at 4:00 pm today in Room 2.",
                     btn("Open tonight’s check-in", "primary", size="lg", href=page("check-in")) + btn("Look around first", "", href=page("today")),
-                    extra=receipt(["Alerts go to 289-555-0177", "After-School Tutoring and Saturday Sports, saved on this phone", "Incident reports go to Marisol Delgado"])),
+                    extra=receipt(["Alerts go to 289-555-0177", "After‑School Tutoring and Saturday Sports, saved on this phone", "Incident reports go to Marisol Delgado"])),
           notes=note("On iOS and Android a second card offers “Add PromiseHub to your home screen” so check-in is one tap from the lock screen.", "top: 5rem; right: 1rem;"))

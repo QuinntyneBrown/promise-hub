@@ -1,0 +1,41 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Import a roster
+
+Container(web, "PromiseHub web app", "Angular", "ImportRosterPage and ColumnMappingTable via ImportsApi")
+Container_Boundary(api, "PromiseHub API") {
+  Component(endpoints, "ImportEndpoints", "Minimal API group", "POST /imports, GET /imports/{id}, PUT mapping, POST run, GET progress")
+  Component(upload, "UploadImportFileCommandHandler", "Application handler", "Detects format, enforces 5,000 rows, parses header, creates ImportSession")
+  Component(matcher, "ColumnMatcher", "Application service", "Proposes field per column; lists unmatched")
+  Component(mapping, "SaveImportMappingCommandHandler", "Application handler", "Validates required columns; previews duplicates and gaps")
+  Component(run, "RunImportCommandHandler", "Application handler", "Creates or merges households; enrolls; counts; one audit entry")
+  Component(dupes, "DuplicateDetector", "Application service", "Matches child name and date of birth to existing children")
+  Component(session, "ImportSession / ImportRow / ColumnMapping", "Domain", "File, rows, mapping, progress, summary")
+  Component(household, "Household aggregate", "Domain (Households)", "Created or merged from rows")
+  Component(reader, "ISpreadsheetReader", "Infrastructure service", "CSV and XLSX parsers")
+  Component(storage, "IFileStorage", "Infrastructure service", "Uploaded file store")
+  Component(jobs, "Job runner", "Infrastructure", "Executes RunImport per tenant")
+  Component(audit, "AuditLog", "Infrastructure writer", "One entry per import: file name, row count, importer")
+  ComponentDb(db, "PromiseHub database", "EF Core", "Import and household tables")
+}
+Rel(web, endpoints, "Calls", "multipart and JSON/HTTPS")
+Rel(endpoints, upload, "Sends UploadImportFileCommand")
+Rel(endpoints, mapping, "Sends SaveImportMappingCommand")
+Rel(endpoints, run, "Sends RunImportCommand via job runner")
+Rel(upload, storage, "Stores file")
+Rel(upload, reader, "Parses header and rows")
+Rel(upload, matcher, "Proposes mapping")
+Rel(upload, session, "Creates")
+Rel(mapping, dupes, "Finds duplicates")
+Rel(mapping, session, "Stores mapping and preview")
+Rel(jobs, run, "Invokes")
+Rel(run, reader, "Streams rows")
+Rel(run, dupes, "Skips or merges")
+Rel(run, household, "Creates or merges")
+Rel(run, session, "Updates progress and summary")
+Rel(run, audit, "Writes one entry")
+Rel(session, db, "Persisted by", "EF Core")
+Rel(household, db, "Persisted by", "EF Core")
+Rel(audit, db, "Appends", "EF Core")
+@enduml

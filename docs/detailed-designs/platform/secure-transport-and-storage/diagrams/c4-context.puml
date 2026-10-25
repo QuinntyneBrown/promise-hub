@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Secure transport and storage
+
+Person(staff, "Staff member", "Signs in with email and password; admins with MFA")
+Person_Ext(guardian, "Guardian", "Opens signed, expiring links")
+System(promisehub, "PromiseHub", "HTTPS only, encrypted at rest, server-side authorization")
+System_Ext(secrets, "Platform secret store", "Connection strings, signing keys, provider credentials")
+System_Ext(storage, "Encrypted storage", "Database, backups and file store encrypted at rest")
+
+Rel(staff, promisehub, "Uses", "HTTPS with bearer session")
+Rel(guardian, promisehub, "Uses", "HTTPS signed link")
+Rel(promisehub, secrets, "Reads secrets at start-up", "Environment / managed identity")
+Rel(promisehub, storage, "Reads and writes", "TLS")
+@enduml

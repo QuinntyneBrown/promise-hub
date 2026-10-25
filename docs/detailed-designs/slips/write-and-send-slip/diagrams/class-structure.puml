@@ -1,0 +1,134 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Write and send a slip
+
+enum SlipStatus {
+  Draft
+  Scheduled
+  Sent
+  Closed
+}
+
+enum Channel {
+  Sms
+  Email
+  Push
+}
+
+enum DeliveryStatus {
+  Queued
+  Sent
+  Delivered
+  Bounced
+  Failed
+}
+
+class ReminderSchedule <<value object>> {
+  +ReminderKind Kind
+  +DayOfWeek[] Days
+  +TimeOnly TimeOfDay
+}
+
+class PermissionSlip {
+  +Guid Id
+  +Guid OrganizationId
+  +Guid EventId
+  +string Title
+  +string Body
+  +DateOnly SignBy
+  +ReminderSchedule ReminderSchedule
+  +SlipStatus Status
+  +DateTimeOffset? ScheduledFor
+  +int CurrentVersion
+  +Send(now: DateTimeOffset): SlipVersion
+  +Schedule(at: DateTimeOffset): void
+  +CancelSchedule(): void
+  +Edit(body: string, isMaterial: bool, now: DateTimeOffset): SlipVersion?
+}
+
+class SlipVersion {
+  +int Version
+  +string TextHash
+  +string BodyAsShown
+  +DateTimeOffset FrozenAt
+}
+
+class SlipQuestion {
+  +string Key
+  +string Prompt
+  +string[] Options
+  +bool Enabled
+}
+
+class SlipDelivery {
+  +Guid HouseholdId
+  +string Language
+  +Channel Channel
+  +DeliveryStatus Status
+  +bool EmailOnlyFallback
+  +DateTimeOffset? SentAt
+}
+
+class SendSlipCommand {
+  +Guid SlipId
+  +ChannelChoice Channels
+}
+
+class EditSentSlipCommand {
+  +Guid SlipId
+  +string Body
+  +bool IsMaterial
+}
+
+class SendSlipCommandHandler {
+  +Handle(command: SendSlipCommand): Task<Result<SendSummary>>
+}
+
+class EditSentSlipCommandHandler {
+  +Handle(command: EditSentSlipCommand): Task<Result>
+}
+
+class SlipValidator {
+  +ValidateForSend(slip: PermissionSlip): ValidationResult
+}
+
+interface ISmsCapService {
+  +SegmentsRemaining(organizationId: Guid): Task<int>
+}
+
+interface IGuardianMessenger {
+  +QueueSlipLink(delivery: SlipDelivery, slip: PermissionSlip): Task
+}
+
+interface IAuditLog {
+  +Record(entry: AuditEntry): Task
+}
+
+PermissionSlip --> SlipStatus : has
+PermissionSlip *-- ReminderSchedule : has
+PermissionSlip "1" *-- "1..*" SlipVersion : versions
+PermissionSlip "1" *-- "*" SlipQuestion : questions
+PermissionSlip "1" *-- "*" SlipDelivery : deliveries
+SlipDelivery --> Channel : via
+SlipDelivery --> DeliveryStatus : has
+SendSlipCommandHandler ..> SendSlipCommand : handles
+SendSlipCommandHandler ..> SlipValidator : validates with
+SendSlipCommandHandler --> PermissionSlip : loads / Send()
+SendSlipCommandHandler ..> ISmsCapService : checks cap
+SendSlipCommandHandler ..> IGuardianMessenger : queues
+SendSlipCommandHandler ..> IAuditLog : records
+EditSentSlipCommandHandler ..> EditSentSlipCommand : handles
+EditSentSlipCommandHandler --> PermissionSlip : loads / Edit()
+EditSentSlipCommandHandler ..> IGuardianMessenger : re-sign when material
+@enduml

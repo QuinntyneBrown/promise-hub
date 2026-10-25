@@ -84,14 +84,21 @@ promise-hub/
 │                                     # including axe accessibility checks
 ├── eng/                              # Developer and CI scripts (start stack, run tests, deploy)
 │   └── infra/                        # Infrastructure as code
+├── tools/                            # Video tooling: narration, build and screen recording
+│   ├── video-audio/                  # script.md -> narration MP3 + timing manifest (edge-tts), pronunciations.json
+│   ├── video-build/                  # slides.html + narration + background music -> 1080p MP4
+│   └── video-record/                 # Screen recordings of the running app for clip slides
 └── docs/
+    ├── journeys.md                   # User journeys by persona, ordered by value
     ├── specs/                        # L1/L2 requirements with acceptance criteria
     ├── detailed-designs/             # Per-subsystem/feature designs and diagrams
     ├── mocks/                        # Static HTML mocks: the design reference
     ├── design-system/                # Tokens, components and patterns taken from the mocks
     ├── estimates/                    # Effort and percent-complete per design
     ├── adr/                          # Architecture decision records (NNNN-title.md)
-    └── prompts/                      # Ready-to-run implementation prompts for features
+    ├── prompts/                      # Ready-to-run implementation prompts for features
+    └── videos/                       # Narrated videos: NN-topic/ (script.md, slides.html, README.md, media)
+        └── assets/                   # Shared slides.css, slides.js, mark.svg and music/ (the background track)
 ```
 
 Rules (MUST be followed):
@@ -165,6 +172,15 @@ Rules (MUST be followed):
 - Run frontend tests in Chromium only. Do not configure or run Firefox, WebKit or any other browser.
 - Run axe accessibility checks on every screen.
 - **The backend is faked in e2e.** The full Playwright suite MUST pass with no backend running. Every HTTP call and the auth flow are intercepted and answered by a fake API in `e2e/fixtures/`, which owns seeded in-memory data and answers the real API's contracts. An unrouted request MUST fail the test loudly. Playwright's `webServer` starts only the frontend. Keep the fake in step with the API in the same change.
+
+## Narrated videos have background music (MANDATORY)
+
+**Every narrated video made in this repository has background music under its narration. It is one fixed track, and it is not optional.**
+
+- The track is `docs/videos/assets/music/on-the-beach-intro-outro.mp3` (_On the Beach Intro Outro_ by NaturesEye, Pixabay Content License). Its provenance lives in `docs/videos/assets/music/README.md`; never swap it for another track or add one without recording the provenance there.
+- Every slide deck names it: `<body data-music="../assets/music/on-the-beach-intro-outro.mp3">`. The builder (`tools/video-build/build-video.mjs`) lays it under the narration, looped, at −10.8 dB with a fade in, holds the last slide 3 s so it fades out, and refuses a deck with no `data-music`. Keep that level unless the user asks for another.
+- Videos are made with the `creating-narrated-videos` skill and the tooling in `tools/` (`tools/video-audio/`, `tools/video-build/`, `tools/video-record/`) with the shared assets in `docs/videos/assets/`. Do not build a second pipeline.
+- A video delivered without the music is incomplete and MUST be rebuilt before it is considered done.
 
 ## Incremental implementation and ATDD (MANDATORY)
 

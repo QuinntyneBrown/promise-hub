@@ -1,0 +1,38 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Invite and onboard staff
+
+Container(web, "PromiseHub web app", "Angular", "InviteStaffDialog, AcceptInvitePage, OnboardStaff* pages via InvitationsApi, StaffApi, StaffProfileApi")
+Container_Boundary(api, "PromiseHub API") {
+  Component(invendpoints, "InvitationEndpoints", "Minimal API group", "POST /staff/invitations; GET and POST /invitations/{token} (anonymous)")
+  Component(profendpoints, "StaffProfileEndpoints", "Minimal API group", "PUT /me/mobile, PUT /me/sessions, POST /me/onboarding/complete")
+  Component(invite, "InviteStaffCommandHandler", "Application handler", "Creates invitation with hashed token, 14-day expiry; sends email")
+  Component(preview, "PreviewInvitationQueryHandler", "Application handler", "Returns organization, inviter, role, email or Expired/Withdrawn")
+  Component(accept, "AcceptInvitationCommandHandler", "Application handler", "Creates StaffUser and Membership, marks accepted, issues session")
+  Component(profile, "SaveStaffMobile / SaveStaffSessions / CompleteOnboarding handlers", "Application handlers", "Store wizard answers on StaffProfile")
+  Component(invitation, "Invitation / StaffProfile", "Domain entities", "Token hash, expiry, status; mobile, sessions, onboarding state")
+  Component(emailsender, "IEmailSender", "Infrastructure service", "Email provider adapter")
+  Component(token, "ITokenGenerator", "Infrastructure service", "Unguessable invitation secret")
+  Component(store, "ISessionStore", "Infrastructure service", "Issues session after acceptance")
+  Component(audit, "AuditLog", "Infrastructure writer", "Invitation and membership entries")
+  ComponentDb(db, "PromiseHub database", "EF Core", "Invitations, memberships, profiles, audit")
+}
+Rel(web, invendpoints, "Calls", "JSON/HTTPS")
+Rel(web, profendpoints, "Calls", "JSON/HTTPS")
+Rel(invendpoints, invite, "Sends InviteStaffCommand")
+Rel(invendpoints, preview, "Sends PreviewInvitationQuery")
+Rel(invendpoints, accept, "Sends AcceptInvitationCommand")
+Rel(profendpoints, profile, "Sends profile commands")
+Rel(invite, token, "Generates secret")
+Rel(invite, emailsender, "Sends link")
+Rel(invite, invitation, "Creates")
+Rel(preview, invitation, "Reads")
+Rel(accept, invitation, "Validates and accepts")
+Rel(accept, store, "Issues session")
+Rel(profile, invitation, "Mutates StaffProfile")
+Rel(invite, audit, "Writes entry")
+Rel(accept, audit, "Writes entry")
+Rel(invitation, db, "Persisted by", "EF Core")
+Rel(audit, db, "Appends", "EF Core")
+@enduml

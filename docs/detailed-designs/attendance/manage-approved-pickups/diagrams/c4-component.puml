@@ -1,0 +1,42 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Manage approved pickups
+
+Container(web, "PromiseHub web app", "Angular", "Pickup dialogs via PickupApi / GuardianPickupApi; ConfirmPickupDialog via AttendanceApi")
+Container_Boundary(api, "PromiseHub API") {
+  Component(pep, "PickupEndpoints", "Minimal API", "Staff and guardian-link routes for /pickups; Pickup module check")
+  Component(aep, "AttendanceEndpoints", "Minimal API", "/sessions/{id}/sign-outs")
+  Component(iep, "IncidentEndpoints", "Minimal API", "/incidents/drafts")
+  Component(get, "GetApprovedPickupsQueryHandler", "Query handler", "Active pickups, primary guardian first")
+  Component(add, "AddApprovedPickupCommandHandler", "Command handler", "Adds row, audits")
+  Component(rem, "RemoveApprovedPickupCommandHandler", "Command handler", "Soft-removes, audits, texts guardian")
+  Component(so, "SignOutChildCommandHandler", "Command handler", "Someone-else sign-out with phone confirmation; notifies household")
+  Component(inc, "CreateIncidentDraftCommandHandler", "Command handler (Incidents)", "Pre-filled pickup-category draft")
+  Component(perm, "PickupPermissions", "Permission check", "Role and household ownership")
+  Component(dom, "ApprovedPickup / PickupConfirmation", "Domain", "Active list; value object stored on the record")
+  Component(notify, "ISmsSender / IEmailSender / IPushSender", "Infrastructure", "Household language and channel, cap-aware")
+  Component(audit, "IAuditLog", "Infrastructure", "Before and after values")
+  ComponentDb(db, "PromiseHubDbContext", "EF Core", "Tenant-filtered persistence")
+}
+
+Rel(web, pep, "Calls", "JSON/HTTPS")
+Rel(web, aep, "Calls", "JSON/HTTPS")
+Rel(web, iep, "Calls on Refuse and report", "JSON/HTTPS")
+Rel(pep, get, "Sends GetApprovedPickupsQuery")
+Rel(pep, add, "Sends AddApprovedPickupCommand")
+Rel(pep, rem, "Sends RemoveApprovedPickupCommand")
+Rel(aep, so, "Sends SignOutChildCommand")
+Rel(iep, inc, "Sends CreateIncidentDraftCommand")
+Rel(add, perm, "Checks")
+Rel(rem, perm, "Checks")
+Rel(add, dom, "Creates")
+Rel(rem, dom, "Soft-removes")
+Rel(so, dom, "Validates against active list, stores confirmation")
+Rel(rem, notify, "Texts primary guardian")
+Rel(so, notify, "Notifies household of someone-else sign-out")
+Rel(add, audit, "Writes")
+Rel(rem, audit, "Writes")
+Rel(get, db, "Reads", "EF Core")
+Rel(dom, db, "Persisted by", "EF Core")
+@enduml

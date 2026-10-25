@@ -1,0 +1,15 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Sign a slip
+
+Person_Ext(guardian, "Guardian", "Opens the slip link on a phone and signs with a typed name")
+Person(sitelead, "Site lead", "Is notified of declines")
+System(promisehub, "PromiseHub", "Multi-tenant system of record for youth programs")
+System_Ext(email, "Email provider", "Delivers the signed receipt")
+
+Rel(guardian, promisehub, "Signs or declines the slip using", "HTTPS link")
+Rel(promisehub, email, "Sends receipt copy via", "SMTP / HTTPS API")
+Rel(email, guardian, "Delivers receipt to")
+Rel(promisehub, sitelead, "Notifies of a decline", "In-app notification")
+@enduml

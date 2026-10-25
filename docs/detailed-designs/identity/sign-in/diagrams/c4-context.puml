@@ -1,0 +1,14 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Sign in
+
+Person(staff, "Staff member", "Site lead, youth worker or coordinator signing in on a phone")
+Person(admin, "Admin", "Admin or program director with MFA enrolled")
+System(promisehub, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+System_Ext(email, "Email provider", "Delivers password-reset links")
+
+Rel(staff, promisehub, "Signs in with email and password", "HTTPS")
+Rel(admin, promisehub, "Signs in and completes the MFA challenge", "HTTPS")
+Rel(promisehub, email, "Sends password-reset email via", "SMTP/API")
+@enduml

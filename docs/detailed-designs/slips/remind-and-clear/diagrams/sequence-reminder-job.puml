@@ -1,0 +1,69 @@
+@startuml
+title UML sequence behaviour — Reminder job
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+box "Backend — PromiseHub Infrastructure (job runner)" #FFF4E5
+  participant "SlipReminderJob" as job
+end box
+box "Backend — PromiseHub Application and Domain (Slips)" #ECFDF3
+  participant "SendSlipRemindersCommandHandler" as handler
+  participant "ReminderSchedulePolicy" as policy
+  participant "Household" as household
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHubDbContext" as db
+  participant "SmsCapService" as cap
+  participant "GuardianMessenger" as messenger
+  participant "NotificationService" as notify
+end box
+job -> db : For one tenant: load Sent slips with a reminder schedule (L2-001, L2-034)
+db --> job : Slips
+loop each slip
+  job -> policy : Due slot for schedule and now (e.g. Tue 6 pm)?
+  policy --> job : Slot or none
+  opt slot due and not yet processed
+    job -> handler : Send SendSlipRemindersCommand(slipId, slot)
+    handler -> db : Households of the event with no Active signature and no decline; last ReminderRecord
+    db --> handler : Unsigned households (L2-016 AC1)
+    handler -> cap : SegmentsRemaining(organizationId) (L2-022)
+    cap --> handler : Remaining
+    loop each unsigned household
+      alt already reminded for this slot
+        handler -> handler : Skip; never send twice (L2-034)
+      else email bounced and no mobile
+        handler -> household : Reachability = Unreachable (L2-016 AC4)
+        handler -> db : Add to unreachable list for staff follow-up; no retry
+      else reachable
+        alt channel Sms and segments remain
+          handler -> messenger : QueueReminder(household, slip, body in household language) via SMS
+        else channel Sms and cap reached
+          handler -> messenger : QueueReminder via email instead (L2-022)
+        else channel Email or Push
+          handler -> messenger : QueueReminder via channel
+        end
+        messenger --> handler : Queued
+        handler -> db : Append ReminderRecord(household, slip, now, channel, language, slot)
+      end
+    end
+    handler -> db : SaveChanges in one unit of work
+    db --> handler : Commit result
+    handler --> job : ReminderSummary (sent, skipped, unreachable)
+  end
+end
+alt a send fails
+  job -> job : Retry with backoff, up to 5 times (L2-034)
+  job -> notify : Surface the failure in the admin notification center after the last retry
+end
+@enduml

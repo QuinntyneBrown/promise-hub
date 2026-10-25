@@ -1,0 +1,19 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Verify a guardian link
+
+Person_Ext(guardian, "Guardian", "Opens a guardian link")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "guardian library: identify and code pages, verify gate, expired state")
+  Container(api, "PromiseHub API", "ASP.NET Core minimal API", "Guardian auth endpoints, GuardianLinkFilter, code handlers")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "Guardian links, verifications, trusted devices, audit log")
+}
+System_Ext(sms, "SMS provider", "Codes by text")
+System_Ext(email, "Email provider", "Codes by email")
+Rel(guardian, web, "Opens /g/... link", "HTTPS")
+Rel(web, api, "Calls /g/auth/* and guardian content endpoints with link and device tokens", "JSON/HTTPS")
+Rel(api, db, "Reads and writes", "EF Core")
+Rel(api, sms, "Sends code", "API")
+Rel(api, email, "Sends code", "SMTP/API")
+@enduml

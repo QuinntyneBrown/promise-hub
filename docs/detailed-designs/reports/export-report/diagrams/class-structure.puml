@@ -1,0 +1,149 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Export a report
+
+enum ExportStatus {
+  Requested
+  Running
+  Completed
+  Failed
+  Expired
+}
+
+enum ExportFormat {
+  Csv
+  FunderXlsx
+  Pdf
+}
+
+class Export {
+  +Guid Id
+  +Guid OrganizationId
+  +Guid RequestedByStaffId
+  +ExportFormat Format
+  +string? TemplateKey
+  +ReportPeriod Period
+  +IReadOnlyList<Guid> ProgramIds
+  +ExportIncludes Includes
+  +int RowCount
+  +ExportStatus Status
+  +int ProgressPercent
+  +string? FileName
+  +string? FileKey
+  +DateTimeOffset? CompletedAt
+  +DateTimeOffset? ExpiresAt
+  +bool IsBackground
+  +Start(): void
+  +Report(progress: int): void
+  +Complete(fileName: string, fileKey: string, completedAt: DateTimeOffset): void
+  +Fail(reason: string): void
+  +Expire(): void
+}
+
+class ExportTemplate {
+  +string Key
+  +string DisplayName
+  +IReadOnlyList<TemplateSheet> Sheets
+}
+
+class TemplateSheet {
+  +string Name
+  +IReadOnlyList<ColumnMapping> Columns
+}
+
+class StartExportCommand {
+  +ExportFormat Format
+  +string? TemplateKey
+  +PeriodKind PeriodKind
+  +DateOnly? From
+  +DateOnly? To
+  +IReadOnlyList<Guid> ProgramIds
+  +ExportIncludes Includes
+}
+
+class StartExportCommandHandler {
+  +{static} int BackgroundRowThreshold = 10000
+  +Handle(command: StartExportCommand): Task<Result<ExportDto>>
+}
+
+class ExportPipeline {
+  +Run(export: Export, progress: IProgress<int>): Task<ExportResult>
+}
+
+interface IExportWriter {
+  +ExportFormat Format
+  +Write(source: ExportSource, destination: Stream): Task
+}
+
+class CsvExportWriter {
+  +Write(source: ExportSource, destination: Stream): Task
+}
+
+class FunderTemplateXlsxWriter {
+  -ExportTemplate template
+  +Write(source: ExportSource, destination: Stream): Task
+}
+
+class ExportFileNamer {
+  +Name(organization: Organization, template: string, period: ReportPeriod, format: ExportFormat): string
+}
+
+class SmallCountSuppressor {
+  +Apply(cells: IReadOnlyList<DemographicCell>, exact: bool): IReadOnlyList<SuppressedCell>
+}
+
+interface IFileStore {
+  +Put(key: string, content: Stream, region: Region): Task
+  +Get(key: string): Task<Stream>
+  +Delete(key: string): Task
+  +SignUrl(key: string, expiresAt: DateTimeOffset): string
+}
+
+class ExportJob {
+  +Run(exportId: Guid): Task
+}
+
+class ExpireExportsJob {
+  +Run(organizationId: Guid, now: DateTimeOffset): Task
+}
+
+class GetExportQueryHandler {
+  +Handle(query: GetExportQuery): Task<ExportDto>
+}
+
+class DownloadExportQueryHandler {
+  +Handle(query: DownloadExportQuery): Task<Result<FileStreamResult>>
+}
+
+Export --> ExportStatus : has
+Export --> ExportFormat : has
+ExportTemplate "1" *-- "*" TemplateSheet
+StartExportCommandHandler ..> StartExportCommand : handles
+StartExportCommandHandler --> Export : creates
+StartExportCommandHandler --> ExportPipeline : runs inline
+StartExportCommandHandler ..> ExportJob : enqueues when over threshold
+ExportJob --> ExportPipeline : runs
+ExportPipeline --> IExportWriter : selects by format
+ExportPipeline --> SmallCountSuppressor : applies, exact = false
+ExportPipeline --> ExportFileNamer : names file
+ExportPipeline --> IFileStore : Put
+ExportPipeline --> Export : progress and completion
+CsvExportWriter ..|> IExportWriter
+FunderTemplateXlsxWriter ..|> IExportWriter
+FunderTemplateXlsxWriter --> ExportTemplate : fills
+GetExportQueryHandler --> IFileStore : SignUrl
+DownloadExportQueryHandler --> IFileStore : Get
+ExpireExportsJob --> Export : Expire
+ExpireExportsJob --> IFileStore : Delete
+@enduml
