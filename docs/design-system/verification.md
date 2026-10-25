@@ -13,6 +13,10 @@ Verified on 25 October 2026 using Chromium. No application behavior tests were a
 | Narrow reflow | Index, button, table, wizard and Quick Card pages checked at 320px; no horizontal page overflow |
 | Keyboard and preferences | First Tab reaches the visible skip link; focus ring renders. Tooltip appears on keyboard focus and Escape dismisses it. Reduced motion resolves the transition to 0.01ms; forced colours resolves the focus token to Highlight |
 
+## Update: mock review rules promoted (25 October 2026)
+
+The remaining rules in `docs/mocks/assets/ui.css` (table `hide-sm` columns and first-column links, phone tab wrapping, padded-card lists, roster status stripe radius, KPI label baseline, phone chart labels, alert ghost action, wizard Skip, flush card titles, name-first tables and flush-card feeds) moved to `assets/components.css` in the same cascade position. The catalogue pages for tabs, table, list, badge, stat, timeline, card, medical flag, alert, roster, wizard and top bar now document them. After regeneration: mocks checker 116 screens, 520 mocks, 0 errors, 0 warnings; design-system checker 95 pages, 0 errors, 0 warnings; contrast checker 232 passed, 0 failed; DTCG export regenerated (391 tokens).
+
 ## Visual review
 
 Reviewed the index, button, attendance roster, dialog and colour foundation at 360px and 1280px in light and dark themes. Reviewed button state matrices and representative source mocks: Today, check-in, Quick Card, guardian permission-slip signing and Add a family. Dark raised surfaces remain distinct. State matrices and tables scroll inside their own regions.

@@ -1815,3 +1815,32 @@ main.container > .steps { width: 100%; max-width: none; }
 /* Org switcher inside the staff top bar: the brand name steps aside for the organization. */
 .topbar:has(.org-switcher) .topbar__brand-name { display: none; }
 .topbar .org-switcher { margin-inline-start: calc(-1 * var(--space-2)); }
+
+/* ---------- Promoted from the mock review (formerly docs/mocks/assets/ui.css) ---------- */
+/* Table hide-sm columns: columns a phone can live without; the row still reads on its own. */
+@media (max-width: 39.99rem) { .table .hide-sm { display: none; } }
+/* Dates and other short first-column links never wrap. */
+.table td:first-child > a { white-space: nowrap; }
+/* Tabs wrap on phones instead of scrolling out of sight. */
+@media (max-width: 39.99rem) { .tabs { flex-wrap: wrap; } }
+/* A list inside a padded card lines up with the card's own text; the stack gap already separates tabs from what follows. */
+.card:not(.card--flush) > .list > .list__item, .card:not(.card--flush) > .stack > .list > .list__item { padding-inline: 0; }
+.stack > .tabs { margin-bottom: 0; }
+/* Roster status stripe follows the card's rounded corners. */
+.card--flush > .roster > .roster__item:first-child { border-top-left-radius: var(--radius-lg); }
+.card--flush > .roster > .roster__item:last-child { border-bottom-left-radius: var(--radius-lg); }
+/* Stat labels: KPI numbers sit on the same baseline across a row even when one label wraps. */
+.kpis .stat > .stat__label { flex: 1 0 auto; }
+/* Stacked charts on phones share one label column so the bars line up. */
+@media (max-width: 39.99rem) { .progress-chart { grid-template-columns: minmax(var(--layout-label-short), var(--layout-search-min)) minmax(0, 1fr) max-content; } }
+/* A ghost button that starts an alert's action row lines its label up with the text above it. */
+.alert .btn--ghost:first-child { margin-inline-start: calc(-1 * var(--space-3)); }
+/* Wizard footer on phones: with no Back button, Skip sits at the right like every other step. */
+.onboarding .wizard-card__footer .wizard-skip:first-child { margin-inline: auto 0; }
+/* Flush and padded cards start their heading at the same height. */
+.card--flush > .card__title { padding: var(--space-6) var(--space-4) var(--space-2); }
+/* Name-first tables keep the name on one line from tablet widths. */
+@media (min-width: 40rem) { .table-wrap--names td:first-child { min-width: var(--layout-role-width); } }
+@media (min-width: 40rem) and (max-width: 63.99rem) { .table-wrap--names th, .table-wrap--names td { padding-inline: var(--space-2); } }
+/* A feed inside a flush card keeps the card's inset. */
+.card--flush > .feed > li { padding-inline: var(--space-4); }
