@@ -33,6 +33,10 @@ def guardian_home(S):
                               list_item("Sofía Rivera · After‑School Tutoring", "Waiting for review. We’ll text you when it’s decided.", end=badge("Waiting review"))], card=False, label="Your children’s enrollments"), cls="card--flush")
               + g_footer())
     S.add("status", "Opened from a decision text on a verified device: each child’s enrollment status, with the waitlist position and next step (L2-013).", main=status)
+    S.add("no-show", "Opened from a no-show text: the child isn't checked in yet; the guardian answers here instead of replying 1 or 2 (L2-018).",
+          main='<h1>Hi Carmen</h1>' + alert("warning", "Sofía isn’t checked in at Tutoring night yet", "It started at 4:00 pm. Let staff know.",
+                actions=btn("On the way", "primary") + btn("Absent tonight", "")) + card(ul_list([list_item("Sofía Rivera · After‑School Tutoring", "Enrolled · started Tue 8 Sep.", end=badge("Enrolled", "success"))], card=False, label="Your children’s enrollments"), cls="card--flush") + g_footer())
+    S.add("no-show-answered", "After answering on the page: staff see it on the roster.", main='<h1>Hi Carmen</h1>' + alert("success", "Thanks. Staff can see Sofía is absent tonight.") + g_footer())
     S.add("declined", "A declined enrollment shows the reason staff wrote.", main=f'<h1>Hi Carmen</h1><p class="text-muted">Where your children stand at Harbourview.</p>'
           + card(ul_list([list_item("Sofía Rivera · Winter Camp 2026", "Not enrolled: Camp is for ages 6 to 12.", end=badge("Not enrolled", "danger"))], card=False, label="Your children’s enrollments"), cls="card--flush") + g_footer())
     S.add("none", "A verified household with nothing enrolled or waiting.", main='<h1>Hi Carmen</h1><p class="text-muted">Where your children stand at Harbourview.</p>' + card('<p>No enrollments yet. Enroll from the link the program sends.</p>') + g_footer())

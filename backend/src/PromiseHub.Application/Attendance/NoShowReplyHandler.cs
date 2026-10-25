@@ -10,6 +10,7 @@ namespace PromiseHub.Application.Attendance;
 /// <summary>
 /// A guardian's reply to a no-show text (L2-018 criterion 2): "1" records that the child is on the way; "2" marks every
 /// alerted child of that household absent. The organization comes from the alert the number answers, never from the text.
+/// The guardian home answers the same way through <see cref="ApplyAsync"/>.
 /// </summary>
 public sealed class NoShowReplyHandler(IPromiseHubDb db, TenantContext tenant, IAuditWriter audit, TimeProvider clock)
 {
@@ -33,8 +34,19 @@ public sealed class NoShowReplyHandler(IPromiseHubDb db, TenantContext tenant, I
             return;
         }
         tenant.ResolveForJob(latest.OrganizationId);
-        var alerts = await db.NoShowAlerts.Where(a => a.EventId == latest.EventId && a.HouseholdId == latest.HouseholdId && a.Reply == NoShowReply.None).ToListAsync(cancellationToken);
-        var e = await db.Events.AsNoTracking().SingleAsync(x => x.Id == latest.EventId, cancellationToken);
+        await ApplyAsync(latest.EventId, latest.HouseholdId, reply, cancellationToken);
+    }
+
+    /// <summary>Applies a reply to the household's unanswered alerts for one session, in the organization already resolved; false when none is open.</summary>
+    public async Task<bool> ApplyAsync(Guid eventId, Guid householdId, NoShowReply reply, CancellationToken cancellationToken = default)
+    {
+        var now = clock.GetUtcNow();
+        var alerts = await db.NoShowAlerts.Where(a => a.EventId == eventId && a.HouseholdId == householdId && a.Reply == NoShowReply.None).ToListAsync(cancellationToken);
+        if (alerts.Count == 0)
+        {
+            return false;
+        }
+        var e = await db.Events.AsNoTracking().SingleAsync(x => x.Id == eventId, cancellationToken);
         foreach (var alert in alerts)
         {
             alert.Replied(reply, now);
@@ -58,5 +70,6 @@ public sealed class NoShowReplyHandler(IPromiseHubDb db, TenantContext tenant, I
             audit.Record(new AuditEvent(AuditAction.Updated, "Attendance", record.Id, $"{child.FullName} · {e.Name} · absent: guardian replied 2"));
         }
         await db.SaveChangesAsync(cancellationToken);
+        return true;
     }
 }

@@ -25,6 +25,19 @@ export class HttpGuardianApi implements GuardianApi {
     return this.page<GuardianHome>(`${this.baseUrl}/g/home/${encodeURIComponent(token)}`);
   }
 
+  answerNoShow(
+    token: string,
+    eventId: string,
+    reply: 'OnTheWay' | 'Absent',
+  ): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(`${this.baseUrl}/g/home/${encodeURIComponent(token)}/no-show`, {
+        eventId,
+        reply,
+      }),
+    );
+  }
+
   private page<T>(url: string): Observable<GuardianPageResult<T>> {
     return this.http.get<T>(url).pipe(
       map((value): GuardianPageResult<T> => ({ status: 'loaded', value })),

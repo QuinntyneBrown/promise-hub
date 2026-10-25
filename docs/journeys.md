@@ -5,7 +5,7 @@
 | Guardian | Update household details | Correct contact, medical, language, and child information through a verified link. | [3 days](detailed-designs/households/maintain-household/README.md) | 0% |
 | Guardian | Manage approved pickups | Add or remove adults authorized to collect a child. | [4 days](detailed-designs/attendance/manage-approved-pickups/README.md) | 0% |
 | Guardian | Confirm an exceptional pickup | Approve or reject a proposed collector outside the approved list. | [4 days](detailed-designs/attendance/manage-approved-pickups/README.md) | 0% |
-| Guardian | Respond to an absence alert | Tell staff whether an expected child will attend. | [3 days](detailed-designs/attendance/alert-no-show-and-end-session/README.md) | 60% · [video](videos/22-follow-up-no-shows/README.md) |
+| Guardian | Respond to an absence alert | Tell staff whether an expected child will attend. | [3 days](detailed-designs/attendance/alert-no-show-and-end-session/README.md) | 90% · [video](videos/23-respond-to-an-absence-alert/README.md) |
 | Guardian | Track enrollment status | See whether a child is accepted or waitlisted. | [2 days](detailed-designs/enrollment/enroll-guardian/README.md) | 90% · [video](videos/17-track-enrollment-status/README.md) |
 | Guardian | Request household data | Ask for an export or deletion of household information. | [4 days](detailed-designs/organizations/set-privacy-and-residency/README.md) | 0% |
 | Guardian | Complete a survey | Submit feedback or outcomes through a translated, verified page. | [3 days](detailed-designs/guardian/localize-guardian-pages/README.md) | 0% |

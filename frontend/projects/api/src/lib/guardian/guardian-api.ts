@@ -10,6 +10,11 @@ import type { GuardianVerifyOutcome } from './guardian-verify-outcome';
 export interface GuardianApi {
   slip(token: string): Observable<GuardianSlipResult>;
   home(token: string): Observable<GuardianPageResult<GuardianHome>>;
+  answerNoShow(
+    token: string,
+    eventId: string,
+    reply: 'OnTheWay' | 'Absent',
+  ): Observable<WriteOutcome>;
   /** The answer is the same whether or not the contact is on file. */
   requestCode(token: string, contact: string): Observable<'sent' | 'gone' | 'error'>;
   verify(token: string, code: string): Observable<GuardianVerifyOutcome>;

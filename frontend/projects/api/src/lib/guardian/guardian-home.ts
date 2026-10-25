@@ -16,4 +16,6 @@ export interface GuardianHome {
       schedule: string | null;
     }[];
   }[];
+  /** No-show texts the household hasn't answered, per session. */
+  noShows: { eventId: string; event: string; startsAt: string; children: string[] }[];
 }

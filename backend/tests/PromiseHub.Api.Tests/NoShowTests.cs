@@ -9,7 +9,7 @@ using PromiseHub.Infrastructure.Persistence.Seed;
 namespace PromiseHub.Api.Tests;
 
 // L2-018 criteria 1 to 3 no-show alerts and replies, L2-022 SMS cap, L2-034 background jobs, L2-001 tenant isolation, L2-005 Roll Call off.
-public sealed class NoShowTests : IAsyncLifetime
+public sealed partial class NoShowTests : IAsyncLifetime
 {
     private static readonly Guid Tom = DatabaseSeeder.MembershipId(DatabaseSeeder.Harbourview, "tom@harbourview.example");
     private static readonly Guid Jaylen = DatabaseSeeder.MembershipId(DatabaseSeeder.Harbourview, "jaylen@harbourview.example");
@@ -87,6 +87,35 @@ public sealed class NoShowTests : IAsyncLifetime
         await RunJob();
         Assert.DoesNotContain(Sms.Sent, s => s.Text.Contains(Alert, StringComparison.Ordinal));
     }
+
+    [Fact]
+    public async Task The_text_links_to_the_home_where_the_guardian_answers_instead_of_replying()
+    {
+        _factory.Clock.Advance(TimeSpan.FromMinutes(4));
+        await RunJob();
+        var token = HomeLink().Match(Sms.Sent.Single(s => s.To == "905-555-0142" && s.Text.Contains(Alert, StringComparison.Ordinal)).Text).Groups["token"].Value;
+        var guardian = _factory.CreateClient();
+
+        Assert.Equal(HttpStatusCode.Unauthorized, (await guardian.PostAsJsonAsync($"/g/home/{token}/no-show", new { eventId = Tonight, reply = "Absent" })).StatusCode);
+        await guardian.PostAsJsonAsync("/g/auth/code", new { token, contact = "905-555-0142" });
+        await guardian.PostAsJsonAsync("/g/auth/verify", new { token, code = CodePattern().Match(Sms.Sent.Last(s => s.Text.Contains("code is", StringComparison.Ordinal)).Text).Value });
+        var home = await guardian.GetFromJsonAsync<JsonElement>($"/g/home/{token}");
+        var alert = home.GetProperty("noShows").EnumerateArray().Single();
+        Assert.Equal("Tutoring night", alert.GetProperty("event").GetString());
+        Assert.Equal(["Mateo", "Sofía"], alert.GetProperty("children").EnumerateArray().Select(c => c.GetString()));
+
+        var answered = await guardian.PostAsJsonAsync($"/g/home/{token}/no-show", new { eventId = Tonight, reply = "Absent" });
+
+        Assert.Equal(HttpStatusCode.NoContent, answered.StatusCode);
+        Assert.Equal("Absent", Row(await Roster(), "Sofía Rivera").GetProperty("noShow").GetString());
+        Assert.Empty((await guardian.GetFromJsonAsync<JsonElement>($"/g/home/{token}")).GetProperty("noShows").EnumerateArray());
+    }
+
+    [System.Text.RegularExpressions.GeneratedRegex(@"/g/home/(?<token>[A-Za-z0-9_-]+)")]
+    private static partial System.Text.RegularExpressions.Regex HomeLink();
+
+    [System.Text.RegularExpressions.GeneratedRegex(@"\b\d{6}\b")]
+    private static partial System.Text.RegularExpressions.Regex CodePattern();
 
     private static JsonElement Row(JsonElement roster, string name) =>
         roster.GetProperty("children").EnumerateArray().Single(r => r.GetProperty("name").GetString() == name);
