@@ -1,0 +1,75 @@
+@let r = result();
+@switch (r?.status) {
+  @case ('not-found') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="search"
+        title="We can’t find that message"
+        text="It may belong to another organization."
+        [headingLevel]="1"
+      >
+        <ph-button variant="primary" link="/messages">All messages</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('error') {
+    <ph-page-header title="Message" />
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load this message"
+        text="Try again."
+      >
+        <ph-button variant="primary" (click)="load(messageId())">Try again</ph-button>
+        <ph-button variant="ghost" link="/messages">All messages</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('loaded') {
+    @if (r?.status === 'loaded') {
+      @let m = r.value;
+      <ph-breadcrumb [items]="[{ label: 'Messages', link: '/messages' }, { label: m.title }]" />
+      <ph-page-header [title]="m.title" [subtitle]="subtitle(m)" />
+      <div class="split">
+        <div class="stack">
+          <div class="kpis" role="group" aria-label="Delivery">
+            <ph-stat
+              label="Delivered"
+              [value]="'' + m.deliveredCount"
+              [caption]="m.status === 'Sending' ? 'sending now' : 'of ' + m.recipientCount"
+              data-testid="kpi-Delivered"
+            />
+            <ph-stat label="Failed" [value]="'' + m.failedCount" data-testid="kpi-Failed" />
+            <ph-stat
+              label="Paused"
+              [value]="'' + m.pausedCount"
+              caption="SMS cap"
+              data-testid="kpi-Paused"
+            />
+          </div>
+          <ph-card title="Delivery" [flush]="true">
+            <ph-table
+              caption="Delivery by household"
+              [columns]="columns"
+              [rows]="rows()"
+              [flush]="true"
+            />
+          </ph-card>
+        </div>
+        <div class="stack">
+          <ph-card title="Message">
+            <div class="stack">
+              <ph-sms-preview
+                [text]="m.smsText"
+                [characters]="m.characters"
+                [segments]="m.segments"
+              />
+              <p>{{ languages(m) }}</p>
+            </div>
+          </ph-card>
+        </div>
+      </div>
+    }
+  }
+}

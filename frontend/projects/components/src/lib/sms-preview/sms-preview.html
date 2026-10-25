@@ -1,0 +1,7 @@
+<div class="bubble" data-testid="sms-text">{{ text() }}</div>
+<div class="meta" [class.meta--over]="over()">
+  <span>{{ characters() }} characters</span>
+  <span data-testid="sms-segments"
+    >{{ segments() }} SMS segment{{ segments() === 1 ? '' : 's' }}</span
+  >
+</div>

@@ -38,3 +38,14 @@
 .error::before {
   content: '⚠ ';
 }
+.meta {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font: var(--text-body-sm);
+  color: var(--color-fg-muted);
+}
+.count {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

@@ -1,0 +1,26 @@
+:host {
+  max-width: var(--layout-message-width);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.bubble {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-subtle);
+  color: var(--color-fg-default);
+  font: var(--text-body-sm);
+  overflow-wrap: anywhere;
+}
+.meta {
+  font: var(--text-caption);
+  color: var(--color-fg-muted);
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-variant-numeric: tabular-nums;
+}
+.meta--over {
+  color: var(--color-danger-fg);
+  font-weight: var(--font-weight-medium);
+}

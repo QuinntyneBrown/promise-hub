@@ -3,6 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 using PromiseHub.Application;
 using PromiseHub.Application.Audit;
 using PromiseHub.Application.Identity;
+using PromiseHub.Application.Messaging;
+using PromiseHub.Infrastructure.Messaging;
 using PromiseHub.Infrastructure.Auth;
 using PromiseHub.Infrastructure.Audit;
 using PromiseHub.Infrastructure.Persistence;
@@ -22,6 +24,9 @@ public static class DependencyInjection
         services.AddSingleton<ITotpVerifier, TotpVerifier>();
         services.AddScoped<DatabaseSeeder>();
         services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<ISmsSender, LoggingSmsSender>();
+        services.AddSingleton<IEmailSender, LoggingEmailSender>();
+        services.AddSingleton<MessageDispatchRunner>();
         return services;
     }
 }

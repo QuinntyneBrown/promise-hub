@@ -2,5 +2,5 @@
 
 | Design | Effort | Complete |
 |---|---|---|
-| compose-and-send-message | 8 days | 0% |
-| enforce-sms-cap | 6 days | 0% |
+| compose-and-send-message | 8 days | 50% |
+| enforce-sms-cap | 6 days | 40% |

@@ -20,7 +20,7 @@
 | Program director | Create programs and events | Set schedules, capacity, and event details for enrolled children. | [7 days](detailed-designs/programs/manage-programs/README.md) | 75% · [video](videos/05-create-programs-and-events/README.md) |
 | Program director | Send permission slips | Write event consent, contact guardians, and monitor signatures. | [7 days](detailed-designs/slips/write-and-send-slip/README.md) | 0% |
 | Program director | Review incidents | Examine submitted reports and record follow-up decisions. | [3 days](detailed-designs/incidents/report-and-review-incident/README.md) | 0% |
-| Program director | Send guardian messages | Choose recipients, language, and channel; review delivery and failures. | [9 days](detailed-designs/messaging/compose-and-send-message/README.md) | 0% |
+| Program director | Send guardian messages | Choose recipients, language, and channel; review delivery and failures. | [9 days](detailed-designs/messaging/compose-and-send-message/README.md) | 55% · [video](videos/10-send-guardian-messages/README.md) |
 | Program director | Produce grant reports | Filter attendance, demographics, and outcomes and export funder-ready results. | [8 days](detailed-designs/reports/export-report/README.md) | 0% |
 | Program director | Manage waitlists | Review capacity and move eligible children into programs. | [3 days](detailed-designs/enrollment/enroll-guardian/README.md) | 0% |
 | Program director | Monitor today's work | See sessions, missing slips, alerts, and tasks in one place. | [2 days](detailed-designs/shell/compose-navigation/README.md) | 0% |

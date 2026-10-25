@@ -17,6 +17,10 @@ Local terms:
 
 The slice spans the `new-message`, `messages` and `message` screens and the `send-now` and `cancel-send` dialogs. The per-organization SMS cap that limits text sending is designed separately in `messaging/enforce-sms-cap`; this feature consumes the cap state the other feature exposes.
 
+## Built so far
+
+Slice 10 delivered `MessagesPage`, `NewMessagePage` (audience by program or event and language, body with counter, Send by, live recipient count, SMS preview, invalid, error, no-results and over-cap states) and `MessagePage` (delivery counts, delivery by household with problems first, the text as sent), `MESSAGING_API` with `list`, `preview`, `send`, `get` and `smsCap`, the `/messages` endpoints, `Message` and `Delivery`, `AudienceResolver`, the segment count and the per-tenant send job (ADR 0013). Scheduling and `send-now`/`cancel-send`, webhooks and bounces, replies, the age and slip filters, list chips and translation are not built yet.
+
 ## Description
 
 ### Frontend

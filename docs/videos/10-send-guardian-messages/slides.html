@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 10 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="10" data-video-title="Send guardian messages" data-parts="Introduction|Promises|Write and send|At the cap|States|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 10</div>
+  <h1>Send guardian messages</h1>
+  <p class="lead">Who it reaches, what it costs, and what happened to each household</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="A message goes to households">
+  <h2>What sending promises</h2>
+  <ul>
+    <li>A program or an event, optionally one language</li>
+    <li>A live count by channel, priced in SMS segments</li>
+    <li>One delivery per household, sent by a per-tenant job</li>
+    <li>Sent once, retried with backoff, failures recorded</li>
+  </ul>
+</section>
+
+<section id="send" data-part="2" data-cue="Here is the composer on Marisol's laptop." data-clip="clips/compose-and-send-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Count, preview, send</h3><p>Three households by text; the Riveras in Spanish.</p></div>
+</section>
+
+<section id="cap" data-part="3" data-cue="Each organization has a monthly cap" data-clip="clips/email-failure-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>At the cap</h3><p>Texts off, email on; a household without email shows as failed.</p></div>
+</section>
+
+<section id="states" data-part="4" data-cue="Two screens to remember">
+  <h2>The states on screen</h2>
+  <div class="cols">
+    <img class="shot" alt="Messages with a delivered message" src="shots/desktop-messages.png">
+    <img class="shot" alt="A message with one failed delivery" src="shots/phone-message.png">
+  </div>
+</section>
+
+<section id="testing" data-part="5" data-cue="Backend tests cover the live count">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Job runs twice</td><td>Each household sent once</td></tr>
+    <tr><td>Provider refuses</td><td>Retried, then failed with the reason</td></tr>
+    <tr><td>At the cap</td><td>Email instead, or paused</td></tr>
+    <tr><td>Youth worker</td><td>403</td></tr>
+    <tr><td>Another organization / Messages off</td><td>404, nothing sent</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="6" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>To households, through their primary guardian</li><li>Counted and priced before it goes</li><li>Sent once per household; at the cap, email continues</li></ul>
+  <p class="muted">Next: edit a permission slip</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

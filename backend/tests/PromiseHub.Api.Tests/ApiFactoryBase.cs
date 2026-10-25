@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Time.Testing;
+using PromiseHub.Application.Messaging;
 using PromiseHub.Cli;
 using PromiseHub.Infrastructure.Persistence.Seed;
 
@@ -44,9 +45,15 @@ public abstract class ApiFactoryBase : WebApplicationFactory<Program>
     {
         builder.UseEnvironment("Testing");
         builder.UseSetting("ConnectionStrings:PromiseHub", ConnectionString);
+        // The tests run the send job by hand.
+        builder.UseSetting("Messaging:Dispatch", "false");
         builder.ConfigureServices(services =>
         {
             services.AddSingleton<TimeProvider>(Clock);
+            services.AddSingleton<FakeSmsSender>();
+            services.AddSingleton<ISmsSender>(sp => sp.GetRequiredService<FakeSmsSender>());
+            services.AddSingleton<FakeEmailSender>();
+            services.AddSingleton<IEmailSender>(sp => sp.GetRequiredService<FakeEmailSender>());
             if (!_testAuth)
             {
                 return;

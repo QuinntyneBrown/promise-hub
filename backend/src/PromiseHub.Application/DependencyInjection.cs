@@ -45,6 +45,14 @@ public static class DependencyInjection
         services.AddScoped<GetSessionRosterHandler>();
         services.AddScoped<CheckInHandler>();
         services.AddScoped<SessionAccess>();
+        services.AddScoped<Messaging.AudienceResolver>();
+        services.AddScoped<Messaging.SmsCap>();
+        services.AddScoped<Messaging.PreviewMessageHandler>();
+        services.AddScoped<Messaging.SendMessageHandler>();
+        services.AddScoped<Messaging.SendQueuedDeliveriesHandler>();
+        services.AddScoped<Messaging.ListMessagesHandler>();
+        services.AddScoped<Messaging.GetMessageHandler>();
+        services.AddScoped<Messaging.GetSmsCapHandler>();
         services.AddScoped<SignOutHandler>();
         services.AddScoped<GetPickupOptionsHandler>();
         services.AddScoped<MarkAbsentHandler>();

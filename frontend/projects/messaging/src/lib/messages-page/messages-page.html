@@ -1,0 +1,67 @@
+@let r = result();
+@if (r?.status !== 'forbidden') {
+  <ph-page-header title="Messages" [subtitle]="r?.status === 'loaded' ? subtitle(r.value) : null">
+    @if (canSend()) {
+      <ph-button variant="primary" link="/messages/new" icon="messages">New message</ph-button>
+    }
+  </ph-page-header>
+}
+@switch (r?.status) {
+  @case ('forbidden') {
+    <ph-error-page
+      icon="lock"
+      title="Messages are for directors and site leads"
+      text="Ask a site lead or program director to send it."
+    >
+      <ph-button variant="primary" link="/">Go to Today</ph-button>
+    </ph-error-page>
+  }
+  @case ('error') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load messages"
+        text="Try again."
+      >
+        <ph-button variant="primary" (click)="load()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('loaded') {
+    @if (r?.status === 'loaded') {
+      @if (r.value.segmentsUsed >= r.value.segmentCap) {
+        <ph-alert
+          tone="danger"
+          [title]="
+            'You’ve used all ' +
+            r.value.segmentCap.toLocaleString('en-CA') +
+            ' SMS segments this month'
+          "
+          text="Texts pause until the 1st. Email still sends."
+        />
+      }
+      @if (r.value.messages.length === 0) {
+        <ph-card [flush]="true">
+          <ph-empty-state
+            icon="messages"
+            title="No messages yet"
+            text="Message guardians by program, event or language."
+          >
+            @if (canSend()) {
+              <ph-button variant="primary" link="/messages/new">New message</ph-button>
+            }
+          </ph-empty-state>
+        </ph-card>
+      } @else {
+        <ph-list label="Sent messages">
+          @for (m of r.value.messages; track m.id) {
+            <ph-list-item [title]="m.title" [meta]="meta(m)" [link]="['/messages', m.id]">
+              <ph-badge [tone]="badge(m).tone">{{ badge(m).label }}</ph-badge>
+            </ph-list-item>
+          }
+        </ph-list>
+      }
+    }
+  }
+}

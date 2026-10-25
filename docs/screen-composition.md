@@ -37,6 +37,9 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Event form | `event-form` (default, invalid) | `ph-breadcrumb`, `ph-page-header`, `ph-card`, `ph-text-field`, `ph-select`, `ph-radio-group`, `ph-switch`, `ph-textarea`, `ph-alert`, `ph-button` | Local time conversion |
 | Check-in | `check-in` (default, empty, no-results, error, forbidden) | `ph-page-header`, `ph-stat`, `ph-text-field` (search), `ph-chip`, `ph-roster`, `ph-roster-item`, `ph-flag`, `ph-badge`, `ph-card`, `ph-empty-state`, `ph-error-page` (forbidden), `ph-button`, toast | Optimistic roster state |
 | Quick Card | `quick-card` (default, empty, forbidden, error) | `ph-avatar`, `ph-quick-card-alert`, `ph-alert`, `ph-card` (titled), `ph-description-list`, `ph-call-list`, `ph-list`, `ph-list-item`, `ph-badge`, `ph-empty-state`, `ph-button` | Section order, overline heading for the call list |
+| Messages | `messages` (default, empty, error, forbidden) | `ph-page-header`, `ph-alert` (danger, cap reached), `ph-list`, `ph-list-item`, `ph-badge`, `ph-card`, `ph-empty-state`, `ph-error-page`, `ph-button` | — |
+| New message | `new-message` (default, invalid, error, no-results, over-cap) | `ph-breadcrumb`, `ph-page-header`, `ph-alert`, `ph-card` (titled), `ph-select`, `ph-recipient-count`, `ph-textarea` (help, counter), `ph-radio-group` (disabled options), `ph-sms-preview`, `ph-button` | Debounced preview |
+| Message | `message` (default, error) | `ph-breadcrumb`, `ph-page-header`, `ph-stat`, `ph-card` (titled, flush), `ph-table` (badge cells), `ph-sms-preview`, `ph-empty-state`, `ph-button` | Refresh while sending |
 
 ## Dialogs
 

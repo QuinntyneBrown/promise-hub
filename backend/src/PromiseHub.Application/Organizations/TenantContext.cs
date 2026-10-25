@@ -20,5 +20,13 @@ public sealed class TenantContext : ITenantContext
         IsResolved = true;
     }
 
+    /// <summary>A background job acting for one organization, never for a person.</summary>
+    public void ResolveForJob(Guid organizationId)
+    {
+        OrganizationId = organizationId;
+        ActorName = "PromiseHub";
+        IsResolved = true;
+    }
+
     public static TenantContext System() => new() { IsSystem = true, ActorName = "System" };
 }
