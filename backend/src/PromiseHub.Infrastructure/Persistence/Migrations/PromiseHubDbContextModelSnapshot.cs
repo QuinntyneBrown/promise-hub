@@ -67,13 +67,28 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("ChildId")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("CollectedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CollectorGuardianId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("ConfirmedByPhone")
+                        .HasColumnType("INTEGER");
+
                     b.Property<Guid>("EventId")
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("IdChecked")
+                        .HasColumnType("INTEGER");
 
                     b.Property<long?>("MarkedAbsentAt")
                         .HasColumnType("INTEGER");
 
                     b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("SignedOutAt")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Status")
