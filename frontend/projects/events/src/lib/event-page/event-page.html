@@ -1,0 +1,77 @@
+@let r = result();
+@switch (r?.status) {
+  @case ('not-found') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="search"
+        title="We can’t find that event"
+        text="It may belong to another organization."
+        [headingLevel]="1"
+      >
+        <ph-button variant="primary" link="/events">Back to Events</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('error') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load this event"
+        text="Try again."
+        [headingLevel]="1"
+      >
+        <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('loaded') {
+    @if (r?.status === 'loaded') {
+      @let e = r.value;
+      @let cancelled = e.status === 'Cancelled';
+      <ph-breadcrumb [items]="[{ label: 'Events', link: '/events' }, { label: e.name }]" />
+      <ph-page-header [title]="e.name" [subtitle]="e.programName">
+        @if (canEdit() && !cancelled) {
+          <ph-button [link]="['/events', e.id, 'edit']">Edit</ph-button>
+        }
+        @if (canCancel() && !cancelled) {
+          <ph-button
+            variant="ghost"
+            icon="menu"
+            [iconOnly]="true"
+            label="More actions"
+            hasPopup="dialog"
+            (click)="actions(e)"
+          />
+        }
+      </ph-page-header>
+      @if (cancelled) {
+        <ph-alert tone="warning" title="This event is cancelled" [text]="cancelledText(e)" />
+      }
+      <div class="split">
+        <div class="stack">
+          <ph-card title="Permission slip">
+            <div class="stack">
+              <div>
+                <ph-badge [tone]="badge(e.slipStatus).tone">{{
+                  badge(e.slipStatus).label
+                }}</ph-badge>
+              </div>
+              @if (e.slipStatus === 'Draft') {
+                <p>
+                  The slip is a draft. Write it and send it to {{ e.rosterSize }} guardians from
+                  Permission slips.
+                </p>
+              } @else if (e.slipStatus === 'NotNeeded') {
+                <p>The season consent covers this event.</p>
+              }
+            </div>
+          </ph-card>
+          <ph-card title="Details">
+            <ph-description-list [facts]="facts(e)" />
+          </ph-card>
+        </div>
+      </div>
+    }
+  }
+}

@@ -1,0 +1,36 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog [title]="'Add a child to ' + program.name" description="Search your roster.">
+    <ph-text-field
+      inputId="q"
+      label="Child’s name"
+      name="q"
+      [error]="error()"
+      [(ngModel)]="q"
+      (ngModelChange)="search($event)"
+    />
+    @if (matches().length) {
+      <ph-list label="Matching children">
+        @for (c of matches(); track c.id) {
+          <ph-list-item
+            [title]="c.name + (c.age !== null ? ', ' + c.age : '')"
+            [meta]="c.householdName + ' household'"
+            [avatar]="c.name"
+          >
+            <ph-button
+              size="sm"
+              [variant]="chosen()?.id === c.id ? 'primary' : 'default'"
+              [label]="'Choose ' + c.name"
+              (click)="chosen.set(c); error.set(null)"
+            >
+              {{ chosen()?.id === c.id ? 'Chosen' : 'Choose' }}
+            </ph-button>
+          </ph-list-item>
+        }
+      </ph-list>
+    }
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Add to roster</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

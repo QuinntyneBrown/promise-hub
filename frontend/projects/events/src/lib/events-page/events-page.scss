@@ -1,0 +1,13 @@
+.search {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.program {
+  flex: 0 1 16rem;
+  min-width: 0;
+}

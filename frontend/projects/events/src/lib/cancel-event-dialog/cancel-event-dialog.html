@@ -1,0 +1,22 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    [title]="'Cancel ' + event.name + '?'"
+    [description]="event.rosterSize + ' guardians on the roster. Signed slips are kept.'"
+    icon="warning"
+    tone="danger"
+  >
+    <ph-textarea
+      inputId="message"
+      label="Message to guardians"
+      name="message"
+      [rows]="3"
+      [error]="error()"
+      [(ngModel)]="message"
+    />
+    <ph-switch label="Tell guardians" name="tellGuardians" [(ngModel)]="tellGuardians" />
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Keep the event</ph-button>
+      <ph-button variant="danger" type="submit" [busy]="busy()">Cancel event</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

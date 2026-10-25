@@ -1,0 +1,70 @@
+@let r = result();
+<ph-page-header title="Events" [subtitle]="r?.status === 'loaded' ? subtitle(r.value) : null">
+  @if (canCreate()) {
+    <ph-button variant="primary" link="/events/new" icon="events">New event</ph-button>
+  }
+</ph-page-header>
+<div class="toolbar">
+  <ph-text-field
+    class="search"
+    inputId="ev-q"
+    type="search"
+    label="Search events"
+    [labelHidden]="true"
+    placeholder="Search events"
+    [(ngModel)]="q"
+    (ngModelChange)="reload()"
+  />
+  <div class="chips" role="group" aria-label="Filter events">
+    <ph-chip [pressed]="filter() === 'upcoming'" (click)="setFilter('upcoming')">Upcoming</ph-chip>
+    <ph-chip [pressed]="filter() === 'needs-slips'" (click)="setFilter('needs-slips')"
+      >Needs slips</ph-chip
+    >
+    <ph-chip [pressed]="filter() === 'past'" (click)="setFilter('past')">Past</ph-chip>
+  </div>
+  <ph-select
+    class="program"
+    inputId="ev-prog"
+    label="Program"
+    name="programId"
+    [options]="programOptions()"
+    [(ngModel)]="programId"
+    (ngModelChange)="reload()"
+  />
+</div>
+@switch (r?.status) {
+  @case ('error') {
+    <ph-card [flush]="true">
+      <ph-empty-state icon="warning" tone="error" title="We couldn’t load events" text="Try again.">
+        <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('loaded') {
+    @if (r?.status === 'loaded') {
+      @if (r.value.events.length === 0) {
+        <ph-card [flush]="true">
+          <ph-empty-state
+            icon="events"
+            title="No events match"
+            text="Try another filter, program or search."
+          />
+        </ph-card>
+      } @else {
+        <ph-list label="Events">
+          @for (e of r.value.events; track e.id) {
+            <ph-list-item [title]="e.name" [meta]="meta(e)" [link]="['/events', e.id]">
+              @if (e.status === 'Cancelled') {
+                <ph-badge>Cancelled</ph-badge>
+              } @else {
+                <ph-badge [tone]="badge(e.slipStatus).tone">{{
+                  badge(e.slipStatus).label
+                }}</ph-badge>
+              }
+            </ph-list-item>
+          }
+        </ph-list>
+      }
+    }
+  }
+}

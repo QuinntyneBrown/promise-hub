@@ -1,0 +1,6 @@
+<ph-dialog [title]="'More actions for ' + event.name">
+  <ph-action-menu label="Event actions" [items]="items" (selected)="choose($event)" />
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close()">Close</ph-button>
+  </ng-container>
+</ph-dialog>

@@ -1,0 +1,23 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    [title]="'Archive ' + program.name + '?'"
+    description="Roster, attendance and slips are kept. No check-in or messages until restored."
+    icon="warning"
+    tone="danger"
+  >
+    <ph-text-field
+      inputId="confirmName"
+      label="Type the program name to confirm"
+      name="confirmName"
+      [error]="error()"
+      [ngModel]="confirmName()"
+      (ngModelChange)="confirmName.set($event)"
+    />
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="danger" type="submit" [disabled]="!matches()" [busy]="busy()"
+        >Archive program</ph-button
+      >
+    </ng-container>
+  </ph-dialog>
+</form>

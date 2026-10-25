@@ -6,6 +6,7 @@ import { toLoad, toWrite } from '../http-results';
 import { LoadResult } from '../load-result';
 import { WriteOutcome } from '../write-outcome';
 import { Child } from './child';
+import { ChildMatch } from './child-match';
 import { ChildChanges } from './child-changes';
 import { GuardianChanges } from './guardian-changes';
 import { Household } from './household';
@@ -34,6 +35,14 @@ export class HttpHouseholdsApi implements HouseholdsApi {
 
   getChild(id: string): Observable<LoadResult<Child>> {
     return toLoad(this.http.get<Child>(`${this.baseUrl}/children/${id}`));
+  }
+
+  findChildren(q: string): Observable<LoadResult<{ children: ChildMatch[] }>> {
+    return toLoad(
+      this.http.get<{ children: ChildMatch[] }>(`${this.baseUrl}/children`, {
+        params: new HttpParams().set('q', q),
+      }),
+    );
   }
 
   create(family: NewFamily): Observable<WriteOutcome> {

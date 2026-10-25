@@ -1,0 +1,55 @@
+@let r = result();
+<ph-page-header title="Programs" [subtitle]="r?.status === 'loaded' ? subtitle(r.value) : null">
+  @if (canManage()) {
+    <ph-button variant="primary" link="/programs/new" icon="programs">New program</ph-button>
+  }
+</ph-page-header>
+<div class="toolbar" role="group" aria-label="Filter programs">
+  <ph-chip [pressed]="status() === 'active'" (click)="status.set('active')">Active</ph-chip>
+  <ph-chip [pressed]="status() === 'archived'" (click)="status.set('archived')">Archived</ph-chip>
+</div>
+@switch (r?.status) {
+  @case ('error') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load programs"
+        text="Try again."
+      >
+        <ph-button variant="primary" (click)="retry()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('loaded') {
+    @if (r?.status === 'loaded') {
+      @if (r.value.programs.length === 0) {
+        <ph-card [flush]="true">
+          <ph-empty-state
+            icon="programs"
+            [title]="status() === 'active' ? 'No programs yet' : 'No archived programs'"
+            [text]="
+              status() === 'active'
+                ? 'Create the first program to enroll children.'
+                : 'Archived programs appear here.'
+            "
+          />
+        </ph-card>
+      } @else {
+        <ph-list label="Programs">
+          @for (p of r.value.programs; track p.id) {
+            <ph-list-item [title]="p.name" [meta]="meta(p)" [link]="['/programs', p.id]">
+              @if (p.status === 'Archived') {
+                <ph-badge>Archived</ph-badge>
+              } @else if (p.enrollmentOpen) {
+                <ph-badge tone="success">Enrolling</ph-badge>
+              } @else {
+                <ph-badge>Closed</ph-badge>
+              }
+            </ph-list-item>
+          }
+        </ph-list>
+      }
+    }
+  }
+}

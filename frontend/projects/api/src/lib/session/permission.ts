@@ -1,2 +1,9 @@
 export type Permission =
-  'manageSettings' | 'writeHouseholds' | 'deleteHouseholds' | 'readMedical' | 'writeMedical';
+  | 'manageSettings'
+  | 'writeHouseholds'
+  | 'deleteHouseholds'
+  | 'readMedical'
+  | 'writeMedical'
+  | 'managePrograms'
+  | 'manageEvents'
+  | 'cancelEvents';

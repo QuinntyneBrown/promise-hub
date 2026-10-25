@@ -1,0 +1,87 @@
+@let editing = !!eventId();
+<ph-breadcrumb
+  [items]="[{ label: 'Events', link: '/events' }, { label: editing ? 'Edit event' : 'New event' }]"
+/>
+<ph-page-header [title]="editing ? 'Edit event' : 'New event'" />
+@if (loaded()) {
+  <form class="form-page" novalidate (ngSubmit)="submit()">
+    <ph-card>
+      <div class="stack">
+        @if (failed()) {
+          <ph-alert
+            tone="danger"
+            title="We couldn’t save the event"
+            text="Try again in a minute."
+          />
+        }
+        <ph-text-field
+          inputId="name"
+          label="Event name"
+          name="name"
+          placeholder="Fall field trip: Royal Botanical Gardens"
+          [error]="errors()['name'] ?? null"
+          [(ngModel)]="fields.name"
+        />
+        <ph-select
+          inputId="programId"
+          label="Program"
+          name="programId"
+          [options]="programs()"
+          [error]="errors()['programId'] ?? null"
+          [(ngModel)]="fields.programId"
+        />
+        <div class="two-col">
+          <ph-text-field
+            inputId="startsAt"
+            label="Starts"
+            type="datetime-local"
+            name="startsAt"
+            [error]="errors()['startsAt'] ?? null"
+            [(ngModel)]="startsAt"
+          />
+          <ph-text-field
+            inputId="endsAt"
+            label="Ends"
+            type="datetime-local"
+            name="endsAt"
+            [error]="errors()['endsAt'] ?? null"
+            [(ngModel)]="endsAt"
+          />
+        </div>
+        <ph-text-field
+          inputId="place"
+          label="Where"
+          name="place"
+          help="For trips, include the bus stop."
+          [(ngModel)]="fields.place"
+        />
+        <ph-radio-group
+          legend="Permission slip"
+          name="slip"
+          [options]="slipOptions"
+          [(ngModel)]="slip"
+        />
+        <ph-switch
+          label="Text guardians if not checked in 15 min after start"
+          name="noShowAlert"
+          [(ngModel)]="fields.noShowAlert"
+        />
+        <ph-textarea
+          inputId="staffNotes"
+          label="Notes for staff"
+          name="staffNotes"
+          [optional]="true"
+          [(ngModel)]="fields.staffNotes"
+        />
+      </div>
+    </ph-card>
+    <div class="form-actions">
+      <ph-button variant="ghost" [link]="editing ? ['/events', eventId()] : '/events'"
+        >Cancel</ph-button
+      >
+      <ph-button variant="primary" type="submit" [busy]="busy()">{{
+        editing ? 'Save event' : 'Create event'
+      }}</ph-button>
+    </div>
+  </form>
+}

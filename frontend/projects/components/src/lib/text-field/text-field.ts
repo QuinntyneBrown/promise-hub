@@ -19,7 +19,9 @@ import { PhIcon } from '../icon/icon';
 export class PhTextField implements ControlValueAccessor {
   readonly inputId = input.required<string>();
   readonly label = input.required<string>();
-  readonly type = input<'text' | 'email' | 'password' | 'search' | 'tel' | 'date'>('text');
+  readonly type = input<
+    'text' | 'email' | 'password' | 'search' | 'tel' | 'date' | 'datetime-local' | 'number'
+  >('text');
   readonly optional = input(false);
   readonly labelHidden = input(false);
   readonly placeholder = input<string | null>(null);

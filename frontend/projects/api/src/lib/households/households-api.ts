@@ -2,6 +2,7 @@ import type { Observable } from 'rxjs';
 import type { LoadResult } from '../load-result';
 import type { WriteOutcome } from '../write-outcome';
 import type { Child } from './child';
+import type { ChildMatch } from './child-match';
 import type { ChildChanges } from './child-changes';
 import type { GuardianChanges } from './guardian-changes';
 import type { Household } from './household';
@@ -15,6 +16,8 @@ export interface HouseholdsApi {
   list(q: string, filter: string): Observable<LoadResult<HouseholdList>>;
   get(id: string): Observable<LoadResult<Household>>;
   getChild(id: string): Observable<LoadResult<Child>>;
+  /** Children whose name contains the text, for pickers. */
+  findChildren(q: string): Observable<LoadResult<{ children: ChildMatch[] }>>;
   create(family: NewFamily): Observable<WriteOutcome>;
   addChild(householdId: string, child: NewChild): Observable<WriteOutcome>;
   addGuardian(householdId: string, guardian: NewGuardian): Observable<WriteOutcome>;
