@@ -13,6 +13,15 @@ public static class DependencyInjection
         services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantContext>());
         services.AddScoped<GetSessionHandler>();
         services.AddScoped<GetChildHandler>();
+        services.AddScoped<ListHouseholdsHandler>();
+        services.AddScoped<GetHouseholdHandler>();
+        services.AddScoped<CreateHouseholdHandler>();
+        services.AddScoped<AddChildHandler>();
+        services.AddScoped<AddGuardianHandler>();
+        services.AddScoped<UpdateGuardianHandler>();
+        services.AddScoped<UpdateChildHandler>();
+        services.AddScoped<UpdateMedicalHandler>();
+        services.AddScoped<DeleteHouseholdHandler>();
         services.AddScoped<GetOrganizationSettingsHandler>();
         services.AddScoped<IModuleGate, ModuleGate>();
         services.AddScoped<GetModulesHandler>();
