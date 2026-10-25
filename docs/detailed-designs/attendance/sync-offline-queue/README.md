@@ -17,6 +17,10 @@ Local terms:
 
 The feature belongs to the `attendance` subsystem and the Roll Call and Quick Cards modules. The service worker is registered by the shell application (`frontend/projects/promisehub/`); the cache contents and the queue are owned by the `attendance` library.
 
+## Built so far
+
+Slice 25 delivered `OfflineStore` (saved rosters, Quick Cards and the action queue in `localStorage`), the `offline` load status and `queued` write outcome, `AttendanceApi.queued()` and `sync()`, the offline notice, sync chip, waiting-to-sync rows and disabled sign-out on `CheckInPage`, the saved chip on `QuickCardPage`, the nothing-saved state, and `AttendanceRecord.HasConflict` with the conflict badge (ADR 0023). The service worker, the offline-queue dialog and the stale warning are not built yet.
+
 ## Description
 
 ### Frontend — `frontend/projects/promisehub/`
