@@ -5,6 +5,7 @@ using PromiseHub.Application.Organizations;
 using PromiseHub.Domain.Attendance;
 using PromiseHub.Domain.Audit;
 using PromiseHub.Domain.Households;
+using PromiseHub.Domain.Messaging;
 using PromiseHub.Domain.Identity;
 using PromiseHub.Domain.Organizations;
 using PromiseHub.Domain.Programs;
@@ -32,6 +33,9 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<AttendanceEvent> AttendanceEvents => Set<AttendanceEvent>();
     public DbSet<WalkIn> WalkIns => Set<WalkIn>();
     public DbSet<SessionStaff> SessionStaff => Set<SessionStaff>();
+    public DbSet<Message> Messages => Set<Message>();
+    public DbSet<Delivery> Deliveries => Set<Delivery>();
+    public DbSet<SmsUsagePeriod> SmsUsagePeriods => Set<SmsUsagePeriod>();
     public DbSet<StaffUser> StaffUsers => Set<StaffUser>();
     public DbSet<SignInAttempt> SignInAttempts => Set<SignInAttempt>();
 
@@ -174,6 +178,37 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.HasOne<Event>().WithMany().HasForeignKey(s => s.EventId);
             e.HasOne<Membership>().WithMany().HasForeignKey(s => s.MembershipId);
             e.HasIndex(s => new { s.EventId, s.MembershipId }).IsUnique();
+        });
+        modelBuilder.Entity<Message>(e =>
+        {
+            e.Property(m => m.Title).HasMaxLength(200);
+            e.Property(m => m.Body).HasMaxLength(Application.Messaging.SendMessageHandler.MaxLength);
+            e.Property(m => m.Audience).HasMaxLength(300);
+            e.Property(m => m.Language).HasMaxLength(50);
+            e.Property(m => m.CreatedBy).HasMaxLength(200);
+            e.Property(m => m.Channel).HasConversion<string>().HasMaxLength(30);
+            e.Property(m => m.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(m => m.CreatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+        });
+        modelBuilder.Entity<Delivery>(e =>
+        {
+            e.Property(d => d.Household).HasMaxLength(200);
+            e.Property(d => d.Guardian).HasMaxLength(200);
+            e.Property(d => d.Language).HasMaxLength(50);
+            e.Property(d => d.To).HasMaxLength(320);
+            e.Property(d => d.FallbackEmail).HasMaxLength(320);
+            e.Property(d => d.Reason).HasMaxLength(200);
+            e.Property(d => d.Channel).HasConversion<string>().HasMaxLength(10);
+            e.Property(d => d.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(d => d.DueAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.HasOne<Message>().WithMany().HasForeignKey(d => d.MessageId);
+            e.HasIndex(d => new { d.OrganizationId, d.Status });
+        });
+        modelBuilder.Entity<SmsUsagePeriod>(e =>
+        {
+            e.Property(p => p.Period).HasMaxLength(7);
+            e.Ignore(p => p.Remaining);
+            e.HasIndex(p => new { p.OrganizationId, p.Period }).IsUnique();
         });
         modelBuilder.Entity<StaffUser>(e =>
         {

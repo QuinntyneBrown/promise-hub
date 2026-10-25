@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using PromiseHub.Domain.Attendance;
 using PromiseHub.Domain.Audit;
 using PromiseHub.Domain.Households;
+using PromiseHub.Domain.Messaging;
 using PromiseHub.Domain.Identity;
 using PromiseHub.Domain.Organizations;
 using PromiseHub.Domain.Programs;
@@ -29,6 +30,9 @@ public interface IPromiseHubDb
     DbSet<AttendanceEvent> AttendanceEvents { get; }
     DbSet<WalkIn> WalkIns { get; }
     DbSet<SessionStaff> SessionStaff { get; }
+    DbSet<Message> Messages { get; }
+    DbSet<Delivery> Deliveries { get; }
+    DbSet<SmsUsagePeriod> SmsUsagePeriods { get; }
     DbSet<StaffUser> StaffUsers { get; }
     DbSet<SignInAttempt> SignInAttempts { get; }
 

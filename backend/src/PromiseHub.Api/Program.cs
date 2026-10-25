@@ -13,6 +13,9 @@ var connectionString = builder.Configuration.GetConnectionString("PromiseHub")
 builder.Services.AddHostedService<MigrationGuard>();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(connectionString);
+builder.Services.AddHostedService<PromiseHub.Api.Hosting.MessageDispatchHostedService>();
+// Enums travel as their names, as the DTOs already do.
+builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 builder.Services.AddStaffAuthentication();
 builder.Services.AddPermissionAuthorization();
 
@@ -35,6 +38,7 @@ app.MapHouseholdEndpoints();
 app.MapProgramEndpoints();
 app.MapEventEndpoints();
 app.MapAttendanceEndpoints();
+app.MapMessagingEndpoints();
 app.MapSettingsEndpoints();
 
 app.Run();

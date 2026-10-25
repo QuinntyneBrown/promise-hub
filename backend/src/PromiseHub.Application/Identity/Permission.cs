@@ -12,4 +12,5 @@ public enum Permission
     CancelEvents,
     RunSessions,
     RunAnySession,
+    SendMessages,
 }
