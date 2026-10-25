@@ -20,6 +20,10 @@ export class TodayPage extends BasePage {
     return this.page.getByRole('heading', { name: 'Nothing here yet' });
   }
 
+  session(name: string): Locator {
+    return this.page.getByRole('region', { name });
+  }
+
   emptyStateAction(name: string): Locator {
     return this.page.getByRole('link', { name });
   }

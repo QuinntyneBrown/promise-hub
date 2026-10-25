@@ -12,7 +12,21 @@ const can = {
   managePrograms: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
   manageEvents: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
   cancelEvents: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
+  runSessions: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker'].includes(m.role),
 };
+
+interface FakeAttendance {
+  status: 'NotYet' | 'Present' | 'Absent' | 'SignedOut';
+  checkedInAt: string | null;
+}
+
+interface FakeWalkIn {
+  id: string;
+  eventId: string;
+  childName: string;
+  guardian: string;
+  medicalNotes: string | null;
+}
 
 type Handler = (route: Route, params: Record<string, string>) => Promise<void>;
 
@@ -34,6 +48,10 @@ export class FakeApi {
   private households: FakeHousehold[] = seedHouseholds();
   private programs: FakeProgram[] = seedPrograms();
   private events: FakeEvent[] = seedEvents();
+  /** Attendance by session, then by child or walk-in id. */
+  private attendance = new Map<string, Map<string, FakeAttendance>>();
+  private walkIns: FakeWalkIn[] = [];
+  private actions = new Set<string>();
   private nextId = 1;
 
   constructor(private membershipId: string | null) {}
@@ -95,6 +113,11 @@ export class FakeApi {
     ['GET', /^\/api\/events\/(?<id>[^/]+)$/, (route, p) => this.getEvent(route, p['id']!)],
     ['PUT', /^\/api\/events\/(?<id>[^/]+)$/, (route, p) => this.saveEvent(route, p['id']!)],
     ['POST', /^\/api\/events\/(?<id>[^/]+)\/cancel$/, (route, p) => this.cancelEvent(route, p['id']!)],
+    ['GET', /^\/api\/sessions\/today$/, (route) => this.todaySessions(route)],
+    ['GET', /^\/api\/sessions\/(?<id>[^/]+)\/roster$/, (route, p) => this.sessionRoster(route, p['id']!)],
+    ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/check-ins$/, (route, p) => this.attend(route, p['id']!, 'Present')],
+    ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/absences$/, (route, p) => this.attend(route, p['id']!, 'Absent')],
+    ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/walk-ins$/, (route, p) => this.addWalkIn(route, p['id']!)],
     ['GET', /^\/api\/children\/(?<id>[^/]+)$/, (route, p) => this.getChild(route, p['id']!)],
     ['PUT', /^\/api\/children\/(?<id>[^/]+)$/, (route, p) => this.updateChild(route, p['id']!)],
     ['PUT', /^\/api\/children\/(?<id>[^/]+)\/medical$/, (route, p) => this.updateMedical(route, p['id']!)],
@@ -719,6 +742,134 @@ export class FakeApi {
     if (b.tellGuardians && !b.message?.trim()) return route.fulfill({ status: 422, json: { errors: { message: 'Write the message to guardians.' } } });
     Object.assign(e, { status: 'Cancelled', cancelledAt: NOW.toISOString(), cancelledBy: m.personName, cancellationMessage: b.message?.trim() || null, guardiansTold: b.tellGuardians });
     return route.fulfill({ status: 204 });
+  }
+
+  /** The signed-in membership when Roll Call is on for its organization. */
+  private async rollCallCaller(route: Route): Promise<Membership | null> {
+    const membership = memberships.find((m) => m.id === this.membershipId);
+    if (!membership) {
+      await this.unauthenticated(route);
+      return null;
+    }
+    if (!this.modules.get(membership.organizationId)!.includes('RollCall')) {
+      await route.fulfill({ status: 404 });
+      return null;
+    }
+    return membership;
+  }
+
+  private sessionRecords(eventId: string): Map<string, FakeAttendance> {
+    if (!this.attendance.has(eventId)) this.attendance.set(eventId, new Map());
+    return this.attendance.get(eventId)!;
+  }
+
+  private sessionSummary(e: FakeEvent) {
+    const p = this.programs.find((x) => x.id === e.programId)!;
+    const records = this.sessionRecords(e.id);
+    const walkIns = this.walkIns.filter((w) => w.eventId === e.id);
+    const ids = [...p.roster, ...walkIns.map((w) => w.id)];
+    const checkedIn = ids.filter((id) => ['Present', 'SignedOut'].includes(records.get(id)?.status ?? '')).length;
+    const absent = ids.filter((id) => records.get(id)?.status === 'Absent').length;
+    return {
+      id: e.id,
+      name: e.name,
+      programId: p.id,
+      programName: p.name,
+      startsAt: e.startsAt,
+      endsAt: e.endsAt,
+      place: e.place,
+      expected: ids.length,
+      checkedIn,
+      absent,
+      notYet: ids.length - checkedIn - absent,
+      status: e.status,
+    };
+  }
+
+  private async todaySessions(route: Route): Promise<void> {
+    const m = await this.rollCallCaller(route);
+    if (!m) return;
+    // "Today" is 5 November 2026 in Hamilton: 05:00Z to the next 05:00Z.
+    const start = '2026-11-05T05:00:00.000Z';
+    const end = '2026-11-06T05:00:00.000Z';
+    const sessions = this.events
+      .filter((e) => e.organizationId === m.organizationId && e.status === 'Scheduled' && e.startsAt < end && e.endsAt > start)
+      .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
+      .map((e) => this.sessionSummary(e));
+    return route.fulfill({ json: { sessions } });
+  }
+
+  private async sessionRoster(route: Route, id: string): Promise<void> {
+    const m = await this.rollCallCaller(route);
+    if (!m) return;
+    const e = this.ownEvent(m, id);
+    if (!e) return route.fulfill({ status: 404 });
+    const p = this.programs.find((x) => x.id === e.programId)!;
+    const records = this.sessionRecords(e.id);
+    const children = this.childrenOf(m)
+      .filter(({ child }) => p.roster.includes(child.id))
+      .map(({ child, household }) => ({
+        id: child.id,
+        childId: child.id,
+        householdId: household.id,
+        name: `${child.firstName} ${child.lastName}`,
+        age: ageOf(child.dateOfBirth),
+        school: child.school,
+        medicalFlag: can.readMedical(m) ? medicalFlag(child) : null,
+        status: records.get(child.id)?.status ?? 'NotYet',
+        checkedInAt: records.get(child.id)?.checkedInAt ?? null,
+        walkIn: false,
+      }));
+    const walkIns = this.walkIns
+      .filter((w) => w.eventId === e.id)
+      .map((w) => ({
+        id: w.id,
+        childId: null,
+        householdId: null,
+        name: w.childName,
+        age: null,
+        school: null,
+        medicalFlag: can.readMedical(m) && w.medicalNotes ? 'Medical note' : null,
+        status: records.get(w.id)?.status ?? 'NotYet',
+        checkedInAt: records.get(w.id)?.checkedInAt ?? null,
+        walkIn: true,
+      }));
+    return route.fulfill({ json: { session: this.sessionSummary(e), children: [...children, ...walkIns].sort((a, b) => a.name.localeCompare(b.name)) } });
+  }
+
+  private async attend(route: Route, id: string, status: 'Present' | 'Absent'): Promise<void> {
+    const m = await this.rollCallCaller(route);
+    if (!m) return;
+    if (!can.runSessions(m)) return this.forbidden(route);
+    const e = this.ownEvent(m, id);
+    if (!e) return route.fulfill({ status: 404 });
+    const b = route.request().postDataJSON() as { childId: string; arrivedAt?: string | null; clientActionId: string };
+    if (this.actions.has(b.clientActionId)) return route.fulfill({ json: { status: 'saved' } });
+    if (e.status === 'Cancelled') return route.fulfill({ status: 422, json: { errors: { session: 'This session is cancelled.' } } });
+    const p = this.programs.find((x) => x.id === e.programId)!;
+    if (!p.roster.includes(b.childId)) {
+      return route.fulfill({ status: 422, json: { errors: { childId: 'This child is not on tonight’s roster. Add a walk-in instead.' } } });
+    }
+    this.actions.add(b.clientActionId);
+    this.sessionRecords(e.id).set(b.childId, { status, checkedInAt: status === 'Present' ? (b.arrivedAt ?? NOW.toISOString()) : null });
+    return route.fulfill({ json: { status: 'saved' } });
+  }
+
+  private async addWalkIn(route: Route, id: string): Promise<void> {
+    const m = await this.rollCallCaller(route);
+    if (!m) return;
+    if (!can.runSessions(m)) return this.forbidden(route);
+    const e = this.ownEvent(m, id);
+    if (!e) return route.fulfill({ status: 404 });
+    const b = route.request().postDataJSON() as { childName: string; guardian: string; medicalNotes: string };
+    const errors: Record<string, string> = {};
+    if (!b.childName?.trim()) errors['childName'] = 'Enter the child’s name.';
+    if (!b.guardian?.trim()) errors['guardian'] = 'Enter the guardian’s name and phone.';
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    const walkIn = { id: `w-${this.nextId++}`, eventId: e.id, childName: b.childName.trim(), guardian: b.guardian.trim(), medicalNotes: b.medicalNotes?.trim() || null };
+    this.walkIns.push(walkIn);
+    this.sessionRecords(e.id).set(walkIn.id, { status: 'Present', checkedInAt: NOW.toISOString() });
+    return route.fulfill({ status: 201, json: { id: walkIn.id } });
   }
 
   private startSession(membershipId: string): void {

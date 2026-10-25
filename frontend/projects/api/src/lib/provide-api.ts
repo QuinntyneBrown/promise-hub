@@ -1,5 +1,7 @@
 import { provideHttpClient, withFetch } from '@angular/common/http';
 import { EnvironmentProviders, makeEnvironmentProviders } from '@angular/core';
+import { ATTENDANCE_API } from './attendance/attendance-api.token';
+import { HttpAttendanceApi } from './attendance/http-attendance-api';
 import { AUTH_API } from './auth/auth-api.token';
 import { HttpAuthApi } from './auth/http-auth-api';
 import { EVENTS_API } from './events/events-api.token';
@@ -23,5 +25,6 @@ export function provideApi(): EnvironmentProviders {
     { provide: HOUSEHOLDS_API, useClass: HttpHouseholdsApi },
     { provide: PROGRAMS_API, useClass: HttpProgramsApi },
     { provide: EVENTS_API, useClass: HttpEventsApi },
+    { provide: ATTENDANCE_API, useClass: HttpAttendanceApi },
   ]);
 }

@@ -10,6 +10,7 @@ const GRANTS: Record<Permission, Role[]> = {
   managePrograms: ['Admin', 'ProgramDirector'],
   manageEvents: ['Admin', 'ProgramDirector', 'SiteLead'],
   cancelEvents: ['Admin', 'ProgramDirector'],
+  runSessions: ['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker'],
 };
 
 /** Whether a role holds a permission, to hide actions it lacks. The server enforces the same map on every request. */

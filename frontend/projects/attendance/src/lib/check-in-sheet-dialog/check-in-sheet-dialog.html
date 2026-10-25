@@ -1,0 +1,21 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog [title]="'Check in ' + entry.name" [description]="entry.school ?? 'Tonight’s session'">
+    <ph-radio-group legend="Arrived" name="arrived" [options]="options" [(ngModel)]="arrived" />
+    @if (arrived === 'earlier') {
+      <ph-text-field
+        inputId="earlier"
+        label="Arrived at"
+        type="time"
+        name="earlier"
+        [error]="error()"
+        [(ngModel)]="earlier"
+      />
+    }
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit">{{
+        arrived === 'absent' ? 'Mark absent' : 'Check in'
+      }}</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>
