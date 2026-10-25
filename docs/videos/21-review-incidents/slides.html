@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 21 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="21" data-video-title="Review incidents" data-parts="Introduction|Promises|Marisol reviews|Rules|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 21</div>
+  <h1>Review incidents</h1>
+  <p class="lead">Read it, decide, and write it down</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="Only admins and program directors review.">
+  <h2>What review promises</h2>
+  <ul>
+    <li>A note and an outcome, every time</li>
+    <li>The reporter is emailed</li>
+    <li>Follow-ups stay, even after closing</li>
+    <li>A trail of who submitted and who opened it</li>
+  </ul>
+</section>
+
+<section id="review" data-part="2" data-cue="Here is the report on Marisol's laptop." data-clip="clips/review-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Mark reviewed, then a follow-up</h3><p>Closed with Marisol's note.</p></div>
+</section>
+
+<section id="rules" data-part="3" data-cue="Mark reviewed without a note is refused">
+  <h2>Rules that keep it honest</h2>
+  <div class="cols">
+    <img class="shot" alt="The review dialog asking for a note" src="shots/desktop-invalid.png">
+    <img class="shot" alt="A closed report on a phone with the follow-up" src="shots/phone-closed.png">
+  </div>
+</section>
+
+<section id="testing" data-part="4" data-cue="Backend tests cover the required note">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>No review note</td><td>422</td></tr>
+    <tr><td>Reviewed twice</td><td>409</td></tr>
+    <tr><td>Follow-up after closing</td><td>204, kept</td></tr>
+    <tr><td>Site lead reviews or reopens</td><td>403</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="5" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>A note and an outcome</li><li>The reporter is told</li><li>Follow-ups stay</li></ul>
+  <p class="muted">Next: the youth worker's session</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
