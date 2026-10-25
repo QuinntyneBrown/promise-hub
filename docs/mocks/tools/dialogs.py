@@ -243,6 +243,13 @@ simple("review-incident", "Mark as reviewed", "incident", [R_INC], "Closes the r
        lambda e: textarea("note", "Review note", value="Followed first-aid procedure correctly. Stairwell lighting reported to the building manager.", rows=3, error=(e or {}).get("note", "")) + fieldset("Outcome", choice("out", "Closed, no further action", checked=True) + choice("out", "Closed, policy change needed", small="In the board report") + choice("out", "Keep open", small="Follow-up pending")),
        "Mark reviewed", icon_name="check", invalid_err={"note": "Write a review note."})
 
+simple("add-follow-up", "Add a follow-up", "incident", [R_INC], "Kept on the report, even after it is closed.",
+       lambda e: textarea("follow", "Follow-up", rows=3, error=(e or {}).get("follow", ""), placeholder="Called Dana the next day; Jordan is fine."),
+       "Add follow-up", icon_name="plus", invalid_err={"follow": "Write the follow-up."})
+
+simple("reopen-incident", "Reopen this report?", "incident", [R_INC], "It goes back to open; the review note is kept.",
+       lambda e: "", "Reopen", icon_name="refresh", na={"invalid": "No inputs."})
+
 simple("export-data", "Export", "reports", [R_REPORTS, R_PRIVACY], "For the period and programs shown. Counts under 5 are masked.",
        lambda e: fieldset("Format", choice("fmt", "Ontario Trillium Foundation template (.xlsx)", checked=True) + choice("fmt", "United Way template (.xlsx)") + choice("fmt", "Plain spreadsheet (.csv)") + choice("fmt", "PDF summary for the board"))
                  + fieldset("Include", choice("inc", "Attendance by session", type_="checkbox", checked=True, attrs=' name="i1"') + choice("inc", "Demographics (age, gender, language, postal code prefix)", type_="checkbox", checked=True, attrs=' name="i2"') + choice("inc", "Children’s names", small="Internal copies only", type_="checkbox", attrs=' name="i3"'))
