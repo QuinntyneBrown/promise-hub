@@ -31,6 +31,9 @@ public sealed class Program : ITenantOwned
     public int Capacity { get; private set; }
     public string? Ages { get; private set; }
     public bool EnrollmentOpen { get; private set; }
+
+    /// <summary>The public part of the enrollment link; kept when enrollment closes so the link stays the same.</summary>
+    public string? EnrollmentSlug { get; private set; }
     public bool SeasonConsent { get; private set; }
     public ProgramStatus Status { get; private set; }
     public DateTimeOffset? ArchivedAt { get; private set; }
@@ -47,6 +50,14 @@ public sealed class Program : ITenantOwned
         EnrollmentOpen = enrollmentOpen;
         SeasonConsent = seasonConsent;
     }
+
+    public void OpenEnrollment(string slug)
+    {
+        EnrollmentSlug ??= slug;
+        EnrollmentOpen = true;
+    }
+
+    public void CloseEnrollment() => EnrollmentOpen = false;
 
     public void Archive(string actor, DateTimeOffset now)
     {

@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace PromiseHub.Application.Programs;
 
-public sealed class GetProgramHandler(IPromiseHubDb db, TimeProvider clock)
+public sealed class GetProgramHandler(IPromiseHubDb db, TimeProvider clock, Guardian.GuardianLinkOptions links)
 {
     public async Task<ProgramDto?> HandleAsync(Guid id, CancellationToken cancellationToken = default)
     {
@@ -25,6 +25,9 @@ public sealed class GetProgramHandler(IPromiseHubDb db, TimeProvider clock)
             [.. roster.OrderBy(r => r.Child.LastName).ThenBy(r => r.Child.FirstName)
                 .Select(r => new RosterChildDto(r.Child.Id, r.Child.HouseholdId, r.Child.FullName, r.Child.AgeOn(today), r.Household))],
             [.. events.OrderBy(e => e.StartsAt).Select(e => new ProgramEventDto(e.Id, e.Name, e.StartsAt, e.EndsAt, e.Status.ToString()))],
-            program.ArchivedAt, program.ArchivedBy);
+            program.ArchivedAt, program.ArchivedBy,
+            program.EnrollmentSlug is null ? null : $"{links.BaseUrl.TrimEnd('/')}/g/enroll/{program.EnrollmentSlug}",
+            await db.EnrollmentRequests.CountAsync(r => r.ProgramId == program.Id && r.Status == Domain.Enrollment.EnrollmentRequestStatus.WaitingReview, cancellationToken),
+            await db.EnrollmentRequests.CountAsync(r => r.ProgramId == program.Id && r.Status == Domain.Enrollment.EnrollmentRequestStatus.Waitlisted, cancellationToken));
     }
 }

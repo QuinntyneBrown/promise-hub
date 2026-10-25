@@ -75,6 +75,9 @@ public static class DependencyInjection
         services.AddScoped<Imports.UploadImportHandler>();
         services.AddScoped<Imports.SaveMappingHandler>();
         services.AddScoped<Imports.RunImportHandler>();
+        services.AddScoped<Enrollment.EnrollmentLink>();
+        services.AddScoped<Enrollment.OpenEnrollmentHandler>();
+        services.AddScoped<Enrollment.GuardianEnrollmentHandler>();
         services.AddScoped<Guardian.GuardianAccess>();
         services.AddScoped<Guardian.GuardianLinkIssuer>();
         services.AddScoped<Guardian.GuardianContactChange>();
