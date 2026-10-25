@@ -1,0 +1,83 @@
+@switch (state()) {
+  @case ('loading') {
+    <ph-page-header title="Sign on this tablet" />
+  }
+  @case ('gone') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="slips"
+        title="Nothing left to sign"
+        text="This family’s children are already cleared or declined."
+        [headingLevel]="1"
+      >
+        <ph-button variant="primary" [link]="['/check-in', sessionId()]"
+          >Back to check-in</ph-button
+        >
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('error') {
+    <ph-page-header title="Sign on this tablet" />
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load the slip"
+        text="Try again."
+      >
+        <ph-button variant="primary" (click)="load(sessionId(), householdId())"
+          >Try again</ph-button
+        >
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('ready') {
+    @if (slip(); as s) {
+      @if (family(); as f) {
+        <ph-page-header
+          title="Sign on this tablet"
+          [subtitle]="'Hand the tablet to ' + (f.guardian ?? 'the guardian') + '.'"
+        />
+        @if (failed()) {
+          <ph-alert
+            tone="danger"
+            title="That didn’t go through"
+            text="Nothing was signed. Try again."
+          />
+        }
+        <form class="form-page" novalidate (ngSubmit)="sign(s, f)">
+          <ph-card [title]="s.title">
+            <div class="stack">
+              <p>{{ when(s) }}</p>
+              <p>{{ s.body }}</p>
+              <p>
+                I give permission for {{ names() }} to attend this trip and for staff to give first
+                aid and call emergency services if needed.
+              </p>
+              <ph-text-field
+                inputId="name"
+                label="Guardian types their full name"
+                name="name"
+                autocomplete="off"
+                [error]="errors()['name'] ?? null"
+                [(ngModel)]="name"
+              />
+              @if (s.askPhotos) {
+                <ph-radio-group
+                  legend="Photos"
+                  name="photos"
+                  [options]="photoOptions"
+                  [(ngModel)]="photos"
+                />
+              }
+            </div>
+          </ph-card>
+          <div class="form-actions">
+            <ph-button variant="ghost" [link]="['/check-in', sessionId()]">Cancel</ph-button>
+            <ph-button variant="primary" type="submit" [busy]="busy()">Sign</ph-button>
+          </div>
+        </form>
+      }
+    }
+  }
+}

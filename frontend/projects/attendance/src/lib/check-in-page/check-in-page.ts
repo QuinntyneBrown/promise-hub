@@ -14,10 +14,13 @@ import {
   AttendanceStatus,
   RosterEntry,
   SESSION_API,
+  SLIPS_API,
   SessionSummary,
+  SlipClearance,
   can,
 } from '@promisehub/api';
 import {
+  PhAlert,
   PhBadge,
   PhButton,
   PhCard,
@@ -53,6 +56,7 @@ type Filter = 'all' | 'not-yet' | 'in' | 'absent';
   selector: 'ph-check-in-page',
   imports: [
     FormsModule,
+    PhAlert,
     PhBadge,
     PhButton,
     PhCard,
@@ -72,6 +76,7 @@ type Filter = 'all' | 'not-yet' | 'in' | 'absent';
 })
 export class CheckInPage {
   private readonly api = inject(ATTENDANCE_API);
+  private readonly slips = inject(SLIPS_API);
   private readonly dialogs = inject(PhDialogs);
   private readonly toasts = inject(ToastService);
   private readonly me = toSignal(
@@ -89,6 +94,8 @@ export class CheckInPage {
   protected readonly session = signal<SessionSummary | null>(null);
   protected readonly entries = signal<RosterEntry[]>([]);
   protected readonly others = signal<SessionSummary[]>([]);
+  /** Day-of slip status when the session's event needs a slip and Permission slips is on. */
+  protected readonly clearance = signal<SlipClearance | null>(null);
   protected readonly filter = signal<Filter>('all');
   protected readonly query = signal('');
   protected readonly canRun = computed(() => !!this.me() && can(this.me()!.role, 'runSessions'));
@@ -105,7 +112,11 @@ export class CheckInPage {
   });
   protected readonly visible = computed(() => {
     const q = this.query().trim().toLowerCase();
-    return this.entries()
+    const order = { Missing: 0, Declined: 1, Cleared: 2 };
+    const clearance = this.clearance();
+    const rank = (e: RosterEntry) => (clearance ? order[this.slipStatus(e) ?? 'Cleared'] : 0);
+    return [...this.entries()]
+      .sort((a, b) => rank(a) - rank(b))
       .filter((e) => !q || e.name.toLowerCase().includes(q))
       .filter((e) => {
         switch (this.filter()) {
@@ -139,6 +150,7 @@ export class CheckInPage {
         if (roster.status === 'loaded') {
           this.session.set(roster.value.session);
           this.entries.set(roster.value.children);
+          this.loadClearance(id);
           this.state.set('loaded');
         } else {
           this.state.set(
@@ -149,6 +161,22 @@ export class CheckInPage {
         }
       });
     });
+  }
+
+  protected loadClearance(sessionId: string): void {
+    this.clearance.set(null);
+    if (!this.me()?.modules.includes('Slips')) return;
+    this.slips
+      .clearance(sessionId)
+      .subscribe((r) => this.clearance.set(r.status === 'loaded' ? r.value : null));
+  }
+
+  protected slipStatus(e: RosterEntry): 'Cleared' | 'Missing' | 'Declined' | null {
+    return this.clearance()?.children.find((c) => c.childId === e.childId)?.status ?? null;
+  }
+
+  protected householdOf(e: RosterEntry): string | null {
+    return this.clearance()?.children.find((c) => c.childId === e.childId)?.householdId ?? null;
   }
 
   protected rowStatus(e: RosterEntry): 'not-yet' | 'in' | 'out' | 'absent' {

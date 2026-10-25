@@ -89,3 +89,6 @@ export * from './lib/guardian/guardian-api.token';
 export * from './lib/guardian/guardian-slip';
 export * from './lib/guardian/guardian-slip-result';
 export * from './lib/guardian/guardian-verify-outcome';
+export * from './lib/slips/remind-outcome';
+export * from './lib/slips/slip-clearance';
+export * from './lib/slips/unsigned-family';

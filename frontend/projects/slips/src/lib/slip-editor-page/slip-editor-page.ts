@@ -39,6 +39,8 @@ import {
 import { EMPTY, catchError } from 'rxjs';
 import { CancelSendDialog } from '../cancel-send-dialog/cancel-send-dialog';
 import { SendNowDialog } from '../send-now-dialog/send-now-dialog';
+import { SendReminderData, SendReminderDialog } from '../send-reminder-dialog/send-reminder-dialog';
+import { formatSignBy } from '../sign-by';
 
 const LABELS: Record<string, string> = {
   title: 'Slip title',
@@ -286,6 +288,26 @@ export class SlipEditorPage {
           this.settle(outcome, s);
         });
       });
+  }
+
+  protected remind(s: Slip): void {
+    this.api.unsigned(s.id).subscribe((r) => {
+      if (r.status !== 'loaded') return this.failed.set(true);
+      this.dialogs
+        .open<number, SendReminderData, SendReminderDialog>(SendReminderDialog, {
+          slipId: s.id,
+          body: `Reminder: please sign {child}’s slip for “${s.title}” by ${formatSignBy(s.signBy)}: {link}`,
+          families: r.value.households,
+        })
+        .closed.subscribe((sent) => {
+          if (sent === undefined) return;
+          this.toasts.show({
+            tone: 'success',
+            title: 'Reminder sent',
+            text: `${sent} ${sent === 1 ? 'family' : 'families'}`,
+          });
+        });
+    });
   }
 
   protected cancelSend(s: Slip): void {

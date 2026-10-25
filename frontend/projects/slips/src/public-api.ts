@@ -1,1 +1,1 @@
-export { routes, slipEditorRoutes } from './lib/slips.routes';
+export { routes, signOnTabletRoutes, slipEditorRoutes } from './lib/slips.routes';

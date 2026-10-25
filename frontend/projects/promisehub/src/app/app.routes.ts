@@ -29,6 +29,9 @@ export const routes: Routes = [
       ...moduleRoute('families', 'Roster', () =>
         import('@promisehub/households').then((m) => m.routes),
       ),
+      ...moduleRoute('check-in/:sessionId/sign-on-tablet/:householdId', 'Slips', () =>
+        import('@promisehub/slips').then((m) => m.signOnTabletRoutes),
+      ),
       ...moduleRoute('check-in', 'RollCall', () =>
         import('@promisehub/attendance').then((m) => m.routes),
       ),
