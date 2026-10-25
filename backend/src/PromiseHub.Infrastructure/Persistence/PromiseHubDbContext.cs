@@ -6,6 +6,9 @@ using PromiseHub.Domain.Audit;
 using PromiseHub.Domain.Households;
 using PromiseHub.Domain.Identity;
 using PromiseHub.Domain.Organizations;
+using PromiseHub.Domain.Programs;
+using PromiseHub.Domain.Slips;
+using Event = PromiseHub.Domain.Events.Event;
 
 namespace PromiseHub.Infrastructure.Persistence;
 
@@ -19,6 +22,10 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Guardian> Guardians => Set<Guardian>();
     public DbSet<Child> Children => Set<Child>();
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
+    public DbSet<Domain.Programs.Program> Programs => Set<Domain.Programs.Program>();
+    public DbSet<Enrollment> Enrollments => Set<Enrollment>();
+    public DbSet<Event> Events => Set<Event>();
+    public DbSet<PermissionSlip> PermissionSlips => Set<PermissionSlip>();
     public DbSet<StaffUser> StaffUsers => Set<StaffUser>();
     public DbSet<SignInAttempt> SignInAttempts => Set<SignInAttempt>();
 
@@ -92,6 +99,43 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.HasIndex(a => new { a.OrganizationId, a.OccurredAt });
         });
 
+        modelBuilder.Entity<Domain.Programs.Program>(e =>
+        {
+            e.Property(p => p.Name).HasMaxLength(120);
+            e.Property(p => p.Schedule).HasMaxLength(200);
+            e.Property(p => p.Ages).HasMaxLength(40);
+            e.Property(p => p.ArchivedBy).HasMaxLength(200);
+            e.Property(p => p.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(p => p.ArchivedAt).HasConversion(v => v.HasValue ? v.Value.UtcTicks : (long?)null, v => v.HasValue ? new DateTimeOffset(v.Value, TimeSpan.Zero) : null);
+        });
+        modelBuilder.Entity<Enrollment>(e =>
+        {
+            e.Property(x => x.EnrolledAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(x => x.EndedAt).HasConversion(v => v.HasValue ? v.Value.UtcTicks : (long?)null, v => v.HasValue ? new DateTimeOffset(v.Value, TimeSpan.Zero) : null);
+            e.Property(x => x.EndReason).HasMaxLength(200);
+            e.Ignore(x => x.Active);
+            e.HasOne<Domain.Programs.Program>().WithMany().HasForeignKey(x => x.ProgramId);
+            e.HasOne<Child>().WithMany().HasForeignKey(x => x.ChildId);
+        });
+        modelBuilder.Entity<Event>(e =>
+        {
+            e.Property(x => x.Name).HasMaxLength(200);
+            e.Property(x => x.Place).HasMaxLength(300);
+            e.Property(x => x.StaffNotes).HasMaxLength(2000);
+            e.Property(x => x.CancelledBy).HasMaxLength(200);
+            e.Property(x => x.CancellationMessage).HasMaxLength(2000);
+            e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.StartsAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(x => x.EndsAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(x => x.CancelledAt).HasConversion(v => v.HasValue ? v.Value.UtcTicks : (long?)null, v => v.HasValue ? new DateTimeOffset(v.Value, TimeSpan.Zero) : null);
+            e.HasOne<Domain.Programs.Program>().WithMany().HasForeignKey(x => x.ProgramId);
+        });
+        modelBuilder.Entity<PermissionSlip>(e =>
+        {
+            e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+            e.HasOne<Event>().WithMany().HasForeignKey(x => x.EventId);
+            e.HasIndex(x => x.EventId).IsUnique();
+        });
         modelBuilder.Entity<StaffUser>(e =>
         {
             e.Property(u => u.Email).HasMaxLength(320);

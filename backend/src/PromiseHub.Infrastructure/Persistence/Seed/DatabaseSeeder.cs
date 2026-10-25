@@ -3,6 +3,9 @@ using PromiseHub.Application.Identity;
 using PromiseHub.Domain.Households;
 using PromiseHub.Domain.Identity;
 using PromiseHub.Domain.Organizations;
+using PromiseHub.Domain.Programs;
+using PromiseHub.Domain.Slips;
+using Event = PromiseHub.Domain.Events.Event;
 
 namespace PromiseHub.Infrastructure.Persistence.Seed;
 
@@ -64,6 +67,27 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
         Guardian(Northgate, northgateRivera, "Ana Rivera", "Mother", "289-555-0101", null, "Spanish", primary: true);
         Kid(Northgate, northgateRivera, "Mateo", "Rivera", new DateOnly(2016, 10, 1), null);
 
+        // Programs and events of the mocks; "today" is Thursday 5 November 2026 in Hamilton (UTC−5).
+        var tutoring = Program(Harbourview, "After-School Tutoring", new(2026, 9, 8), new(2027, 6, 24), "Mon–Thu, 4–6 pm", 50, "6–13", open: true);
+        var sports = Program(Harbourview, "Saturday Sports", new(2026, 9, 12), new(2027, 5, 29), "Sat, 10 am–12 pm", 80, "7–14", open: true);
+        Program(Harbourview, "Winter Camp 2026", new(2026, 12, 21), new(2026, 12, 23), "21–23 Dec, 8 am–5 pm", 60, "6–12", open: true);
+        Program(Harbourview, "Summer Camp 2026", new(2026, 7, 6), new(2026, 8, 14), "Mon–Fri, 9 am–4 pm", 40, "6–12", open: false, archived: true);
+        foreach (var child in new[] { "Mateo Rivera", "Sofía Rivera", "Jordan Thompson", "Yusuf Haddad" })
+        {
+            Enroll(Harbourview, tutoring, child);
+        }
+        foreach (var child in new[] { "Kevin Tran", "Emily Tran" })
+        {
+            Enroll(Harbourview, sports, child);
+        }
+        Session(Harbourview, tutoring, "Tutoring night", At(2026, 11, 5, 16), At(2026, 11, 5, 18), "Harbourview Community Centre, Room 2", slip: false);
+        Session(Harbourview, sports, "Saturday Sports", At(2026, 11, 7, 10), At(2026, 11, 7, 12), "Bennetto School gym", slip: false);
+        Session(Harbourview, tutoring, "Fall field trip: Royal Botanical Gardens", At(2026, 11, 14, 9), At(2026, 11, 14, 15), "Royal Botanical Gardens · bus leaves 8:45 am", slip: true);
+        Session(Harbourview, tutoring, "Tutoring night", At(2026, 11, 4, 16), At(2026, 11, 4, 18), "Harbourview Community Centre, Room 2", slip: false, key: "past");
+        var kidsClub = Program(Northgate, "Kids Club", new(2026, 9, 9), new(2027, 6, 16), "Wed, 6–7:30 pm", 30, "5–11", open: true);
+        Enroll(Northgate, kidsClub, "Mateo Rivera");
+        Session(Northgate, kidsClub, "Kids Club night", At(2026, 11, 11, 18), At(2026, 11, 11, 19), "Northgate fellowship hall", slip: false);
+
         return await db.SaveChangesAsync(cancellationToken);
     }
 
@@ -76,6 +100,37 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
 
     // A fixed time keeps re-runs identical.
     private static readonly DateTimeOffset SeedClock = new(2026, 9, 1, 12, 0, 0, TimeSpan.Zero);
+
+    public static Guid ProgramId(Guid organizationId, string name) => SeedIds.Of($"program:{organizationId}:{name}");
+
+    public static Guid EventId(Guid organizationId, string name, string key = "") => SeedIds.Of($"event:{organizationId}:{name}:{key}");
+
+    /// <summary>A wall-clock time in Hamilton (Eastern Standard Time in November).</summary>
+    private static DateTimeOffset At(int year, int month, int day, int hour) => new(year, month, day, hour, 0, 0, TimeSpan.FromHours(-5));
+
+    private Guid Program(Guid organizationId, string name, DateOnly starts, DateOnly ends, string schedule, int capacity, string ages, bool open, bool archived = false)
+    {
+        var program = new Domain.Programs.Program(ProgramId(organizationId, name), organizationId, name, starts, ends, schedule, capacity, ages, open, seasonConsent: true);
+        if (archived)
+        {
+            program.Archive("Marisol Delgado", SeedClock);
+        }
+        Add(program);
+        return program.Id;
+    }
+
+    private void Enroll(Guid organizationId, Guid programId, string child) =>
+        Add(new Enrollment(SeedIds.Of($"enrollment:{programId}:{child}"), organizationId, programId, ChildId(organizationId, child), SeedClock));
+
+    private void Session(Guid organizationId, Guid programId, string name, DateTimeOffset starts, DateTimeOffset ends, string place, bool slip, string key = "")
+    {
+        var id = EventId(organizationId, name, key);
+        Add(new Event(id, organizationId, programId, name, starts, ends, place, slip, noShowAlert: true, staffNotes: null));
+        if (slip)
+        {
+            Add(new PermissionSlip(SeedIds.Of($"slip:{id}"), organizationId, id, DateOnly.FromDateTime(starts.UtcDateTime)));
+        }
+    }
 
     public static Guid UserId(string email) => SeedIds.Of($"user:{email}");
 
