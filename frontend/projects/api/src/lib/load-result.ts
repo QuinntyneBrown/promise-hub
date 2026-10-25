@@ -3,4 +3,6 @@ export type LoadResult<T> =
   | { status: 'loaded'; value: T }
   | { status: 'not-found' }
   | { status: 'forbidden' }
-  | { status: 'error' };
+  | { status: 'error' }
+  /** No signal and nothing saved on this device. */
+  | { status: 'offline' };

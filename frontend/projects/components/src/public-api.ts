@@ -56,6 +56,7 @@ export * from './lib/table/table';
 export * from './lib/table/table-cell';
 export * from './lib/table/table-column';
 export * from './lib/switch/switch';
+export * from './lib/sync-chip/sync-chip';
 export * from './lib/tabs/tab-item';
 export * from './lib/timeline/timeline';
 export * from './lib/timeline/timeline-entry';

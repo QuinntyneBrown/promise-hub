@@ -19,4 +19,6 @@ export interface RosterEntry {
   /** The no-show text and the guardian's reply, when the job sent one. */
   noShow: 'TextSent' | 'OnTheWay' | 'Absent' | null;
   noShowAt: string | null;
+  /** An offline check-in arrived after another device marked the child absent; present was kept. */
+  conflict?: boolean;
 }

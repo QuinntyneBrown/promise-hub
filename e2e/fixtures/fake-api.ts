@@ -433,7 +433,28 @@ export class FakeApi {
     ['PUT', /^\/api\/children\/(?<id>[^/]+)\/medical$/, (route, p) => this.updateMedical(route, p['id']!)],
   ];
 
+  /** While true, every API call fails as if the device had no signal (the app shell stays loaded). */
+  private offline = false;
+  /** Children whose offline check-in arrived after another device marked them absent: "event:child". */
+  private conflicts = new Set<string>();
+
+  setOffline(offline: boolean): void {
+    this.offline = offline;
+  }
+
+  /** An offline check-in reached the server after another device marked the child absent; present wins and the row is flagged. */
+  attendanceConflict(eventId: string, childId: string): void {
+    this.conflicts.add(`${eventId}:${childId}`);
+    this.sessionRecords(eventId).set(childId, { status: 'Present', checkedInAt: '2026-11-05T21:05:00Z' });
+  }
+
+  /** Whether the fake recorded this child as checked in at this session (to check a synced action). */
+  attendanceOf(eventId: string, childId: string): string {
+    return this.sessionRecords(eventId).get(childId)?.status ?? 'NotYet';
+  }
+
   private async handle(route: Route): Promise<void> {
+    if (this.offline) return route.abort('internetdisconnected');
     const url = new URL(route.request().url());
     const failure = this.failures.get(url.pathname);
     if (failure) {
@@ -1147,6 +1168,7 @@ export class FakeApi {
         walkIn: false,
         signedOutAt: records.get(child.id)?.signedOutAt ?? null,
         collectedBy: records.get(child.id)?.collectedBy ?? null,
+        conflict: this.conflicts.has(`${e.id}:${child.id}`),
         noShow: this.noShows.get(`${e.id}:${child.id}`)?.state ?? null,
         noShowAt: this.noShows.get(`${e.id}:${child.id}`)?.at ?? null,
       }));

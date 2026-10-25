@@ -79,6 +79,9 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("EventId")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("HasConflict")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("IdChecked")
                         .HasColumnType("INTEGER");
 

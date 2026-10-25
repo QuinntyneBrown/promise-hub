@@ -30,6 +30,20 @@
       <ph-button variant="primary" link="/check-in">Your sessions today</ph-button>
     </ph-error-page>
   }
+  @case ('offline') {
+    <ph-page-header title="Check-in" />
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="Nothing is saved on this phone"
+        text="Open check-in once with signal to keep tonight’s roster here. Until then, call the guardians from the office list."
+        [headingLevel]="2"
+      >
+        <ph-button variant="primary" link="/">Back to Today</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
   @case ('error') {
     <ph-page-header title="Check-in" />
     <ph-card [flush]="true">
@@ -46,9 +60,15 @@
   @case ('loaded') {
     @if (session(); as s) {
       @let t = totals();
+      @if (savedAt()) {
+        <ph-alert tone="warning" title="You’re offline" [text]="savedText()" />
+      }
       <ph-page-header [title]="s.name" [subtitle]="subtitle(s)">
         @for (other of others(); track other.id) {
           <ph-button size="sm" [link]="['/check-in', other.id]">{{ other.name }}</ph-button>
+        }
+        @if (queue().length) {
+          <ph-sync-chip data-testid="sync-chip">{{ queue().length }} queued</ph-sync-chip>
         }
         @if (canRun()) {
           <ph-button hasPopup="dialog" (click)="editNotes(s)">Session notes</ph-button>
@@ -169,6 +189,11 @@
                     >{{ noShowText(e) }}</ph-badge
                   >
                 }
+                @if (e.conflict) {
+                  <ph-badge data-testid="conflict" tone="warning"
+                    >Conflict: marked absent on another device</ph-badge
+                  >
+                }
                 @switch (slipStatus(e)) {
                   @case ('Missing') {
                     <ph-badge tone="warning">Slip missing</ph-badge>
@@ -204,6 +229,7 @@
                     size="sm"
                     [label]="'Sign out ' + e.name"
                     hasPopup="dialog"
+                    [disabled]="queuedIds().has(e.id)"
                     (click)="signOut(e)"
                     >Sign out</ph-button
                   >

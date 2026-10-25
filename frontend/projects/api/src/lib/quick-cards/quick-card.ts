@@ -27,4 +27,6 @@ export interface QuickCard {
   approvedPickups: { name: string; relationship: string; isPrimary: boolean }[];
   notes: string | null;
   medicalRestricted: boolean;
+  /** Set when the card came from this device without signal: when it was saved. */
+  savedAt?: string;
 }

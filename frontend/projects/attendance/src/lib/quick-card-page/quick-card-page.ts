@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { LoadResult, QUICK_CARD_API, QuickCard } from '@promisehub/api';
 import {
+  formatTime,
+  PhSyncChip,
   CallContact,
   Fact,
   PhAlert,
@@ -22,6 +24,7 @@ import { Subject, startWith, switchMap } from 'rxjs';
 @Component({
   selector: 'ph-quick-card-page',
   imports: [
+    PhSyncChip,
     PhAlert,
     PhAvatar,
     PhBadge,
@@ -59,6 +62,10 @@ export class QuickCardPage {
 
   protected retry(): void {
     this.retry$.next();
+  }
+
+  protected savedTime(at: string): string {
+    return formatTime(new Date(at));
   }
 
   protected subtitle(c: QuickCard): string {
