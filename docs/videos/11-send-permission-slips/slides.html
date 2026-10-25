@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 11 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="11" data-video-title="Send permission slips" data-parts="Introduction|Promises|Write and send|Answers and changes|Errors|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 11</div>
+  <h1>Send permission slips</h1>
+  <p class="lead">Write once, send to every family, watch the answers come in</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="A slip belongs to one event.">
+  <h2>What a slip promises</h2>
+  <ul>
+    <li>Title, text, sign-by date, questions, reminders, channel</li>
+    <li>Send now, schedule for later, or keep as a draft</li>
+    <li>One message per household through the send job</li>
+    <li>Its own module: sends even with Messages off</li>
+  </ul>
+</section>
+
+<section id="send" data-part="2" data-cue="Here is the slip editor for the Fall field trip" data-clip="clips/write-and-send-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Write and send</h3><p>Then tracking: 0 of 4 signed.</p></div>
+</section>
+
+<section id="answers" data-part="3" data-cue="On her phone a day later" data-clip="clips/track-and-edit-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Answers, then a material change</h3><p>Version 2: everyone signs again.</p></div>
+</section>
+
+<section id="errors" data-part="4" data-cue="If the text is empty or the sign-by date falls after the event">
+  <h2>When things go wrong</h2>
+  <div class="cols">
+    <img class="shot" alt="The slip editor listing two problems" src="shots/phone-invalid.png">
+    <img class="shot" alt="Permission slips with answers so far" src="shots/desktop-slips.png">
+  </div>
+</section>
+
+<section id="testing" data-part="5" data-cue="Backend tests cover the draft and what it reaches">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Send now / schedule / cancel / send now</td><td>Sent, scheduled, draft, sent</td></tr>
+    <tr><td>Material edit</td><td>Version 2, answers superseded, families told</td></tr>
+    <tr><td>At the SMS cap</td><td>Email instead, households named</td></tr>
+    <tr><td>Volunteer coordinator</td><td>Reads; 403 to send</td></tr>
+    <tr><td>Another organization / Slips off</td><td>404; scheduled slip not sent</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="6" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Now, later or not yet</li><li>The message path, under its own module</li><li>Answers per child; a material change re-opens signing</li></ul>
+  <p class="muted">Next: guardians sign on their phones</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

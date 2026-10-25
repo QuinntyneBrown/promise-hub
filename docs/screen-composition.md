@@ -40,6 +40,8 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Messages | `messages` (default, empty, error, forbidden) | `ph-page-header`, `ph-alert` (danger, cap reached), `ph-list`, `ph-list-item`, `ph-badge`, `ph-card`, `ph-empty-state`, `ph-error-page`, `ph-button` | — |
 | New message | `new-message` (default, invalid, error, no-results, over-cap) | `ph-breadcrumb`, `ph-page-header`, `ph-alert`, `ph-card` (titled), `ph-select`, `ph-recipient-count`, `ph-textarea` (help, counter), `ph-radio-group` (disabled options), `ph-sms-preview`, `ph-button` | Debounced preview |
 | Message | `message` (default, error) | `ph-breadcrumb`, `ph-page-header`, `ph-stat`, `ph-card` (titled, flush), `ph-table` (badge cells), `ph-sms-preview`, `ph-empty-state`, `ph-button` | Refresh while sending |
+| Permission slips | `slips` (default, empty, error) | `ph-page-header`, `ph-progress-bar`, `ph-badge`, `ph-card`, `ph-empty-state`, `ph-button` | Slip rows with a progress bar |
+| Slip editor | `slip-editor` (default, error, invalid, submitting, success, edit) | `ph-breadcrumb`, `ph-page-header`, `ph-error-summary`, `ph-alert`, `ph-card` (titled), `ph-text-field`, `ph-textarea` (counter), `ph-select`, `ph-switch`, `ph-radio-group`, `ph-progress-bar`, `ph-stat`, `ph-table`, `ph-button` | Draft, scheduled and sent modes |
 
 ## Dialogs
 
@@ -59,6 +61,8 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Cancel event | `cancel-event` | `ph-dialog`, `ph-textarea`, `ph-switch`, `ph-button` |
 | Check-in sheet | `check-in-sheet` | `ph-dialog`, `ph-radio-group`, `ph-text-field` (time), `ph-button` |
 | Sign out | `confirm-pickup` (default, invalid, failed, confirm) | `ph-dialog`, `ph-radio-group` (with error), `ph-alert` (warning, danger), `ph-button` (tel: link), `ph-text-field`, `ph-switch` (with error) |
+| Send now | `send-now` | `ph-dialog`, `ph-button` |
+| Cancel send | `cancel-send` | `ph-dialog`, `ph-button` (danger) |
 | Add a walk-in | `add-walk-in` (default, invalid) | `ph-dialog`, `ph-text-field`, `ph-textarea`, `ph-button` |
 
 The toast region (`ph-toast-region`) sits once in the app root.

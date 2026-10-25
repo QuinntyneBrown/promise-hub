@@ -16,6 +16,10 @@ Local terms used below:
 
 The Permission slips module gates every page and endpoint here (`L2-005`); the Messages module and the SMS cap govern delivery (`L2-021`, `L2-022`).
 
+## Built so far
+
+Slice 11 delivered `SlipsPage` (progress per slip, due date, unsigned badge), `SlipEditorPage` at `/events/:eventId/slip` (the slip, what the guardian confirms, delivery with now, later or not yet, the error summary, the scheduled state with `SendNowDialog` and `CancelSendDialog`, and once sent the signatures, answers by child, the SMS-cap notice and edits with the material switch), `SLIPS_API`, the slip endpoints, `PermissionSlip` and `SlipSignature`, `SlipSender` on the message path and scheduled sends in the per-tenant job (ADR 0014). Translation, per-household links, reminders, the delivery preview in the editor and the list chips are not built yet.
+
 ## Description
 
 ### Frontend (`frontend/projects/slips/`)
