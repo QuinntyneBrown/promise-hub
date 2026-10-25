@@ -33,6 +33,7 @@ export class EditMedicalDialog {
     conditions: this.child.medical?.conditions ?? '',
     doctor: this.child.medical?.doctor ?? '',
     redAlert: this.child.medical?.redAlert ?? false,
+    alertInstruction: this.child.medical?.alertInstruction ?? '',
   };
   protected alert = this.changes.redAlert ? 'red' : 'list';
   protected readonly error = signal<string | null>(null);

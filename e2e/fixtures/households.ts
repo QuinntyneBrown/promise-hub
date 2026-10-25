@@ -19,6 +19,8 @@ export interface FakeMedical {
   conditions: string | null;
   doctor: string | null;
   redAlert: boolean;
+  alertInstruction?: string | null;
+  healthCard?: string | null;
   updatedAt: string | null;
   updatedBy: string | null;
 }
@@ -30,6 +32,7 @@ export interface FakeChild {
   dateOfBirth: string | null;
   school: string | null;
   medical: FakeMedical;
+  notes?: string | null;
 }
 
 export interface FakeHousehold {
@@ -79,9 +82,12 @@ export function seedHouseholds(): FakeHousehold[] {
             conditions: null,
             doctor: 'Dr. Amrita Sethi · 905-555-0100',
             redAlert: true,
+            alertInstruction: 'EpiPen in backpack front pocket. Use it, call 911, then Carmen.',
+            healthCard: 'Ontario ···· 4471',
             updatedAt: '2026-09-02T19:55:00Z',
             updatedBy: 'Carmen Rivera',
           },
+          notes: 'Sits with Jordan.',
         },
         {
           id: 'c-sofia',

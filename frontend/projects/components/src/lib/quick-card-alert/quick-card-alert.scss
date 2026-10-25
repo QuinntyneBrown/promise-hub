@@ -1,0 +1,18 @@
+:host {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-danger-bg);
+  color: var(--color-danger-fg);
+  border: var(--border-width-thick) solid var(--color-danger-border);
+}
+.title {
+  font: var(--text-h4);
+  overflow-wrap: anywhere;
+}
+.text {
+  font: var(--text-body-lg);
+  overflow-wrap: anywhere;
+}

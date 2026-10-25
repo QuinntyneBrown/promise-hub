@@ -98,6 +98,7 @@
               [name]="e.name"
               [meta]="meta(e)"
               [status]="rowStatus(e)"
+              [link]="quickCards() && e.childId ? ['/quick-cards', e.childId] : null"
               avatarTint="peach"
             >
               <ng-container ngProjectAs="[phRosterFlags]">

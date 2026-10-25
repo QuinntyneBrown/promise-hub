@@ -1,0 +1,20 @@
+<ol class="call-list" [attr.aria-label]="label()">
+  @for (c of contacts(); track c.phone; let first = $first) {
+    <li class="item">
+      <ph-avatar [name]="c.name" size="sm" [tint]="first ? 'peach' : 'accent'" />
+      <div class="body">
+        <div class="name">{{ c.name }} · {{ c.relationship.toLowerCase() }}</div>
+        @if (c.meta) {
+          <div class="meta">{{ c.meta }}</div>
+        }
+      </div>
+      <a
+        class="call"
+        [class.call--primary]="first"
+        [href]="'tel:' + c.phone"
+        [attr.aria-label]="'Call ' + c.name + ', ' + c.phone"
+        >{{ c.phone }}</a
+      >
+    </li>
+  }
+</ol>

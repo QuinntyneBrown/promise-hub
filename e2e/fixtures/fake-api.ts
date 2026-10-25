@@ -118,6 +118,7 @@ export class FakeApi {
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/check-ins$/, (route, p) => this.attend(route, p['id']!, 'Present')],
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/absences$/, (route, p) => this.attend(route, p['id']!, 'Absent')],
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/walk-ins$/, (route, p) => this.addWalkIn(route, p['id']!)],
+    ['GET', /^\/api\/children\/(?<id>[^/]+)\/quick-card$/, (route, p) => this.quickCard(route, p['id']!)],
     ['GET', /^\/api\/children\/(?<id>[^/]+)$/, (route, p) => this.getChild(route, p['id']!)],
     ['PUT', /^\/api\/children\/(?<id>[^/]+)$/, (route, p) => this.updateChild(route, p['id']!)],
     ['PUT', /^\/api\/children\/(?<id>[^/]+)\/medical$/, (route, p) => this.updateMedical(route, p['id']!)],
@@ -473,7 +474,7 @@ export class FakeApi {
     if (!can.writeMedical(m)) return this.forbidden(route);
     const found = this.ownChild(m, id);
     if (!found) return route.fulfill({ status: 404 });
-    const body = route.request().postDataJSON() as { allergies: string; medication: string; conditions: string; doctor: string; redAlert: boolean };
+    const body = route.request().postDataJSON() as { allergies: string; medication: string; conditions: string; doctor: string; redAlert: boolean; alertInstruction: string };
     const clean = (v: string) => v?.trim() || null;
     found.child.medical = {
       allergies: clean(body.allergies),
@@ -481,6 +482,8 @@ export class FakeApi {
       conditions: clean(body.conditions),
       doctor: clean(body.doctor),
       redAlert: body.redAlert,
+      alertInstruction: clean(body.alertInstruction),
+      healthCard: found.child.medical.healthCard ?? null,
       updatedAt: '2026-11-05T21:12:00Z',
       updatedBy: m.personName,
     };
@@ -870,6 +873,37 @@ export class FakeApi {
     this.walkIns.push(walkIn);
     this.sessionRecords(e.id).set(walkIn.id, { status: 'Present', checkedInAt: NOW.toISOString() });
     return route.fulfill({ status: 201, json: { id: walkIn.id } });
+  }
+
+  private async quickCard(route: Route, id: string): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    if (!this.modules.get(m.organizationId)!.includes('QuickCards')) return route.fulfill({ status: 404 });
+    const found = this.ownChild(m, id);
+    if (!found) return route.fulfill({ status: 404 });
+    const { child, household } = found;
+    const allowed = can.readMedical(m);
+    const med = child.medical;
+    const hasMedical = !!(med.allergies || med.medication || med.conditions || med.doctor || med.healthCard);
+    const guardians = [...household.guardians].sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.name.localeCompare(b.name));
+    return route.fulfill({
+      json: {
+        id: child.id,
+        householdId: household.id,
+        name: `${child.firstName} ${child.lastName}`,
+        age: ageOf(child.dateOfBirth),
+        school: child.school,
+        programs: this.programs.filter((p) => p.organizationId === m.organizationId && p.roster.includes(child.id)).map((p) => p.name).sort(),
+        primaryGuardian: guardians[0]?.name ?? null,
+        language: household.language,
+        allergyAlert: allowed && med.redAlert && med.allergies ? { title: `Severe allergy: ${med.allergies}`, instruction: med.alertInstruction ?? null } : null,
+        medical: allowed && hasMedical ? { allergies: med.allergies, medication: med.medication, conditions: med.conditions, doctor: med.doctor, healthCard: med.healthCard ?? null } : null,
+        callOrder: guardians.filter((g) => g.mobile).map((g) => ({ name: g.name, relationship: g.relationship, phone: g.mobile, language: g.language, isPrimary: g.isPrimary })),
+        approvedPickups: guardians.filter((g) => g.canPickUp).map((g) => ({ name: g.name, relationship: g.relationship, isPrimary: g.isPrimary })),
+        notes: child.notes ?? null,
+        medicalRestricted: !allowed,
+      },
+    });
   }
 
   private startSession(membershipId: string): void {

@@ -52,3 +52,9 @@
 .actions:empty {
   display: none;
 }
+.name-link {
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+}

@@ -89,6 +89,8 @@ export class CheckInPage {
   protected readonly filter = signal<Filter>('all');
   protected readonly query = signal('');
   protected readonly canRun = computed(() => !!this.me() && can(this.me()!.role, 'runSessions'));
+  /** Names open the Quick Card only while that module is on. */
+  protected readonly quickCards = computed(() => !!this.me()?.modules.includes('QuickCards'));
 
   protected readonly totals = computed(() => {
     const list = this.entries();

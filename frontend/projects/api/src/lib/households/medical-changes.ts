@@ -4,4 +4,5 @@ export interface MedicalChanges {
   conditions: string;
   doctor: string;
   redAlert: boolean;
+  alertInstruction: string;
 }
