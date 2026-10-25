@@ -1,0 +1,22 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Notify in app
+
+Person(staff, "Staff member", "Uses several devices")
+System_Boundary(promisehub, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "Shell NotificationBell and BellPanel; NotificationsPage; preference cards in settings and account")
+  Container(api, "PromiseHub API", "ASP.NET Core", "NotificationsEndpoints, NotificationPublisher, NotificationStreamHub")
+  Container(jobs, "Job runner", "PromiseHub.Infrastructure", "DigestJob per tenant")
+  ContainerDb(db, "PromiseHub database", "SQL via EF Core", "Notifications, preferences")
+}
+System_Ext(email, "Email provider", "Emails")
+
+Rel(staff, web, "Uses", "HTTPS")
+Rel(web, api, "List, counts, mark read, preferences", "JSON/HTTPS")
+Rel_Back(web, api, "Unread count and new items", "Server-sent events")
+Rel(api, db, "Reads and writes", "EF Core")
+Rel(jobs, db, "Reads unread since last digest", "EF Core")
+Rel(jobs, email, "Sends digests", "HTTPS")
+Rel(api, email, "Sends per-kind emails at publish", "HTTPS")
+@enduml

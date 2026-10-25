@@ -1,0 +1,14 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Notify in app
+
+Person(staff, "Staff member", "Sees the bell, the panel and the notifications page on any device")
+Person(admin, "Admin", "Receives bounce, cap, payment and job-failure notices; sets staff email preferences")
+System(promisehub, "PromiseHub", "Collects events into per-person notifications with unread counts")
+System_Ext(email, "Email provider", "Delivers per-kind emails and digests")
+
+Rel(staff, promisehub, "Reads and marks notifications", "HTTPS, server-sent events")
+Rel(admin, promisehub, "Sets preferences", "HTTPS")
+Rel(promisehub, email, "Sends digests and per-kind emails", "HTTPS API")
+@enduml
