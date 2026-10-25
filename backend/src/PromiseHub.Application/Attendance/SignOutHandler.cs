@@ -57,7 +57,14 @@ public sealed class SignOutHandler(IPromiseHubDb db, AttendanceWriter writer, IT
             {
                 errors["otherName"] = "Enter their name.";
             }
-            if (!command.GuardianConfirmed)
+            var asked = string.IsNullOrWhiteSpace(command.OtherName) ? [] : (await db.PickupRequests.AsNoTracking()
+                .Where(r => r.EventId == eventId && r.ChildId == command.ChildId && r.Status != PickupRequestStatus.Pending).ToListAsync(cancellationToken))
+                .Where(r => r.IsFor(command.OtherName!)).ToList();
+            if (asked.Any(r => r.Status == PickupRequestStatus.Refused))
+            {
+                errors["otherName"] = $"{primary?.Name ?? "The guardian"} refused this pickup. {first} stays with staff.";
+            }
+            else if (!command.GuardianConfirmed && !asked.Any(r => r.Status == PickupRequestStatus.Approved))
             {
                 errors["guardianConfirmed"] = $"{primary?.Name ?? "The guardian"} needs to okay this by phone first.";
             }

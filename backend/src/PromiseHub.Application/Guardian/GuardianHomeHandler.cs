@@ -11,7 +11,7 @@ namespace PromiseHub.Application.Guardian;
 /// The household's home page, opened from a decision text (L2-013 criterion 12): each child's programs with the status, the
 /// waitlist position and the note staff wrote. The household comes from the link; a new device verifies with a code first.
 /// </summary>
-public sealed class GuardianHomeHandler(IPromiseHubDb db, GuardianAccess access, IModuleGate modules, NoShowReplyHandler replies, ApprovedPickupsHandler pickups, TimeProvider clock)
+public sealed class GuardianHomeHandler(IPromiseHubDb db, GuardianAccess access, IModuleGate modules, NoShowReplyHandler replies, ApprovedPickupsHandler pickups, PickupRequestHandler requests, TimeProvider clock)
 {
     public async Task<GuardianResult> GetAsync(GuardianRequest request, CancellationToken cancellationToken = default)
     {
@@ -40,6 +40,9 @@ public sealed class GuardianHomeHandler(IPromiseHubDb db, GuardianAccess access,
         var primary = guardians.OrderByDescending(g => g.IsPrimary).ThenBy(g => g.Name).FirstOrDefault();
         var pickupsOn = await modules.IsOnAsync(ModuleId.Pickup, cancellationToken);
         var pickups = pickupsOn ? await db.ApprovedPickups.AsNoTracking().Where(p => ids.Contains(p.ChildId) && p.RemovedAt == null).OrderBy(p => p.Name).ToListAsync(cancellationToken) : [];
+        var waiting = pickupsOn ? await db.PickupRequests.AsNoTracking().Where(r => r.HouseholdId == scope.Household.Id && r.Status == PickupRequestStatus.Pending).ToListAsync(cancellationToken) : [];
+        var waitingEvents = waiting.Select(r => r.EventId).Distinct().ToList();
+        var eventNames = await db.Events.AsNoTracking().Where(e => waitingEvents.Contains(e.Id)).ToDictionaryAsync(e => e.Id, e => e.Name, cancellationToken);
         var noShows = await OpenNoShowsAsync(scope.Household.Id, children.ToDictionary(c => c.Id, c => c.FirstName), cancellationToken);
         return GuardianResult.Of(GuardianOutcome.Ok, new GuardianHomeDto(
             GuardianLanguage.Code(scope.Household.Language),
@@ -61,7 +64,8 @@ public sealed class GuardianHomeHandler(IPromiseHubDb db, GuardianAccess access,
                 return new GuardianHomeChildDto(child.FullName, child.FirstName, enrollments, child.Id,
                     pickupsOn ? [.. pickups.Where(p => p.ChildId == child.Id).Select(p => new GuardianHomePickupDto(p.Id, p.Name, p.Relationship))] : null);
             })],
-            noShows));
+            noShows,
+            [.. waiting.OrderBy(r => r.RequestedAt).Select(r => new GuardianHomePickupRequestDto(r.Id, children.First(c => c.Id == r.ChildId).FirstName, r.CollectorName, eventNames.GetValueOrDefault(r.EventId, ""), r.RequestedAt))]));
     }
 
     /// <summary>Answers a no-show text from the page instead of replying 1 or 2 (L2-018 criterion 8).</summary>
@@ -108,6 +112,19 @@ public sealed class GuardianHomeHandler(IPromiseHubDb db, GuardianAccess access,
             return (problem, null);
         }
         return (null, await pickups.RemoveAsync(childId, pickupId, true, await GuardianNameAsync(scope!, cancellationToken), scope!.Household.Id, cancellationToken));
+    }
+
+    /// <summary>The guardian approves or refuses someone waiting to collect their child (L2-020 criterion 7).</summary>
+    public async Task<GuardianResult> DecidePickupAsync(GuardianRequest request, Guid requestId, DecidePickupRequest body, CancellationToken cancellationToken = default)
+    {
+        var (problem, scope) = await PickupScopeAsync(request, cancellationToken);
+        if (problem is not null)
+        {
+            return problem;
+        }
+        return await requests.DecideAsync(requestId, scope!.Household.Id, body.Approve, await GuardianNameAsync(scope, cancellationToken), cancellationToken)
+            ? GuardianResult.Of(GuardianOutcome.Done)
+            : GuardianResult.Of(GuardianOutcome.NotFound);
     }
 
     private async Task<(GuardianResult? Problem, GuardianScope? Scope)> PickupScopeAsync(GuardianRequest request, CancellationToken cancellationToken)
