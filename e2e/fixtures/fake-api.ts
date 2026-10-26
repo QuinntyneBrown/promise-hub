@@ -235,6 +235,14 @@ export class FakeApi {
   /** The six-digit code the fake texts to a contact on file. */
   readonly guardianCode = '482913';
   private smsUsed = new Map<string, number>();
+  /** The audit log as the API keeps it: organization, when, who, action, record type and summary. */
+  private auditEntries: { organizationId: string; when: string; who: string; action: string; record: string; summary: string; device: string | null }[] = [
+    { organizationId: 'org-harbourview', when: '2026-11-05T20:41:00Z', who: 'Carmen Rivera', action: 'Signed', record: 'PermissionSlip', summary: 'Mateo Rivera · signed by Carmen Rivera · version 1', device: 'Phone' },
+    { organizationId: 'org-harbourview', when: '2026-11-05T18:10:00Z', who: 'Tom Nguyen', action: 'Updated', record: 'Enrollment', summary: 'Kevin Tran · After-School Tutoring · accepted', device: 'Laptop' },
+    { organizationId: 'org-harbourview', when: '2026-11-02T14:10:00Z', who: 'Tom Nguyen', action: 'Viewed', record: 'ChildMedical', summary: 'Mateo Rivera · medical details', device: 'Laptop' },
+    { organizationId: 'org-harbourview', when: '2026-10-20T15:00:00Z', who: 'Marisol Delgado', action: 'Exported', record: 'ReportExport', summary: 'harbourview-youth-collective-report.csv · CSV · 12 rows', device: 'Laptop' },
+    { organizationId: 'org-northgate', when: '2026-11-04T12:00:00Z', who: 'Grace Mensah', action: 'Updated', record: 'Organization', summary: 'Northgate Kids · Burlington', device: null },
+  ];
   /** Consent retention per organization, when saved (null: until deleted by request); otherwise 7 years. */
   private retention = new Map<string, number | null>();
   /** Guardian data requests: household, kind, email and who fulfilled it. */
@@ -380,6 +388,7 @@ export class FakeApi {
     ['POST', /^\/api\/auth\/sign-out$/, (route) => this.signOut(route)],
     ['GET', /^\/api\/setup$/, (route) => this.setup(route)],
     ['GET', /^\/api\/billing$/, (route) => this.billing(route)],
+    ['GET', /^\/api\/audit$/, (route) => this.auditLog(route)],
     ['PUT', /^\/api\/billing\/plan$/, (route) => this.changePlan(route)],
     ['GET', /^\/api\/me\/organizations$/, (route) => this.myOrganizations(route)],
     ['POST', /^\/api\/me\/organization$/, (route) => this.switchOrganization(route)],
@@ -614,6 +623,25 @@ export class FakeApi {
     }
     this.membershipId = null;
     return route.fulfill({ status: 204 });
+  }
+
+  /** Mirrors backend AuditLogHandler. */
+  private async auditLog(route: Route): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    if (m.role !== 'Admin') return this.forbidden(route);
+    const url = new URL(route.request().url());
+    const q = (url.searchParams.get('q') ?? '').trim().toLowerCase();
+    const action = url.searchParams.get('action');
+    const days = Number(url.searchParams.get('days') ?? 7);
+    const since = new Date(NOW.getTime() - days * 86400000).toISOString();
+    const entries = this.auditEntries
+      .filter((e) => e.organizationId === m.organizationId && e.when >= since)
+      .filter((e) => !action || e.action === action)
+      .filter((e) => !q || `${e.who} ${e.record} ${e.summary}`.toLowerCase().includes(q))
+      .sort((a, b) => b.when.localeCompare(a.when))
+      .map(({ organizationId: _, ...e }) => e);
+    return route.fulfill({ json: { entries, total: entries.length, page: 1, pageSize: 50 } });
   }
 
   failPayment(organizationId: string, at = '2026-11-01T12:00:00Z'): void {

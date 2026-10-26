@@ -41,3 +41,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0035](0035-billing.md) | Plans are fixed terms in the domain; limits are enforced where children join; payments are modelled, not processed |
 | [0036](0036-privacy-retention.md) | Region is fixed per organization; consent retention is a setting applied by a nightly per-tenant job |
 | [0037](0037-guardian-data-requests.md) | Guardian data requests are recorded from the family page and fulfilled once by staff |
+| [0038](0038-audit-log-search.md) | The audit log is searched in the tenant's entries on request and exported as CSV, logging the export |

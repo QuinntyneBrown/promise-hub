@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { AuditLogPage } from './audit-log-page/audit-log-page';
 import { BillingPage } from './billing-page/billing-page';
 import { CoveragePage } from './coverage-page/coverage-page';
 import { StaffPage } from './staff-page/staff-page';
@@ -16,4 +17,9 @@ export const coverageRoutes: Routes = [
 /** Mounted by the app at /settings/billing; every organization has a plan. */
 export const billingRoutes: Routes = [
   { path: '', component: BillingPage, title: 'Billing · PromiseHub' },
+];
+
+/** Mounted by the app at /settings/audit; every organization keeps an audit log. */
+export const auditRoutes: Routes = [
+  { path: '', component: AuditLogPage, title: 'Audit log · PromiseHub' },
 ];

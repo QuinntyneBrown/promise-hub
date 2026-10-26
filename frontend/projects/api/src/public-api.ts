@@ -166,3 +166,7 @@ export * from './lib/privacy/privacy-api';
 export * from './lib/privacy/privacy-api.token';
 export * from './lib/privacy/privacy-settings';
 export * from './lib/privacy/data-request';
+export * from './lib/audit/audit-api';
+export * from './lib/audit/audit-api.token';
+export * from './lib/audit/audit-filter';
+export * from './lib/audit/audit-log';

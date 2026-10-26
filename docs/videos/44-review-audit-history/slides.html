@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 44 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="44" data-video-title="Review audit history" data-parts="Introduction|Promises|Searching|Export|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 44</div>
+  <h1>Review audit history</h1>
+  <p class="lead">Who looked at what, and when</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="Every view of medical details">
+  <h2>What the audit log promises</h2>
+  <ul>
+    <li>Views, changes, signatures, exports and sign-ins</li>
+    <li>Search by person, record and details</li>
+    <li>Filter by action; 7 days, 30 days or a year</li>
+    <li>Exports match the screen and are logged too</li>
+  </ul>
+</section>
+
+<section id="search" data-part="2" data-cue="Here is the audit log on Tom's laptop." data-clip="clips/audit-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Mateo, then views</h3><p>Jaylen viewed his medical details.</p></div>
+</section>
+
+<section id="export" data-part="3" data-cue="Export carries the same search and period">
+  <h2>Exporting and access</h2>
+  <div class="cols">
+    <img class="shot" alt="A director told that admins read the audit log" src="shots/desktop-forbidden.png">
+    <img class="shot" alt="The audit log on a phone" src="shots/phone-audit.png">
+  </div>
+</section>
+
+<section id="testing" data-part="4" data-cue="Backend tests cover newest-first entries">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Entry 10 days old, 7-day period</td><td>Left out</td></tr>
+    <tr><td>Export</td><td>CSV, and logged</td></tr>
+    <tr><td>Director</td><td>403</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="5" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Every sensitive action recorded</li><li>Search person, record, action, time</li><li>Exports are logged too</li></ul>
+  <p class="muted">Next: manage sessions</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

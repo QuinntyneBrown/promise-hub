@@ -54,6 +54,10 @@ Slice 01 delivered `AuditEntry`, `AuditAction`, `IAuditWriter` and `AuditWriter`
 - Coarse location derivation for the Device column (city from IP or none) is `<TO SUPPLY>`.
 - Whether the search is backed by a database full-text index or by `LIKE` on indexed columns is `<TO SUPPLY>`.
 
+## Built so far
+
+Slice 44 delivered `AuditLogHandler` (`GET /audit` with text, action and period filters and paging; `GET /audit/export`, itself logged), `ViewAudit`, and `AuditLogPage` at `/settings/audit` (ADR 0038).
+
 ## Requirements
 
 The feature realizes the following level-2 (L2) requirement and enforces the cross-cutting ones listed with it.

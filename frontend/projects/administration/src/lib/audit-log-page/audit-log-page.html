@@ -1,0 +1,97 @@
+@let r = result();
+@let l = log();
+@if (r?.status === 'forbidden') {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      title="Admins read the audit log"
+      text="Ask Tom Nguyen or another admin."
+      [headingLevel]="1"
+    >
+      <ph-button link="/">Back to Today</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-page-header
+    title="Audit log"
+    [subtitle]="l ? l.total.toLocaleString('en-US') + ' entries in this period' : ''"
+  >
+    <ph-button icon="download" [href]="exportUrl()">Export</ph-button>
+  </ph-page-header>
+  <div class="toolbar">
+    <ph-text-field
+      class="search"
+      inputId="au-q"
+      type="search"
+      label="Search the log"
+      [labelHidden]="true"
+      placeholder="Child, staff member or action"
+      name="q"
+      [ngModel]="filter().q"
+      (ngModelChange)="set({ q: $event })"
+    />
+    <ph-select
+      inputId="au-action"
+      label="Action"
+      [options]="actions"
+      name="action"
+      [ngModel]="filter().action"
+      (ngModelChange)="set({ action: $event })"
+    />
+    <ph-select
+      inputId="au-days"
+      label="Period"
+      [options]="periods"
+      name="days"
+      [ngModel]="'' + filter().days"
+      (ngModelChange)="set({ days: +$event })"
+    />
+  </div>
+  @if (l) {
+    @if (l.entries.length) {
+      <ph-table caption="Audit log" [columns]="columns" [rows]="rows()" />
+      <nav class="pager" aria-label="Pagination">
+        <span class="muted">{{ range(l) }}</span>
+        <div class="pager__buttons">
+          <ph-button [disabled]="l.page === 1" (click)="set({ page: l.page - 1 })"
+            >Previous</ph-button
+          >
+          <ph-button [disabled]="l.page * l.pageSize >= l.total" (click)="set({ page: l.page + 1 })"
+            >Next</ph-button
+          >
+        </div>
+      </nav>
+    } @else if (filter().q || filter().action) {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="search"
+          [title]="'No entries for “' + (filter().q || filter().action) + '” in this period'"
+          text="Widen the period or clear the search."
+        >
+          <ph-button (click)="set({ q: '', action: '' })">Clear</ph-button>
+        </ph-empty-state>
+      </ph-card>
+    } @else {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="warning"
+          title="Nothing logged in this period"
+          text="Views, changes and exports appear here."
+        />
+      </ph-card>
+    }
+  } @else if (r === null) {
+    <div aria-busy="true" aria-label="Loading the audit log"><ph-skeleton shape="card" /></div>
+  } @else {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load the audit log"
+        text="Try again."
+      >
+        <ph-button variant="primary" (click)="set({})">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+}
