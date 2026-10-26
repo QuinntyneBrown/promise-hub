@@ -3,6 +3,11 @@
   title="Something went wrong on our side"
   text="Try again in a minute. Nothing was lost."
 >
+  @if (reference) {
+    <p phEmptyStateDetail class="text-caption" data-testid="error-reference">
+      Reference: {{ reference }}
+    </p>
+  }
   <ph-button variant="primary" (click)="retry()">Try again</ph-button>
   <ph-button link="/">Go to Today</ph-button>
 </ph-error-page>
