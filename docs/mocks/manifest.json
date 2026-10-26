@@ -38,7 +38,11 @@
         "error",
         "partial",
         "single-module",
-        "offline"
+        "offline",
+        "youth",
+        "youth-learning-off",
+        "mentor",
+        "volunteer"
       ]
     },
     {
@@ -923,6 +927,8 @@
       "states": [
         "default",
         "invalid",
+        "custom",
+        "blocked",
         "submitting",
         "error"
       ],
@@ -1102,6 +1108,7 @@
         "default",
         "single",
         "invalid",
+        "blocked",
         "submitting",
         "success",
         "loading",
@@ -1359,6 +1366,78 @@
       "not_applicable": {
         "empty": "Static form.",
         "loading": "Static form."
+      }
+    },
+    {
+      "id": "learning",
+      "kind": "page",
+      "title": "Learning",
+      "route": "/learning",
+      "requirements": [
+        "L1-023",
+        "L1-002"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "error"
+      ],
+      "not_applicable": {
+        "empty": "Until the journeys add content, the default state is the empty state."
+      }
+    },
+    {
+      "id": "curriculum",
+      "kind": "page",
+      "title": "Curriculum",
+      "route": "/curriculum",
+      "requirements": [
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "error",
+        "forbidden"
+      ],
+      "not_applicable": {
+        "empty": "Until the journeys add content, the default state is the empty state."
+      }
+    },
+    {
+      "id": "mentoring",
+      "kind": "page",
+      "title": "Mentoring",
+      "route": "/mentoring",
+      "requirements": [
+        "L1-024",
+        "L1-002"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "error"
+      ],
+      "not_applicable": {
+        "empty": "Until the journeys add content, the default state is the empty state."
+      }
+    },
+    {
+      "id": "website",
+      "kind": "page",
+      "title": "Public website",
+      "route": "/site/harbourview",
+      "requirements": [
+        "L1-025"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "error",
+        "not-found"
+      ],
+      "not_applicable": {
+        "empty": "Until the journeys add content, the default state is the empty state."
       }
     },
     {
@@ -2103,7 +2182,10 @@
       ],
       "states": [
         "default",
-        "director"
+        "director",
+        "youth",
+        "mentor",
+        "volunteer"
       ],
       "not_applicable": {
         "busy": "A menu has no submit.",

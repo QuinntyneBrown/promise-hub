@@ -290,15 +290,24 @@ simple("sign-out-all", "Sign out everywhere?", "account", [R_SEC], "Every other 
 # ------------------------------------------------------------------ Shell: main menu, account menu, session expired, offline queue
 @screen("main-menu", "dialog", "Main menu", opens_from="today", reqs=["L1-014"], na={"busy": "A menu has no submit.", "invalid": "A menu has no inputs."})
 def main_menu(S):
-    def drawer(user=STAFF["jaylen"], current="today"):
-        links = [("today", "Today", "home"), ("check-in", "Check-in", "clipboard"), ("quick-card", "Quick Cards", "heart-pulse"), ("families", "Families", "users"), ("events", "Events", "calendar"), ("slips", "Slips", "clipboard"), ("programs", "Programs", "list"), ("messages", "Messages", "message"), ("reports", "Reports", "chart"), ("incidents", "Incidents", "flag"), ("attendance", "Attendance", "table"), ("settings", "Settings", "settings"), ("notifications", "Notifications", "bell"), ("account", "Your account", "user")]
+    staff_links = [("today", "Today", "home"), ("check-in", "Check-in", "clipboard"), ("quick-card", "Quick Cards", "heart-pulse"), ("families", "Families", "users"), ("events", "Events", "calendar"), ("slips", "Slips", "clipboard"), ("programs", "Programs", "list"), ("messages", "Messages", "message"), ("reports", "Reports", "chart"), ("incidents", "Incidents", "flag"), ("attendance", "Attendance", "table"), ("settings", "Settings", "settings"), ("notifications", "Notifications", "bell"), ("account", "Your account", "user")]
+    director_links = staff_links[:10] + [("curriculum", "Curriculum", "star")] + staff_links[10:]
+    tail = [("notifications", "Notifications", "bell"), ("account", "Your account", "user")]
+
+    def drawer(user=STAFF["jaylen"], current="today", links=staff_links):
         items = "".join(f'<a class="nav-drawer__link" href="{page(s)}"{" aria-current=\"page\"" if s == current else ""}>{icon(i)}{t}</a>' for s, t, i in links)
         return (f'<div class="backdrop"></div><nav class="nav-drawer" role="dialog" aria-modal="true" aria-labelledby="menu-title" style="display: flex;" data-dismiss-on-escape>'
                 f'<div class="nav-drawer__header"><span class="nav-drawer__title" id="menu-title">Menu</span><button class="btn btn--ghost btn--icon" type="button" aria-label="Close menu" autofocus>{icon("x")}</button></div>'
                 f'<div class="nav-drawer__nav">{items}<div class="menu__divider" aria-hidden="true"></div><a class="nav-drawer__link" href="{page("sign-in")}">{icon("log-out")}Sign out</a></div>'
                 f'<div style="padding: var(--space-3) var(--space-4); border-top: var(--border-width-hairline) solid var(--color-border-default);" class="cluster cluster--snug">{avatar(user)}<div><div style="font: var(--text-label);">{esc(user["name"])}</div><div class="text-caption">{esc(user["role"])} · {ORG_SHORT}</div></div></div></nav>')
     S.add("default", "The More menu on a phone: every section, current one marked, sign out at the end.", **over("today", overlays=drawer()))
-    S.add("director", "The same menu for the program director, from Programs.", **over("programs", overlays=drawer(STAFF["marisol"], "programs")))
+    S.add("director", "The same menu for the program director, from Programs; Curriculum shows while Learning is on.", **over("programs", overlays=drawer(STAFF["marisol"], "programs", director_links)))
+    S.add("youth", "A youth’s menu: Today, Learning, notifications and account only; no staff sections, no Settings.",
+          **over("today", "youth", overlays=drawer(YOUTH["sofia"], "today", [("today", "Today", "home"), ("learning", "Learning", "star")] + tail)))
+    S.add("mentor", "A mentor’s menu: Today, Mentoring, notifications and account.",
+          **over("today", "mentor", overlays=drawer(STAFF["daniel"], "today", [("today", "Today", "home"), ("mentoring", "Mentoring", "users")] + tail)))
+    S.add("volunteer", "A volunteer’s menu: Today, Check-in for their assigned sessions, notifications and account.",
+          **over("today", "volunteer", overlays=drawer(STAFF["leo"], "today", [("today", "Today", "home"), ("check-in", "Check-in", "clipboard")] + tail)))
 
 
 @screen("account-menu", "dialog", "Account menu", opens_from="today", reqs=[R_SEC], na={"busy": "A menu has no submit.", "invalid": "A menu has no inputs."})

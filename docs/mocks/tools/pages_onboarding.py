@@ -111,16 +111,27 @@ def onboard_org(S):
 def onboard_modules(S):
     def form(choice="suite", invalid=False, busy=False):
         tiles = ('<fieldset class="field"><legend class="field__label">Start with</legend><div class="choice-tiles">'
-                 + tile("preset", "The whole suite", "All 8 modules. Recommended.", checked=choice == "suite", invalid=invalid)
+                 + tile("preset", "The whole suite", "All 8 operations modules. Recommended.", checked=choice == "suite", invalid=invalid)
                  + tile("preset", "Just check-in", "Roster, Roll Call and Quick Cards.", checked=choice == "checkin", invalid=invalid)
                  + tile("preset", "Just permission slips", "Roster, slips and messages.", checked=choice == "slips", invalid=invalid)
-                 + tile("preset", "Let me choose", "Pick modules one by one.", checked=choice == "custom", invalid=invalid)
+                 + tile("preset", "Let me choose", "Pick modules one by one, including Learning, Mentoring and Public website.", checked=choice == "custom", invalid=invalid)
                  + "</div>" + ('<div class="field__error">Pick one to continue.</div>' if invalid else "") + "</fieldset>")
         return wiz(ORG_STEPS, 1, "What should PromiseHub do for you?", "Switch any module on or off later.", tiles,
                    primary=btn("Continue", "primary", type_="submit", icon_name="arrow-right", busy=busy), back=page("onboard-org"), skip=page("onboard-program"))
     S.add("default", "Step 2 of 6: a preset for which modules are on; the whole suite is recommended.", user=M, exit_href=page("setup"), org=ORG, main=form(),
-          notes=note("“Let me choose” opens the same module list as Settings › Modules (settings-modules) inside the wizard.", "top: 5rem; right: 1rem;"))
+          notes=note("“Let me choose” opens the same module list as Settings › Modules (settings-modules) inside the wizard, with each module’s dependency. Learning, Mentoring and Public website each need the roster.", "top: 5rem; right: 1rem;"))
     S.add("invalid", "Continue pressed with nothing chosen.", user=M, exit_href=page("setup"), org=ORG, main=form(choice="", invalid=True))
+
+    def choose(on, errors=None):
+        from pages_tenancy import module_rows
+        body = ('<p class="text-muted">Each module says what it needs. Learning, Mentoring and Public website each need the roster.</p>'
+                + module_rows(on, errors=errors))
+        return wiz(ORG_STEPS, 1, "Choose your modules", "Switch any module on or off later.", body,
+                   primary=btn("Continue", "primary", type_="submit", icon_name="arrow-right"), back=page("onboard-org"), skip=page("onboard-program"))
+    S.add("custom", "“Let me choose”: the module list with every dependency note, including Learning, Mentoring and Public website.", user=M, exit_href=page("setup"), org=ORG,
+          main=choose({"roster", "rollcall", "quickcard", "learning", "mentoring"}))
+    S.add("blocked", "The roster switched off while Learning is on: Continue is refused with the reason beside the roster.", user=M, exit_href=page("setup"), org=ORG,
+          main=choose({"rollcall", "learning"}, errors={"roster": "Roll Call and Learning need the roster."}))
     S.add("submitting", "Saving the module configuration.", user=M, exit_href=page("setup"), org=ORG, main=form(busy=True))
     S.add("error", "Saving failed.", user=M, exit_href=page("setup"), org=ORG, main=failed(form(), "We couldn’t save that", "Try again."))
 
