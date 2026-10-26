@@ -1,9 +1,11 @@
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Role, STAFF_API } from '@promisehub/api';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { Role, SESSION_API, STAFF_API } from '@promisehub/api';
 import { PhAlert, PhButton, PhDialog, PhRadioGroup, PhTextField } from '@promisehub/components';
-import { ROLE_OPTIONS } from '../role-labels';
+import { EMPTY, catchError } from 'rxjs';
+import { INVITE_ROLE_OPTIONS } from '../role-labels';
 
 /** Invite staff (dialog: invite-staff): a work email and a role; the invitation is emailed and lasts 14 days. Closes with true. */
 @Component({
@@ -22,9 +24,19 @@ export class InviteStaffDialog {
   private readonly data = inject<{ youthWorkersOnly: boolean } | null>(DIALOG_DATA, {
     optional: true,
   });
-  protected readonly roles = this.data?.youthWorkersOnly
-    ? ROLE_OPTIONS.filter((r) => r.value === 'YouthWorker')
-    : ROLE_OPTIONS;
+  private readonly session = toSignal(
+    inject(SESSION_API)
+      .current()
+      .pipe(catchError(() => EMPTY)),
+  );
+  /** Mentor is offered only while Mentoring is on (L2-051 criterion 5). */
+  protected readonly roles = computed(() =>
+    this.data?.youthWorkersOnly
+      ? INVITE_ROLE_OPTIONS.filter((r) => r.value === 'YouthWorker')
+      : INVITE_ROLE_OPTIONS.filter(
+          (r) => r.value !== 'Mentor' || !!this.session()?.modules.includes('Mentoring'),
+        ),
+  );
   protected readonly errors = signal<Record<string, string>>({});
   protected readonly failed = signal(false);
   protected readonly busy = signal(false);

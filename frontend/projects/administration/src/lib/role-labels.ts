@@ -16,3 +16,10 @@ export const ROLE_OPTIONS: RadioOption[] = [
   },
   { value: 'Admin', label: 'Admin', hint: 'Everything, including staff and billing' },
 ];
+
+/** The roles an admin can invite (dialog: invite-staff): the staff roles plus Mentor and Volunteer (L2-051). */
+export const INVITE_ROLE_OPTIONS: RadioOption[] = [
+  ...ROLE_OPTIONS,
+  { value: 'Mentor', label: 'Mentor', hint: 'Sees only the youth assigned to them' },
+  { value: 'Volunteer', label: 'Volunteer', hint: 'Runs the sessions they’re assigned' },
+];

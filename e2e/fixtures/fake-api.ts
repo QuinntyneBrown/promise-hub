@@ -2056,8 +2056,10 @@ export class FakeApi {
     const email = (b.email ?? '').trim().toLowerCase();
     const errors: Record<string, string> = {};
     if (!/^[^@]+@[^@]+\.[^@]+$/.test(email)) errors['email'] = 'Enter a work email like name@example.org.';
-    if (!['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker', 'VolunteerCoordinator'].includes(b.role ?? '')) errors['role'] = 'Choose a role.';
+    if (!['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker', 'VolunteerCoordinator', 'Youth', 'Mentor', 'Volunteer'].includes(b.role ?? '')) errors['role'] = 'Choose a role.';
     if (!errors['role'] && m.role === 'VolunteerCoordinator' && b.role !== 'YouthWorker') errors['role'] = 'Coordinators invite youth workers. Ask an admin for other roles.';
+    else if (!errors['role'] && b.role === 'Youth') errors['role'] = 'Invite youth from their child record.';
+    else if (!errors['role'] && b.role === 'Mentor' && !this.modules.get(m.organizationId)!.includes('Mentoring')) errors['role'] = 'Turn on Mentoring to invite mentors.';
     const member = this.staffOf(m).find((x) => x.email === email);
     if (!errors['email'] && member) errors['email'] = `${member.personName} already has access.`;
     if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });

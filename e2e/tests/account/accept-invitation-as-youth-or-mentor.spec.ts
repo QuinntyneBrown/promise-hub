@@ -1,6 +1,7 @@
 import { test, expect } from '../../fixtures/test';
 import { AcceptInvitePage } from '../../pages/accept-invite.page';
 import { LearningPage } from '../../pages/learning.page';
+import { MentoringPage } from '../../pages/mentoring.page';
 import { TodayPage } from '../../pages/today.page';
 
 // Acceptance Test
@@ -38,5 +39,27 @@ test.describe('Accept an invitation as a youth or mentor', () => {
     await expect(page).toHaveURL(/\/$/);
     expect(requested.filter((p) => p.startsWith('/api/learning'))).toEqual([]);
     expect(await new LearningPage(page).apiStatus()).toBe(404);
+  });
+
+  test('Given Grace’s mentor invitation, when she accepts, then she is signed in as a Mentor and lands on Mentoring', async ({ page, api }) => {
+    api.sentInvitation('inv-grace', 'grace.adeyemi@example.org', 'Mentor');
+    const invite = new AcceptInvitePage(page);
+    await invite.open('inv-grace');
+    await expect(invite.subtitle).toHaveText('Tom Nguyen invited you as Mentor.');
+
+    await invite.accept('Grace Adeyemi', 'mentoring on thursdays');
+
+    await new MentoringPage(page).expectOpen();
+  });
+
+  test('Given a volunteer invitation, when Ravi accepts, then he lands on Today', async ({ page, api }) => {
+    api.sentInvitation('inv-ravi', 'ravi.patel@example.org', 'Volunteer');
+    const invite = new AcceptInvitePage(page);
+    await invite.open('inv-ravi');
+
+    await invite.accept('Ravi Patel', 'saturday sports helper');
+
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Welcome, Ravi');
   });
 });

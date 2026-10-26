@@ -28,11 +28,24 @@ export class StaffPage extends BasePage {
     return this.members.getByRole('listitem').filter({ hasText: name });
   }
 
-  async invite(email: string, role: string): Promise<void> {
+  invitation(email: string): Locator {
+    return this.invitations.getByRole('listitem').filter({ hasText: email });
+  }
+
+  async openInvite(): Promise<void> {
     await this.page.getByRole('button', { name: 'Invite staff' }).click();
     await expect(this.dialog).toBeVisible();
+  }
+
+  /** The role's radio; "Volunteer" never matches "Volunteer coordinator". */
+  roleOption(role: string): Locator {
+    return this.dialog.getByRole('radio', { name: new RegExp(`^${role}(?! coordinator)`) });
+  }
+
+  async invite(email: string, role: string): Promise<void> {
+    await this.openInvite();
     await this.dialog.getByLabel('Work email').fill(email);
-    await this.dialog.getByRole('radio', { name: new RegExp(`^${role}`) }).check();
+    await this.roleOption(role).check();
     await this.dialog.getByRole('button', { name: 'Send invitation' }).click();
   }
 

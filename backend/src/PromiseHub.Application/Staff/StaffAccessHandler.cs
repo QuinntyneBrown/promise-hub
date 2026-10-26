@@ -12,7 +12,7 @@ namespace PromiseHub.Application.Staff;
 /// change-role, remove-staff). A changed role applies on the person's next request and a removed membership ends it, since
 /// every request reads the membership afresh. Admins cannot change or remove themselves. Every change is audited.
 /// </summary>
-public sealed class StaffAccessHandler(IPromiseHubDb db, ITenantContext tenant, InvitationIssuer issuer, IAuditWriter audit, TimeProvider clock)
+public sealed class StaffAccessHandler(IPromiseHubDb db, ITenantContext tenant, InvitationIssuer issuer, IModuleGate modules, IAuditWriter audit, TimeProvider clock)
 {
     public async Task<StaffListDto> ListAsync(CancellationToken cancellationToken = default)
     {
@@ -39,6 +39,15 @@ public sealed class StaffAccessHandler(IPromiseHubDb db, ITenantContext tenant, 
         if (errors.Count == 0 && tenant.Role == Role.VolunteerCoordinator && role != Role.YouthWorker)
         {
             errors["role"] = "Coordinators invite youth workers. Ask an admin for other roles.";
+        }
+        else if (errors.Count == 0 && role == Role.Youth)
+        {
+            // Every youth account links to a child, so youth are invited from their child record (ADR 0045).
+            errors["role"] = "Invite youth from their child record.";
+        }
+        else if (errors.Count == 0 && role == Role.Mentor && !await modules.IsOnAsync(ModuleId.Mentoring, cancellationToken))
+        {
+            errors["role"] = "Turn on Mentoring to invite mentors.";
         }
         if (errors.Count == 0)
         {
