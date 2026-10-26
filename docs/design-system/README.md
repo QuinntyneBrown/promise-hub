@@ -136,6 +136,7 @@ Edit tokens and shared component CSS first. Edit catalogue metadata and generato
 | Existing tokens.css | Copied organization comment referenced a different product’s ADR and implied an implemented server feature | Replaced the comment with the scoped pair contract; no existing token value changed. Organization branding remains unimplemented. |
 | Quick Card phone facts | The .quick-card-specific two-column rule overrode the narrower generic phone rule | Matched specificity in the phone rule so labels stack above values below 640px, as documented; no information is removed. |
 | Core catalogue | Tooltip, spinner and complete sidebar/pagination specimens were not all present in mocks | Documented core compositions using inherited roles and tokens; source sections identify core additions explicitly. |
+| Waypoint foundation mocks (ADR 0043) | Youth, mentor and volunteer shells, Learning, Curriculum, Mentoring and public website pages | Composed only from existing components (top bar, tab bar, nav drawer, card, list, icon tile, empty state, skeleton, guardian bar); no token or component added. The navigation pattern documents the participant-role and module-off states. |
 | Inherited component CSS | Includes historical selectors unused by PromiseHub | Retained for compatibility; catalogue scope is the PromiseHub evidence plus the core set. Do not interpret unused inherited selectors as implemented product features. |
 
 ## Verification
