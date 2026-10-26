@@ -14,6 +14,7 @@ import {
   PhSkeleton,
   ToastService,
   formatDate,
+  PhInlineMessage,
 } from '@promisehub/components';
 import { Subject, startWith, switchMap } from 'rxjs';
 import { ChangePlanDialog } from '../change-plan-dialog/change-plan-dialog';
@@ -22,6 +23,7 @@ import { ChangePlanDialog } from '../change-plan-dialog/change-plan-dialog';
 @Component({
   selector: 'ph-billing-page',
   imports: [
+    PhInlineMessage,
     PhAlert,
     PhButton,
     PhCard,

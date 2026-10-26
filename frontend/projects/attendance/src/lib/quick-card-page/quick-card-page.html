@@ -28,95 +28,85 @@
   @case ('loaded') {
     @if (r?.status === 'loaded') {
       @let c = r.value;
-      <div class="quick-card">
-        <div class="head">
-          <ph-avatar [name]="c.name" size="lg" tint="peach" />
-          <div>
-            <h1 class="name">{{ c.name }}</h1>
-            <p class="muted">{{ subtitle(c) }}</p>
-            @if (c.savedAt) {
-              <ph-sync-chip data-testid="sync-chip"
-                >Saved on this phone · {{ savedTime(c.savedAt) }}</ph-sync-chip
+      <ph-quick-card [name]="c.name" [subtitle]="subtitle(c)">
+        @if (c.savedAt) {
+          <ph-sync-chip phQuickCardStatus data-testid="sync-chip"
+            >Saved on this phone · {{ savedTime(c.savedAt) }}</ph-sync-chip
+          >
+        }
+        @if (c.allergyAlert; as alert) {
+          <ph-quick-card-alert
+            data-block="alert"
+            [title]="alert.title"
+            [instruction]="alert.instruction"
+          />
+        }
+        @if (c.medicalRestricted) {
+          <div data-block="restricted" class="stack">
+            <ph-alert
+              tone="info"
+              title="Medical details are hidden for your role"
+              text="Ask a site lead or program director if you need them."
+            />
+          </div>
+        } @else if (c.medical) {
+          <ph-card data-block="medical" title="Medical">
+            <ph-description-list [facts]="medicalFacts(c)" />
+          </ph-card>
+        } @else {
+          <ph-card data-block="empty" [flush]="true">
+            <ph-empty-state
+              icon="quick-cards"
+              title="No medical information yet"
+              [text]="'Ask ' + (c.primaryGuardian ?? 'the guardian') + ' to add it.'"
+            />
+          </ph-card>
+        }
+        <ph-quick-card-section data-block="call" title="Call, in this order">
+          @if (c.callOrder.length) {
+            <ph-call-list label="Call, in this order" [contacts]="contacts(c)" />
+          } @else {
+            <p class="muted">No phone numbers on file. Check the household.</p>
+          }
+        </ph-quick-card-section>
+        <ph-card data-block="pickups" title="Approved to pick up" [flush]="true">
+          <ph-list label="Approved to pick up" [inset]="true">
+            @for (p of c.approvedPickups; track p.name) {
+              <ph-list-item [title]="p.name" [meta]="p.relationship" [avatar]="p.name">
+                @if (p.isPrimary) {
+                  <ph-badge tone="success">Primary</ph-badge>
+                }
+                @if (p.pickupId && canManage() && !c.savedAt) {
+                  <ph-button
+                    variant="ghost"
+                    size="sm"
+                    hasPopup="dialog"
+                    [label]="'Remove ' + p.name"
+                    (click)="removePickup(c, p)"
+                    >Remove</ph-button
+                  >
+                }
+              </ph-list-item>
+            } @empty {
+              <ph-list-item
+                title="No one approved yet"
+                meta="Ask the guardian before anyone takes the child."
+              />
+            }
+          </ph-list>
+          <div phCardFooter>
+            Others need the primary guardian’s okay by phone.
+            @if (canManage() && !c.savedAt) {
+              <ph-button size="sm" hasPopup="dialog" (click)="addPickup(c)"
+                >Add an approved adult</ph-button
               >
             }
           </div>
-        </div>
-        <div class="body" data-testid="quick-card-body">
-          @if (c.allergyAlert; as alert) {
-            <ph-quick-card-alert
-              data-block="alert"
-              [title]="alert.title"
-              [instruction]="alert.instruction"
-            />
-          }
-          @if (c.medicalRestricted) {
-            <div data-block="restricted" class="stack">
-              <ph-alert
-                tone="info"
-                title="Medical details are hidden for your role"
-                text="Ask a site lead or program director if you need them."
-              />
-            </div>
-          } @else if (c.medical) {
-            <ph-card data-block="medical" title="Medical">
-              <ph-description-list [facts]="medicalFacts(c)" />
-            </ph-card>
-          } @else {
-            <ph-card data-block="empty" [flush]="true">
-              <ph-empty-state
-                icon="quick-cards"
-                title="No medical information yet"
-                [text]="'Ask ' + (c.primaryGuardian ?? 'the guardian') + ' to add it.'"
-              />
-            </ph-card>
-          }
-          <section data-block="call" class="section" aria-labelledby="qc-call">
-            <h2 id="qc-call" class="overline">Call, in this order</h2>
-            @if (c.callOrder.length) {
-              <ph-call-list label="Call, in this order" [contacts]="contacts(c)" />
-            } @else {
-              <p class="muted">No phone numbers on file. Check the household.</p>
-            }
-          </section>
-          <ph-card data-block="pickups" title="Approved to pick up" [flush]="true">
-            <ph-list label="Approved to pick up" [inset]="true">
-              @for (p of c.approvedPickups; track p.name) {
-                <ph-list-item [title]="p.name" [meta]="p.relationship" [avatar]="p.name">
-                  @if (p.isPrimary) {
-                    <ph-badge tone="success">Primary</ph-badge>
-                  }
-                  @if (p.pickupId && canManage() && !c.savedAt) {
-                    <ph-button
-                      variant="ghost"
-                      size="sm"
-                      hasPopup="dialog"
-                      [label]="'Remove ' + p.name"
-                      (click)="removePickup(c, p)"
-                      >Remove</ph-button
-                    >
-                  }
-                </ph-list-item>
-              } @empty {
-                <ph-list-item
-                  title="No one approved yet"
-                  meta="Ask the guardian before anyone takes the child."
-                />
-              }
-            </ph-list>
-            <div phCardFooter>
-              Others need the primary guardian’s okay by phone.
-              @if (canManage() && !c.savedAt) {
-                <ph-button size="sm" hasPopup="dialog" (click)="addPickup(c)"
-                  >Add an approved adult</ph-button
-                >
-              }
-            </div>
-          </ph-card>
-          <ph-card data-block="notes" title="Also good to know">
-            <ph-description-list [facts]="otherFacts(c)" />
-          </ph-card>
-        </div>
-      </div>
+        </ph-card>
+        <ph-card data-block="notes" title="Also good to know">
+          <ph-description-list [facts]="otherFacts(c)" />
+        </ph-card>
+      </ph-quick-card>
     }
   }
 }

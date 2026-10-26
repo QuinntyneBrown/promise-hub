@@ -6,7 +6,3 @@
 .form {
   max-width: var(--layout-form-medium);
 }
-.hint {
-  color: var(--color-fg-muted);
-  margin: 0;
-}

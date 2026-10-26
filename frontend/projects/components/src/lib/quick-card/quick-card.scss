@@ -1,0 +1,27 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-gutter);
+  max-width: var(--layout-dialog-wide);
+  margin-top: var(--space-6);
+}
+.head {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+}
+.name {
+  font: var(--text-h2);
+  margin: 0;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+.muted {
+  color: var(--color-fg-muted);
+  margin: 0;
+}
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-gutter);
+}

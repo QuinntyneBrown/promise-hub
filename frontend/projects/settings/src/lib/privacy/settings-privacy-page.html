@@ -48,9 +48,9 @@
               [ngModel]="retention()"
               (ngModelChange)="retention.set($event)"
             />
-            <p class="hint">
+            <ph-inline-message>
               After that, who signed and the details are removed each night; the counts stay.
-            </p>
+            </ph-inline-message>
             <div>
               <ph-button variant="primary" type="submit" [busy]="saving()"
                 >Save retention</ph-button
@@ -61,7 +61,9 @@
       </form>
       <ph-card title="Requests from guardians">
         <div class="stack">
-          <p class="hint">Guardians ask from their family page. Fulfilling is logged.</p>
+          <ph-inline-message
+            >Guardians ask from their family page. Fulfilling is logged.</ph-inline-message
+          >
           <ph-list label="Requests from guardians">
             @for (r of requests(); track r.id) {
               <ph-list-item
