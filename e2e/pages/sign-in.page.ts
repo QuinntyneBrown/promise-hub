@@ -46,6 +46,11 @@ export class SignInPage extends BasePage {
     await this.submit.click();
   }
 
+  /** Follows Reset password from the locked state (mock: sign-in/locked). */
+  async resetFromLock(): Promise<void> {
+    await this.alert.getByRole('link', { name: 'Reset password' }).click();
+  }
+
   async enterCode(code: string): Promise<void> {
     await expect(this.heading).toHaveText('Enter your code');
     await this.code.fill(code);

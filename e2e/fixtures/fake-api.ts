@@ -250,7 +250,10 @@ export class FakeApi {
   readonly guardianCode = '482913';
   private smsUsed = new Map<string, number>();
   /** Password reset links: token → email and whether it is still usable. */
-  private resetLinks = new Map<string, { email: string; usable: boolean }>([['tok-reset-jaylen', { email: 'jaylen@harbourview.example', usable: true }]]);
+  private resetLinks = new Map<string, { email: string; usable: boolean }>([
+    ['tok-reset-jaylen', { email: 'jaylen@harbourview.example', usable: true }],
+    ['tok-reset-sofia', { email: 'sofia@harbourview.example', usable: true }],
+  ]);
   resetRequestedFor: string | null = null;
   /** Recovery codes left per person, and whether the other devices were signed out. */
   private recoveryCodes = new Map<string, number>();
@@ -682,6 +685,27 @@ export class FakeApi {
     return route.fulfill({ json: { name: organization.name, city: organization.city } });
   }
 
+  /** Five consecutive failures for this email, as if they had just been made (L2-047). */
+  lock(email: string): void {
+    this.signInFailures.set(email, 5);
+  }
+
+  /** Records failed sign-ins; the fifth consecutive one starts the lock, audited in each organization of the email (L2-047). */
+  failSignIn(email: string, times: number): void {
+    for (let i = 0; i < times; i++) {
+      const failures = (this.signInFailures.get(email) ?? 0) + 1;
+      this.signInFailures.set(email, failures);
+      if (failures !== 5) continue;
+      for (const m of memberships.filter((x) => x.email === email)) {
+        this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'SignInLocked', record: 'StaffUser', summary: 'Sign-in locked after 5 failed attempts', device: null });
+      }
+    }
+  }
+
+  isLocked(email: string): boolean {
+    return (this.signInFailures.get(email) ?? 0) >= 5;
+  }
+
   private async signIn(route: Route): Promise<void> {
     const { email, password } = route.request().postDataJSON() as { email: string; password: string };
     const key = email.trim().toLowerCase();
@@ -692,9 +716,11 @@ export class FakeApi {
       .filter((m) => m.email === key)
       .sort((a, b) => a.organizationId.localeCompare(b.organizationId))[0];
     if (!membership || password !== seededPassword) {
-      this.signInFailures.set(key, (this.signInFailures.get(key) ?? 0) + 1);
+      this.failSignIn(key, 1);
       return route.fulfill({ status: 401, json: { code: 'invalid-credentials' } });
     }
+    // Only consecutive failures count: a success starts the count again.
+    this.signInFailures.delete(key);
     if (MFA_ROLES.has(membership.role)) {
       this.mfaPending = membership.id;
       return route.fulfill({ json: { status: 'mfa-required' } });
@@ -919,7 +945,12 @@ export class FakeApi {
     if (b.repeat !== b.password) errors['repeat'] = 'The two passwords don’t match.';
     if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
     link.usable = false;
-    this.membershipId = memberships.find((m) => m.email === link.email)!.id;
+    const member = memberships.find((m) => m.email === link.email)!;
+    if (this.isLocked(link.email)) {
+      this.auditEntries.push({ organizationId: member.organizationId, when: NOW.toISOString(), who: member.personName, action: 'SignInUnlocked', record: 'StaffUser', summary: 'Unlocked sign-in by password reset', device: null });
+    }
+    this.signInFailures.delete(link.email);
+    this.membershipId = member.id;
     return route.fulfill({ json: { status: 'signed-in' } });
   }
 
