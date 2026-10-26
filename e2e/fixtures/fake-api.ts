@@ -387,6 +387,8 @@ export class FakeApi {
     ['POST', /^\/api\/children\/(?<id>[^/]+)\/pickups$/, (route, p) => this.addPickup(route, p['id']!)],
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/pickup-requests$/, (route, p) => this.askForPickup(route, p['id']!)],
     ['GET', /^\/api\/pickup-requests\/(?<id>[^/]+)$/, (route, p) => this.pickupRequest(route, p['id']!)],
+    ['PUT', /^\/api\/g\/home\/(?<token>[^/]+)\/household$/, (route, p) => this.guardianUpdateHousehold(route, p['token']!)],
+    ['PUT', /^\/api\/g\/home\/(?<token>[^/]+)\/children\/(?<id>[^/]+)\/medical$/, (route, p) => this.guardianUpdateMedical(route, p['token']!, p['id']!)],
     ['POST', /^\/api\/g\/home\/(?<token>[^/]+)\/pickup-requests\/(?<id>[^/]+)$/, (route, p) => this.guardianDecidesPickup(route, p['token']!, p['id']!)],
     ['DELETE', /^\/api\/children\/(?<id>[^/]+)\/pickups\/(?<pickup>[^/]+)$/, (route, p) => this.removePickup(route, p['id']!, p['pickup']!)],
     ['POST', /^\/api\/g\/home\/(?<token>[^/]+)\/children\/(?<id>[^/]+)\/pickups$/, (route, p) => this.guardianAddPickup(route, p['token']!, p['id']!)],
@@ -1374,6 +1376,48 @@ export class FakeApi {
     return route.fulfill({ status: 204 });
   }
 
+  private async guardianUpdateHousehold(route: Route, token: string): Promise<void> {
+    const household = this.guardianHousehold(token);
+    if (!household) return route.fulfill({ status: 410, json: { code: 'link-expired' } });
+    if (!this.trustedHouseholds.has(household.id)) return route.fulfill({ status: 401, json: { code: 'verification-required' } });
+    const b = route.request().postDataJSON() as { mobile?: string; email?: string; language?: string };
+    const mobile = b.mobile?.trim() || null;
+    const email = b.email?.trim() || null;
+    const errors: Record<string, string> = {};
+    if (mobile && mobile.replace(/\D/g, '').length !== 10) errors['mobile'] = 'Enter a ten-digit mobile number.';
+    if (email && !/^[^@]+@[^@]+\.[^@]+$/.test(email)) errors['email'] = 'Enter an email like name@example.com.';
+    if (!mobile && !email) errors['mobile'] = 'Leave a mobile number or an email so we can reach you.';
+    if (!['English', 'Spanish', 'French'].includes(b.language ?? '')) errors['language'] = 'Choose English, Spanish or French.';
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    const primary = this.sortedGuardians(household)[0]!;
+    const changed = primary.mobile !== mobile;
+    Object.assign(primary, { mobile, email });
+    household.language = b.language!;
+    if (changed) {
+      this.trustedHouseholds.delete(household.id);
+      this.homeLinks.delete(token);
+    }
+    return route.fulfill({ status: 204 });
+  }
+
+  /** A guardian saved a child's medical details from the family page (seeded as the API would store it). */
+  guardianUpdatesMedical(token: string, childId: string, allergies: string, medication: string): void {
+    const household = this.guardianHousehold(token)!;
+    const child = household.children.find((c) => c.id === childId)!;
+    child.medical = { ...child.medical, allergies, medication };
+  }
+
+  private async guardianUpdateMedical(route: Route, token: string, childId: string): Promise<void> {
+    const household = this.guardianHousehold(token);
+    if (!household) return route.fulfill({ status: 410, json: { code: 'link-expired' } });
+    if (!this.trustedHouseholds.has(household.id)) return route.fulfill({ status: 401, json: { code: 'verification-required' } });
+    const child = household.children.find((c) => c.id === childId);
+    if (!child) return route.fulfill({ status: 404 });
+    const b = route.request().postDataJSON() as { allergies?: string; medication?: string };
+    child.medical = { ...child.medical, allergies: b.allergies?.trim() || null, medication: b.medication?.trim() || null };
+    return route.fulfill({ status: 204 });
+  }
+
   private activePickups(childId: string) {
     return this.extraPickups.filter((x) => x.childId === childId && !x.removed).sort((a, z) => a.name.localeCompare(z.name));
   }
@@ -2121,6 +2165,8 @@ export class FakeApi {
         const onRoster = this.programs.filter((x) => x.roster.includes(c.id) && !requests.some((r) => r.programId === x.id)).map((program) => ({ program, status: 'Enrolled', position: null, note: null }));
         return {
           id: c.id,
+          allergies: c.medical.allergies,
+          medication: c.medical.medication,
           pickups: this.modules.get(org.id)!.includes('Pickup') ? this.activePickups(c.id).map((x) => ({ id: x.id, name: x.name, relationship: x.relationship })) : null,
           name: `${c.firstName} ${c.lastName}`,
           firstName: c.firstName,
@@ -2130,7 +2176,8 @@ export class FakeApi {
         };
       });
     const primary = this.sortedGuardians(household)[0];
-    return route.fulfill({ json: { language: this.guardianLanguage(household.language), organization: org.name, phone: '905-555-0100', firstName: primary?.name.split(' ')[0] ?? '', children, noShows: this.openNoShows(household), pickupRequests: this.pickupRequests
+    return route.fulfill({ json: { language: this.guardianLanguage(household.language), organization: org.name, phone: '905-555-0100', firstName: primary?.name.split(' ')[0] ?? '', children, noShows: this.openNoShows(household),
+          contact: primary ? { name: primary.name, mobile: primary.mobile, email: primary.email, language: household.language } : null, pickupRequests: this.pickupRequests
           .filter((r) => r.householdId === household.id && r.status === 'Pending')
           .map((r) => ({ id: r.id, child: household.children.find((c) => c.id === r.childId)!.firstName, collector: r.collector, event: this.events.find((x) => x.id === r.eventId)?.name ?? '', requestedAt: NOW.toISOString() })) } });
   }

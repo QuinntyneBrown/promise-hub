@@ -1,0 +1,62 @@
+@let t = data.text;
+@let child = data.child;
+<form novalidate (ngSubmit)="save()">
+  <ph-dialog
+    [title]="child ? t.updateMedical(child.firstName) : t.updateDetails"
+    [description]="child ? t.medicalText : t.detailsText"
+  >
+    @if (failed()) {
+      <ph-alert
+        tone="danger"
+        [title]="child ? t.updateMedical(child.firstName) : t.updateDetails"
+      />
+    }
+    @if (child) {
+      <ph-textarea
+        inputId="g-allergies"
+        [label]="t.allergies"
+        name="allergies"
+        [rows]="2"
+        [(ngModel)]="allergies"
+      />
+      <ph-textarea
+        inputId="g-medication"
+        [label]="t.medication"
+        name="medication"
+        [rows]="2"
+        [(ngModel)]="medication"
+      />
+    } @else {
+      <ph-text-field
+        inputId="g-mobile"
+        [label]="t.mobile"
+        type="tel"
+        name="mobile"
+        autocomplete="tel"
+        [error]="errors()['mobile'] ?? null"
+        [(ngModel)]="mobile"
+      />
+      <ph-text-field
+        inputId="g-email"
+        [label]="t.email"
+        type="email"
+        name="email"
+        autocomplete="email"
+        [error]="errors()['email'] ?? null"
+        [(ngModel)]="email"
+      />
+      <ph-select
+        inputId="g-language"
+        [label]="t.languageLabel"
+        name="language"
+        [options]="languages"
+        [error]="errors()['language'] ?? null"
+        [(ngModel)]="language"
+      />
+    }
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">{{ t.cancel }}</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">{{ t.save }}</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

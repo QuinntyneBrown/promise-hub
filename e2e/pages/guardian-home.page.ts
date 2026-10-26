@@ -46,6 +46,31 @@ export class GuardianHomePage extends BasePage {
     await this.page.getByRole('dialog').getByRole('button', { name: /^(Remove|Quitar|Retirer)$/ }).click();
   }
 
+  get details(): Locator {
+    return this.page.getByRole('region', { name: /^(Your details|Sus datos|Vos coordonnées)$/ });
+  }
+
+  async updateDetails(changes: { mobile?: string; email?: string; language?: string }): Promise<void> {
+    await this.page.getByRole('button', { name: /^(Update your details|Actualizar sus datos|Mettre à jour vos coordonnées)$/ }).click();
+    const dialog = this.page.getByRole('dialog');
+    if (changes.mobile !== undefined) await dialog.getByRole('textbox', { name: /^(Mobile|Celular|Cellulaire)/ }).fill(changes.mobile);
+    if (changes.email !== undefined) await dialog.getByRole('textbox', { name: /^(Email|Correo|Courriel)/ }).fill(changes.email);
+    if (changes.language !== undefined) await dialog.getByRole('combobox').selectOption({ label: changes.language });
+    await dialog.getByRole('button', { name: /^(Save|Guardar|Enregistrer)$/ }).click();
+  }
+
+  async updateMedical(child: string, allergies: string, medication: string): Promise<void> {
+    await this.page.getByRole('button', { name: new RegExp(`^(Update ${child}’s medical details|Actualizar los datos médicos de ${child}|Mettre à jour la santé de ${child})$`) }).click();
+    const dialog = this.page.getByRole('dialog');
+    await dialog.getByRole('textbox').first().fill(allergies);
+    await dialog.getByRole('textbox').nth(1).fill(medication);
+    await dialog.getByRole('button', { name: /^(Save|Guardar|Enregistrer)$/ }).click();
+  }
+
+  get dialog(): Locator {
+    return this.page.getByRole('dialog');
+  }
+
   get pickupRequest(): Locator {
     return this.page.getByRole('main').getByRole('status').filter({ hasText: /to collect|para recoger|chercher/ });
   }

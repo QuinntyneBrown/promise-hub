@@ -6,6 +6,8 @@ export interface GuardianHome {
   firstName: string;
   children: {
     id: string;
+    allergies?: string | null;
+    medication?: string | null;
     /** Adults besides the guardians who may collect the child; null while Pickup is off. */
     pickups: { id: string; name: string; relationship: string }[] | null;
     name: string;
@@ -29,4 +31,6 @@ export interface GuardianHome {
     event: string;
     requestedAt: string;
   }[];
+  /** How the family page reaches the primary guardian, for them to correct. */
+  contact?: { name: string; mobile: string | null; email: string | null; language: string } | null;
 }
