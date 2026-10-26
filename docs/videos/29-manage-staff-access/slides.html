@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 29 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="29" data-video-title="Manage staff access" data-parts="Introduction|Promises|Invite and promote|Removing access|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 29</div>
+  <h1>Manage staff access</h1>
+  <p class="lead">The right people, with the right role, for as long as they're here</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="Only admins manage staff. An invitation">
+  <h2>What staff access promises</h2>
+  <ul>
+    <li>Invitations by work email, with a role, for 14 days</li>
+    <li>Role changes apply on the next action</li>
+    <li>Removal signs them out; history keeps their name</li>
+    <li>Admins can't change or remove themselves</li>
+  </ul>
+</section>
+
+<section id="invite" data-part="2" data-cue="Here is Staff and roles on Tom's laptop." data-clip="clips/staff-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Invite Sam, promote Jaylen</h3><p>Invitations waiting, roles at once.</p></div>
+</section>
+
+<section id="remove" data-part="3" data-cue="When Aisha leaves">
+  <h2>Removing access</h2>
+  <div class="cols">
+    <img class="shot" alt="The remove access confirmation" src="shots/desktop-remove.png">
+    <img class="shot" alt="Only admins manage staff" src="shots/phone-forbidden.png">
+  </div>
+</section>
+
+<section id="testing" data-part="4" data-cue="Backend tests cover the invitation and its email">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Already has access</td><td>422, named</td></tr>
+    <tr><td>Removed person's next request</td><td>401</td></tr>
+    <tr><td>Admin changes their own role</td><td>422</td></tr>
+    <tr><td>Program director / other organization</td><td>403 / 404</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="5" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Invite with a role</li><li>Changes on the next action</li><li>History keeps names</li></ul>
+  <p class="muted">Next: starting an invited shift</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
