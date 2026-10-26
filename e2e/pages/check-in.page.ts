@@ -58,7 +58,12 @@ export class CheckInPage extends BasePage {
   }
 
   async openFromNavigation(): Promise<void> {
-    await this.page.getByRole('navigation', { name: 'Primary', exact: true }).or(this.page.getByRole('navigation', { name: 'Primary, phone' })).getByRole('link', { name: 'Check-in' }).first().click();
+    await this.page
+      .getByRole('navigation', { name: 'Primary', exact: true })
+      .or(this.page.getByRole('navigation', { name: 'Primary, phone' }))
+      .getByRole('link', { name: 'Check-in' })
+      .first()
+      .click();
   }
 
   get recorded(): Locator {
@@ -105,11 +110,15 @@ export class CheckInPage extends BasePage {
   }
 
   async checkIn(name: string): Promise<void> {
-    await this.row(name).getByRole('button', { name: `Check in ${name}` }).click();
+    await this.row(name)
+      .getByRole('button', { name: `Check in ${name}` })
+      .click();
   }
 
   async openOptions(name: string): Promise<void> {
-    await this.row(name).getByRole('button', { name: `More for ${name}` }).click();
+    await this.row(name)
+      .getByRole('button', { name: `More for ${name}` })
+      .click();
     await expect(this.dialog).toBeVisible();
   }
 
@@ -173,7 +182,10 @@ export class CheckInPage extends BasePage {
   }
 
   async filter(name: string): Promise<void> {
-    await this.page.getByRole('group', { name: 'Filter roster' }).getByRole('button', { name: new RegExp(`^${name}`) }).click();
+    await this.page
+      .getByRole('group', { name: 'Filter roster' })
+      .getByRole('button', { name: new RegExp(`^${name}`) })
+      .click();
   }
 
   async addWalkIn(values: { childName: string; guardian: string }): Promise<void> {
@@ -193,9 +205,10 @@ export class CheckInPage extends BasePage {
 
   /** The approved adults as offered, in order, without "Someone else". */
   async approvedAdults(): Promise<string[]> {
-    const labels = await this.dialog.getByRole('group', { name: 'Picked up by' }).getByRole('radio').evaluateAll((inputs) =>
-      inputs.map((i) => (i.closest('label')?.querySelector('.text')?.firstChild?.textContent ?? '').trim()),
-    );
+    const labels = await this.dialog
+      .getByRole('group', { name: 'Picked up by' })
+      .getByRole('radio')
+      .evaluateAll((inputs) => inputs.map((i) => (i.closest('label')?.querySelector('.text')?.firstChild?.textContent ?? '').trim()));
     return labels.filter((l) => l !== 'Someone else');
   }
 
