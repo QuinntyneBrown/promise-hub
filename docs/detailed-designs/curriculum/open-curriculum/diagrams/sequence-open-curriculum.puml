@@ -1,0 +1,28 @@
+@startuml
+title UML sequence behaviour — Open Curriculum
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Marisol (Program director)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "CurriculumPage" as page
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "CurriculumEndpoints (AuthorCurriculum, Learning)" as endpoint
+end box
+box "Backend — PromiseHub Application (Curriculum)" #ECFDF3
+  participant "CurriculumHandler" as handler
+end box
+actor -> page : Open /curriculum
+page -> endpoint : GET /curriculum
+alt role is not an author
+  endpoint --> page : 403
+else Learning off
+  endpoint --> page : 404
+else
+  endpoint -> handler : Handle
+  handler --> page : CurriculumDto (no tracks yet)
+  page --> actor : "No tracks yet"
+end
+@enduml

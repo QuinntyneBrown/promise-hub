@@ -1,0 +1,30 @@
+@startuml
+title UML sequence behaviour — Open Learning
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Sofía (Youth)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "Shell (moduleRoute Learning)" as shell
+  participant "LearningPage" as page
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "LearningEndpoints (Learn, Learning)" as endpoint
+end box
+box "Backend — PromiseHub Application (Learning)" #ECFDF3
+  participant "LearnerHandler" as handler
+end box
+database "PromiseHub database" as db
+actor -> shell : Open /learning
+alt Learning off in the session
+  shell --> actor : Redirect to Today (L2-005 criterion 8)
+else
+  shell -> page : Lazy-load learning library
+  page -> endpoint : GET /learning/me
+  endpoint -> handler : Handle
+  handler -> db : Membership.ChildId → child (tenant filter)
+  handler --> page : LearnerDto (own record only)
+  page --> actor : Learning placeholder
+end
+@enduml

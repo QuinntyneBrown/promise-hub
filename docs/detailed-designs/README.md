@@ -45,10 +45,11 @@ One folder per subsystem, one folder per vertically sliced feature, each with a 
 | platform | run-background-jobs | L2-034 |
 | platform | observe-and-alert | L2-041 |
 | platform | migrate-and-seed | L2-042 |
-| learning | (journeys 57, 61, 62, 65, 66; see [learning](learning/README.md)) | L1-023 |
-| curriculum | (journeys 56, 60, 64; see [curriculum](curriculum/README.md)) | L1-023 |
-| mentoring | (journeys 55, 63, 67, 68, 69; see [mentoring](mentoring/README.md)) | L1-024 |
-| website | (journey 81; see [website](website/README.md)) | L1-025 |
+| platform | merge-waypoint-foundation | L2-004, L2-007, L2-042, L2-045 |
+| learning | read-own-record (journeys 57, 61, 62, 65, 66 add more; see [learning](learning/README.md)) | L2-005, L2-007, L2-045 |
+| curriculum | open-curriculum (journeys 56, 60, 64 add more; see [curriculum](curriculum/README.md)) | L2-005, L2-007 |
+| mentoring | list-assigned-youth (journeys 55, 63, 67, 68, 69 add more; see [mentoring](mentoring/README.md)) | L2-005, L2-007 |
+| website | serve-public-site (journey 81 adds more; see [website](website/README.md)) | L2-005 |
 
 Render all diagrams with:
 

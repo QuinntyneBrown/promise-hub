@@ -1,0 +1,30 @@
+@startuml
+title UML sequence behaviour — Link a youth account to a child
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Tom (Admin)" as actor
+box "Backend — PromiseHub API" #D1FADF
+  participant "StaffEndpoints (ManageStaff)" as endpoint
+end box
+box "Backend — PromiseHub Application (Staff)" #ECFDF3
+  participant "LinkYouthHandler" as handler
+  participant "IAuditWriter" as audit
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> endpoint : PUT /staff/{membershipId}/child { childId }
+endpoint -> handler : Handle
+handler -> db : Membership and child (tenant query filter)
+alt either belongs to another organization
+  handler --> endpoint : NotFound → 404
+else membership is not Youth, or child already linked
+  handler --> endpoint : Invalid → 422
+else
+  handler -> db : Membership.ChildId = childId
+  handler -> audit : YouthLinked (who, account, child)
+  handler --> endpoint : Done → 204 (L2-045)
+end
+@enduml

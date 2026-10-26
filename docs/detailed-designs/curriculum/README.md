@@ -2,7 +2,7 @@
 
 The authoring side of the **Learning** module (ADR 0043, `L1-023`): tracks, modules, lessons, quizzes, assignments, badges and the progression framework, served by `backend/src/PromiseHub.Application/Curriculum/` and the `frontend/projects/curriculum/` library. Only admins and program directors author (`AuthorCurriculum`). The library maps to the Learning module; while it is off `/curriculum` redirects to Today and the endpoints answer 404.
 
-Prompt 49 built the foundation only: `GET /curriculum` (an empty track list, `L2-007` criterion 12) and the placeholder `CurriculumPage` (`curriculum`). The journey prompts add these designs:
+Prompt 49 built the foundation only ([open-curriculum](open-curriculum/README.md)): `GET /curriculum` (an empty track list, `L2-007` criterion 12) and the placeholder `CurriculumPage` (`curriculum`). The journey prompts add these designs:
 
 | Design | Prompt | Waypoint source |
 |---|---|---|

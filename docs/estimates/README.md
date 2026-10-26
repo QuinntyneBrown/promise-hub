@@ -1,13 +1,13 @@
 # Estimates
 
-- Overall effort: 223 days
-- Complete: 64%
+- Overall effort: 231 days
+- Complete: 62%
 
 | Subsystem | Effort | Complete |
 |---|---|---|
 | [identity](identity.md) | 14 days | 74% |
 | [organizations](organizations.md) | 34 days | 70% |
-| [platform](platform.md) | 24 days | 36% |
+| [platform](platform.md) | 28 days | 31% |
 | [shell](shell.md) | 9 days | 51% |
 | [households](households.md) | 6 days | 80% |
 | [programs](programs.md) | 5 days | 70% |
@@ -25,6 +25,10 @@
 | [billing](billing.md) | 10 days | 50% |
 | [audit](audit.md) | 6 days | 80% |
 | [search](search.md) | 4 days | 70% |
+| [learning](learning.md) | 1 day | 0% |
+| [curriculum](curriculum.md) | 1 day | 0% |
+| [mentoring](mentoring.md) | 1 day | 0% |
+| [website](website.md) | 1 day | 0% |
 
 ## Roadmap
 
@@ -33,3 +37,4 @@
 3. Enrollment, attendance and imports: guardian enrollment, roster import, session flow, pickup, Quick Cards and offline support.
 4. Messaging, notifications, permission slips and guardian experiences: delivery controls, notification center, signing, reminders, localized guardian pages and incidents.
 5. Reports, billing and audit: computation and export, plan metering and payments, then organization audit search.
+6. Waypoint: the merge foundation (platform), then learning, curriculum, mentoring and website through the journeys of prompts 50 to 81.

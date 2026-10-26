@@ -2,7 +2,7 @@
 
 The youth side of the **Learning** module (ADR 0043, `L1-023`): lessons, quizzes, assignments, reflections, the journey and badges, served by `backend/src/PromiseHub.Application/Learning/` and the `frontend/projects/learning/` library. The module needs Roster; while it is off every endpoint answers 404 and `/learning` redirects to Today.
 
-Prompt 49 built the foundation only: `GET /learning/me` (a youth's own linked child record, `L2-007` criterion 9, `L2-045`) and the placeholder `LearningPage` (`learning`). The journey prompts add these designs:
+Prompt 49 built the foundation only ([read-own-record](read-own-record/README.md)): `GET /learning/me` (a youth's own linked child record, `L2-007` criterion 9, `L2-045`) and the placeholder `LearningPage` (`learning`). The journey prompts add these designs:
 
 | Design | Prompt | Waypoint source |
 |---|---|---|
