@@ -864,6 +864,37 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.ToTable("Households");
                 });
 
+            modelBuilder.Entity("PromiseHub.Domain.Identity.PasswordReset", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("CreatedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("ExpiresAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("UsedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.ToTable("PasswordResets");
+                });
+
             modelBuilder.Entity("PromiseHub.Domain.Identity.SignInAttempt", b =>
                 {
                     b.Property<Guid>("Id")

@@ -49,6 +49,7 @@ public interface IPromiseHubDb
     DbSet<GuardianVerification> GuardianVerifications { get; }
     DbSet<TrustedGuardianDevice> TrustedGuardianDevices { get; }
     DbSet<StaffUser> StaffUsers { get; }
+    DbSet<Domain.Identity.PasswordReset> PasswordResets { get; }
     DbSet<SignInAttempt> SignInAttempts { get; }
     DbSet<Domain.Notifications.Notification> Notifications { get; }
     DbSet<Domain.Notifications.NotificationSettings> NotificationSettings { get; }

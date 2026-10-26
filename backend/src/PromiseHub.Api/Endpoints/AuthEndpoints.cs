@@ -22,6 +22,29 @@ public static class AuthEndpoints
             };
         }).AllowAnonymous();
 
+        auth.MapPost("/forgot-password", async (ForgotPasswordCommand command, PasswordResetHandler handler, CancellationToken ct) =>
+        {
+            await handler.RequestAsync(command, ct);
+            return Results.Accepted();
+        }).AllowAnonymous();
+
+        auth.MapGet("/reset-password/{token}", async (string token, PasswordResetHandler handler, CancellationToken ct) =>
+            await handler.CheckAsync(token, ct) is { } email ? Results.Ok(new { email }) : Results.StatusCode(StatusCodes.Status410Gone)).AllowAnonymous();
+
+        auth.MapPost("/reset-password", async (ResetPasswordCommand command, PasswordResetHandler handler, HttpContext http, CancellationToken ct) =>
+        {
+            var result = await handler.ResetAsync(command, ct);
+            if (result.Gone)
+            {
+                return Results.StatusCode(StatusCodes.Status410Gone);
+            }
+            if (result.Errors is { } errors)
+            {
+                return Results.Json(new { errors }, statusCode: StatusCodes.Status422UnprocessableEntity);
+            }
+            return result.SignIn!.Status == SignInStatus.MfaRequired ? await StartMfa(http, result.SignIn) : await StartSession(http, result.SignIn, persistent: false);
+        }).AllowAnonymous();
+
         auth.MapPost("/mfa", async (MfaRequest request, CompleteMfaHandler handler, HttpContext http, CancellationToken ct) =>
         {
             var pending = await http.AuthenticateAsync(AuthSchemes.MfaPending);

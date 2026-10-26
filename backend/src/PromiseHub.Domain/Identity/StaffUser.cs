@@ -29,4 +29,6 @@ public sealed class StaffUser
     public void ReplaceRecoveryCodes(IEnumerable<string> hashes) => RecoveryCodes = string.Join(';', hashes);
 
     public void EndOtherSessions() => SessionVersion++;
+
+    public void ChangePassword(string hash) => PasswordHash = hash;
 }
