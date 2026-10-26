@@ -21,7 +21,19 @@ builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.Converters.Ad
 builder.Services.AddStaffAuthentication();
 builder.Services.AddPermissionAuthorization();
 
+// One structured line per request comes from RequestLoggingMiddleware; the framework's own request lines would repeat
+// the raw path and query, which can carry a child's name (L2-041).
+builder.Logging.AddFilter("Microsoft.AspNetCore", LogLevel.Warning);
+builder.Logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Warning);
+if (!builder.Environment.IsDevelopment())
+{
+    builder.Logging.AddJsonConsole();
+}
+
 var app = builder.Build();
+
+app.UseMiddleware<RequestLoggingMiddleware>();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"))
 {
