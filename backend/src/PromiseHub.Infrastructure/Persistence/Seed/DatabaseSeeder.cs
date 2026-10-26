@@ -39,6 +39,14 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
         Staff(Harbourview, "Aisha Bello", "aisha@harbourview.example", Role.YouthWorker);
         Staff(Northgate, "Priya Raman", "priya@harbourview.example", Role.VolunteerCoordinator);
         Staff(Northgate, "Grace Mensah", "grace@northgate.example", Role.Admin);
+        // From Waypoint (ADR 0043): youth, mentors and a volunteer in both organizations.
+        Staff(Harbourview, "Sofía Rivera", "sofia@harbourview.example", Role.Youth);
+        Staff(Harbourview, "Nadia Haddad", "nadia@harbourview.example", Role.Youth);
+        Staff(Harbourview, "Daniel Osei", "daniel@harbourview.example", Role.Mentor);
+        Staff(Harbourview, "Hana Kim", "hana@harbourview.example", Role.Mentor);
+        Staff(Harbourview, "Leo Martins", "leo@harbourview.example", Role.Volunteer);
+        Staff(Northgate, "Samuel Boateng", "samuel@northgate.example", Role.Mentor);
+        Staff(Northgate, "Lucía Rivera", "lucia@northgate.example", Role.Youth);
 
         var rivera = Family(Harbourview, "Rivera", "Spanish");
         Guardian(Harbourview, rivera, "Carmen Rivera", "Mother", "905-555-0142", "carmen.rivera@example.com", "Spanish", primary: true);
@@ -94,6 +102,8 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
         // Tonight's staff, as on the event page: Jaylen leads and Aisha works it; she is not on last night's session.
         Assign(Harbourview, "Tutoring night", "jaylen@harbourview.example");
         Assign(Harbourview, "Tutoring night", "aisha@harbourview.example");
+        // Leo volunteers at tonight's session only.
+        Assign(Harbourview, "Tutoring night", "leo@harbourview.example");
         var kidsClub = Program(Northgate, "Kids Club", new(2026, 9, 9), new(2027, 6, 16), "Wed, 6–7:30 pm", 30, "5–11", open: true);
         Enroll(Northgate, kidsClub, "Mateo Rivera");
         Session(Northgate, kidsClub, "Kids Club night", At(2026, 11, 11, 18), At(2026, 11, 11, 19), "Northgate fellowship hall", slip: false);

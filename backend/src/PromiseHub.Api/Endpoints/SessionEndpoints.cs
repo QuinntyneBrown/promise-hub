@@ -1,3 +1,4 @@
+using PromiseHub.Api.Authorization;
 using PromiseHub.Application.Identity;
 using PromiseHub.Api.Authentication;
 using PromiseHub.Application.Organizations;
@@ -6,8 +7,10 @@ namespace PromiseHub.Api.Endpoints;
 
 public static class SessionEndpoints
 {
-    public static IEndpointRouteBuilder MapSessionEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapSessionEndpoints(this IEndpointRouteBuilder root)
     {
+        // The session belongs to every member, participant roles included (ADR 0043).
+        var app = root.MapGroup(string.Empty).AllowAnyMember();
         app.MapGet("/me", (GetSessionHandler handler, CancellationToken ct) => handler.HandleAsync(ct));
         app.MapGet("/me/account", (AccountHandler handler, CancellationToken ct) => handler.GetAsync(ct));
         app.MapPost("/me/recovery-codes", async (AccountHandler handler, HttpContext http, CancellationToken ct) =>
@@ -33,6 +36,6 @@ public static class SessionEndpoints
             await SessionCookie.ReissueAsync(http, membershipId);
             return Results.NoContent();
         });
-        return app;
+        return root;
     }
 }

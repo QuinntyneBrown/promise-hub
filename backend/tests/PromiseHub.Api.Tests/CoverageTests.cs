@@ -25,10 +25,14 @@ public sealed class CoverageTests : IAsyncLifetime
 
         var sessions = coverage.GetProperty("sessions").EnumerateArray().ToList();
         var tonight = sessions.Single(s => s.GetProperty("id").GetGuid() == Tonight);
-        Assert.Equal(["Aisha Bello", "Jaylen Okafor"], tonight.GetProperty("staff").EnumerateArray().Select(m => m.GetProperty("name").GetString()).Order());
+        // Leo Martins volunteers tonight (ADR 0043).
+        Assert.Equal(["Aisha Bello", "Jaylen Okafor", "Leo Martins"], tonight.GetProperty("staff").EnumerateArray().Select(m => m.GetProperty("name").GetString()).Order());
         var trip = sessions.Single(s => s.GetProperty("id").GetGuid() == FieldTrip);
         Assert.True(trip.GetProperty("gap").GetBoolean());
         Assert.Contains(coverage.GetProperty("people").EnumerateArray(), p => p.GetProperty("name").GetString() == "Aisha Bello");
+        // Youth are never staffed onto a session; volunteers and mentors can be.
+        Assert.DoesNotContain(coverage.GetProperty("people").EnumerateArray(), p => p.GetProperty("name").GetString() == "Sofía Rivera");
+        Assert.Contains(coverage.GetProperty("people").EnumerateArray(), p => p.GetProperty("name").GetString() == "Leo Martins");
     }
 
     [Fact]

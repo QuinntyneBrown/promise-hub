@@ -3,6 +3,7 @@ using PromiseHub.Application.Audit;
 using PromiseHub.Application.Organizations;
 using PromiseHub.Domain.Audit;
 using PromiseHub.Domain.Events;
+using PromiseHub.Domain.Organizations;
 
 namespace PromiseHub.Application.Staff;
 
@@ -16,7 +17,8 @@ public sealed class CoverageHandler(IPromiseHubDb db, ITenantContext tenant, IAu
 
     public async Task<CoverageDto> ListAsync(CancellationToken cancellationToken = default)
     {
-        var people = await db.Memberships.AsNoTracking().Where(m => m.RemovedAt == null).OrderBy(m => m.PersonName).ToListAsync(cancellationToken);
+        // Youth accounts are never staffed onto a session (ADR 0043).
+        var people = await db.Memberships.AsNoTracking().Where(m => m.RemovedAt == null && m.Role != Role.Youth).OrderBy(m => m.PersonName).ToListAsync(cancellationToken);
         var sessions = await SessionsAsync(null, cancellationToken);
         return new CoverageDto(sessions, [.. people.Select(m => new CoveragePersonDto(m.Id, m.PersonName, m.Role.ToString()))]);
     }
@@ -32,7 +34,7 @@ public sealed class CoverageHandler(IPromiseHubDb db, ITenantContext tenant, IAu
             return Result.NotFound;
         }
         var ids = (command.MembershipIds ?? []).Distinct().ToList();
-        var people = await db.Memberships.AsNoTracking().Where(m => ids.Contains(m.Id) && m.RemovedAt == null).ToListAsync(cancellationToken);
+        var people = await db.Memberships.AsNoTracking().Where(m => ids.Contains(m.Id) && m.RemovedAt == null && m.Role != Role.Youth).ToListAsync(cancellationToken);
         if (people.Count != ids.Count)
         {
             return Result.Invalid(new Dictionary<string, string> { ["membershipIds"] = "Choose people who work for this organization." });

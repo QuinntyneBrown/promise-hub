@@ -25,4 +25,10 @@ public enum Permission
     ReadSmallCounts,
     ManageBilling,
     ViewAudit,
+
+    /// <summary>Held by the five staff roles; the fallback policy requires it, so a participant role reaches only what it was granted (ADR 0043).</summary>
+    UseStaffApp,
+    Learn,
+    MentorYouth,
+    AuthorCurriculum,
 }

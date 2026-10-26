@@ -16,7 +16,8 @@ public static class RolePermissions
         Permission.ManagePrograms => role is Role.Admin or Role.ProgramDirector,
         Permission.ManageEvents => role is Role.Admin or Role.ProgramDirector or Role.SiteLead,
         Permission.CancelEvents => role is Role.Admin or Role.ProgramDirector,
-        Permission.RunSessions => role is Role.Admin or Role.ProgramDirector or Role.SiteLead or Role.YouthWorker,
+        // Volunteers run only the sessions they are assigned to, like youth workers (ADR 0043).
+        Permission.RunSessions => role is Role.Admin or Role.ProgramDirector or Role.SiteLead or Role.YouthWorker or Role.Volunteer,
         // Youth workers run only the sessions they are assigned to (L2-007 criterion 6).
         Permission.RunAnySession => role is Role.Admin or Role.ProgramDirector or Role.SiteLead,
         Permission.SendMessages => role is Role.Admin or Role.ProgramDirector or Role.SiteLead,
@@ -34,6 +35,10 @@ public static class RolePermissions
         Permission.ReadSmallCounts => role is Role.Admin or Role.ProgramDirector,
         Permission.ManageBilling => role is Role.Admin,
         Permission.ViewAudit => role is Role.Admin,
+        Permission.UseStaffApp => role is Role.Admin or Role.ProgramDirector or Role.SiteLead or Role.YouthWorker or Role.VolunteerCoordinator,
+        Permission.Learn => role is Role.Youth,
+        Permission.MentorYouth => role is Role.Mentor,
+        Permission.AuthorCurriculum => role is Role.Admin or Role.ProgramDirector,
         _ => false,
     };
 }
