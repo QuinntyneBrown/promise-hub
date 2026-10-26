@@ -27,6 +27,15 @@ public sealed class Organization
     /// <summary>When an admin confirmed the name and city in setup (L2-008); null until then.</summary>
     public DateTimeOffset? ProfileConfirmedAt { get; private set; }
 
+    /// <summary>When the last payment failed; null while payments are current. Service continues for the grace period.</summary>
+    public DateTimeOffset? PaymentFailedAt { get; private set; }
+
+    public void ChangePlan(Plan plan) => Plan = plan;
+
+    public void PaymentFailed(DateTimeOffset now) => PaymentFailedAt ??= now;
+
+    public void PaymentRecovered() => PaymentFailedAt = null;
+
     public void ChangeProfile(string name, string city, DateTimeOffset now)
     {
         Name = name;

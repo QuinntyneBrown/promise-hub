@@ -14,7 +14,7 @@ namespace PromiseHub.Application.Enrollment;
 /// bulk-review; L2-013 criterion 4). An accepted child joins the roster; the guardian is texted the decision with a link to the
 /// household's home page (criterion 12); each decision is audited.
 /// </summary>
-public sealed class ReviewEnrollmentHandler(IPromiseHubDb db, ITenantContext tenant, AudienceResolver resolver, MessageWriter writer, GuardianLinkIssuer links, IAuditWriter audit, TimeProvider clock)
+public sealed class ReviewEnrollmentHandler(IPromiseHubDb db, ITenantContext tenant, AudienceResolver resolver, MessageWriter writer, GuardianLinkIssuer links, IAuditWriter audit, TimeProvider clock, Billing.PlanLimit limit)
 {
     public Task<Result> ReviewAsync(Guid id, ReviewEnrollmentCommand command, CancellationToken cancellationToken = default) =>
         DecideAsync([id], command.Decision, command.Note, cancellationToken);
@@ -37,6 +37,10 @@ public sealed class ReviewEnrollmentHandler(IPromiseHubDb db, ITenantContext ten
         if (decision == ReviewDecision.Decline && text is null)
         {
             return Result.Invalid(new Dictionary<string, string> { ["note"] = "Write a reason the guardian will read." });
+        }
+        if (decision == ReviewDecision.Accept && await limit.RefusalForAsync(requests.Select(r => r.ChildId), cancellationToken) is { } refusal)
+        {
+            return Result.Invalid(new Dictionary<string, string> { ["decision"] = refusal });
         }
         var now = clock.GetUtcNow();
         foreach (var group in requests.GroupBy(r => r.ProgramId))
