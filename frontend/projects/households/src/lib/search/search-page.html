@@ -1,0 +1,98 @@
+<ph-page-header title="Search" />
+<ph-text-field
+  class="query"
+  inputId="search-q"
+  type="search"
+  label="Search children, families and events"
+  placeholder="Child, guardian, phone, event…"
+  [ngModel]="text()"
+  (ngModelChange)="typed($event)"
+/>
+@let r = result();
+@let v = loaded();
+@if (r === 'idle') {
+  <ph-card [flush]="true">
+    <ph-empty-state icon="search" title="Find anyone" text="Type a name, phone or email." />
+  </ph-card>
+} @else if (r === null) {
+  <div class="results" aria-busy="true" aria-label="Searching">
+    <ph-skeleton shape="card" />
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (v) {
+  @if (total(v)) {
+    <p role="status" class="muted">{{ total(v) }} results for “{{ text() }}”</p>
+    <div class="results">
+      @if (v.children.length) {
+        <section aria-labelledby="g-children">
+          <h2 id="g-children" class="group">Children ({{ v.children.length }})</h2>
+          <ph-list label="Children">
+            @for (c of v.children; track c.id) {
+              <ph-list-item
+                [title]="c.name"
+                [meta]="(c.age !== null ? c.age + ' · ' : '') + c.householdName + ' household'"
+                [avatar]="c.name"
+                avatarTint="peach"
+                [link]="['/families', c.householdId, 'children', c.id]"
+              />
+            }
+          </ph-list>
+        </section>
+      }
+      @if (v.households.length) {
+        <section aria-labelledby="g-families">
+          <h2 id="g-families" class="group">Families ({{ v.households.length }})</h2>
+          <ph-list label="Families">
+            @for (h of v.households; track h.id) {
+              <ph-list-item
+                [title]="h.name + ' household'"
+                [meta]="h.guardians + (h.phone ? ' · ' + h.phone : '') + ' · ' + h.language"
+                [avatar]="h.name"
+                [link]="['/families', h.id]"
+              />
+            }
+          </ph-list>
+        </section>
+      }
+      @if (v.events?.length) {
+        <section aria-labelledby="g-events">
+          <h2 id="g-events" class="group">Events ({{ v.events!.length }})</h2>
+          <ph-list label="Events">
+            @for (e of v.events; track e.id) {
+              <ph-list-item
+                [title]="e.name"
+                [meta]="date(e.startsAt) + (e.place ? ' · ' + e.place : '')"
+                [link]="['/events', e.id]"
+              />
+            }
+          </ph-list>
+        </section>
+      }
+    </div>
+  } @else {
+    <p role="status" class="muted">No results for “{{ text() }}”</p>
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="search"
+        [title]="'Nothing matches “' + text() + '”'"
+        text="Try a name, phone or email."
+      >
+        @if (canAddFamily()) {
+          <ph-button link="/families">Add family</ph-button>
+        }
+      </ph-empty-state>
+    </ph-card>
+  }
+} @else {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="Search isn’t responding"
+      text="Try again in a moment."
+    >
+      <ph-button variant="primary" (click)="retry()">Try again</ph-button>
+      <ph-button variant="ghost" link="/families">Browse families</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}

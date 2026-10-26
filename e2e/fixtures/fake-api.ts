@@ -358,6 +358,7 @@ export class FakeApi {
     ['GET', /^\/api\/settings\/modules$/, (route) => this.getModules(route)],
     ['PUT', /^\/api\/settings\/modules$/, (route) => this.saveModules(route)],
     ['GET', /^\/api\/today$/, (route) => this.today(route)],
+    ['GET', /^\/api\/search$/, (route) => this.search(route)],
     ['GET', /^\/api\/households$/, (route) => this.listHouseholds(route)],
     ['POST', /^\/api\/households$/, (route) => this.createHousehold(route)],
     ['GET', /^\/api\/households\/(?<id>[^/]+)$/, (route, p) => this.getHousehold(route, p['id']!)],
@@ -2802,6 +2803,43 @@ export class FakeApi {
         tasks,
       },
     });
+  }
+
+  /** Children, households and events by name, email or phone fragment. Mirrors backend SearchHandler. */
+  private async search(route: Route): Promise<void> {
+    const m = await this.rosterCaller(route);
+    if (!m) return;
+    const q = (new URL(route.request().url()).searchParams.get('q') ?? '').trim().toLowerCase();
+    const slipsOn = this.modules.get(m.organizationId)!.includes('Slips');
+    if (!q) return route.fulfill({ json: { children: [], households: [], events: slipsOn ? [] : null } });
+    const digits = q.replace(/\D/g, '');
+    const permitted = this.permittedChildren(m);
+    const own = this.households.filter((h) => h.organizationId === m.organizationId);
+    const visible = own.filter((h) => !permitted || h.children.some((c) => permitted.has(c.id)));
+    const children = own
+      .flatMap((h) => h.children.map((c) => ({ c, h })))
+      .filter(({ c }) => !permitted || permitted.has(c.id))
+      .filter(({ c }) => `${c.firstName} ${c.lastName}`.toLowerCase().includes(q))
+      .sort((a, b) => a.c.firstName.localeCompare(b.c.firstName))
+      .map(({ c, h }) => ({ id: c.id, name: `${c.firstName} ${c.lastName}`, age: ageOf(c.dateOfBirth), householdId: h.id, householdName: h.name }));
+    const households = visible
+      .filter(
+        (h) =>
+          h.name.toLowerCase().includes(q) ||
+          h.guardians.some((g) => g.name.toLowerCase().includes(q) || (g.email ?? '').toLowerCase().includes(q) || (digits.length >= 3 && (g.mobile ?? '').replace(/\D/g, '').includes(digits))),
+      )
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((h) => {
+        const gs = [...h.guardians].sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary));
+        return { id: h.id, name: h.name, guardians: gs.map((g) => g.name).join(', '), phone: gs.find((g) => g.mobile)?.mobile ?? null, language: h.language };
+      });
+    const events = slipsOn
+      ? this.events
+          .filter((e) => e.organizationId === m.organizationId && e.name.toLowerCase().includes(q))
+          .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
+          .map((e) => ({ id: e.id, name: e.name, startsAt: e.startsAt, place: e.place }))
+      : null;
+    return route.fulfill({ json: { children, households, events } });
   }
 
   private async listSlips(route: Route): Promise<void> {
