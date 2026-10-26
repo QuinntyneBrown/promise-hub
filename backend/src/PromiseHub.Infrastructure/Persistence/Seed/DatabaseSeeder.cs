@@ -24,8 +24,12 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
         // Harbourview finished the organization step of setup; Northgate is still part way through.
         var harbourview = new Organization(Harbourview, "Harbourview Youth Collective", "Hamilton, Ontario", Plan.Standard, phone: "905-555-0100");
         harbourview.ChangeProfile(harbourview.Name, harbourview.City, new DateTimeOffset(2024, 9, 1, 12, 0, 0, TimeSpan.Zero));
+        // Public website addresses (ADR 0043); the module itself stays off until an admin turns it on.
+        harbourview.ChangeWebsiteSlug("harbourview");
         Add(harbourview);
-        Add(new Organization(Northgate, "Northgate Community Church Kids", "Burlington, Ontario", Plan.Free, phone: "289-555-0190"));
+        var northgate = new Organization(Northgate, "Northgate Community Church Kids", "Burlington, Ontario", Plan.Free, phone: "289-555-0190");
+        northgate.ChangeWebsiteSlug("northgate");
+        Add(northgate);
 
         // Harbourview runs the whole suite; Northgate, on the Free plan, runs check-in only (L2-004, L2-005).
         Modules(Harbourview, ModuleCatalog.Suite);

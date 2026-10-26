@@ -1523,7 +1523,14 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .HasMaxLength(60)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("WebsiteSlug")
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("WebsiteSlug")
+                        .IsUnique();
 
                     b.ToTable("Organizations");
                 });
