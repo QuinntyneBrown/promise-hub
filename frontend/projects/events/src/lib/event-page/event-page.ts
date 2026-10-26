@@ -16,7 +16,8 @@ import {
   formatWhen,
 } from '@promisehub/components';
 import { EMPTY, Subject, catchError, startWith, switchMap } from 'rxjs';
-import { EventActionsDialog } from '../event-actions-dialog/event-actions-dialog';
+import { CancelEventDialog } from '../cancel-event-dialog/cancel-event-dialog';
+import { EventAction, EventActionsDialog } from '../event-actions-dialog/event-actions-dialog';
 import { slipBadge } from '../slip-label';
 
 /** An event (mock: event): details, the slip's state and, when cancelled, who cancelled it. */
@@ -94,7 +95,12 @@ export class EventPage {
 
   protected actions(e: EventDetail): void {
     this.dialogs
-      .open<boolean, EventDetail, EventActionsDialog>(EventActionsDialog, e)
-      .closed.subscribe((changed) => changed && this.reload());
+      .open<EventAction, EventDetail, EventActionsDialog>(EventActionsDialog, e)
+      .closed.subscribe((action) => {
+        if (action !== 'cancel') return;
+        this.dialogs
+          .open<boolean, EventDetail, CancelEventDialog>(CancelEventDialog, e)
+          .closed.subscribe((cancelled) => cancelled && this.reload());
+      });
   }
 }
