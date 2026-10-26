@@ -52,6 +52,10 @@ Domain in `PromiseHub.Domain/Billing/`: `Subscription` (`OrganizationId`, `Plan`
 - Standard plan price and whether SMS overage is billable or hard-stopped are `<TO SUPPLY>`.
 - Whether a downgrade from Standard to Free with more than 50 active children is refused or scheduled for the end of the period is `<TO SUPPLY>`.
 
+## Built so far
+
+Slice 41 delivered `PlanTerms`, `PlanLimit` (enforced on enrolling and accepting), `BillingHandler` (`GET /billing`, `PUT /billing/plan` with proration), `Organization.PaymentFailedAt` with the grace period, and `BillingPage` with `ChangePlanDialog` (ADR 0035). The payment processor, invoices and suspension enforcement are not built.
+
 ## Requirements
 
 The feature realizes the following level-2 (L2) requirement and enforces the cross-cutting ones listed with it.

@@ -630,6 +630,7 @@
         "error",
         "free",
         "limit-reached",
+        "forbidden",
         "payment-failed"
       ],
       "not_applicable": {

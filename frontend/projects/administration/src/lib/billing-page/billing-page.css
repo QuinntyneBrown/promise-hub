@@ -1,0 +1,14 @@
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-gutter);
+}
+.split {
+  display: grid;
+  gap: var(--layout-gutter);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+}
+.hint {
+  color: var(--color-fg-muted);
+  margin: 0;
+}

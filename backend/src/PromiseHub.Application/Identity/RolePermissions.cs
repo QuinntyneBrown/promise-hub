@@ -32,6 +32,7 @@ public static class RolePermissions
         Permission.ViewReports => role is Role.Admin or Role.ProgramDirector or Role.SiteLead,
         // Exact counts under five are shown only to directors and admins; exports always mask them (L2-024 criterion 3).
         Permission.ReadSmallCounts => role is Role.Admin or Role.ProgramDirector,
+        Permission.ManageBilling => role is Role.Admin,
         _ => false,
     };
 }

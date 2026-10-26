@@ -81,7 +81,10 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
         });
         modelBuilder.Entity<Domain.Notifications.NotificationSettings>(e => e.HasIndex(s => s.OrganizationId).IsUnique());
         modelBuilder.Entity<Organization>(e =>
-            e.Property(o => o.ProfileConfirmedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero)));
+        {
+            e.Property(o => o.ProfileConfirmedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.Property(o => o.PaymentFailedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+        });
         modelBuilder.Entity<Domain.Surveys.Survey>(e =>
         {
             e.Property(x => x.SentBy).HasMaxLength(200);

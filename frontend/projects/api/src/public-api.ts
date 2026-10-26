@@ -158,3 +158,7 @@ export * from './lib/setup/setup-api';
 export * from './lib/setup/setup-api.token';
 export * from './lib/setup/setup-step-key';
 export * from './lib/session/my-organization';
+export * from './lib/billing/billing';
+export * from './lib/billing/billing-api';
+export * from './lib/billing/billing-api.token';
+export * from './lib/billing/plan-change';

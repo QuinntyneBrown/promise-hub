@@ -145,6 +145,7 @@ def billing(S):
     S.add("limit-reached", "At the free-tier limit: new enrollments wait until the plan changes; nothing is lost.", nav="settings", user=T, main=page_header("Billing", "Free plan · 50 of 50 active children") + settings_nav("billing") +
           alert("warning", "You’ve reached 50 active children", "3 enrollments are waiting. Move to Standard or archive a program.", actions=btn("Move to Standard", "primary", size="sm", data_href=dialog("change-plan")) + btn("Archive a program", "ghost", size="sm", href=page("programs"))) +
           f'<div class="split">{card(facts([("Plan", "Free · up to 50 active children")]), title="Plan", tid="plan")}{meter(50, 50, 140, 200, kind="danger")}</div>')
+    S.add("forbidden", "A program director opening billing.", nav="settings", user=M, main=card(empty("Admins manage billing", "Ask Tom Nguyen or another admin.", action=btn("Back to Today", "", href=page("today")), icon_name="lock", heading="h1"), cls="card--flush"))
     S.add("payment-failed", "The card was declined: a grace period, no lockout.", nav="settings", user=T, main=hdr + alert("danger", "Payment didn’t go through", "Visa ···· 4242 declined 1 Nov. Retry 8 Nov; service continues 14 days.", actions=btn("Update card", "primary", size="sm", icon_name="credit-card", data_href=dialog("change-plan"))) + f'<div class="split">{plan}{meter()}</div>')
 
 

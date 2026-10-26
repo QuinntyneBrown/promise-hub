@@ -7,7 +7,7 @@ using PromiseHub.Domain.Programs;
 namespace PromiseHub.Application.Programs;
 
 /// <summary>Adds a child of the organization to an active program's roster while there is room.</summary>
-public sealed class EnrollChildHandler(IPromiseHubDb db, ITenantContext tenant, IAuditWriter audit, TimeProvider clock)
+public sealed class EnrollChildHandler(IPromiseHubDb db, ITenantContext tenant, IAuditWriter audit, TimeProvider clock, Billing.PlanLimit limit)
 {
     public async Task<Result> HandleAsync(Guid programId, Guid childId, CancellationToken cancellationToken = default)
     {
@@ -33,6 +33,10 @@ public sealed class EnrollChildHandler(IPromiseHubDb db, ITenantContext tenant, 
         if (active.Count >= program.Capacity)
         {
             return Result.Invalid(new Dictionary<string, string> { ["childId"] = $"{program.Name} is full ({active.Count} of {program.Capacity})." });
+        }
+        if (await limit.RefusalForAsync([childId], cancellationToken) is { } refusal)
+        {
+            return Result.Invalid(new Dictionary<string, string> { ["childId"] = refusal });
         }
         var enrollment = new Domain.Programs.Enrollment(Guid.NewGuid(), tenant.OrganizationId, programId, childId, clock.GetUtcNow());
         db.Enrollments.Add(enrollment);

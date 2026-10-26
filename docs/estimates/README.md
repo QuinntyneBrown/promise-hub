@@ -1,7 +1,7 @@
 # Estimates
 
 - Overall effort: 216 days
-- Complete: 56%
+- Complete: 58%
 
 | Subsystem | Effort | Complete |
 |---|---|---|
@@ -22,7 +22,7 @@
 | [incidents](incidents.md) | 6 days | 75% |
 | [reports](reports.md) | 10 days | 57% |
 | [imports](imports.md) | 5 days | 75% |
-| [billing](billing.md) | 10 days | 0% |
+| [billing](billing.md) | 10 days | 55% |
 | [audit](audit.md) | 6 days | 25% |
 | [search](search.md) | 4 days | 75% |
 

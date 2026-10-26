@@ -40,6 +40,7 @@ app.MapTodayEndpoints();
 app.MapSearchEndpoints();
 app.MapNotificationEndpoints();
 app.MapReportEndpoints();
+app.MapBillingEndpoints();
 app.MapProgramEndpoints();
 app.MapEventEndpoints();
 app.MapAttendanceEndpoints();

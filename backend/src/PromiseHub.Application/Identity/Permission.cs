@@ -23,4 +23,5 @@ public enum Permission
     ReadDateOfBirth,
     ViewReports,
     ReadSmallCounts,
+    ManageBilling,
 }
