@@ -51,6 +51,10 @@ Domain types in `PromiseHub.Domain/Reports/`: `ReportPeriod`, `AgeBand` (`6-8`, 
 - Whether `AttendanceRate` counts excused absences as expected is `<TO SUPPLY>`.
 - Whether the report response is cached per organization and filter for a short window is `<TO SUPPLY>`; the design assumes no cache in phase 1.
 
+## Built so far
+
+Slice 37 delivered `ReportCalculator` and `GET /reports` with the program filter, `ViewReports` and `ReadSmallCounts`, small counts masked as "<5", and `ReportsPage` (ADR 0031). Gender, custom ranges and caching are not built.
+
 ## Requirements
 
 The feature realizes the following level-2 (L2) requirement and enforces the cross-cutting ones listed with it.
