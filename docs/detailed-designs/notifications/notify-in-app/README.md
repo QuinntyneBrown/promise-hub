@@ -55,6 +55,10 @@ Sources that publish in phase 1: `incidents/report-and-review-incident` (inciden
 - Retention of read notifications is `<TO SUPPLY>`.
 - Whether server-sent events need a distributed backplane is `<TO SUPPLY>`.
 
+## Built so far
+
+Slice 35 delivered `Notification`, `NotificationWriter` (incident reports notify reviewers), `GET /notifications` with read and read-all, module-hidden kinds, the bell's unread count in the shell and the notification center at `/notifications` (ADR 0029). The bell panel, other producers, digests and push are not built.
+
 ## Requirements
 
 The feature realizes the following level-2 (L2) requirement and enforces the cross-cutting ones listed with it.

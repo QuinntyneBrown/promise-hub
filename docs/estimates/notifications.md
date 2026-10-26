@@ -2,4 +2,4 @@
 
 | Design | Effort | Complete |
 |---|---|---|
-| notify-in-app | 8 days | 0% |
+| notify-in-app | 8 days | 45% |
