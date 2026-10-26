@@ -21,6 +21,10 @@ export const routes: Routes = [
     loadChildren: () => import('@promisehub/account').then((m) => m.resetRoutes),
   },
   {
+    path: 'signed-out',
+    loadChildren: () => import('@promisehub/account').then((m) => m.signedOutRoutes),
+  },
+  {
     path: 'welcome',
     canActivate: [authGuard],
     loadChildren: () => import('@promisehub/account').then((m) => m.welcomeRoutes),

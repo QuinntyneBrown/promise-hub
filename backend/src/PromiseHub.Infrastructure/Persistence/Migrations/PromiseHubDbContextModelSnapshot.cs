@@ -864,6 +864,25 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.ToTable("Households");
                 });
 
+            modelBuilder.Entity("PromiseHub.Domain.Identity.EndedSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("EndedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("ExpiresAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("EndedSessions");
+                });
+
             modelBuilder.Entity("PromiseHub.Domain.Identity.PasswordReset", b =>
                 {
                     b.Property<Guid>("Id")

@@ -743,9 +743,12 @@ export class FakeApi {
   }
 
   private async signOut(route: Route): Promise<void> {
-    if (!this.membershipId) {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) {
       return this.unauthenticated(route);
     }
+    // The session ends on the server and the sign-out is audited in its organization (L2-048).
+    this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'SignedOut', record: 'StaffUser', summary: 'Signed out', device: null });
     this.membershipId = null;
     return route.fulfill({ status: 204 });
   }

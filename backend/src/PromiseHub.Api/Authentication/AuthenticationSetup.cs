@@ -39,12 +39,13 @@ public static class AuthenticationSetup
         return services;
     }
 
-    public static ClaimsPrincipal SessionPrincipal(Guid userId, Guid membershipId, int sessionVersion) =>
+    public static ClaimsPrincipal SessionPrincipal(Guid userId, Guid membershipId, int sessionVersion, Guid sessionId) =>
         new(new ClaimsIdentity(
             [
                 new Claim(AuthSchemes.UserClaim, userId.ToString()),
                 new Claim(AuthSchemes.MembershipClaim, membershipId.ToString()),
                 new Claim(AuthSchemes.SessionVersionClaim, sessionVersion.ToString(System.Globalization.CultureInfo.InvariantCulture)),
+                new Claim(AuthSchemes.SessionIdClaim, sessionId.ToString()),
             ],
             AuthSchemes.Session));
 

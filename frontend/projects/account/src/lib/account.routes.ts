@@ -7,6 +7,7 @@ import { MfaPage } from './mfa/mfa-page';
 import { OnboardPhonePage } from './onboard-phone/onboard-phone-page';
 import { OnboardReadyPage } from './onboard-ready/onboard-ready-page';
 import { SignInPage } from './sign-in/sign-in-page';
+import { SignedOutPage } from './signed-out/signed-out-page';
 
 export const routes: Routes = [
   { path: '', component: SignInPage, title: 'Sign in · PromiseHub' },
@@ -36,4 +37,9 @@ export const forgotRoutes: Routes = [
 
 export const resetRoutes: Routes = [
   { path: '', component: ResetPasswordPage, title: 'Choose a new password · PromiseHub' },
+];
+
+/** After signing out, outside the shell: mounted at /signed-out (L2-048). */
+export const signedOutRoutes: Routes = [
+  { path: '', component: SignedOutPage, title: 'Signed out · PromiseHub' },
 ];

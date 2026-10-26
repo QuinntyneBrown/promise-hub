@@ -21,4 +21,5 @@ public enum AuditAction
     YouthLinked,
     SignInLocked,
     SignInUnlocked,
+    SignedOut,
 }

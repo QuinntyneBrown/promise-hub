@@ -36,6 +36,12 @@ public sealed class TenantContextMiddleware(RequestDelegate next)
                     membership = null;
                 }
             }
+            // A session signed out on another copy of this cookie stays ended (L2-048).
+            if (membership is not null && SessionCookie.SessionId(context) is { } sessionId
+                && await db.EndedSessions.AsNoTracking().AnyAsync(s => s.Id == sessionId, context.RequestAborted))
+            {
+                membership = null;
+            }
             if (membership is null)
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;

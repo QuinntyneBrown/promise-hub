@@ -85,6 +85,11 @@ export class ShellPage extends BasePage {
     await this.accountMenu.getByRole('menuitem', { name: 'Sign out' }).click();
   }
 
+  /** The check-in data this device keeps for working offline (L2-028). */
+  async offlineKeys(): Promise<string[]> {
+    return this.page.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('promisehub.offline.')));
+  }
+
   async accountButtonName(): Promise<string | null> {
     return this.page.getByRole('button', { name: /^Account menu for/ }).getAttribute('aria-label');
   }

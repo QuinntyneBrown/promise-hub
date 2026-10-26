@@ -62,8 +62,12 @@ public static class AuthEndpoints
             return await StartSession(http, result, persistent: request.TrustDevice);
         }).AllowAnonymous();
 
-        auth.MapPost("/sign-out", async (HttpContext http) =>
+        auth.MapPost("/sign-out", async (HttpContext http, SessionSignOutHandler handler, CancellationToken ct) =>
         {
+            if (Guid.TryParse(http.User.FindFirst(AuthSchemes.UserClaim)?.Value, out var userId))
+            {
+                await handler.HandleAsync(SessionCookie.SessionId(http), userId, ct);
+            }
             await http.SignOutAsync(AuthSchemes.Session);
             return Results.NoContent();
         }).AllowAnyMember();

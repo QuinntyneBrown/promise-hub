@@ -101,7 +101,7 @@ export class Shell {
   }
 
   protected signOut(): void {
-    this.auth.signOut().subscribe(() => void this.router.navigateByUrl('/sign-in'));
+    this.auth.signOut().subscribe(() => void this.router.navigateByUrl('/signed-out'));
   }
 
   /** Only sections whose module is on (L2-005) and that serve the role (L2-038, ADR 0043). */
