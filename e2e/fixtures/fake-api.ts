@@ -8,6 +8,7 @@ const can = {
   writeHouseholds: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
   deleteHouseholds: (m: Membership) => m.role === 'Admin',
   readMedical: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
+  readContacts: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
   writeMedical: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
   managePrograms: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
   manageEvents: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
@@ -626,6 +627,13 @@ export class FakeApi {
     return membership;
   }
 
+  /** Children a youth worker may read: those on the rosters of programs with a session they work. Null for everyone else. */
+  private permittedChildren(m: Membership): Set<string> | null {
+    if (!can.runSessions(m) || can.runAnySession(m)) return null;
+    const programs = new Set(this.events.filter((e) => (this.sessionStaff.get(e.id) ?? []).includes(m.id)).map((e) => e.programId));
+    return new Set(this.programs.filter((p) => programs.has(p.id)).flatMap((p) => p.roster));
+  }
+
   private ownHousehold(m: Membership, id: string): FakeHousehold | undefined {
     return this.households.find((h) => h.id === id && h.organizationId === m.organizationId);
   }
@@ -648,11 +656,13 @@ export class FakeApi {
     const url = new URL(route.request().url());
     const q = (url.searchParams.get('q') ?? '').trim().toLowerCase();
     const filter = url.searchParams.get('filter');
+    const permitted = this.permittedChildren(m);
     const rows = this.households
       .filter((h) => h.organizationId === m.organizationId)
+      .filter((h) => !permitted || h.children.some((c) => permitted.has(c.id)))
       .sort((a, b) => a.name.localeCompare(b.name))
       .map((h) => {
-        const children = [...h.children].sort((a, b) => (ageOf(a.dateOfBirth) ?? 99) - (ageOf(b.dateOfBirth) ?? 99));
+        const children = h.children.filter((c) => !permitted || permitted.has(c.id)).sort((a, b) => (ageOf(a.dateOfBirth) ?? 99) - (ageOf(b.dateOfBirth) ?? 99));
         const guardians = [...h.guardians].sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary));
         const summary = {
           id: h.id,
@@ -689,17 +699,24 @@ export class FakeApi {
     if (!m) return;
     const h = this.ownHousehold(m, id);
     if (!h) return route.fulfill({ status: 404 });
+    const permitted = this.permittedChildren(m);
+    const visible = h.children.filter((c) => !permitted || permitted.has(c.id));
+    if (!visible.length && permitted) return this.forbidden(route);
     const medical = can.readMedical(m);
+    const contacts = can.readContacts(m);
     return route.fulfill({
       json: {
         id: h.id,
         name: h.name,
         language: h.language,
-        guardians: [...h.guardians].sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.name.localeCompare(b.name)).map(({ emailBounced: _, ...g }) => g),
-        children: [...h.children]
+        guardians: [...h.guardians]
+          .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.name.localeCompare(b.name))
+          .map(({ emailBounced: _, ...g }) => (contacts ? g : { ...g, mobile: null, email: null })),
+        children: [...visible]
           .sort((a, b) => (ageOf(a.dateOfBirth) ?? 99) - (ageOf(b.dateOfBirth) ?? 99))
           .map((c) => ({ id: c.id, name: `${c.firstName} ${c.lastName}`, age: ageOf(c.dateOfBirth), school: c.school, medicalFlag: medical ? medicalFlag(c) : null })),
         medicalRestricted: !medical,
+        contactsRestricted: !contacts,
       },
     });
   }
@@ -787,6 +804,7 @@ export class FakeApi {
     const found = this.ownChild(m, id);
     if (!found) return route.fulfill({ status: 404 });
     const { household, child } = found;
+    if (this.permittedChildren(m)?.has(child.id) === false) return this.forbidden(route);
     const medical = can.readMedical(m);
     return route.fulfill({
       json: {
@@ -794,7 +812,7 @@ export class FakeApi {
         name: `${child.firstName} ${child.lastName}`,
         firstName: child.firstName,
         lastName: child.lastName,
-        dateOfBirth: child.dateOfBirth,
+        dateOfBirth: can.readContacts(m) ? child.dateOfBirth : null,
         age: ageOf(child.dateOfBirth),
         school: child.school,
         householdId: household.id,
@@ -876,6 +894,7 @@ export class FakeApi {
     const children = !q
       ? []
       : this.childrenOf(m)
+          .filter(({ child }) => this.permittedChildren(m)?.has(child.id) !== false)
           .filter(({ child }) => `${child.firstName} ${child.lastName}`.toLowerCase().includes(q))
           .map(({ child, household }) => ({ id: child.id, name: `${child.firstName} ${child.lastName}`, age: ageOf(child.dateOfBirth), householdId: household.id, householdName: household.name }));
     return route.fulfill({ json: { children } });

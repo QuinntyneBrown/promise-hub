@@ -9,6 +9,7 @@ import {
   PhDescriptionList,
   PhDialogs,
   PhEmptyState,
+  PhErrorPage,
   PhPageHeader,
   ToastService,
 } from '@promisehub/components';
@@ -20,7 +21,15 @@ import { EditMedicalDialog } from '../edit-medical/edit-medical-dialog';
 /** A child's profile (mock: child): details and the medical and emergency card. */
 @Component({
   selector: 'ph-child-page',
-  imports: [PhBreadcrumb, PhButton, PhCard, PhDescriptionList, PhEmptyState, PhPageHeader],
+  imports: [
+    PhBreadcrumb,
+    PhButton,
+    PhCard,
+    PhDescriptionList,
+    PhEmptyState,
+    PhErrorPage,
+    PhPageHeader,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './child-page.html',
 })
@@ -62,7 +71,12 @@ export class ChildPage {
   }
 
   protected subtitle(c: Child): string {
-    const age = c.age !== null ? `${c.age} years (born ${formatDate(c.dateOfBirth)})` : null;
+    const age =
+      c.age === null
+        ? null
+        : c.dateOfBirth
+          ? `${c.age} years (born ${formatDate(c.dateOfBirth)})`
+          : `${c.age} years`;
     return [age, c.school, `${c.householdName} household`].filter(Boolean).join(' · ');
   }
 
