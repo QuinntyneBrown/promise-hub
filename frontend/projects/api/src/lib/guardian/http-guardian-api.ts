@@ -65,6 +65,28 @@ export class HttpGuardianApi implements GuardianApi {
     );
   }
 
+  updateHousehold(
+    token: string,
+    contact: { mobile: string; email: string; language: string },
+  ): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.put<null>(`${this.baseUrl}/g/home/${encodeURIComponent(token)}/household`, contact),
+    );
+  }
+
+  updateMedical(
+    token: string,
+    childId: string,
+    medical: { allergies: string; medication: string },
+  ): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.put<null>(
+        `${this.baseUrl}/g/home/${encodeURIComponent(token)}/children/${childId}/medical`,
+        medical,
+      ),
+    );
+  }
+
   private page<T>(url: string): Observable<GuardianPageResult<T>> {
     return this.http.get<T>(url).pipe(
       map((value): GuardianPageResult<T> => ({ status: 'loaded', value })),

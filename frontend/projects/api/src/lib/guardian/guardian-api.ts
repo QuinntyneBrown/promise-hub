@@ -19,6 +19,15 @@ export interface GuardianApi {
   addPickup(token: string, childId: string, pickup: NewPickup): Observable<WriteOutcome>;
   removePickup(token: string, childId: string, pickupId: string): Observable<WriteOutcome>;
   decidePickup(token: string, requestId: string, approve: boolean): Observable<WriteOutcome>;
+  updateHousehold(
+    token: string,
+    contact: { mobile: string; email: string; language: string },
+  ): Observable<WriteOutcome>;
+  updateMedical(
+    token: string,
+    childId: string,
+    medical: { allergies: string; medication: string },
+  ): Observable<WriteOutcome>;
   /** The answer is the same whether or not the contact is on file. */
   requestCode(token: string, contact: string): Observable<'sent' | 'gone' | 'error'>;
   verify(token: string, code: string): Observable<GuardianVerifyOutcome>;

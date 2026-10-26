@@ -147,6 +147,36 @@
             <p>{{ h().none }}</p>
           </ph-card>
         }
+        @if (detailsSaved()) {
+          <ph-alert tone="success" [title]="h().saved" />
+        }
+        @if (home.contact; as contact) {
+          <ph-card [title]="h().detailsHeading">
+            <div class="stack">
+              <p>{{ contact.name }} · {{ contact.mobile ?? '—' }} · {{ contact.email ?? '—' }}</p>
+              <div>
+                <ph-button hasPopup="dialog" (click)="editDetails(home, null)">{{
+                  h().updateDetails
+                }}</ph-button>
+              </div>
+            </div>
+          </ph-card>
+        }
+        @for (child of home.children; track child.id) {
+          <ph-card [title]="h().medicalHeading(child.firstName)">
+            <div class="stack">
+              <p>
+                {{ h().allergies }}: {{ child.allergies ?? h().nothing }} · {{ h().medication }}:
+                {{ child.medication ?? h().nothing }}
+              </p>
+              <div>
+                <ph-button hasPopup="dialog" (click)="editDetails(home, child)">{{
+                  h().updateMedical(child.firstName)
+                }}</ph-button>
+              </div>
+            </div>
+          </ph-card>
+        }
         @for (child of home.children; track child.id) {
           @if (child.pickups; as pickups) {
             <h2>{{ h().pickupsHeading(child.firstName) }}</h2>

@@ -22,6 +22,8 @@ public sealed class Household : ITenantOwned, ISoftDeletable
     public DateTimeOffset? DeletedAt { get; private set; }
     public DateTimeOffset? PurgeAfter { get; private set; }
 
+    public void ChangeLanguage(string language) => Language = language;
+
     public void SoftDelete(DateTimeOffset now, TimeSpan retention)
     {
         DeletedAt = now;

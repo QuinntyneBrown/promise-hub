@@ -16,6 +16,8 @@ Terms used in this document:
 
 ## Built so far
 
+Slice 28 reuses the code check for the family page's corrections; a mobile changed by the guardian revokes the household's links and devices.
+
 Slice 15 added the enrollment identify flow: a code to the contact the guardian types, the same 10-minute expiry and 15-minute lock, and an HttpOnly cookie per program's enrollment session (ADR 0018).
 
 Slice 12 delivered `GuardianLink`, `GuardianVerification`, `TrustedGuardianDevice`, `GuardianAccess` (the link picks the tenant), `POST /g/auth/code` and `/g/auth/verify` with the 10-minute code, the 15-minute lock after three wrong codes, the 30-day HttpOnly device cookie, and revocation when a guardian's mobile changes (ADR 0015). The `enroll` identify page and links for other purposes are not built yet.

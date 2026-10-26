@@ -9,7 +9,7 @@
 | [organizations](organizations.md) | 34 days | 26% |
 | [platform](platform.md) | 24 days | 23% |
 | [shell](shell.md) | 9 days | 40% |
-| [households](households.md) | 6 days | 70% |
+| [households](households.md) | 6 days | 85% |
 | [programs](programs.md) | 5 days | 75% |
 | [staff](staff.md) | 5 days | 0% |
 | [enrollment](enrollment.md) | 5 days | 95% |
@@ -18,7 +18,7 @@
 | [messaging](messaging.md) | 14 days | 46% |
 | [notifications](notifications.md) | 8 days | 0% |
 | [slips](slips.md) | 17 days | 73% |
-| [guardian](guardian.md) | 9 days | 55% |
+| [guardian](guardian.md) | 9 days | 59% |
 | [incidents](incidents.md) | 6 days | 75% |
 | [reports](reports.md) | 10 days | 0% |
 | [imports](imports.md) | 5 days | 75% |

@@ -40,6 +40,8 @@ Backend:
 
 ## Built so far
 
+Slice 28 added the guardian's own corrections on the family page: contact details and language, and each child's allergies and medication, audited as made by the guardian (ADR 0020).
+
 Slice 04 delivered `FamiliesPage` (default, empty, no-results and error), `HouseholdPage` (default, restricted and not-found), `ChildPage` (medical card or the restricted note), the add-family, add-child, add-guardian, edit-guardian, edit-child, edit-medical, household-actions and delete-household dialogs, `HOUSEHOLDS_API`, every endpoint above under the Roster module, the handlers with audit entries, `Guardian`, the child's medical fields and the soft delete (ADR 0007). Read permissions are any staff role; writes need `WriteHouseholds`, medical edits `WriteMedical` and deletion `DeleteHouseholds`; medical fields are omitted without `ReadMedical`, and each medical read writes a `Viewed` entry. Approved pickups, the child's programs, slips and attendance, the household's consent and audit cards, sending the enrollment link and `HouseholdPurgeJob` arrive with their features.
 
 ## Requirements

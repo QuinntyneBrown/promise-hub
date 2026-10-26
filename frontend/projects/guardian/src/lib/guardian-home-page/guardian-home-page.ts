@@ -25,6 +25,10 @@ import {
 } from '@promisehub/components';
 import { guardianText, longDate, timeRange } from '../guardian-text';
 import {
+  GuardianDetailsData,
+  GuardianDetailsDialog,
+} from '../guardian-details-dialog/guardian-details-dialog';
+import {
   GuardianPickupData,
   GuardianPickupDialog,
 } from '../guardian-pickup-dialog/guardian-pickup-dialog';
@@ -68,6 +72,7 @@ export class GuardianHomePage {
   protected readonly busy = signal(false);
   protected readonly answered = signal<'OnTheWay' | 'Absent' | null>(null);
   protected readonly pickupAnswered = signal(false);
+  protected readonly detailsSaved = signal(false);
   protected contact = '';
   protected code = '';
 
@@ -187,6 +192,29 @@ export class GuardianHomePage {
         this.load(this.token());
       } else this.failed.set(true);
     });
+  }
+
+  /** Opens the correction dialog for the guardian's contact (no child) or a child's medical details (L2-011 criterion 7). */
+  protected editDetails(home: GuardianHome, child: GuardianHome['children'][number] | null): void {
+    this.dialogs
+      .open<boolean, GuardianDetailsData, GuardianDetailsDialog>(GuardianDetailsDialog, {
+        token: this.token(),
+        text: this.h(),
+        contact: child ? null : (home.contact ?? null),
+        child: child
+          ? {
+              id: child.id,
+              firstName: child.firstName,
+              allergies: child.allergies ?? null,
+              medication: child.medication ?? null,
+            }
+          : null,
+      })
+      .closed.subscribe((done) => {
+        if (!done) return;
+        this.detailsSaved.set(true);
+        this.load(this.token());
+      });
   }
 
   protected requestCode(): void {

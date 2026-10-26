@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 28 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="28" data-video-title="Update household details" data-parts="Introduction|Promises|Linh corrects|Language and number|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 28</div>
+  <h1>Update household details</h1>
+  <p class="lead">Families keep their own record current</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="After the same six-digit code check">
+  <h2>What updating promises</h2>
+  <ul>
+    <li>Mobile, email, language and each child's health</li>
+    <li>Bad entries named, nothing saved until fixed</li>
+    <li>Staff see changes at once; all audited</li>
+    <li>A new mobile ends the current link</li>
+  </ul>
+</section>
+
+<section id="linh" data-part="2" data-cue="Here is Linh's family page on her phone." data-clip="clips/update-details-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Email, then Kevin's allergy</h3><p>Saved and seen by staff.</p></div>
+</section>
+
+<section id="language" data-part="3" data-cue="If Linh prefers French">
+  <h2>Language and a new number</h2>
+  <div class="cols">
+    <img class="shot" alt="The family page in French" src="shots/phone-french.png">
+    <img class="shot" alt="The details form naming an invalid email" src="shots/desktop-invalid.png">
+  </div>
+</section>
+
+<section id="testing" data-part="4" data-cue="Backend tests cover email and language changes">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Invalid mobile or email</td><td>422, each named</td></tr>
+    <tr><td>New mobile</td><td>Link and device revoked</td></tr>
+    <tr><td>Another household's child</td><td>404</td></tr>
+    <tr><td>Unverified phone</td><td>401</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="5" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Families update their record</li><li>Staff see it at once</li><li>New number, new link</li></ul>
+  <p class="muted">Next: messaging families</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
