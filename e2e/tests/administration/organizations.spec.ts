@@ -13,7 +13,7 @@ test.describe('Manage organizations as a platform admin', () => {
 
     await expect(orgs.rows()).toHaveCount(2);
     await expect(orgs.row('Harbourview Youth Collective')).toContainText('Standard');
-    await expect(orgs.row('Harbourview Youth Collective')).toContainText('8 of 11');
+    await expect(orgs.row('Harbourview Youth Collective')).toContainText('10 of 11');
     await expect(orgs.row('Harbourview Youth Collective')).toContainText('Active');
     await expect(orgs.row('Northgate Community Church Kids')).toContainText('Setting up');
     await orgs.expectAccessible();

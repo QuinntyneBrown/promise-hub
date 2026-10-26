@@ -17,6 +17,7 @@ public sealed class ModuleConfigurationTests : IAsyncLifetime
     // The eight operations modules Harbourview's seed turns on; the Waypoint modules follow in the catalog (ADR 0043).
     private static readonly string[] All = ["Roster", "Slips", "RollCall", "QuickCards", "Pickup", "Messages", "Incidents", "Reports"];
     private static readonly string[] Catalog = [.. All, "Learning", "Mentoring", "PublicWebsite"];
+    private static readonly string[] Seeded = [.. All, "Learning", "Mentoring"];
 
     private readonly PromiseHubApiFactory _factory = new();
 
@@ -52,7 +53,7 @@ public sealed class ModuleConfigurationTests : IAsyncLifetime
         var error = Assert.Single(errors);
         Assert.Equal("Pickup", error.GetProperty("module").GetString());
         Assert.Equal("Pickup needs Roll Call.", error.GetProperty("message").GetString());
-        Assert.Equal(All, await ModulesOn(Tom));
+        Assert.Equal(Seeded, await ModulesOn(Tom));
     }
 
     [Fact]
@@ -80,7 +81,7 @@ public sealed class ModuleConfigurationTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(["Roster"], await ModulesOn(Grace));
-        Assert.Equal(All, await ModulesOn(Tom));
+        Assert.Equal(Seeded, await ModulesOn(Tom));
     }
 
     [Fact]

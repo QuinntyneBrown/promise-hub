@@ -6,7 +6,7 @@ import { ShellPage } from '../../pages/shell.page';
 test.describe('Settings › Modules', () => {
   test.use({ signedInAs: 'm-tom' });
 
-  test('Given an admin, when Settings › Modules opens, then every module is listed with the whole suite on', async ({ page }) => {
+  test('Given an admin, when Settings › Modules opens, then every module is listed with the whole suite, Learning and Mentoring on', async ({ page }) => {
     const modules = new SettingsModulesPage(page);
 
     await modules.open();
@@ -24,8 +24,9 @@ test.describe('Settings › Modules', () => {
       'Mentoring',
       'Public website',
     ]);
-    await expect(modules.summary).toHaveText('8 of 11 modules on');
+    await expect(modules.summary).toHaveText('10 of 11 modules on');
     await expect(modules.toggle('Reports')).toBeChecked();
+    await expect(modules.toggle('Learning')).toBeChecked();
     await expect(modules.toggle('Public website')).not.toBeChecked();
     await modules.expectAccessible();
     await modules.expectNoHorizontalScroll();
@@ -36,7 +37,7 @@ test.describe('Settings › Modules', () => {
     const shell = new ShellPage(page);
     await modules.open();
 
-    for (const name of ['Permission slips', 'Quick Cards', 'Pickup', 'Messages', 'Incident log', 'Reports']) {
+    for (const name of ['Permission slips', 'Quick Cards', 'Pickup', 'Messages', 'Incident log', 'Reports', 'Learning', 'Mentoring']) {
       await modules.set(name, false);
     }
     await modules.save();

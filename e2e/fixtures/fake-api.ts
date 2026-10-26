@@ -279,7 +279,11 @@ export class FakeApi {
   /** Who works each session; youth workers run only these (as seeded: Jaylen and Aisha tonight). */
   private sessionStaff = new Map<string, string[]>([['e-tutoring-today', ['m-jaylen', 'm-aisha', 'm-leo']]]);
   /** Youth accounts and the child each links to (L2-045), as the seed links them. */
-  private youthLinks = new Map<string, string>();
+  private youthLinks = new Map<string, string>([
+    ['m-sofia', 'c-sofia'],
+    ['m-nadia', 'c-nadia'],
+    ['m-lucia', 'c-ng-lucia'],
+  ]);
   private nextId = 1;
 
   constructor(private membershipId: string | null) {}

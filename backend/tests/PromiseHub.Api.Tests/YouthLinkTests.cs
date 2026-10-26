@@ -88,6 +88,18 @@ public sealed class YouthLinkTests : IAsyncLifetime
         }
     }
 
+    // L2-042 criterion 4: the seed links each youth account to its own child record, with Learning on for Harbourview only.
+    [Fact]
+    public async Task The_seeded_youth_read_their_own_records_and_Northgate_has_Learning_off()
+    {
+        var sofia = (await _factory.ClientFor(Sofia).GetFromJsonAsync<JsonElement>("/learning/me")).GetProperty("child");
+        var nadia = (await _factory.ClientFor(Nadia).GetFromJsonAsync<JsonElement>("/learning/me")).GetProperty("child");
+
+        Assert.Equal(("Sofía", 12), (sofia.GetProperty("firstName").GetString(), sofia.GetProperty("age").GetInt32()));
+        Assert.Equal(("Nadia", 18), (nadia.GetProperty("firstName").GetString(), nadia.GetProperty("age").GetInt32()));
+        Assert.Equal(HttpStatusCode.NotFound, (await _factory.ClientFor(Lucia).GetAsync("/learning/me")).StatusCode);
+    }
+
     private Task<HttpResponseMessage> Link(Guid admin, Guid membership, Guid child) =>
         _factory.ClientFor(admin).PutAsJsonAsync($"/staff/{membership}/child", new { childId = child });
 

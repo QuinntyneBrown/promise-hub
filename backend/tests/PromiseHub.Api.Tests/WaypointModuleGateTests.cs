@@ -51,6 +51,7 @@ public sealed class WaypointModuleGateTests : IAsyncLifetime
     [Fact]
     public async Task Curriculum_follows_Learning_and_only_admins_and_program_directors_author()
     {
+        await Modules(Tom, Suite);
         Assert.Equal(HttpStatusCode.NotFound, (await Get(Marisol, "/curriculum")).StatusCode);
 
         await Modules(Tom, [.. Suite, "Learning"]);
@@ -66,6 +67,7 @@ public sealed class WaypointModuleGateTests : IAsyncLifetime
     [Fact]
     public async Task Mentoring_lists_only_assigned_youth_none_yet_and_answers_404_while_off()
     {
+        await Modules(Tom, Suite);
         Assert.Equal(HttpStatusCode.NotFound, (await Get(Daniel, "/mentoring/youth")).StatusCode);
 
         await Modules(Tom, [.. Suite, "Mentoring"]);

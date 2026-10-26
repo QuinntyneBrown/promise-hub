@@ -44,7 +44,8 @@ export const organizations: Organization[] = [
     city: 'Hamilton, Ontario',
     slug: 'harbourview',
     plan: 'Standard',
-    modules: ['Roster', 'Slips', 'RollCall', 'QuickCards', 'Pickup', 'Messages', 'Incidents', 'Reports'],
+    // The whole suite plus Learning and Mentoring from Waypoint; Public website stays off (ADR 0043).
+    modules: ['Roster', 'Slips', 'RollCall', 'QuickCards', 'Pickup', 'Messages', 'Incidents', 'Reports', 'Learning', 'Mentoring'],
   },
   { id: 'org-northgate', name: 'Northgate Community Church Kids', city: 'Burlington, Ontario', slug: 'northgate', plan: 'Free', modules: ['Roster', 'RollCall', 'QuickCards'] },
 ];
