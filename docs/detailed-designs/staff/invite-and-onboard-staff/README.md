@@ -15,7 +15,7 @@ Terms used in this document:
 
 ## Built so far
 
-Slice 29 delivered the admin side: `StaffPage` at `/settings/staff`, `InviteStaffDialog`, `ChangeRoleDialog`, `RemoveStaffDialog`, `STAFF_API`, `StaffInvitation` and the `/staff` endpoints (ADR 0025). Accepting an invitation and onboarding are not built yet.
+Slice 29 delivered the admin side: `StaffPage` at `/settings/staff`, `InviteStaffDialog`, `ChangeRoleDialog`, `RemoveStaffDialog`, `STAFF_API`, `StaffInvitation` and the `/staff` endpoints (ADR 0025). Slice 30 delivered `AcceptInvitePage`, `OnboardPhonePage`, `OnboardReadyPage`, `INVITATION_API`, the invitation and `/me/phone` endpoints and `Membership.Mobile`. The sessions step and offline caching of chosen rosters are not built yet.
 
 ## Description
 

@@ -386,6 +386,9 @@ export class FakeApi {
     ['GET', /^\/api\/children\/(?<id>[^/]+)\/pickups$/, (route, p) => this.pickups(route, p['id']!)],
     ['POST', /^\/api\/children\/(?<id>[^/]+)\/pickups$/, (route, p) => this.addPickup(route, p['id']!)],
     ['GET', /^\/api\/staff$/, (route) => this.listStaff(route)],
+    ['GET', /^\/api\/invitations\/(?<token>[^/]+)$/, (route, p) => this.getInvitation(route, p['token']!)],
+    ['POST', /^\/api\/invitations\/(?<token>[^/]+)\/accept$/, (route, p) => this.acceptInvitation(route, p['token']!)],
+    ['PUT', /^\/api\/me\/phone$/, (route) => this.savePhone(route)],
     ['POST', /^\/api\/staff\/invitations$/, (route) => this.inviteStaff(route)],
     ['DELETE', /^\/api\/staff\/invitations\/(?<id>[^/]+)$/, (route, p) => this.withdrawInvitation(route, p['id']!)],
     ['PUT', /^\/api\/staff\/(?<id>[^/]+)\/role$/, (route, p) => this.changeRole(route, p['id']!)],
@@ -450,6 +453,7 @@ export class FakeApi {
 
   /** Staff changes in this test: roles changed, access removed and invitations sent (seeded memberships stay as they are). */
   private roleOverrides = new Map<string, string>();
+  private invitationLinks = new Map<string, { email: string; role: string; expired: boolean; accepted: boolean }>();
   private removedMembers = new Set<string>();
   private invitations: { id: string; organizationId: string; email: string; role: string; invitedBy: string; withdrawn: boolean }[] = [];
   /** Staff asked a guardian about an adult not on the approved list. */
@@ -1354,6 +1358,43 @@ export class FakeApi {
 
   private staffOf(m: Membership) {
     return memberships.filter((x) => x.organizationId === m.organizationId && !this.removedMembers.has(x.id));
+  }
+
+  /** An emailed invitation for this test, reachable at /invite/{token}; expired ones answer 410. */
+  sentInvitation(token: string, email: string, role = 'YouthWorker', expired = false): void {
+    this.invitationLinks.set(token, { email, role, expired, accepted: false });
+  }
+
+  /** The phone number the new worker saved during onboarding, if any. */
+  savedPhone: string | null = null;
+
+  private async getInvitation(route: Route, token: string): Promise<void> {
+    const i = this.invitationLinks.get(token);
+    if (!i || i.expired || i.accepted) return route.fulfill({ status: 410, json: { invitedBy: 'Tom Nguyen', organization: 'Harbourview Youth Collective' } });
+    return route.fulfill({ json: { email: i.email, organization: 'Harbourview Youth Collective', role: i.role, invitedBy: 'Tom Nguyen' } });
+  }
+
+  private async acceptInvitation(route: Route, token: string): Promise<void> {
+    const i = this.invitationLinks.get(token);
+    if (!i || i.expired || i.accepted) return route.fulfill({ status: 410, json: {} });
+    const b = route.request().postDataJSON() as { name?: string; password?: string };
+    const errors: Record<string, string> = {};
+    if (!b.name?.trim()) errors['name'] = 'Enter your name.';
+    if ((b.password ?? '').length < 12) errors['password'] = 'Use at least 12 characters.';
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    i.accepted = true;
+    // The new worker signs in as the seeded youth worker membership (the fake has no account store).
+    this.membershipId = 'm-aisha';
+    return route.fulfill({ json: { status: 'signed-in' } });
+  }
+
+  private async savePhone(route: Route): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    const b = route.request().postDataJSON() as { mobile?: string };
+    if ((b.mobile ?? '').replace(/\D/g, '').length !== 10) return route.fulfill({ status: 422, json: { errors: { mobile: 'Include the area code, like 905-555-0101.' } } });
+    this.savedPhone = b.mobile!;
+    return route.fulfill({ status: 204 });
   }
 
   private async listStaff(route: Route): Promise<void> {

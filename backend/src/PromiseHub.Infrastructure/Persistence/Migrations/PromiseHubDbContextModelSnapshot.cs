@@ -1268,6 +1268,10 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .HasMaxLength(320)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Mobile")
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("TEXT");
 

@@ -11,7 +11,7 @@
 | [shell](shell.md) | 9 days | 40% |
 | [households](households.md) | 6 days | 85% |
 | [programs](programs.md) | 5 days | 75% |
-| [staff](staff.md) | 5 days | 40% |
+| [staff](staff.md) | 5 days | 80% |
 | [enrollment](enrollment.md) | 5 days | 95% |
 | [events](events.md) | 5 days | 65% |
 | [attendance](attendance.md) | 27 days | 73% |

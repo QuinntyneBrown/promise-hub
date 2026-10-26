@@ -13,6 +13,8 @@ Prompt 29 lets an admin invite staff, assign roles and remove access (`L2-007`, 
 - **Invite.** `POST /staff/invitations` takes a work email and a role, stores a `StaffInvitation` with only the token's hash, a 14-day expiry and who invited, and emails a link to `/invite/<token>`. A person who already has access, or an invitation already waiting for the email, is refused. `DELETE /staff/invitations/{id}` withdraws one. Accepting is prompt 30.
 - **Roles and removal.** `PUT /staff/{id}/role` changes the role, which applies on the person's next request because the role is read from the membership each time. `DELETE /staff/{id}` sets `Membership.RemovedAt`; the tenant middleware and sign-in ignore removed memberships, so the person's next request answers 401 and their records keep naming them. Admins cannot change or remove themselves, which also keeps at least one admin. Every change is audited.
 
+- **Accepting (prompt 30).** `GET /invitations/{token}` shows the invitation or answers 410 with who invited; `POST /invitations/{token}/accept` (anonymous) creates the `StaffUser` (or checks the existing one's password) and a `Membership` in the invitation's organization, marks it accepted and signs in. `PUT /me/phone` saves the worker's mobile on the membership, never shown to guardians. The account library mounts the pages at `/invite/:token` and `/welcome/phone`, `/welcome/ready`. Choosing programs to cache (`onboard-staff-sessions`) is left for later; the ready step shows today's assigned sessions.
+
 ## Consequences
 
-Accepting an invitation and onboarding are prompt 30. A removed person's open browser tab fails on its next request rather than being pushed out at once.
+A removed person's open browser tab fails on its next request rather than being pushed out at once.

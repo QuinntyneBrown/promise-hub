@@ -1,0 +1,40 @@
+import { test, expect } from '../../fixtures/test';
+import { AcceptInvitePage } from '../../pages/accept-invite.page';
+
+// L2-009 criteria 1 to 3 and 7: an invited worker accepts, saves a phone and reaches today's session.
+test.describe('Start an invited shift as a youth worker', () => {
+  test.use({ signedInAs: null });
+
+  test('Given an invitation, when Aisha accepts, saves her phone and finishes, then she can open tonight’s check-in', async ({ page, api }) => {
+    api.sentInvitation('inv-aisha', 'aisha@harbourview.example');
+    const invite = new AcceptInvitePage(page);
+    await invite.open('inv-aisha');
+    await expect(invite.invitedEmail).toHaveText('aisha@harbourview.example');
+    await invite.expectAccessible();
+    await invite.expectNoHorizontalScroll();
+
+    await invite.accept('Aisha Bello', 'short');
+    await expect(invite.fieldError('password')).toHaveText('Use at least 12 characters.');
+    await invite.accept('Aisha Bello', 'a long passphrase 42');
+    await expect(invite.heading).toHaveText('Your mobile for alerts');
+    await invite.savePhone('555-0101');
+    await expect(invite.fieldError('mobile')).toHaveText('Include the area code, like 905-555-0101.');
+    await invite.expectAccessible();
+    await invite.savePhone('905-555-0101');
+
+    await expect(invite.heading).toHaveText('You’re ready, Aisha');
+    await expect(invite.openCheckIn).toBeVisible();
+    expect(api.savedPhone).toBe('905-555-0101');
+    await invite.expectAccessible();
+  });
+
+  test('Given an expired invitation, when it opens, then it says to ask the person who invited them', async ({ page, api }) => {
+    api.sentInvitation('inv-old', 'sam@harbourview.example', 'YouthWorker', true);
+    const invite = new AcceptInvitePage(page);
+
+    await invite.open('inv-old');
+
+    await expect(invite.heading).toHaveText('This invitation has expired');
+    await expect(page.getByRole('main')).toContainText('Ask Tom Nguyen for a new one.');
+  });
+});
