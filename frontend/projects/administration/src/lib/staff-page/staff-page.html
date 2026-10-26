@@ -29,55 +29,58 @@
         >
           <ph-button variant="primary" hasPopup="dialog" (click)="invite()">Invite staff</ph-button>
         </ph-page-header>
-        <ph-list label="Staff">
-          @for (m of s.members; track m.id) {
-            <ph-list-item
-              [title]="m.name + (m.isYou ? ' (you)' : '')"
-              [meta]="m.email"
-              [avatar]="m.name"
-            >
-              <ph-badge [tone]="m.role === 'Admin' ? 'success' : 'neutral'">{{
-                roleLabel[m.role]
-              }}</ph-badge>
-              @if (!m.isYou) {
-                <ph-button
-                  size="sm"
-                  hasPopup="dialog"
-                  [label]="'Change role for ' + m.name"
-                  (click)="changeRole(m)"
-                  >Change role</ph-button
-                >
-                <ph-button
-                  variant="ghost"
-                  size="sm"
-                  hasPopup="dialog"
-                  [label]="'Remove ' + m.name"
-                  (click)="remove(m)"
-                  >Remove</ph-button
-                >
-              }
-            </ph-list-item>
-          }
-        </ph-list>
-        @if (s.invitations.length) {
-          <h2>Invitations waiting</h2>
-          <ph-list label="Invitations waiting">
-            @for (i of s.invitations; track i.id) {
+        <div class="stack">
+          <ph-list label="Staff">
+            @for (m of s.members; track m.id) {
               <ph-list-item
-                [title]="i.email"
-                [meta]="roleLabel[i.role] + ' · invited by ' + i.invitedBy"
+                [title]="m.name + (m.isYou ? ' (you)' : '')"
+                [meta]="m.email"
+                [avatar]="m.name"
               >
-                <ph-button
-                  variant="ghost"
-                  size="sm"
-                  [label]="'Withdraw invitation to ' + i.email"
-                  (click)="withdraw(i.id, i.email)"
-                  >Withdraw</ph-button
-                >
+                <ph-badge [tone]="m.role === 'Admin' ? 'success' : 'neutral'">{{
+                  roleLabel[m.role]
+                }}</ph-badge>
+                @if (!m.isYou) {
+                  <ph-button
+                    size="sm"
+                    hasPopup="dialog"
+                    [label]="'Change role for ' + m.name"
+                    (click)="changeRole(m)"
+                    >Change role</ph-button
+                  >
+                  <ph-button
+                    variant="ghost"
+                    size="sm"
+                    hasPopup="dialog"
+                    [label]="'Remove ' + m.name"
+                    (click)="remove(m)"
+                    >Remove</ph-button
+                  >
+                }
               </ph-list-item>
             }
           </ph-list>
-        }
+          @if (s.invitations.length) {
+            <ph-card title="Invitations waiting" [flush]="true">
+              <ph-list label="Invitations waiting" [inset]="true">
+                @for (i of s.invitations; track i.id) {
+                  <ph-list-item
+                    [title]="i.email"
+                    [meta]="roleLabel[i.role] + ' · invited by ' + i.invitedBy"
+                  >
+                    <ph-button
+                      variant="ghost"
+                      size="sm"
+                      [label]="'Withdraw invitation to ' + i.email"
+                      (click)="withdraw(i.id, i.email)"
+                      >Withdraw</ph-button
+                    >
+                  </ph-list-item>
+                }
+              </ph-list>
+            </ph-card>
+          }
+        </div>
       }
     }
   }
