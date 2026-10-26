@@ -23,6 +23,15 @@ export class HttpGuardianApi implements GuardianApi {
     return this.page<GuardianSlip>(`${this.baseUrl}/g/slips/${encodeURIComponent(token)}`);
   }
 
+  requestData(token: string, kind: 'Export' | 'Delete', email: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<{ id: string }>(
+        `${this.baseUrl}/g/home/${encodeURIComponent(token)}/data-requests`,
+        { kind, email },
+      ),
+    );
+  }
+
   survey(token: string): Observable<GuardianPageResult<GuardianSurvey>> {
     return this.page<GuardianSurvey>(`${this.baseUrl}/g/survey/${encodeURIComponent(token)}`);
   }

@@ -50,6 +50,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 40 | [Switch organizations](40-switch-organizations/README.md) | ~2 min | The top bar's switcher moves the session to another membership and reloads for that organization |
 | 41 | [Manage billing](41-manage-billing/README.md) | ~2 min | Plan limits and usage, the Free child limit, prorated plan changes and the payment grace period |
 | 42 | [Configure privacy](42-configure-privacy/README.md) | ~2 min | A fixed region, a consent retention choice and the nightly job that keeps it, with counts intact |
+| 43 | [Request household data](43-request-household-data/README.md) | ~2 min | A guardian asks for a copy or deletion from a verified page; staff fulfil it once, on the record |
 
 ## Making or updating a video
 

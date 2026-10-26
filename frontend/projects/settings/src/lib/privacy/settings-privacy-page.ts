@@ -1,12 +1,15 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { PRIVACY_API } from '@promisehub/api';
+import { DataRequest, PRIVACY_API } from '@promisehub/api';
 import {
   Fact,
   PhButton,
   PhCard,
+  PhBadge,
   PhDescriptionList,
   PhEmptyState,
+  PhList,
+  PhListItem,
   PhPageHeader,
   PhRadioGroup,
   PhSkeleton,
@@ -21,10 +24,13 @@ import { SETTINGS_SECTIONS } from '../settings-sections';
   selector: 'ph-settings-privacy-page',
   imports: [
     FormsModule,
+    PhBadge,
     PhButton,
     PhCard,
     PhDescriptionList,
     PhEmptyState,
+    PhList,
+    PhListItem,
     PhPageHeader,
     PhRadioGroup,
     PhSkeleton,
@@ -43,6 +49,8 @@ export class SettingsPrivacyPage {
   protected readonly facts = signal<Fact[]>([]);
   protected readonly retention = signal('7');
   protected readonly saving = signal(false);
+  protected readonly requests = signal<DataRequest[]>([]);
+  protected readonly fulfilling = signal<string | null>(null);
   protected readonly options: RadioOption[] = [
     { value: '7', label: '7 years after the event' },
     { value: '3', label: '3 years after the event' },
@@ -68,9 +76,49 @@ export class SettingsPrivacyPage {
             : String(r.value.consentRetentionYears),
         );
         this.state.set('loaded');
+        this.loadRequests();
       } else {
         this.state.set(r.status === 'forbidden' ? 'forbidden' : 'error');
       }
+    });
+  }
+
+  private loadRequests(): void {
+    this.api
+      .requests()
+      .subscribe((r) => r.status === 'loaded' && this.requests.set(r.value.requests));
+  }
+
+  protected requestMeta(r: DataRequest): string {
+    const what = r.kind === 'Export' ? 'A copy of their data' : 'Delete their data';
+    return r.status === 'Open'
+      ? `${what} · send to ${r.email}`
+      : `${what} · done by ${r.fulfilledBy}`;
+  }
+
+  protected exportUrl(id: string): string {
+    return this.api.exportUrl(id);
+  }
+
+  /** Fulfils a request: an export is emailed; a deletion removes the household, purged after 30 days. */
+  protected fulfil(r: DataRequest): void {
+    this.fulfilling.set(r.id);
+    this.api.fulfil(r.id).subscribe((outcome) => {
+      this.fulfilling.set(null);
+      if (outcome.status === 'saved') {
+        this.toasts.show({
+          tone: 'success',
+          title:
+            r.kind === 'Export' ? `Copy sent to ${r.email}` : `${r.household} household deleted`,
+          text: r.kind === 'Export' ? 'It’s logged.' : 'It’s purged after 30 days.',
+        });
+        this.loadRequests();
+      } else
+        this.toasts.show({
+          tone: 'danger',
+          title: 'Not done',
+          text: 'Something went wrong. Try again.',
+        });
     });
   }
 

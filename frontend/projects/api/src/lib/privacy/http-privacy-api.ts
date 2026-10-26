@@ -5,6 +5,7 @@ import { API_BASE_URL } from '../api-base-url';
 import { toLoad, toWrite } from '../http-results';
 import { LoadResult } from '../load-result';
 import { WriteOutcome } from '../write-outcome';
+import { DataRequest } from './data-request';
 import { PrivacyApi } from './privacy-api';
 import { PrivacySettings } from './privacy-settings';
 
@@ -15,6 +16,22 @@ export class HttpPrivacyApi implements PrivacyApi {
 
   load(): Observable<LoadResult<PrivacySettings>> {
     return toLoad(this.http.get<PrivacySettings>(`${this.baseUrl}/settings/privacy`));
+  }
+
+  requests(): Observable<LoadResult<{ requests: DataRequest[] }>> {
+    return toLoad(
+      this.http.get<{ requests: DataRequest[] }>(`${this.baseUrl}/settings/data-requests`),
+    );
+  }
+
+  fulfil(id: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(`${this.baseUrl}/settings/data-requests/${id}/fulfil`, null),
+    );
+  }
+
+  exportUrl(id: string): string {
+    return `${this.baseUrl}/settings/data-requests/${id}/export`;
   }
 
   saveRetention(years: number | null): Observable<WriteOutcome> {

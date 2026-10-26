@@ -61,10 +61,38 @@
       </form>
       <ph-card title="Requests from guardians">
         <div class="stack">
-          <p class="hint">Export or delete a household when a guardian asks. Both are logged.</p>
-          <div>
-            <ph-button link="/families">Open Families</ph-button>
-          </div>
+          <p class="hint">Guardians ask from their family page. Fulfilling is logged.</p>
+          <ph-list label="Requests from guardians">
+            @for (r of requests(); track r.id) {
+              <ph-list-item
+                [title]="r.household + ' household'"
+                [meta]="requestMeta(r)"
+                [muted]="r.status !== 'Open'"
+              >
+                @if (r.status === 'Open') {
+                  <ph-button
+                    size="sm"
+                    [variant]="r.kind === 'Delete' ? 'danger' : 'default'"
+                    [busy]="fulfilling() === r.id"
+                    [label]="
+                      (r.kind === 'Export' ? 'Send the copy to ' : 'Delete the household of ') +
+                      r.household
+                    "
+                    (click)="fulfil(r)"
+                    >{{ r.kind === 'Export' ? 'Send copy' : 'Delete' }}</ph-button
+                  >
+                } @else if (r.kind === 'Export') {
+                  <ph-button size="sm" variant="ghost" icon="download" [href]="exportUrl(r.id)"
+                    >Download</ph-button
+                  >
+                } @else {
+                  <ph-badge tone="neutral">Done</ph-badge>
+                }
+              </ph-list-item>
+            } @empty {
+              <ph-list-item title="No requests yet" />
+            }
+          </ph-list>
         </div>
       </ph-card>
     </div>

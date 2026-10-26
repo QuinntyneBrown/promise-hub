@@ -14,6 +14,7 @@ public sealed class NotificationsHandler(IPromiseHubDb db, ITenantContext tenant
     private static readonly Dictionary<string, ModuleId> KindModule = new()
     {
         ["incidents"] = ModuleId.Incidents,
+        ["requests"] = ModuleId.Roster,
     };
 
     public async Task<NotificationListDto> ListAsync(CancellationToken cancellationToken = default)

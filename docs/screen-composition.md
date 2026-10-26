@@ -70,6 +70,7 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 
 | Dialog | Mock | Library components |
 |---|---|---|
+| Guardian data request | `guardian-data-request` | `ph-dialog`, `ph-radio-group`, `ph-text-field`, `ph-alert`, `ph-button` |
 | Switch organization | `switch-organization` | `ph-top-bar` (organization switcher menu, `ph-avatar`, `ph-icon`) |
 | Add a family | `add-family` (default, invalid, busy) | `ph-dialog` via `PhDialogs`, `ph-text-field`, `ph-select`, `ph-button` |
 | Add a child | `add-child` | `ph-dialog`, `ph-text-field`, `ph-textarea`, `ph-button` |

@@ -56,6 +56,7 @@ public interface IPromiseHubDb
     DbSet<Domain.Surveys.Survey> Surveys { get; }
     DbSet<Domain.Surveys.SurveyResponse> SurveyResponses { get; }
     DbSet<PrivacySettings> PrivacySettings { get; }
+    DbSet<DataRequest> DataRequests { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
