@@ -45,7 +45,7 @@
 | Staff | Review notifications | Open relevant tasks, alerts, and updates from the notification center. | [5 days](detailed-designs/notifications/notify-in-app/README.md) | 70% · [video](videos/35-review-notifications/README.md) |
 | Staff | Recover account access | Reset a forgotten password and resume authorized work. | [3 days](detailed-designs/identity/recover-access/README.md) | 90% · [video](videos/46-recover-account-access/README.md) |
 | Staff | Manage sessions | View account settings, recover codes, and sign out other sessions. | [3 days](detailed-designs/identity/sign-in/README.md) | 80% · [video](videos/45-manage-sessions/README.md) |
-| Platform admin | Create an organization | Add a tenant and prepare its onboarding. | [3 days](detailed-designs/organizations/manage-organizations/README.md) | 0% |
-| Platform admin | Suspend an organization | Block access and outbound messages while retaining tenant data. | [3 days](detailed-designs/organizations/manage-organizations/README.md) | 0% |
-| Platform admin | Manage organizations | Review tenants across the deployment with platform-only access. | [3 days](detailed-designs/organizations/manage-organizations/README.md) | 0% |
+| Platform admin | Create an organization | Add a tenant and prepare its onboarding. | [3 days](detailed-designs/organizations/manage-organizations/README.md) | 85% |
+| Platform admin | Suspend an organization | Block access and outbound messages while retaining tenant data. | [3 days](detailed-designs/organizations/manage-organizations/README.md) | 85% |
+| Platform admin | Manage organizations | Review tenants across the deployment with platform-only access. | [3 days](detailed-designs/organizations/manage-organizations/README.md) | 85% |
 | Everyone | Walking skeleton | Tenancy, migrate and seed, the shell and audit recording that every journey builds on. | [supporting](prompts/01-walking-skeleton.md) | 100% · [video](videos/01-walking-skeleton/README.md) |
