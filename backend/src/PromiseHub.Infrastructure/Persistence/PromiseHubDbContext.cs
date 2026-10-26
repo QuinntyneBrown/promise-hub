@@ -51,6 +51,8 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Notifications.Notification> Notifications => Set<Domain.Notifications.Notification>();
     public DbSet<Domain.Notifications.NotificationSettings> NotificationSettings => Set<Domain.Notifications.NotificationSettings>();
     public DbSet<Domain.Reports.ReportExport> ReportExports => Set<Domain.Reports.ReportExport>();
+    public DbSet<Domain.Surveys.Survey> Surveys => Set<Domain.Surveys.Survey>();
+    public DbSet<Domain.Surveys.SurveyResponse> SurveyResponses => Set<Domain.Surveys.SurveyResponse>();
     public DbSet<Domain.Incidents.IncidentFollowUp> IncidentFollowUps => Set<Domain.Incidents.IncidentFollowUp>();
     public DbSet<GuardianVerification> GuardianVerifications => Set<GuardianVerification>();
     public DbSet<TrustedGuardianDevice> TrustedGuardianDevices => Set<TrustedGuardianDevice>();
@@ -78,6 +80,18 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(m => m.RemovedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
         });
         modelBuilder.Entity<Domain.Notifications.NotificationSettings>(e => e.HasIndex(s => s.OrganizationId).IsUnique());
+        modelBuilder.Entity<Domain.Surveys.Survey>(e =>
+        {
+            e.Property(x => x.SentBy).HasMaxLength(200);
+            e.Property(x => x.SentAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(x => x.ClosesAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+        });
+        modelBuilder.Entity<Domain.Surveys.SurveyResponse>(e =>
+        {
+            e.Property(x => x.Comment).HasMaxLength(1000);
+            e.HasIndex(x => new { x.SurveyId, x.ChildId }).IsUnique();
+            e.Property(x => x.AnsweredAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+        });
         modelBuilder.Entity<Domain.Reports.ReportExport>(e =>
         {
             e.Property(x => x.FileName).HasMaxLength(200);

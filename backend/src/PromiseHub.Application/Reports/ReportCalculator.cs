@@ -42,6 +42,9 @@ public sealed class ReportCalculator(IPromiseHubDb db, TimeProvider clock)
         var households = (await db.Households.AsNoTracking().ToListAsync(cancellationToken))
             .Where(h => children.Any(c => c.HouseholdId == h.Id)).ToList();
 
+        var surveys = (await db.Surveys.AsNoTracking().ToListAsync(cancellationToken)).Where(s => sessionIds.Contains(s.EventId) || (filter.ProgramId is null)).Select(s => s.Id).ToHashSet();
+        var ratings = (await db.SurveyResponses.AsNoTracking().ToListAsync(cancellationToken)).Where(r => surveys.Contains(r.SurveyId)).Select(r => r.Rating).ToList();
+
         string Count(int n) => mask && n > 0 && n < SmallCount ? $"<{SmallCount}" : n.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
         return new ReportDto(
@@ -53,7 +56,9 @@ public sealed class ReportCalculator(IPromiseHubDb db, TimeProvider clock)
             [.. programs.Where(p => p.Status == Domain.Programs.ProgramStatus.Active).OrderBy(p => p.Name)
                 .Select(p => new ProgramAttendanceDto(p.Id, p.Name, Rate(records.Where(r => sessions.Any(e => e.Id == r.EventId && e.ProgramId == p.Id)))))],
             [.. households.GroupBy(h => h.Language).OrderByDescending(g => g.Count()).ThenBy(g => g.Key).Select(g => new LanguageCountDto(g.Key, g.Count()))],
-            mask);
+            mask,
+            ratings.Count,
+            ratings.Count == 0 ? null : Math.Round(ratings.Average(), 1));
     }
 
     private static int? Rate(IEnumerable<AttendanceRecord> records)

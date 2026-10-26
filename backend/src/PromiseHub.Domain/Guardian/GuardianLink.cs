@@ -11,8 +11,9 @@ public sealed class GuardianLink : ITenantOwned
 {
     public const int MaxFailedCodes = 3;
 
-    public GuardianLink(Guid id, Guid organizationId, Guid householdId, Guid? slipId, Guid? childId, string tokenHash, DateTimeOffset createdAt)
+    public GuardianLink(Guid id, Guid organizationId, Guid householdId, Guid? slipId, Guid? childId, string tokenHash, DateTimeOffset createdAt, Guid? surveyId = null)
     {
+        SurveyId = surveyId;
         Id = id;
         OrganizationId = organizationId;
         HouseholdId = householdId;
@@ -27,6 +28,9 @@ public sealed class GuardianLink : ITenantOwned
     public Guid HouseholdId { get; private set; }
     public Guid? SlipId { get; private set; }
     public Guid? ChildId { get; private set; }
+
+    /// <summary>The survey this link answers, for a survey link.</summary>
+    public Guid? SurveyId { get; private set; }
     public string TokenHash { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset? RevokedAt { get; private set; }

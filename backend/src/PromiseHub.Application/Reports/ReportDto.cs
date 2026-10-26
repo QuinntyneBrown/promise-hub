@@ -12,4 +12,6 @@ public sealed record ReportDto(
     IReadOnlyList<AgeBandDto> Ages,
     IReadOnlyList<ProgramAttendanceDto> Programs,
     IReadOnlyList<LanguageCountDto> Languages,
-    bool Masked);
+    bool Masked,
+    int SurveyResponses,
+    double? SurveyAverage);

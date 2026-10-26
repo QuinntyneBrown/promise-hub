@@ -14,4 +14,7 @@ public enum MessageSource
 
     /// <summary>Changes to a child's approved pickups; part of the Pickup module.</summary>
     Pickup,
+
+    /// <summary>Surveys to guardians; part of the Reports module.</summary>
+    Survey,
 }

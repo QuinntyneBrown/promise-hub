@@ -13,6 +13,13 @@ public sealed class GuardianLinkIssuer(IPromiseHubDb db, ITenantContext tenant, 
         return $"{options.BaseUrl.TrimEnd('/')}/g/slip/{token}";
     }
 
+    public string IssueSurvey(Guid householdId, Guid surveyId, Guid childId)
+    {
+        var token = GuardianTokens.New();
+        db.GuardianLinks.Add(new GuardianLink(Guid.NewGuid(), tenant.OrganizationId, householdId, null, childId, GuardianTokens.Hash(token), clock.GetUtcNow(), surveyId));
+        return $"{options.BaseUrl.TrimEnd('/')}/g/survey/{token}";
+    }
+
     public string IssueHome(Guid householdId)
     {
         var token = GuardianTokens.New();
