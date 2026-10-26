@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 49 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="49" data-video-title="Merge Waypoint: foundation" data-parts="Introduction|Mapping|Modules|Settings|Roles|Shell|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 49</div>
+  <h1>Merge Waypoint: foundation</h1>
+  <p class="lead">Modules, roles and a map for prompts 50 to 81</p>
+</section>
+
+<section id="mapping" data-part="1" data-cue="Most of Waypoint already has a home.">
+  <h2>Where Waypoint lands</h2>
+  <table class="facts">
+    <tr><th>Waypoint</th><th>PromiseHub</th></tr>
+    <tr><td>Cohort</td><td>Program</td></tr>
+    <tr><td>Session and attendance</td><td>Event and Roll Call</td></tr>
+    <tr><td>Application, referral</td><td>Enrollment link</td></tr>
+    <tr><td>Announcements, messages</td><td>Messages</td></tr>
+    <tr><td>Guardian portal</td><td>Verified guardian links</td></tr>
+  </table>
+  <p class="muted small">docs/adr/0043-merge-waypoint.md</p>
+</section>
+
+<section id="modules" data-part="2" data-cue="What is new becomes three modules.">
+  <h2>Three new modules</h2>
+  <div class="cols">
+    <div class="card"><h3>Learning</h3><p>Lessons, quizzes, badges, authoring</p></div>
+    <div class="card"><h3>Mentoring</h3><p>Assigned youth, check-ins, at-risk flags</p></div>
+    <div class="card"><h3>Public website</h3><p>Anonymous public pages by slug</p></div>
+  </div>
+  <p class="muted">Each needs Roster · off until an admin turns it on</p>
+</section>
+
+<section id="settings" data-part="3" data-cue="Here is Tom, Harbourview's admin, in Settings, Modules." data-clip="clips/modules-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Off, then on again</h3><p>Curriculum leaves More with Learning and returns with it.</p></div>
+</section>
+
+<section id="roles" data-part="4" data-cue="There are three new roles.">
+  <h2>Three new roles</h2>
+  <table class="facts">
+    <tr><th>Role</th><th>Reaches</th></tr>
+    <tr><td>Youth</td><td>Their own linked child record</td></tr>
+    <tr><td>Mentor</td><td>Assigned youth only (none yet)</td></tr>
+    <tr><td>Volunteer</td><td>Assigned sessions only</td></tr>
+  </table>
+  <p class="muted">Staff endpoints answer 403 unless they opt in</p>
+</section>
+
+<section id="youth" data-part="5" data-cue="Here is Sofía, a youth, on her phone." data-clip="clips/youth-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Learning on, then off</h3><p>The tab disappears; <code>/learning</code> lands on Today.</p></div>
+</section>
+
+<section id="mentor" data-part="5" data-cue="Daniel, a mentor, gets Today and Mentoring." data-clip="clips/mentor-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>A mentor's shell</h3><p>Today and Mentoring; nobody assigned yet.</p></div>
+</section>
+
+<section id="testing" data-part="6" data-cue="The API tests turn each module off and on">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Module off, this organization</td><td>404</td></tr>
+    <tr><td>Staff endpoint, new role</td><td>403</td></tr>
+    <tr><td>Link to another organization's child</td><td>404</td></tr>
+    <tr><td>Every new page</td><td>axe, phone and desktop</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="7" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Waypoint reuses programs, events and Roll Call</li><li>Three modules that start off</li><li>Each role sees only its own</li></ul>
+  <p class="muted">Next: youth and mentors sign in</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
