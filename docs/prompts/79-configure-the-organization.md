@@ -40,7 +40,7 @@ Why now: Gathers the new settings in Settings.
 
 - Waypoint lives at `/Users/quinntynebrown/projects/waypoint` on branch `promise-hub`. That branch already uses the PromiseHub tokens and the `ph` prefix. Read it with `git -C /Users/quinntynebrown/projects/waypoint show promise-hub:<path>` (or a worktree of that branch). Never commit to, push or change the Waypoint repository.
 - Waypoint is the source of behaviour, copy, states and edge cases. PromiseHub's `AGENTS.md` wins on everything else. Port the behaviour; do not copy the structure.
-- Follow the mapping in `docs/adr/0019-merge-waypoint.md` (written by prompt 49): which Waypoint subsystem becomes which PromiseHub feature, module, role and library.
+- Follow the mapping in `docs/adr/0043-merge-waypoint.md` (written by prompt 49): which Waypoint subsystem becomes which PromiseHub feature, module, role and library.
 - Rename as you port: no "Waypoint" in namespaces, types, routes, copy or file names. The product is PromiseHub.
 - Convert Waypoint's conventions to PromiseHub's:
   - .NET 10 (`backend/global.json`) and Angular 22, not .NET 9 and Angular 21.

@@ -4,7 +4,7 @@
 
 Persona: **Program director**. Waypoint journey 7 Manage cohorts, merged into PromiseHub.
 
-A program director runs cohorts as PromiseHub programs (ADR 0019: a cohort is a program with a term and, later, a track). They place youth into a cohort and assign mentors to youth and to whole cohorts. Mentor assignment is shown only when the Mentoring module is on. Capacity and archiving work as programs already do.
+A program director runs cohorts as PromiseHub programs (ADR 0043: a cohort is a program with a term and, later, a track). They place youth into a cohort and assign mentors to youth and to whole cohorts. Mentor assignment is shown only when the Mentoring module is on. Capacity and archiving work as programs already do.
 
 Prompt `49` (merge foundation) and prompts `05`, `49` in `docs/prompts/` are assumed done; reuse what they built. If something they describe is missing, build only the minimum this journey needs and list it as deferred. Frontend libraries: `frontend/projects/programs/`, `frontend/projects/api/`. Backend feature folders under `backend/src/PromiseHub.*/` with the same names.
 
@@ -40,7 +40,7 @@ Why now: Mentor dashboards, learning gating and cohort sessions all hang off coh
 
 - Waypoint lives at `/Users/quinntynebrown/projects/waypoint` on branch `promise-hub`. That branch already uses the PromiseHub tokens and the `ph` prefix. Read it with `git -C /Users/quinntynebrown/projects/waypoint show promise-hub:<path>` (or a worktree of that branch). Never commit to, push or change the Waypoint repository.
 - Waypoint is the source of behaviour, copy, states and edge cases. PromiseHub's `AGENTS.md` wins on everything else. Port the behaviour; do not copy the structure.
-- Follow the mapping in `docs/adr/0019-merge-waypoint.md` (written by prompt 49): which Waypoint subsystem becomes which PromiseHub feature, module, role and library.
+- Follow the mapping in `docs/adr/0043-merge-waypoint.md` (written by prompt 49): which Waypoint subsystem becomes which PromiseHub feature, module, role and library.
 - Rename as you port: no "Waypoint" in namespaces, types, routes, copy or file names. The product is PromiseHub.
 - Convert Waypoint's conventions to PromiseHub's:
   - .NET 10 (`backend/global.json`) and Angular 22, not .NET 9 and Angular 21.
