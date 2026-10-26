@@ -78,8 +78,8 @@ test.describe('Settings › Modules', () => {
     await expect(modules.summary).toHaveText('3 of 11 modules on');
   });
 
-  // L2-004 criterion 6: the Waypoint modules each say they need the roster, and the whole suite leaves them off.
-  test('Given the Waypoint modules, when Settings › Modules opens, then Learning, Mentoring and Public website each need the roster', async ({ page }) => {
+  // L2-004 criterion 6: Learning, Mentoring and Public website each say they need the roster, and the whole suite leaves them off.
+  test('Given Learning, Mentoring and Public website, when Settings › Modules opens, then Learning, Mentoring and Public website each need the roster', async ({ page }) => {
     const modules = new SettingsModulesPage(page);
     await modules.open();
 

@@ -26,7 +26,7 @@ public sealed class PlatformOrganizationTests : IAsyncLifetime
         var harbourview = orgs.Single(o => o.GetProperty("name").GetString() == "Harbourview Youth Collective");
         var northgate = orgs.Single(o => o.GetProperty("name").GetString() == "Northgate Community Church Kids");
         Assert.Equal("Standard", harbourview.GetProperty("plan").GetString());
-        // Seven children plus Nadia Haddad, whose youth account the Waypoint seed links (ADR 0043).
+        // Seven children plus Nadia Haddad, whose youth account the seed links (ADR 0043).
         Assert.Equal(8, harbourview.GetProperty("activeChildren").GetInt32());
         Assert.Equal(10, harbourview.GetProperty("modulesOn").GetInt32());
         Assert.Equal("Active", harbourview.GetProperty("status").GetString());

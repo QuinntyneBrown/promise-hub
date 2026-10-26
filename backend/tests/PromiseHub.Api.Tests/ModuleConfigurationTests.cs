@@ -14,7 +14,7 @@ public sealed class ModuleConfigurationTests : IAsyncLifetime
     private static readonly Guid Grace = DatabaseSeeder.MembershipId(DatabaseSeeder.Northgate, "grace@northgate.example");
     private static readonly Guid HarbourviewMateo = DatabaseSeeder.ChildId(DatabaseSeeder.Harbourview, "Mateo Rivera");
 
-    // The eight operations modules Harbourview's seed turns on; the Waypoint modules follow in the catalog (ADR 0043).
+    // The eight operations modules Harbourview's seed turns on; Learning, Mentoring and Public website follow in the catalog (ADR 0043).
     private static readonly string[] All = ["Roster", "Slips", "RollCall", "QuickCards", "Pickup", "Messages", "Incidents", "Reports"];
     private static readonly string[] Catalog = [.. All, "Learning", "Mentoring", "PublicWebsite"];
     private static readonly string[] Seeded = [.. All, "Learning", "Mentoring"];
@@ -156,9 +156,9 @@ public sealed class ModuleConfigurationTests : IAsyncLifetime
         Assert.Equal(["Roster", "Learning", "Mentoring"], await ModulesOn(Grace));
     }
 
-    // L2-004 criterion 8: one organization's Waypoint modules never touch another's.
+    // L2-004 criterion 8: one organization's Learning, Mentoring and Public website modules never touch another's.
     [Fact]
-    public async Task Turning_the_Waypoint_modules_on_for_one_organization_leaves_the_other_unchanged()
+    public async Task Turning_Learning_Mentoring_and_Public_website_on_for_one_organization_leaves_the_other_unchanged()
     {
         var response = await Save(Grace, "Roster", "RollCall", "QuickCards", "Learning", "Mentoring", "PublicWebsite");
 

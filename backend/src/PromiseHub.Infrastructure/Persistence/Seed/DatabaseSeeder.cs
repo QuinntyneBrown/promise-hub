@@ -32,7 +32,7 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
         Add(northgate);
 
         // Harbourview runs the whole suite; Northgate, on the Free plan, runs check-in only (L2-004, L2-005).
-        // Harbourview also runs Learning and Mentoring from Waypoint; Public website stays off everywhere (ADR 0043).
+        // Harbourview also runs Learning and Mentoring; Public website stays off everywhere (ADR 0043).
         Modules(Harbourview, [.. ModuleCatalog.Suite, ModuleId.Learning, ModuleId.Mentoring]);
         Modules(Northgate, [ModuleId.Roster, ModuleId.RollCall, ModuleId.QuickCards]);
 
@@ -44,7 +44,7 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
         Staff(Harbourview, "Aisha Bello", "aisha@harbourview.example", Role.YouthWorker);
         Staff(Northgate, "Priya Raman", "priya@harbourview.example", Role.VolunteerCoordinator);
         Staff(Northgate, "Grace Mensah", "grace@northgate.example", Role.Admin);
-        // From Waypoint (ADR 0043): youth, mentors and a volunteer in both organizations.
+        // Participants (ADR 0043): youth, mentors and a volunteer in both organizations.
         // Each youth account links to its own child record (L2-045): Sofía is 12 and needs guardian consent; Nadia is 18.
         Staff(Harbourview, "Sofía Rivera", "sofia@harbourview.example", Role.Youth, child: "Sofía Rivera");
         Staff(Harbourview, "Nadia Haddad", "nadia@harbourview.example", Role.Youth, child: "Nadia Haddad");

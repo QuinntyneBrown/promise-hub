@@ -49,7 +49,7 @@ By the end, the viewer can:
 ## Demo commands
 
 ```sh
-dotnet test backend/PromiseHub.sln --filter "WaypointModuleGateTests|ParticipantRoleTests|YouthLinkTests|ModuleConfigurationTests"
+dotnet test backend/PromiseHub.sln --filter "ParticipantModuleGateTests|ParticipantRoleTests|YouthLinkTests|ModuleConfigurationTests"
 cd e2e && npx playwright test tests/shell/participant-shell.spec.ts tests/learning tests/curriculum tests/mentoring tests/website
 node tools/video-record/record-clips.mjs docs/videos/49-merge-waypoint-foundation --base http://localhost:4317
 ```

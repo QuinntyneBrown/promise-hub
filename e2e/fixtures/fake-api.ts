@@ -645,7 +645,7 @@ export class FakeApi {
   }
 
   /** The caller when signed in, their module is on and their role holds the permission; otherwise answers 401, 404 or 403. */
-  private async waypointCaller(route: Route, module: ModuleId, allowed: (m: Membership) => boolean): Promise<Membership | null> {
+  private async participantModuleCaller(route: Route, module: ModuleId, allowed: (m: Membership) => boolean): Promise<Membership | null> {
     const m = memberships.find((x) => x.id === this.membershipId);
     if (!m) {
       await this.unauthenticated(route);
@@ -664,7 +664,7 @@ export class FakeApi {
 
   /** GET /learning/me: the youth's own linked child only (L2-007 criterion 9, L2-045). */
   private async learner(route: Route): Promise<void> {
-    const m = await this.waypointCaller(route, 'Learning', can.learn);
+    const m = await this.participantModuleCaller(route, 'Learning', can.learn);
     if (!m) return;
     const linked = this.youthLinks.get(m.id);
     const found = linked ? this.households.flatMap((h) => h.children).find((c) => c.id === linked) : undefined;
@@ -674,13 +674,13 @@ export class FakeApi {
   }
 
   private async curriculum(route: Route): Promise<void> {
-    if (!(await this.waypointCaller(route, 'Learning', can.authorCurriculum))) return;
+    if (!(await this.participantModuleCaller(route, 'Learning', can.authorCurriculum))) return;
     return route.fulfill({ json: { tracks: [] } });
   }
 
   /** GET /mentoring/youth: only the youth assigned to the mentor; there are no assignments yet. */
   private async mentoredYouth(route: Route): Promise<void> {
-    if (!(await this.waypointCaller(route, 'Mentoring', can.mentorYouth))) return;
+    if (!(await this.participantModuleCaller(route, 'Mentoring', can.mentorYouth))) return;
     return route.fulfill({ json: { youth: [] } });
   }
 

@@ -55,7 +55,7 @@ export const MODULE_CATALOG: {
     description: 'Grant-ready attendance and outcomes.',
     needs: ['Roster'],
   },
-  // From Waypoint (ADR 0043): switched on one at a time, never by the whole-suite preset.
+  // Learning, Mentoring and Public website (ADR 0043): switched on one at a time, never by the whole-suite preset.
   {
     id: 'Learning',
     name: 'Learning',

@@ -21,7 +21,7 @@ MODULES = [
     ("notify", "Messages", "Texts, emails, push; no-show alerts.", R_NOTIFY, ["roster"]),
     ("incidents", "Incident log", "Reports, review, audit trail.", R_INC, ["roster"]),
     ("reports", "Reports", "Grant-ready attendance and outcomes.", R_REPORTS, ["roster"]),
-    # From Waypoint (ADR 0043); not in the "Whole suite" preset, switched on one at a time.
+    # Learning, Mentoring and Public website (ADR 0043); not in the "Whole suite" preset, switched on one at a time.
     ("learning", "Learning", "Lessons, quizzes, assignments and badges for youth.", "L1-023", ["roster"]),
     ("mentoring", "Mentoring", "Mentors, assigned youth, check-ins and at-risk flags.", "L1-024", ["roster"]),
     ("website", "Public website", "Your organization’s public pages.", "L1-025", ["roster"]),

@@ -5,9 +5,9 @@ using PromiseHub.Infrastructure.Persistence.Seed;
 
 namespace PromiseHub.Api.Tests;
 
-// L2-005 criteria 6 and 7, L2-007 criteria 9, 10 and 12: each Waypoint module's endpoints answer 404 while it is off,
+// L2-005 criteria 6 and 7, L2-007 criteria 9, 10 and 12: each of Learning, Mentoring and Public website's endpoints answer 404 while it is off,
 // per organization, and only the roles they serve pass.
-public sealed class WaypointModuleGateTests : IAsyncLifetime
+public sealed class ParticipantModuleGateTests : IAsyncLifetime
 {
     private static readonly Guid Tom = DatabaseSeeder.MembershipId(DatabaseSeeder.Harbourview, "tom@harbourview.example");
     private static readonly Guid Marisol = DatabaseSeeder.MembershipId(DatabaseSeeder.Harbourview, "marisol@harbourview.example");
