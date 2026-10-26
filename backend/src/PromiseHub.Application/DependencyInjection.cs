@@ -49,6 +49,8 @@ public static class DependencyInjection
         services.AddScoped<Reports.TodayHandler>();
         services.AddScoped<Reports.ReportCalculator>();
         services.AddScoped<Reports.ReportsHandler>();
+        services.AddScoped<Surveys.SendSurveyHandler>();
+        services.AddScoped<Surveys.GuardianSurveyHandler>();
         services.AddScoped<Search.SearchHandler>();
         services.AddScoped<Notifications.NotificationWriter>();
         services.AddScoped<Notifications.NotificationsHandler>();

@@ -225,6 +225,11 @@ export class FakeApi {
   ]);
   /** Households whose device has verified a code (the HttpOnly cookie, in the fake). */
   private trustedHouseholds = new Set<string>();
+  /** Survey links as texted after an event: token → household, child and event; answers by token. */
+  private surveyLinks = new Map<string, { householdId: string; childId: string; eventId: string; organizationId: string; closed?: boolean }>([
+    ['tok-survey-mateo', { householdId: 'hh-rivera', childId: 'c-mateo', eventId: 'e-tutoring-today', organizationId: 'org-harbourview' }],
+  ]);
+  private surveyAnswers = new Map<string, { rating: number; comment: string | null }>();
   private wrongCodes = new Map<string, number>();
   private lockedLinks = new Set<string>();
   /** The six-digit code the fake texts to a contact on file. */
@@ -371,6 +376,9 @@ export class FakeApi {
     ['GET', /^\/api\/today$/, (route) => this.today(route)],
     ['GET', /^\/api\/search$/, (route) => this.search(route)],
     ['GET', /^\/api\/reports$/, (route) => this.report(route)],
+    ['POST', /^\/api\/events\/(?<id>[^/]+)\/survey$/, (route, p) => this.sendSurvey(route, p['id']!)],
+    ['GET', /^\/api\/g\/survey\/(?<token>[^/]+)$/, (route, p) => this.guardianSurvey(route, p['token']!)],
+    ['POST', /^\/api\/g\/survey\/(?<token>[^/]+)$/, (route, p) => this.answerSurvey(route, p['token']!)],
     ['POST', /^\/api\/reports\/exports$/, (route) => this.exportReport(route)],
     ['GET', /^\/api\/reports\/exports\/(?<id>[^/]+)$/, (route, p) => this.downloadExport(route, p['id']!)],
     ['GET', /^\/api\/notifications$/, (route) => this.listNotifications(route)],
@@ -2367,7 +2375,7 @@ export class FakeApi {
   /** A slip link or a home link: either picks the household. */
   private linkOf(token: string): { householdId: string } | undefined {
     const home = this.homeLinks.get(token);
-    return home ? { householdId: home } : this.guardianLinks.get(token);
+    return home ? { householdId: home } : (this.guardianLinks.get(token) ?? this.surveyLinks.get(token));
   }
 
   private async guardianHome(route: Route, token: string): Promise<void> {
@@ -2983,6 +2991,11 @@ export class FakeApi {
         .map((p) => ({ id: p.id, name: p.name, attendanceRate: rate(sessions.filter((e) => e.programId === p.id)) })),
       languages: [...languages.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([language, households]) => ({ language, households })),
       masked: mask,
+      surveyResponses: [...this.surveyAnswers.keys()].filter((t) => this.surveyLinks.get(t)?.organizationId === m.organizationId).length,
+      surveyAverage: (() => {
+        const r = [...this.surveyAnswers.entries()].filter(([t]) => this.surveyLinks.get(t)?.organizationId === m.organizationId).map(([, a]) => a.rating);
+        return r.length ? Math.round((r.reduce((a, b) => a + b, 0) / r.length) * 10) / 10 : null;
+      })(),
     };
   }
 
@@ -3004,6 +3017,66 @@ export class FakeApi {
     const fileName = `${org.name.toLowerCase().split(' ').join('-')}-report-2026-11-05.csv`;
     this.reportExports.set(id, { organizationId: m.organizationId, fileName, csv });
     return route.fulfill({ status: 201, json: { id, fileName, rows: r.ages.length + r.programs.length + r.languages.length + 4, expiresAt: '2026-11-12T21:12:00Z' } });
+  }
+
+  /** Closes a survey link, as a week after sending. */
+  closeSurvey(token: string): void {
+    this.surveyLinks.get(token)!.closed = true;
+  }
+
+  private async sendSurvey(route: Route, eventId: string): Promise<void> {
+    const m = await this.reportsCaller(route);
+    if (!m) return;
+    const e = this.events.find((x) => x.id === eventId && x.organizationId === m.organizationId);
+    if (!e) return route.fulfill({ status: 404 });
+    const program = this.programs.find((p) => p.id === e.programId)!;
+    const households = new Set(this.households.filter((h) => h.children.some((c) => program.roster.includes(c.id))).map((h) => h.id));
+    return route.fulfill({ status: 201, json: { id: `survey-${this.nextId++}`, households: households.size, closesAt: '2026-11-12T21:12:00Z' } });
+  }
+
+  private surveyScope(token: string) {
+    const link = this.surveyLinks.get(token);
+    const household = link ? this.households.find((h) => h.id === link.householdId) : undefined;
+    const org = link ? organizations.find((o) => o.id === link.organizationId) : undefined;
+    return link && household && org ? { link, household, org } : null;
+  }
+
+  /** Mirrors backend GuardianSurveyHandler. */
+  private async guardianSurvey(route: Route, token: string): Promise<void> {
+    const s = this.surveyScope(token);
+    if (!s) return route.fulfill({ status: 410, json: { code: 'link-expired', organization: null, phone: null } });
+    if (!this.modules.get(s.org.id)!.includes('Reports')) return route.fulfill({ status: 404 });
+    if (!this.trustedHouseholds.has(s.household.id)) {
+      const contacts = s.household.guardians.filter((g) => g.mobile).map((g) => `•••-•••-${g.mobile!.slice(-4)}`);
+      return route.fulfill({ status: 401, json: { code: 'verification-required', language: this.guardianLanguage(s.household.language), organization: s.org.name, phone: '905-555-0100', contacts } });
+    }
+    const child = s.household.children.find((c) => c.id === s.link.childId)!;
+    const event = this.events.find((e) => e.id === s.link.eventId)!;
+    const primary = this.sortedGuardians(s.household)[0];
+    return route.fulfill({
+      json: {
+        language: this.guardianLanguage(s.household.language),
+        organization: s.org.name,
+        organizationPhone: '905-555-0100',
+        guardianFirstName: primary?.name.split(' ')[0] ?? '',
+        eventName: event.name,
+        childFirstName: child.firstName,
+        sentBy: 'Marisol Delgado',
+        status: this.surveyAnswers.has(token) ? 'Answered' : s.link.closed ? 'Closed' : 'Open',
+      },
+    });
+  }
+
+  private async answerSurvey(route: Route, token: string): Promise<void> {
+    const s = this.surveyScope(token);
+    if (!s) return route.fulfill({ status: 410, json: { code: 'link-expired' } });
+    if (!this.modules.get(s.org.id)!.includes('Reports')) return route.fulfill({ status: 404 });
+    if (!this.trustedHouseholds.has(s.household.id)) return route.fulfill({ status: 401, json: { code: 'verification-required' } });
+    if (this.surveyAnswers.has(token) || s.link.closed) return route.fulfill({ status: 409 });
+    const b = route.request().postDataJSON() as { rating: number | null; comment: string | null };
+    if (!(b.rating && b.rating >= 1 && b.rating <= 5)) return route.fulfill({ status: 422, json: { errors: { rating: 'Pick a number from 1 to 5.' } } });
+    this.surveyAnswers.set(token, { rating: b.rating, comment: b.comment?.trim() || null });
+    return route.fulfill({ status: 204 });
   }
 
   private async downloadExport(route: Route, id: string): Promise<void> {

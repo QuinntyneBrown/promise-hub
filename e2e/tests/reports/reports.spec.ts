@@ -37,6 +37,16 @@ test.describe('Produce grant reports as a program director', () => {
     await reports.expectAccessible();
   });
 
+  test('Given a past session, when a survey is sent, then the households are told and answers show in the report', async ({ page }) => {
+    const reports = new ReportsPage(page);
+    await reports.open();
+
+    await reports.sendSurvey('Tutoring night');
+
+    await expect(reports.toast).toContainText('Survey sent to 3 households');
+    await expect(reports.stat('Guardian feedback')).toHaveText('No answers yet');
+  });
+
   test('Given the report fails, when Reports opens, then it offers to try again', async ({ page, api }) => {
     api.failNext('/api/reports', 500);
     const reports = new ReportsPage(page);

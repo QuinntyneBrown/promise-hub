@@ -16,6 +16,8 @@ Terms used in this document:
 
 ## Built so far
 
+Slice 38 added the survey page (`GuardianSurveyPage`, `survey-text.ts`) on the same verified links and language rules as the slip and home pages (ADR 0032).
+
 Slice 12 delivered the English, Spanish and French strings of the slip page, `html lang` from the household language, `ph-guardian-shell` with the organization's contact in the footer and one primary action per state (ADR 0015). The language selector, translated message bodies and the other guardian pages are not built yet.
 
 ## Description

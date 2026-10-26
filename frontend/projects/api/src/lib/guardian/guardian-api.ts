@@ -1,3 +1,4 @@
+import type { GuardianSurvey } from './guardian-survey';
 import type { NewPickup } from '../pickups/new-pickup';
 import type { Observable } from 'rxjs';
 import type { WriteOutcome } from '../write-outcome';
@@ -11,6 +12,8 @@ import type { GuardianVerifyOutcome } from './guardian-verify-outcome';
 export interface GuardianApi {
   slip(token: string): Observable<GuardianSlipResult>;
   home(token: string): Observable<GuardianPageResult<GuardianHome>>;
+  survey(token: string): Observable<GuardianPageResult<GuardianSurvey>>;
+  answerSurvey(token: string, rating: number | null, comment: string): Observable<WriteOutcome>;
   answerNoShow(
     token: string,
     eventId: string,

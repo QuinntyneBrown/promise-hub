@@ -150,3 +150,5 @@ export * from './lib/reports/report';
 export * from './lib/reports/report-export';
 export * from './lib/reports/reports-api';
 export * from './lib/reports/reports-api.token';
+export * from './lib/guardian/guardian-survey';
+export * from './lib/reports/survey-sent';

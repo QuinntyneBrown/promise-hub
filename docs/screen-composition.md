@@ -60,6 +60,8 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Onboarding: phone / ready | `onboard-staff-phone`, `onboard-staff-ready` | `ph-auth-card`, `ph-stepper`, `ph-text-field`, `ph-list`, `ph-list-item`, `ph-button` | — |
 | Staff coverage | `coverage` (default, error, forbidden) | `ph-page-header`, `ph-list`, `ph-list-item`, `ph-badge` (gap), `ph-button`, `ph-error-page`, `ph-card`, `ph-empty-state`; assign dialog with `ph-dialog`, `ph-checkbox` | — |
 
+| Survey | `survey` (default, invalid, submitting, success, error, expired) | `ph-guardian-shell`, `ph-card`, `ph-radio-group` (1 to 5), `ph-textarea`, `ph-button`, `ph-alert`, `ph-text-field` (code), `ph-empty-state` | — |
+
 ## Dialogs
 
 | Dialog | Mock | Library components |

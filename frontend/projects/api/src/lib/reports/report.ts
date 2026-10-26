@@ -8,4 +8,6 @@ export interface Report {
   programs: { id: string; name: string; attendanceRate: number | null }[];
   languages: { language: string; households: number }[];
   masked: boolean;
+  surveyResponses: number;
+  surveyAverage: number | null;
 }

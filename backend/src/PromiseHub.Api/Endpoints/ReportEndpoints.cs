@@ -31,6 +31,9 @@ public static class ReportEndpoints
                 _ => Results.NotFound(),
             };
         });
+        app.MapPost("/events/{id:guid}/survey", async (Guid id, Application.Surveys.SendSurveyHandler handler, CancellationToken ct) =>
+            await handler.HandleAsync(id, ct) is { } sent ? Results.Created($"/surveys/{sent.Id}", sent) : Results.NotFound())
+            .RequireModule(ModuleId.Reports).RequirePermission(Permission.ViewReports);
         return app;
     }
 }

@@ -1,0 +1,131 @@
+@let r = result();
+@let text = t();
+@let st = s();
+<ph-guardian-shell
+  [organization]="organization()"
+  [phone]="phone()"
+  [contactText]="text.footer(organization() ?? '')"
+  [skipLabel]="text.skip"
+>
+  @switch (r?.status) {
+    @case (undefined) {
+      <h1>{{ text.loading }}</h1>
+    }
+    @case ('verify') {
+      @if (step() === 'locked') {
+        <h1>{{ text.verifyHeading }}</h1>
+        <ph-alert tone="danger" [title]="text.locked" />
+      } @else if (step() === 'code') {
+        <h1>{{ text.codeHeading }}</h1>
+        <p>{{ text.codeText }}</p>
+        <form class="stack" novalidate (ngSubmit)="verify()">
+          <ph-text-field
+            inputId="code"
+            [label]="text.codeLabel"
+            name="code"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            [error]="errors()['code'] ?? null"
+            [(ngModel)]="code"
+          />
+          <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
+            text.continue
+          }}</ph-button>
+          <ph-button variant="ghost" (click)="step.set('contact')">{{
+            text.differentContact
+          }}</ph-button>
+        </form>
+      } @else {
+        <h1>{{ text.verifyHeading }}</h1>
+        <p>{{ text.verifyText(organization() ?? '') }}</p>
+        <form class="stack" novalidate (ngSubmit)="requestCode()">
+          <ph-text-field
+            inputId="contact"
+            [label]="text.contactLabel"
+            name="contact"
+            autocomplete="tel"
+            [(ngModel)]="contact"
+          />
+          <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
+            text.sendCode
+          }}</ph-button>
+        </form>
+      }
+    }
+    @case ('gone') {
+      <h1>{{ text.expiredHeading }}</h1>
+      <ph-card>
+        <p>{{ text.expiredText(organization() ?? 'the organization') }}</p>
+      </ph-card>
+    }
+    @case ('not-found') {
+      <ph-empty-state
+        icon="lock"
+        [title]="text.notAvailable"
+        [text]="text.notAvailableText"
+        [headingLevel]="1"
+      />
+    }
+    @case ('error') {
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        [title]="text.errorHeading"
+        [text]="text.tryAgain"
+        [headingLevel]="1"
+      >
+        <ph-button variant="primary" (click)="load(token())">{{ text.tryAgain }}</ph-button>
+      </ph-empty-state>
+    }
+    @case ('loaded') {
+      @if (r?.status === 'loaded') {
+        @let v = r.value;
+        @if (v.status === 'Answered') {
+          <ph-card>
+            <div class="stack" role="status">
+              <h1>{{ st.thanks }}</h1>
+              <p>{{ st.thanksText }}</p>
+            </div>
+          </ph-card>
+        } @else if (v.status === 'Closed') {
+          <h1>{{ st.closedHeading }}</h1>
+          <ph-card>
+            <p>{{ st.closedText(v.organization) }}</p>
+          </ph-card>
+        } @else {
+          <h1>{{ st.heading(v.guardianFirstName) }}</h1>
+          <p>{{ st.about(v.eventName, v.sentBy) }}</p>
+          @if (failed()) {
+            <ph-alert tone="danger" [title]="st.failed" />
+          }
+          <form class="stack" novalidate (ngSubmit)="send()">
+            <ph-card>
+              <div class="stack">
+                <ph-radio-group
+                  [legend]="st.rate(v.childFirstName)"
+                  [options]="scale"
+                  [error]="errors()['rating'] ?? null"
+                  name="rating"
+                  [(ngModel)]="rating"
+                />
+                <p class="hint">1 · {{ st.low }} — 5 · {{ st.high }}</p>
+                <ph-textarea
+                  inputId="comment"
+                  [label]="st.comment"
+                  [rows]="3"
+                  [optional]="true"
+                  [placeholder]="st.placeholder"
+                  name="comment"
+                  [(ngModel)]="comment"
+                />
+              </div>
+            </ph-card>
+            <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
+              st.send
+            }}</ph-button>
+          </form>
+        }
+      }
+    }
+  }
+</ph-guardian-shell>
