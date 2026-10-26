@@ -228,6 +228,8 @@ export class FakeApi {
   /** The six-digit code the fake texts to a contact on file. */
   readonly guardianCode = '482913';
   private smsUsed = new Map<string, number>();
+  /** Notification settings per organization, when saved; otherwise the defaults. */
+  private notificationSettings = new Map<string, { noShowDelayMinutes: number; emailSupervisorsOnIncidents: boolean; smsCap: number }>();
   /** Who works each session; youth workers run only these (as seeded: Jaylen and Aisha tonight). */
   private sessionStaff = new Map<string, string[]>([['e-tutoring-today', ['m-jaylen', 'm-aisha']]]);
   private nextId = 1;
@@ -358,6 +360,8 @@ export class FakeApi {
     ['POST', /^\/api\/auth\/sign-in$/, (route) => this.signIn(route)],
     ['POST', /^\/api\/auth\/mfa$/, (route) => this.mfa(route)],
     ['POST', /^\/api\/auth\/sign-out$/, (route) => this.signOut(route)],
+    ['GET', /^\/api\/settings\/notifications$/, (route) => this.getNotificationSettings(route)],
+    ['PUT', /^\/api\/settings\/notifications$/, (route) => this.saveNotificationSettings(route)],
     ['GET', /^\/api\/settings\/modules$/, (route) => this.getModules(route)],
     ['PUT', /^\/api\/settings\/modules$/, (route) => this.saveModules(route)],
     ['GET', /^\/api\/today$/, (route) => this.today(route)],
@@ -573,6 +577,32 @@ export class FakeApi {
       return this.unauthenticated(route);
     }
     this.membershipId = null;
+    return route.fulfill({ status: 204 });
+  }
+
+  private notificationSettingsOf(organizationId: string) {
+    const plan = organizations.find((o) => o.id === organizationId)!.plan;
+    const cap = plan === 'Free' ? 200 : plan === 'Standard' ? 2000 : 5000;
+    return this.notificationSettings.get(organizationId) ?? { noShowDelayMinutes: 15, emailSupervisorsOnIncidents: true, smsCap: cap };
+  }
+
+  /** Mirrors backend NotificationSettingsHandler. */
+  private async getNotificationSettings(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    return route.fulfill({ json: { ...this.notificationSettingsOf(organizationId), smsUsed: this.smsUsed.get(organizationId) ?? 0 } });
+  }
+
+  private async saveNotificationSettings(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    const b = route.request().postDataJSON() as { noShowDelayMinutes: number; emailSupervisorsOnIncidents: boolean; smsCap: number };
+    const used = this.smsUsed.get(organizationId) ?? 0;
+    const errors: Record<string, string> = {};
+    if (!(b.noShowDelayMinutes >= 5 && b.noShowDelayMinutes <= 60)) errors['noShowDelayMinutes'] = 'Choose between 5 and 60 minutes.';
+    if (!(b.smsCap >= Math.max(0, used))) errors['smsCap'] = `Can’t be below ${used.toLocaleString('en-US')}, already used this month.`;
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    this.notificationSettings.set(organizationId, { noShowDelayMinutes: b.noShowDelayMinutes, emailSupervisorsOnIncidents: b.emailSupervisorsOnIncidents, smsCap: b.smsCap });
     return route.fulfill({ status: 204 });
   }
 

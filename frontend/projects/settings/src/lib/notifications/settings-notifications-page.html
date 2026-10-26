@@ -1,0 +1,83 @@
+<ph-page-header title="Notifications" subtitle="No-show alerts, staff emails and the SMS cap" />
+@switch (state()) {
+  @case ('forbidden') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="lock"
+        title="Admins configure notifications"
+        text="Ask an admin or a program director."
+      >
+        <ph-button link="/">Back to Today</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('error') {
+    <div class="stack">
+      <ph-tabs label="Settings sections" [links]="sections" />
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="warning"
+          tone="error"
+          title="We couldn’t load notification settings"
+          text="Try again."
+        >
+          <ph-button variant="primary" (click)="load()">Try again</ph-button>
+        </ph-empty-state>
+      </ph-card>
+    </div>
+  }
+  @case ('loading') {
+    <div class="stack" aria-busy="true" aria-label="Loading notification settings">
+      <ph-tabs label="Settings sections" [links]="sections" />
+      <ph-skeleton shape="card" />
+      <ph-skeleton shape="card" />
+    </div>
+  }
+  @default {
+    <form class="stack form" novalidate (ngSubmit)="save()">
+      <ph-tabs label="Settings sections" [links]="sections" />
+      @if (summary().length) {
+        <ph-error-summary [items]="summary()" />
+      }
+      <ph-card title="No-show alert">
+        <ph-text-field
+          class="narrow"
+          inputId="noShowDelayMinutes"
+          label="Minutes after start"
+          type="number"
+          inputmode="numeric"
+          help="A text goes to the guardian when a child isn’t checked in by then."
+          [error]="errors()['noShowDelayMinutes'] ?? null"
+          name="delay"
+          [ngModel]="delay()"
+          (ngModelChange)="delay.set($event)"
+        />
+      </ph-card>
+      <ph-card title="Staff emails">
+        <ph-switch
+          label="Email supervisors on new incidents"
+          name="emails"
+          [ngModel]="emails()"
+          (ngModelChange)="emails.set($event)"
+        />
+      </ph-card>
+      <ph-card title="Texts and cost">
+        <ph-text-field
+          class="narrow"
+          inputId="smsCap"
+          label="Monthly SMS cap (segments)"
+          type="number"
+          inputmode="numeric"
+          [help]="usedHelp()"
+          [error]="errors()['smsCap'] ?? null"
+          name="cap"
+          [ngModel]="cap()"
+          (ngModelChange)="cap.set($event)"
+        />
+      </ph-card>
+      <div>
+        <ph-button variant="primary" type="submit" [busy]="saving()">Save changes</ph-button>
+      </div>
+    </form>
+  }
+}

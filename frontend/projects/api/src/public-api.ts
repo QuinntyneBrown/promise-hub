@@ -143,3 +143,6 @@ export * from './lib/notifications/app-notification';
 export * from './lib/notifications/notification-list';
 export * from './lib/notifications/notifications-api';
 export * from './lib/notifications/notifications-api.token';
+export * from './lib/notifications/notification-settings';
+export * from './lib/notifications/notification-settings-api';
+export * from './lib/notifications/notification-settings-api.token';
