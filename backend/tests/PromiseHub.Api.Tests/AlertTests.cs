@@ -7,7 +7,7 @@ using PromiseHub.Infrastructure.Persistence.Seed;
 
 namespace PromiseHub.Api.Tests;
 
-// L2-041 criteria 2 and 3: alerts for the error rate and for an old job queue, per tenant.
+// L2-041 criteria 2, 3 and 5: alerts for the error rate and for an old job queue, per tenant, raised once.
 public sealed class AlertTests : IAsyncLifetime
 {
     private static readonly Guid Tom = DatabaseSeeder.MembershipId(DatabaseSeeder.Harbourview, "tom@harbourview.example");
@@ -43,6 +43,20 @@ public sealed class AlertTests : IAsyncLifetime
 
         var alert = Assert.Single(_alerts.Raised);
         Assert.Equal("error-rate", alert.Kind);
+    }
+
+    [Fact]
+    public async Task Too_few_requests_to_judge_by_raise_nothing_even_with_a_fault()
+    {
+        for (var i = 0; i < 10; i++)
+        {
+            await Client().GetAsync("/today");
+        }
+        await Client().GetAsync("/test/fault");
+
+        await Monitor.CheckAsync();
+
+        Assert.Empty(_alerts.Raised);
     }
 
     [Fact]

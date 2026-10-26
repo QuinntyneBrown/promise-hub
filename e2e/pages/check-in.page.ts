@@ -120,6 +120,54 @@ export class CheckInPage extends BasePage {
     await expect(this.dialog).toBeHidden();
   }
 
+  /** Milliseconds, measured in the page, from the tap on Check in until the row says the child is checked in (L2-033). */
+  async timeCheckIn(name: string): Promise<number> {
+    await expect(this.checkInButton(name)).toBeVisible();
+    const elapsed = await this.page.evaluate(
+      (label) =>
+        new Promise<number>((resolve) => {
+          // The row re-renders when it changes, so find it afresh on every frame.
+          const button = document.querySelector<HTMLButtonElement>(`button[aria-label="Check in ${label}"]`)!;
+          const start = performance.now();
+          const done = () => {
+            const row = document.querySelector(`[aria-label="Quick Card for ${label}"]`)?.closest('li, [role="listitem"]');
+            return row?.textContent?.includes('Checked in') ? resolve(performance.now() - start) : requestAnimationFrame(done);
+          };
+          button.click();
+          requestAnimationFrame(done);
+        }),
+      name,
+    );
+    await expect(this.row(name)).toContainText('Checked in');
+    return elapsed;
+  }
+
+  /** Types the text one key at a time and returns, per keystroke, the ms until the roster has settled on its rows (L2-033). */
+  async timeSearch(text: string): Promise<number[]> {
+    const box = this.page.getByRole('searchbox', { name: 'Find a child' });
+    const times: number[] = [];
+    for (let i = 1; i <= text.length; i++) {
+      const value = text.slice(0, i);
+      times.push(
+        await box.evaluate(
+          (input, typed) =>
+            new Promise<number>((resolve) => {
+              const field = input as HTMLInputElement;
+              const names = () => [...document.querySelectorAll('[data-testid="roster-name"]')].map((n) => n.textContent ?? '');
+              const start = performance.now();
+              field.value = typed;
+              field.dispatchEvent(new Event('input', { bubbles: true }));
+              const words = typed.toLowerCase();
+              const check = () => (names().every((n) => n.toLowerCase().includes(words)) ? resolve(performance.now() - start) : requestAnimationFrame(check));
+              requestAnimationFrame(check);
+            }),
+          value,
+        ),
+      );
+    }
+    return times;
+  }
+
   async search(text: string): Promise<void> {
     await this.page.getByRole('searchbox', { name: 'Find a child' }).fill(text);
   }

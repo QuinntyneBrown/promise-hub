@@ -23,6 +23,23 @@ export abstract class BasePage {
     expect(results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(', ')}`)).toEqual([]);
   }
 
+  /** How long the current page took to load, in ms from navigation: first contentful paint and DOM interactive (L2-033). */
+  async loadTimings(): Promise<{ firstContentfulPaint: number; interactive: number }> {
+    return this.page.evaluate(
+      () =>
+        new Promise<{ firstContentfulPaint: number; interactive: number }>((resolve) => {
+          // The paint entry can arrive after the page's heading, so wait for it rather than read it once.
+          new PerformanceObserver((list, observer) => {
+            const paint = list.getEntriesByName('first-contentful-paint')[0];
+            if (!paint) return;
+            observer.disconnect();
+            const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+            resolve({ firstContentfulPaint: paint.startTime, interactive: navigation.domInteractive });
+          }).observe({ type: 'paint', buffered: true });
+        }),
+    );
+  }
+
   async expectNoHorizontalScroll(): Promise<void> {
     const overflow = await this.page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     expect(overflow).toBeLessThanOrEqual(0);
