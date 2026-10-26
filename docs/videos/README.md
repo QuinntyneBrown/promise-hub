@@ -55,6 +55,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 45 | [Manage sessions](45-manage-sessions/README.md) | ~2 min | The account page, recovery codes shown once and stored scrambled, and signing out everywhere else |
 | 46 | [Recover account access](46-recover-account-access/README.md) | ~2 min | A one-hour, single-use emailed link, a new password, and straight back to Today |
 | 47 | [Manage organizations](47-manage-organizations/README.md) | ~2 min | Platform admins list, add, suspend and reinstate organizations; suspension deletes nothing |
+| 48 | [Operational readiness](48-operational-readiness/README.md) | ~3 min | One log line per request, on-call alerts for errors and stuck queues, and performance budgets measured in CI |
 
 ## Making or updating a video
 

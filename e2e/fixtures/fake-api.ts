@@ -157,6 +157,9 @@ const MFA_ROLES = new Set(['Admin', 'ProgramDirector']);
  * membership signed in; the tenant always comes from it, never from the request.
  * Any request the fake does not route is recorded and fails the test.
  */
+/** The reference a faked fault answers with, as the API's request trace id would be. */
+export const FAULT_REFERENCE = '0HNA1B2C3D4E5:00000001';
+
 export class FakeApi {
   readonly unrouted: string[] = [];
   private failures = new Map<string, number>();
@@ -563,7 +566,8 @@ export class FakeApi {
     const url = new URL(route.request().url());
     const failure = this.failures.get(url.pathname);
     if (failure) {
-      return route.fulfill({ status: failure });
+      // A fault answers as the API's ExceptionHandlingMiddleware does: a code and a reference to quote (L2-041).
+      return route.fulfill(failure >= 500 ? { status: failure, json: { code: 'server-error', reference: FAULT_REFERENCE } } : { status: failure });
     }
     // A suspended organization is closed to its staff; platform administration stays open (L2-003).
     const caller = memberships.find((x) => x.id === this.membershipId);

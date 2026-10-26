@@ -1,0 +1,11 @@
+<div class="head">
+  <ph-avatar [name]="name()" size="lg" tint="peach" />
+  <div>
+    <h1 class="name">{{ name() }}</h1>
+    @if (subtitle()) {
+      <p class="muted">{{ subtitle() }}</p>
+    }
+    <ng-content select="[phQuickCardStatus]" />
+  </div>
+</div>
+<div class="body" data-testid="quick-card-body"><ng-content /></div>

@@ -51,6 +51,7 @@ public abstract class ApiFactoryBase : WebApplicationFactory<Program>
         // The tests run the send and retention jobs by hand.
         builder.UseSetting("Messaging:Dispatch", "false");
         builder.UseSetting("Privacy:Retention", "false");
+        builder.UseSetting("Ops:Alerts", "false");
         builder.UseSetting("Sms:InboundSecret", InboundSmsSecret);
         builder.ConfigureServices(services =>
         {

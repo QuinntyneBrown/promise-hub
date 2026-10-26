@@ -21,6 +21,7 @@ import {
   PhTextField,
   PhTextarea,
   RadioOption,
+  PhInlineMessage,
 } from '@promisehub/components';
 import { GuardianLanguage, guardianText } from '../guardian-text';
 import { surveyText } from '../survey-text';
@@ -31,6 +32,7 @@ type Step = 'contact' | 'code' | 'locked';
 @Component({
   selector: 'ph-guardian-survey-page',
   imports: [
+    PhInlineMessage,
     FormsModule,
     PhAlert,
     PhButton,

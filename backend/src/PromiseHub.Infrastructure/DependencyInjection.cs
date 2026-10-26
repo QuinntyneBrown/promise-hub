@@ -28,6 +28,9 @@ public static class DependencyInjection
         services.AddSingleton<IEmailSender, LoggingEmailSender>();
         services.AddSingleton<MessageDispatchRunner>();
         services.AddSingleton<Privacy.RetentionRunner>();
+        services.AddSingleton<Observability.RequestMetrics>();
+        services.AddSingleton<Observability.OpsAlertMonitor>();
+        services.AddSingleton<Observability.IAlertSender, Observability.LoggingAlertSender>();
         services.AddSingleton<PromiseHub.Application.Imports.ISpreadsheetReader, Imports.SpreadsheetReader>();
         return services;
     }

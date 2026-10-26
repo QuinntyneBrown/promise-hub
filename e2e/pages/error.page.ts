@@ -11,6 +11,11 @@ export class ErrorPage extends BasePage {
     return this.page.getByTestId('empty-state-text');
   }
 
+  /** The reference a person can quote to support, under a server error's message. */
+  get reference(): Locator {
+    return this.page.getByTestId('error-reference');
+  }
+
   action(name: string): Locator {
     return this.page.getByRole('main').getByRole('link', { name }).or(this.page.getByRole('main').getByRole('button', { name }));
   }

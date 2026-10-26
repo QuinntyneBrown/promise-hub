@@ -38,13 +38,15 @@
     <div class="split">
       <ph-card title="Demographics" [flush]="true">
         <ph-table caption="Children by age" [columns]="ageColumns" [rows]="v.ages" />
-        <p class="hint">
-          @if (v.masked) {
-            Counts under 5 show as “&lt;5”.
-          } @else {
-            Exports show counts under 5 as “&lt;5”.
-          }
-        </p>
+        <div class="note">
+          <ph-inline-message>
+            @if (v.masked) {
+              Counts under 5 show as “&lt;5”.
+            } @else {
+              Exports show counts under 5 as “&lt;5”.
+            }
+          </ph-inline-message>
+        </div>
       </ph-card>
       <div class="stack">
         <ph-card title="Attendance by program">

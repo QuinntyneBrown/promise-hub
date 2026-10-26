@@ -17,10 +17,25 @@ export abstract class BasePage {
   async expectAccessible(): Promise<void> {
     // Let layout settle (focus moves, scrolls, toasts) so axe checks the page as it rests, not mid-frame.
     await this.page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
-    const results = await new AxeBuilder({ page: this.page })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-      .analyze();
+    const results = await new AxeBuilder({ page: this.page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
     expect(results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(', ')}`)).toEqual([]);
+  }
+
+  /** How long the current page took to load, in ms from navigation: first contentful paint and DOM interactive (L2-033). */
+  async loadTimings(): Promise<{ firstContentfulPaint: number; interactive: number }> {
+    return this.page.evaluate(
+      () =>
+        new Promise<{ firstContentfulPaint: number; interactive: number }>((resolve) => {
+          // The paint entry can arrive after the page's heading, so wait for it rather than read it once.
+          new PerformanceObserver((list, observer) => {
+            const paint = list.getEntriesByName('first-contentful-paint')[0];
+            if (!paint) return;
+            observer.disconnect();
+            const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+            resolve({ firstContentfulPaint: paint.startTime, interactive: navigation.domInteractive });
+          }).observe({ type: 'paint', buffered: true });
+        }),
+    );
   }
 
   async expectNoHorizontalScroll(): Promise<void> {

@@ -17,6 +17,7 @@ import {
   SelectOption,
   TableColumn,
   ToastService,
+  PhInlineMessage,
 } from '@promisehub/components';
 import { Subject, merge, startWith, switchMap } from 'rxjs';
 import { ExportDialog, ExportDialogData } from '../export-dialog/export-dialog';
@@ -26,6 +27,7 @@ import { SendSurveyDialog } from '../send-survey-dialog/send-survey-dialog';
 @Component({
   selector: 'ph-reports-page',
   imports: [
+    PhInlineMessage,
     FormsModule,
     PhButton,
     PhCard,

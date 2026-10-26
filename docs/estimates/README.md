@@ -1,30 +1,30 @@
 # Estimates
 
-- Overall effort: 216 days
-- Complete: 65%
+- Overall effort: 223 days
+- Complete: 64%
 
 | Subsystem | Effort | Complete |
 |---|---|---|
-| [identity](identity.md) | 14 days | 76% |
-| [organizations](organizations.md) | 34 days | 71% |
-| [platform](platform.md) | 24 days | 23% |
+| [identity](identity.md) | 14 days | 74% |
+| [organizations](organizations.md) | 34 days | 70% |
+| [platform](platform.md) | 24 days | 36% |
 | [shell](shell.md) | 9 days | 51% |
-| [households](households.md) | 6 days | 85% |
-| [programs](programs.md) | 5 days | 75% |
+| [households](households.md) | 6 days | 80% |
+| [programs](programs.md) | 5 days | 70% |
 | [staff](staff.md) | 5 days | 90% |
-| [enrollment](enrollment.md) | 5 days | 95% |
-| [events](events.md) | 5 days | 65% |
-| [attendance](attendance.md) | 27 days | 73% |
+| [enrollment](enrollment.md) | 5 days | 90% |
+| [events](events.md) | 5 days | 60% |
+| [attendance](attendance.md) | 27 days | 70% |
 | [messaging](messaging.md) | 14 days | 46% |
-| [notifications](notifications.md) | 8 days | 65% |
-| [slips](slips.md) | 17 days | 73% |
+| [notifications](notifications.md) | 8 days | 60% |
+| [slips](slips.md) | 17 days | 70% |
 | [guardian](guardian.md) | 9 days | 84% |
-| [incidents](incidents.md) | 6 days | 75% |
-| [reports](reports.md) | 10 days | 57% |
-| [imports](imports.md) | 5 days | 75% |
-| [billing](billing.md) | 10 days | 55% |
+| [incidents](incidents.md) | 6 days | 70% |
+| [reports](reports.md) | 10 days | 52% |
+| [imports](imports.md) | 5 days | 70% |
+| [billing](billing.md) | 10 days | 50% |
 | [audit](audit.md) | 6 days | 80% |
-| [search](search.md) | 4 days | 75% |
+| [search](search.md) | 4 days | 70% |
 
 ## Roadmap
 

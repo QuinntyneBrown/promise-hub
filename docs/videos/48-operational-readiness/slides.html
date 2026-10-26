@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 48 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="48" data-video-title="Operational readiness" data-parts="Introduction|Logs|Faults|Phone|Alerts|Budgets|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 48</div>
+  <h1>Operational readiness</h1>
+  <p class="lead">See trouble first, stay quick</p>
+</section>
+
+<section id="logs" data-part="1" data-cue="Every request writes one structured log line">
+  <h2>One line per request</h2>
+  <ul>
+    <li>Organization, route template, status, duration</li>
+    <li>A correlation id to find it again</li>
+    <li>Never a child's name or a link token</li>
+    <li>Logged outside the fault handler</li>
+  </ul>
+</section>
+
+<section id="fault" data-part="2" data-cue="Here is Jaylen opening PromiseHub on a laptop" data-clip="clips/fault-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>A server fault</h3><p>Try again recovers.</p></div>
+</section>
+
+<section id="fault-shots" data-part="2" data-cue="On our side, that same reference">
+  <h2>Error, then recovered</h2>
+  <div class="cols">
+    <img class="shot" alt="The server error page with Try again" src="shots/desktop-error.png">
+    <img class="shot" alt="Today after Try again" src="shots/desktop-recovered.png">
+  </div>
+</section>
+
+<section id="phone-states" data-part="3" data-cue="Before anyone arrives">
+  <h2>Default and empty</h2>
+  <div class="cols">
+    <img class="shot" alt="Check-in on a phone with four children not yet here" src="shots/phone-roster.png">
+    <img class="shot" alt="Check-in on a phone saying there are no sessions today" src="shots/phone-empty.png">
+  </div>
+</section>
+
+<section id="phone-outcomes" data-part="3" data-cue="A server fault gets the same page">
+  <h2>Error and success</h2>
+  <div class="cols">
+    <img class="shot" alt="The server error page on a phone with its reference" src="shots/phone-error.png">
+    <img class="shot" alt="Check-in on a phone after a child is checked in, with a toast" src="shots/phone-checked-in.png">
+  </div>
+</section>
+
+<section id="alerts" data-part="4" data-cue="Every request is also counted">
+  <h2>Alerts for on-call</h2>
+  <table class="facts">
+    <tr><th>Alert</th><th>When</th></tr>
+    <tr><td>Error rate</td><td>Over 1% of at least 20 requests, 5 minutes</td></tr>
+    <tr><td>Queue age</td><td>A message waiting over 10 minutes, per organization</td></tr>
+    <tr><td>Repeat</td><td>Once, again only after it clears</td></tr>
+  </table>
+</section>
+
+<section id="check-in" data-part="5" data-cue="Here is Jaylen checking in tonight's roster" data-clip="clips/check-in-phone.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Check-in at the door</h3><p>Rows update at once.</p></div>
+</section>
+
+<section id="budgets" data-part="5" data-cue="A budgets project loads Today">
+  <h2>Budgets in every build</h2>
+  <div class="cols">
+    <table class="facts">
+      <tr><th>Measure</th><th>Budget</th></tr>
+      <tr><td>First paint, cold</td><td>Under 1.5 s</td></tr>
+      <tr><td>Interactive</td><td>Under 2.5 s</td></tr>
+      <tr><td>Check-in row</td><td>Under 300 ms</td></tr>
+      <tr><td>Search keystroke</td><td>Under 200 ms</td></tr>
+    </table>
+    <img class="shot" alt="Check-in on a phone after two children are checked in" src="shots/phone-checked-in.png">
+  </div>
+</section>
+
+<section id="testing" data-part="6" data-cue="The API tests prove the log line">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Too few requests</td><td>No alert</td></tr>
+    <tr><td>Check-ins, server p95</td><td>Under 1 s</td></tr>
+    <tr><td>Two organizations at once</td><td>p95 under 500 ms</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="7" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>One log line per request, no names</li><li>Alerts fire once</li><li>Slow builds fail</li></ul>
+  <p class="muted">Next: backups and jobs</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

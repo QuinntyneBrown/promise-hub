@@ -16,6 +16,7 @@ import {
   PhTabs,
   RadioOption,
   ToastService,
+  PhInlineMessage,
 } from '@promisehub/components';
 import { SETTINGS_SECTIONS } from '../settings-sections';
 
@@ -23,6 +24,7 @@ import { SETTINGS_SECTIONS } from '../settings-sections';
 @Component({
   selector: 'ph-settings-privacy-page',
   imports: [
+    PhInlineMessage,
     FormsModule,
     PhBadge,
     PhButton,

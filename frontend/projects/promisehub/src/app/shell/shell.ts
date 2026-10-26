@@ -37,7 +37,13 @@ export class Shell {
       .pipe(
         catchError((error: HttpErrorResponse) => {
           if (error.status !== 401) {
-            void this.router.navigateByUrl('/server-error', { skipLocationChange: true });
+            // The API's fault answer carries a reference to its log line; the page shows it to quote (L2-041).
+            const reference =
+              typeof error.error?.reference === 'string' ? error.error.reference : null;
+            void this.router.navigateByUrl('/server-error', {
+              skipLocationChange: true,
+              state: { reference },
+            });
           }
           return EMPTY;
         }),

@@ -7,7 +7,6 @@ import {
   CallContact,
   Fact,
   PhAlert,
-  PhAvatar,
   PhBadge,
   PhButton,
   PhCallList,
@@ -18,6 +17,8 @@ import {
   PhList,
   PhListItem,
   PhQuickCardAlert,
+  PhQuickCard,
+  PhQuickCardSection,
 } from '@promisehub/components';
 import { EMPTY, Subject, catchError, startWith, switchMap } from 'rxjs';
 import { AddPickupData, AddPickupDialog } from '../add-pickup-dialog/add-pickup-dialog';
@@ -27,9 +28,10 @@ import { RemovePickupData, RemovePickupDialog } from '../remove-pickup-dialog/re
 @Component({
   selector: 'ph-quick-card-page',
   imports: [
+    PhQuickCard,
+    PhQuickCardSection,
     PhSyncChip,
     PhAlert,
-    PhAvatar,
     PhBadge,
     PhButton,
     PhCallList,

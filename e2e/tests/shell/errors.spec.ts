@@ -1,5 +1,6 @@
 import { test, expect } from '../../fixtures/test';
 import { ErrorPage } from '../../pages/error.page';
+import { FAULT_REFERENCE } from '../../fixtures/fake-api';
 
 // Full-page errors from the components library's error page (L2-035, L2-036).
 const pages = [
@@ -32,6 +33,18 @@ test.describe('Error pages', () => {
     await errorPage.open('/');
 
     await expect(errorPage.heading).toHaveText('Something went wrong on our side');
+  });
+
+  // L2-041: the 500 carries a reference to the request's log line, and the page shows it so support can find it.
+  test('Given the API fails with a reference, when the server error page shows, then it shows the reference to quote', async ({ page, api }) => {
+    api.failNext('/api/me', 500);
+    const errorPage = new ErrorPage(page);
+
+    await errorPage.open('/');
+
+    await expect(errorPage.heading).toHaveText('Something went wrong on our side');
+    await expect(errorPage.reference).toHaveText(`Reference: ${FAULT_REFERENCE}`);
+    await errorPage.expectAccessible();
   });
 
   test('Given the not-found page, when Go to Today is chosen, then Today opens', async ({ page }) => {
