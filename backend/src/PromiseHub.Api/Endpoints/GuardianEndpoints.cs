@@ -58,6 +58,10 @@ public static class GuardianEndpoints
         });
         g.MapPost("/home/{token}/pickup-requests/{requestId:guid}", async (string token, Guid requestId, DecidePickupRequest body, GuardianHomeHandler handler, HttpContext http, CancellationToken ct) =>
             ToHttp(await handler.DecidePickupAsync(Request(token, http), requestId, body, ct)));
+        g.MapPut("/home/{token}/household", async (string token, UpdateHouseholdRequest body, GuardianHomeHandler handler, HttpContext http, CancellationToken ct) =>
+            ToHttp(await handler.UpdateHouseholdAsync(Request(token, http), body, ct)));
+        g.MapPut("/home/{token}/children/{childId:guid}/medical", async (string token, Guid childId, UpdateMedicalRequest body, GuardianHomeHandler handler, HttpContext http, CancellationToken ct) =>
+            ToHttp(await handler.UpdateMedicalAsync(Request(token, http), childId, body, ct)));
         var enroll = g.MapGroup("/enroll/{slug}");
         enroll.MapGet("", async (string slug, PromiseHub.Application.Enrollment.GuardianEnrollmentHandler handler, CancellationToken ct) =>
             ToHttp(await handler.PageAsync(slug, ct)));

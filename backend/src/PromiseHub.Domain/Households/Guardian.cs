@@ -59,6 +59,18 @@ public sealed class Guardian : ITenantOwned, ISoftDeletable
         CanSign = canSign;
     }
 
+    /// <summary>The guardian corrects how to reach them from the family page (L2-011 criterion 7); a new email is assumed to work.</summary>
+    public void UpdateContact(string? mobile, string? email, string language)
+    {
+        if (!string.Equals(Email, email, StringComparison.OrdinalIgnoreCase))
+        {
+            EmailBounced = false;
+        }
+        Mobile = mobile;
+        Email = email;
+        Language = language;
+    }
+
     public void MarkEmailBounced() => EmailBounced = true;
 
     public void SoftDelete(DateTimeOffset now) => DeletedAt = now;
