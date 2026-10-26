@@ -32,7 +32,7 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Reset password | `reset-password` (default, invalid, submitting, success, error) | `ph-skip-link`, `ph-auth-card`, `ph-text-field`, `ph-button`, `ph-alert` | — |
 | Not found | `not-found` | `ph-error-page`, `ph-button` | — |
 | Forbidden | `forbidden` | `ph-error-page`, `ph-button` | — |
-| Server error | `server-error` | `ph-error-page`, `ph-button` | Retry reloads |
+| Server error | `server-error` | `ph-error-page`, `ph-button` | Retry reloads; Go to Today. The mock's reference line is not shown yet: the API answers the 500 with a reference, but reading it on the client (`CorrelationInterceptor`, `platform/observe-and-alert`) is deferred |
 | Offline | `offline` | `ph-error-page`, `ph-button` | Retry reloads |
 | Maintenance | `maintenance` | `ph-error-page`, `ph-button` | Retry reloads |
 
