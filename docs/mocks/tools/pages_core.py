@@ -56,11 +56,21 @@ def today(S):
                    f'<li>{avatar(GUARDIANS["nour"])}<div class="feed__body"><strong>Nour Haddad</strong> updated Yusuf’s medication<div class="feed__meta">Yesterday, 8:22 pm</div></div></li>'
                    f'<li>{avatar(M)}<div class="feed__body"><strong>Marisol Delgado</strong> reminded 7 guardians<div class="feed__meta">Yesterday, 5:05 pm</div></div></li>'
                    '</ul>', title="Recent activity", tid="act", cls="card--flush")
+        tasks = card(ul_list([
+            list_item("1 incident to review", "Reported by Aisha Bello · today", lead=f'<span class="icon-tile" aria-hidden="true">{icon("alert-triangle")}</span>', href=page("incidents")),
+            list_item("3 enrollments to review", "After-School Tutoring", lead=f'<span class="icon-tile" aria-hidden="true">{icon("users")}</span>', href=page("programs")),
+        ], card=False), title="Waiting for you", tid="tasks", cls="card--flush")
         return greeting + kpis([("Active children", "184", "+6 this month"), ("Households", "112", "3 waiting review"), ("Slips unsigned", "30", "across 2 events"), ("Sessions this week", "9", "7 attendance recorded")]) + \
-            f'<div class="split"><div class="stack">{sess}{up}</div><div class="stack">{slips}{act}</div></div>'
+            f'<div class="split"><div class="stack">{tasks}{sess}{up}</div><div class="stack">{slips}{act}</div></div>'
 
     S.add("default", "Site lead’s home at 4:12 pm on a tutoring night: today’s session, slips due, upcoming events and recent activity.",
           nav="today", main=main_default(), checkin_badge=15)
+    S.add("roster-only", "An organization with only Roster on: counts and what is coming up; no sessions, slips or review work, and nothing links to an off module.", nav="today",
+          main=page_header("Good afternoon, Marisol", f"{TODAY} · Harbourview Community Centre") + kpis([("Active children", "184", "+6 this month"), ("Households", "112", "")]) +
+          card(ul_list([
+              list_item("Saturday Sports", "Sat 7 Nov, 10:00 am · Bennetto School gym", lead=f'<span class="icon-tile" aria-hidden="true">{icon("calendar")}</span>'),
+              list_item("Fall field trip: Royal Botanical Gardens", "Sat 14 Nov, 9:00 am", lead=f'<span class="icon-tile" aria-hidden="true">{icon("bus")}</span>'),
+          ], card=False), title="Coming up", tid="up", cls="card--flush"))
     S.add("loading", "Today while the first request is in flight: skeletons match the final layout.", nav="today",
           main=page_header("Good afternoon, Jaylen", f"{TODAY} · Harbourview Community Centre") + skeleton_kpis() +
           f'<div class="split"><div class="card" aria-busy="true" aria-label="Loading today’s session">{skeleton_header()}<span class="skeleton skeleton--card" aria-hidden="true"></span></div>{skeleton_list(2, "Loading slips due")}</div>')
