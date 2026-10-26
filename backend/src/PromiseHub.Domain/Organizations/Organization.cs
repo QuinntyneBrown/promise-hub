@@ -23,4 +23,14 @@ public sealed class Organization
 
     /// <summary>The number guardians call, shown in the footer of every guardian page.</summary>
     public string? Phone { get; private set; }
+
+    /// <summary>When an admin confirmed the name and city in setup (L2-008); null until then.</summary>
+    public DateTimeOffset? ProfileConfirmedAt { get; private set; }
+
+    public void ChangeProfile(string name, string city, DateTimeOffset now)
+    {
+        Name = name;
+        City = city;
+        ProfileConfirmedAt ??= now;
+    }
 }

@@ -52,6 +52,10 @@ The feature is a vertical slice from the Angular wizard pages to the `Organizati
 
 The 60-minute completion target in criterion 5 is an acceptance measurement, not a runtime rule. The seeded spreadsheet used for that measurement is `<TO SUPPLY>`.
 
+## Built so far
+
+Slice 39 delivered `SetupHandler` (`GET /setup`, `PUT /settings/organization`), `Organization.ProfileConfirmedAt`, and `SetupPage` and `SetupOrganizationPage` at `/setup` linking each step to its feature's screen (ADR 0033). The one-step-per-screen wizard chrome is not built.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

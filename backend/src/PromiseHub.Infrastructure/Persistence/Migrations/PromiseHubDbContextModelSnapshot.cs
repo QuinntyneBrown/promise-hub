@@ -1415,6 +1415,9 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
+                    b.Property<long?>("ProfileConfirmedAt")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("TimeZone")
                         .IsRequired()
                         .HasMaxLength(60)

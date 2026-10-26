@@ -235,6 +235,8 @@ export class FakeApi {
   /** The six-digit code the fake texts to a contact on file. */
   readonly guardianCode = '482913';
   private smsUsed = new Map<string, number>();
+  /** Organizations whose admin confirmed name and city in setup (Harbourview did, as seeded), with any new profile. */
+  private profiles = new Map<string, { name: string; city: string }>([['org-harbourview', { name: 'Harbourview Youth Collective', city: 'Hamilton, Ontario' }]]);
   /** Report exports by id: organization, file name and CSV. */
   private reportExports = new Map<string, { organizationId: string; fileName: string; csv: string }>();
   /** Notification settings per organization, when saved; otherwise the defaults. */
@@ -369,6 +371,9 @@ export class FakeApi {
     ['POST', /^\/api\/auth\/sign-in$/, (route) => this.signIn(route)],
     ['POST', /^\/api\/auth\/mfa$/, (route) => this.mfa(route)],
     ['POST', /^\/api\/auth\/sign-out$/, (route) => this.signOut(route)],
+    ['GET', /^\/api\/setup$/, (route) => this.setup(route)],
+    ['GET', /^\/api\/settings\/organization$/, (route) => this.getOrganizationProfile(route)],
+    ['PUT', /^\/api\/settings\/organization$/, (route) => this.saveOrganizationProfile(route)],
     ['GET', /^\/api\/settings\/notifications$/, (route) => this.getNotificationSettings(route)],
     ['PUT', /^\/api\/settings\/notifications$/, (route) => this.saveNotificationSettings(route)],
     ['GET', /^\/api\/settings\/modules$/, (route) => this.getModules(route)],
@@ -592,6 +597,42 @@ export class FakeApi {
       return this.unauthenticated(route);
     }
     this.membershipId = null;
+    return route.fulfill({ status: 204 });
+  }
+
+  /** Mirrors backend SetupHandler: each step is done when its data exists. */
+  private async setup(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    const steps = [
+      { key: 'organization', done: this.profiles.has(organizationId) },
+      { key: 'modules', done: true },
+      { key: 'program', done: this.programs.some((p) => p.organizationId === organizationId) },
+      { key: 'children', done: this.households.some((h) => h.organizationId === organizationId && h.children.length > 0) },
+      { key: 'staff', done: memberships.filter((m) => m.organizationId === organizationId).length > 1 || this.invitations.some((i) => i.organizationId === organizationId) },
+    ];
+    if (this.modules.get(organizationId)!.includes('Slips')) steps.push({ key: 'slip', done: this.events.some((e) => e.organizationId === organizationId && this.slipOf(e.id)?.status === 'Sent') });
+    const next = steps.find((s) => !s.done)?.key ?? null;
+    return route.fulfill({ json: { steps, next, complete: next === null } });
+  }
+
+  private async getOrganizationProfile(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    const org = organizations.find((o) => o.id === organizationId)!;
+    const p = this.profiles.get(organizationId);
+    return route.fulfill({ json: { name: p?.name ?? org.name, city: p?.city ?? (organizationId === 'org-northgate' ? 'Burlington, Ontario' : 'Hamilton, Ontario'), plan: org.plan } });
+  }
+
+  private async saveOrganizationProfile(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    const b = route.request().postDataJSON() as { name: string; city: string };
+    const errors: Record<string, string> = {};
+    if (!b.name?.trim()) errors['name'] = 'Enter your organization’s name.';
+    if (!b.city?.trim()) errors['city'] = 'Enter the city you work in.';
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    this.profiles.set(organizationId, { name: b.name.trim(), city: b.city.trim() });
     return route.fulfill({ status: 204 });
   }
 

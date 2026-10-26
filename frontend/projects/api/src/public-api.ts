@@ -152,3 +152,8 @@ export * from './lib/reports/reports-api';
 export * from './lib/reports/reports-api.token';
 export * from './lib/guardian/guardian-survey';
 export * from './lib/reports/survey-sent';
+export * from './lib/setup/organization-profile';
+export * from './lib/setup/setup';
+export * from './lib/setup/setup-api';
+export * from './lib/setup/setup-api.token';
+export * from './lib/setup/setup-step-key';
