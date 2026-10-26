@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 33 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="33" data-video-title="Monitor today's work" data-parts="Introduction|Promises|Today|Roster only|Phone|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 33</div>
+  <h1>Monitor today's work</h1>
+  <p class="lead">One page that answers: what needs me?</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="Today reads one summary from the server.">
+  <h2>What Today promises</h2>
+  <ul>
+    <li>Active children and households</li>
+    <li>Slips still collecting signatures</li>
+    <li>The next two weeks</li>
+    <li>Work waiting, each count a link</li>
+    <li>Nothing from a module that is off</li>
+  </ul>
+</section>
+
+<section id="today" data-part="2" data-cue="Here is Today on Marisol's laptop." data-clip="clips/today-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Everything on</h3><p>Sessions, waiting work, slips and coming up.</p></div>
+</section>
+
+<section id="roster" data-part="3" data-cue="Now the same organization with only Roster" data-clip="clips/today-roster-only.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Modules</span><h3>Roster only</h3><p>Counts and coming up; nothing else.</p></div>
+</section>
+
+<section id="phone" data-part="4" data-cue="On a phone the cards stack">
+  <h2>Phones and loading</h2>
+  <div class="cols">
+    <img class="shot" alt="Today on a phone with the cards in one column" src="shots/phone-today.png">
+    <img class="shot" alt="Today saying it did not load, with Try again" src="shots/desktop-error.png">
+  </div>
+</section>
+
+<section id="testing" data-part="5" data-cue="Backend tests cover the counts">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Slips or Incidents off</td><td>No card, no task</td></tr>
+    <tr><td>Youth worker</td><td>No review work</td></tr>
+    <tr><td>Another organization</td><td>Its own counts only</td></tr>
+    <tr><td>Roster off</td><td>404</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="6" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>One summary from the server</li><li>Every count links to its work</li><li>Nothing of an off module</li></ul>
+  <p class="muted">Next: search records</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
