@@ -2,4 +2,4 @@
 
 | Design | Effort | Complete |
 |---|---|---|
-| maintain-household | 6 days | 70% |
+| maintain-household | 6 days | 85% |

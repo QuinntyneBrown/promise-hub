@@ -14,6 +14,8 @@ Prompt 17 lets a guardian see whether each child is accepted or waitlisted (`L2-
 - **Content.** `GET /g/home/{token}` lists each child's programs: the latest enrollment request per program (Enrolled, Waiting review, Waitlisted with the position, Declined with the reason) and any roster place without a request as Enrolled, with the program's start date and the staff note.
 - **Page.** `GuardianHomePage` in the `guardian` library, in English, Spanish or French by household language, composed from `ph-guardian-shell`, `ph-list`, `ph-list-item` and `ph-badge`.
 
+- **Corrections (prompt 28).** The family page shows the primary guardian's contact and each child's allergies and medication, with dialogs to correct them (`PUT /g/home/{token}/household`, `PUT /g/home/{token}/children/{childId}/medical`) after the code check. A new mobile revokes every link and device of the household, as a staff change does. Corrections are audited as made by the guardian. Other medical fields, pickups aside, stay with staff.
+
 ## Consequences
 
 The landing page at `/g` without a token stays static. Joining a waitlist from a full program page and moving up the waitlist are prompt 18.
