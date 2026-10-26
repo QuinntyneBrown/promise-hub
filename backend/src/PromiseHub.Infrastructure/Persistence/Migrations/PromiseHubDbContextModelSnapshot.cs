@@ -1892,6 +1892,9 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.Property<long?>("AcceptedAt")
                         .HasColumnType("INTEGER");
 
+                    b.Property<Guid?>("ChildId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(320)
@@ -1910,6 +1913,9 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("TEXT");
+
+                    b.Property<long?>("ReplacementRequestedAt")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Role")
                         .IsRequired()

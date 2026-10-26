@@ -123,6 +123,7 @@ export * from './lib/pickups/pickup-request';
 export * from './lib/staff/staff-api';
 export * from './lib/staff/staff-api.token';
 export * from './lib/staff/staff-list';
+export * from './lib/staff/youth-account';
 export * from './lib/invitations/invitation';
 export * from './lib/invitations/invitation-api';
 export * from './lib/invitations/invitation-api.token';

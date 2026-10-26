@@ -142,6 +142,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(i => i.ExpiresAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.Property(i => i.AcceptedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
             e.Property(i => i.WithdrawnAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.Property(i => i.ReplacementRequestedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
         });
         modelBuilder.Entity<ModuleConfiguration>(e =>
         {

@@ -129,6 +129,9 @@ interface AudienceBody {
 
 const GSM7 = '@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#¤%&\'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà';
 
+/** The seeded memberships; accepting an invitation adds to the list for one test only. */
+const SEEDED_MEMBERSHIPS = memberships.length;
+
 /** The password policy as the server applies it (L2-053): 12 to 128 characters and not the email's name. */
 function passwordProblem(password: string | undefined, email: string): string | null {
   const value = password ?? '';
@@ -298,7 +301,10 @@ export class FakeApi {
   ]);
   private nextId = 1;
 
-  constructor(private membershipId: string | null) {}
+  constructor(private membershipId: string | null) {
+    // Memberships joined by accepting an invitation in an earlier test of this worker are forgotten.
+    memberships.splice(SEEDED_MEMBERSHIPS);
+  }
 
   /** Makes the next calls to a route answer with the given status, as the real API would on a fault. */
   failNext(path: string, status: number): void {
@@ -560,6 +566,8 @@ export class FakeApi {
     ['GET', /^\/api\/messages\/(?<id>[^/]+)$/, (route, p) => this.getMessage(route, p['id']!)],
     ['GET', /^\/api\/messaging\/sms-cap$/, (route) => this.smsCap(route)],
     ['GET', /^\/api\/children\/(?<id>[^/]+)\/quick-card$/, (route, p) => this.quickCard(route, p['id']!)],
+    ['GET', /^\/api\/children\/(?<id>[^/]+)\/youth-account$/, (route, p) => this.youthAccount(route, p['id']!)],
+    ['POST', /^\/api\/children\/(?<id>[^/]+)\/youth-invitation$/, (route, p) => this.inviteYouth(route, p['id']!)],
     ['GET', /^\/api\/children\/(?<id>[^/]+)$/, (route, p) => this.getChild(route, p['id']!)],
     ['PUT', /^\/api\/children\/(?<id>[^/]+)$/, (route, p) => this.updateChild(route, p['id']!)],
     ['PUT', /^\/api\/children\/(?<id>[^/]+)\/medical$/, (route, p) => this.updateMedical(route, p['id']!)],
@@ -567,9 +575,9 @@ export class FakeApi {
 
   /** Staff changes in this test: roles changed, access removed and invitations sent (seeded memberships stay as they are). */
   private roleOverrides = new Map<string, string>();
-  private invitationLinks = new Map<string, { email: string; role: string; expired: boolean; accepted: boolean }>();
+  private invitationLinks = new Map<string, { email: string; role: string; expired: boolean; accepted: boolean; childId: string | null; suggestedName: string | null }>();
   private removedMembers = new Set<string>();
-  private invitations: { id: string; organizationId: string; email: string; role: string; invitedBy: string; withdrawn: boolean }[] = [];
+  private invitations: { id: string; organizationId: string; email: string; role: string; invitedBy: string; withdrawn: boolean; childId?: string }[] = [];
   /** Staff asked a guardian about an adult not on the approved list. */
   private pickupRequests: { id: string; eventId: string; childId: string; householdId: string; collector: string; status: 'Pending' | 'Approved' | 'Refused'; decidedBy: string | null }[] = [];
   /** Approved adults besides the guardians, as added by staff or the family. */
@@ -1944,8 +1952,14 @@ export class FakeApi {
   }
 
   /** An emailed invitation for this test, reachable at /invite/{token}; expired ones answer 410. */
-  sentInvitation(token: string, email: string, role = 'YouthWorker', expired = false): void {
-    this.invitationLinks.set(token, { email, role, expired, accepted: false });
+  sentInvitation(token: string, email: string, role = 'YouthWorker', expired = false, youth: { childId: string; suggestedName: string } | null = null): void {
+    this.invitationLinks.set(token, { email, role, expired, accepted: false, childId: youth?.childId ?? null, suggestedName: youth?.suggestedName ?? null });
+  }
+
+  /** The child a youth account made by accepting an invitation links to, by its email. */
+  youthLinkOf(email: string): string | undefined {
+    const m = memberships.find((x) => x.email === email);
+    return m ? this.youthLinks.get(m.id) : undefined;
   }
 
   /** The phone number the new worker saved during onboarding, if any. */
@@ -1954,7 +1968,7 @@ export class FakeApi {
   private async getInvitation(route: Route, token: string): Promise<void> {
     const i = this.invitationLinks.get(token);
     if (!i || i.expired || i.accepted) return route.fulfill({ status: 410, json: { invitedBy: 'Tom Nguyen', organization: 'Harbourview Youth Collective' } });
-    return route.fulfill({ json: { email: i.email, organization: 'Harbourview Youth Collective', role: i.role, invitedBy: 'Tom Nguyen' } });
+    return route.fulfill({ json: { email: i.email, organization: 'Harbourview Youth Collective', role: i.role, invitedBy: 'Tom Nguyen', suggestedName: i.suggestedName } });
   }
 
   private async acceptInvitation(route: Route, token: string): Promise<void> {
@@ -1967,6 +1981,14 @@ export class FakeApi {
     if (weak) errors['password'] = weak;
     if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
     i.accepted = true;
+    if (['Youth', 'Mentor', 'Volunteer'].includes(i.role)) {
+      // A participant joins as a new membership of this test; a youth account links to the invitation's child (L2-052).
+      const id = `m-joined-${this.nextId++}`;
+      memberships.push({ id, organizationId: 'org-harbourview', personName: b.name!.trim(), email: i.email, role: i.role as Membership['role'] });
+      if (i.childId) this.youthLinks.set(id, i.childId);
+      this.membershipId = id;
+      return route.fulfill({ json: { status: 'signed-in' } });
+    }
     // The new worker signs in as the seeded youth worker membership (the fake has no account store).
     this.membershipId = 'm-aisha';
     return route.fulfill({ json: { status: 'signed-in' } });
@@ -2041,6 +2063,52 @@ export class FakeApi {
     if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
     const id = `inv-${this.nextId++}`;
     this.invitations.push({ id, organizationId: m.organizationId, email, role: b.role!, invitedBy: m.personName, withdrawn: false });
+    return route.fulfill({ status: 201, json: { id } });
+  }
+
+  /** The caller for the youth-account endpoints: an admin, Learning on, a child of their organization (L2-051). */
+  private async youthCaller(route: Route, childId: string): Promise<{ m: Membership; child: { id: string; firstName: string; lastName: string; dateOfBirth: string } } | null> {
+    const m = await this.adminCaller(route);
+    if (!m) return null;
+    const found = this.modules.get(m.organizationId)!.includes('Learning') ? this.ownChild(m, childId) : undefined;
+    if (!found) {
+      await route.fulfill({ status: 404 });
+      return null;
+    }
+    return { m, child: found.child };
+  }
+
+  private linkedYouth(childId: string): Membership | undefined {
+    const id = [...this.youthLinks].find(([, c]) => c === childId)?.[0];
+    return memberships.find((x) => x.id === id && !this.removedMembers.has(x.id));
+  }
+
+  private async youthAccount(route: Route, childId: string): Promise<void> {
+    const found = await this.youthCaller(route, childId);
+    if (!found) return;
+    const member = this.linkedYouth(childId);
+    if (member) return route.fulfill({ json: { status: 'Active', name: member.personName, email: member.email, expiresAt: null } });
+    const waiting = this.invitations.find((i) => i.childId === childId && !i.withdrawn);
+    return route.fulfill({ json: waiting ? { status: 'Invited', name: null, email: waiting.email, expiresAt: '2026-11-19T21:12:00Z' } : { status: 'None', name: null, email: null, expiresAt: null } });
+  }
+
+  private async inviteYouth(route: Route, childId: string): Promise<void> {
+    const found = await this.youthCaller(route, childId);
+    if (!found) return;
+    const { m, child } = found;
+    const email = ((route.request().postDataJSON() as { email?: string }).email ?? '').trim().toLowerCase();
+    const name = `${child.firstName} ${child.lastName}`;
+    const age = ageOf(child.dateOfBirth);
+    const errors: Record<string, string> = {};
+    if (age < 12 || age > 18) errors['childId'] = 'Youth accounts are for ages 12 to 18.';
+    else if (this.linkedYouth(child.id)) errors['childId'] = `${name} already has a youth account.`;
+    else if (this.invitations.some((i) => i.childId === child.id && !i.withdrawn)) errors['childId'] = `An invitation for ${name} is already waiting.`;
+    const member = this.staffOf(m).find((x) => x.email === email);
+    if (!/^[^@]+@[^@]+\.[^@]+$/.test(email)) errors['email'] = 'Enter an email like name@example.org.';
+    else if (member) errors['email'] = `${member.personName} already has access.`;
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    const id = `inv-${this.nextId++}`;
+    this.invitations.push({ id, organizationId: m.organizationId, email, role: 'Youth', invitedBy: m.personName, withdrawn: false, childId: child.id });
     return route.fulfill({ status: 201, json: { id } });
   }
 

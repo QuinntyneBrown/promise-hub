@@ -65,6 +65,69 @@
             </div>
           }
         </ph-card>
+        @if (youthChild(); as yc) {
+          @let ya = youthAccount();
+          <ph-card title="Youth account" [flush]="true">
+            @switch (ya?.status) {
+              @case ('loaded') {
+                @if (ya?.status === 'loaded') {
+                  @let a = ya.value;
+                  @switch (a.status) {
+                    @case ('None') {
+                      <ph-empty-state
+                        icon="account"
+                        title="No youth account yet"
+                        [text]="
+                          'Invite ' +
+                          yc.firstName +
+                          ' to sign in to Learning with their own email. The account links to this record.'
+                        "
+                      >
+                        <ph-button variant="primary" hasPopup="dialog" (click)="inviteYouth(yc)"
+                          >Invite to PromiseHub</ph-button
+                        >
+                      </ph-empty-state>
+                    }
+                    @case ('Invited') {
+                      <ph-list label="Youth account" [inset]="true">
+                        <ph-list-item
+                          [title]="a.email ?? ''"
+                          [meta]="
+                            'Expires ' +
+                            expiry(a.expiresAt) +
+                            ' · resend or withdraw it in Staff and roles'
+                          "
+                        >
+                          <ph-badge tone="info">Invited</ph-badge>
+                        </ph-list-item>
+                      </ph-list>
+                    }
+                    @case ('Active') {
+                      <ph-list label="Youth account" [inset]="true">
+                        <ph-list-item
+                          [title]="a.name ?? ''"
+                          [meta]="(a.email ?? '') + ' · signs in to Learning'"
+                          [avatar]="a.name"
+                        >
+                          <ph-badge tone="success">Active</ph-badge>
+                        </ph-list-item>
+                      </ph-list>
+                    }
+                  }
+                }
+              }
+              @case (undefined) {}
+              @default {
+                <ph-empty-state
+                  icon="warning"
+                  tone="error"
+                  title="Couldn’t load the youth account"
+                  text="Try again."
+                />
+              }
+            }
+          </ph-card>
+        }
       </div>
     }
   }

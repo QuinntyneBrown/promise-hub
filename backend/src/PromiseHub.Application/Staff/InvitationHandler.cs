@@ -63,6 +63,11 @@ public sealed class InvitationHandler(IPromiseHubDb db, TenantContext tenant, IP
             db.StaffUsers.Add(user);
         }
         var membership = new Membership(Guid.NewGuid(), invitation.OrganizationId, command.Name!.Trim(), invitation.Email, invitation.Role);
+        if (invitation.ChildId is { } childId)
+        {
+            // A youth account links to the child record named on the invitation (L2-052, L2-045).
+            membership.LinkChild(childId);
+        }
         db.Memberships.Add(membership);
         var tracked = await db.StaffInvitations.SingleAsync(i => i.Id == invitation.Id, cancellationToken);
         tracked.Accept(now);
@@ -93,6 +98,9 @@ public sealed class InvitationHandler(IPromiseHubDb db, TenantContext tenant, IP
     private async Task<InvitationDto> DtoAsync(StaffInvitation invitation, CancellationToken cancellationToken)
     {
         var organization = await db.Organizations.AsNoTracking().SingleAsync(o => o.Id == invitation.OrganizationId, cancellationToken);
-        return new InvitationDto(invitation.Email, organization.Name, invitation.Role.ToString(), invitation.InvitedBy);
+        var child = invitation.ChildId is { } childId
+            ? await db.Children.IgnoreQueryFilters().AsNoTracking().FirstOrDefaultAsync(c => c.Id == childId && c.OrganizationId == invitation.OrganizationId, cancellationToken)
+            : null;
+        return new InvitationDto(invitation.Email, organization.Name, invitation.Role.ToString(), invitation.InvitedBy, child?.FullName);
     }
 }

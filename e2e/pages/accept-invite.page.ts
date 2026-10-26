@@ -24,10 +24,18 @@ export class AcceptInvitePage extends BasePage {
     return this.page.getByTestId(`${field}-error`);
   }
 
-  async accept(name: string, password: string): Promise<void> {
-    await this.page.getByLabel('Your name').fill(name);
+  get subtitle(): Locator {
+    return this.page.getByTestId('auth-subtitle');
+  }
+
+  get nameField(): Locator {
+    return this.page.getByLabel('Your name');
+  }
+
+  async accept(name: string, password: string, button = 'Accept and continue'): Promise<void> {
+    await this.nameField.fill(name);
     await this.page.getByLabel('Choose a password').fill(password);
-    await this.page.getByRole('button', { name: 'Accept and continue' }).click();
+    await this.page.getByRole('button', { name: button }).click();
   }
 
   async savePhone(mobile: string): Promise<void> {

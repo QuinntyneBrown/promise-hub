@@ -134,6 +134,8 @@ public static class DependencyInjection
         services.AddScoped<CompleteMfaHandler>();
         services.AddScoped<Learning.LearnerHandler>();
         services.AddScoped<Staff.LinkYouthHandler>();
+        services.AddScoped<Staff.InvitationIssuer>();
+        services.AddScoped<Staff.YouthInvitationHandler>();
         services.AddScoped<Curriculum.CurriculumHandler>();
         services.AddScoped<Mentoring.MentoringHandler>();
         services.AddScoped<Website.PublicWebsiteHandler>();

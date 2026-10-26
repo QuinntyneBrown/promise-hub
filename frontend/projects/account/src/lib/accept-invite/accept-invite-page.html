@@ -6,9 +6,7 @@
       @if (r?.status === 'open') {
         <ph-auth-card
           [title]="'Join ' + r.invitation.organization"
-          [subtitle]="
-            r.invitation.invitedBy + ' invited you as ' + roleLabels[r.invitation.role] + '.'
-          "
+          [subtitle]="subtitle(r.invitation)"
         >
           <form class="stack" novalidate (ngSubmit)="accept()">
             @if (failed()) {
@@ -39,9 +37,9 @@
               [error]="errors()['password'] ?? null"
               [(ngModel)]="password"
             />
-            <ph-button variant="primary" type="submit" size="lg" [busy]="busy()"
-              >Accept and continue</ph-button
-            >
+            <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
+              joinLabel(r.invitation)
+            }}</ph-button>
           </form>
         </ph-auth-card>
       }

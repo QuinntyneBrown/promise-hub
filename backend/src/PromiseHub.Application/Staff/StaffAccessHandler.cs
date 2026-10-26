@@ -1,7 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using PromiseHub.Application.Audit;
-using PromiseHub.Application.Guardian;
-using PromiseHub.Application.Messaging;
 using PromiseHub.Application.Organizations;
 using PromiseHub.Domain.Audit;
 using PromiseHub.Domain.Organizations;
@@ -14,7 +12,7 @@ namespace PromiseHub.Application.Staff;
 /// change-role, remove-staff). A changed role applies on the person's next request and a removed membership ends it, since
 /// every request reads the membership afresh. Admins cannot change or remove themselves. Every change is audited.
 /// </summary>
-public sealed class StaffAccessHandler(IPromiseHubDb db, ITenantContext tenant, IEmailSender email, GuardianLinkOptions links, IAuditWriter audit, TimeProvider clock)
+public sealed class StaffAccessHandler(IPromiseHubDb db, ITenantContext tenant, InvitationIssuer issuer, IAuditWriter audit, TimeProvider clock)
 {
     public async Task<StaffListDto> ListAsync(CancellationToken cancellationToken = default)
     {
@@ -59,14 +57,7 @@ public sealed class StaffAccessHandler(IPromiseHubDb db, ITenantContext tenant, 
         {
             return Result.Invalid(errors);
         }
-        var token = GuardianTokens.New();
-        var invitation = new StaffInvitation(Guid.NewGuid(), tenant.OrganizationId, address, role, GuardianTokens.Hash(token), tenant.ActorName, clock.GetUtcNow());
-        db.StaffInvitations.Add(invitation);
-        audit.Record(new AuditEvent(AuditAction.Created, "StaffInvitation", invitation.Id, $"{address} invited as {role} by {tenant.ActorName}"));
-        await db.SaveChangesAsync(cancellationToken);
-        var organization = await db.Organizations.AsNoTracking().SingleAsync(o => o.Id == tenant.OrganizationId, cancellationToken);
-        await email.SendAsync(address, $"Join {organization.Name} on PromiseHub",
-            $"{tenant.ActorName} invited you to {organization.Name} on PromiseHub. Accept within 14 days: {links.BaseUrl.TrimEnd('/')}/invite/{token}", cancellationToken);
+        var invitation = await issuer.IssueAsync(address, role, null, $"{address} invited as {role} by {tenant.ActorName}", cancellationToken);
         return Result.Created(invitation.Id);
     }
 
