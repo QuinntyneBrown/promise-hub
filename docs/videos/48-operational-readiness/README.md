@@ -48,7 +48,7 @@ By the end, the viewer can:
 
 ```powershell
 dotnet test backend/PromiseHub.sln --filter "AlertTests|ObservabilityTests|PerformanceBudgetTests"
-cd e2e; npx playwright test --project=budgets
+cd e2e; npx playwright test --project=budgets --no-deps
 node tools/video-record/record-clips.mjs docs/videos/48-operational-readiness --base http://localhost:4317
 ```
 

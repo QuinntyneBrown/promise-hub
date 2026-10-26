@@ -21,7 +21,8 @@ export default defineConfig({
   projects: [
     { name: 'desktop', testIgnore: budgets, use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } } },
     { name: 'phone', testIgnore: budgets, use: { ...devices['Pixel 7'] } },
-    { name: 'budgets', testMatch: budgets, use: { ...devices['Pixel 7'], baseURL: `http://localhost:${budgetPort}` } },
+    // After the other projects, so the budgets are measured with the runner to itself.
+    { name: 'budgets', testMatch: budgets, dependencies: ['desktop', 'phone'], use: { ...devices['Pixel 7'], baseURL: `http://localhost:${budgetPort}` } },
   ],
   webServer: [
     {

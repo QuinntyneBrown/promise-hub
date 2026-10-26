@@ -10,7 +10,15 @@ import { TodayPage } from '../../pages/today.page';
 // L2-033 performance budgets, measured on the CI runner against the fake API.
 test.describe('Meet the performance budgets', () => {
   // One page at a time, so the measurement is of the page and not of other tests competing for the runner.
-  test.describe.configure({ mode: 'serial' });
+  test.describe.configure({ mode: 'default' });
+
+  // Cold means a fresh browser, not a server still compiling: load the app once, with the API refused, before measuring.
+  test.beforeAll(async ({ browser }) => {
+    const page = await browser.newPage();
+    await page.route('**/api/**', (route) => route.abort());
+    await page.goto('/');
+    await page.close();
+  });
 
   const screens: [string, (page: Page) => BasePage & { open(): Promise<void> }][] = [
     ['Today', (page) => new TodayPage(page)],
