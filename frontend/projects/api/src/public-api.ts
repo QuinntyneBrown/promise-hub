@@ -139,3 +139,7 @@ export * from './lib/search/household-hit';
 export * from './lib/search/search-api';
 export * from './lib/search/search-api.token';
 export * from './lib/search/search-results';
+export * from './lib/notifications/app-notification';
+export * from './lib/notifications/notification-list';
+export * from './lib/notifications/notifications-api';
+export * from './lib/notifications/notifications-api.token';

@@ -50,6 +50,7 @@ public interface IPromiseHubDb
     DbSet<TrustedGuardianDevice> TrustedGuardianDevices { get; }
     DbSet<StaffUser> StaffUsers { get; }
     DbSet<SignInAttempt> SignInAttempts { get; }
+    DbSet<Domain.Notifications.Notification> Notifications { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

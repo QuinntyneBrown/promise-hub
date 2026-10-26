@@ -1,0 +1,49 @@
+@let l = list();
+@let r = result();
+@if (l) {
+  <ph-page-header title="Notifications" [subtitle]="subtitle(l)">
+    @if (l.unread) {
+      <ph-button (click)="markAllRead()">Mark all read</ph-button>
+    }
+  </ph-page-header>
+  @if (l.items.length) {
+    <ph-card [flush]="true">
+      <ph-list label="Notifications" [inset]="true">
+        @for (n of l.items; track n.id) {
+          <ph-list-item
+            [title]="n.text"
+            [meta]="meta(n)"
+            [muted]="!!n.readAt"
+            [link]="n.link"
+            (click)="opened(n)"
+          />
+        }
+      </ph-list>
+    </ph-card>
+  } @else {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="notifications"
+        title="You’re all caught up"
+        text="New activity lands here."
+      />
+    </ph-card>
+  }
+} @else if (r === null) {
+  <ph-page-header title="Notifications" />
+  <div aria-busy="true" aria-label="Loading notifications">
+    <ph-skeleton shape="card" />
+  </div>
+} @else {
+  <ph-page-header title="Notifications" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load notifications"
+      text="Try again."
+    >
+      <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}

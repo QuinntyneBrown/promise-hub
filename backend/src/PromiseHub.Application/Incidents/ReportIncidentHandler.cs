@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PromiseHub.Application.Audit;
+using PromiseHub.Application.Identity;
+using PromiseHub.Application.Notifications;
 using PromiseHub.Application.Messaging;
 using PromiseHub.Application.Organizations;
 using PromiseHub.Domain.Audit;
@@ -12,7 +14,7 @@ namespace PromiseHub.Application.Incidents;
 /// Records an incident from the structured form (page: new-incident): every required fact is named when missing and nothing
 /// is saved; a complete report needs review, is audited and is emailed at once to the program directors (L2-023 criterion 1).
 /// </summary>
-public sealed class ReportIncidentHandler(IPromiseHubDb db, ITenantContext tenant, IEmailSender email, IAuditWriter audit, TimeProvider clock)
+public sealed class ReportIncidentHandler(IPromiseHubDb db, ITenantContext tenant, IEmailSender email, IAuditWriter audit, TimeProvider clock, NotificationWriter notifications)
 {
     public async Task<Result> HandleAsync(ReportIncidentCommand command, CancellationToken cancellationToken = default)
     {
@@ -55,6 +57,8 @@ public sealed class ReportIncidentHandler(IPromiseHubDb db, ITenantContext tenan
             command.GuardianContact!.Value, command.Severity!.Value, tenant.MembershipId, tenant.ActorName, clock.GetUtcNow());
         db.Incidents.Add(incident);
         audit.Record(new AuditEvent(AuditAction.Created, "Incident", incident.Id, $"{incident.Category} · {child.FullName} · reported by {tenant.ActorName}"));
+        await notifications.NotifyAsync(Permission.ReviewIncidents, "incidents",
+            $"Incident reported by {tenant.ActorName}: {child.FullName}, {incident.Category.ToString().ToLowerInvariant()}.", $"/incidents/{incident.Id}", cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         var supervisors = await db.Memberships.AsNoTracking().Where(m => m.Role == Role.ProgramDirector && m.RemovedAt == null).Select(m => m.Email).ToListAsync(cancellationToken);
         foreach (var to in supervisors)
