@@ -15,6 +15,8 @@ Prompt 29 lets an admin invite staff, assign roles and remove access (`L2-007`, 
 
 - **Accepting (prompt 30).** `GET /invitations/{token}` shows the invitation or answers 410 with who invited; `POST /invitations/{token}/accept` (anonymous) creates the `StaffUser` (or checks the existing one's password) and a `Membership` in the invitation's organization, marks it accepted and signs in. `PUT /me/phone` saves the worker's mobile on the membership, never shown to guardians. The account library mounts the pages at `/invite/:token` and `/welcome/phone`, `/welcome/ready`. Choosing programs to cache (`onboard-staff-sessions`) is left for later; the ready step shows today's assigned sessions.
 
+- **Coverage (prompt 31).** `GET /coverage` (new `AssignStaff`: admins, directors, site leads, coordinators) lists the next 14 days of sessions with their staff and gaps; `PUT /sessions/{id}/staff` replaces the session's `SessionStaff` rows (ADR 0012) and is audited; `GET /coverage/mine` lists one's own. Inviting needs the new `InviteStaff` (admins and coordinators); a coordinator may invite youth workers only. The page is `CoveragePage` at `/settings/coverage` in the `administration` library.
+
 ## Consequences
 
 A removed person's open browser tab fails on its next request rather than being pushed out at once.
