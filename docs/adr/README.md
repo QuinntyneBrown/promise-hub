@@ -35,3 +35,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0029](0029-in-app-notifications.md) | In-app notifications are rows per recipient, hidden with their module, and the bell opens the center |
 | [0030](0030-notification-settings.md) | Notification settings are one optional row per organization, read by jobs on every run |
 | [0031](0031-grant-reports.md) | Reports are computed on request from the roster and check-ins; exports are stored CSV files that expire in seven days |
+| [0032](0032-surveys.md) | Surveys ride on guardian links and belong to the Reports module |
