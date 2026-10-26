@@ -1,0 +1,79 @@
+@let r = result();
+@let b = billing();
+@if (r?.status === 'forbidden') {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      title="Admins manage billing"
+      text="Ask Tom Nguyen or another admin."
+      [headingLevel]="1"
+    >
+      <ph-button link="/">Back to Today</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else if (b) {
+  <ph-page-header title="Billing" [subtitle]="subtitle(b)" />
+  <div class="stack">
+    @if (b.status === 'PaymentFailed') {
+      <ph-alert
+        tone="danger"
+        title="Payment didn’t go through"
+        [text]="'Service continues until ' + date(b.graceUntil!) + '. Update the card before then.'"
+      />
+    } @else if (b.status === 'Suspended') {
+      <ph-alert
+        tone="danger"
+        title="Your account is suspended"
+        text="The payment grace period has ended. Update the card to restore service; nothing has been deleted."
+      />
+    }
+    @if (atLimit(b)) {
+      <ph-alert
+        tone="warning"
+        [title]="'You’ve reached ' + b.childLimit + ' active children'"
+        text="New enrollments wait until you move to a bigger plan or end an enrollment."
+      />
+    }
+    <div class="split">
+      <ph-card title="Plan">
+        <div class="stack">
+          <ph-description-list [facts]="facts(b)" />
+          <div>
+            <ph-button [variant]="atLimit(b) ? 'primary' : 'default'" (click)="changePlan(b)"
+              >Change plan</ph-button
+            >
+          </div>
+        </div>
+      </ph-card>
+      <ph-card title="Usage">
+        <div class="stack">
+          <ph-progress-bar
+            [value]="b.activeChildren"
+            [max]="b.childLimit"
+            label="Active children"
+            [caption]="b.activeChildren + ' of ' + b.childLimit"
+          />
+          <ph-progress-bar
+            [value]="b.smsUsed"
+            [max]="b.smsCap || 1"
+            label="Text segments this month"
+            [caption]="
+              b.smsUsed.toLocaleString('en-US') + ' of ' + b.smsCap.toLocaleString('en-US')
+            "
+          />
+          <p class="hint">No per-seat charges.</p>
+        </div>
+      </ph-card>
+    </div>
+  </div>
+} @else if (r === null) {
+  <ph-page-header title="Billing" />
+  <div aria-busy="true" aria-label="Loading billing"><ph-skeleton shape="card" /></div>
+} @else {
+  <ph-page-header title="Billing" />
+  <ph-card [flush]="true">
+    <ph-empty-state icon="warning" tone="error" title="We couldn’t load billing" text="Try again.">
+      <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}

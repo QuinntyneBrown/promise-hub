@@ -235,6 +235,9 @@ export class FakeApi {
   /** The six-digit code the fake texts to a contact on file. */
   readonly guardianCode = '482913';
   private smsUsed = new Map<string, number>();
+  /** Plans changed in billing, and organizations whose last payment failed (with when). */
+  private plans = new Map<string, 'Free' | 'Standard' | 'Plus'>();
+  private paymentFailed = new Map<string, string>();
   /** Organizations whose admin confirmed name and city in setup (Harbourview did, as seeded), with any new profile. */
   private profiles = new Map<string, { name: string; city: string }>([['org-harbourview', { name: 'Harbourview Youth Collective', city: 'Hamilton, Ontario' }]]);
   /** Report exports by id: organization, file name and CSV. */
@@ -372,6 +375,8 @@ export class FakeApi {
     ['POST', /^\/api\/auth\/mfa$/, (route) => this.mfa(route)],
     ['POST', /^\/api\/auth\/sign-out$/, (route) => this.signOut(route)],
     ['GET', /^\/api\/setup$/, (route) => this.setup(route)],
+    ['GET', /^\/api\/billing$/, (route) => this.billing(route)],
+    ['PUT', /^\/api\/billing\/plan$/, (route) => this.changePlan(route)],
     ['GET', /^\/api\/me\/organizations$/, (route) => this.myOrganizations(route)],
     ['POST', /^\/api\/me\/organization$/, (route) => this.switchOrganization(route)],
     ['GET', /^\/api\/settings\/organization$/, (route) => this.getOrganizationProfile(route)],
@@ -600,6 +605,43 @@ export class FakeApi {
     }
     this.membershipId = null;
     return route.fulfill({ status: 204 });
+  }
+
+  failPayment(organizationId: string, at = '2026-11-01T12:00:00Z'): void {
+    this.paymentFailed.set(organizationId, at);
+  }
+
+  private planOf(organizationId: string): 'Free' | 'Standard' | 'Plus' {
+    return this.plans.get(organizationId) ?? organizations.find((o) => o.id === organizationId)!.plan;
+  }
+
+  private static readonly terms = { Free: { price: 0, children: 50, sms: 200 }, Standard: { price: 89, children: 500, sms: 2000 }, Plus: { price: 149, children: 2000, sms: 5000 } };
+
+  /** Mirrors backend BillingHandler. */
+  private async billing(route: Route): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    if (m.role !== 'Admin') return this.forbidden(route);
+    const plan = this.planOf(m.organizationId);
+    const t = FakeApi.terms[plan];
+    const active = new Set(this.programs.filter((p) => p.organizationId === m.organizationId).flatMap((p) => p.roster)).size;
+    const failed = this.paymentFailed.get(m.organizationId);
+    const graceUntil = failed ? new Date(new Date(failed).getTime() + 14 * 86400000).toISOString() : null;
+    const status = !graceUntil ? 'Active' : NOW.toISOString() < graceUntil ? 'PaymentFailed' : 'Suspended';
+    return route.fulfill({ json: { plan, monthlyPrice: t.price, childLimit: t.children, activeChildren: active, smsUsed: this.smsUsed.get(m.organizationId) ?? 0, smsCap: t.sms, status, graceUntil } });
+  }
+
+  private async changePlan(route: Route): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    if (m.role !== 'Admin') return this.forbidden(route);
+    const b = route.request().postDataJSON() as { plan: 'Free' | 'Standard' | 'Plus' };
+    const current = this.planOf(m.organizationId);
+    if (!(b.plan in FakeApi.terms)) return route.fulfill({ status: 422, json: { errors: { plan: 'Choose Free, Standard or Plus.' } } });
+    if (b.plan === current) return route.fulfill({ status: 422, json: { errors: { plan: `You’re already on ${b.plan}.` } } });
+    const proratedCharge = Math.max(0, Math.round(((FakeApi.terms[b.plan].price - FakeApi.terms[current].price) * 26) / 30 * 100) / 100);
+    this.plans.set(m.organizationId, b.plan);
+    return route.fulfill({ json: { plan: b.plan, proratedCharge } });
   }
 
   /** Removed memberships (as an admin would remove them); a session in one falls back to the person's next. */

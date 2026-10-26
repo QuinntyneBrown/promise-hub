@@ -1,0 +1,21 @@
+<form novalidate (ngSubmit)="save()">
+  <ph-dialog
+    title="Change plan"
+    description="An upgrade is prorated for the rest of this month; a downgrade applies now."
+  >
+    @if (failed()) {
+      <ph-alert tone="danger" title="That didn’t go through" text="Nothing changed. Try again." />
+    }
+    <ph-radio-group
+      legend="Plan"
+      [options]="options"
+      [error]="error()"
+      name="plan"
+      [(ngModel)]="plan"
+    />
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Change plan</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

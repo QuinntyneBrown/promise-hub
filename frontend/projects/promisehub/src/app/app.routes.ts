@@ -37,6 +37,10 @@ export const routes: Routes = [
         loadChildren: () => import('@promisehub/today').then((m) => m.notificationRoutes),
       },
       {
+        path: 'settings/billing',
+        loadChildren: () => import('@promisehub/administration').then((m) => m.billingRoutes),
+      },
+      {
         path: 'settings/coverage',
         loadChildren: () => import('@promisehub/administration').then((m) => m.coverageRoutes),
       },

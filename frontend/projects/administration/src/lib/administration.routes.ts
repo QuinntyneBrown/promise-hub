@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { BillingPage } from './billing-page/billing-page';
 import { CoveragePage } from './coverage-page/coverage-page';
 import { StaffPage } from './staff-page/staff-page';
 
@@ -10,4 +11,9 @@ export const routes: Routes = [
 /** Mounted by the app at /settings/coverage. */
 export const coverageRoutes: Routes = [
   { path: '', component: CoveragePage, title: 'Staff coverage · PromiseHub' },
+];
+
+/** Mounted by the app at /settings/billing; every organization has a plan. */
+export const billingRoutes: Routes = [
+  { path: '', component: BillingPage, title: 'Billing · PromiseHub' },
 ];

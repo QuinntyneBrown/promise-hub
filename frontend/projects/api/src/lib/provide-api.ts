@@ -35,6 +35,8 @@ import { NOTIFICATION_SETTINGS_API } from './notifications/notification-settings
 import { NOTIFICATIONS_API } from './notifications/notifications-api.token';
 import { HttpReportsApi } from './reports/http-reports-api';
 import { REPORTS_API } from './reports/reports-api.token';
+import { BILLING_API } from './billing/billing-api.token';
+import { HttpBillingApi } from './billing/http-billing-api';
 import { HttpSearchApi } from './search/http-search-api';
 import { HttpSetupApi } from './setup/http-setup-api';
 import { SETUP_API } from './setup/setup-api.token';
@@ -72,6 +74,7 @@ export function provideApi(): EnvironmentProviders {
     { provide: STAFF_API, useClass: HttpStaffApi },
     { provide: TODAY_API, useClass: HttpTodayApi },
     { provide: SEARCH_API, useClass: HttpSearchApi },
+    { provide: BILLING_API, useClass: HttpBillingApi },
     { provide: SETUP_API, useClass: HttpSetupApi },
     { provide: REPORTS_API, useClass: HttpReportsApi },
     { provide: NOTIFICATIONS_API, useClass: HttpNotificationsApi },
