@@ -1,17 +1,17 @@
 # Estimates
 
-- Overall effort: 238 days
-- Complete: 66%
+- Overall effort: 245 days
+- Complete: 64%
 
 | Subsystem | Effort | Complete |
 |---|---|---|
-| [identity](identity.md) | 21 days | 82% |
+| [identity](identity.md) | 25 days | 69% |
 | [organizations](organizations.md) | 34 days | 70% |
 | [platform](platform.md) | 28 days | 45% |
 | [shell](shell.md) | 9 days | 51% |
 | [households](households.md) | 6 days | 80% |
 | [programs](programs.md) | 5 days | 70% |
-| [staff](staff.md) | 5 days | 90% |
+| [staff](staff.md) | 8 days | 56% |
 | [enrollment](enrollment.md) | 5 days | 90% |
 | [events](events.md) | 5 days | 60% |
 | [attendance](attendance.md) | 27 days | 70% |
