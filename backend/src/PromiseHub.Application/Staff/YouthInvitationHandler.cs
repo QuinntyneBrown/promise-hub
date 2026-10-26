@@ -68,9 +68,7 @@ public sealed class YouthInvitationHandler(IPromiseHubDb db, InvitationIssuer is
         return Result.Created(invitation.Id);
     }
 
-    private async Task<Domain.Staff.StaffInvitation?> WaitingAsync(Guid childId, CancellationToken cancellationToken)
-    {
-        var now = clock.GetUtcNow();
-        return (await db.StaffInvitations.AsNoTracking().Where(i => i.ChildId == childId).ToListAsync(cancellationToken)).FirstOrDefault(i => i.Open(now));
-    }
+    /// <summary>The child's invitation not yet accepted or withdrawn, expired or not: an expired one is resent, not replaced (ADR 0045).</summary>
+    private async Task<Domain.Staff.StaffInvitation?> WaitingAsync(Guid childId, CancellationToken cancellationToken) =>
+        await db.StaffInvitations.AsNoTracking().FirstOrDefaultAsync(i => i.ChildId == childId && i.AcceptedAt == null && i.WithdrawnAt == null, cancellationToken);
 }

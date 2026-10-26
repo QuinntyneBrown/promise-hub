@@ -23,6 +23,7 @@ export class HttpInvitationApi implements InvitationApi {
             error.status === 410
               ? {
                   status: 'gone',
+                  reason: error.error?.reason ?? 'used',
                   invitedBy: error.error?.invitedBy ?? null,
                   organization: error.error?.organization ?? null,
                 }

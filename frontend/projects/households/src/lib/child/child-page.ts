@@ -129,8 +129,10 @@ export class ChildPage {
       });
   }
 
+  /** "Expires 19 Nov 2026", or "Expired …" once the link has timed out and waits to be resent. */
   protected expiry(iso: string | null): string {
-    return iso ? formatDate(iso.slice(0, 10)) : '';
+    if (!iso) return '';
+    return `${new Date(iso).getTime() <= Date.now() ? 'Expired' : 'Expires'} ${formatDate(iso)}`;
   }
 
   protected reload(): void {

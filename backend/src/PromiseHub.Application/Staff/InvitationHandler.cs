@@ -17,15 +17,20 @@ namespace PromiseHub.Application.Staff;
 /// </summary>
 public sealed class InvitationHandler(IPromiseHubDb db, TenantContext tenant, IPasswordHasher hasher, IAuditWriter audit, TimeProvider clock)
 {
-    public async Task<(bool Open, InvitationDto? Invitation)> GetAsync(string token, CancellationToken cancellationToken = default)
+    public async Task<InvitationLookup> GetAsync(string token, CancellationToken cancellationToken = default)
     {
         var invitation = await FindAsync(token, cancellationToken);
-        if (invitation is null)
-        {
-            return (false, null);
-        }
-        return (invitation.Open(clock.GetUtcNow()), await DtoAsync(invitation, cancellationToken));
+        return invitation is null
+            ? new InvitationLookup(null, "used")
+            : new InvitationLookup(await DtoAsync(invitation, cancellationToken), GoneReason(invitation, clock.GetUtcNow()));
     }
+
+    /// <summary>Why a link no longer works, or null while it is open (L2-052 criterion 3, L2-054 criterion 1).</summary>
+    private static string? GoneReason(StaffInvitation invitation, DateTimeOffset now) =>
+        invitation.AcceptedAt is not null ? "used"
+        : invitation.WithdrawnAt is not null ? "withdrawn"
+        : invitation.Expired(now) ? "expired"
+        : null;
 
     public async Task<AcceptInvitationResult> AcceptAsync(string token, AcceptInvitationCommand command, CancellationToken cancellationToken = default)
     {
@@ -33,7 +38,8 @@ public sealed class InvitationHandler(IPromiseHubDb db, TenantContext tenant, IP
         var now = clock.GetUtcNow();
         if (invitation is null || !invitation.Open(now))
         {
-            return new AcceptInvitationResult(true, null, null, null, invitation is null ? null : await DtoAsync(invitation, cancellationToken));
+            return new AcceptInvitationResult(true, null, null, null, invitation is null ? null : await DtoAsync(invitation, cancellationToken),
+                invitation is null ? "used" : GoneReason(invitation, now));
         }
         var errors = new Dictionary<string, string>();
         if (string.IsNullOrWhiteSpace(command.Name))

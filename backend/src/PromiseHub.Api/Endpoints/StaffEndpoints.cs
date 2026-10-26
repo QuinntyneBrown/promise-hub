@@ -15,6 +15,8 @@ public static class StaffEndpoints
         staff.MapGet("", (StaffAccessHandler handler, CancellationToken ct) => handler.ListAsync(ct));
         staff.MapDelete("/invitations/{id:guid}", async (Guid id, StaffAccessHandler handler, CancellationToken ct) =>
             (await handler.WithdrawAsync(id, ct)).ToHttp());
+        staff.MapPost("/invitations/{id:guid}/resend", async (Guid id, StaffAccessHandler handler, CancellationToken ct) =>
+            (await handler.ResendAsync(id, ct)).ToHttp());
         staff.MapPut("/{id:guid}/role", async (Guid id, ChangeRoleCommand command, StaffAccessHandler handler, CancellationToken ct) =>
             (await handler.ChangeRoleAsync(id, command, ct)).ToHttp());
         staff.MapPut("/{id:guid}/child", async (Guid id, LinkYouthCommand command, LinkYouthHandler handler, CancellationToken ct) =>

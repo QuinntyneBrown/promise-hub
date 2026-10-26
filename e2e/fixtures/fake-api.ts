@@ -511,6 +511,7 @@ export class FakeApi {
     ['PUT', /^\/api\/me\/phone$/, (route) => this.savePhone(route)],
     ['POST', /^\/api\/staff\/invitations$/, (route) => this.inviteStaff(route)],
     ['DELETE', /^\/api\/staff\/invitations\/(?<id>[^/]+)$/, (route, p) => this.withdrawInvitation(route, p['id']!)],
+    ['POST', /^\/api\/staff\/invitations\/(?<id>[^/]+)\/resend$/, (route, p) => this.resendInvitation(route, p['id']!)],
     ['PUT', /^\/api\/staff\/(?<id>[^/]+)\/role$/, (route, p) => this.changeRole(route, p['id']!)],
     ['DELETE', /^\/api\/staff\/(?<id>[^/]+)$/, (route, p) => this.removeStaff(route, p['id']!)],
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/pickup-requests$/, (route, p) => this.askForPickup(route, p['id']!)],
@@ -575,9 +576,11 @@ export class FakeApi {
 
   /** Staff changes in this test: roles changed, access removed and invitations sent (seeded memberships stay as they are). */
   private roleOverrides = new Map<string, string>();
-  private invitationLinks = new Map<string, { email: string; role: string; expired: boolean; accepted: boolean; childId: string | null; suggestedName: string | null }>();
+  private invitationLinks = new Map<string, { email: string; role: string; expired: boolean; accepted: boolean; withdrawn?: boolean; childId: string | null; suggestedName: string | null }>();
   private removedMembers = new Set<string>();
-  private invitations: { id: string; organizationId: string; email: string; role: string; invitedBy: string; withdrawn: boolean; childId?: string }[] = [];
+  private invitations: { id: string; organizationId: string; email: string; role: string; invitedBy: string; withdrawn: boolean; childId?: string; childName?: string; expired?: boolean; replacementRequested?: boolean }[] = [];
+  /** Emails whose invitation was resent in this test, in order. */
+  resentInvitations: string[] = [];
   /** Staff asked a guardian about an adult not on the approved list. */
   private pickupRequests: { id: string; eventId: string; childId: string; householdId: string; collector: string; status: 'Pending' | 'Approved' | 'Refused'; decidedBy: string | null }[] = [];
   /** Approved adults besides the guardians, as added by staff or the family. */
@@ -1956,6 +1959,16 @@ export class FakeApi {
     this.invitationLinks.set(token, { email, role, expired, accepted: false, childId: youth?.childId ?? null, suggestedName: youth?.suggestedName ?? null });
   }
 
+  /** An admin withdrew this emailed invitation; its link answers 410 "withdrawn". */
+  withdrawLink(token: string): void {
+    this.invitationLinks.get(token)!.withdrawn = true;
+  }
+
+  /** An invitation on Harbourview's Staff and roles, as an admin sent it; expired ones stay listed to resend (L2-052). */
+  pendingInvitation(i: { email: string; role: string; childName?: string; expired?: boolean; replacementRequested?: boolean }): void {
+    this.invitations.push({ id: `inv-${this.nextId++}`, organizationId: 'org-harbourview', invitedBy: 'Tom Nguyen', withdrawn: false, ...i });
+  }
+
   /** The child a youth account made by accepting an invitation links to, by its email. */
   youthLinkOf(email: string): string | undefined {
     const m = memberships.find((x) => x.email === email);
@@ -1967,13 +1980,22 @@ export class FakeApi {
 
   private async getInvitation(route: Route, token: string): Promise<void> {
     const i = this.invitationLinks.get(token);
-    if (!i || i.expired || i.accepted) return route.fulfill({ status: 410, json: { invitedBy: 'Tom Nguyen', organization: 'Harbourview Youth Collective' } });
-    return route.fulfill({ json: { email: i.email, organization: 'Harbourview Youth Collective', role: i.role, invitedBy: 'Tom Nguyen', suggestedName: i.suggestedName } });
+    const reason = this.goneReason(i);
+    if (reason) return route.fulfill({ status: 410, json: { reason, invitedBy: i ? 'Tom Nguyen' : null, organization: i ? 'Harbourview Youth Collective' : null } });
+    return route.fulfill({ json: { email: i!.email, organization: 'Harbourview Youth Collective', role: i!.role, invitedBy: 'Tom Nguyen', suggestedName: i!.suggestedName } });
+  }
+
+  /** Why a link no longer works, as the server answers it (L2-052, L2-054); an unknown token reads as used. */
+  private goneReason(i: { expired: boolean; accepted: boolean; withdrawn?: boolean } | undefined): string | null {
+    if (!i || i.accepted) return 'used';
+    if (i.withdrawn) return 'withdrawn';
+    return i.expired ? 'expired' : null;
   }
 
   private async acceptInvitation(route: Route, token: string): Promise<void> {
     const i = this.invitationLinks.get(token);
-    if (!i || i.expired || i.accepted) return route.fulfill({ status: 410, json: {} });
+    const reason = this.goneReason(i);
+    if (reason) return route.fulfill({ status: 410, json: { reason, invitedBy: i ? 'Tom Nguyen' : null, organization: i ? 'Harbourview Youth Collective' : null } });
     const b = route.request().postDataJSON() as { name?: string; password?: string };
     const errors: Record<string, string> = {};
     if (!b.name?.trim()) errors['name'] = 'Enter your name.';
@@ -2043,7 +2065,17 @@ export class FakeApi {
           .sort((a, z) => a.name.localeCompare(z.name)),
         invitations: this.invitations
           .filter((i) => i.organizationId === m.organizationId && !i.withdrawn)
-          .map((i) => ({ id: i.id, email: i.email, role: i.role, invitedBy: i.invitedBy, invitedAt: NOW.toISOString(), expiresAt: NOW.toISOString() })),
+          .map((i) => ({
+            id: i.id,
+            email: i.email,
+            role: i.role,
+            invitedBy: i.invitedBy,
+            invitedAt: '2026-11-05T21:12:00Z',
+            expiresAt: i.expired ? '2026-11-04T21:12:00Z' : '2026-11-19T21:12:00Z',
+            status: i.expired ? 'Expired' : 'Pending',
+            childName: i.childName ?? (i.childId ? this.childName(i.childId) : null),
+            replacementRequested: !!i.replacementRequested,
+          })),
       },
     });
   }
@@ -2112,6 +2144,22 @@ export class FakeApi {
     const id = `inv-${this.nextId++}`;
     this.invitations.push({ id, organizationId: m.organizationId, email, role: 'Youth', invitedBy: m.personName, withdrawn: false, childId: child.id });
     return route.fulfill({ status: 201, json: { id } });
+  }
+
+  private childName(childId: string): string | null {
+    const c = this.households.flatMap((h) => h.children).find((x) => x.id === childId);
+    return c ? `${c.firstName} ${c.lastName}` : null;
+  }
+
+  private async resendInvitation(route: Route, id: string): Promise<void> {
+    const m = await this.adminCaller(route);
+    if (!m) return;
+    const i = this.invitations.find((x) => x.id === id && x.organizationId === m.organizationId && !x.withdrawn);
+    if (!i) return route.fulfill({ status: 404 });
+    i.expired = false;
+    i.replacementRequested = false;
+    this.resentInvitations.push(i.email);
+    return route.fulfill({ status: 204 });
   }
 
   private async withdrawInvitation(route: Route, id: string): Promise<void> {

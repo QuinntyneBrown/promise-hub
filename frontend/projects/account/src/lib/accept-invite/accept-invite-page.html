@@ -46,12 +46,21 @@
     }
     @case ('gone') {
       @if (r?.status === 'gone') {
-        <ph-auth-card
-          title="This invitation has expired"
-          [subtitle]="'Ask ' + (r.invitedBy ?? 'the person who invited you') + ' for a new one.'"
-        >
-          <ph-button link="/sign-in">Sign in instead</ph-button>
-        </ph-auth-card>
+        @if (r.reason === 'expired') {
+          <ph-auth-card
+            title="This invitation has expired"
+            [subtitle]="'Ask ' + (r.invitedBy ?? 'the person who invited you') + ' for a new one.'"
+          >
+            <ph-button link="/sign-in">Sign in instead</ph-button>
+          </ph-auth-card>
+        } @else {
+          <ph-auth-card
+            title="This invitation can’t be used"
+            subtitle="It was withdrawn or has already been used. If you already joined, sign in."
+          >
+            <ph-button variant="primary" link="/sign-in">Sign in</ph-button>
+          </ph-auth-card>
+        }
       }
     }
     @case ('error') {

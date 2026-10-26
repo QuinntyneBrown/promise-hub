@@ -11,6 +11,8 @@ export interface StaffApi {
   list(): Observable<LoadResult<StaffList>>;
   invite(email: string, role: Role): Observable<WriteOutcome>;
   withdraw(invitationId: string): Observable<WriteOutcome>;
+  /** A fresh link lasting 14 days; the previous link stops working. */
+  resend(invitationId: string): Observable<WriteOutcome>;
   changeRole(membershipId: string, role: Role): Observable<WriteOutcome>;
   remove(membershipId: string): Observable<WriteOutcome>;
   /** A child's youth account, while Learning is on; admins only (L2-051). */

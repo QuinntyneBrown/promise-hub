@@ -18,10 +18,26 @@ public sealed class StaffAccessHandler(IPromiseHubDb db, ITenantContext tenant, 
     {
         var now = clock.GetUtcNow();
         var members = await db.Memberships.AsNoTracking().Where(m => m.RemovedAt == null).OrderBy(m => m.PersonName).ToListAsync(cancellationToken);
-        var invitations = (await db.StaffInvitations.AsNoTracking().ToListAsync(cancellationToken)).Where(i => i.Open(now)).OrderBy(i => i.Email).ToList();
+        // Waiting and expired invitations; accepted and withdrawn ones leave the list (L2-052 criterion 4).
+        var invitations = await db.StaffInvitations.AsNoTracking().Where(i => i.AcceptedAt == null && i.WithdrawnAt == null).OrderBy(i => i.Email).ToListAsync(cancellationToken);
+        var childIds = invitations.Where(i => i.ChildId != null).Select(i => i.ChildId!.Value).ToList();
+        var children = await db.Children.AsNoTracking().Where(c => childIds.Contains(c.Id)).ToDictionaryAsync(c => c.Id, c => c.FullName, cancellationToken);
         return new StaffListDto(
             [.. members.Select(m => new StaffMemberDto(m.Id, m.PersonName, m.Email, m.Role.ToString(), m.Id == tenant.MembershipId))],
-            [.. invitations.Select(i => new StaffInvitationDto(i.Id, i.Email, i.Role.ToString(), i.InvitedBy, i.InvitedAt, i.ExpiresAt))]);
+            [.. invitations.Select(i => new StaffInvitationDto(i.Id, i.Email, i.Role.ToString(), i.InvitedBy, i.InvitedAt, i.ExpiresAt,
+                i.Open(now) ? "Pending" : "Expired", i.ChildId is { } c ? children.GetValueOrDefault(c) : null, i.ReplacementRequestedAt is not null))]);
+    }
+
+    /// <summary>A fresh link on a waiting or expired invitation (L2-052 criterion 5); accepted or withdrawn ones are not found.</summary>
+    public async Task<Result> ResendAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var invitation = await db.StaffInvitations.FirstOrDefaultAsync(i => i.Id == id && i.AcceptedAt == null && i.WithdrawnAt == null, cancellationToken);
+        if (invitation is null)
+        {
+            return Result.NotFound;
+        }
+        await issuer.ReissueAsync(invitation, cancellationToken);
+        return Result.Done;
     }
 
     public async Task<Result> InviteAsync(InviteStaffCommand command, CancellationToken cancellationToken = default)
@@ -72,8 +88,8 @@ public sealed class StaffAccessHandler(IPromiseHubDb db, ITenantContext tenant, 
 
     public async Task<Result> WithdrawAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var invitation = await db.StaffInvitations.FirstOrDefaultAsync(i => i.Id == id, cancellationToken);
-        if (invitation is null || !invitation.Open(clock.GetUtcNow()))
+        var invitation = await db.StaffInvitations.FirstOrDefaultAsync(i => i.Id == id && i.AcceptedAt == null && i.WithdrawnAt == null, cancellationToken);
+        if (invitation is null)
         {
             return Result.NotFound;
         }

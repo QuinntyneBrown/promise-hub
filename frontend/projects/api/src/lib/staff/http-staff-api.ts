@@ -30,6 +30,12 @@ export class HttpStaffApi implements StaffApi {
     return toWrite(this.http.delete<null>(`${this.baseUrl}/staff/invitations/${invitationId}`));
   }
 
+  resend(invitationId: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(`${this.baseUrl}/staff/invitations/${invitationId}/resend`, null),
+    );
+  }
+
   changeRole(membershipId: string, role: Role): Observable<WriteOutcome> {
     return toWrite(this.http.put<null>(`${this.baseUrl}/staff/${membershipId}/role`, { role }));
   }

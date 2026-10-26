@@ -18,7 +18,10 @@ import { ChangeRoleDialog } from '../change-role-dialog/change-role-dialog';
 import { InviteStaffDialog } from '../invite-staff-dialog/invite-staff-dialog';
 import { RemoveStaffDialog } from '../remove-staff-dialog/remove-staff-dialog';
 
-/** Staff and roles (mock: staff): who has access, with what role, and invitations waiting; admins only (L2-007, L2-009). */
+/**
+ * Staff and roles (mock: staff): who has access, with what role, and invitations waiting or expired with Resend and
+ * Withdraw; admins only (L2-007, L2-009, L2-052).
+ */
 @Component({
   selector: 'ph-staff-page',
   imports: [PhBadge, PhButton, PhCard, PhEmptyState, PhErrorPage, PhList, PhListItem, PhPageHeader],
@@ -80,6 +83,30 @@ export class StaffPage {
       .closed.subscribe((done) =>
         this.done(done, `${m.name}’s access removed`, 'Kept in the audit log.'),
       );
+  }
+
+  protected resend(invitationId: string, email: string): void {
+    this.api
+      .resend(invitationId)
+      .subscribe((outcome) =>
+        this.done(
+          outcome.status === 'saved',
+          'Invitation resent',
+          `${email} has a fresh link for 14 days.`,
+        ),
+      );
+  }
+
+  protected invitationMeta(i: StaffList['invitations'][number]): string {
+    const role = i.childName
+      ? `${this.roleLabel[i.role]} · ${i.childName}`
+      : this.roleLabel[i.role];
+    const when = new Date(i.expiresAt).toLocaleDateString('en-CA', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+    });
+    return `${role} · invited by ${i.invitedBy} · ${i.status === 'Expired' ? 'expired' : 'expires'} ${when}`;
   }
 
   protected withdraw(invitationId: string, email: string): void {

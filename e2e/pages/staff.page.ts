@@ -21,7 +21,7 @@ export class StaffPage extends BasePage {
   }
 
   get invitations(): Locator {
-    return this.page.getByRole('list', { name: 'Invitations waiting' });
+    return this.page.getByRole('list', { name: 'Invitations' });
   }
 
   member(name: string): Locator {
@@ -58,6 +58,14 @@ export class StaffPage extends BasePage {
   async remove(name: string): Promise<void> {
     await this.member(name).getByRole('button', { name: `Remove ${name}` }).click();
     await this.dialog.getByRole('button', { name: 'Remove access' }).click();
+  }
+
+  get toast(): Locator {
+    return this.page.getByTestId('toast');
+  }
+
+  async resend(email: string): Promise<void> {
+    await this.invitations.getByRole('button', { name: `Resend invitation to ${email}` }).click();
   }
 
   async withdraw(email: string): Promise<void> {
