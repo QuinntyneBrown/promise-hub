@@ -1,0 +1,69 @@
+@let r = result();
+<ph-skip-link />
+<main id="main">
+  @switch (r?.status) {
+    @case ('open') {
+      @if (r?.status === 'open') {
+        <ph-auth-card
+          [title]="'Join ' + r.invitation.organization"
+          [subtitle]="
+            r.invitation.invitedBy + ' invited you as ' + roleLabels[r.invitation.role] + '.'
+          "
+        >
+          <form class="stack" novalidate (ngSubmit)="accept()">
+            @if (failed()) {
+              <ph-alert
+                tone="danger"
+                title="That didn’t go through"
+                text="Try again in a minute."
+              />
+            }
+            <p>
+              Signing in as <strong data-testid="invited-email">{{ r.invitation.email }}</strong>
+            </p>
+            <ph-text-field
+              inputId="name"
+              label="Your name"
+              name="name"
+              autocomplete="name"
+              [error]="errors()['name'] ?? null"
+              [(ngModel)]="name"
+            />
+            <ph-text-field
+              inputId="password"
+              label="Choose a password"
+              type="password"
+              name="password"
+              autocomplete="new-password"
+              help="At least 12 characters. A short sentence works well."
+              [error]="errors()['password'] ?? null"
+              [(ngModel)]="password"
+            />
+            <ph-button variant="primary" type="submit" size="lg" [busy]="busy()"
+              >Accept and continue</ph-button
+            >
+          </form>
+        </ph-auth-card>
+      }
+    }
+    @case ('gone') {
+      @if (r?.status === 'gone') {
+        <ph-auth-card
+          title="This invitation has expired"
+          [subtitle]="'Ask ' + (r.invitedBy ?? 'the person who invited you') + ' for a new one.'"
+        >
+          <ph-button link="/sign-in">Sign in instead</ph-button>
+        </ph-auth-card>
+      }
+    }
+    @case ('error') {
+      <ph-auth-card
+        title="We couldn’t open this invitation"
+        subtitle="Check your connection and try again."
+      />
+    }
+    @default {
+      <ph-auth-card title="Opening your invitation…" />
+    }
+  }
+</main>

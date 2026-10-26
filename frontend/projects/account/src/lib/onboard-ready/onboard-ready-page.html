@@ -1,0 +1,29 @@
+<ph-skip-link />
+<main id="main">
+  <ph-auth-card
+    [title]="'You’re ready, ' + (me()?.personName?.split(' ')?.[0] ?? '')"
+    subtitle="Here’s what you’re working today."
+  >
+    <div class="stack">
+      <ph-stepper [current]="2" [total]="2" />
+      @if (sessions(); as list) {
+        @if (list.length) {
+          <ph-list label="Today’s sessions">
+            @for (s of list; track s.id) {
+              <ph-list-item
+                [title]="s.name"
+                [meta]="when(s.startsAt, s.endsAt) + (s.place ? ' · ' + s.place : '')"
+              />
+            }
+          </ph-list>
+          <ph-button variant="primary" size="lg" [link]="['/check-in', list[0].id]"
+            >Open check-in for {{ list[0].name }}</ph-button
+          >
+        } @else {
+          <p>No sessions for you today. Your site lead adds you to the ones you work.</p>
+          <ph-button variant="primary" size="lg" link="/">Go to Today</ph-button>
+        }
+      }
+    </div>
+  </ph-auth-card>
+</main>

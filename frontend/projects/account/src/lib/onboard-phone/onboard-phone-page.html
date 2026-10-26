@@ -1,0 +1,25 @@
+<ph-skip-link />
+<main id="main">
+  <ph-auth-card
+    title="Your mobile for alerts"
+    subtitle="We text you about sessions you work. Guardians never see it."
+  >
+    <form class="stack" novalidate (ngSubmit)="save()">
+      <ph-stepper [current]="1" [total]="2" />
+      @if (failed()) {
+        <ph-alert tone="danger" title="That didn’t go through" text="Try again in a minute." />
+      }
+      <ph-text-field
+        inputId="mobile"
+        label="Your mobile"
+        type="tel"
+        name="mobile"
+        autocomplete="tel"
+        [error]="errors()['mobile'] ?? null"
+        [(ngModel)]="mobile"
+      />
+      <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">Continue</ph-button>
+      <ph-button variant="ghost" link="/welcome/ready">Skip for now</ph-button>
+    </form>
+  </ph-auth-card>
+</main>

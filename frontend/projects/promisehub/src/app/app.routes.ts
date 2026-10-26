@@ -10,6 +10,12 @@ import { Shell } from './shell/shell';
 
 export const routes: Routes = [
   { path: 'sign-in', loadChildren: () => import('@promisehub/account').then((m) => m.routes) },
+  { path: 'invite', loadChildren: () => import('@promisehub/account').then((m) => m.inviteRoutes) },
+  {
+    path: 'welcome',
+    canActivate: [authGuard],
+    loadChildren: () => import('@promisehub/account').then((m) => m.welcomeRoutes),
+  },
   // Guardian pages: anonymous, reached by a link and a code; the server answers for the link's organization.
   { path: 'g', loadChildren: () => import('@promisehub/guardian').then((m) => m.routes) },
   {
