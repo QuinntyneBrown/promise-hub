@@ -515,6 +515,24 @@
       }
     },
     {
+      "id": "coverage",
+      "kind": "page",
+      "title": "Staff coverage",
+      "route": "/settings/coverage",
+      "requirements": [
+        "L1-016"
+      ],
+      "states": [
+        "default",
+        "error",
+        "forbidden"
+      ],
+      "not_applicable": {
+        "loading": "Same as the staff list.",
+        "empty": "See the gap state."
+      }
+    },
+    {
       "id": "staff",
       "kind": "page",
       "title": "Staff and roles",

@@ -38,6 +38,10 @@ public sealed class StaffAccessHandler(IPromiseHubDb db, ITenantContext tenant, 
         {
             errors["role"] = "Choose a role.";
         }
+        if (errors.Count == 0 && tenant.Role == Role.VolunteerCoordinator && role != Role.YouthWorker)
+        {
+            errors["role"] = "Coordinators invite youth workers. Ask an admin for other roles.";
+        }
         if (errors.Count == 0)
         {
             var member = await db.Memberships.AsNoTracking().FirstOrDefaultAsync(m => m.Email == address && m.RemovedAt == null, cancellationToken);

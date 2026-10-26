@@ -39,6 +39,16 @@ def settings(S):
 
 
 # ------------------------------------------------------------------ Staff and roles
+@screen("coverage", "page", "Staff coverage", route="/settings/coverage", reqs=[R_SEC], na={"loading": "Same as the staff list.", "empty": "See the gap state."})
+def coverage(S):
+    rows = [list_item("Tutoring night · Thu 5 Nov, 4–6 pm", "Jaylen Okafor, Aisha Bello", end=btn("Assign staff", "", size="sm")),
+            list_item("Saturday Sports · Sat 7 Nov, 10 am–12 pm", "No one assigned yet", end=badge("Gap", "warning") + btn("Assign staff", "primary", size="sm"))]
+    hdr = page_header("Staff coverage", "Next 14 days · 1 gap", btn("Invite a volunteer", "primary"))
+    S.add("default", "Upcoming sessions with who works them; a session with no one is a gap. Coordinators assign staff and invite youth workers.", nav="settings", main=hdr + card(ul_list(rows, card=False, label="Upcoming sessions"), cls="card--flush"))
+    S.add("error", "Coverage failed to load.", nav="settings", main=page_header("Staff coverage", "") + card(empty("Couldn’t load coverage", "Try again.", action=btn("Try again", "primary"), error=True, icon_name="alert-triangle"), cls="card--flush"))
+    S.add("forbidden", "Youth workers can't assign staff.", nav="settings", main='<h1>Only coordinators, site leads and directors assign staff</h1><p class="text-muted">Ask your site lead.</p>')
+
+
 @screen("staff", "page", "Staff and roles", route="/settings/staff", reqs=[R_PRIVACY, R_SEC], na={})
 def staff(S):
     hdr = page_header("Staff and roles", "5 staff · 2 admins with MFA · 3 invitations open", btn("Invite staff", "primary", icon_name="plus", data_href=dialog("invite-staff"))) + settings_nav("staff")
