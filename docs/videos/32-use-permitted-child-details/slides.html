@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 32 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="32" data-video-title="Use permitted child details" data-parts="Introduction|Permitted|Rivera household|Lists|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 32</div>
+  <h1>Use permitted child details</h1>
+  <p class="lead">What a youth worker sees, and what never leaves the server</p>
+</section>
+
+<section id="permitted" data-part="1" data-cue="Aisha works Tutoring night.">
+  <h2>What permitted means</h2>
+  <ul>
+    <li>Children of the sessions she works</li>
+    <li>Age, school, household and guardian phone</li>
+    <li>No medical details, no date of birth</li>
+    <li>Anyone else: 403, and audited</li>
+  </ul>
+</section>
+
+<section id="rivera" data-part="2" data-cue="Here is the Rivera household on Aisha's laptop." data-clip="clips/permitted-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Permitted, then refused</h3><p>Mateo shows; Kevin is not in her sessions.</p></div>
+</section>
+
+<section id="lists" data-part="3" data-cue="Families and the child search">
+  <h2>Lists leave them out too</h2>
+  <div class="cols">
+    <img class="shot" alt="Families listing only the households of Aisha's sessions" src="shots/desktop-families.png">
+    <img class="shot" alt="Mateo's profile on a phone with age only" src="shots/phone-child.png">
+  </div>
+</section>
+
+<section id="testing" data-part="4" data-cue="Backend tests cover the date of birth">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Youth worker opens a child outside her sessions</td><td>403 · audited</td></tr>
+    <tr><td>Youth worker opens Mateo</td><td>Age, no date of birth</td></tr>
+    <tr><td>Another organization's child</td><td>404</td></tr>
+    <tr><td>Roster off</td><td>404</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="5" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>The children of her sessions</li><li>Age, not date of birth</li><li>Refused on the server, and logged</li></ul>
+  <p class="muted">Next: monitor today's work</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

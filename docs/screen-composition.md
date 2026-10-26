@@ -27,8 +27,8 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Enter your code | `sign-in/mfa` | `ph-auth-card`, `ph-text-field`, `ph-switch`, `ph-alert`, `ph-button`, `ph-skip-link` | — |
 | Settings › Modules | `settings-modules` (default, single, invalid, success, error, forbidden) | `ph-page-header`, `ph-tabs`, `ph-chip`, `ph-list`, `ph-list-item`, `ph-switch`, `ph-button`, `ph-card`, `ph-empty-state`, toast via `ToastService` | Presets and dependency captions from `MODULE_CATALOG` |
 | Families | `families` (default, empty, no-results, error) | `ph-page-header`, `ph-text-field` (search), `ph-chip`, `ph-list`, `ph-list-item`, `ph-badge`, `ph-flag`, `ph-card`, `ph-empty-state`, `ph-button` | Row meta text |
-| Household | `household` (default, forbidden) | `ph-breadcrumb`, `ph-page-header`, `ph-alert`, `ph-card` (titled), `ph-list`, `ph-list-item`, `ph-flag`, `ph-badge`, `ph-button` | — |
-| Child | `child` (default, forbidden) | `ph-breadcrumb`, `ph-page-header`, `ph-card` (titled), `ph-description-list`, `ph-button` | Medical facts |
+| Household | `household` (default, forbidden) | `ph-breadcrumb`, `ph-page-header`, `ph-alert`, `ph-card` (titled), `ph-list`, `ph-list-item`, `ph-flag`, `ph-badge`, `ph-button`, `ph-error-page` (outside sessions) | — |
+| Child | `child` (default, forbidden, outside-sessions) | `ph-breadcrumb`, `ph-page-header`, `ph-card` (titled), `ph-description-list`, `ph-button`, `ph-error-page` (outside sessions) | Medical facts |
 | Programs | `programs` (default, empty, error) | `ph-page-header`, `ph-chip`, `ph-list`, `ph-list-item`, `ph-badge`, `ph-card`, `ph-empty-state`, `ph-button` | — |
 | Program | `program` (default, archived) | `ph-breadcrumb`, `ph-page-header`, `ph-alert`, `ph-stat`, `ph-card` (titled), `ph-list`, `ph-list-item`, `ph-button` | Season and roster text |
 | Program form | `program-form` (default, invalid) | `ph-breadcrumb`, `ph-page-header`, `ph-card`, `ph-text-field`, `ph-radio-group`, `ph-switch`, `ph-alert`, `ph-button` | — |

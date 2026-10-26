@@ -27,6 +27,8 @@ public static class RolePermissions
         Permission.ManageStaff => role is Role.Admin,
         Permission.InviteStaff => role is Role.Admin or Role.VolunteerCoordinator,
         Permission.AssignStaff => role is Role.Admin or Role.ProgramDirector or Role.SiteLead or Role.VolunteerCoordinator,
+        // Youth workers and coordinators see a child's age, not the date of birth (L2-007 criterion 7).
+        Permission.ReadDateOfBirth => role is Role.Admin or Role.ProgramDirector or Role.SiteLead,
         _ => false,
     };
 }

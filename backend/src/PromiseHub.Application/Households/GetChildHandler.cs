@@ -6,10 +6,13 @@ using PromiseHub.Domain.Audit;
 
 namespace PromiseHub.Application.Households;
 
-public sealed class GetChildHandler(IPromiseHubDb db, IAuditWriter audit, ITenantContext tenant, TimeProvider clock)
+public sealed class GetChildHandler(IPromiseHubDb db, IAuditWriter audit, ITenantContext tenant, TimeProvider clock, RosterAccess access)
 {
-    /// <summary>Returns the child of the current organization, or null. A child of another organization is null too, and the attempt is audited.</summary>
-    public async Task<ChildDto?> HandleAsync(Guid id, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Returns the child of the current organization. A child of another organization is not found, and a child outside
+    /// a youth worker's sessions is forbidden; both attempts are audited.
+    /// </summary>
+    public async Task<(ResultStatus Status, ChildDto? Child)> HandleAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var child = await db.Children.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
         if (child is null)
@@ -19,7 +22,13 @@ public sealed class GetChildHandler(IPromiseHubDb db, IAuditWriter audit, ITenan
                 audit.Record(new AuditEvent(AuditAction.AccessDenied, "Child", id, "Requested a child of another organization"));
                 await db.SaveChangesAsync(cancellationToken);
             }
-            return null;
+            return (ResultStatus.NotFound, null);
+        }
+        if (await access.PermittedChildrenAsync(cancellationToken) is { } permitted && !permitted.Contains(child.Id))
+        {
+            audit.Record(new AuditEvent(AuditAction.AccessDenied, "Child", child.Id, $"{child.FullName} · outside the caller's sessions"));
+            await db.SaveChangesAsync(cancellationToken);
+            return (ResultStatus.Forbidden, null);
         }
 
         var household = await db.Households.AsNoTracking().FirstAsync(h => h.Id == child.HouseholdId, cancellationToken);
@@ -31,12 +40,13 @@ public sealed class GetChildHandler(IPromiseHubDb db, IAuditWriter audit, ITenan
             await db.SaveChangesAsync(cancellationToken);
         }
         var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
-        return new ChildDto(
+        var birthDate = RolePermissions.Has(tenant.Role, Permission.ReadDateOfBirth);
+        return (ResultStatus.Done, new ChildDto(
             child.Id,
             child.FullName,
             child.FirstName,
             child.LastName,
-            child.DateOfBirth,
+            birthDate ? child.DateOfBirth : null,
             child.AgeOn(today),
             child.School,
             household.Id,
@@ -44,6 +54,6 @@ public sealed class GetChildHandler(IPromiseHubDb db, IAuditWriter audit, ITenan
             medical
                 ? new MedicalDto(child.Allergies, child.Medication, child.Conditions, child.Doctor, child.RedAlert, child.AlertInstruction, child.HealthCard, child.MedicalUpdatedAt, child.MedicalUpdatedBy)
                 : null,
-            !medical);
+            !medical));
     }
 }

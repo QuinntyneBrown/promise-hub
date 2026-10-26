@@ -3,14 +3,21 @@ using Microsoft.EntityFrameworkCore;
 namespace PromiseHub.Application.Households;
 
 /// <summary>Families: the organization's households, searchable by child, guardian or phone, with filter counts.</summary>
-public sealed class ListHouseholdsHandler(IPromiseHubDb db, TimeProvider clock)
+public sealed class ListHouseholdsHandler(IPromiseHubDb db, TimeProvider clock, RosterAccess access)
 {
     public async Task<HouseholdListDto> HandleAsync(string? q, string? filter, CancellationToken cancellationToken = default)
     {
         var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
         var households = await db.Households.AsNoTracking().OrderBy(h => h.Name).ToListAsync(cancellationToken);
         var guardians = (await db.Guardians.AsNoTracking().ToListAsync(cancellationToken)).ToLookup(g => g.HouseholdId);
-        var children = (await db.Children.AsNoTracking().ToListAsync(cancellationToken)).ToLookup(c => c.HouseholdId);
+        var permitted = await access.PermittedChildrenAsync(cancellationToken);
+        var children = (await db.Children.AsNoTracking().ToListAsync(cancellationToken))
+            .Where(c => permitted is null || permitted.Contains(c.Id)).ToLookup(c => c.HouseholdId);
+        if (permitted is not null)
+        {
+            // A youth worker never receives a household with none of their children (L2-007 criterion 7).
+            households = [.. households.Where(h => children[h.Id].Any())];
+        }
 
         var rows = households.Select(h =>
         {

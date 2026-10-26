@@ -12,6 +12,15 @@
       </ph-empty-state>
     </ph-card>
   }
+  @case ('forbidden') {
+    <ph-error-page
+      icon="lock"
+      title="This household isn’t in your sessions"
+      text="Youth workers see the children in the sessions they work. Ask a site lead if you need more."
+    >
+      <ph-button variant="primary" link="/families">Back to Families</ph-button>
+    </ph-error-page>
+  }
   @case ('error') {
     <ph-card [flush]="true">
       <ph-empty-state
@@ -46,7 +55,7 @@
         <ph-alert
           tone="info"
           title="Some details are hidden for your role"
-          text="Medical details need a staff role."
+          text="Medical details and dates of birth need a staff role."
         />
       }
       <div class="split">
