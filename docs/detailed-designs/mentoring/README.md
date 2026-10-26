@@ -1,0 +1,13 @@
+# Mentoring
+
+The **Mentoring** module (ADR 0043, `L1-024`): the mentor dashboard, youth records, grading, check-ins, at-risk flags and assigned work, served by `backend/src/PromiseHub.Application/Mentoring/` and the `frontend/projects/mentoring/` library. A mentor reaches only the youth assigned to them. The module needs Roster; grading and assign work also need Learning content and render only while Learning is on.
+
+Prompt 49 built the foundation only: `GET /mentoring/youth` (the caller's assigned youth, an empty list until assignments exist, `L2-007` criterion 10) and the placeholder `MentoringPage` (`mentoring`). The journey prompts add these designs:
+
+| Design | Prompt | Waypoint source |
+|---|---|---|
+| `use-the-mentor-dashboard` | 55 Use the mentor dashboard | `mentoring` L1-MENTOR-001, 002 |
+| `grade-and-assess` | 63 Grade and assess | L1-MENTOR-003 to 005 |
+| `record-mentor-check-ins` | 67 Record mentor check-ins | L1-MENTOR-006 |
+| `flag-at-risk-youth` | 68 Flag at-risk youth | L1-MENTOR-007 |
+| `assign-work` | 69 Assign work | L1-MENTOR-008 |

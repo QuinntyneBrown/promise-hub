@@ -49,6 +49,15 @@ Slice 29 made the per-request membership check honour removed access (`Membershi
 
 Slice 02 delivered `Permission`, `RolePermissions` (in `PromiseHub.Application/Identity/`, ADR 0003) and a `RequirePermission` extension backed by an ASP.NET Core authorization requirement that reads the role of the membership resolved for the request; `/settings/*` answers 403 for roles without `ManageSettings`. Slice 09 added the first row scope: `RunAnySession` and `SessionAccess` limit youth workers to the sessions they are assigned to (`SessionStaff`), with `ResultStatus.Forbidden` written as 403 (ADR 0012). Field policies, other row scopes, role changes and removals arrive with their features.
 
+## Participant roles (prompt 49)
+
+ADR 0043 adds the roles **Youth**, **Mentor** and **Volunteer** to `Role`.
+
+- **Staff roles and participant roles.** The new `Permission.UseStaffApp` is held by the five staff roles only. `AuthorizationSetup` makes the fallback policy require it, so every existing endpoint that declares no permission answers 403 to a participant role (`L2-007` criterion 8). `AllowAnyMember()` opts an endpoint back in for every signed-in member: `/me` and its children, `/notifications` and `/auth/sign-out`.
+- **`AnyPermissionRequirement`.** `RequireAnyPermission(params Permission[])` passes when the role holds one of them. `/sessions/today` and `/sessions/{id}/roster` require `UseStaffApp` or `RunSessions`, so a volunteer, who holds `RunSessions` without `RunAnySession`, reaches them and `SessionAccess` limits him to his assigned sessions (criterion 11).
+- **New permissions.** `Learn` (Youth), `MentorYouth` (Mentor) and `AuthorCurriculum` (Admin, Program director). `LearnerHandler` answers `GET /learning/me` with the child linked to the caller's own membership (criterion 9); `MentoringHandler` answers `GET /mentoring/youth` with the youth assigned to the caller, which is an empty list until assignments exist (criterion 10).
+- **Linking a youth account.** `Membership.ChildId` holds the linked child. `LinkYouthHandler` serves `PUT /staff/{membershipId}/child` with `ManageStaff`: the membership and the child are read through the tenant query filter (another organization's answers 404), the membership must be a Youth one and the child must have no other youth account (422 otherwise), and `AuditAction.YouthLinked` records the link (`L2-045`).
+
 ## Requirements
 
 The feature realizes the following level-2 (L2) requirements. Each L2 requirement refines a level-1 (L1) requirement, cited by identifier.
@@ -56,6 +65,7 @@ The feature realizes the following level-2 (L2) requirements. Each L2 requiremen
 | L2 ID | Refines (L1) | Requirement |
 |-------|--------------|-------------|
 | `L2-007` | `L1-003` | Permissions are enforced per endpoint and per field by role; the UI reflects them but never substitutes for them. |
+| `L2-045` | `L1-003` | A youth signs in with a membership whose role is Youth, and that membership links to exactly one child record in the same organization, so every youth-facing page reads that child's data and no other. |
 | `L2-001` | `L1-001` | Every tenant-owned table carries the organization id and every query filters by it on the server. |
 | `L2-032` | `L1-017` | Every change and every sensitive view is recorded and searchable by admins. |
 
@@ -96,3 +106,9 @@ A volunteer coordinator's Quick Card request returns the record without medical 
 The admin's change is audited and takes effect on the affected person's next request; removal revokes sessions so the next request answers 401 (`L2-007`).
 
 ![Sequence diagram for changing a role and removing staff](diagrams/sequence-change-role.png)
+
+### Behaviour — a participant role calls a staff endpoint and its own endpoint
+
+The fallback policy refuses a staff endpoint to a youth; the youth's own endpoint passes its permission and module gate and returns only the linked child (`L2-007` criteria 8 and 9).
+
+![Sequence diagram for participant scoping](diagrams/sequence-participant-scope.png)

@@ -1,0 +1,44 @@
+@startuml
+title UML sequence behaviour — A participant role calls a staff endpoint and its own endpoint
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Sofía (Youth)" as actor
+box "Frontend — PromiseHub web app, learning library" #E0F2FE
+  participant "LearningPage" as page
+  participant "HttpLearningApi" as client
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "TenantContextMiddleware" as middleware
+  participant "Authorization (fallback: UseStaffApp)" as authz
+  participant "ModuleGateFilter (Learning)" as gate
+end box
+box "Backend — PromiseHub Application (Learning)" #ECFDF3
+  participant "LearnerHandler" as handler
+end box
+box "Backend — PromiseHub Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> client : GET /households (typed directly)
+client -> middleware : Session cookie
+middleware -> db : Load membership (Role = Youth)
+middleware -> authz : Continue
+authz --> client : 403 — no UseStaffApp (L2-007 criterion 8)
+actor -> page : Open Learning
+page -> client : learner()
+client -> middleware : GET /learning/me
+middleware -> authz : Continue
+authz -> authz : Permission Learn held by Youth
+authz -> gate : Continue
+alt Learning off for the organization
+  gate --> client : 404 (L2-005 criterion 6)
+else Learning on
+  gate -> handler : Handle
+  handler -> db : Membership.ChildId, then that child (tenant filter)
+  db --> handler : Sofía Rivera, 12
+  handler --> client : 200 LearnerDto (own record only, L2-007 criterion 9)
+  client --> page : Loaded
+end
+@enduml

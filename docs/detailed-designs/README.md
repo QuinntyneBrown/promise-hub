@@ -12,7 +12,7 @@ One folder per subsystem, one folder per vertically sliced feature, each with a 
 | organizations | enforce-module-gates | L2-005 |
 | organizations | set-privacy-and-residency | L2-030 |
 | identity | sign-in | L2-006 |
-| identity | authorize-request | L2-007 |
+| identity | authorize-request | L2-007, L2-045 |
 | staff | invite-and-onboard-staff | L2-009 |
 | households | maintain-household | L2-011 |
 | enrollment | enroll-guardian | L2-013 |
@@ -45,6 +45,10 @@ One folder per subsystem, one folder per vertically sliced feature, each with a 
 | platform | run-background-jobs | L2-034 |
 | platform | observe-and-alert | L2-041 |
 | platform | migrate-and-seed | L2-042 |
+| learning | (journeys 57, 61, 62, 65, 66; see [learning](learning/README.md)) | L1-023 |
+| curriculum | (journeys 56, 60, 64; see [curriculum](curriculum/README.md)) | L1-023 |
+| mentoring | (journeys 55, 63, 67, 68, 69; see [mentoring](mentoring/README.md)) | L1-024 |
+| website | (journey 81; see [website](website/README.md)) | L1-025 |
 
 Render all diagrams with:
 
