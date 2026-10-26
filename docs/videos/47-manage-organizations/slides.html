@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 47 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="47" data-video-title="Manage organizations" data-parts="Introduction|Promises|Adding|Suspending|Suspended|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 47</div>
+  <h1>Manage organizations</h1>
+  <p class="lead">Every tenant, from one list</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="Only platform admins open the list">
+  <h2>What platform admins can do</h2>
+  <ul>
+    <li>Plan, active children, modules on, status</li>
+    <li>Search by name; filter by plan or status</li>
+    <li>Add: name, first admin, plan, module preset</li>
+    <li>Suspend with a reason; nothing is deleted</li>
+  </ul>
+</section>
+
+<section id="add" data-part="2" data-cue="Here is Tom on a laptop" data-clip="clips/add-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Add an organization</h3><p>Starts setting up.</p></div>
+</section>
+
+<section id="suspend" data-part="3" data-cue="Here Tom suspends Northgate" data-clip="clips/suspend-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Suspend, then reinstate</h3><p>Nothing deleted.</p></div>
+</section>
+
+<section id="suspended" data-part="4" data-cue="Northgate's staff who try to open PromiseHub">
+  <h2>What a suspended organization sees</h2>
+  <div class="cols">
+    <img class="shot" alt="Sign in saying the organization is suspended" src="shots/phone-suspended.png">
+    <img class="shot" alt="The add organization dialog naming field errors" src="shots/desktop-invalid.png">
+  </div>
+</section>
+
+<section id="testing" data-part="5" data-cue="Backend tests cover the list">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Suspended staff</td><td>403 suspended</td></tr>
+    <tr><td>Queued messages</td><td>Wait, not sent</td></tr>
+    <tr><td>Not a platform admin</td><td>403</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="6" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Only platform admins see every organization</li><li>New ones start setting up</li><li>Suspending deletes nothing</li></ul>
+  <p class="muted">Next: operational readiness</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

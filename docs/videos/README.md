@@ -54,6 +54,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 44 | [Review audit history](44-review-audit-history/README.md) | ~2 min | Search sensitive actions by person, record, action and time; exports are logged too |
 | 45 | [Manage sessions](45-manage-sessions/README.md) | ~2 min | The account page, recovery codes shown once and stored scrambled, and signing out everywhere else |
 | 46 | [Recover account access](46-recover-account-access/README.md) | ~2 min | A one-hour, single-use emailed link, a new password, and straight back to Today |
+| 47 | [Manage organizations](47-manage-organizations/README.md) | ~2 min | Platform admins list, add, suspend and reinstate organizations; suspension deletes nothing |
 
 ## Making or updating a video
 
