@@ -235,6 +235,9 @@ export class FakeApi {
   /** The six-digit code the fake texts to a contact on file. */
   readonly guardianCode = '482913';
   private smsUsed = new Map<string, number>();
+  /** Password reset links: token → email and whether it is still usable. */
+  private resetLinks = new Map<string, { email: string; usable: boolean }>([['tok-reset-jaylen', { email: 'jaylen@harbourview.example', usable: true }]]);
+  resetRequestedFor: string | null = null;
   /** Recovery codes left per person, and whether the other devices were signed out. */
   private recoveryCodes = new Map<string, number>();
   signedOutOthers = false;
@@ -390,6 +393,9 @@ export class FakeApi {
     ['POST', /^\/api\/auth\/mfa$/, (route) => this.mfa(route)],
     ['POST', /^\/api\/auth\/sign-out$/, (route) => this.signOut(route)],
     ['GET', /^\/api\/setup$/, (route) => this.setup(route)],
+    ['POST', /^\/api\/auth\/forgot-password$/, (route) => this.forgotPassword(route)],
+    ['GET', /^\/api\/auth\/reset-password\/(?<token>[^/]+)$/, (route, p) => this.checkReset(route, p['token']!)],
+    ['POST', /^\/api\/auth\/reset-password$/, (route) => this.resetPassword(route)],
     ['GET', /^\/api\/me\/account$/, (route) => this.account(route)],
     ['POST', /^\/api\/me\/recovery-codes$/, (route) => this.newRecoveryCodes(route)],
     ['POST', /^\/api\/me\/sign-out-others$/, (route) => this.signOutOthers(route)],
@@ -713,6 +719,36 @@ export class FakeApi {
     if (!target) return route.fulfill({ status: 404 });
     this.membershipId = target.id;
     return route.fulfill({ status: 204 });
+  }
+
+  expireReset(token: string): void {
+    this.resetLinks.get(token)!.usable = false;
+  }
+
+  /** Mirrors backend PasswordResetHandler. */
+  private async forgotPassword(route: Route): Promise<void> {
+    const b = route.request().postDataJSON() as { email: string };
+    this.resetRequestedFor = b.email;
+    return route.fulfill({ status: 202 });
+  }
+
+  private async checkReset(route: Route, token: string): Promise<void> {
+    const link = this.resetLinks.get(token);
+    if (!link?.usable) return route.fulfill({ status: 410 });
+    return route.fulfill({ json: { email: link.email } });
+  }
+
+  private async resetPassword(route: Route): Promise<void> {
+    const b = route.request().postDataJSON() as { token: string; password: string; repeat: string };
+    const link = this.resetLinks.get(b.token);
+    if (!link?.usable) return route.fulfill({ status: 410 });
+    const errors: Record<string, string> = {};
+    if ((b.password ?? '').length < 12) errors['password'] = 'Use at least 12 characters.';
+    if (b.repeat !== b.password) errors['repeat'] = 'The two passwords don’t match.';
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    link.usable = false;
+    this.membershipId = memberships.find((m) => m.email === link.email)!.id;
+    return route.fulfill({ json: { status: 'signed-in' } });
   }
 
   /** Mirrors backend AccountHandler. */

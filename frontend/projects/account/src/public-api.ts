@@ -1,1 +1,8 @@
-export { accountRoutes, inviteRoutes, routes, welcomeRoutes } from './lib/account.routes';
+export {
+  accountRoutes,
+  forgotRoutes,
+  inviteRoutes,
+  resetRoutes,
+  routes,
+  welcomeRoutes,
+} from './lib/account.routes';

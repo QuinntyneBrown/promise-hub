@@ -27,6 +27,8 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Set up | `setup` (default, error, success, forbidden) | `ph-page-header`, `ph-progress-bar`, `ph-card`, `ph-list`, `ph-list-item`, `ph-badge`, `ph-button`, `ph-empty-state`, `ph-skeleton` | — |
 | Set up: organization | `onboard-org` (default, invalid) | `ph-page-header`, `ph-card`, `ph-text-field`, `ph-error-summary`, `ph-alert`, `ph-button` | — |
 | Search | `search` (default, loading, empty, error, no-results) | `ph-page-header`, `ph-text-field` (search), `ph-list`, `ph-list-item`, `ph-card`, `ph-empty-state`, `ph-button`, `ph-skeleton` | Result group headings |
+| Forgot password | `forgot-password` (default, invalid, submitting, success, error) | `ph-skip-link`, `ph-auth-card`, `ph-text-field`, `ph-button`, `ph-alert` | — |
+| Reset password | `reset-password` (default, invalid, submitting, success, error) | `ph-skip-link`, `ph-auth-card`, `ph-text-field`, `ph-button`, `ph-alert` | — |
 | Not found | `not-found` | `ph-error-page`, `ph-button` | — |
 | Forbidden | `forbidden` | `ph-error-page`, `ph-button` | — |
 | Server error | `server-error` | `ph-error-page`, `ph-button` | Retry reloads |

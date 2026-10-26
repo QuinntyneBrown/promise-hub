@@ -1,0 +1,29 @@
+@startuml
+title UML sequence — Reset a forgotten password
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Staff member" as staff
+participant ForgotPasswordPage as forgot
+participant ResetPasswordPage as reset
+participant AuthEndpoints as api
+participant PasswordResetHandler as handler
+participant "Email provider" as mail
+staff -> forgot : enters work email
+forgot -> api : POST /auth/forgot-password
+api -> handler : RequestAsync
+handler -> handler : store hash of new token, expires in 1 h
+handler -> mail : email /reset-password?token=…
+api --> forgot : 202 (same for any address)
+staff -> reset : opens the emailed link
+reset -> api : GET /auth/reset-password/{token}
+api --> reset : email, or 410
+staff -> reset : new password twice
+reset -> api : POST /auth/reset-password
+api -> handler : ResetAsync
+handler -> handler : hash password, use link, session version + 1, audit
+api --> reset : session cookie (or MFA step)
+reset -> staff : Today
+@enduml

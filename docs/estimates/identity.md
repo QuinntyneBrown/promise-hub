@@ -4,3 +4,4 @@
 |---|---|---|
 | authorize-request | 5 days | 70% |
 | sign-in | 6 days | 75% |
+| recover-access | 3 days | 90% |
