@@ -35,6 +35,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 25 | [Run check-in offline](25-run-check-in-offline/README.md) | ~2 min | Roster and Quick Cards kept on the phone, a queue that syncs in order, conflicts flagged |
 | 26 | [Manage approved pickups](26-manage-approved-pickups/README.md) | ~2 min | Guardians and staff add or remove approved adults; the Quick Card and sign-out follow |
 | 27 | [Confirm an exceptional pickup](27-confirm-an-exceptional-pickup/README.md) | ~2 min | Ask the guardian by text; an approval allows sign-out, a refusal keeps the child and logs an incident |
+| 28 | [Update household details](28-update-household-details/README.md) | ~2 min | Families correct contact, language and children's health from the family page; staff see it at once |
 
 ## Making or updating a video
 
