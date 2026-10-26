@@ -10,6 +10,7 @@
   </ph-error-page>
 } @else {
   <ph-page-header title="Reports" subtitle="This season to today">
+    <ph-button (click)="openSurvey()">Send a survey</ph-button>
     <ph-button variant="primary" icon="download" (click)="openExport()">Export</ph-button>
   </ph-page-header>
   <div class="toolbar">
@@ -28,6 +29,11 @@
       <ph-stat label="Attendance rate" [value]="v.attendanceRate + '%'" />
       <ph-stat label="Sessions delivered" [value]="'' + v.sessionsDelivered" />
       <ph-stat label="Slips signed online" [value]="'' + v.slipsSigned" />
+      <ph-stat
+        label="Guardian feedback"
+        [value]="feedback(v)"
+        [caption]="v.surveyResponses ? v.surveyResponses + ' answers' : null"
+      />
     </section>
     <div class="split">
       <ph-card title="Demographics" [flush]="true">

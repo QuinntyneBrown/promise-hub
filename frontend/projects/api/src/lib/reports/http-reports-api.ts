@@ -7,6 +7,7 @@ import { LoadResult } from '../load-result';
 import { Report } from './report';
 import { ReportExport } from './report-export';
 import { ReportsApi } from './reports-api';
+import { SurveySent } from './survey-sent';
 
 @Injectable()
 export class HttpReportsApi implements ReportsApi {
@@ -20,6 +21,10 @@ export class HttpReportsApi implements ReportsApi {
 
   export(programId: string | null): Observable<LoadResult<ReportExport>> {
     return toLoad(this.http.post<ReportExport>(`${this.baseUrl}/reports/exports`, { programId }));
+  }
+
+  sendSurvey(eventId: string): Observable<LoadResult<SurveySent>> {
+    return toLoad(this.http.post<SurveySent>(`${this.baseUrl}/events/${eventId}/survey`, {}));
   }
 
   downloadUrl(id: string): string {

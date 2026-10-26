@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { LoadResult, REPORTS_API, Report } from '@promisehub/api';
+import { LoadResult, REPORTS_API, Report, SurveySent } from '@promisehub/api';
 import {
   PhButton,
   PhCard,
@@ -16,9 +16,11 @@ import {
   PhTable,
   SelectOption,
   TableColumn,
+  ToastService,
 } from '@promisehub/components';
 import { Subject, merge, startWith, switchMap } from 'rxjs';
 import { ExportDialog, ExportDialogData } from '../export-dialog/export-dialog';
+import { SendSurveyDialog } from '../send-survey-dialog/send-survey-dialog';
 
 /** Reports (mock: reports): headline numbers, children by age, attendance by program and households by language. */
 @Component({
@@ -43,6 +45,7 @@ import { ExportDialog, ExportDialogData } from '../export-dialog/export-dialog';
 export class ReportsPage {
   private readonly api = inject(REPORTS_API);
   private readonly dialogs = inject(PhDialogs);
+  private readonly toasts = inject(ToastService);
   private readonly retry$ = new Subject<void>();
   private programs: SelectOption[] = [];
 
@@ -74,6 +77,23 @@ export class ReportsPage {
 
   protected retry(): void {
     this.retry$.next();
+  }
+
+  protected feedback(r: Report): string {
+    return r.surveyResponses ? `${r.surveyAverage} of 5` : 'No answers yet';
+  }
+
+  protected openSurvey(): void {
+    this.dialogs
+      .open<SurveySent, void, SendSurveyDialog>(SendSurveyDialog)
+      .closed.subscribe((sent) => {
+        if (!sent) return;
+        this.toasts.show({
+          tone: 'success',
+          title: `Survey sent to ${sent.households} households`,
+          text: 'It closes in a week.',
+        });
+      });
   }
 
   protected openExport(): void {

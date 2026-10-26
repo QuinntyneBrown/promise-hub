@@ -46,6 +46,19 @@ export class ReportsPage extends BasePage {
     return this.dialog.getByRole('link', { name: /^Download/ });
   }
 
+  async sendSurvey(eventName: string): Promise<void> {
+    await this.page.getByRole('button', { name: 'Send a survey' }).click();
+    await expect(this.dialog).toBeVisible();
+    const select = this.dialog.getByLabel('Event');
+    const value = await select.locator('option', { hasText: `${eventName} · ` }).first().getAttribute('value');
+    await select.selectOption(value!);
+    await this.dialog.getByRole('button', { name: 'Send survey' }).click();
+  }
+
+  get toast(): Locator {
+    return this.page.getByTestId('toast');
+  }
+
   get forbidden(): Locator {
     return this.page.getByRole('heading', { name: 'Reports are for directors and site leads' });
   }

@@ -1,0 +1,22 @@
+<form novalidate (ngSubmit)="send()">
+  <ph-dialog
+    title="Send a survey"
+    description="Each household gets two quick questions per child. It closes after a week."
+  >
+    @if (failed()) {
+      <ph-alert tone="danger" title="That didn’t go through" text="Nothing was sent. Try again." />
+    }
+    <ph-select
+      inputId="survey-event"
+      label="Event"
+      [options]="events()"
+      [error]="error()"
+      name="event"
+      [(ngModel)]="eventId"
+    />
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Send survey</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

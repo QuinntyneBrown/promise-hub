@@ -1,3 +1,4 @@
+import { GuardianSurvey } from './guardian-survey';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, of } from 'rxjs';
@@ -20,6 +21,19 @@ export class HttpGuardianApi implements GuardianApi {
 
   slip(token: string): Observable<GuardianSlipResult> {
     return this.page<GuardianSlip>(`${this.baseUrl}/g/slips/${encodeURIComponent(token)}`);
+  }
+
+  survey(token: string): Observable<GuardianPageResult<GuardianSurvey>> {
+    return this.page<GuardianSurvey>(`${this.baseUrl}/g/survey/${encodeURIComponent(token)}`);
+  }
+
+  answerSurvey(token: string, rating: number | null, comment: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(`${this.baseUrl}/g/survey/${encodeURIComponent(token)}`, {
+        rating,
+        comment,
+      }),
+    );
   }
 
   home(token: string): Observable<GuardianPageResult<GuardianHome>> {
