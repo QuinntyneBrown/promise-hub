@@ -17,7 +17,10 @@ public static class HouseholdEndpoints
 
         roster.MapGet("/households", (string? q, string? filter, ListHouseholdsHandler handler, CancellationToken ct) => handler.HandleAsync(q, filter, ct));
         roster.MapGet("/households/{id:guid}", async (Guid id, GetHouseholdHandler handler, CancellationToken ct) =>
-            await handler.HandleAsync(id, ct) is { } household ? Results.Ok(household) : Results.NotFound());
+        {
+            var (status, household) = await handler.HandleAsync(id, ct);
+            return household is not null ? Results.Ok(household) : new Application.Result(status).ToHttp();
+        });
         roster.MapPost("/households", async (CreateHouseholdCommand command, CreateHouseholdHandler handler, CancellationToken ct) =>
             (await handler.HandleAsync(command, ct)).ToHttp("/households")).RequirePermission(Permission.WriteHouseholds);
         roster.MapPost("/households/{id:guid}/children", async (Guid id, AddChildCommand command, AddChildHandler handler, CancellationToken ct) =>
@@ -30,7 +33,10 @@ public static class HouseholdEndpoints
             (await handler.HandleAsync(id, command, ct)).ToHttp()).RequirePermission(Permission.WriteHouseholds);
         roster.MapGet("/children", (string? q, FindChildrenHandler handler, CancellationToken ct) => handler.HandleAsync(q, ct));
         roster.MapGet("/children/{id:guid}", async (Guid id, GetChildHandler handler, CancellationToken ct) =>
-            await handler.HandleAsync(id, ct) is { } child ? Results.Ok(child) : Results.NotFound());
+        {
+            var (status, child) = await handler.HandleAsync(id, ct);
+            return child is not null ? Results.Ok(child) : new Application.Result(status).ToHttp();
+        });
         roster.MapPut("/children/{id:guid}", async (Guid id, UpdateChildCommand command, UpdateChildHandler handler, CancellationToken ct) =>
             (await handler.HandleAsync(id, command, ct)).ToHttp()).RequirePermission(Permission.WriteHouseholds);
         roster.MapPut("/children/{id:guid}/medical", async (Guid id, MedicalRequest request, UpdateMedicalHandler handler, CancellationToken ct) =>

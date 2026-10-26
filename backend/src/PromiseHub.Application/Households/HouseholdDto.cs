@@ -6,4 +6,5 @@ public sealed record HouseholdDto(
     string Language,
     IReadOnlyList<GuardianDto> Guardians,
     IReadOnlyList<ChildSummaryDto> Children,
-    bool MedicalRestricted);
+    bool MedicalRestricted,
+    bool ContactsRestricted);

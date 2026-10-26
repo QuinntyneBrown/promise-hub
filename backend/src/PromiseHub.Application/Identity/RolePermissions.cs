@@ -27,6 +27,8 @@ public static class RolePermissions
         Permission.ManageStaff => role is Role.Admin,
         Permission.InviteStaff => role is Role.Admin or Role.VolunteerCoordinator,
         Permission.AssignStaff => role is Role.Admin or Role.ProgramDirector or Role.SiteLead or Role.VolunteerCoordinator,
+        // Date of birth and guardian phone and email (L2-007 criterion 7).
+        Permission.ReadContacts => role is Role.Admin or Role.ProgramDirector or Role.SiteLead,
         _ => false,
     };
 }
