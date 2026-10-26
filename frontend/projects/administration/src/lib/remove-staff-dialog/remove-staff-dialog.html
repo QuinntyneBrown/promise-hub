@@ -1,0 +1,16 @@
+<ph-dialog
+  [title]="'Remove ' + data.name + '’s access?'"
+  description="They’re signed out on their next action. What they recorded keeps their name."
+>
+  @if (failed()) {
+    <ph-alert
+      tone="danger"
+      title="That didn’t go through"
+      text="They still have access. Try again."
+    />
+  }
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close()">Cancel</ph-button>
+    <ph-button variant="danger" [busy]="busy()" (click)="remove()">Remove access</ph-button>
+  </ng-container>
+</ph-dialog>

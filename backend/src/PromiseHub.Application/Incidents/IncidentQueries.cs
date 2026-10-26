@@ -38,7 +38,7 @@ public sealed class IncidentQueries(IPromiseHubDb db, ITenantContext tenant, IAu
 
     public async Task<IncidentFormDto> FormAsync(CancellationToken cancellationToken = default)
     {
-        var supervisor = await db.Memberships.AsNoTracking().Where(m => m.Role == Domain.Organizations.Role.ProgramDirector)
+        var supervisor = await db.Memberships.AsNoTracking().Where(m => m.Role == Domain.Organizations.Role.ProgramDirector && m.RemovedAt == null)
             .OrderBy(m => m.PersonName).Select(m => m.PersonName).FirstOrDefaultAsync(cancellationToken);
         var children = (await db.Children.AsNoTracking().ToListAsync(cancellationToken)).OrderBy(c => c.FirstName).ThenBy(c => c.LastName)
             .Select(c => new IncidentChildDto(c.Id, c.FullName)).ToList();

@@ -56,7 +56,7 @@ public sealed class ReportIncidentHandler(IPromiseHubDb db, ITenantContext tenan
         db.Incidents.Add(incident);
         audit.Record(new AuditEvent(AuditAction.Created, "Incident", incident.Id, $"{incident.Category} · {child.FullName} · reported by {tenant.ActorName}"));
         await db.SaveChangesAsync(cancellationToken);
-        var supervisors = await db.Memberships.AsNoTracking().Where(m => m.Role == Role.ProgramDirector).Select(m => m.Email).ToListAsync(cancellationToken);
+        var supervisors = await db.Memberships.AsNoTracking().Where(m => m.Role == Role.ProgramDirector && m.RemovedAt == null).Select(m => m.Email).ToListAsync(cancellationToken);
         foreach (var to in supervisors)
         {
             await email.SendAsync(to, $"New incident to review: {incident.Category} · {child.FirstName}",

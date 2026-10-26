@@ -51,6 +51,7 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Incident log | `incidents` (default, empty, error, forbidden) | `ph-page-header`, `ph-list`, `ph-list-item`, `ph-badge`, `ph-error-page` (forbidden), `ph-card`, `ph-empty-state`, `ph-button` | Log or own reports |
 | Report an incident | `new-incident` (default, invalid, submitting, error) | `ph-page-header`, `ph-error-summary`, `ph-card`, `ph-radio-group`, `ph-select`, `ph-text-field` (datetime-local), `ph-textarea`, `ph-alert` (info, danger), `ph-button`, toast | Form state |
 | Incident | `incident` (default, reviewed, error, forbidden) | `ph-breadcrumb`, `ph-page-header`, `ph-badge`, `ph-alert` (success, info), `ph-card` (titled), `ph-description-list`, `ph-timeline` (follow-up, trail), `ph-empty-state`, `ph-button` | — |
+| Staff and roles | `staff` (default, forbidden) | `ph-page-header`, `ph-list`, `ph-list-item`, `ph-badge`, `ph-button`, `ph-error-page` (forbidden), `ph-card`, `ph-empty-state`, toast | — |
 
 ## Dialogs
 
@@ -74,6 +75,9 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Session notes | `session-notes` (default, busy, failed) | `ph-dialog`, `ph-textarea`, `ph-alert`, `ph-button` |
 | Add an approved adult | `add-pickup` (default, busy, invalid, failed) | `ph-dialog`, `ph-text-field`, `ph-radio-group`, `ph-alert`, `ph-button` |
 | Remove an approved adult | `remove-pickup` (default, busy, failed) | `ph-dialog`, `ph-alert`, `ph-button` (danger) |
+| Invite staff | `invite-staff` | `ph-dialog`, `ph-text-field`, `ph-radio-group`, `ph-alert`, `ph-button` |
+| Change role | `change-role` | `ph-dialog`, `ph-radio-group`, `ph-alert`, `ph-button` |
+| Remove staff | `remove-staff` | `ph-dialog`, `ph-alert`, `ph-button` (danger) |
 | Bulk review | `bulk-review` | `ph-dialog`, `ph-list`, `ph-list-item`, `ph-textarea`, `ph-alert`, `ph-button` |
 | Program actions / Event actions | `program-actions`, `event-actions` | `ph-dialog`, `ph-action-menu`, `ph-button` |
 | Archive program | `archive-program` | `ph-dialog`, `ph-text-field`, `ph-button` |

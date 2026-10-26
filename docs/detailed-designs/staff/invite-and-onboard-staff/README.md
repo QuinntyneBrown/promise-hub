@@ -13,6 +13,10 @@ Terms used in this document:
 - **staff onboarding** — three-step wizard shown once after accepting an invitation
 - **session preference** — set of programs a staff member runs, used to pick rosters to cache and to compose Today
 
+## Built so far
+
+Slice 29 delivered the admin side: `StaffPage` at `/settings/staff`, `InviteStaffDialog`, `ChangeRoleDialog`, `RemoveStaffDialog`, `STAFF_API`, `StaffInvitation` and the `/staff` endpoints (ADR 0025). Accepting an invitation and onboarding are not built yet.
+
 ## Description
 
 The feature spans the administration and account libraries on the frontend and the `Staff` and `Identity` folders in the application layer.

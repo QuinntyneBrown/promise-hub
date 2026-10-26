@@ -1,0 +1,84 @@
+@if (!allowed()) {
+  <ph-error-page
+    icon="lock"
+    title="Only admins manage staff"
+    text="Ask an admin to invite someone or change a role."
+  >
+    <ph-button variant="primary" link="/">Today</ph-button>
+  </ph-error-page>
+} @else {
+  @switch (state()) {
+    @case ('error') {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="warning"
+          tone="error"
+          title="Couldn’t load staff"
+          text="Try again."
+          [headingLevel]="1"
+        >
+          <ph-button variant="primary" (click)="load()">Try again</ph-button>
+        </ph-empty-state>
+      </ph-card>
+    }
+    @case ('loaded') {
+      @if (staff(); as s) {
+        <ph-page-header
+          title="Staff and roles"
+          [subtitle]="s.members.length + ' with access · ' + s.invitations.length + ' invited'"
+        >
+          <ph-button variant="primary" hasPopup="dialog" (click)="invite()">Invite staff</ph-button>
+        </ph-page-header>
+        <ph-list label="Staff">
+          @for (m of s.members; track m.id) {
+            <ph-list-item
+              [title]="m.name + (m.isYou ? ' (you)' : '')"
+              [meta]="m.email"
+              [avatar]="m.name"
+            >
+              <ph-badge [tone]="m.role === 'Admin' ? 'success' : 'neutral'">{{
+                roleLabel[m.role]
+              }}</ph-badge>
+              @if (!m.isYou) {
+                <ph-button
+                  size="sm"
+                  hasPopup="dialog"
+                  [label]="'Change role for ' + m.name"
+                  (click)="changeRole(m)"
+                  >Change role</ph-button
+                >
+                <ph-button
+                  variant="ghost"
+                  size="sm"
+                  hasPopup="dialog"
+                  [label]="'Remove ' + m.name"
+                  (click)="remove(m)"
+                  >Remove</ph-button
+                >
+              }
+            </ph-list-item>
+          }
+        </ph-list>
+        @if (s.invitations.length) {
+          <h2>Invitations waiting</h2>
+          <ph-list label="Invitations waiting">
+            @for (i of s.invitations; track i.id) {
+              <ph-list-item
+                [title]="i.email"
+                [meta]="roleLabel[i.role] + ' · invited by ' + i.invitedBy"
+              >
+                <ph-button
+                  variant="ghost"
+                  size="sm"
+                  [label]="'Withdraw invitation to ' + i.email"
+                  (click)="withdraw(i.id, i.email)"
+                  >Withdraw</ph-button
+                >
+              </ph-list-item>
+            }
+          </ph-list>
+        }
+      }
+    }
+  }
+}

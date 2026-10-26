@@ -8,7 +8,7 @@ public static class ActiveMembership
 {
     public static Task<Membership?> ForAsync(IPromiseHubDb db, string email, CancellationToken cancellationToken) =>
         db.Memberships.IgnoreQueryFilters()
-            .Where(m => m.Email == email)
+            .Where(m => m.Email == email && m.RemovedAt == null)
             .Join(db.Organizations, m => m.OrganizationId, o => o.Id, (m, o) => new { Membership = m, o.Name })
             .OrderBy(x => x.Name)
             .Select(x => x.Membership)

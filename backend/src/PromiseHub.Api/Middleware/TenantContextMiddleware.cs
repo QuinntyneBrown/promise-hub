@@ -13,7 +13,7 @@ public sealed class TenantContextMiddleware(RequestDelegate next)
         if (context.User.Identity?.IsAuthenticated == true)
         {
             var membership = Guid.TryParse(context.User.FindFirst(AuthSchemes.MembershipClaim)?.Value, out var membershipId)
-                ? await db.Memberships.IgnoreQueryFilters().AsNoTracking().FirstOrDefaultAsync(m => m.Id == membershipId, context.RequestAborted)
+                ? await db.Memberships.IgnoreQueryFilters().AsNoTracking().FirstOrDefaultAsync(m => m.Id == membershipId && m.RemovedAt == null, context.RequestAborted)
                 : null;
             if (membership is null)
             {

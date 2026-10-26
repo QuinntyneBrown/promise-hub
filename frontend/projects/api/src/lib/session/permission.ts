@@ -11,4 +11,5 @@ export type Permission =
   | 'sendMessages'
   | 'manageSlips'
   | 'reviewEnrollments'
-  | 'managePickups';
+  | 'managePickups'
+  | 'manageStaff';

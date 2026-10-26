@@ -17,4 +17,11 @@ public sealed class Membership : ITenantOwned
     public string PersonName { get; private set; }
     public string Email { get; private set; }
     public Role Role { get; private set; }
+
+    /// <summary>Set when an admin removed this person's access; the row stays so records keep naming who did what.</summary>
+    public DateTimeOffset? RemovedAt { get; private set; }
+
+    public void ChangeRole(Role role) => Role = role;
+
+    public void Remove(DateTimeOffset now) => RemovedAt = now;
 }

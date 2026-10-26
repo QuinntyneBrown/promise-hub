@@ -17,4 +17,5 @@ public enum Permission
     ReviewEnrollments,
     ReviewIncidents,
     ManagePickups,
+    ManageStaff,
 }
