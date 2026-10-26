@@ -99,14 +99,4 @@ public sealed class ObservabilityTests : IAsyncLifetime
         await _host.DisposeAsync();
         await _factory.DisposeAsync();
     }
-
-    /// <summary>Adds a route that throws, after the app's own pipeline, to prove faults are handled and logged.</summary>
-    private sealed class FaultRouteFilter : IStartupFilter
-    {
-        public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next) => app =>
-        {
-            next(app);
-            app.Map("/test/fault", b => b.Run(_ => throw new InvalidOperationException("secret-detail")));
-        };
-    }
 }

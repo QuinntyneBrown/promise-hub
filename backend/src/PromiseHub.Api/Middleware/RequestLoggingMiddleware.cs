@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using PromiseHub.Application.Organizations;
+using PromiseHub.Infrastructure.Observability;
 
 namespace PromiseHub.Api.Middleware;
 
@@ -8,7 +9,7 @@ namespace PromiseHub.Api.Middleware;
 /// tenant, the route template (never the raw path or query, which can carry a child's name), status and duration. It
 /// sits outside <see cref="ExceptionHandlingMiddleware"/>, so a handled fault is logged with the 500 it became.
 /// </summary>
-public sealed class RequestLoggingMiddleware(RequestDelegate next, ILogger<RequestLoggingMiddleware> logger)
+public sealed class RequestLoggingMiddleware(RequestDelegate next, ILogger<RequestLoggingMiddleware> logger, RequestMetrics metrics)
 {
     public const string Header = "X-Correlation-Id";
 
@@ -33,6 +34,7 @@ public sealed class RequestLoggingMiddleware(RequestDelegate next, ILogger<Reque
             var route = (context.GetEndpoint() as RouteEndpoint)?.RoutePattern.RawText ?? "(unmatched)";
             var organizationId = tenant.IsResolved ? tenant.OrganizationId : (Guid?)null;
             var status = context.Response.StatusCode;
+            metrics.Record(organizationId, status, duration);
             logger.LogInformation("HTTP {Method} {Route} answered {Status} in {DurationMs} ms for {OrganizationId} ({CorrelationId})",
                 context.Request.Method, route, status, Math.Round(duration, 1), organizationId, correlationId);
         }
