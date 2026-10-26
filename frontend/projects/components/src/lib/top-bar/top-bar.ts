@@ -41,6 +41,8 @@ export class PhTopBar {
   readonly personContext = input('');
   readonly avatarTint = input<AvatarTint>('sky');
   readonly unread = input(0);
+  /** False for roles that have no search, such as youth and mentors (ADR 0043). */
+  readonly searchable = input(true);
   readonly menuOpen = input(false);
   /** The person's organizations; the switcher shows only when there are two or more (L2-002). */
   readonly organizations = input<OrgOption[]>([]);

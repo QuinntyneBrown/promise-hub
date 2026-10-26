@@ -1,0 +1,26 @@
+<ph-page-header title="Mentoring" subtitle="The youth assigned to you." />
+@let r = result();
+@if (r === null) {
+  <div aria-busy="true" aria-label="Loading your youth">
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (r.status === 'loaded') {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="mentoring"
+      title="No youth assigned yet"
+      text="A program director assigns youth to you. They appear here with their progress."
+    ></ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load your youth"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}

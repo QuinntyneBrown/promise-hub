@@ -59,6 +59,10 @@ export class ShellPage extends BasePage {
     return this.page.getByRole('menu', { name: 'Switch organization' });
   }
 
+  get search(): Locator {
+    return this.page.getByRole('banner').getByRole('search');
+  }
+
   get bell(): Locator {
     return this.page.getByRole('banner').getByRole('button', { name: /^Notifications/ });
   }

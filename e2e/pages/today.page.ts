@@ -20,6 +20,16 @@ export class TodayPage extends BasePage {
     return this.page.getByRole('heading', { name: 'Nothing here yet' });
   }
 
+  /** A participant's Today with no module serving their role (mock: today/youth-learning-off). */
+  get nothingToDo(): Locator {
+    return this.page.getByRole('heading', { name: 'Nothing to do here yet' });
+  }
+
+  /** The titles in a participant's "Your work" card. */
+  async yourWork(): Promise<string[]> {
+    return (await this.card('Your work').getByTestId('list-title').allInnerTexts()).map((t) => t.trim());
+  }
+
   session(name: string): Locator {
     return this.page.getByRole('region', { name });
   }

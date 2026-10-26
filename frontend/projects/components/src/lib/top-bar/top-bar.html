@@ -44,17 +44,19 @@
     </button>
   </nav>
   <span class="topbar__spacer"></span>
-  <form class="topbar__search" role="search" (ngSubmit)="searched.emit(query)">
-    <label class="visually-hidden" for="global-q">Search children, families and events</label>
-    <input
-      class="input"
-      id="global-q"
-      name="q"
-      type="search"
-      placeholder="Search"
-      [(ngModel)]="query"
-    />
-  </form>
+  @if (searchable()) {
+    <form class="topbar__search" role="search" (ngSubmit)="searched.emit(query)">
+      <label class="visually-hidden" for="global-q">Search children, families and events</label>
+      <input
+        class="input"
+        id="global-q"
+        name="q"
+        type="search"
+        placeholder="Search"
+        [(ngModel)]="query"
+      />
+    </form>
+  }
   <button
     class="icon-button"
     type="button"

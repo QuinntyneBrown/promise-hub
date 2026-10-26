@@ -1,0 +1,28 @@
+<ph-page-header title="Learning" subtitle="Your lessons, quizzes, assignments and badges." />
+@let r = result();
+@if (r === null) {
+  <div aria-busy="true" aria-label="Loading your lessons">
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (r.status === 'loaded') {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="learning"
+      title="No lessons yet"
+      text="When your program publishes a track, its lessons appear here."
+    >
+      <ph-button link="/">Back to Today</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load your lessons"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}

@@ -1,4 +1,27 @@
-@if (session(); as s) {
+@if (participant()) {
+  @if (session(); as s) {
+    <ph-page-header
+      [title]="'Welcome, ' + firstName()"
+      [subtitle]="today + ' · ' + s.organizationName"
+    />
+    @if (work().length) {
+      <ph-card title="Your work" [flush]="true">
+        <ph-list label="Your work" [inset]="true">
+          @for (item of work(); track item.link) {
+            <ph-list-item [title]="item.title" [meta]="item.meta" [link]="item.link" />
+          }
+        </ph-list>
+      </ph-card>
+    } @else {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          title="Nothing to do here yet"
+          text="Your program staff will tell you what comes next."
+        />
+      </ph-card>
+    }
+  }
+} @else if (session(); as s) {
   <ph-page-header
     [title]="'Welcome, ' + firstName()"
     [subtitle]="s.organizationName + ' · ' + today"
