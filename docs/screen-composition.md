@@ -42,7 +42,9 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Offline | `offline` | `ph-error-page`, `ph-button` | Retry reloads |
 | Maintenance | `maintenance` | `ph-error-page`, `ph-button` | Retry reloads |
 
-| Sign in | `sign-in` (default, invalid, submitting, error, expired, locked) | `ph-auth-card`, `ph-text-field`, `ph-switch`, `ph-alert`, `ph-button`, `ph-skip-link` | Return-path handling |
+| Sign in | `sign-in` (default, youth, invalid, submitting, error, expired, locked) | `ph-auth-card`, `ph-text-field`, `ph-switch`, `ph-alert`, `ph-button`, `ph-skip-link` | Return-path handling; the role home after sign-in (`roleHome` from `api`: Learning for youth, Mentoring for mentors, Today otherwise or when that module is off) |
+| Signed out | `signed-out` (default) | `ph-skip-link`, `ph-auth-card`, `ph-button` | — |
+| Account inactive | `account-deactivated` (default) | `ph-skip-link`, `ph-auth-card`, `ph-button` | — |
 | Enter your code | `sign-in/mfa` | `ph-auth-card`, `ph-text-field`, `ph-switch`, `ph-alert`, `ph-button`, `ph-skip-link` | — |
 | Settings › Modules | `settings-modules` (default, single, invalid, blocked, success, error, forbidden) | `ph-page-header`, `ph-tabs`, `ph-chip`, `ph-list`, `ph-list-item`, `ph-switch`, `ph-button`, `ph-card`, `ph-empty-state`, toast via `ToastService` | Presets and dependency captions from `MODULE_CATALOG` |
 | Families | `families` (default, empty, no-results, error) | `ph-page-header`, `ph-text-field` (search), `ph-chip`, `ph-list`, `ph-list-item`, `ph-badge`, `ph-flag`, `ph-card`, `ph-empty-state`, `ph-button` | Row meta text |
