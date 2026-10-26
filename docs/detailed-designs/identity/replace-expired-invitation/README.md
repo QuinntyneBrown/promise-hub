@@ -26,6 +26,10 @@ Backend:
 - **`InvitationEndpoints`** — anonymous `POST /invitations/{token}/request-new` answering 202 or 404.
 - **`NotificationsHandler`** — kind `staff` maps to Roster.
 
+## Built so far
+
+Prompt 51 delivered everything above: the expired state of `AcceptInvitePage`, `InvitationApi.requestNew`, `InvitationHandler.RequestNewAsync`, the anonymous endpoint and the `staff` notification kind. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/ExpiredInvitationTests.cs`, `e2e/tests/account/invite-expired.spec.ts`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

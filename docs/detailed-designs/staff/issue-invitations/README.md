@@ -31,6 +31,10 @@ Backend:
 - **`StaffEndpoints`** — `GET /children/{id}/youth-account` and `POST /children/{id}/youth-invitation`, each `RequireModule(Learning)` and `RequirePermission(ManageStaff)`. The tenant filter makes another organization's child not found.
 - **`StaffInvitation`** — gains `ChildId` (migration `InvitationReplacement`).
 
+## Built so far
+
+Prompt 51 delivered everything above: the Youth account card and `InviteYouthDialog` in `households`, Mentor and Volunteer in `InviteStaffDialog` (`INVITE_ROLE_OPTIONS`), `YouthInvitationHandler`, `InvitationIssuer` and the two youth-account endpoints. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/YouthInvitationTests.cs`, `ParticipantInvitationTests.cs`, `e2e/tests/households/invite-youth.spec.ts`, `e2e/tests/administration/invite-mentors-and-volunteers.spec.ts`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

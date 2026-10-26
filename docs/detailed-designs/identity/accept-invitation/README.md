@@ -26,6 +26,10 @@ Backend:
 - **`InvitationHandler.AcceptAsync(token, command)`** — validates the name and the password (`PasswordPolicy`, or the existing account's password), resolves the tenant from the invitation, creates the `StaffUser` when new and a `Membership` with the invited role, calls `Membership.LinkChild` for a youth invitation, marks the invitation accepted, audits, and the endpoint issues the session cookie.
 - **`InvitationEndpoints`** — anonymous `GET /invitations/{token}` and `POST /invitations/{token}/accept`, answering 410 with `{ reason, invitedBy, organization }`.
 
+## Built so far
+
+Prompt 51 delivered everything above: the suggested name, the youth subtitle and "Join and start Learning", the role home after joining, the child link on acceptance and the gone reasons. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/YouthInvitationTests.cs`, `PendingInvitationTests.cs`, `e2e/tests/account/accept-invitation-as-youth-or-mentor.spec.ts`, `e2e/tests/account/accept-invite.spec.ts`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

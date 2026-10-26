@@ -20,6 +20,10 @@ Ported from Waypoint `authentication/set-secure-password` (`L2-AUTH-008`). Chang
 - **`PasswordHasher`** (`PromiseHub.Infrastructure/Auth/`) — PBKDF2 through `PasswordHasher<StaffUser>`; unchanged.
 - **`PhTextField`** (`frontend/projects/components/`) — a `password` field already renders a Show password toggle; `AcceptInvitePage` and `ResetPasswordPage` state the rule in the help text.
 
+## Built so far
+
+Prompt 51 delivered everything above: `PasswordPolicy` on both paths and the rule in both help texts. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/PasswordPolicyTests.cs`, `e2e/tests/account/password-policy.spec.ts`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

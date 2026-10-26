@@ -27,6 +27,10 @@ Backend:
 - **`StaffAccessHandler.ResendAsync(id)`** — 404 for an unknown, accepted or withdrawn invitation; otherwise `InvitationIssuer.ReissueAsync`, which calls `StaffInvitation.Reissue`, audits "Invitation to {email} resent by {actor}" and emails the new link.
 - **`StaffEndpoints`** — `POST /staff/invitations/{id}/resend` with `RequirePermission(ManageStaff)`; `DELETE /staff/invitations/{id}` unchanged.
 
+## Built so far
+
+Prompt 51 delivered everything above: the invitations card with Expired, Asked for a new link, Resend and Withdraw, `StaffAccessHandler.ResendAsync` and `POST /staff/invitations/{id}/resend`. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/PendingInvitationTests.cs`, `e2e/tests/administration/pending-invitations.spec.ts`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |
