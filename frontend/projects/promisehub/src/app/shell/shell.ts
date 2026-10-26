@@ -4,7 +4,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { AUTH_API, NOTIFICATIONS_API, ROLE_LABELS, SESSION_API, Session } from '@promisehub/api';
 import { NavDrawerService, PhBottomNavigation, PhSkipLink, PhTopBar } from '@promisehub/components';
-import { EMPTY, catchError, filter, map, startWith, switchMap } from 'rxjs';
+import { EMPTY, catchError, filter, map, merge, startWith, switchMap } from 'rxjs';
 import { navigationFor } from './navigation';
 
 /** The staff shell: skip link, top bar, main, phone tab bar and the More drawer. */
@@ -37,8 +37,10 @@ export class Shell {
 
   /** The bell's unread count, read again after every navigation so it follows reads on any device. */
   protected readonly unread = toSignal(
-    this.router.events.pipe(
-      filter((e) => e instanceof NavigationEnd),
+    merge(
+      this.router.events.pipe(filter((e) => e instanceof NavigationEnd)),
+      this.notifications.changed,
+    ).pipe(
       startWith(null),
       switchMap(() => this.notifications.list()),
       map((r) => (r.status === 'loaded' ? r.value.unread : 0)),

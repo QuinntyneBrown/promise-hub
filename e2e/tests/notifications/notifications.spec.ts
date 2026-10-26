@@ -44,6 +44,7 @@ test.describe('Review notifications as a program director', () => {
     await center.markAllRead();
 
     await expect(center.subtitle).toHaveText('All read');
+    await expect(new ShellPage(page).bell).toHaveAccessibleName('Notifications');
   });
 
   test('Given nothing yet, when the center opens, then it says all caught up', async ({ page }) => {

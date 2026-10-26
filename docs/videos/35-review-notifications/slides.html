@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 35 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="35" data-video-title="Review notifications" data-parts="Introduction|Promises|The bell|Empty|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 35</div>
+  <h1>Review notifications</h1>
+  <p class="lead">What needs you, without having to look for it</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="Every notice belongs to one person.">
+  <h2>What notifications promise</h2>
+  <ul>
+    <li>Incident reports notify their reviewers</li>
+    <li>The bell counts what's unread</li>
+    <li>Opening marks it read, on every device</li>
+    <li>Hidden with its module, never deleted</li>
+  </ul>
+</section>
+
+<section id="bell" data-part="2" data-cue="Here is Today on Marisol's laptop." data-clip="clips/notifications-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Bell to center</h3><p>Two unread, then all read.</p></div>
+</section>
+
+<section id="empty" data-part="3" data-cue="When there is nothing new">
+  <h2>Empty and errors</h2>
+  <div class="cols">
+    <img class="shot" alt="The notification center on a phone saying you're all caught up" src="shots/phone-empty.png">
+    <img class="shot" alt="The notification center saying it couldn't load, with Try again" src="shots/desktop-error.png">
+  </div>
+</section>
+
+<section id="testing" data-part="4" data-cue="Backend tests cover reviewers notified">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Youth worker reads someone else's</td><td>404</td></tr>
+    <tr><td>Another organization</td><td>None listed</td></tr>
+    <tr><td>Incidents off</td><td>Hidden, then restored</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="5" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>One notice per person</li><li>The bell counts unread</li><li>Notices follow their module</li></ul>
+  <p class="muted">Next: configure notifications</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

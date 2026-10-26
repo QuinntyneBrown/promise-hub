@@ -42,6 +42,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 32 | [Use permitted child details](32-use-permitted-child-details/README.md) | ~2 min | Youth workers see the children of their sessions, age not date of birth; anything else is a logged 403 |
 | 33 | [Monitor today's work](33-monitor-todays-work/README.md) | ~2 min | Today composes counts, slips due, coming up and work waiting from the modules that are on |
 | 34 | [Search records](34-search-records/README.md) | ~2 min | Staff find permitted children, families and events by name, email or phone digits |
+| 35 | [Review notifications](35-review-notifications/README.md) | ~2 min | The bell counts unread notices; the center lists them newest first and marks them read |
 
 ## Making or updating a video
 

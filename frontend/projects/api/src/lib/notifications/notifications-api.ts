@@ -8,4 +8,6 @@ export interface NotificationsApi {
   list(): Observable<LoadResult<NotificationList>>;
   read(id: string): Observable<WriteOutcome>;
   readAll(): Observable<WriteOutcome>;
+  /** Emits after a read changes the unread count, so the bell can follow. */
+  readonly changed: Observable<void>;
 }
