@@ -1,0 +1,24 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Sign in as a youth or mentor
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "SignInPage", "Angular page", "Form, outcomes, role home")
+  Component(home, "roleHome", "Function in api", "Youth to /learning, Mentor to /mentoring, else /")
+  Component(auth, "AuthApi", "Contract + HTTP client", "POST /auth/sign-in")
+  Component(sess, "SessionApi", "Contract + HTTP client", "GET /me")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "AuthEndpoints", "Minimal API", "/auth/sign-in")
+  Component(me, "SessionEndpoints", "Minimal API", "/me")
+  Component(h, "SignInHandler", "Application handler", "Password, lockout, audit")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Staff users, memberships, sign-in attempts, ended sessions, audit entries")
+}
+Rel(page, auth, "signs in")
+Rel(page, sess, "reads session")
+Rel(page, home, "chooses home")
+Rel(auth, ep, "POST /auth/sign-in")
+Rel(sess, me, "GET /me")
+Rel(ep, h, "SignInCommand")
+Rel(h, db, "attempts, memberships, audit")
+@enduml

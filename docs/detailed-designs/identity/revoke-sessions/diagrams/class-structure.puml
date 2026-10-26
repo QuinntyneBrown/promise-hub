@@ -1,0 +1,31 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+title Class structure — Session claims
+class SessionPrincipal <<claims>> {
+  +user_id: Guid
+  +membership_id: Guid
+  +session_version: int
+  +session_id: Guid
+}
+class StaffUser {
+  +SessionVersion: int
+  +EndOtherSessions(): void
+}
+class EndedSession {
+  +Id: Guid
+  +ExpiresAt: DateTimeOffset
+}
+class TenantContextMiddleware
+TenantContextMiddleware ..> SessionPrincipal : reads
+TenantContextMiddleware ..> StaffUser : compares version
+TenantContextMiddleware ..> EndedSession : refuses ended id
+@enduml

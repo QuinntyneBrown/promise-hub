@@ -1,0 +1,13 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Recover a locked account
+Person(p, "Youth, mentor or staff member", "Has typed the wrong password too often")
+Person(admin, "Admin", "Manages accounts in one organization")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+System_Ext(mail, "Email provider", "Delivers password reset links")
+Rel(p, ph, "Signs in and out using", "HTTPS")
+Rel(admin, ph, "Manages memberships using", "HTTPS")
+Rel(ph, mail, "Sends reset links via")
+
+@enduml

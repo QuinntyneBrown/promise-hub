@@ -58,6 +58,10 @@ ADR 0043 adds the roles **Youth**, **Mentor** and **Volunteer** to `Role`.
 - **New permissions.** `Learn` (Youth), `MentorYouth` (Mentor) and `AuthorCurriculum` (Admin, Program director). `LearnerHandler` answers `GET /learning/me` with the child linked to the caller's own membership (criterion 9); `MentoringHandler` answers `GET /mentoring/youth` with the youth assigned to the caller, which is an empty list until assignments exist (criterion 10).
 - **Linking a youth account.** `Membership.ChildId` holds the linked child. `LinkYouthHandler` serves `PUT /staff/{membershipId}/child` with `ManageStaff`: the membership and the child are read through the tenant query filter (another organization's answers 404), the membership must be a Youth one and the child must have no other youth account (422 otherwise), and `AuditAction.YouthLinked` records the link (`L2-045`).
 
+## Session endings (prompt 50)
+
+`TenantContextMiddleware` answers each way a session ends with its own code (ADR 0044): a removed membership with no other current one answers 401 "account-deactivated" and the app shows `account-deactivated`; a session id recorded at sign-out (`EndedSession`) answers 401 with no code; an older session version answers 401 as before. See `handle-deactivated-account` and `end-user-session`.
+
 ## Requirements
 
 The feature realizes the following level-2 (L2) requirements. Each L2 requirement refines a level-1 (L1) requirement, cited by identifier.

@@ -1,0 +1,17 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Recover an expired session
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(guard, "authGuard", "Route guard", "Maps 401 codes to pages")
+  Component(page, "SignInPage", "Angular page", "Timed-out state, return URL")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(cookie, "Cookie authentication", "ASP.NET Core", "401 session-expired")
+  Component(me, "SessionEndpoints", "Minimal API", "/me")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Staff users, memberships, sign-in attempts, ended sessions, audit entries")
+}
+Rel(guard, me, "GET /me")
+Rel(cookie, guard, "401 session-expired")
+Rel(guard, page, "/sign-in?reason=expired")
+@enduml

@@ -1,0 +1,43 @@
+@startuml
+title UML sequence behaviour — Lock, then unlock by password reset
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Nadia (Youth)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "SignInPage" as page
+  participant "ResetPasswordPage" as reset
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "AuthEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application and Domain" #ECFDF3
+  participant "SignInHandler" as h
+  participant "PasswordResetHandler" as r
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : fifth wrong password
+page -> ep : POST /auth/sign-in
+ep -> h : SignInCommand
+h -> db : 4 consecutive failures in 15 min
+h -> db : record failure (now 5)
+h -> db : audit SignInLocked in each organization of the email (L2-047)
+ep --> page : 401 invalid-credentials
+actor -> page : sixth attempt, right password
+page -> ep : POST /auth/sign-in
+ep -> h : SignInCommand
+h -> db : 5 consecutive failures
+ep --> page : 423 locked, lockedUntil
+page --> actor : sign-in/locked with the time and Reset password
+actor -> reset : opens the emailed link, new password
+reset -> ep : POST /auth/reset-password
+ep -> r : ResetPasswordCommand
+r -> db : still locked: audit SignInUnlocked, record a success
+r -> db : new hash, session version + 1
+ep --> reset : session cookie
+reset --> actor : role home
+@enduml

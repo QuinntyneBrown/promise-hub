@@ -1,0 +1,26 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Recover a locked account
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "SignInPage", "Angular page", "Locked state with end time")
+  Component(reset, "ResetPasswordPage", "Angular page", "New password from the link")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "AuthEndpoints", "Minimal API", "/auth/sign-in, /auth/reset-password")
+  Component(h, "SignInHandler", "Application handler", "Refuses while locked, audits the lock")
+  Component(r, "PasswordResetHandler", "Application handler", "Unlocks and audits")
+  Component(lock, "SignInLock", "Application helper", "Counts consecutive failures")
+  Component(aud, "IAuditWriter", "Port", "Audit entry per organization")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Staff users, memberships, sign-in attempts, ended sessions, audit entries")
+}
+Rel(page, ep, "POST /auth/sign-in")
+Rel(reset, ep, "POST /auth/reset-password")
+Rel(ep, h, "SignInCommand")
+Rel(ep, r, "ResetPasswordCommand")
+Rel(h, lock, "count")
+Rel(r, lock, "count")
+Rel(h, aud, "SignInLocked")
+Rel(r, aud, "SignInUnlocked")
+Rel(lock, db, "SignInAttempts")
+@enduml

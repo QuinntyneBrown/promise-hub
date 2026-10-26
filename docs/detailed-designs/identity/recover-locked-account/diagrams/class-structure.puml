@@ -1,0 +1,44 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+title Class structure — Lock
+class SignInPolicy <<static>> {
+  +MaxFailures: int = 5
+  +Window: TimeSpan = 15 min
+}
+class SignInLock <<static>> {
+  +ConsecutiveFailuresAsync(db, email, now): Task<List<DateTimeOffset>>
+}
+class SignInAttempt {
+  +Id: Guid
+  +Email: string
+  +At: DateTimeOffset
+  +Succeeded: bool
+}
+class SignInHandler {
+  +HandleAsync(command): Task<SignInResult>
+}
+class PasswordResetHandler {
+  +ResetAsync(command): Task<ResetPasswordResult>
+}
+enum AuditAction {
+  SignedIn
+  SignInLocked
+  SignInUnlocked
+  SignedOut
+}
+SignInLock ..> SignInAttempt : reads
+SignInLock ..> SignInPolicy
+SignInHandler ..> SignInLock
+PasswordResetHandler ..> SignInLock
+SignInHandler ..> AuditAction
+PasswordResetHandler ..> AuditAction
+@enduml

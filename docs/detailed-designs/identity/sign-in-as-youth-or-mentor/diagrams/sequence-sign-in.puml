@@ -1,0 +1,41 @@
+@startuml
+title UML sequence behaviour — Sign in and land on the role home
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Sofía (Youth)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "SignInPage" as page
+  participant "AuthApi" as auth
+  participant "SessionApi" as sess
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "AuthEndpoints" as ep
+  participant "SessionEndpoints" as me
+end box
+box "Backend — PromiseHub.Application and Domain" #ECFDF3
+  participant "SignInHandler" as h
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : email and password
+page -> auth : signIn
+auth -> ep : POST /auth/sign-in
+ep -> h : SignInCommand
+h -> db : consecutive failures, user, first current membership
+h -> db : audit "Signed in" in Harbourview (L2-046)
+ep --> auth : 200 signed-in + session cookie
+auth --> page : signed-in
+alt return URL present
+  page --> actor : the deep-linked page
+else no return URL
+  page -> sess : current()
+  sess -> me : GET /me
+  me --> sess : role Youth, modules of Harbourview
+  page -> page : roleHome: Learning on, so /learning
+  page --> actor : Learning (Today when Learning is off)
+end
+@enduml
