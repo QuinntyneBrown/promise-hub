@@ -43,6 +43,15 @@ From this list a platform admin adds an organization (`add-organization`), suspe
 - **`IEmailSender`** — sends the welcome email with the confirmation link for the first admin.
 - **`AuditLog`** — records create, suspend and reinstate with actor, organization and reason. The audit entry for a platform action is stored against the target organization.
 
+## Built so far
+
+Slice 47 delivered the list, add, suspend and reinstate (ADR 0041), with two simplifications against the design above:
+
+- Platform admins are a flag on `StaffUser` (`IsPlatformAdmin`, seeded for Tom) checked by `PlatformOrganizationsHandler`, not a separate policy.
+- `TenantContextMiddleware` refuses a suspended tenant's staff with 403 `suspended` (except `/platform`); `GuardianAccess` treats a suspended tenant's links as unknown; `MessageDispatchRunner` skips suspended tenants, so their queue waits.
+
+The guardian-facing "suspended" wording, a sign-up link and a plan filter in the API are not built; the page filters by plan and status itself.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

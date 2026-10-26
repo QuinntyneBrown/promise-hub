@@ -1,1 +1,7 @@
-export { auditRoutes, billingRoutes, coverageRoutes, routes } from './lib/administration.routes';
+export {
+  auditRoutes,
+  billingRoutes,
+  coverageRoutes,
+  organizationsRoutes,
+  routes,
+} from './lib/administration.routes';

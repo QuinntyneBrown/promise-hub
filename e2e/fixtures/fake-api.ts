@@ -401,6 +401,10 @@ export class FakeApi {
     ['POST', /^\/api\/me\/sign-out-others$/, (route) => this.signOutOthers(route)],
     ['GET', /^\/api\/billing$/, (route) => this.billing(route)],
     ['GET', /^\/api\/audit$/, (route) => this.auditLog(route)],
+    ['GET', /^\/api\/platform\/organizations$/, (route) => this.platformOrganizations(route)],
+    ['POST', /^\/api\/platform\/organizations$/, (route) => this.addOrganization(route)],
+    ['POST', /^\/api\/platform\/organizations\/(?<id>[^/]+)\/suspend$/, (route, p) => this.suspendOrganization(route, p['id']!)],
+    ['POST', /^\/api\/platform\/organizations\/(?<id>[^/]+)\/reinstate$/, (route, p) => this.reinstateOrganization(route, p['id']!)],
     ['PUT', /^\/api\/billing\/plan$/, (route) => this.changePlan(route)],
     ['GET', /^\/api\/me\/organizations$/, (route) => this.myOrganizations(route)],
     ['POST', /^\/api\/me\/organization$/, (route) => this.switchOrganization(route)],
@@ -561,6 +565,11 @@ export class FakeApi {
     if (failure) {
       return route.fulfill({ status: failure });
     }
+    // A suspended organization is closed to its staff; platform administration stays open (L2-003).
+    const caller = memberships.find((x) => x.id === this.membershipId);
+    if (caller && this.suspended.has(caller.organizationId) && !url.pathname.startsWith('/api/platform') && !url.pathname.startsWith('/api/auth')) {
+      return route.fulfill({ status: 403, json: { code: 'suspended' } });
+    }
     for (const [method, pattern, handler] of this.routes) {
       const match = pattern.exec(url.pathname);
       if (match && route.request().method() === method) {
@@ -654,6 +663,91 @@ export class FakeApi {
       .sort((a, b) => b.when.localeCompare(a.when))
       .map(({ organizationId: _, ...e }) => e);
     return route.fulfill({ json: { entries, total: entries.length, page: 1, pageSize: 50 } });
+  }
+
+  /** Organizations a platform admin suspended (with the reason) and added in this test (L2-003). */
+  private suspended = new Map<string, string>();
+  private addedOrganizations: { id: string; name: string; plan: 'Free' | 'Standard' | 'Plus'; modulesOn: number }[] = [];
+  /** Welcome emails sent to new organizations' first admins. */
+  readonly welcomeEmails: string[] = [];
+
+  suspend(organizationId: string, reason = 'Unpaid invoice'): void {
+    this.suspended.set(organizationId, reason);
+  }
+
+  /** Mirrors backend PlatformOrganizationsHandler: only platform admins (Tom in the seed). */
+  private platformCaller(route: Route): Membership | null {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) {
+      void this.unauthenticated(route);
+      return null;
+    }
+    if (m.email !== 'tom@harbourview.example') {
+      void this.forbidden(route);
+      return null;
+    }
+    return m;
+  }
+
+  private async platformOrganizations(route: Route): Promise<void> {
+    if (!this.platformCaller(route)) return;
+    const url = new URL(route.request().url());
+    const q = (url.searchParams.get('q') ?? '').trim().toLowerCase();
+    const plan = url.searchParams.get('plan');
+    const status = url.searchParams.get('status');
+    const rows = [
+      ...organizations.map((o) => ({
+        id: o.id,
+        name: o.name,
+        plan: this.planOf(o.id),
+        activeChildren: this.households.filter((h) => h.organizationId === o.id).reduce((n, h) => n + h.children.length, 0),
+        modulesOn: this.modules.get(o.id)!.length,
+        setUp: o.id === 'org-harbourview',
+      })),
+      ...this.addedOrganizations.map((o) => ({ ...o, activeChildren: 0, setUp: false })),
+    ]
+      .map(({ setUp, ...o }) => ({
+        ...o,
+        status: this.suspended.has(o.id) ? 'Suspended' : setUp ? 'Active' : 'SettingUp',
+        suspensionReason: this.suspended.get(o.id) ?? null,
+      }))
+      .filter((o) => !q || o.name.toLowerCase().includes(q))
+      .filter((o) => !plan || o.plan === plan)
+      .filter((o) => !status || o.status === status)
+      .sort((a, b) => a.name.localeCompare(b.name));
+    return route.fulfill({ json: { organizations: rows } });
+  }
+
+  private async addOrganization(route: Route): Promise<void> {
+    if (!this.platformCaller(route)) return;
+    const body = route.request().postDataJSON() as { name?: string; adminEmail?: string; plan?: string; preset?: string };
+    const name = (body.name ?? '').trim();
+    const email = (body.adminEmail ?? '').trim().toLowerCase();
+    const errors: Record<string, string> = {};
+    if (!name) errors['name'] = 'Enter the organization’s name.';
+    else if ([...organizations, ...this.addedOrganizations].some((o) => o.name === name)) errors['name'] = 'An organization with this name already exists.';
+    if (!email) errors['adminEmail'] = 'Enter the first admin’s email.';
+    else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) errors['adminEmail'] = 'That doesn’t look like an email address.';
+    const presets: Record<string, number> = { 'Whole suite': 8, 'Just check-in': 3, 'Just slips': 2 };
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    const id = `org-added-${this.addedOrganizations.length + 1}`;
+    this.addedOrganizations.push({ id, name, plan: body.plan as 'Free' | 'Standard', modulesOn: presets[body.preset ?? ''] ?? 8 });
+    this.welcomeEmails.push(email);
+    return route.fulfill({ status: 201, json: { id } });
+  }
+
+  private async suspendOrganization(route: Route, id: string): Promise<void> {
+    if (!this.platformCaller(route)) return;
+    const { reason } = route.request().postDataJSON() as { reason?: string };
+    if (!reason?.trim()) return route.fulfill({ status: 422, json: { errors: { reason: 'Give a reason; the organization’s admins will see it.' } } });
+    this.suspended.set(id, reason.trim());
+    return route.fulfill({ status: 204 });
+  }
+
+  private async reinstateOrganization(route: Route, id: string): Promise<void> {
+    if (!this.platformCaller(route)) return;
+    this.suspended.delete(id);
+    return route.fulfill({ status: 204 });
   }
 
   failPayment(organizationId: string, at = '2026-11-01T12:00:00Z'): void {

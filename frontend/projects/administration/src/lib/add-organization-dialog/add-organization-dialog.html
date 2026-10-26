@@ -1,0 +1,49 @@
+@if (created(); as c) {
+  <ph-dialog [title]="c.name + ' is ready'">
+    <p>{{ c.email }} has the welcome email.</p>
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button variant="primary" (click)="ref.close(true)">Done</ph-button>
+    </ng-container>
+  </ph-dialog>
+} @else {
+  <form novalidate (ngSubmit)="save()">
+    <ph-dialog
+      title="Add an organization"
+      description="A separate tenant. The admin finishes setup."
+    >
+      @if (failed()) {
+        <ph-alert tone="danger" title="We couldn’t create the organization" text="Try again." />
+      }
+      <ph-text-field
+        inputId="o-name"
+        label="Organization name"
+        name="name"
+        [error]="errors()['name'] ?? null"
+        [(ngModel)]="name"
+      />
+      <ph-text-field
+        inputId="o-admin"
+        label="First admin’s email"
+        type="email"
+        help="Gets the welcome email."
+        name="adminEmail"
+        [error]="errors()['adminEmail'] ?? null"
+        [(ngModel)]="adminEmail"
+      />
+      <ph-select inputId="o-plan" label="Plan" [options]="plans" name="plan" [(ngModel)]="plan" />
+      <ph-select
+        inputId="o-preset"
+        label="Modules"
+        [options]="presets"
+        name="preset"
+        [(ngModel)]="preset"
+      />
+      <ng-container ngProjectAs="[phDialogFooter]">
+        <ph-button (click)="ref.close(false)">Cancel</ph-button>
+        <ph-button variant="primary" type="submit" icon="send" [busy]="busy()"
+          >Create and invite</ph-button
+        >
+      </ng-container>
+    </ph-dialog>
+  </form>
+}

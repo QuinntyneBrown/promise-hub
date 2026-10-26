@@ -35,6 +35,23 @@ public sealed class Organization
     /// <summary>When the last payment failed; null while payments are current. Service continues for the grace period.</summary>
     public DateTimeOffset? PaymentFailedAt { get; private set; }
 
+    /// <summary>When a platform admin suspended the organization; null while it runs (L2-003). Suspension deletes nothing.</summary>
+    public DateTimeOffset? SuspendedAt { get; private set; }
+
+    public string? SuspensionReason { get; private set; }
+
+    public void Suspend(string reason, DateTimeOffset now)
+    {
+        SuspendedAt = now;
+        SuspensionReason = reason;
+    }
+
+    public void Reinstate()
+    {
+        SuspendedAt = null;
+        SuspensionReason = null;
+    }
+
     public void ChangePlan(Plan plan) => Plan = plan;
 
     public void PaymentFailed(DateTimeOffset now) => PaymentFailedAt ??= now;

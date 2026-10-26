@@ -930,6 +930,9 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .HasMaxLength(320)
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsPlatformAdmin")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("MfaSecret")
                         .HasColumnType("TEXT");
 
@@ -1507,6 +1510,13 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT")
                         .HasDefaultValue("Canada (Toronto region)");
+
+                    b.Property<long?>("SuspendedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SuspensionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("TimeZone")
                         .IsRequired()

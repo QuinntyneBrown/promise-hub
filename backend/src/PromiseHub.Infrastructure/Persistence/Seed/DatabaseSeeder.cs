@@ -33,7 +33,8 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
 
         Staff(Harbourview, "Jaylen Okafor", "jaylen@harbourview.example", Role.SiteLead);
         Staff(Harbourview, "Marisol Delgado", "marisol@harbourview.example", Role.ProgramDirector);
-        Staff(Harbourview, "Tom Nguyen", "tom@harbourview.example", Role.Admin);
+        // Tom also runs the service for every organization (L2-003).
+        Staff(Harbourview, "Tom Nguyen", "tom@harbourview.example", Role.Admin, platformAdmin: true);
         Staff(Harbourview, "Priya Raman", "priya@harbourview.example", Role.VolunteerCoordinator);
         Staff(Harbourview, "Aisha Bello", "aisha@harbourview.example", Role.YouthWorker);
         Staff(Northgate, "Priya Raman", "priya@harbourview.example", Role.VolunteerCoordinator);
@@ -150,7 +151,7 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
 
     public static Guid UserId(string email) => SeedIds.Of($"user:{email}");
 
-    private void Staff(Guid organizationId, string name, string email, Role role)
+    private void Staff(Guid organizationId, string name, string email, Role role, bool platformAdmin = false)
     {
         Add(new Membership(MembershipId(organizationId, email), organizationId, name, email, role));
         // Admins and program directors are enrolled in MFA when a secret is configured (L2-006).
@@ -158,7 +159,12 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
         var password = _options.StaffPassword is { } p ? hasher.Hash(p) : null;
         if (db.ChangeTracker.Entries<StaffUser>().All(e => e.Entity.Email != email))
         {
-            Add(new StaffUser(UserId(email), email, password, mfa));
+            var user = new StaffUser(UserId(email), email, password, mfa);
+            if (platformAdmin)
+            {
+                user.MakePlatformAdmin();
+            }
+            Add(user);
         }
     }
 

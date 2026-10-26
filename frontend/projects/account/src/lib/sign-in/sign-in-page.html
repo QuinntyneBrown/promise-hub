@@ -1,9 +1,19 @@
 <ph-skip-link />
 <main id="main">
   <ph-auth-card
-    [title]="expired() ? 'Your session timed out' : 'Sign in to PromiseHub'"
+    [title]="
+      suspended()
+        ? 'Your organization is suspended'
+        : expired()
+          ? 'Your session timed out'
+          : 'Sign in to PromiseHub'
+    "
     [subtitle]="
-      expired() ? 'Signed out after 12 hours. Sign in to pick up where you left off.' : null
+      suspended()
+        ? 'PromiseHub is paused for your organization. Nothing has been deleted; ask your admin.'
+        : expired()
+          ? 'Signed out after 12 hours. Sign in to pick up where you left off.'
+          : null
     "
   >
     <form class="stack" novalidate (ngSubmit)="submit()">

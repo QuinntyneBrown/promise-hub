@@ -49,6 +49,10 @@ export const routes: Routes = [
         loadChildren: () => import('@promisehub/today').then((m) => m.notificationRoutes),
       },
       {
+        path: 'admin/organizations',
+        loadChildren: () => import('@promisehub/administration').then((m) => m.organizationsRoutes),
+      },
+      {
         path: 'settings/audit',
         loadChildren: () => import('@promisehub/administration').then((m) => m.auditRoutes),
       },

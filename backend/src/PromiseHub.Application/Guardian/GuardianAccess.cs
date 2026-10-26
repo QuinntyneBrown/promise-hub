@@ -21,7 +21,8 @@ public sealed class GuardianAccess(IPromiseHubDb db, TenantContext tenant, TimeP
         tenant.ResolveForJob(link.OrganizationId);
         var household = await db.Households.FirstOrDefaultAsync(h => h.Id == link.HouseholdId, cancellationToken);
         var organization = await db.Organizations.AsNoTracking().SingleAsync(o => o.Id == link.OrganizationId, cancellationToken);
-        if (household is null)
+        // A suspended organization's links stop working; nothing is deleted (L2-003).
+        if (household is null || organization.SuspendedAt is not null)
         {
             return null;
         }

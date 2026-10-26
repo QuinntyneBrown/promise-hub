@@ -24,6 +24,11 @@ public sealed class StaffUser
     /// <summary>Rises when the person signs out everywhere; a session cookie carrying an older version is refused.</summary>
     public int SessionVersion { get; private set; }
 
+    /// <summary>Runs the PromiseHub service itself: lists, adds and suspends organizations (L2-003). Not tenant-owned.</summary>
+    public bool IsPlatformAdmin { get; private set; }
+
+    public void MakePlatformAdmin() => IsPlatformAdmin = true;
+
     public int RecoveryCodesLeft => string.IsNullOrEmpty(RecoveryCodes) ? 0 : RecoveryCodes.Split(';').Length;
 
     public void ReplaceRecoveryCodes(IEnumerable<string> hashes) => RecoveryCodes = string.Join(';', hashes);
