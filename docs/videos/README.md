@@ -37,6 +37,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 27 | [Confirm an exceptional pickup](27-confirm-an-exceptional-pickup/README.md) | ~2 min | Ask the guardian by text; an approval allows sign-out, a refusal keeps the child and logs an incident |
 | 28 | [Update household details](28-update-household-details/README.md) | ~2 min | Families correct contact, language and children's health from the family page; staff see it at once |
 | 29 | [Manage staff access](29-manage-staff-access/README.md) | ~2 min | Invite staff with a role, change roles and remove access, effective on the next action |
+| 30 | [Start an invited shift](30-start-an-invited-shift/README.md) | ~2 min | Accept an invitation, add a mobile for alerts, and land on tonight's session |
 
 ## Making or updating a video
 

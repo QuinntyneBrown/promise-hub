@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 30 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="30" data-video-title="Start an invited shift" data-parts="Introduction|Promises|Sam accepts|Mistakes|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 30</div>
+  <h1>Start an invited shift</h1>
+  <p class="lead">From the invitation email to tonight's check-in</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="The invitation link shows which organization">
+  <h2>What starting a shift promises</h2>
+  <ul>
+    <li>Who, where and which role, before anything is typed</li>
+    <li>One organization, one use</li>
+    <li>A mobile for alerts, never shown to guardians</li>
+    <li>Today's sessions, one tap to check-in</li>
+  </ul>
+</section>
+
+<section id="accept" data-part="2" data-cue="Here is Sam's phone." data-clip="clips/invited-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Accept, phone, ready</h3><p>Tutoring night is one tap away.</p></div>
+</section>
+
+<section id="mistakes" data-part="3" data-cue="A short password or a phone number">
+  <h2>Mistakes and old links</h2>
+  <div class="cols">
+    <img class="shot" alt="The phone step naming a missing area code" src="shots/phone-area-code.png">
+    <img class="shot" alt="An expired invitation" src="shots/desktop-expired.png">
+  </div>
+</section>
+
+<section id="testing" data-part="4" data-cue="Backend tests cover an open invitation's details">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Expired or unknown link</td><td>410 with who to ask</td></tr>
+    <tr><td>Used twice</td><td>410</td></tr>
+    <tr><td>Short password</td><td>422</td></tr>
+    <tr><td>Northgate invitation</td><td>Northgate only</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="5" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>One link, one use</li><li>Alerts mobile stays private</li><li>Tonight's work first</li></ul>
+  <p class="muted">Next: coordinating staff coverage</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
