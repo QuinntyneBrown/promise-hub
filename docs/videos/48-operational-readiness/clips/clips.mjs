@@ -7,7 +7,7 @@ const jaylen = {
   modules: ['Roster', 'Slips', 'RollCall', 'QuickCards', 'Pickup', 'Messages', 'Incidents', 'Reports'],
 };
 
-async function fakeApi(demo, { failFirst = false } = {}) {
+async function fakeApi(demo, { failFirst = false, noSessions = false } = {}) {
   // The guard and the shell each read the session, so the first two reads fail.
   let failing = failFirst ? 2 : 0;
   const roster = [
@@ -32,7 +32,7 @@ async function fakeApi(demo, { failFirst = false } = {}) {
     if (path === '/api/notifications') return route.fulfill({ json: { unread: 0, items: [] } });
     if (path === '/api/me/organizations') return route.fulfill({ json: { organizations: [] } });
     if (path === '/api/today') return route.fulfill({ json: { activeChildren: 7, households: 5, slipsDue: [], comingUp: [], tasks: [] } });
-    if (path === '/api/sessions/today') return route.fulfill({ json: { sessions: [session()] } });
+    if (path === '/api/sessions/today') return route.fulfill({ json: { sessions: noSessions ? [] : [session()] } });
     if (path.endsWith('/roster')) return route.fulfill({ json: { session: session(), children: [...roster].sort((a, b) => a.name.localeCompare(b.name)) } });
     if (path.endsWith('/check-ins')) {
       Object.assign(roster.find((c) => c.id === body.childId), { status: 'Present', checkedInAt: new Date().toISOString() });
@@ -72,6 +72,29 @@ export default [
       await demo.pause(3500);
       await demo.click(app.getByRole('button', { name: 'Try again' }).or(app.getByRole('link', { name: 'Try again' })));
       await app.getByRole('region', { name: 'Tutoring night' }).waitFor();
+      await demo.pause(3000);
+    },
+  },
+  {
+    name: 'fault-phone',
+    phone: true,
+    run: async (demo) => {
+      await fakeApi(demo, { failFirst: true });
+      await demo.go('/', { ready: false });
+      await demo.app().getByRole('heading', { name: 'Something went wrong on our side' }).waitFor();
+      demo.mark();
+      await demo.pause(3000);
+    },
+  },
+  {
+    name: 'empty-phone',
+    phone: true,
+    run: async (demo) => {
+      await fakeApi(demo, { noSessions: true });
+      await demo.go('/check-in', { ready: false });
+      await demo.app().getByRole('heading', { level: 1 }).waitFor();
+      await demo.pause(1500);
+      demo.mark();
       await demo.pause(3000);
     },
   },

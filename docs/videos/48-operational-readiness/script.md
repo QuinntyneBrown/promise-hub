@@ -10,6 +10,10 @@ Every request writes one structured log line: the organization, the route templa
 
 Here is Jaylen opening PromiseHub on a laptop while the server is failing. She gets the server error page, which says nothing was lost, shows a reference she can quote to support, and offers Try again. When the server is back, Try again opens Today as if nothing happened. On our side, that same reference is on the fault's log line, and the fault was counted.
 
+## The same states on a phone
+
+On a phone, the same pages hold up. Before anyone arrives, the roster shows four children not yet here. With no session today, Check-in says so plainly instead of showing an empty list. A server fault gets the same page with its reference, and a check-in confirms with a toast saying how many are now here.
+
 ## Alerts for on-call
 
 Every request is also counted, per organization, for the last five minutes. Once a minute a check looks at those numbers. If more than one percent of at least twenty requests failed, it raises an error rate alert. If an organization has a message waiting more than ten minutes past its time, it raises a queue alert naming that organization. Each alert is raised once, and again only after it has cleared.

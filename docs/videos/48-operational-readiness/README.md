@@ -32,17 +32,18 @@ By the end, the viewer can:
 | `backend/src/PromiseHub.Api/Middleware/RequestLoggingMiddleware.cs` | The one log line per request |
 | `backend/src/PromiseHub.Infrastructure/Observability/OpsAlertMonitor.cs` | The two alert rules |
 | `e2e/tests/shell/performance-budgets.spec.ts` | The page, check-in and search budgets |
-| `clips/fault-desktop.mp4`, `clips/check-in-phone.mp4` | Recorded against the running frontend with a faked API |
+| `clips/fault-desktop.mp4`, `clips/check-in-phone.mp4`, `clips/fault-phone.mp4`, `clips/empty-phone.mp4` | Recorded against the running frontend with a faked API |
 
 ## Run sheet
 
 | Time | Segment | Content |
 |---|---|---|
 | 00:00-00:42 | Introduction, logs | One line per request |
-| 00:42-01:02 | Faults | Server error page and Try again |
-| 01:02-01:28 | Alerts | Error rate and queue age |
-| 01:28-02:00 | Budgets | Check-in on a phone; the budget table |
-| 02:00-02:52 | Testing, recap | Cases and what is deferred |
+| 00:42-01:08 | Faults | Server error page with its reference, and Try again |
+| 01:08-01:26 | Phone | Default, empty, error and success states |
+| 01:26-01:52 | Alerts | Error rate and queue age |
+| 01:52-02:24 | Budgets | Check-in on a phone; the budget table |
+| 02:24-03:13 | Testing, recap | Cases and what is deferred |
 
 ## Demo commands
 

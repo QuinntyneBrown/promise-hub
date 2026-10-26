@@ -6,7 +6,7 @@
 <title>Video 48 Slides</title>
 <link rel="stylesheet" href="../assets/slides.css">
 </head>
-<body data-video-number="48" data-video-title="Operational readiness" data-parts="Introduction|Logs|Faults|Alerts|Budgets|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+<body data-video-number="48" data-video-title="Operational readiness" data-parts="Introduction|Logs|Faults|Phone|Alerts|Budgets|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
 
 <section id="title" data-part="0">
   <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
@@ -38,7 +38,23 @@
   </div>
 </section>
 
-<section id="alerts" data-part="3" data-cue="Every request is also counted">
+<section id="phone-states" data-part="3" data-cue="Before anyone arrives">
+  <h2>Default and empty</h2>
+  <div class="cols">
+    <img class="shot" alt="Check-in on a phone with four children not yet here" src="shots/phone-roster.png">
+    <img class="shot" alt="Check-in on a phone saying there are no sessions today" src="shots/phone-empty.png">
+  </div>
+</section>
+
+<section id="phone-outcomes" data-part="3" data-cue="A server fault gets the same page">
+  <h2>Error and success</h2>
+  <div class="cols">
+    <img class="shot" alt="The server error page on a phone with its reference" src="shots/phone-error.png">
+    <img class="shot" alt="Check-in on a phone after a child is checked in, with a toast" src="shots/phone-checked-in.png">
+  </div>
+</section>
+
+<section id="alerts" data-part="4" data-cue="Every request is also counted">
   <h2>Alerts for on-call</h2>
   <table class="facts">
     <tr><th>Alert</th><th>When</th></tr>
@@ -48,12 +64,12 @@
   </table>
 </section>
 
-<section id="check-in" data-part="4" data-cue="Here is Jaylen checking in tonight's roster" data-clip="clips/check-in-phone.mp4">
+<section id="check-in" data-part="5" data-cue="Here is Jaylen checking in tonight's roster" data-clip="clips/check-in-phone.mp4">
   <video class="clip" muted></video>
   <div class="clip-notes"><span class="tag">Phone</span><h3>Check-in at the door</h3><p>Rows update at once.</p></div>
 </section>
 
-<section id="budgets" data-part="4" data-cue="A budgets project loads Today">
+<section id="budgets" data-part="5" data-cue="A budgets project loads Today">
   <h2>Budgets in every build</h2>
   <div class="cols">
     <table class="facts">
@@ -67,7 +83,7 @@
   </div>
 </section>
 
-<section id="testing" data-part="5" data-cue="The API tests prove the log line">
+<section id="testing" data-part="6" data-cue="The API tests prove the log line">
   <h2>How it is tested</h2>
   <table class="facts">
     <tr><th>Case</th><th>Answer</th></tr>
@@ -77,7 +93,7 @@
   </table>
 </section>
 
-<section id="recap" data-part="6" data-cue="Things to remember.">
+<section id="recap" data-part="7" data-cue="Things to remember.">
   <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
   <h2>Things to remember</h2>
   <ul class="recap"><li>One log line per request, no names</li><li>Alerts fire once</li><li>Slow builds fail</li></ul>
