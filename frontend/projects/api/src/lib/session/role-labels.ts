@@ -7,4 +7,7 @@ export const ROLE_LABELS: Record<Role, string> = {
   SiteLead: 'Site lead',
   YouthWorker: 'Youth worker',
   VolunteerCoordinator: 'Volunteer coordinator',
+  Youth: 'Youth',
+  Mentor: 'Mentor',
+  Volunteer: 'Volunteer',
 };

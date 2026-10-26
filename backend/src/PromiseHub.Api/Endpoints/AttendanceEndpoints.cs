@@ -13,12 +13,14 @@ public static class AttendanceEndpoints
     public static IEndpointRouteBuilder MapAttendanceEndpoints(this IEndpointRouteBuilder app)
     {
         var sessions = app.MapGroup("/sessions").RequireModule(ModuleId.RollCall);
-        sessions.MapGet("/today", (TodaySessionsHandler handler, CancellationToken ct) => handler.HandleAsync(ct));
+        // Volunteers run their assigned sessions without the staff app (ADR 0043).
+        sessions.MapGet("/today", (TodaySessionsHandler handler, CancellationToken ct) => handler.HandleAsync(ct))
+            .RequireAnyPermission(Permission.UseStaffApp, Permission.RunSessions);
         sessions.MapGet("/{id:guid}/roster", async (Guid id, GetSessionRosterHandler handler, CancellationToken ct) =>
         {
             var (status, roster) = await handler.HandleAsync(id, ct);
             return roster is not null ? Results.Ok(roster) : new Application.Result(status).ToHttp();
-        });
+        }).RequireAnyPermission(Permission.UseStaffApp, Permission.RunSessions);
         sessions.MapPost("/{id:guid}/check-ins", async (Guid id, CheckInCommand command, CheckInHandler handler, CancellationToken ct) =>
             Ok(await handler.HandleAsync(id, command, ct))).RequirePermission(Permission.RunSessions);
         sessions.MapPost("/{id:guid}/absences", async (Guid id, MarkAbsentCommand command, MarkAbsentHandler handler, CancellationToken ct) =>

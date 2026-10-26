@@ -50,6 +50,14 @@ import { HttpSetupApi } from './setup/http-setup-api';
 import { SETUP_API } from './setup/setup-api.token';
 import { SEARCH_API } from './search/search-api.token';
 import { HttpTodayApi } from './today/http-today-api';
+import { HttpLearningApi } from './learning/http-learning-api';
+import { LEARNING_API } from './learning/learning-api.token';
+import { HttpCurriculumApi } from './curriculum/http-curriculum-api';
+import { CURRICULUM_API } from './curriculum/curriculum-api.token';
+import { HttpMentoringApi } from './mentoring/http-mentoring-api';
+import { MENTORING_API } from './mentoring/mentoring-api.token';
+import { HttpWebsiteApi } from './website/http-website-api';
+import { WEBSITE_API } from './website/website-api.token';
 import { TODAY_API } from './today/today-api.token';
 import { HttpPickupApi } from './pickups/http-pickup-api';
 import { PICKUP_API } from './pickups/pickup-api.token';
@@ -92,5 +100,9 @@ export function provideApi(): EnvironmentProviders {
     { provide: NOTIFICATIONS_API, useClass: HttpNotificationsApi },
     { provide: NOTIFICATION_SETTINGS_API, useClass: HttpNotificationSettingsApi },
     { provide: INVITATION_API, useClass: HttpInvitationApi },
+    { provide: LEARNING_API, useClass: HttpLearningApi },
+    { provide: CURRICULUM_API, useClass: HttpCurriculumApi },
+    { provide: MENTORING_API, useClass: HttpMentoringApi },
+    { provide: WEBSITE_API, useClass: HttpWebsiteApi },
   ]);
 }

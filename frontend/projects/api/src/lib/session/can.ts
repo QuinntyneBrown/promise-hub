@@ -10,7 +10,7 @@ const GRANTS: Record<Permission, Role[]> = {
   managePrograms: ['Admin', 'ProgramDirector'],
   manageEvents: ['Admin', 'ProgramDirector', 'SiteLead'],
   cancelEvents: ['Admin', 'ProgramDirector'],
-  runSessions: ['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker'],
+  runSessions: ['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker', 'Volunteer'],
   sendMessages: ['Admin', 'ProgramDirector', 'SiteLead'],
   manageSlips: ['Admin', 'ProgramDirector', 'SiteLead'],
   managePickups: ['Admin', 'ProgramDirector', 'SiteLead'],

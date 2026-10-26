@@ -9,6 +9,9 @@
 | Guardian | Track enrollment status | See whether a child is accepted or waitlisted. | [2 days](detailed-designs/enrollment/enroll-guardian/README.md) | 90% · [video](videos/17-track-enrollment-status/README.md) |
 | Guardian | Request household data | Ask for an export or deletion of household information. | [4 days](detailed-designs/organizations/set-privacy-and-residency/README.md) | 80% · [video](videos/43-request-household-data/README.md) |
 | Guardian | Complete a survey | Submit feedback or outcomes through a translated, verified page. | [3 days](detailed-designs/guardian/localize-guardian-pages/README.md) | 80% · [video](videos/38-complete-a-survey/README.md) |
+| Guardian | Give guardian consent for a youth | Grant or withdraw participation consent for a minor through a verified link. | [7 days](prompts/52-give-guardian-consent.md) | 0% |
+| Guardian | Apply or refer a youth | Submit an application or referral through the open enrollment link. | [3 days](prompts/58-apply-or-refer.md) | 0% |
+| Guardian | Use the guardian portal | See a child's progress, schedule and consents through guardian pages. | [17 days](prompts/73-use-the-guardian-portal.md) | 0% |
 | Site lead | Check children in | Open today's session and record arrivals from a phone. | [5 days](detailed-designs/attendance/check-in-and-sign-out/README.md) | 80% · [video](videos/06-check-children-in/README.md) |
 | Site lead | Sign children out | Verify pickup authority and record who collected each child. | [3 days](detailed-designs/attendance/check-in-and-sign-out/README.md) | 80% · [video](videos/08-sign-children-out/README.md) |
 | Site lead | Read a Quick Card | Find allergies, medication, emergency contacts, and pickup rules immediately. | [3 days](detailed-designs/attendance/show-quick-card/README.md) | 75% · [video](videos/07-read-a-quick-card/README.md) |
@@ -24,6 +27,13 @@
 | Program director | Produce grant reports | Filter attendance, demographics, and outcomes and export funder-ready results. | [8 days](detailed-designs/reports/export-report/README.md) | 60% · [video](videos/37-produce-grant-reports/README.md) |
 | Program director | Manage waitlists | Review capacity and move eligible children into programs. | [3 days](detailed-designs/enrollment/enroll-guardian/README.md) | 95% · [video](videos/18-manage-waitlists/README.md) |
 | Program director | Monitor today's work | See sessions, missing slips, alerts, and tasks in one place. | [2 days](detailed-designs/shell/compose-navigation/README.md) | 85% · [video](videos/33-monitor-todays-work/README.md) |
+| Program director | Manage cohorts and assign mentors | Run cohorts as programs and assign mentors to youth. | [8 days](prompts/54-manage-cohorts.md) | 0% |
+| Program director | Author curriculum | Build tracks, modules and lessons through draft, review and publish. | [8 days](prompts/56-author-curriculum.md) | 0% |
+| Program director | Author quizzes and assignments | Create quizzes, assignments, rubrics and attempt rules. | [6 days](prompts/60-author-quizzes-and-assignments.md) | 0% |
+| Program director | Author badges and progression | Define badges, award rules and the progression framework. | [10 days](prompts/64-author-badges-and-progression.md) | 0% |
+| Program director | Schedule sessions and RSVP | Schedule cohort sessions as events and collect RSVPs. | [11 days](prompts/70-schedule-sessions-and-rsvp.md) | 0% |
+| Program director | Announce and message | Send announcements and direct messages. | [11 days](prompts/74-announce-and-message.md) | 0% |
+| Program director | Report, export and import learning data | Run learning reports and move learning data in and out. | [31 days](prompts/80-report-export-and-import.md) | 0% |
 | Admin / office manager | Set up an organization | Choose modules and create the first program, roster, staff, and slip. | [5 days](detailed-designs/organizations/set-up-organization/README.md) | 65% · [video](videos/39-set-up-an-organization/README.md) |
 | Admin / office manager | Import a roster | Map spreadsheet columns, review records, and create households and children. | [5 days](detailed-designs/imports/import-roster/README.md) | 75% · [video](videos/14-import-a-roster/README.md) |
 | Admin / office manager | Review enrollment | Accept, reject, or waitlist submitted children and update rosters. | [3 days](detailed-designs/enrollment/enroll-guardian/README.md) | 80% · [video](videos/16-review-enrollment/README.md) |
@@ -34,12 +44,32 @@
 | Admin / office manager | Configure privacy | Set data residency, retention, and guardian data request handling. | [5 days](detailed-designs/organizations/set-privacy-and-residency/README.md) | 65% · [video](videos/42-configure-privacy/README.md) |
 | Admin / office manager | Review audit history | Search sensitive actions by person, record, and time. | [5 days](detailed-designs/audit/record-and-search-audit/README.md) | 85% · [video](videos/44-review-audit-history/README.md) |
 | Admin / office manager | Configure notifications | Set reminder, no-show, and messaging preferences. | [3 days](detailed-designs/notifications/notify-in-app/README.md) | 70% · [video](videos/36-configure-notifications/README.md) |
+| Admin / office manager | Review and place applicants | Review applications and place youth into cohorts. | [9 days](prompts/59-review-and-place-applicants.md) | 0% |
+| Admin / office manager | Manage people | Manage youth, mentor and volunteer accounts and their lifecycle. | [14 days](prompts/76-manage-people.md) | 0% |
+| Admin / office manager | Configure the organization | Edit organization profile, consent policy, terms and tracks. | [14 days](prompts/79-configure-the-organization.md) | 0% |
 | Youth worker | Start an invited shift | Accept an invitation, complete setup, and reach today's assigned session. | [4 days](detailed-designs/staff/invite-and-onboard-staff/README.md) | 80% · [video](videos/30-start-an-invited-shift/README.md) |
 | Youth worker | Record attendance | Check children in or out within assigned permissions. | [3 days](detailed-designs/attendance/check-in-and-sign-out/README.md) | 75% · [video](videos/09-record-attendance-as-youth-worker/README.md) |
 | Youth worker | Report an incident | Submit a structured report for supervisor review. | [3 days](detailed-designs/incidents/report-and-review-incident/README.md) | 90% · [video](videos/20-report-an-incident-as-a-youth-worker/README.md) |
 | Youth worker | Use permitted child details | Find authorized roster details without exposing restricted records. | [3 days](detailed-designs/identity/authorize-request/README.md) | 90% · [video](videos/32-use-permitted-child-details/README.md) |
 | Volunteer coordinator | Coordinate staff coverage | Invite volunteers and align them with sessions and permissions. | [3 days](detailed-designs/staff/invite-and-onboard-staff/README.md) | 80% · [video](videos/31-coordinate-staff-coverage/README.md) |
 | Volunteer coordinator | Switch organizations | Select an active organization before working with its records. | [4 days](detailed-designs/organizations/switch-organization/README.md) | 85% · [video](videos/40-switch-organizations/README.md) |
+| Youth | Sign in as a youth or mentor | Sign in to the youth or mentor pages with an account linked to their record. | [6 days](prompts/50-sign-in-as-youth-or-mentor.md) | 0% |
+| Youth | Accept an invitation as a youth or mentor | Activate an invited youth or mentor account and set a password. | [4 days](prompts/51-accept-an-invitation.md) | 0% |
+| Youth | Complete first-run onboarding | Finish guided setup after a youth's first sign-in. | [3 days](prompts/53-complete-first-run-onboarding.md) | 0% |
+| Youth | Complete lessons | Work through gated lessons, including coding tracks. | [13 days](prompts/57-complete-lessons.md) | 0% |
+| Youth | Take quizzes | Attempt quizzes and see scores and results. | [7 days](prompts/61-take-quizzes.md) | 0% |
+| Youth | Submit assignments | Submit work and follow it through review and revision. | [14 days](prompts/62-submit-assignments.md) | 0% |
+| Youth | View journey and progress | See badges, the journey roadmap and overall progress. | [10 days](prompts/65-view-journey-and-progress.md) | 0% |
+| Youth | Write reflections | Write private-by-default reflections after a lesson. | [4 days](prompts/66-write-reflections.md) | 0% |
+| Youth | Reset a password as a youth or mentor | Recover a youth or mentor account through an emailed link. | [4 days](prompts/77-reset-a-password.md) | 0% |
+| Mentor | Use the mentor dashboard | See the roster of assigned youth and each youth's record. | [7 days](prompts/55-use-the-mentor-dashboard.md) | 0% |
+| Mentor | Grade and assess | Grade submissions, approve quiz results and assess competencies. | [13 days](prompts/63-grade-and-assess.md) | 0% |
+| Mentor | Record mentor check-ins | Log check-ins with assigned youth. | [5 days](prompts/67-record-mentor-check-ins.md) | 0% |
+| Mentor | Flag at-risk youth | Raise, act on and resolve at-risk concerns. | [5 days](prompts/68-flag-at-risk-youth.md) | 0% |
+| Mentor | Assign work | Assign lessons, modules or projects to youth or a cohort. | [4 days](prompts/69-assign-work.md) | 0% |
+| Mentor | Take attendance for cohort sessions | Record cohort session attendance in Roll Call, including offline. | [7 days](prompts/71-take-attendance-for-cohort-sessions.md) | 0% |
+| Volunteer | Use the volunteer portal | See assigned sessions and today's schedule and take attendance. | [12 days](prompts/72-use-the-volunteer-portal.md) | 0% |
+| Visitor | Explore the public website | Browse programs and open cohorts, and apply, volunteer or donate. | [22 days](prompts/81-explore-the-public-website.md) | 0% |
 | Staff | Sign in securely | Access authorized work with credentials and required verification. | [5 days](detailed-designs/identity/sign-in/README.md) | 80% · [video](videos/02-sign-in-securely/README.md) |
 | Staff | Search records | Find permitted children, families, and events across enabled modules. | [4 days](detailed-designs/search/search-organization/README.md) | 75% · [video](videos/34-search-records/README.md) |
 | Staff | Review notifications | Open relevant tasks, alerts, and updates from the notification center. | [5 days](detailed-designs/notifications/notify-in-app/README.md) | 70% · [video](videos/35-review-notifications/README.md) |
@@ -48,5 +78,8 @@
 | Platform admin | Create an organization | Add a tenant and prepare its onboarding. | [3 days](detailed-designs/organizations/manage-organizations/README.md) | 85% |
 | Platform admin | Suspend an organization | Block access and outbound messages while retaining tenant data. | [3 days](detailed-designs/organizations/manage-organizations/README.md) | 85% |
 | Platform admin | Manage organizations | Review tenants across the deployment with platform-only access. | [3 days](detailed-designs/organizations/manage-organizations/README.md) | 85% |
+| Everyone | Receive notifications in real time | Get near-real-time in-app alerts for relevant activity. | [10 days](prompts/75-receive-notifications.md) | 0% |
+| Everyone | Manage personal settings | Update profile, notifications, theme and password. | [18 days](prompts/78-manage-personal-settings.md) | 0% |
 | Everyone | Walking skeleton | Tenancy, migrate and seed, the shell and audit recording that every journey builds on. | [supporting](prompts/01-walking-skeleton.md) | 100% · [video](videos/01-walking-skeleton/README.md) |
 | Everyone | Operational readiness | Structured request logs, per-tenant metrics and on-call alerts, and the performance budgets measured in CI. | [supporting](prompts/48-operational-readiness.md) | 40% · [video](videos/48-operational-readiness/README.md) |
+| Everyone | Merge Waypoint: foundation | The merge mapping, the Learning, Mentoring and Public website modules, the Youth, Mentor and Volunteer roles, youth accounts linked to child records and the seeded cast. | [supporting](prompts/49-merge-waypoint-foundation.md) | 100% · [video](videos/49-merge-waypoint-foundation/README.md) |

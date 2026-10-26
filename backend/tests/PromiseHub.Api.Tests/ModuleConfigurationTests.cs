@@ -14,7 +14,10 @@ public sealed class ModuleConfigurationTests : IAsyncLifetime
     private static readonly Guid Grace = DatabaseSeeder.MembershipId(DatabaseSeeder.Northgate, "grace@northgate.example");
     private static readonly Guid HarbourviewMateo = DatabaseSeeder.ChildId(DatabaseSeeder.Harbourview, "Mateo Rivera");
 
+    // The eight operations modules Harbourview's seed turns on; the Waypoint modules follow in the catalog (ADR 0043).
     private static readonly string[] All = ["Roster", "Slips", "RollCall", "QuickCards", "Pickup", "Messages", "Incidents", "Reports"];
+    private static readonly string[] Catalog = [.. All, "Learning", "Mentoring", "PublicWebsite"];
+    private static readonly string[] Seeded = [.. All, "Learning", "Mentoring"];
 
     private readonly PromiseHubApiFactory _factory = new();
 
@@ -24,8 +27,8 @@ public sealed class ModuleConfigurationTests : IAsyncLifetime
         var modules = await _factory.ClientFor(Tom).GetFromJsonAsync<JsonElement>("/settings/modules");
 
         var rows = modules.GetProperty("modules").EnumerateArray().ToList();
-        Assert.Equal(All, rows.Select(m => m.GetProperty("id").GetString()));
-        Assert.All(rows, m => Assert.True(m.GetProperty("on").GetBoolean()));
+        Assert.Equal(Catalog, rows.Select(m => m.GetProperty("id").GetString()));
+        Assert.All(rows.Where(m => All.Contains(m.GetProperty("id").GetString())), m => Assert.True(m.GetProperty("on").GetBoolean()));
         var pickup = rows.Single(m => m.GetProperty("id").GetString() == "Pickup");
         Assert.Equal(["Roster", "RollCall"], pickup.GetProperty("needs").EnumerateArray().Select(n => n.GetString()));
     }
@@ -50,7 +53,7 @@ public sealed class ModuleConfigurationTests : IAsyncLifetime
         var error = Assert.Single(errors);
         Assert.Equal("Pickup", error.GetProperty("module").GetString());
         Assert.Equal("Pickup needs Roll Call.", error.GetProperty("message").GetString());
-        Assert.Equal(All, await ModulesOn(Tom));
+        Assert.Equal(Seeded, await ModulesOn(Tom));
     }
 
     [Fact]
@@ -78,7 +81,7 @@ public sealed class ModuleConfigurationTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(["Roster"], await ModulesOn(Grace));
-        Assert.Equal(All, await ModulesOn(Tom));
+        Assert.Equal(Seeded, await ModulesOn(Tom));
     }
 
     [Fact]
@@ -119,6 +122,49 @@ public sealed class ModuleConfigurationTests : IAsyncLifetime
         await Save(Tom, All);
         var child = await client.GetFromJsonAsync<JsonElement>($"/children/{HarbourviewMateo}");
         Assert.Equal("Mateo Rivera", child.GetProperty("name").GetString());
+    }
+
+    // L2-004 criterion 6.
+    [Fact]
+    public async Task Learning_Mentoring_and_Public_website_follow_Reports_each_needing_the_roster_and_are_off_for_an_organization_that_never_turned_them_on()
+    {
+        var modules = await _factory.ClientFor(Grace).GetFromJsonAsync<JsonElement>("/settings/modules");
+
+        var rows = modules.GetProperty("modules").EnumerateArray().ToList();
+        Assert.Equal(Catalog, rows.Select(m => m.GetProperty("id").GetString()));
+        foreach (var (id, name) in new[] { ("Learning", "Learning"), ("Mentoring", "Mentoring"), ("PublicWebsite", "Public website") })
+        {
+            var row = rows.Single(m => m.GetProperty("id").GetString() == id);
+            Assert.Equal(name, row.GetProperty("name").GetString());
+            Assert.False(row.GetProperty("on").GetBoolean());
+            Assert.Equal(["Roster"], row.GetProperty("needs").EnumerateArray().Select(n => n.GetString()));
+        }
+    }
+
+    // L2-004 criterion 7.
+    [Fact]
+    public async Task Turning_Roster_off_while_Learning_and_Mentoring_are_on_is_rejected_and_nothing_changes()
+    {
+        Assert.Equal(HttpStatusCode.OK, (await Save(Grace, "Roster", "Learning", "Mentoring")).StatusCode);
+
+        var response = await Save(Grace, "Learning", "Mentoring");
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        var error = Assert.Single((await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("errors").EnumerateArray());
+        Assert.Equal("Roster", error.GetProperty("module").GetString());
+        Assert.Equal("Learning and Mentoring need the roster.", error.GetProperty("message").GetString());
+        Assert.Equal(["Roster", "Learning", "Mentoring"], await ModulesOn(Grace));
+    }
+
+    // L2-004 criterion 8: one organization's Waypoint modules never touch another's.
+    [Fact]
+    public async Task Turning_the_Waypoint_modules_on_for_one_organization_leaves_the_other_unchanged()
+    {
+        var response = await Save(Grace, "Roster", "RollCall", "QuickCards", "Learning", "Mentoring", "PublicWebsite");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(["Roster", "RollCall", "QuickCards", "Learning", "Mentoring", "PublicWebsite"], await ModulesOn(Grace));
+        Assert.DoesNotContain("PublicWebsite", await ModulesOn(Tom));
     }
 
     private Task<HttpResponseMessage> Save(Guid membership, params string[] on) =>

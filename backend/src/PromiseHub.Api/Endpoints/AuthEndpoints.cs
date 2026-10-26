@@ -1,3 +1,4 @@
+using PromiseHub.Api.Authorization;
 using Microsoft.AspNetCore.Authentication;
 using PromiseHub.Api.Authentication;
 using PromiseHub.Application.Identity;
@@ -65,7 +66,7 @@ public static class AuthEndpoints
         {
             await http.SignOutAsync(AuthSchemes.Session);
             return Results.NoContent();
-        });
+        }).AllowAnyMember();
 
         return app;
     }

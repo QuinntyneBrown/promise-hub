@@ -7,4 +7,9 @@ public enum Role
     SiteLead,
     YouthWorker,
     VolunteerCoordinator,
+
+    // Participant roles from Waypoint (ADR 0043): they hold no staff permission.
+    Youth,
+    Mentor,
+    Volunteer,
 }

@@ -62,6 +62,13 @@ Slice 33 composed Today from the modules that are on: `GET /today` (`TodayHandle
 
 Slice 01 delivered the shell (`Shell` in the app) composed from `ph-skip-link`, `ph-top-bar`, `ph-bottom-navigation` and the `ph-nav-drawer` More menu (CDK Dialog, closes on Escape). Navigation is a static list until module configuration (slice 03) filters it. The avatar opens the same drawer until the account menu arrives with sign-out (slice 02).
 
+## Participant shells (prompt 49)
+
+- **Roles on sections.** Each `Section` in `shell/navigation.ts` may name the roles it serves; a section without roles serves the five staff roles. `navigationFor(modules, role)` keeps a section only when its module is on and the role is served. Staff keep today's sections plus Curriculum (Learning; Admin and Program director) in More. Youth get Today, Learning, Notifications and Your account; mentors Today, Mentoring, Notifications and Your account; volunteers Today, Check-in, Notifications and Your account (`L2-038` criteria 6 to 8).
+- **Search.** `PhTopBar` gains a `searchable` input; the shell sets it false for participant roles, so no search field renders.
+- **Today.** `TodayPage` reads the role from the session. For a participant role it renders a welcome and a "Your work" card with one item per module that is on and serves the role (a volunteer gets his assigned sessions), and never calls `GET /today`; the staff summary stays unchanged.
+- **Libraries.** `learning`, `curriculum` and `mentoring` export `routes` with one placeholder page each, composed of `ph-page-header`, `ph-card` and `ph-empty-state`; `website` exports `routes` with the public page, loaded at `/site/:slug` outside the shell.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

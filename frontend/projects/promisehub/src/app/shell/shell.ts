@@ -3,7 +3,14 @@ import { DOCUMENT } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
-import { AUTH_API, NOTIFICATIONS_API, ROLE_LABELS, SESSION_API, Session } from '@promisehub/api';
+import {
+  AUTH_API,
+  NOTIFICATIONS_API,
+  PARTICIPANT_ROLES,
+  ROLE_LABELS,
+  SESSION_API,
+  Session,
+} from '@promisehub/api';
 import {
   NavDrawerService,
   OrgOption,
@@ -97,8 +104,17 @@ export class Shell {
     this.auth.signOut().subscribe(() => void this.router.navigateByUrl('/sign-in'));
   }
 
-  /** Only sections whose module is on (L2-005). */
-  protected readonly navigation = computed(() => navigationFor(this.session()?.modules ?? []));
+  /** Only sections whose module is on (L2-005) and that serve the role (L2-038, ADR 0043). */
+  protected readonly navigation = computed(() => {
+    const s = this.session();
+    return s ? navigationFor(s.modules, s.role) : [];
+  });
+
+  /** Youth, mentors and volunteers have no search (L2-038 criterion 6). */
+  protected readonly searchable = computed(() => {
+    const s = this.session();
+    return !!s && !PARTICIPANT_ROLES.includes(s.role);
+  });
 
   protected openMenu(session: Session): void {
     this.menuOpen.set(true);

@@ -7,16 +7,21 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Part | Mock | Library components | Built locally |
 |---|---|---|---|
 | Skip link | every page | `ph-skip-link` | — |
-| Top bar | every staff page | `ph-top-bar` (`ph-brand-mark`, `ph-avatar`, `ph-icon`) | Navigation list (`shell/navigation.ts`) |
-| Phone tab bar | every staff page | `ph-bottom-navigation` | — |
+| Top bar | every staff page; participant variants `today/youth`, `today/mentor`, `today/volunteer`, `today/youth-learning-off` | `ph-top-bar` (`ph-brand-mark`, `ph-avatar`, `ph-icon`); search hidden for participant roles | Navigation list filtered by module and role (`shell/navigation.ts`, ADR 0043) |
+| Phone tab bar | every staff page and the participant variants | `ph-bottom-navigation` | — |
 | Account menu | `account-menu` | `ph-top-bar` (CDK Menu) | Sign out calls `AUTH_API` |
-| More menu | `main-menu` | `ph-nav-drawer` via `NavDrawerService` | Drawer data from the session |
+| More menu | `main-menu` (default, director, youth, mentor, volunteer) | `ph-nav-drawer` via `NavDrawerService` | Drawer data from the session and role |
 
 ## Pages
 
 | Screen | Mock | Library components | Built locally |
 |---|---|---|---|
 | Today | `today` (sessions), `today/empty`, `today/roster-only`, `today/loading` | `ph-page-header`, `ph-card` (titled), `ph-empty-state`, `ph-button`, `ph-stat`, `ph-list`, `ph-list-item`, `ph-badge`, `ph-skeleton` | Greeting, date and session counts |
+| Today for a participant | `today` (youth, youth-learning-off, mentor, volunteer) | `ph-page-header`, `ph-card` (titled, flush), `ph-list`, `ph-list-item` (link), `ph-empty-state` | One card item per module that is on and serves the role, from the session |
+| Learning | `learning` (default, loading, error) | `ph-page-header`, `ph-card`, `ph-empty-state`, `ph-button` (link), `ph-skeleton` | — |
+| Curriculum | `curriculum` (default, loading, error, forbidden) | `ph-page-header`, `ph-card`, `ph-empty-state`, `ph-button`, `ph-skeleton` | — |
+| Mentoring | `mentoring` (default, loading, error) | `ph-page-header`, `ph-card`, `ph-empty-state`, `ph-skeleton` | — |
+| Public website | `website` (default, loading, error, not-found) | `ph-guardian-shell` (organization bar), `ph-page-header`, `ph-card`, `ph-empty-state`, `ph-skeleton` | Slug from the route; the not-found state is the app's `SiteNotFoundPage`, shown when the server answers 404 so the library never loads |
 | Your account | `account` (default, loading, error) | `ph-page-header`, `ph-card`, `ph-description-list`, `ph-badge`, `ph-button`, `ph-empty-state`, `ph-skeleton`; `recovery-codes` and `sign-out-all` dialogs with `ph-dialog`, `ph-alert`, `ph-button` | Recovery code list |
 | Audit log | `audit-log` (default, loading, empty, error, no-results, long, forbidden) | `ph-page-header`, `ph-text-field` (search), `ph-select`, `ph-table`, `ph-button` (paging, export link), `ph-card`, `ph-empty-state`, `ph-skeleton` | — |
 | Organizations | `organizations` (default, loading, empty, error, no-results, forbidden); `add-organization` (default, busy, invalid, failed, success); `suspend-organization` (default, busy, failed) | `ph-page-header`, `ph-text-field` (search), `ph-chip` (filters), `ph-table` (with `#rowActions`), `ph-badge`, `ph-button`, `ph-card`, `ph-empty-state`, `ph-skeleton`, toast; dialogs with `ph-dialog`, `ph-text-field`, `ph-select`, `ph-radio-group`, `ph-alert` | — |
@@ -26,6 +31,7 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Notifications | `notifications` (default, read, loading, empty, error) | `ph-page-header`, `ph-card`, `ph-list`, `ph-list-item` (muted when read), `ph-button`, `ph-empty-state`, `ph-skeleton` | — |
 | Reports | `reports` (default, loading, error, forbidden) | `ph-page-header`, `ph-select`, `ph-stat`, `ph-card`, `ph-table`, `ph-progress-bar`, `ph-button`, `ph-empty-state`, `ph-error-page`, `ph-skeleton`; export dialog with `ph-dialog`, `ph-alert`, `ph-button` (download link), `ph-inline-message` | — |
 | Set up | `setup` (default, error, success, forbidden) | `ph-page-header`, `ph-progress-bar`, `ph-card`, `ph-list`, `ph-list-item`, `ph-badge`, `ph-button`, `ph-empty-state`, `ph-skeleton` | — |
+| Set up: modules | `onboard-modules` (default, invalid, custom, blocked, submitting, error) | `ph-page-header`, `ph-card`, `ph-radio-group` (presets), `ph-list`, `ph-list-item`, `ph-switch`, `ph-button` | Dependency captions from `MODULE_CATALOG`; not built yet (setup reuses Settings › Modules, ADR 0033) |
 | Set up: organization | `onboard-org` (default, invalid) | `ph-page-header`, `ph-card`, `ph-text-field`, `ph-error-summary`, `ph-alert`, `ph-button` | — |
 | Search | `search` (default, loading, empty, error, no-results) | `ph-page-header`, `ph-text-field` (search), `ph-list`, `ph-list-item`, `ph-card`, `ph-empty-state`, `ph-button`, `ph-skeleton` | Result group headings |
 | Forgot password | `forgot-password` (default, invalid, submitting, success, error) | `ph-skip-link`, `ph-auth-card`, `ph-text-field`, `ph-button`, `ph-alert` | — |
@@ -38,7 +44,7 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 
 | Sign in | `sign-in` (default, invalid, submitting, error, expired, locked) | `ph-auth-card`, `ph-text-field`, `ph-switch`, `ph-alert`, `ph-button`, `ph-skip-link` | Return-path handling |
 | Enter your code | `sign-in/mfa` | `ph-auth-card`, `ph-text-field`, `ph-switch`, `ph-alert`, `ph-button`, `ph-skip-link` | — |
-| Settings › Modules | `settings-modules` (default, single, invalid, success, error, forbidden) | `ph-page-header`, `ph-tabs`, `ph-chip`, `ph-list`, `ph-list-item`, `ph-switch`, `ph-button`, `ph-card`, `ph-empty-state`, toast via `ToastService` | Presets and dependency captions from `MODULE_CATALOG` |
+| Settings › Modules | `settings-modules` (default, single, invalid, blocked, success, error, forbidden) | `ph-page-header`, `ph-tabs`, `ph-chip`, `ph-list`, `ph-list-item`, `ph-switch`, `ph-button`, `ph-card`, `ph-empty-state`, toast via `ToastService` | Presets and dependency captions from `MODULE_CATALOG` |
 | Families | `families` (default, empty, no-results, error) | `ph-page-header`, `ph-text-field` (search), `ph-chip`, `ph-list`, `ph-list-item`, `ph-badge`, `ph-flag`, `ph-card`, `ph-empty-state`, `ph-button` | Row meta text |
 | Household | `household` (default, forbidden) | `ph-breadcrumb`, `ph-page-header`, `ph-alert`, `ph-card` (titled), `ph-list`, `ph-list-item`, `ph-flag`, `ph-badge`, `ph-button`, `ph-error-page` (outside sessions) | — |
 | Child | `child` (default, forbidden, outside-sessions) | `ph-breadcrumb`, `ph-page-header`, `ph-card` (titled), `ph-description-list`, `ph-button`, `ph-error-page` (outside sessions) | Medical facts |

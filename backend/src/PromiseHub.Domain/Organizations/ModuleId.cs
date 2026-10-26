@@ -11,4 +11,7 @@ public enum ModuleId
     Messages,
     Incidents,
     Reports,
+    Learning,
+    Mentoring,
+    PublicWebsite,
 }

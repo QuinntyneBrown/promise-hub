@@ -40,6 +40,11 @@ public sealed class Organization
 
     public string? SuspensionReason { get; private set; }
 
+    /// <summary>The lower-case name in the public website's address (<c>/site/{slug}</c>); null until chosen (ADR 0043).</summary>
+    public string? WebsiteSlug { get; private set; }
+
+    public void ChangeWebsiteSlug(string slug) => WebsiteSlug = slug;
+
     public void Suspend(string reason, DateTimeOffset now)
     {
         SuspendedAt = now;

@@ -346,6 +346,90 @@
         }
       }
     },
+    "learning": {
+      "projectType": "library",
+      "root": "projects/learning",
+      "sourceRoot": "projects/learning/src",
+      "prefix": "ph",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "options": {
+            "project": "projects/learning/ng-package.json",
+            "tsConfig": "projects/learning/tsconfig.lib.json"
+          }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": ["projects/learning/**/*.ts", "projects/learning/**/*.html"]
+          }
+        }
+      }
+    },
+    "curriculum": {
+      "projectType": "library",
+      "root": "projects/curriculum",
+      "sourceRoot": "projects/curriculum/src",
+      "prefix": "ph",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "options": {
+            "project": "projects/curriculum/ng-package.json",
+            "tsConfig": "projects/curriculum/tsconfig.lib.json"
+          }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": ["projects/curriculum/**/*.ts", "projects/curriculum/**/*.html"]
+          }
+        }
+      }
+    },
+    "mentoring": {
+      "projectType": "library",
+      "root": "projects/mentoring",
+      "sourceRoot": "projects/mentoring/src",
+      "prefix": "ph",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "options": {
+            "project": "projects/mentoring/ng-package.json",
+            "tsConfig": "projects/mentoring/tsconfig.lib.json"
+          }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": ["projects/mentoring/**/*.ts", "projects/mentoring/**/*.html"]
+          }
+        }
+      }
+    },
+    "website": {
+      "projectType": "library",
+      "root": "projects/website",
+      "sourceRoot": "projects/website/src",
+      "prefix": "ph",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "options": {
+            "project": "projects/website/ng-package.json",
+            "tsConfig": "projects/website/tsconfig.lib.json"
+          }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": ["projects/website/**/*.ts", "projects/website/**/*.html"]
+          }
+        }
+      }
+    },
     "promisehub": {
       "projectType": "application",
       "root": "projects/promisehub",

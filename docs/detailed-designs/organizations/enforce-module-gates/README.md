@@ -48,11 +48,17 @@ Each feature's acceptance suite includes the case where its module is off: the r
 
 Slice 03 delivered `IModuleGate` and `ModuleGate` (per-request read), the `RequireModule` endpoint filter (applied to `GET /children/{id}` for Roster), modules in `GET /me`, navigation composed in the shell from the session's modules (`navigationFor`), and `moduleRoute` with its `canMatch` guards for every module route. Guardian pages, Today's cards, search scopes and per-tenant jobs adopt the gate as they are built.
 
+## Waypoint modules (prompt 49)
+
+- **Placeholder endpoints.** `GET /learning/me` and `GET /curriculum` carry `RequireModule(ModuleId.Learning)`; `GET /mentoring/youth` carries `RequireModule(ModuleId.Mentoring)`. Each answers 404 while its module is off for the caller's organization, and the same request from another organization with the module on answers 200 (`L2-005` criterion 6).
+- **Public website.** `GET /website/{slug}` is anonymous, so there is no membership to read a tenant from. `PublicWebsiteHandler` finds the organization by `Organization.WebsiteSlug`, reads that organization's `ModuleConfiguration` with the query filter bypassed for that one id, and answers 404 for an unknown slug, a suspended organization or Public website off; otherwise it returns `PublicSiteDto(name, city)` (criterion 7).
+- **Client gate.** `moduleRoute('learning', 'Learning', …)`, `moduleRoute('curriculum', 'Learning', …)` and `moduleRoute('mentoring', 'Mentoring', …)` load the libraries only while their module is on and redirect to Today otherwise (criterion 8). `/site/:slug` sits outside the shell with a `canMatch` that calls `WEBSITE_API.site(slug)`; when the server answers 404 the route does not match and the not-found page renders, so the `website` library is never downloaded.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |
 |-------|--------------|-------------|
-| `L2-005` | `L1-002` | A module that is off is neither served nor rendered. |
+| `L2-005` | `L1-002` | A module that is off is neither served nor rendered, including the Learning, Mentoring and Public website endpoints and routes (criteria 6 to 8). |
 
 ## Diagrams
 

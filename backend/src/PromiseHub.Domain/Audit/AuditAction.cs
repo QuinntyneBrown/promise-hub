@@ -18,4 +18,5 @@ public enum AuditAction
     Restored,
     Cancelled,
     Switched,
+    YouthLinked,
 }

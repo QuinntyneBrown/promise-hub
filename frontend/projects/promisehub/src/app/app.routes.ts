@@ -6,6 +6,7 @@ import { NotFoundPage } from './errors/not-found/not-found-page';
 import { OfflinePage } from './errors/offline/offline-page';
 import { ServerErrorPage } from './errors/server-error/server-error-page';
 import { moduleRoute } from './modules/module-route';
+import { websiteOn } from './modules/website.guard';
 import { Shell } from './shell/shell';
 
 export const routes: Routes = [
@@ -26,6 +27,18 @@ export const routes: Routes = [
   },
   // Guardian pages: anonymous, reached by a link and a code; the server answers for the link's organization.
   { path: 'g', loadChildren: () => import('@promisehub/guardian').then((m) => m.routes) },
+  // The public website: anonymous; the library loads only when the server says the slug's site is published (ADR 0043).
+  {
+    path: 'site/:slug',
+    canMatch: [websiteOn],
+    loadChildren: () => import('@promisehub/website').then((m) => m.routes),
+  },
+  {
+    path: 'site/:slug',
+    loadComponent: () =>
+      import('./errors/site-not-found/site-not-found-page').then((m) => m.SiteNotFoundPage),
+    title: 'Page not found',
+  },
   {
     path: '',
     component: Shell,
@@ -109,6 +122,15 @@ export const routes: Routes = [
       ),
       ...moduleRoute('reports', 'Reports', () =>
         import('@promisehub/reports').then((m) => m.routes),
+      ),
+      ...moduleRoute('learning', 'Learning', () =>
+        import('@promisehub/learning').then((m) => m.routes),
+      ),
+      ...moduleRoute('curriculum', 'Learning', () =>
+        import('@promisehub/curriculum').then((m) => m.routes),
+      ),
+      ...moduleRoute('mentoring', 'Mentoring', () =>
+        import('@promisehub/mentoring').then((m) => m.routes),
       ),
       { path: 'forbidden', component: ForbiddenPage, title: 'No access · PromiseHub' },
       {

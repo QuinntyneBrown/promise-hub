@@ -55,11 +55,42 @@ export const MODULE_CATALOG: {
     description: 'Grant-ready attendance and outcomes.',
     needs: ['Roster'],
   },
+  // From Waypoint (ADR 0043): switched on one at a time, never by the whole-suite preset.
+  {
+    id: 'Learning',
+    name: 'Learning',
+    description: 'Lessons, quizzes, assignments and badges for youth.',
+    needs: ['Roster'],
+  },
+  {
+    id: 'Mentoring',
+    name: 'Mentoring',
+    description: 'Mentors, assigned youth, check-ins and at-risk flags.',
+    needs: ['Roster'],
+  },
+  {
+    id: 'PublicWebsite',
+    name: 'Public website',
+    description: 'Your organization’s public pages.',
+    needs: ['Roster'],
+  },
+];
+
+/** The eight operations modules of the "Whole suite" preset. */
+const SUITE: ModuleId[] = [
+  'Roster',
+  'Slips',
+  'RollCall',
+  'QuickCards',
+  'Pickup',
+  'Messages',
+  'Incidents',
+  'Reports',
 ];
 
 /** The presets offered in Settings › Modules and onboarding (L2-004). */
 export const MODULE_PRESETS: { name: string; modules: ModuleId[] | null }[] = [
-  { name: 'Whole suite', modules: MODULE_CATALOG.map((m) => m.id) },
+  { name: 'Whole suite', modules: SUITE },
   { name: 'Just check-in', modules: ['Roster', 'RollCall', 'QuickCards'] },
   { name: 'Just slips', modules: ['Roster', 'Slips'] },
   { name: 'Custom', modules: null },

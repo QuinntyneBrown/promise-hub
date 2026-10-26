@@ -13,7 +13,7 @@ test.describe('Manage organizations as a platform admin', () => {
 
     await expect(orgs.rows()).toHaveCount(2);
     await expect(orgs.row('Harbourview Youth Collective')).toContainText('Standard');
-    await expect(orgs.row('Harbourview Youth Collective')).toContainText('8 of 8');
+    await expect(orgs.row('Harbourview Youth Collective')).toContainText('10 of 11');
     await expect(orgs.row('Harbourview Youth Collective')).toContainText('Active');
     await expect(orgs.row('Northgate Community Church Kids')).toContainText('Setting up');
     await orgs.expectAccessible();
@@ -40,7 +40,7 @@ test.describe('Manage organizations as a platform admin', () => {
 
     await expect(orgs.dialog.getByRole('heading', { name: 'Kitchener Youth Alliance is ready' })).toBeVisible();
     await orgs.dialog.getByRole('button', { name: 'Done' }).click();
-    await expect(orgs.row('Kitchener Youth Alliance')).toContainText('3 of 8');
+    await expect(orgs.row('Kitchener Youth Alliance')).toContainText('3 of 11');
     await expect(orgs.row('Kitchener Youth Alliance')).toContainText('Setting up');
     expect(api.welcomeEmails).toEqual(['dana@kitcheneryouth.example']);
   });

@@ -19,6 +19,18 @@ STAFF = {
     "priya": dict(name="Priya Raman", initials="PR", color="mint", role="Volunteer coordinator"),
     "tom": dict(name="Tom Nguyen", initials="TN", color="sun", role="Admin"),
     "aisha": dict(name="Aisha Bello", initials="AB", color="rose", role="Youth worker"),
+    # From Waypoint (ADR 0043): mentors and a volunteer at Harbourview, a mentor at Northgate.
+    "daniel": dict(name="Daniel Osei", initials="DO", color="sage", role="Mentor"),
+    "hana": dict(name="Hana Kim", initials="HK", color="peach", role="Mentor"),
+    "leo": dict(name="Leo Martins", initials="LM", color="sky", role="Volunteer"),
+    "samuel": dict(name="Samuel Boateng", initials="SB", color="mint", role="Mentor"),
+}
+
+# Youth who sign in (ADR 0043). Each account links to one child record in its own organization.
+YOUTH = {
+    "sofia": dict(name="Sofía Rivera", initials="SR", color="peach", role="Youth", age=12, consent="Needs guardian consent"),
+    "nadia": dict(name="Nadia Haddad", initials="NH", color="sage", role="Youth", age=18, consent="Adult; no guardian consent needed"),
+    "lucia": dict(name="Lucía Rivera", initials="LR", color="lilac", role="Youth", age=14, consent="Needs guardian consent"),
 }
 
 CHILDREN = [
@@ -493,6 +505,13 @@ NAV_SECONDARY = [
 ]
 TABBAR = [("today", "Today", "home"), ("check-in", "Check-in", "clipboard"), ("families", "Families", "users"), ("events", "Events", "calendar")]
 
+# Participant roles (ADR 0043): their own sections only, each shown while its module is on. No search, no Settings.
+NAV_ROLE = {
+    "youth": [("today", "Today", "home", "today"), ("learning", "Learning", "star", "learning")],
+    "mentor": [("today", "Today", "home", "today"), ("mentoring", "Mentoring", "users", "mentoring")],
+    "volunteer": [("today", "Today", "home", "today"), ("check-in", "Check-in", "clipboard", "check-in")],
+}
+
 
 def brand(href: str, name: str = "PromiseHub") -> str:
     return (f'<a class="topbar__brand" href="{href}" aria-label="{esc(name)} home"><span class="ph-mark" aria-hidden="true"></span>'
@@ -506,37 +525,40 @@ def org_switcher(kind: str = "page", *, open_: bool = False, org: str = ORG, ini
 
 
 def topbar(current: str, user: dict, *, unread: int = 2, kind: str = "page", menu_open: bool = False, modules: list | None = None,
-           switcher: str = "") -> str:
+           switcher: str = "", role: str = "staff") -> str:
     links = []
-    for sid, label, _ic, cur in NAV_STAFF:
+    participant = role in NAV_ROLE
+    for sid, label, _ic, cur in (NAV_ROLE[role] if participant else NAV_STAFF):
         if modules is not None and sid not in modules:
             continue
         a = ' aria-current="page"' if cur == current else ""
         md = " nav-link--md" if sid in ("programs", "messages", "reports") else ""
         links.append(f'<a class="nav-link{md}" href="{rel(kind, "page", sid)}"{a}>{esc(label)}</a>')
-    for sid, label, _ic, cur in NAV_SECONDARY:
+    for sid, label, _ic, cur in ([] if participant else NAV_SECONDARY):
         a = ' aria-current="page"' if cur == current else ""
         links.append(f'<a class="nav-link nav-link--secondary" href="{rel(kind, "page", sid)}"{a}>{esc(label)}</a>')
-    links.append(f'<button class="nav-link nav-link--more" type="button" aria-haspopup="dialog" aria-expanded="false" data-href="{rel(kind, "dialog", "main-menu")}">More{icon("chevron-down", "icon--sm")}</button>')
+    links.append(f'<button class="nav-link nav-link--more" type="button" aria-haspopup="dialog" aria-expanded="false" data-href="{rel(kind, "dialog", "main-menu", role if participant else "default")}">More{icon("chevron-down", "icon--sm")}</button>')
     bell_label = f"Notifications, {unread} unread" if unread else "Notifications"
     bell_badge = f'<span class="badge badge--count" aria-hidden="true">{unread}</span>' if unread else ""
+    search = "" if participant else (f'<form class="topbar__search" role="search" action="{rel(kind, "page", "search")}"><label class="visually-hidden" for="global-q">Search children, families and events</label>'
+                                     f'<input class="input input--sm" id="global-q" name="q" type="search" placeholder="Search"></form>')
     return (f'<header class="topbar">{brand(rel(kind, "page", "today"))}{switcher}<span class="ph-org">{esc(ORG_SHORT)}</span>'
             f'<nav class="topbar__nav" aria-label="Primary">{"".join(links)}</nav><span class="topbar__spacer"></span>'
-            f'<form class="topbar__search" role="search" action="{rel(kind, "page", "search")}"><label class="visually-hidden" for="global-q">Search children, families and events</label>'
-            f'<input class="input input--sm" id="global-q" name="q" type="search" placeholder="Search"></form>'
+            f'{search}'
             f'<div class="bell-anchor"><button class="btn btn--ghost btn--icon" type="button" aria-label="{bell_label}" aria-haspopup="dialog" aria-expanded="false" data-href="{rel(kind, "notification", "bell", "unread" if unread else "empty")}">{icon("bell")}{bell_badge}</button></div>'
             f'<button class="avatar-trigger" type="button" aria-haspopup="menu" aria-expanded="{"true" if menu_open else "false"}" aria-label="Account menu for {esc(user["name"])}" data-href="{rel(kind, "dialog", "account-menu")}">{avatar(user)}</button></header>')
 
 
-def tabbar(current: str, kind: str = "page", *, checkin_badge: int = 0, modules: list | None = None) -> str:
+def tabbar(current: str, kind: str = "page", *, checkin_badge: int = 0, modules: list | None = None, role: str = "staff") -> str:
     items = []
-    for sid, label, ic in TABBAR:
+    participant = role in NAV_ROLE
+    for sid, label, ic in ([(i[0], i[1], i[2]) for i in NAV_ROLE[role]] if participant else TABBAR):
         if modules is not None and sid not in modules:
             continue
         a = ' aria-current="page"' if sid == current else ""
         b = f'<span class="badge badge--count" aria-label="{checkin_badge} not checked in">{checkin_badge}</span>' if (sid == "check-in" and checkin_badge) else ""
         items.append(f'<a href="{rel(kind, "page", sid)}"{a}>{icon(ic)}{esc(label)}{b}</a>')
-    items.append(f'<button type="button" aria-haspopup="dialog" aria-expanded="false" data-href="{rel(kind, "dialog", "main-menu")}">{icon("menu")}More</button>')
+    items.append(f'<button type="button" aria-haspopup="dialog" aria-expanded="false" data-href="{rel(kind, "dialog", "main-menu", role if participant else "default")}">{icon("menu")}More</button>')
     return f'<nav class="tabbar" aria-label="Primary, phone">{"".join(items)}</nav>'
 
 
@@ -562,10 +584,10 @@ def mock_bar(title: str, states: list[str], state: str, depth: int = 2) -> str:
 def staff_doc(*, kind: str, sid: str, state: str, title: str, desc: str, reqs: list[str], states: list[str], nav: str,
               main: str, user: dict = STAFF["jaylen"], overlays: str = "", notes: str = "", inert: bool = False,
               unread: int = 2, checkin_badge: int = 0, toast_html: str = "", menu_open: bool = False, show_tabbar: bool = True,
-              modules: list | None = None, switcher: str = "") -> str:
-    inner = topbar(nav, user, unread=unread, kind=kind, menu_open=menu_open, modules=modules, switcher=switcher) + f'<main id="main" class="container">{main}</main>'
+              modules: list | None = None, switcher: str = "", role: str = "staff") -> str:
+    inner = topbar(nav, user, unread=unread, kind=kind, menu_open=menu_open, modules=modules, switcher=switcher, role=role) + f'<main id="main" class="container">{main}</main>'
     if show_tabbar:
-        inner += tabbar(nav, kind, checkin_badge=checkin_badge, modules=modules)
+        inner += tabbar(nav, kind, checkin_badge=checkin_badge, modules=modules, role=role)
     wrap_open = '<div class="has-tabbar"' + (' inert aria-hidden="true"' if inert else "") + ">"
     body = ('<body>\n<a class="skip-link" href="#main">Skip to content</a>\n' + wrap_open + inner + "</div>\n"
             + (toast_html or toast_region()) + overlays + notes)

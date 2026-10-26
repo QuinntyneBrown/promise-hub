@@ -43,7 +43,8 @@ promise-hub/
 │   │   │                               # one folder per feature (Identity/, Organizations/,
 │   │   │                               # Households/, Enrollment/, Programs/, Events/, Slips/,
 │   │   │                               # Attendance/, Messaging/, Incidents/, Reports/, Surveys/,
-│   │   │                               # Staff/, Billing/, Audit/, Imports/, Search/, Notifications/)
+│   │   │                               # Staff/, Billing/, Audit/, Imports/, Search/, Notifications/,
+│   │   │                               # Learning/, Curriculum/, Mentoring/, Website/)
 │   │   ├── PromiseHub.Infrastructure/  # DbContext, EF migrations, SMS, email and push providers,
 │   │   │                               # file storage, auth services, audit log, seeder
 │   │   ├── PromiseHub.Api/             # Endpoints, Program.cs, DI composition, middleware.
@@ -75,12 +76,20 @@ promise-hub/
 │       ├── reports/                  # Feature library: reports and surveys
 │       ├── guardian/                 # Feature library: lightweight guardian pages
 │       ├── settings/                 # Feature library: organization, notification and privacy settings
-│       └── administration/           # Feature library: staff, roles, billing, audit log
+│       ├── administration/           # Feature library: staff, roles, billing, audit log
+│       ├── learning/                 # Feature library: youth lessons, quizzes, assignments, reflections,
+│       │                             # journey and badges
+│       ├── curriculum/               # Feature library: tracks, modules, lessons, quizzes, assignments,
+│       │                             # badges and progression authoring
+│       ├── mentoring/                # Feature library: mentor dashboard, youth records, grading,
+│       │                             # check-ins, at-risk flags, assigned work
+│       └── website/                  # Feature library: the organization's public pages
 ├── e2e/                              # Playwright suite (Chromium only)
 │   ├── playwright.config.ts
 │   ├── pages/                        # Page objects: one per screen, owning selectors
 │   ├── fixtures/                     # Test fixtures, the fake backend (routed API + auth) and seeded data
-│   └── tests/                        # Specs by feature (one folder per feature),
+│   └── tests/                        # Specs by feature (one folder per feature, including
+│                                     # learning/, curriculum/, mentoring/ and website/),
 │                                     # including axe accessibility checks
 ├── eng/                              # Developer and CI scripts (start stack, run tests, deploy)
 │   └── infra/                        # Infrastructure as code
@@ -91,10 +100,12 @@ promise-hub/
 └── docs/
     ├── journeys.md                   # User journeys by persona, ordered by value
     ├── specs/                        # L1/L2 requirements with acceptance criteria
-    ├── detailed-designs/             # Per-subsystem/feature designs and diagrams
+    ├── detailed-designs/             # Per-subsystem/feature designs and diagrams (including
+    │                                 # learning/, curriculum/, mentoring/ and website/)
     ├── mocks/                        # Static HTML mocks: the design reference
     ├── design-system/                # Tokens, components and patterns taken from the mocks
-    ├── estimates/                    # Effort and percent-complete per design
+    ├── estimates/                    # Effort and percent-complete per design (one file per
+    │                                 # subsystem, including learning, curriculum, mentoring, website)
     ├── adr/                          # Architecture decision records (NNNN-title.md)
     ├── prompts/                      # Ready-to-run implementation prompts for features
     └── videos/                       # Narrated videos: NN-topic/ (script.md, slides.html, README.md, media)
@@ -154,10 +165,10 @@ Rules (MUST be followed):
 
 **Every feature of PromiseHub is a module that an organization can switch on or off, from a single module to the entire suite. This is a product rule, not a setting to bolt on later.**
 
-- The modules are Roster, Permission slips, Roll Call, Quick Cards, Pickup, Messages, Incident log and Reports. Roster is the data every other module reads; a module declares which modules it needs (for example Pickup needs Roll Call) and the server rejects a configuration that breaks a dependency.
+- The modules are Roster, Permission slips, Roll Call, Quick Cards, Pickup, Messages, Incident log, Reports, Learning, Mentoring and Public website. Roster is the data every other module reads; a module declares which modules it needs (for example Pickup needs Roll Call; Learning, Mentoring and Public website each need Roster) and the server rejects a configuration that breaks a dependency.
 - The configuration lives per organization (`Settings › Modules`, mocked as `settings-modules`; chosen during onboarding in `onboard-modules`) and is read by the backend on every request: an endpoint of a module that is off answers 404 for that organization, never 200 with hidden data.
 - The frontend reads the same configuration once per session and composes navigation (top bar, More menu, phone tab bar, search scopes, Today's cards, guardian pages) only from modules that are on. Nothing that is off is rendered, linked, mentioned or prefetched. Routes of a module that is off redirect to Today.
-- Each frontend feature library maps to exactly one module and is lazy-loaded only when its module is on. Shared code never assumes a module is present.
+- Each frontend feature library maps to exactly one module and is lazy-loaded only when its module is on (`learning` and `curriculum` map to Learning, `mentoring` to Mentoring, `website` to Public website; ADR 0043). Shared code never assumes a module is present.
 - Turning a module off hides it; it never deletes data. Turning it back on restores everything.
 - Every acceptance test suite for a feature includes the case where its module is off: the route is unreachable and the API answers 404.
 

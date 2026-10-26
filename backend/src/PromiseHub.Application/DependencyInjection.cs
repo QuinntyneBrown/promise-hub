@@ -131,6 +131,11 @@ public static class DependencyInjection
         services.AddScoped<SaveModulesHandler>();
         services.AddScoped<SignInHandler>();
         services.AddScoped<CompleteMfaHandler>();
+        services.AddScoped<Learning.LearnerHandler>();
+        services.AddScoped<Staff.LinkYouthHandler>();
+        services.AddScoped<Curriculum.CurriculumHandler>();
+        services.AddScoped<Mentoring.MentoringHandler>();
+        services.AddScoped<Website.PublicWebsiteHandler>();
         return services;
     }
 }

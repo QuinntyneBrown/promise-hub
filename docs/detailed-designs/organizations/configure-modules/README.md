@@ -45,11 +45,15 @@ Admins change the configuration on `settings-modules` or pick a preset on `onboa
 
 Slice 03 delivered `SettingsModulesPage` in `frontend/projects/settings/` (default, invalid, error and forbidden states, presets applied in the page from `MODULE_PRESETS`), `MODULES_API`, `GET`/`PUT /settings/modules` (ADR 0006), `ModuleRules` (the validator), `SaveModulesHandler` with an audit entry per change, `ModuleConfiguration` and the seeded configurations. The onboarding preset tiles and `POST /modules/preset` arrive with `set-up-organization`; there is no cache to invalidate (ADR 0006).
 
+## Waypoint modules (prompt 49)
+
+ADR 0043 adds three modules after Reports in `ModuleId` and `ModuleCatalog`: **Learning**, **Mentoring** and **Public website**, each needing Roster. `ModuleRules.Check` already names every dependent of Roster, so turning Roster off while Learning and Mentoring are on is rejected with "Learning and Mentoring need the roster." (`L2-004` criterion 7). The stored `ModuleConfiguration` lists only the modules on, so the new modules are off for every existing organization until an admin turns them on. The frontend `MODULE_CATALOG` lists the same three; the "Whole suite" preset keeps the eight operations modules, and the summary counts eleven. Saving stays audited as `ModuleChanged` for the active organization only (criterion 8).
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |
 |-------|--------------|-------------|
-| `L2-004` | `L1-002` | Admins switch modules on or off in `settings-modules` or choose a preset during onboarding (`onboard-modules`). Roster is the data every other module reads; dependencies are declared and enforced. |
+| `L2-004` | `L1-002` | Admins switch modules on or off in `settings-modules` or choose a preset during onboarding (`onboard-modules`). Roster is the data every other module reads; dependencies are declared and enforced. Learning, Mentoring and Public website each need Roster (criteria 6 to 8). |
 
 ## Diagrams
 

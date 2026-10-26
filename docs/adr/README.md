@@ -45,3 +45,5 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0039](0039-session-version.md) | Signing out everywhere raises a session version carried in the cookie; recovery codes are stored as hashes |
 | [0040](0040-password-reset.md) | Password reset is a one-hour, single-use emailed link stored as a hash, and it signs out other devices |
 | [0041](0041-platform-organizations.md) | Platform admins are a flag on the person; suspension is a timestamp enforced per request and per job |
+| [0042](0042-in-process-metrics-alerts-and-ci-budgets.md) | Request metrics and alerts run in process; performance budgets are measured in the Playwright suite on the production build |
+| [0043](0043-merge-waypoint.md) | Waypoint merges in as the Learning, Mentoring and Public website modules, the Youth, Mentor and Volunteer roles and existing features |

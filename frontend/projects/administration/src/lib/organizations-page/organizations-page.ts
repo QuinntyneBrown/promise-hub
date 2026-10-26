@@ -1,7 +1,7 @@
 import { Dialog } from '@angular/cdk/dialog';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { LoadResult, PLATFORM_API, PlatformOrganization } from '@promisehub/api';
+import { LoadResult, MODULE_CATALOG, PLATFORM_API, PlatformOrganization } from '@promisehub/api';
 import {
   PhButton,
   PhCard,
@@ -74,7 +74,7 @@ export class OrganizationsPage {
       name: o.name,
       plan: o.plan,
       children: o.activeChildren.toLocaleString('en-US'),
-      modules: `${o.modulesOn} of 8`,
+      modules: `${o.modulesOn} of ${MODULE_CATALOG.length}`,
       status:
         o.status === 'Active'
           ? { text: 'Active', tone: 'success' }

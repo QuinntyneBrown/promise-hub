@@ -24,11 +24,16 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
         // Harbourview finished the organization step of setup; Northgate is still part way through.
         var harbourview = new Organization(Harbourview, "Harbourview Youth Collective", "Hamilton, Ontario", Plan.Standard, phone: "905-555-0100");
         harbourview.ChangeProfile(harbourview.Name, harbourview.City, new DateTimeOffset(2024, 9, 1, 12, 0, 0, TimeSpan.Zero));
+        // Public website addresses (ADR 0043); the module itself stays off until an admin turns it on.
+        harbourview.ChangeWebsiteSlug("harbourview");
         Add(harbourview);
-        Add(new Organization(Northgate, "Northgate Community Church Kids", "Burlington, Ontario", Plan.Free, phone: "289-555-0190"));
+        var northgate = new Organization(Northgate, "Northgate Community Church Kids", "Burlington, Ontario", Plan.Free, phone: "289-555-0190");
+        northgate.ChangeWebsiteSlug("northgate");
+        Add(northgate);
 
         // Harbourview runs the whole suite; Northgate, on the Free plan, runs check-in only (L2-004, L2-005).
-        Modules(Harbourview, ModuleCatalog.All);
+        // Harbourview also runs Learning and Mentoring from Waypoint; Public website stays off everywhere (ADR 0043).
+        Modules(Harbourview, [.. ModuleCatalog.Suite, ModuleId.Learning, ModuleId.Mentoring]);
         Modules(Northgate, [ModuleId.Roster, ModuleId.RollCall, ModuleId.QuickCards]);
 
         Staff(Harbourview, "Jaylen Okafor", "jaylen@harbourview.example", Role.SiteLead);
@@ -39,6 +44,15 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
         Staff(Harbourview, "Aisha Bello", "aisha@harbourview.example", Role.YouthWorker);
         Staff(Northgate, "Priya Raman", "priya@harbourview.example", Role.VolunteerCoordinator);
         Staff(Northgate, "Grace Mensah", "grace@northgate.example", Role.Admin);
+        // From Waypoint (ADR 0043): youth, mentors and a volunteer in both organizations.
+        // Each youth account links to its own child record (L2-045): Sofía is 12 and needs guardian consent; Nadia is 18.
+        Staff(Harbourview, "Sofía Rivera", "sofia@harbourview.example", Role.Youth, child: "Sofía Rivera");
+        Staff(Harbourview, "Nadia Haddad", "nadia@harbourview.example", Role.Youth, child: "Nadia Haddad");
+        Staff(Harbourview, "Daniel Osei", "daniel@harbourview.example", Role.Mentor);
+        Staff(Harbourview, "Hana Kim", "hana@harbourview.example", Role.Mentor);
+        Staff(Harbourview, "Leo Martins", "leo@harbourview.example", Role.Volunteer);
+        Staff(Northgate, "Samuel Boateng", "samuel@northgate.example", Role.Mentor);
+        Staff(Northgate, "Lucía Rivera", "lucia@northgate.example", Role.Youth, child: "Lucía Rivera");
 
         var rivera = Family(Harbourview, "Rivera", "Spanish");
         Guardian(Harbourview, rivera, "Carmen Rivera", "Mother", "905-555-0142", "carmen.rivera@example.com", "Spanish", primary: true);
@@ -63,6 +77,8 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
         Guardian(Harbourview, haddad, "Nour Haddad", "Mother", "905-555-0128", "nour.haddad@example.com", "French", primary: true);
         Kid(Harbourview, haddad, "Yusuf", "Haddad", new DateOnly(2013, 9, 4), "École Pavillon de la jeunesse, Grade 8",
             new MedicalDetails(null, "Methylphenidate at lunch", null, null, RedAlert: false));
+        // Yusuf's older sister signs in to Learning with a youth account (ADR 0043); she is enrolled in no program.
+        Kid(Harbourview, haddad, "Nadia", "Haddad", new DateOnly(2008, 3, 15), "Sir John A. Macdonald Secondary, Grade 12");
 
         // No mobile and a bounced email: the "Missing info" case (L2-011 criterion 3).
         var okonkwo = Family(Harbourview, "Okonkwo", "English");
@@ -73,6 +89,7 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
         var northgateRivera = Family(Northgate, "Rivera", "Spanish");
         Guardian(Northgate, northgateRivera, "Ana Rivera", "Mother", "289-555-0101", null, "Spanish", primary: true);
         Kid(Northgate, northgateRivera, "Mateo", "Rivera", new DateOnly(2016, 10, 1), null);
+        Kid(Northgate, northgateRivera, "Lucía", "Rivera", new DateOnly(2012, 5, 20), null);
 
         // Programs and events of the mocks; "today" is Thursday 5 November 2026 in Hamilton (UTC−5).
         var tutoring = Program(Harbourview, "After-School Tutoring", new(2026, 9, 8), new(2027, 6, 24), "Mon–Thu, 4–6 pm", 50, "6–13", open: true);
@@ -94,6 +111,8 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
         // Tonight's staff, as on the event page: Jaylen leads and Aisha works it; she is not on last night's session.
         Assign(Harbourview, "Tutoring night", "jaylen@harbourview.example");
         Assign(Harbourview, "Tutoring night", "aisha@harbourview.example");
+        // Leo volunteers at tonight's session only.
+        Assign(Harbourview, "Tutoring night", "leo@harbourview.example");
         var kidsClub = Program(Northgate, "Kids Club", new(2026, 9, 9), new(2027, 6, 16), "Wed, 6–7:30 pm", 30, "5–11", open: true);
         Enroll(Northgate, kidsClub, "Mateo Rivera");
         Session(Northgate, kidsClub, "Kids Club night", At(2026, 11, 11, 18), At(2026, 11, 11, 19), "Northgate fellowship hall", slip: false);
@@ -151,9 +170,14 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
 
     public static Guid UserId(string email) => SeedIds.Of($"user:{email}");
 
-    private void Staff(Guid organizationId, string name, string email, Role role, bool platformAdmin = false)
+    private void Staff(Guid organizationId, string name, string email, Role role, bool platformAdmin = false, string? child = null)
     {
-        Add(new Membership(MembershipId(organizationId, email), organizationId, name, email, role));
+        var membership = new Membership(MembershipId(organizationId, email), organizationId, name, email, role);
+        if (child is not null)
+        {
+            membership.LinkChild(ChildId(organizationId, child));
+        }
+        Add(membership);
         // Admins and program directors are enrolled in MFA when a secret is configured (L2-006).
         var mfa = SignInPolicy.RequiresMfa(role) ? _options.MfaSecret : null;
         var password = _options.StaffPassword is { } p ? hasher.Hash(p) : null;

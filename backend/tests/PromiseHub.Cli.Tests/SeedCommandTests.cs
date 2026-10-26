@@ -33,6 +33,33 @@ public sealed class SeedCommandTests : IDisposable
         Assert.Equal(first, Snapshot());
     }
 
+    // L2-042 criterion 4: the Waypoint cast (ADR 0043) in both organizations, linked to their child records.
+    [Fact]
+    public async Task Seed_creates_the_Waypoint_cast_in_both_organizations_with_youth_linked_to_their_child_records()
+    {
+        await CliApp.RunAsync(["migrate"], ConnectionString);
+        await CliApp.RunAsync(["seed"], ConnectionString);
+
+        var people = Query(
+            "SELECT o.Name || '|' || m.PersonName || '|' || m.Role || '|' || COALESCE(c.FirstName || ' ' || c.LastName || ' ' || c.DateOfBirth, '') " +
+            "FROM Memberships m JOIN Organizations o ON o.Id = m.OrganizationId LEFT JOIN Children c ON c.Id = m.ChildId " +
+            "WHERE m.Role IN ('Youth', 'Mentor', 'Volunteer') ORDER BY o.Name, m.PersonName");
+        Assert.Equal(
+        [
+            "Harbourview Youth Collective|Daniel Osei|Mentor|",
+            "Harbourview Youth Collective|Hana Kim|Mentor|",
+            "Harbourview Youth Collective|Leo Martins|Volunteer|",
+            "Harbourview Youth Collective|Nadia Haddad|Youth|Nadia Haddad 2008-03-15",
+            "Harbourview Youth Collective|Sofía Rivera|Youth|Sofía Rivera 2014-06-02",
+            "Northgate Community Church Kids|Lucía Rivera|Youth|Lucía Rivera 2012-05-20",
+            "Northgate Community Church Kids|Samuel Boateng|Mentor|",
+        ], people);
+        Assert.Equal(
+            ["Harbourview Youth Collective|Roster,Slips,RollCall,QuickCards,Pickup,Messages,Incidents,Reports,Learning,Mentoring|harbourview",
+             "Northgate Community Church Kids|Roster,RollCall,QuickCards|northgate"],
+            Query("SELECT o.Name || '|' || c.ModulesOn || '|' || o.WebsiteSlug FROM Organizations o JOIN ModuleConfigurations c ON c.OrganizationId = o.Id ORDER BY o.Name"));
+    }
+
     [Fact]
     public async Task Seed_refuses_to_run_when_migrations_are_pending()
     {

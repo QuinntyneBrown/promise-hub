@@ -133,6 +133,15 @@ export function seedHouseholds(): FakeHousehold[] {
           school: 'École Pavillon de la jeunesse, Grade 8',
           medical: { ...noMedical, medication: 'Methylphenidate at lunch' },
         },
+        // Yusuf's older sister signs in to Learning with a youth account (ADR 0043); she is enrolled in no program.
+        {
+          id: 'c-nadia',
+          firstName: 'Nadia',
+          lastName: 'Haddad',
+          dateOfBirth: '2008-03-15',
+          school: 'Sir John A. Macdonald Secondary, Grade 12',
+          medical: noMedical,
+        },
       ],
     },
     {
@@ -149,7 +158,10 @@ export function seedHouseholds(): FakeHousehold[] {
       name: 'Rivera',
       language: 'Spanish',
       guardians: [guardian('g-ana', 'Ana Rivera', 'Mother', '289-555-0101', null, 'Spanish', true)],
-      children: [{ id: 'c-ng-mateo', firstName: 'Mateo', lastName: 'Rivera', dateOfBirth: '2016-10-01', school: null, medical: noMedical }],
+      children: [
+        { id: 'c-ng-mateo', firstName: 'Mateo', lastName: 'Rivera', dateOfBirth: '2016-10-01', school: null, medical: noMedical },
+        { id: 'c-ng-lucia', firstName: 'Lucía', lastName: 'Rivera', dateOfBirth: '2012-05-20', school: null, medical: noMedical },
+      ],
     },
   ];
 }

@@ -54,6 +54,10 @@ This feature designs the three commands of `PromiseHub.Cli` (`migrate`, `seed`, 
 
 Slice 01 (walking skeleton) delivered `migrate` and `migrate --check`, `seed`, `reset` (Development or `--force`), the API start-up guard (`MigrationGuard`) and a first seed of both organizations, their staff and the Rivera, Thompson and Tran households (with a second Mateo Rivera in Northgate). The database is SQLite (ADR 0001). Seed profiles, `--repair`, drift reporting and the rest of the cast arrive with the features that need them.
 
+## Waypoint cast (prompt 49)
+
+A migration adds `Memberships.ChildId` (nullable) and `Organizations.WebsiteSlug` (nullable, unique). `DatabaseSeeder` adds, by stable id: at Harbourview youth accounts for Sofía Rivera (linked to her child record) and Nadia Haddad (18, a new child in the Haddad household), mentors Daniel Osei and Hana Kim and volunteer Leo Martins assigned to tonight's Tutoring night; at Northgate mentor Samuel Boateng and youth Lucía Rivera (14, a new child in Ana Rivera's household). Harbourview's configuration lists the eight operations modules plus Learning and Mentoring; Northgate's is unchanged; Public website is off for both. The slugs are `harbourview` and `northgate`. A second run finds every row by its id and adds nothing (`L2-042` criterion 4). The e2e fake API seeds the same cast.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

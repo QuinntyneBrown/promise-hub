@@ -24,3 +24,6 @@ docs/design-system/.cache/
 e2e/node_modules/
 e2e/test-results/
 e2e/playwright-report/
+
+# Python bytecode
+__pycache__/

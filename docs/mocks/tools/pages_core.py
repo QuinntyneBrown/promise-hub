@@ -99,6 +99,25 @@ def today(S):
           main=offline_banner() + main_default(), checkin_badge=15,
           notes=note("Offline banner stays until the connection returns; queued actions sync in order and a toast confirms.", "top: 5.5rem; right: 1rem;"))
 
+    # Participant roles (ADR 0043): a welcome and one card per module that is on and serves the role.
+    def participant(name, cards):
+        return page_header(f"Welcome, {name}", f"{TODAY} · {ORG}") + (
+            card(ul_list(cards, card=False), title="Your work", tid="yours", cls="card--flush") if cards else
+            card(empty("Nothing to do here yet", "Your program staff will tell you what comes next.", icon_name="sparkle"), cls="card--flush"))
+    learning_card = list_item("Learning", "Your lessons, quizzes and badges", href=page("learning"))
+    S.add("youth", "Sofía (Youth, 12) signs in: the youth shell shows Today and Learning only; no search, no staff sections.", nav="today", role="youth",
+          user=YOUTH["sofia"], unread=0, modules=["today", "learning"], main=participant("Sofía", [learning_card]),
+          notes=note("A youth reaches only their own record: the child linked to their account. Families, events and search are closed to them on the server.", "top: 5rem; right: 1rem;"))
+    S.add("youth-learning-off", "The same youth while Learning is off: Learning is gone from the bar, the tab bar and the menu, and Today says there is nothing to do.", nav="today", role="youth",
+          user=YOUTH["sofia"], unread=0, modules=["today"], main=participant("Sofía", []),
+          notes=note("Opening /learning while Learning is off redirects here to Today.", "top: 5rem; right: 1rem;"))
+    S.add("mentor", "Daniel (Mentor) signs in: Today and Mentoring only; a mentor sees only the youth assigned to them.", nav="today", role="mentor",
+          user=STAFF["daniel"], unread=0, modules=["today", "mentoring"],
+          main=participant("Daniel", [list_item("Mentoring", "The youth assigned to you", href=page("mentoring"))]))
+    S.add("volunteer", "Leo (Volunteer) signs in: Today and Check-in for the sessions he is assigned to.", nav="today", role="volunteer",
+          user=STAFF["leo"], unread=0, modules=["today", "check-in"],
+          main=participant("Leo", [list_item("Tutoring night", "Today, 4:00–6:00 pm · Harbourview Community Centre, Room 2 · you are assigned", href=page("check-in"))]))
+
 
 # ------------------------------------------------------------------ Check-in (Roll Call)
 def roster_row(c: dict, state: str, meta: str, kind: str = "page") -> str:

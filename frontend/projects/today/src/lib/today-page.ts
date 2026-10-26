@@ -4,7 +4,9 @@ import {
   ATTENDANCE_API,
   LoadResult,
   ModuleId,
+  PARTICIPANT_ROLES,
   SESSION_API,
+  Session,
   SessionSummary,
   TODAY_API,
   TodaySummary,
@@ -66,12 +68,17 @@ export class TodayPage {
       .pipe(catchError(() => EMPTY)),
   );
   protected readonly firstName = computed(() => this.session()?.personName.split(' ')[0] ?? '');
+  /** Youth, mentors and volunteers get a welcome and their own work, never the staff summary (ADR 0043). */
+  protected readonly participant = computed(() => {
+    const s = this.session();
+    return !!s && PARTICIPANT_ROLES.includes(s.role);
+  });
   protected readonly today = dateFormat.format(new Date());
   /** Only fetched while Roll Call is on, so nothing of an off module is requested. */
   protected readonly sessions = toSignal(
     toObservable(this.session).pipe(
       switchMap((s) =>
-        s?.modules.includes('RollCall')
+        s?.modules.includes('RollCall') && TodayPage.runsSessions(s)
           ? this.attendance
               .today()
               .pipe(map((r) => (r.status === 'loaded' ? r.value.sessions : [])))
@@ -84,7 +91,7 @@ export class TodayPage {
   protected readonly summary = toSignal<LoadResult<TodaySummary> | null>(
     toObservable(this.session).pipe(
       switchMap((s) =>
-        s?.modules.includes('Roster')
+        s?.modules.includes('Roster') && !PARTICIPANT_ROLES.includes(s.role)
           ? this.refresh$.pipe(
               startWith(undefined),
               switchMap(() => this.todayApi.summary().pipe(startWith(null))),
@@ -97,6 +104,38 @@ export class TodayPage {
   protected readonly when = formatWhen;
   protected readonly date = formatDate;
   protected readonly dateTime = formatDateTime;
+
+  /** Staff and volunteers have sessions; youth and mentors never ask for them. */
+  private static runsSessions(s: Session): boolean {
+    return !PARTICIPANT_ROLES.includes(s.role) || s.role === 'Volunteer';
+  }
+
+  /** A participant's work: one item per module that is on and serves the role (L2-038 criteria 6 and 7). */
+  protected readonly work = computed(() => {
+    const s = this.session();
+    if (!s) return [];
+    const items: { title: string; meta: string; link: string }[] = [];
+    if (s.role === 'Youth' && s.modules.includes('Learning')) {
+      items.push({
+        title: 'Learning',
+        meta: 'Your lessons, quizzes and badges',
+        link: '/learning',
+      });
+    }
+    if (s.role === 'Mentor' && s.modules.includes('Mentoring')) {
+      items.push({ title: 'Mentoring', meta: 'The youth assigned to you', link: '/mentoring' });
+    }
+    if (s.role === 'Volunteer') {
+      for (const session of this.sessions() ?? []) {
+        items.push({
+          title: session.name,
+          meta: `${this.when(session.startsAt, session.endsAt)}${session.place ? ' · ' + session.place : ''} · you are assigned`,
+          link: `/check-in/${session.id}`,
+        });
+      }
+    }
+    return items;
+  });
 
   protected reload(): void {
     this.refresh$.next();

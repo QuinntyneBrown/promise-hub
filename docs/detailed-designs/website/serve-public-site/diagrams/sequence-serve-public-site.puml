@@ -1,0 +1,31 @@
+@startuml
+title UML sequence behaviour — Open a public site
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Visitor" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "Router (websiteOn canMatch)" as router
+  participant "WebsitePage" as page
+end box
+box "Backend — PromiseHub API" #D1FADF
+  participant "WebsiteEndpoints (anonymous)" as endpoint
+end box
+box "Backend — PromiseHub Application (Website)" #ECFDF3
+  participant "PublicWebsiteHandler" as handler
+end box
+database "PromiseHub database" as db
+actor -> router : Open /site/harbourview
+router -> endpoint : GET /website/harbourview
+endpoint -> handler : Handle
+handler -> db : Organization by slug; its module configuration
+alt unknown, suspended or Public website off
+  handler --> router : 404
+  router --> actor : Not-found page; website library not loaded
+else
+  handler --> router : 200 PublicSiteDto
+  router -> page : Lazy-load website library
+  page --> actor : Organization's public page
+end
+@enduml

@@ -70,6 +70,7 @@ app.MapSmsWebhookEndpoints();
 app.MapStaffEndpoints();
 app.MapInvitationEndpoints();
 app.MapSettingsEndpoints();
+app.MapWaypointEndpoints();
 
 app.Run();
 

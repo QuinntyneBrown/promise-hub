@@ -13,7 +13,7 @@ const can = {
   managePrograms: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
   manageEvents: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
   cancelEvents: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
-  runSessions: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker'].includes(m.role),
+  runSessions: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker', 'Volunteer'].includes(m.role),
   runAnySession: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
   sendMessages: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
   manageSlips: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
@@ -22,7 +22,18 @@ const can = {
   reviewEnrollments: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
   viewReports: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
   readSmallCounts: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
+  useStaffApp: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker', 'VolunteerCoordinator'].includes(m.role),
+  learn: (m: Membership) => m.role === 'Youth',
+  mentorYouth: (m: Membership) => m.role === 'Mentor',
+  authorCurriculum: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
 };
+
+/**
+ * What a participant role (Youth, Mentor, Volunteer) may call: mirrors the API's fallback policy, which closes every staff
+ * endpoint to them unless it opts in (ADR 0043). Volunteers also open their assigned sessions.
+ */
+const PARTICIPANT_PATHS = [/^\/api\/me(\/|$)/, /^\/api\/notifications(\/|$)/, /^\/api\/auth\//, /^\/api\/learning\//, /^\/api\/mentoring\//, /^\/api\/curriculum$/];
+const VOLUNTEER_PATHS = [/^\/api\/sessions\/today$/, /^\/api\/sessions\/[^/]+\/roster$/];
 
 type ImportField = 'ChildName' | 'DateOfBirth' | 'School' | 'GuardianName' | 'GuardianPhone' | 'GuardianEmail' | 'Allergies' | 'Language' | 'Notes' | 'Skip';
 
@@ -266,7 +277,13 @@ export class FakeApi {
   /** Notification settings per organization, when saved; otherwise the defaults. */
   private notificationSettings = new Map<string, { noShowDelayMinutes: number; emailSupervisorsOnIncidents: boolean; smsCap: number }>();
   /** Who works each session; youth workers run only these (as seeded: Jaylen and Aisha tonight). */
-  private sessionStaff = new Map<string, string[]>([['e-tutoring-today', ['m-jaylen', 'm-aisha']]]);
+  private sessionStaff = new Map<string, string[]>([['e-tutoring-today', ['m-jaylen', 'm-aisha', 'm-leo']]]);
+  /** Youth accounts and the child each links to (L2-045), as the seed links them. */
+  private youthLinks = new Map<string, string>([
+    ['m-sofia', 'c-sofia'],
+    ['m-nadia', 'c-nadia'],
+    ['m-lucia', 'c-ng-lucia'],
+  ]);
   private nextId = 1;
 
   constructor(private membershipId: string | null) {}
@@ -392,6 +409,10 @@ export class FakeApi {
 
   private readonly routes: [string, RegExp, Handler][] = [
     ['GET', /^\/api\/me$/, (route) => this.me(route)],
+    ['GET', /^\/api\/learning\/me$/, (route) => this.learner(route)],
+    ['GET', /^\/api\/curriculum$/, (route) => this.curriculum(route)],
+    ['GET', /^\/api\/mentoring\/youth$/, (route) => this.mentoredYouth(route)],
+    ['GET', /^\/api\/website\/(?<slug>[^/]+)$/, (route, p) => this.website(route, p['slug']!)],
     ['POST', /^\/api\/auth\/sign-in$/, (route) => this.signIn(route)],
     ['POST', /^\/api\/auth\/mfa$/, (route) => this.mfa(route)],
     ['POST', /^\/api\/auth\/sign-out$/, (route) => this.signOut(route)],
@@ -574,6 +595,10 @@ export class FakeApi {
     if (caller && this.suspended.has(caller.organizationId) && !url.pathname.startsWith('/api/platform') && !url.pathname.startsWith('/api/auth')) {
       return route.fulfill({ status: 403, json: { code: 'suspended' } });
     }
+    if (caller && !can.useStaffApp(caller) && !url.pathname.startsWith('/api/website/')) {
+      const allowed = PARTICIPANT_PATHS.some((p) => p.test(url.pathname)) || (caller.role === 'Volunteer' && VOLUNTEER_PATHS.some((p) => p.test(url.pathname)));
+      if (!allowed) return route.fulfill({ status: 403, json: { code: 'forbidden' } });
+    }
     for (const [method, pattern, handler] of this.routes) {
       const match = pattern.exec(url.pathname);
       if (match && route.request().method() === method) {
@@ -606,6 +631,55 @@ export class FakeApi {
         modules: this.modules.get(organization.id),
       },
     });
+  }
+
+  /** The caller when signed in, their module is on and their role holds the permission; otherwise answers 401, 404 or 403. */
+  private async waypointCaller(route: Route, module: ModuleId, allowed: (m: Membership) => boolean): Promise<Membership | null> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) {
+      await this.unauthenticated(route);
+      return null;
+    }
+    if (!allowed(m)) {
+      await route.fulfill({ status: 403, json: { code: 'forbidden' } });
+      return null;
+    }
+    if (!this.modules.get(m.organizationId)!.includes(module)) {
+      await route.fulfill({ status: 404 });
+      return null;
+    }
+    return m;
+  }
+
+  /** GET /learning/me: the youth's own linked child only (L2-007 criterion 9, L2-045). */
+  private async learner(route: Route): Promise<void> {
+    const m = await this.waypointCaller(route, 'Learning', can.learn);
+    if (!m) return;
+    const linked = this.youthLinks.get(m.id);
+    const found = linked ? this.households.flatMap((h) => h.children).find((c) => c.id === linked) : undefined;
+    return route.fulfill({
+      json: { personName: m.personName, child: found ? { id: found.id, firstName: found.firstName, lastName: found.lastName, age: ageOf(found.dateOfBirth) } : null },
+    });
+  }
+
+  private async curriculum(route: Route): Promise<void> {
+    if (!(await this.waypointCaller(route, 'Learning', can.authorCurriculum))) return;
+    return route.fulfill({ json: { tracks: [] } });
+  }
+
+  /** GET /mentoring/youth: only the youth assigned to the mentor; there are no assignments yet. */
+  private async mentoredYouth(route: Route): Promise<void> {
+    if (!(await this.waypointCaller(route, 'Mentoring', can.mentorYouth))) return;
+    return route.fulfill({ json: { youth: [] } });
+  }
+
+  /** GET /website/{slug}: anonymous; unknown, suspended and module-off all answer 404 (L2-005 criterion 7). */
+  private async website(route: Route, slug: string): Promise<void> {
+    const organization = organizations.find((o) => o.slug === slug.toLowerCase());
+    if (!organization || this.suspended.has(organization.id) || !this.modules.get(organization.id)!.includes('PublicWebsite')) {
+      return route.fulfill({ status: 404 });
+    }
+    return route.fulfill({ json: { name: organization.name, city: organization.city } });
   }
 
   private async signIn(route: Route): Promise<void> {
@@ -1858,7 +1932,9 @@ export class FakeApi {
         const staff = (this.sessionStaff.get(e.id) ?? []).map((id) => people.find((p) => p.id === id)).filter((p) => !!p).map((p) => ({ id: p!.id, name: p!.personName, role: p!.role }));
         return { id: e.id, name: e.name, startsAt: e.startsAt, endsAt: e.endsAt, place: e.place, staff, gap: staff.length === 0 };
       });
-    return route.fulfill({ json: { sessions, people: people.map((p) => ({ id: p.id, name: p.personName, role: p.role })) } });
+    // Youth accounts are never staffed onto a session (ADR 0043).
+    const assignable = people.filter((p) => p.role !== 'Youth');
+    return route.fulfill({ json: { sessions, people: assignable.map((p) => ({ id: p.id, name: p.personName, role: p.role })) } });
   }
 
   private async assignStaff(route: Route, eventId: string): Promise<void> {
