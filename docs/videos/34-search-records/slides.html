@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 34 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="34" data-video-title="Search records" data-parts="Introduction|Promises|Searching|No results|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 34</div>
+  <h1>Search records</h1>
+  <p class="lead">The family on screen before the second ring</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="Type part of a name, an email">
+  <h2>What search promises</h2>
+  <ul>
+    <li>Names, emails or three phone digits</li>
+    <li>Children, families and events</li>
+    <li>Only what your role permits</li>
+    <li>Events only with Permission slips on</li>
+  </ul>
+</section>
+
+<section id="search" data-part="2" data-cue="Here is Search on Jaylen's laptop." data-clip="clips/search-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Name, then phone</h3><p>Rivera, then 555-0163.</p></div>
+</section>
+
+<section id="none" data-part="3" data-cue="When nothing matches, search says so">
+  <h2>Nothing found, and errors</h2>
+  <div class="cols">
+    <img class="shot" alt="Search on a phone saying nothing matches Garcia" src="shots/phone-no-results.png">
+    <img class="shot" alt="Search saying it is not responding, with Try again" src="shots/desktop-error.png">
+  </div>
+</section>
+
+<section id="testing" data-part="4" data-cue="Backend tests cover name fragments">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Youth worker searches Tran</td><td>Nothing</td></tr>
+    <tr><td>Permission slips off</td><td>No events</td></tr>
+    <tr><td>Another organization</td><td>Its own only</td></tr>
+    <tr><td>Roster off</td><td>404</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="5" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Names, emails or phone digits</li><li>Grouped by type</li><li>Only what you may see</li></ul>
+  <p class="muted">Next: review notifications</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

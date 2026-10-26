@@ -21,7 +21,9 @@
   </div>
 } @else if (v) {
   @if (total(v)) {
-    <p role="status" class="muted">{{ total(v) }} results for “{{ text() }}”</p>
+    <p role="status" class="muted">
+      {{ total(v) }} {{ total(v) === 1 ? 'result' : 'results' }} for “{{ text() }}”
+    </p>
     <div class="results">
       @if (v.children.length) {
         <section aria-labelledby="g-children">
