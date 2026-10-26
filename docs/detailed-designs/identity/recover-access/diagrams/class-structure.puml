@@ -1,0 +1,33 @@
+@startuml
+title UML class structure — Recovering account access
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+class PasswordReset {
+  +Id : Guid
+  +UserId : Guid
+  +TokenHash : string
+  +CreatedAt : DateTimeOffset
+  +ExpiresAt : DateTimeOffset
+  +UsedAt : DateTimeOffset?
+  +Usable(now) : bool
+  +Use(now)
+}
+class StaffUser {
+  +Email : string
+  +PasswordHash : string?
+  +SessionVersion : int
+  +ChangePassword(hash)
+  +EndOtherSessions()
+}
+class PasswordResetHandler {
+  +RequestAsync(ForgotPasswordCommand)
+  +CheckAsync(token) : string?
+  +ResetAsync(ResetPasswordCommand) : ResetPasswordResult
+}
+PasswordReset --> StaffUser : for
+PasswordResetHandler ..> PasswordReset
+PasswordResetHandler ..> StaffUser
+@enduml

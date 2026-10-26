@@ -1,0 +1,14 @@
+@startuml
+title C4 system context — Recovering account access
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Staff member" as staff
+rectangle "PromiseHub\n(web app and API)" as ph #D1FADF
+rectangle "Email provider" as mail #F2F4F7
+staff --> ph : asks for a link, chooses a new password
+ph --> mail : sends the reset link
+mail --> staff : delivers the email
+@enduml

@@ -55,6 +55,7 @@ public static class DependencyInjection
         services.AddScoped<Billing.PlanLimit>();
         services.AddScoped<PrivacyHandler>();
         services.AddScoped<AccountHandler>();
+        services.AddScoped<PasswordResetHandler>();
         services.AddScoped<Audit.AuditLogHandler>();
         services.AddScoped<DataRequestHandler>();
         services.AddScoped<ApplyRetentionHandler>();

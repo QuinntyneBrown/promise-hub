@@ -55,6 +55,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Surveys.SurveyResponse> SurveyResponses => Set<Domain.Surveys.SurveyResponse>();
     public DbSet<PrivacySettings> PrivacySettings => Set<PrivacySettings>();
     public DbSet<DataRequest> DataRequests => Set<DataRequest>();
+    public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
     public DbSet<Domain.Incidents.IncidentFollowUp> IncidentFollowUps => Set<Domain.Incidents.IncidentFollowUp>();
     public DbSet<GuardianVerification> GuardianVerifications => Set<GuardianVerification>();
     public DbSet<TrustedGuardianDevice> TrustedGuardianDevices => Set<TrustedGuardianDevice>();
@@ -427,6 +428,14 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.HasIndex(u => u.Email).IsUnique();
             e.Ignore(u => u.RecoveryCodesLeft);
             e.Property(u => u.RecoveryCodes).HasMaxLength(1000);
+        });
+        modelBuilder.Entity<PasswordReset>(e =>
+        {
+            e.Property(r => r.TokenHash).HasMaxLength(64);
+            e.HasIndex(r => r.TokenHash).IsUnique();
+            e.Property(r => r.CreatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(r => r.ExpiresAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(r => r.UsedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
         });
         modelBuilder.Entity<SignInAttempt>(e =>
         {
