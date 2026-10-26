@@ -36,6 +36,7 @@ app.UseAuthorization();
 app.MapGet("/health/ready", () => Results.Ok()).AllowAnonymous();
 app.MapAuthEndpoints();
 app.MapSessionEndpoints();
+app.MapPlatformEndpoints();
 app.MapHouseholdEndpoints();
 app.MapTodayEndpoints();
 app.MapSearchEndpoints();

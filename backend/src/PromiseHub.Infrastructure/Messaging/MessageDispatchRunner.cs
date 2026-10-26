@@ -38,7 +38,9 @@ public sealed class MessageDispatchRunner(IServiceScopeFactory scopes, TimeProvi
                 .Where(e => e.NoShowAlert && e.Status != Domain.Events.EventStatus.Cancelled)
                 .Select(e => new { e.OrganizationId, e.StartsAt, e.EndsAt }).ToListAsync(cancellationToken))
                 .Where(e => e.StartsAt + Application.Attendance.NoShowRules.MinDelay <= now && e.EndsAt > now).Select(e => e.OrganizationId);
-            organizations = [.. withDeliveries.Union(withSlips).Union(withReminders).Union(withSessions)];
+            // A suspended organization sends nothing; its queue waits until it is reinstated (L2-003).
+            var suspended = await db.Organizations.AsNoTracking().Where(o => o.SuspendedAt != null).Select(o => o.Id).ToListAsync(cancellationToken);
+            organizations = [.. withDeliveries.Union(withSlips).Union(withReminders).Union(withSessions).Except(suspended)];
         }
         foreach (var organizationId in organizations)
         {

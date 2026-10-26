@@ -97,6 +97,8 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(o => o.ProfileConfirmedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
             e.Property(o => o.Region).HasMaxLength(100).HasDefaultValue(Organization.DefaultRegion);
             e.Property(o => o.PaymentFailedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.Property(o => o.SuspendedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.Property(o => o.SuspensionReason).HasMaxLength(500);
         });
         modelBuilder.Entity<Domain.Surveys.Survey>(e =>
         {

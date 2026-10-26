@@ -42,6 +42,14 @@ public sealed class TenantContextMiddleware(RequestDelegate next)
                 return;
             }
             tenant.Resolve(membership);
+            // A suspended organization is closed to its staff; platform administration stays open (L2-003).
+            if (!context.Request.Path.StartsWithSegments("/platform")
+                && await db.Organizations.AsNoTracking().AnyAsync(o => o.Id == membership.OrganizationId && o.SuspendedAt != null, context.RequestAborted))
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                await context.Response.WriteAsJsonAsync(new { code = "suspended" }, context.RequestAborted);
+                return;
+            }
         }
         await next(context);
     }
