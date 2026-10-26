@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using PromiseHub.Application.Audit;
 using PromiseHub.Application.Guardian;
 using PromiseHub.Application.Identity;
+using PromiseHub.Application.Notifications;
 using PromiseHub.Application.Organizations;
 using PromiseHub.Domain.Audit;
 using PromiseHub.Domain.Identity;
@@ -15,7 +16,7 @@ namespace PromiseHub.Application.Staff;
 /// has gone; accepting with a name and password creates the account (or uses the existing one with its password) and the
 /// membership in the invitation's organization only, then the phone step saves a mobile for alerts.
 /// </summary>
-public sealed class InvitationHandler(IPromiseHubDb db, TenantContext tenant, IPasswordHasher hasher, IAuditWriter audit, TimeProvider clock)
+public sealed class InvitationHandler(IPromiseHubDb db, TenantContext tenant, IPasswordHasher hasher, IAuditWriter audit, NotificationWriter notifications, TimeProvider clock)
 {
     public async Task<InvitationLookup> GetAsync(string token, CancellationToken cancellationToken = default)
     {
@@ -80,6 +81,30 @@ public sealed class InvitationHandler(IPromiseHubDb db, TenantContext tenant, IP
         audit.Record(new AuditEvent(AuditAction.Updated, "StaffInvitation", invitation.Id, $"{membership.PersonName} accepted the invitation as {invitation.Role}"));
         await db.SaveChangesAsync(cancellationToken);
         return new AcceptInvitationResult(false, null, user.Id, membership.Id);
+    }
+
+    /// <summary>
+    /// The holder of an expired link asks for a new one (L2-054): only an expired invitation qualifies; the first request
+    /// marks it, tells the organization's admins and is audited there; later requests change nothing. False when not found.
+    /// </summary>
+    public async Task<bool> RequestNewAsync(string token, CancellationToken cancellationToken = default)
+    {
+        var found = await FindAsync(token, cancellationToken);
+        if (found is null || !found.Expired(clock.GetUtcNow()))
+        {
+            return false;
+        }
+        tenant.ResolveForJob(found.OrganizationId);
+        var invitation = await db.StaffInvitations.SingleAsync(i => i.Id == found.Id, cancellationToken);
+        if (!invitation.RequestReplacement(clock.GetUtcNow()))
+        {
+            return true;
+        }
+        var text = $"{invitation.Email} asked for a new invitation link";
+        audit.Record(new AuditEvent(AuditAction.Updated, "StaffInvitation", invitation.Id, text));
+        await notifications.NotifyAsync(Permission.ManageStaff, "staff", text, "/settings/staff", cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
     public async Task<Result> SavePhoneAsync(PhoneCommand command, CancellationToken cancellationToken = default)

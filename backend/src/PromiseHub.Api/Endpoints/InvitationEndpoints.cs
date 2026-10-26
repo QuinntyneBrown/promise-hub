@@ -28,6 +28,8 @@ public static class InvitationEndpoints
             await SessionCookie.SignInAsync(http, result.UserId!.Value, result.MembershipId!.Value);
             return Results.Ok(new { status = "signed-in" });
         }).AllowAnonymous();
+        app.MapPost("/invitations/{token}/request-new", async (string token, InvitationHandler handler, CancellationToken ct) =>
+            await handler.RequestNewAsync(token, ct) ? Results.Accepted() : Results.NotFound()).AllowAnonymous();
         app.MapPut("/me/phone", async (PhoneCommand command, InvitationHandler handler, CancellationToken ct) => (await handler.SavePhoneAsync(command, ct)).ToHttp());
         return app;
     }

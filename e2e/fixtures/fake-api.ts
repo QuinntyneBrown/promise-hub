@@ -508,6 +508,7 @@ export class FakeApi {
     ['PUT', /^\/api\/sessions\/(?<id>[^/]+)\/staff$/, (route, p) => this.assignStaff(route, p['id']!)],
     ['GET', /^\/api\/invitations\/(?<token>[^/]+)$/, (route, p) => this.getInvitation(route, p['token']!)],
     ['POST', /^\/api\/invitations\/(?<token>[^/]+)\/accept$/, (route, p) => this.acceptInvitation(route, p['token']!)],
+    ['POST', /^\/api\/invitations\/(?<token>[^/]+)\/request-new$/, (route, p) => this.requestNewLink(route, p['token']!)],
     ['PUT', /^\/api\/me\/phone$/, (route) => this.savePhone(route)],
     ['POST', /^\/api\/staff\/invitations$/, (route) => this.inviteStaff(route)],
     ['DELETE', /^\/api\/staff\/invitations\/(?<id>[^/]+)$/, (route, p) => this.withdrawInvitation(route, p['id']!)],
@@ -579,6 +580,8 @@ export class FakeApi {
   private invitationLinks = new Map<string, { email: string; role: string; expired: boolean; accepted: boolean; withdrawn?: boolean; childId: string | null; suggestedName: string | null }>();
   private removedMembers = new Set<string>();
   private invitations: { id: string; organizationId: string; email: string; role: string; invitedBy: string; withdrawn: boolean; childId?: string; childName?: string; expired?: boolean; replacementRequested?: boolean }[] = [];
+  /** Expired links whose holder asked for a new one in this test (L2-054). */
+  newLinkRequests: string[] = [];
   /** Emails whose invitation was resent in this test, in order. */
   resentInvitations: string[] = [];
   /** Staff asked a guardian about an adult not on the approved list. */
@@ -1983,6 +1986,13 @@ export class FakeApi {
     const reason = this.goneReason(i);
     if (reason) return route.fulfill({ status: 410, json: { reason, invitedBy: i ? 'Tom Nguyen' : null, organization: i ? 'Harbourview Youth Collective' : null } });
     return route.fulfill({ json: { email: i!.email, organization: 'Harbourview Youth Collective', role: i!.role, invitedBy: 'Tom Nguyen', suggestedName: i!.suggestedName } });
+  }
+
+  /** Anonymous: only an expired link may ask, and asking twice records once (L2-054). */
+  private async requestNewLink(route: Route, token: string): Promise<void> {
+    if (this.goneReason(this.invitationLinks.get(token)) !== 'expired') return route.fulfill({ status: 404 });
+    if (!this.newLinkRequests.includes(token)) this.newLinkRequests.push(token);
+    return route.fulfill({ status: 202 });
   }
 
   /** Why a link no longer works, as the server answers it (L2-052, L2-054); an unknown token reads as used. */

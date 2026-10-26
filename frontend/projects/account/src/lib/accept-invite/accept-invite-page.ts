@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, effect, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import {
   INVITATION_API,
   Invitation,
@@ -18,7 +18,7 @@ import { PhAlert, PhAuthCard, PhButton, PhSkipLink, PhTextField } from '@promise
  */
 @Component({
   selector: 'ph-accept-invite-page',
-  imports: [FormsModule, PhAlert, PhAuthCard, PhButton, PhSkipLink, PhTextField],
+  imports: [FormsModule, PhAlert, PhAuthCard, PhButton, PhSkipLink, PhTextField, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './accept-invite-page.html',
 })
@@ -33,6 +33,8 @@ export class AcceptInvitePage {
   protected readonly errors = signal<Record<string, string>>({});
   protected readonly failed = signal(false);
   protected readonly busy = signal(false);
+  /** The request for a new link from an expired invitation (L2-054). */
+  protected readonly request = signal<'idle' | 'busy' | 'sent' | 'failed'>('idle');
   protected readonly roleLabels = ROLE_LABELS;
   protected name = '';
   protected password = '';
@@ -68,6 +70,13 @@ export class AcceptInvitePage {
       else if (outcome.status === 'invalid') this.errors.set(outcome.errors);
       else this.failed.set(true);
     });
+  }
+
+  protected requestNew(): void {
+    this.request.set('busy');
+    this.api
+      .requestNew(this.token())
+      .subscribe((outcome) => this.request.set(outcome.status === 'saved' ? 'sent' : 'failed'));
   }
 
   /** Staff continue to the phone step; a participant role lands on its home (L2-052 criterion 2). */

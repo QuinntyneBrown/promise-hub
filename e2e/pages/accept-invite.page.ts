@@ -43,6 +43,18 @@ export class AcceptInvitePage extends BasePage {
     await this.page.getByRole('button', { name: 'Continue' }).click();
   }
 
+  get alreadyHaveAccount(): Locator {
+    return this.page.getByRole('link', { name: 'I already have an account' });
+  }
+
+  newLinkButton(inviter: string): Locator {
+    return this.page.getByRole('button', { name: `Ask ${inviter} for a new link` });
+  }
+
+  async askForNewLink(inviter: string): Promise<void> {
+    await this.newLinkButton(inviter).click();
+  }
+
   get openCheckIn(): Locator {
     return this.page.getByRole('link', { name: /^Open check-in/ });
   }

@@ -42,6 +42,15 @@ export class HttpInvitationApi implements InvitationApi {
     );
   }
 
+  requestNew(token: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(
+        `${this.baseUrl}/invitations/${encodeURIComponent(token)}/request-new`,
+        null,
+      ),
+    );
+  }
+
   savePhone(mobile: string): Observable<WriteOutcome> {
     return toWrite(this.http.put<null>(`${this.baseUrl}/me/phone`, { mobile }));
   }
