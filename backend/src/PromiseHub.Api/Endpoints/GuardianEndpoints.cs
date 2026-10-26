@@ -1,5 +1,6 @@
 using PromiseHub.Application.Attendance;
 using PromiseHub.Application.Guardian;
+using PromiseHub.Application.Organizations;
 
 namespace PromiseHub.Api.Endpoints;
 
@@ -46,6 +47,8 @@ public static class GuardianEndpoints
             ToHttp(await handler.GetAsync(Request(token, http), ct)));
         g.MapPost("/survey/{token}", async (string token, PromiseHub.Application.Surveys.SurveyAnswerRequest body, PromiseHub.Application.Surveys.GuardianSurveyHandler handler, HttpContext http, CancellationToken ct) =>
             ToHttp(await handler.AnswerAsync(Request(token, http), body, ct)));
+        g.MapPost("/home/{token}/data-requests", async (string token, DataRequestBody body, DataRequestHandler handler, HttpContext http, CancellationToken ct) =>
+            ToHttp(await handler.AskAsync(Request(token, http), body, ct)));
         g.MapGet("/home/{token}", async (string token, GuardianHomeHandler handler, HttpContext http, CancellationToken ct) =>
             ToHttp(await handler.GetAsync(Request(token, http), ct)));
         g.MapPost("/home/{token}/no-show", async (string token, AnswerNoShowRequest body, GuardianHomeHandler handler, HttpContext http, CancellationToken ct) =>
@@ -102,6 +105,7 @@ public static class GuardianEndpoints
     {
         GuardianOutcome.Ok => Results.Ok(result.Value),
         GuardianOutcome.Done => Results.NoContent(),
+        GuardianOutcome.Created => Results.Json(result.Value, statusCode: StatusCodes.Status201Created),
         GuardianOutcome.Gone => Results.Json(result.Value, contentType: "application/problem+json", statusCode: StatusCodes.Status410Gone),
         GuardianOutcome.VerificationRequired => Results.Json(result.Value, contentType: "application/problem+json", statusCode: StatusCodes.Status401Unauthorized),
         GuardianOutcome.Locked => Results.Json(new { code = "locked" }, contentType: "application/problem+json", statusCode: StatusCodes.Status423Locked),

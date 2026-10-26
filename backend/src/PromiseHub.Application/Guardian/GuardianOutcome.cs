@@ -4,6 +4,8 @@ public enum GuardianOutcome
 {
     Ok,
     Done,
+    /// <summary>Something new was recorded (201), with its id.</summary>
+    Created,
 
     /// <summary>The link is unknown, revoked or long past its deadline (410).</summary>
     Gone,

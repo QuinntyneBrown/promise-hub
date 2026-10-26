@@ -15,6 +15,10 @@ public static class SettingsEndpoints
         settings.MapPut("/organization", async (SaveOrganizationCommand command, SetupHandler handler, CancellationToken ct) =>
             (await handler.SaveOrganizationAsync(command, ct)).ToHttp());
         app.MapGet("/setup", (SetupHandler handler, CancellationToken ct) => handler.GetAsync(ct)).RequirePermission(Permission.ManageSettings);
+        settings.MapGet("/data-requests", (DataRequestHandler handler, CancellationToken ct) => handler.ListAsync(ct));
+        settings.MapPost("/data-requests/{id:guid}/fulfil", async (Guid id, DataRequestHandler handler, CancellationToken ct) => (await handler.FulfilAsync(id, ct)).ToHttp());
+        settings.MapGet("/data-requests/{id:guid}/export", async (Guid id, DataRequestHandler handler, CancellationToken ct) =>
+            await handler.ExportFileAsync(id, ct) is { } file ? Results.File(System.Text.Encoding.UTF8.GetBytes(file), "text/csv", "household-data.csv") : Results.NotFound());
         settings.MapGet("/privacy", (PrivacyHandler handler, CancellationToken ct) => handler.GetAsync(ct));
         settings.MapPut("/privacy", async (SavePrivacyCommand command, PrivacyHandler handler, CancellationToken ct) =>
             (await handler.SaveAsync(command, ct)).ToHttp());
