@@ -51,6 +51,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 41 | [Manage billing](41-manage-billing/README.md) | ~2 min | Plan limits and usage, the Free child limit, prorated plan changes and the payment grace period |
 | 42 | [Configure privacy](42-configure-privacy/README.md) | ~2 min | A fixed region, a consent retention choice and the nightly job that keeps it, with counts intact |
 | 43 | [Request household data](43-request-household-data/README.md) | ~2 min | A guardian asks for a copy or deletion from a verified page; staff fulfil it once, on the record |
+| 44 | [Review audit history](44-review-audit-history/README.md) | ~2 min | Search sensitive actions by person, record, action and time; exports are logged too |
 
 ## Making or updating a video
 

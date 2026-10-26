@@ -14,7 +14,13 @@
 } @else {
   <ph-page-header
     title="Audit log"
-    [subtitle]="l ? l.total.toLocaleString('en-US') + ' entries in this period' : ''"
+    [subtitle]="
+      l
+        ? l.total.toLocaleString('en-US') +
+          (l.total === 1 ? ' entry' : ' entries') +
+          ' in this period'
+        : ''
+    "
   >
     <ph-button icon="download" [href]="exportUrl()">Export</ph-button>
   </ph-page-header>
