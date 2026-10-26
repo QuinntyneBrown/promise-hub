@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 40 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="40" data-video-title="Switch organizations" data-parts="Introduction|Promises|Switching|One org|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 40</div>
+  <h1>Switch organizations</h1>
+  <p class="lead">One person, two organizations, no overlap</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="A person can belong to several organizations">
+  <h2>What switching promises</h2>
+  <ul>
+    <li>A different role in each organization</li>
+    <li>One active at a time, shown in the top bar</li>
+    <li>Switching reloads the whole app</li>
+    <li>Audited; removal falls back to the next</li>
+  </ul>
+</section>
+
+<section id="switch" data-part="2" data-cue="Here is Today on Priya's laptop" data-clip="clips/switch-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Harbourview to Northgate</h3><p>The app reloads for Northgate.</p></div>
+</section>
+
+<section id="one" data-part="3" data-cue="Aisha only works at Harbourview">
+  <h2>One organization, no switcher</h2>
+  <div class="cols">
+    <img class="shot" alt="Today for Aisha with no switcher" src="shots/desktop-single.png">
+    <img class="shot" alt="Priya's switcher on a phone" src="shots/phone-switcher.png">
+  </div>
+</section>
+
+<section id="testing" data-part="4" data-cue="Backend tests cover listing both memberships">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Someone else's membership</td><td>404</td></tr>
+    <tr><td>After switching</td><td>Only Northgate's families</td></tr>
+    <tr><td>Active membership removed</td><td>Falls back to Northgate</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="5" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>One active organization</li><li>Switching reloads everything</li><li>Removal falls back safely</li></ul>
+  <p class="muted">Next: manage billing</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

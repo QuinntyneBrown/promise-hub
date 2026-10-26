@@ -46,6 +46,19 @@ export class ShellPage extends BasePage {
     await this.menu.getByRole('link', { name: label }).click();
   }
 
+  get organizationSwitcher(): Locator {
+    return this.page.getByRole('banner').getByRole('button', { name: /^Organization: / });
+  }
+
+  async switchTo(name: string): Promise<void> {
+    await this.organizationSwitcher.click();
+    await this.page.getByRole('menu', { name: 'Switch organization' }).getByRole('menuitemradio', { name: new RegExp(name) }).click();
+  }
+
+  get organizationMenu(): Locator {
+    return this.page.getByRole('menu', { name: 'Switch organization' });
+  }
+
   get bell(): Locator {
     return this.page.getByRole('banner').getByRole('button', { name: /^Notifications/ });
   }

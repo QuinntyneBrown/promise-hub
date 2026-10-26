@@ -3,7 +3,7 @@ using PromiseHub.Domain.Organizations;
 
 namespace PromiseHub.Application.Identity;
 
-/// <summary>The membership a new session starts in: the first organization by name, until switching arrives.</summary>
+/// <summary>The membership a new session starts in, or a session falls back to: the first current organization by name.</summary>
 public static class ActiveMembership
 {
     public static Task<Membership?> ForAsync(IPromiseHubDb db, string email, CancellationToken cancellationToken) =>

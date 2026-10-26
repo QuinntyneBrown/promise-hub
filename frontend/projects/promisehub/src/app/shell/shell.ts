@@ -1,9 +1,16 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { DOCUMENT } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { AUTH_API, NOTIFICATIONS_API, ROLE_LABELS, SESSION_API, Session } from '@promisehub/api';
-import { NavDrawerService, PhBottomNavigation, PhSkipLink, PhTopBar } from '@promisehub/components';
+import {
+  NavDrawerService,
+  OrgOption,
+  PhBottomNavigation,
+  PhSkipLink,
+  PhTopBar,
+} from '@promisehub/components';
 import { EMPTY, catchError, filter, map, merge, startWith, switchMap } from 'rxjs';
 import { navigationFor } from './navigation';
 
@@ -20,6 +27,8 @@ export class Shell {
   private readonly drawer = inject(NavDrawerService);
   private readonly auth = inject(AUTH_API);
   private readonly notifications = inject(NOTIFICATIONS_API);
+  private readonly sessions = inject(SESSION_API);
+  private readonly document = inject(DOCUMENT);
 
   protected readonly menuOpen = signal(false);
   protected readonly session = toSignal(
@@ -47,6 +56,28 @@ export class Shell {
     ),
     { initialValue: 0 },
   );
+
+  /** The person's organizations for the switcher; empty or one hides it (L2-002 criterion 3). */
+  protected readonly organizations = toSignal(
+    this.sessions.organizations().pipe(
+      map((list): OrgOption[] =>
+        list.map((o) => ({
+          id: o.membershipId,
+          name: o.name,
+          caption: ROLE_LABELS[o.role],
+          active: o.active,
+        })),
+      ),
+    ),
+    { initialValue: [] as OrgOption[] },
+  );
+
+  /** Switching reloads the whole app so nothing of the previous organization stays in memory. */
+  protected switchOrganization(membershipId: string): void {
+    this.sessions.switchTo(membershipId).subscribe((outcome) => {
+      if (outcome.status === 'saved') this.document.location.assign('/');
+    });
+  }
 
   protected openNotifications(): void {
     void this.router.navigateByUrl('/notifications');

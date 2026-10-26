@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PromiseHub.Api.Authentication;
 using PromiseHub.Application;
+using PromiseHub.Application.Identity;
 using PromiseHub.Application.Organizations;
 
 namespace PromiseHub.Api.Middleware;
@@ -12,9 +13,19 @@ public sealed class TenantContextMiddleware(RequestDelegate next)
     {
         if (context.User.Identity?.IsAuthenticated == true)
         {
-            var membership = Guid.TryParse(context.User.FindFirst(AuthSchemes.MembershipClaim)?.Value, out var membershipId)
-                ? await db.Memberships.IgnoreQueryFilters().AsNoTracking().FirstOrDefaultAsync(m => m.Id == membershipId && m.RemovedAt == null, context.RequestAborted)
+            var claimed = Guid.TryParse(context.User.FindFirst(AuthSchemes.MembershipClaim)?.Value, out var membershipId)
+                ? await db.Memberships.IgnoreQueryFilters().AsNoTracking().FirstOrDefaultAsync(m => m.Id == membershipId, context.RequestAborted)
                 : null;
+            var membership = claimed?.RemovedAt is null ? claimed : null;
+            if (claimed is { RemovedAt: not null })
+            {
+                // Removed from the active organization: continue in the person's remaining one, or sign out (L2-002 criterion 4).
+                membership = await ActiveMembership.ForAsync(db, claimed.Email, context.RequestAborted);
+                if (membership is not null)
+                {
+                    await SessionCookie.ReissueAsync(context, membership.Id);
+                }
+            }
             if (membership is null)
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;

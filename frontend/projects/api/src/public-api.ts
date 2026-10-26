@@ -157,3 +157,4 @@ export * from './lib/setup/setup';
 export * from './lib/setup/setup-api';
 export * from './lib/setup/setup-api.token';
 export * from './lib/setup/setup-step-key';
+export * from './lib/session/my-organization';

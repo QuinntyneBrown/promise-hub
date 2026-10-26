@@ -37,3 +37,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0031](0031-grant-reports.md) | Reports are computed on request from the roster and check-ins; exports are stored CSV files that expire in seven days |
 | [0032](0032-surveys.md) | Surveys ride on guardian links and belong to the Reports module |
 | [0033](0033-setup-wizard.md) | Setup progress is read from the organization's data, and each step reuses its feature's screen |
+| [0034](0034-switch-organization.md) | Switching moves the session cookie to another membership and reloads the app |

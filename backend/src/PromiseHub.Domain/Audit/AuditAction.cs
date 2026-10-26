@@ -17,4 +17,5 @@ public enum AuditAction
     Archived,
     Restored,
     Cancelled,
+    Switched,
 }
