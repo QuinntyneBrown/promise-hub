@@ -386,6 +386,8 @@ export class FakeApi {
     ['GET', /^\/api\/children\/(?<id>[^/]+)\/pickups$/, (route, p) => this.pickups(route, p['id']!)],
     ['POST', /^\/api\/children\/(?<id>[^/]+)\/pickups$/, (route, p) => this.addPickup(route, p['id']!)],
     ['GET', /^\/api\/staff$/, (route) => this.listStaff(route)],
+    ['GET', /^\/api\/coverage$/, (route) => this.coverage(route)],
+    ['PUT', /^\/api\/sessions\/(?<id>[^/]+)\/staff$/, (route, p) => this.assignStaff(route, p['id']!)],
     ['GET', /^\/api\/invitations\/(?<token>[^/]+)$/, (route, p) => this.getInvitation(route, p['token']!)],
     ['POST', /^\/api\/invitations\/(?<token>[^/]+)\/accept$/, (route, p) => this.acceptInvitation(route, p['token']!)],
     ['PUT', /^\/api\/me\/phone$/, (route) => this.savePhone(route)],
@@ -1397,6 +1399,34 @@ export class FakeApi {
     return route.fulfill({ status: 204 });
   }
 
+  private async coverage(route: Route): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    if (!['Admin', 'ProgramDirector', 'SiteLead', 'VolunteerCoordinator'].includes(m.role)) return this.forbidden(route);
+    const people = this.staffOf(m);
+    const end = NOW.getTime() + 14 * 24 * 3600 * 1000;
+    const sessions = this.events
+      .filter((e) => e.organizationId === m.organizationId && e.status === 'Scheduled' && new Date(e.endsAt).getTime() > NOW.getTime() && new Date(e.startsAt).getTime() < end)
+      .sort((a, z) => a.startsAt.localeCompare(z.startsAt))
+      .map((e) => {
+        const staff = (this.sessionStaff.get(e.id) ?? []).map((id) => people.find((p) => p.id === id)).filter((p) => !!p).map((p) => ({ id: p!.id, name: p!.personName, role: p!.role }));
+        return { id: e.id, name: e.name, startsAt: e.startsAt, endsAt: e.endsAt, place: e.place, staff, gap: staff.length === 0 };
+      });
+    return route.fulfill({ json: { sessions, people: people.map((p) => ({ id: p.id, name: p.personName, role: p.role })) } });
+  }
+
+  private async assignStaff(route: Route, eventId: string): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    if (!['Admin', 'ProgramDirector', 'SiteLead', 'VolunteerCoordinator'].includes(m.role)) return this.forbidden(route);
+    const e = this.ownEvent(m, eventId);
+    if (!e) return route.fulfill({ status: 404 });
+    const b = route.request().postDataJSON() as { membershipIds: string[] };
+    if (b.membershipIds.some((id) => !this.staffOf(m).some((p) => p.id === id))) return route.fulfill({ status: 422, json: { errors: { membershipIds: 'Choose people who work for this organization.' } } });
+    this.sessionStaff.set(e.id, [...b.membershipIds]);
+    return route.fulfill({ status: 204 });
+  }
+
   private async listStaff(route: Route): Promise<void> {
     const m = await this.adminCaller(route);
     if (!m) return;
@@ -1413,13 +1443,15 @@ export class FakeApi {
   }
 
   private async inviteStaff(route: Route): Promise<void> {
-    const m = await this.adminCaller(route);
-    if (!m) return;
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    if (!['Admin', 'VolunteerCoordinator'].includes(m.role)) return this.forbidden(route);
     const b = route.request().postDataJSON() as { email?: string; role?: string };
     const email = (b.email ?? '').trim().toLowerCase();
     const errors: Record<string, string> = {};
     if (!/^[^@]+@[^@]+\.[^@]+$/.test(email)) errors['email'] = 'Enter a work email like name@example.org.';
     if (!['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker', 'VolunteerCoordinator'].includes(b.role ?? '')) errors['role'] = 'Choose a role.';
+    if (!errors['role'] && m.role === 'VolunteerCoordinator' && b.role !== 'YouthWorker') errors['role'] = 'Coordinators invite youth workers. Ask an admin for other roles.';
     const member = this.staffOf(m).find((x) => x.email === email);
     if (!errors['email'] && member) errors['email'] = `${member.personName} already has access.`;
     if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });

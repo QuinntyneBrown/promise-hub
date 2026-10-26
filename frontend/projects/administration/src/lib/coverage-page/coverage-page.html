@@ -1,0 +1,58 @@
+@if (!allowed()) {
+  <ph-error-page
+    icon="lock"
+    title="Only coordinators, site leads and directors assign staff"
+    text="Ask your site lead."
+  >
+    <ph-button variant="primary" link="/">Today</ph-button>
+  </ph-error-page>
+} @else {
+  @switch (state()) {
+    @case ('error') {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="warning"
+          tone="error"
+          title="Couldn’t load coverage"
+          text="Try again."
+          [headingLevel]="1"
+        >
+          <ph-button variant="primary" (click)="load()">Try again</ph-button>
+        </ph-empty-state>
+      </ph-card>
+    }
+    @case ('loaded') {
+      @if (coverage(); as c) {
+        <ph-page-header
+          title="Staff coverage"
+          [subtitle]="'Next 14 days · ' + gaps() + (gaps() === 1 ? ' gap' : ' gaps')"
+        >
+          @if (canInvite()) {
+            <ph-button variant="primary" hasPopup="dialog" (click)="invite()"
+              >Invite a volunteer</ph-button
+            >
+          }
+        </ph-page-header>
+        <ph-list label="Upcoming sessions">
+          @for (s of c.sessions; track s.id) {
+            <ph-list-item [title]="s.name" [meta]="meta(s)">
+              @if (s.gap) {
+                <ph-badge tone="warning">Gap</ph-badge>
+              }
+              <ph-button
+                size="sm"
+                [variant]="s.gap ? 'primary' : 'default'"
+                hasPopup="dialog"
+                [label]="'Assign staff to ' + s.name"
+                (click)="assign(s)"
+                >Assign staff</ph-button
+              >
+            </ph-list-item>
+          } @empty {
+            <ph-list-item title="No sessions in the next 14 days" meta="New events appear here." />
+          }
+        </ph-list>
+      }
+    }
+  }
+}

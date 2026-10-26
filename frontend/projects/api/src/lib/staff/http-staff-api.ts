@@ -7,6 +7,7 @@ import { LoadResult } from '../load-result';
 import { Role } from '../session/role';
 import { WriteOutcome } from '../write-outcome';
 import { StaffApi } from './staff-api';
+import { Coverage } from './coverage';
 import { StaffList } from './staff-list';
 
 @Injectable()
@@ -34,5 +35,15 @@ export class HttpStaffApi implements StaffApi {
 
   remove(membershipId: string): Observable<WriteOutcome> {
     return toWrite(this.http.delete<null>(`${this.baseUrl}/staff/${membershipId}`));
+  }
+
+  coverage(): Observable<LoadResult<Coverage>> {
+    return toLoad(this.http.get<Coverage>(`${this.baseUrl}/coverage`));
+  }
+
+  assign(sessionId: string, membershipIds: string[]): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.put<null>(`${this.baseUrl}/sessions/${sessionId}/staff`, { membershipIds }),
+    );
   }
 }

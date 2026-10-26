@@ -1,4 +1,4 @@
-import { DialogRef } from '@angular/cdk/dialog';
+import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Role, STAFF_API } from '@promisehub/api';
@@ -18,7 +18,13 @@ export class InviteStaffDialog {
 
   protected email = '';
   protected role: Role = 'YouthWorker';
-  protected readonly roles = ROLE_OPTIONS;
+  /** Coordinators invite youth workers only (L2-009 criterion 8); admins choose any role. */
+  private readonly data = inject<{ youthWorkersOnly: boolean } | null>(DIALOG_DATA, {
+    optional: true,
+  });
+  protected readonly roles = this.data?.youthWorkersOnly
+    ? ROLE_OPTIONS.filter((r) => r.value === 'YouthWorker')
+    : ROLE_OPTIONS;
   protected readonly errors = signal<Record<string, string>>({});
   protected readonly failed = signal(false);
   protected readonly busy = signal(false);
