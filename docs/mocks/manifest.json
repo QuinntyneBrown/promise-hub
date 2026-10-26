@@ -790,11 +790,46 @@
         "error",
         "mfa",
         "expired",
+        "youth",
         "locked"
       ],
       "not_applicable": {
         "loading": "The form is static.",
         "empty": "A form has no collection to be empty of."
+      }
+    },
+    {
+      "id": "signed-out",
+      "kind": "page",
+      "title": "Signed out",
+      "route": "/signed-out",
+      "requirements": [
+        "L1-016"
+      ],
+      "states": [
+        "default"
+      ],
+      "not_applicable": {
+        "loading": "Nothing loads: the page is shown after the session has ended.",
+        "empty": "A confirmation has no collection to be empty of.",
+        "error": "Signing out always ends here; a failed request still clears the device."
+      }
+    },
+    {
+      "id": "account-deactivated",
+      "kind": "page",
+      "title": "Account inactive",
+      "route": "/account-deactivated",
+      "requirements": [
+        "L1-016"
+      ],
+      "states": [
+        "default"
+      ],
+      "not_applicable": {
+        "loading": "Nothing loads: the server has already answered.",
+        "empty": "A message has no collection to be empty of.",
+        "error": "This page is itself the refusal."
       }
     },
     {

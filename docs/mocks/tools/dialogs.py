@@ -298,7 +298,7 @@ def main_menu(S):
         items = "".join(f'<a class="nav-drawer__link" href="{page(s)}"{" aria-current=\"page\"" if s == current else ""}>{icon(i)}{t}</a>' for s, t, i in links)
         return (f'<div class="backdrop"></div><nav class="nav-drawer" role="dialog" aria-modal="true" aria-labelledby="menu-title" style="display: flex;" data-dismiss-on-escape>'
                 f'<div class="nav-drawer__header"><span class="nav-drawer__title" id="menu-title">Menu</span><button class="btn btn--ghost btn--icon" type="button" aria-label="Close menu" autofocus>{icon("x")}</button></div>'
-                f'<div class="nav-drawer__nav">{items}<div class="menu__divider" aria-hidden="true"></div><a class="nav-drawer__link" href="{page("sign-in")}">{icon("log-out")}Sign out</a></div>'
+                f'<div class="nav-drawer__nav">{items}<div class="menu__divider" aria-hidden="true"></div><a class="nav-drawer__link" href="{page("signed-out")}">{icon("log-out")}Sign out</a></div>'
                 f'<div style="padding: var(--space-3) var(--space-4); border-top: var(--border-width-hairline) solid var(--color-border-default);" class="cluster cluster--snug">{avatar(user)}<div><div style="font: var(--text-label);">{esc(user["name"])}</div><div class="text-caption">{esc(user["role"])} · {ORG_SHORT}</div></div></div></nav>')
     S.add("default", "The More menu on a phone: every section, current one marked, sign out at the end.", **over("today", overlays=drawer()))
     S.add("director", "The same menu for the program director, from Programs; Curriculum shows while Learning is on.", **over("programs", overlays=drawer(STAFF["marisol"], "programs", director_links)))
@@ -319,7 +319,7 @@ def account_menu(S):
             f'<li role="none"><a class="menu__item" role="menuitem" href="{page("notifications")}">{icon("bell")}Notifications</a></li>'
             f'<li role="none"><button class="menu__item" role="menuitem" type="button" data-theme-toggle>{icon("sun")}Switch theme<kbd class="menu__shortcut">t</kbd></button></li>'
             '<li role="none" class="menu__divider" aria-hidden="true"></li>'
-            f'<li role="none"><a class="menu__item" role="menuitem" href="{page("sign-in")}">{icon("log-out")}Sign out</a></li></ul>')
+            f'<li role="none"><a class="menu__item" role="menuitem" href="{page("signed-out")}">{icon("log-out")}Sign out</a></li></ul>')
     S.add("default", "The account menu off the avatar: account, notifications, theme, sign out.", **over("today", overlays=menu, menu_open=True))
 
 

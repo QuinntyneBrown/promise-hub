@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Account inactive · default — PromiseHub mocks</title>
+<meta name="mock:kind" content="page">
+<meta name="mock:screen" content="account-deactivated">
+<meta name="mock:state" content="default">
+<meta name="mock:requirements" content="L1-016">
+<meta name="description" content="A youth whose account was turned off signs in with the right password: sign-in is refused and the page says who can restore it.">
+<link rel="stylesheet" href="../../../design-system/tokens/tokens.css">
+<link rel="stylesheet" href="../../../design-system/assets/components.css">
+<link rel="stylesheet" href="../../assets/ui.css">
+<link rel="stylesheet" href="../../assets/mock.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<main id="main" class="auth-layout"><div class="auth-card card stack"><div class="stack" style="gap: var(--space-2); align-items: center; text-align: center;"><span class="ph-mark" aria-hidden="true" style="width: var(--size-avatar-lg); height: var(--size-avatar-lg);"></span><h1 style="font: var(--text-h2);">This account is inactive</h1><p class="text-muted">Your access to PromiseHub was turned off. Nothing has been deleted; ask your program director or admin to turn it back on.</p></div><a class="btn btn--lg btn--block" href="../../pages/sign-in/default.html">Back to sign in</a></div></main><div class="toast-region" role="status" aria-live="polite"></div><p class="mock-note" style="top: 5rem; right: 1rem;">Shown only after a correct password, so it never reveals whether an email has an account. A session whose account is turned off lands here on its next request.</p><nav class="mock-bar" aria-label="Mock navigation"><a class="mock-bar__home" href="../../index.html" aria-label="All mocks">⌂</a><span class="mock-bar__screen">Account inactive</span><ul class="mock-bar__states"><li><a href="default.html" aria-current="page">default</a></li></ul><button type="button" data-theme-toggle aria-pressed="false">☾ Dark</button><button type="button" data-chrome-toggle aria-label="Hide mock chrome">×</button></nav>
+<script src="../../assets/mock.js"></script>
+</body>
+</html>
