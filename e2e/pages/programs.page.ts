@@ -82,10 +82,11 @@ export class ProgramsPage extends BasePage {
   async archive(name: string): Promise<void> {
     await this.page.getByRole('button', { name: 'More actions' }).click();
     await this.dialog.getByRole('menuitem', { name: 'Archive program…' }).click();
-    await expect(this.page.getByRole('dialog', { name: `Archive ${name}?` })).toBeVisible();
-    await this.dialog.getByLabel('Type the program name to confirm').fill(name);
-    await this.dialog.getByRole('button', { name: 'Archive program' }).click();
-    await expect(this.dialog).toBeHidden();
+    const confirm = this.page.getByRole('dialog', { name: `Archive ${name}?` });
+    await expect(confirm).toBeVisible();
+    await confirm.getByLabel('Type the program name to confirm').fill(name);
+    await confirm.getByRole('button', { name: 'Archive program' }).click();
+    await expect(this.dialog).toHaveCount(0);
   }
 
   get archivedNotice(): Locator {
