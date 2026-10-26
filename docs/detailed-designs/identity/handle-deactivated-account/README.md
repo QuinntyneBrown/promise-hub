@@ -28,6 +28,10 @@ Frontend:
 - **`authGuard`** — redirects 401 "account-deactivated" to `/account-deactivated`.
 - **`AccountDeactivatedPage`** — page at `/account-deactivated` in the `account` library, outside the shell: authentication card, Back to sign in.
 
+## Built so far
+
+Prompt 50 delivered everything above. Acceptance tests: `e2e/tests/account/account-states.spec.ts`, `backend/tests/PromiseHub.Api.Tests/DeactivatedAccountTests.cs`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

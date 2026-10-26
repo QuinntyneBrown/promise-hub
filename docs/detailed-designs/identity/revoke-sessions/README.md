@@ -20,7 +20,11 @@ Ported from Waypoint `authentication/rotate-and-revoke-tokens` (`L2-AUTH-012`). 
 - **`SessionCookie`** — issues the cookie with the user id, membership id, session version and a new session id.
 - **`TenantContextMiddleware`** — refuses a cookie whose session version is older than the person's, or whose session id is ended.
 - **`AccountHandler.SignOutOthersAsync`**, **`PasswordResetHandler.ResetAsync`** — raise the session version.
-- **`SignOutHandler`** — records the ended session.
+- **`SessionSignOutHandler`** — records the ended session.
+
+## Built so far
+
+Prompt 50 added the session id and ended sessions; the cookie flags, the session version and the idle expiry already existed (ADR 0005, ADR 0039). Acceptance tests: `backend/tests/PromiseHub.Api.Tests/SessionEndingTests.cs`, `SignInTests.cs`, `AccountTests.cs`, `PasswordResetTests.cs`.
 
 ## Requirements
 

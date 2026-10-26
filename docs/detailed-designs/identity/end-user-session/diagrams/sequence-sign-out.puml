@@ -16,7 +16,7 @@ box "Backend — PromiseHub.Api" #D1FADF
   participant "TenantContextMiddleware" as mw
 end box
 box "Backend — PromiseHub.Application and Domain" #ECFDF3
-  participant "SignOutHandler" as h
+  participant "SessionSignOutHandler" as h
 end box
 box "Backend — PromiseHub.Infrastructure" #FFF4E5
   database "PromiseHub database" as db

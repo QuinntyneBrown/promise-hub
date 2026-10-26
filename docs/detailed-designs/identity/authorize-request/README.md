@@ -60,7 +60,7 @@ ADR 0043 adds the roles **Youth**, **Mentor** and **Volunteer** to `Role`.
 
 ## Session endings (prompt 50)
 
-`TenantContextMiddleware` answers each way a session ends with its own code (ADR 0044): a removed membership with no other current one answers 401 "account-deactivated" and the app shows `account-deactivated`; a session id recorded at sign-out (`EndedSession`) answers 401 with no code; an older session version answers 401 as before. See `handle-deactivated-account` and `end-user-session`.
+`TenantContextMiddleware` answers each way a session ends with its own code (ADR 0044): a removed membership with no other current one answers 401 "account-deactivated" and the app shows `account-deactivated`; a session id recorded at sign-out (`EndedSession`) answers 401 with no code; an older session version answers 401 as before. The anonymous `/auth` endpoints that start a session skip this resolution, so a stale cookie never blocks the next sign-in on a shared device. See `handle-deactivated-account` and `end-user-session`.
 
 ## Requirements
 

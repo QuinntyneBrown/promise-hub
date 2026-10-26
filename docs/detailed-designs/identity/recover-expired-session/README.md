@@ -17,6 +17,10 @@ Ported from Waypoint `platform-services/recover-expired-session` (`L2-PLATFORM-0
 - **`authGuard`** — in `frontend/projects/promisehub/`. On 401 "session-expired" it redirects to `/sign-in?reason=expired&returnUrl=…`.
 - **`SignInPage`** — shows the timed-out heading for `reason=expired` and, after signing in, follows the return URL before the role home.
 
+## Built so far
+
+Already built by slice 02; prompt 50 added the youth case and the role home when no page was open. Acceptance tests: `e2e/tests/account/account-states.spec.ts`, `backend/tests/PromiseHub.Api.Tests/DeactivatedAccountTests.cs`. The form-replaying `session-expired` dialog stays deferred.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

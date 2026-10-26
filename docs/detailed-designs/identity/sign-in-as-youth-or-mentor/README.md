@@ -25,6 +25,10 @@ Frontend:
 
 Backend: unchanged. `SignInHandler` already finds the person's first current membership by organization name, verifies the password, applies the lockout (`recover-locked-account`), audits "Signed in" in that organization and issues the session cookie through `SessionCookie`. `GET /me` answers the role and the organization's modules from the session's membership. Participant roles never need a second factor (`SignInPolicy.RequiresMfa`).
 
+## Built so far
+
+Prompt 50 delivered everything above: `roleHome` in `api`, the role home after sign-in and after a password reset, and the "Email" label. Acceptance tests: `e2e/tests/account/sign-in-as-youth-or-mentor.spec.ts`, `backend/tests/PromiseHub.Api.Tests/ParticipantSignInTests.cs`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

@@ -22,6 +22,10 @@ Ported from Waypoint `authentication/recover-locked-account` (`L2-AUTH-006`). Wa
 - **`AuditAction`** — gains `SignInLocked` and `SignInUnlocked`; the audit log page offers both in its action filter.
 - **`SignInPage`** — existing locked state: alert with the end time, Reset password, and the Sign in button disabled.
 
+## Built so far
+
+Prompt 50 delivered everything above. Acceptance tests: `e2e/tests/account/lockout.spec.ts`, the lock filter in `e2e/tests/administration/audit-log.spec.ts`, `backend/tests/PromiseHub.Api.Tests/LockoutTests.cs`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

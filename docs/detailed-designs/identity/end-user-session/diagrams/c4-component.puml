@@ -10,7 +10,7 @@ Container_Boundary(web, "PromiseHub web app (Angular)") {
 }
 Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
   Component(ep, "AuthEndpoints", "Minimal API", "/auth/sign-out")
-  Component(h, "SignOutHandler", "Application handler", "Ends the session, audits")
+  Component(h, "SessionSignOutHandler", "Application handler", "Ends the session, audits")
   Component(mw, "TenantContextMiddleware", "Middleware", "Refuses ended sessions")
   ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Staff users, memberships, sign-in attempts, ended sessions, audit entries")
 }

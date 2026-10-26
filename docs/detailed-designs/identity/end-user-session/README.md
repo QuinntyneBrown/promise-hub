@@ -25,11 +25,15 @@ Frontend:
 
 Backend:
 
-- **`AuthEndpoints`** — `POST /auth/sign-out` (`AllowAnyMember`) calls `SignOutHandler` with the session id and user from the cookie, then removes the cookie.
-- **`SignOutHandler`** — in `PromiseHub.Application/Identity/`. Records an `EndedSession`, deletes ended sessions whose 12 hours are over, and audits `SignedOut` "Signed out" in the session's organization.
+- **`AuthEndpoints`** — `POST /auth/sign-out` (`AllowAnyMember`) calls `SessionSignOutHandler` with the session id and user from the cookie, then removes the cookie.
+- **`SessionSignOutHandler`** — in `PromiseHub.Application/Identity/`. Records an `EndedSession`, deletes ended sessions whose 12 hours are over, and audits `SignedOut` "Signed out" in the session's organization.
 - **`EndedSession`** — entity in `PromiseHub.Domain/Identity/`: session id, user id, ended at, expires at. Not tenant-owned, like `StaffUser`.
 - **`AuthenticationSetup.SessionPrincipal`** — adds the `session_id` claim; `SessionCookie.SignInAsync` creates a new id for every sign-in, and reissuing on an organization switch keeps it.
 - **`TenantContextMiddleware`** — answers 401 when the cookie's session id is an ended session.
+
+## Built so far
+
+Prompt 50 delivered everything above, and `TenantContextMiddleware` no longer resolves a stale cookie on the anonymous `/auth` endpoints that start a session, so the next person on a shared device can always sign in. Acceptance tests: `e2e/tests/account/sign-out.spec.ts`, `backend/tests/PromiseHub.Api.Tests/SessionEndingTests.cs`. Not built: a warning before signing out with check-ins still queued offline (they are cleared with the rest), and ending cookies issued before session ids existed.
 
 ## Requirements
 
