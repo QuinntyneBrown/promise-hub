@@ -46,6 +46,8 @@ ADR 0005 settles the cookie name (`.PromiseHub.Session`), `SameSite=Strict` and 
 
 ## Built so far
 
+Slice 45 added the account page (`GET /me/account`), recovery codes stored as hashes, and signing out everywhere through `StaffUser.SessionVersion` checked on every request (ADR 0039).
+
 Slice 02 delivered `SignInPage` (default, invalid, submitting, error, expired and locked) and `MfaPage` in `account`, the auth guard and account-menu sign-out in the shell, `POST /auth/sign-in`, `/auth/mfa` and `/auth/sign-out`, `SignInHandler`, `CompleteMfaHandler`, the attempt-based lockout, TOTP verification and audited sign-ins. Sessions are cookie tickets (ADR 0005), so `SessionMiddleware`, `ISessionStore`, `StaffSession`, recovery codes, trusted devices, sign-out-everywhere and the session-expired dialog that replays a form are deferred to `manage-sessions` and `recover-account-access`; today an expired session returns to sign-in with the destination kept.
 
 ## Requirements

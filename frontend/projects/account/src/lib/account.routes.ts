@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { AccountPage } from './account-page/account-page';
 import { AcceptInvitePage } from './accept-invite/accept-invite-page';
 import { MfaPage } from './mfa/mfa-page';
 import { OnboardPhonePage } from './onboard-phone/onboard-phone-page';
@@ -19,4 +20,9 @@ export const inviteRoutes: Routes = [
 export const welcomeRoutes: Routes = [
   { path: 'phone', component: OnboardPhonePage, title: 'Your mobile · PromiseHub' },
   { path: 'ready', component: OnboardReadyPage, title: 'You’re ready · PromiseHub' },
+];
+
+/** Your account, mounted by the app at /account inside the staff shell. */
+export const accountRoutes: Routes = [
+  { path: '', component: AccountPage, title: 'Your account · PromiseHub' },
 ];

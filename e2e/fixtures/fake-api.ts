@@ -235,6 +235,9 @@ export class FakeApi {
   /** The six-digit code the fake texts to a contact on file. */
   readonly guardianCode = '482913';
   private smsUsed = new Map<string, number>();
+  /** Recovery codes left per person, and whether the other devices were signed out. */
+  private recoveryCodes = new Map<string, number>();
+  signedOutOthers = false;
   /** The audit log as the API keeps it: organization, when, who, action, record type and summary. */
   private auditEntries: { organizationId: string; when: string; who: string; action: string; record: string; summary: string; device: string | null }[] = [
     { organizationId: 'org-harbourview', when: '2026-11-05T20:41:00Z', who: 'Carmen Rivera', action: 'Signed', record: 'PermissionSlip', summary: 'Mateo Rivera · signed by Carmen Rivera · version 1', device: 'Phone' },
@@ -387,6 +390,9 @@ export class FakeApi {
     ['POST', /^\/api\/auth\/mfa$/, (route) => this.mfa(route)],
     ['POST', /^\/api\/auth\/sign-out$/, (route) => this.signOut(route)],
     ['GET', /^\/api\/setup$/, (route) => this.setup(route)],
+    ['GET', /^\/api\/me\/account$/, (route) => this.account(route)],
+    ['POST', /^\/api\/me\/recovery-codes$/, (route) => this.newRecoveryCodes(route)],
+    ['POST', /^\/api\/me\/sign-out-others$/, (route) => this.signOutOthers(route)],
     ['GET', /^\/api\/billing$/, (route) => this.billing(route)],
     ['GET', /^\/api\/audit$/, (route) => this.auditLog(route)],
     ['PUT', /^\/api\/billing\/plan$/, (route) => this.changePlan(route)],
@@ -706,6 +712,31 @@ export class FakeApi {
     const target = memberships.find((x) => x.id === b.membershipId && x.email === m.email && !this.removedMemberships.has(x.id));
     if (!target) return route.fulfill({ status: 404 });
     this.membershipId = target.id;
+    return route.fulfill({ status: 204 });
+  }
+
+  /** Mirrors backend AccountHandler. */
+  private async account(route: Route): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    const org = organizations.find((o) => o.id === m.organizationId)!;
+    return route.fulfill({
+      json: { name: m.personName, email: m.email, role: m.role, organization: org.name, mobile: null, twoStepOn: ['Admin', 'ProgramDirector'].includes(m.role), recoveryCodesLeft: this.recoveryCodes.get(m.email) ?? 0 },
+    });
+  }
+
+  private async newRecoveryCodes(route: Route): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    this.recoveryCodes.set(m.email, 10);
+    const codes = Array.from({ length: 10 }, (_, i) => `k${i}x2-${(7000 + i * 37).toString(36).slice(-4).padStart(4, 'm')}`);
+    return route.fulfill({ json: { codes } });
+  }
+
+  private async signOutOthers(route: Route): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    this.signedOutOthers = true;
     return route.fulfill({ status: 204 });
   }
 

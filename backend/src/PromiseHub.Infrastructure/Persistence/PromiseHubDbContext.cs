@@ -425,6 +425,8 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
         {
             e.Property(u => u.Email).HasMaxLength(320);
             e.HasIndex(u => u.Email).IsUnique();
+            e.Ignore(u => u.RecoveryCodesLeft);
+            e.Property(u => u.RecoveryCodes).HasMaxLength(1000);
         });
         modelBuilder.Entity<SignInAttempt>(e =>
         {

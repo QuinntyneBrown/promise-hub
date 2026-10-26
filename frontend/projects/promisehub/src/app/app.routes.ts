@@ -29,6 +29,10 @@ export const routes: Routes = [
         loadChildren: () => import('@promisehub/today').then((m) => m.routes),
       },
       {
+        path: 'account',
+        loadChildren: () => import('@promisehub/account').then((m) => m.accountRoutes),
+      },
+      {
         path: 'setup',
         loadChildren: () => import('@promisehub/settings').then((m) => m.setupRoutes),
       },

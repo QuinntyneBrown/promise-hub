@@ -44,7 +44,7 @@
 | Staff | Search records | Find permitted children, families, and events across enabled modules. | [4 days](detailed-designs/search/search-organization/README.md) | 75% · [video](videos/34-search-records/README.md) |
 | Staff | Review notifications | Open relevant tasks, alerts, and updates from the notification center. | [5 days](detailed-designs/notifications/notify-in-app/README.md) | 70% · [video](videos/35-review-notifications/README.md) |
 | Staff | Recover account access | Reset a forgotten password and resume authorized work. | Not sized: password-reset design missing | — |
-| Staff | Manage sessions | View account settings, recover codes, and sign out other sessions. | [3 days](detailed-designs/identity/sign-in/README.md) | 0% |
+| Staff | Manage sessions | View account settings, recover codes, and sign out other sessions. | [3 days](detailed-designs/identity/sign-in/README.md) | 80% · [video](videos/45-manage-sessions/README.md) |
 | Platform admin | Create an organization | Add a tenant and prepare its onboarding. | [3 days](detailed-designs/organizations/manage-organizations/README.md) | 0% |
 | Platform admin | Suspend an organization | Block access and outbound messages while retaining tenant data. | [3 days](detailed-designs/organizations/manage-organizations/README.md) | 0% |
 | Platform admin | Manage organizations | Review tenants across the deployment with platform-only access. | [3 days](detailed-designs/organizations/manage-organizations/README.md) | 0% |

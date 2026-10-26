@@ -1,1 +1,1 @@
-export { inviteRoutes, routes, welcomeRoutes } from './lib/account.routes';
+export { accountRoutes, inviteRoutes, routes, welcomeRoutes } from './lib/account.routes';

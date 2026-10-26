@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 45 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="45" data-video-title="Manage sessions" data-parts="Introduction|Promises|Securing|Underneath|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 45</div>
+  <h1>Manage sessions</h1>
+  <p class="lead">Recovery codes and signing out everywhere else</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="Every staff member has an account page">
+  <h2>What the account page promises</h2>
+  <ul>
+    <li>Name, email, mobile, role and organization</li>
+    <li>Ten recovery codes, shown once, stored scrambled</li>
+    <li>Sign out everywhere else; this device stays</li>
+    <li>All recorded in the audit log</li>
+  </ul>
+</section>
+
+<section id="secure" data-part="2" data-cue="Here is Jaylen's account on his laptop." data-clip="clips/account-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Codes, then sign out</h3><p>Ten codes once; other devices out.</p></div>
+</section>
+
+<section id="under" data-part="3" data-cue="Each sign-in carries a session version.">
+  <h2>How it works underneath</h2>
+  <div class="cols">
+    <img class="shot" alt="The account page on a phone" src="shots/phone-account.png">
+    <img class="shot" alt="The sign out everywhere else dialog" src="shots/desktop-sign-out.png">
+  </div>
+</section>
+
+<section id="testing" data-part="4" data-cue="Backend tests cover the account details">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Other session after signing out everywhere</td><td>401</td></tr>
+    <tr><td>This session</td><td>Still signed in</td></tr>
+    <tr><td>Stored codes</td><td>Hashes only</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="5" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Codes shown once, stored scrambled</li><li>This device stays signed in</li><li>Every step on the record</li></ul>
+  <p class="muted">Next: recover account access</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

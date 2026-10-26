@@ -49,10 +49,7 @@ public static class AuthEndpoints
 
     private static async Task<IResult> StartSession(HttpContext http, SignInResult result, bool persistent)
     {
-        await http.SignInAsync(
-            AuthSchemes.Session,
-            AuthenticationSetup.SessionPrincipal(result.UserId!.Value, result.MembershipId!.Value),
-            new AuthenticationProperties { IsPersistent = persistent });
+        await SessionCookie.SignInAsync(http, result.UserId!.Value, result.MembershipId!.Value, new AuthenticationProperties { IsPersistent = persistent });
         return Results.Ok(new { status = "signed-in" });
     }
 

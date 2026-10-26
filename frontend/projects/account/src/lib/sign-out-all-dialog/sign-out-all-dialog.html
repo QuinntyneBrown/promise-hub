@@ -1,0 +1,14 @@
+<ph-dialog
+  title="Sign out everywhere else?"
+  description="Every other device is signed out. You stay signed in here."
+>
+  @if (failed()) {
+    <ph-alert tone="danger" title="That didn’t work" text="Nothing changed. Try again." />
+  }
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close()">Cancel</ph-button>
+    <ph-button variant="primary" [busy]="busy()" (click)="confirm()"
+      >Sign out other devices</ph-button
+    >
+  </ng-container>
+</ph-dialog>
