@@ -71,6 +71,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(m => m.PersonName).HasMaxLength(200);
             e.Property(m => m.Email).HasMaxLength(320);
             e.Property(m => m.Role).HasConversion<string>().HasMaxLength(40);
+            e.Property(m => m.Mobile).HasMaxLength(30);
             e.Property(m => m.RemovedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
         });
         modelBuilder.Entity<Domain.Staff.StaffInvitation>(e =>
