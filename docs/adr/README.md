@@ -33,3 +33,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0027](0027-today-summary.md) | Today is one summary endpoint composed on the server from the modules that are on |
 | [0028](0028-global-search.md) | Global search is one roster-scoped endpoint, and its page lives in the households library |
 | [0029](0029-in-app-notifications.md) | In-app notifications are rows per recipient, hidden with their module, and the bell opens the center |
+| [0030](0030-notification-settings.md) | Notification settings are one optional row per organization, read by jobs on every run |

@@ -17,6 +17,7 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Screen | Mock | Library components | Built locally |
 |---|---|---|---|
 | Today | `today` (sessions), `today/empty`, `today/roster-only`, `today/loading` | `ph-page-header`, `ph-card` (titled), `ph-empty-state`, `ph-button`, `ph-stat`, `ph-list`, `ph-list-item`, `ph-badge`, `ph-skeleton` | Greeting, date and session counts |
+| Notification settings | `settings-notifications` (default, loading, error, invalid, submitting, success, forbidden) | `ph-page-header`, `ph-tabs`, `ph-card` (titled), `ph-text-field` (number), `ph-switch`, `ph-error-summary`, `ph-button`, `ph-empty-state`, `ph-skeleton`, toast | — |
 | Notifications | `notifications` (default, read, loading, empty, error) | `ph-page-header`, `ph-card`, `ph-list`, `ph-list-item` (muted when read), `ph-button`, `ph-empty-state`, `ph-skeleton` | — |
 | Search | `search` (default, loading, empty, error, no-results) | `ph-page-header`, `ph-text-field` (search), `ph-list`, `ph-list-item`, `ph-card`, `ph-empty-state`, `ph-button`, `ph-skeleton` | Result group headings |
 | Not found | `not-found` | `ph-error-page`, `ph-button` | — |
