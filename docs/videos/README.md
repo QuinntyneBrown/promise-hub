@@ -47,6 +47,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 37 | [Produce grant reports](37-produce-grant-reports/README.md) | ~2 min | Report numbers from the data, a program filter, small counts masked and CSV exports that expire in a week |
 | 38 | [Complete a survey](38-complete-a-survey/README.md) | ~2 min | A survey per child on a verified guardian link, in the household's language, answered once and counted in reports |
 | 39 | [Set up an organization](39-set-up-an-organization/README.md) | ~2 min | A setup checklist read from the organization's data; each step opens its screen; finish later loses nothing |
+| 40 | [Switch organizations](40-switch-organizations/README.md) | ~2 min | The top bar's switcher moves the session to another membership and reloads for that organization |
 
 ## Making or updating a video
 
