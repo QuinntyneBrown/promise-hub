@@ -2,7 +2,7 @@ import type { GuardianLanguage } from './guardian-text';
 
 const TEXT = {
   en: {
-    heading: 'Your data',
+    heading: 'Your family’s data',
     intro: 'Get a copy of your family’s data, or ask us to delete it.',
     open: 'Ask about your data',
     title: 'Ask about your family’s data',
@@ -17,7 +17,7 @@ const TEXT = {
     sent: 'Request received. We’ll email you within 30 days.',
   },
   es: {
-    heading: 'Sus datos',
+    heading: 'Los datos de su familia',
     intro: 'Pida una copia de los datos de su familia, o que los borremos.',
     open: 'Preguntar por sus datos',
     title: 'Preguntar por los datos de su familia',
@@ -32,7 +32,7 @@ const TEXT = {
     sent: 'Solicitud recibida. Le escribiremos en 30 días.',
   },
   fr: {
-    heading: 'Vos données',
+    heading: 'Les données de votre famille',
     intro: 'Demandez une copie des données de votre famille, ou leur suppression.',
     open: 'Demander vos données',
     title: 'Demander les données de votre famille',
