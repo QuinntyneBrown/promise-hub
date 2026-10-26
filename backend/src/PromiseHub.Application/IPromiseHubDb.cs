@@ -55,6 +55,7 @@ public interface IPromiseHubDb
     DbSet<Domain.Reports.ReportExport> ReportExports { get; }
     DbSet<Domain.Surveys.Survey> Surveys { get; }
     DbSet<Domain.Surveys.SurveyResponse> SurveyResponses { get; }
+    DbSet<PrivacySettings> PrivacySettings { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

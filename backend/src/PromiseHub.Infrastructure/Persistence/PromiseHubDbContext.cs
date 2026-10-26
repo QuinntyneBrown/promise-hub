@@ -53,6 +53,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Reports.ReportExport> ReportExports => Set<Domain.Reports.ReportExport>();
     public DbSet<Domain.Surveys.Survey> Surveys => Set<Domain.Surveys.Survey>();
     public DbSet<Domain.Surveys.SurveyResponse> SurveyResponses => Set<Domain.Surveys.SurveyResponse>();
+    public DbSet<PrivacySettings> PrivacySettings => Set<PrivacySettings>();
     public DbSet<Domain.Incidents.IncidentFollowUp> IncidentFollowUps => Set<Domain.Incidents.IncidentFollowUp>();
     public DbSet<GuardianVerification> GuardianVerifications => Set<GuardianVerification>();
     public DbSet<TrustedGuardianDevice> TrustedGuardianDevices => Set<TrustedGuardianDevice>();
@@ -80,9 +81,11 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(m => m.RemovedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
         });
         modelBuilder.Entity<Domain.Notifications.NotificationSettings>(e => e.HasIndex(s => s.OrganizationId).IsUnique());
+        modelBuilder.Entity<PrivacySettings>(e => e.HasIndex(s => s.OrganizationId).IsUnique());
         modelBuilder.Entity<Organization>(e =>
         {
             e.Property(o => o.ProfileConfirmedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.Property(o => o.Region).HasMaxLength(100).HasDefaultValue(Organization.DefaultRegion);
             e.Property(o => o.PaymentFailedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
         });
         modelBuilder.Entity<Domain.Surveys.Survey>(e =>

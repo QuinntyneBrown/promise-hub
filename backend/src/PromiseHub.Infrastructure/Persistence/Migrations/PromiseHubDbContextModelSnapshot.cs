@@ -1421,6 +1421,13 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.Property<long?>("ProfileConfirmedAt")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Region")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("Canada (Toronto region)");
+
                     b.Property<string>("TimeZone")
                         .IsRequired()
                         .HasMaxLength(60)
@@ -1429,6 +1436,26 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Organizations");
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Organizations.PrivacySettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ConsentRetentionYears")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId")
+                        .IsUnique();
+
+                    b.ToTable("PrivacySettings");
                 });
 
             modelBuilder.Entity("PromiseHub.Domain.Programs.Enrollment", b =>
@@ -2199,6 +2226,15 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                 });
 
             modelBuilder.Entity("PromiseHub.Domain.Organizations.ModuleConfiguration", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Organizations.PrivacySettings", b =>
                 {
                     b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
                         .WithMany()

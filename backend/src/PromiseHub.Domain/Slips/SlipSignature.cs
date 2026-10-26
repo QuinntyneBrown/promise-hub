@@ -38,6 +38,16 @@ public sealed class SlipSignature : ITenantOwned
     public string? Answers { get; private set; }
     public string? Reason { get; private set; }
 
+    /// <summary>Removes who signed and the details once the retention period has passed; the answer itself stays for counts.</summary>
+    public void Purge(string note)
+    {
+        SignedBy = note;
+        Device = null;
+        TextHash = null;
+        Answers = null;
+        Reason = null;
+    }
+
     public void Given(string? device, string language, string textHash, string? answers, string? reason)
     {
         Device = device;
