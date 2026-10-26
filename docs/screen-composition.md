@@ -54,6 +54,7 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Staff and roles | `staff` (default, forbidden) | `ph-page-header`, `ph-list`, `ph-list-item`, `ph-badge`, `ph-button`, `ph-error-page` (forbidden), `ph-card`, `ph-empty-state`, toast | — |
 | Accept an invitation | `accept-invite` (default, invalid, error) | `ph-skip-link`, `ph-auth-card`, `ph-text-field`, `ph-alert`, `ph-button` | — |
 | Onboarding: phone / ready | `onboard-staff-phone`, `onboard-staff-ready` | `ph-auth-card`, `ph-stepper`, `ph-text-field`, `ph-list`, `ph-list-item`, `ph-button` | — |
+| Staff coverage | `coverage` (default, error, forbidden) | `ph-page-header`, `ph-list`, `ph-list-item`, `ph-badge` (gap), `ph-button`, `ph-error-page`, `ph-card`, `ph-empty-state`; assign dialog with `ph-dialog`, `ph-checkbox` | — |
 
 ## Dialogs
 

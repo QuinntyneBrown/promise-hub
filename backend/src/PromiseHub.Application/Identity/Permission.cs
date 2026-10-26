@@ -18,4 +18,6 @@ public enum Permission
     ReviewIncidents,
     ManagePickups,
     ManageStaff,
+    InviteStaff,
+    AssignStaff,
 }

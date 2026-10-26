@@ -1,0 +1,28 @@
+<form novalidate (ngSubmit)="save()">
+  <ph-dialog
+    [title]="'Who works ' + data.session.name + '?'"
+    description="Youth workers can run only the sessions they’re on."
+  >
+    @if (failed()) {
+      <ph-alert tone="danger" title="That didn’t go through" text="Nothing changed. Try again." />
+    }
+    <ph-list label="Staff">
+      @for (p of data.people; track p.id) {
+        <ph-list-item [title]="p.name" [meta]="roleLabels[p.role]">
+          <ph-checkbox
+            phListLead
+            [label]="p.name"
+            [labelHidden]="true"
+            [ngModel]="chosen.has(p.id)"
+            [ngModelOptions]="{ standalone: true }"
+            (ngModelChange)="toggle(p.id, $event)"
+          />
+        </ph-list-item>
+      }
+    </ph-list>
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Save</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

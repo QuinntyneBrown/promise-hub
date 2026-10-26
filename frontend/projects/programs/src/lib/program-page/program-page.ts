@@ -20,6 +20,7 @@ import { EMPTY, Subject, catchError, startWith, switchMap } from 'rxjs';
 import { CloseEnrollmentDialog } from '../close-enrollment-dialog/close-enrollment-dialog';
 import { EnrollDialog } from '../enroll-dialog/enroll-dialog';
 import { OpenEnrollmentDialog } from '../open-enrollment-dialog/open-enrollment-dialog';
+import { ArchiveProgramDialog } from '../archive-program-dialog/archive-program-dialog';
 import { ProgramActionsDialog } from '../program-actions-dialog/program-actions-dialog';
 import { RemoveFromRosterDialog } from '../remove-from-roster-dialog/remove-from-roster-dialog';
 
@@ -128,8 +129,13 @@ export class ProgramPage {
 
   protected actions(p: Program): void {
     this.dialogs
-      .open<boolean, Program, ProgramActionsDialog>(ProgramActionsDialog, p)
-      .closed.subscribe((changed) => changed && this.reload());
+      .open<'archive', Program, ProgramActionsDialog>(ProgramActionsDialog, p)
+      .closed.subscribe((action) => {
+        if (action !== 'archive') return;
+        this.dialogs
+          .open<boolean, Program, ArchiveProgramDialog>(ArchiveProgramDialog, p)
+          .closed.subscribe((archived) => archived && this.reload());
+      });
   }
 
   protected restore(p: Program): void {

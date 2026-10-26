@@ -126,3 +126,4 @@ export * from './lib/invitations/invitation';
 export * from './lib/invitations/invitation-api';
 export * from './lib/invitations/invitation-api.token';
 export * from './lib/invitations/invitation-result';
+export * from './lib/staff/coverage';

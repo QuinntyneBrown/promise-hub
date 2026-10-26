@@ -12,4 +12,6 @@ export type Permission =
   | 'manageSlips'
   | 'reviewEnrollments'
   | 'managePickups'
-  | 'manageStaff';
+  | 'manageStaff'
+  | 'inviteStaff'
+  | 'assignStaff';

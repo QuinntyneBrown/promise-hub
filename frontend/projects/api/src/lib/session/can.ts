@@ -15,6 +15,8 @@ const GRANTS: Record<Permission, Role[]> = {
   manageSlips: ['Admin', 'ProgramDirector', 'SiteLead'],
   managePickups: ['Admin', 'ProgramDirector', 'SiteLead'],
   manageStaff: ['Admin'],
+  inviteStaff: ['Admin', 'VolunteerCoordinator'],
+  assignStaff: ['Admin', 'ProgramDirector', 'SiteLead', 'VolunteerCoordinator'],
   reviewEnrollments: ['Admin', 'ProgramDirector'],
 };
 
