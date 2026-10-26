@@ -48,6 +48,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Attendance.ApprovedPickup> ApprovedPickups => Set<Domain.Attendance.ApprovedPickup>();
     public DbSet<Domain.Attendance.PickupRequest> PickupRequests => Set<Domain.Attendance.PickupRequest>();
     public DbSet<Domain.Staff.StaffInvitation> StaffInvitations => Set<Domain.Staff.StaffInvitation>();
+    public DbSet<Domain.Notifications.Notification> Notifications => Set<Domain.Notifications.Notification>();
     public DbSet<Domain.Incidents.IncidentFollowUp> IncidentFollowUps => Set<Domain.Incidents.IncidentFollowUp>();
     public DbSet<GuardianVerification> GuardianVerifications => Set<GuardianVerification>();
     public DbSet<TrustedGuardianDevice> TrustedGuardianDevices => Set<TrustedGuardianDevice>();
@@ -73,6 +74,15 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(m => m.Role).HasConversion<string>().HasMaxLength(40);
             e.Property(m => m.Mobile).HasMaxLength(30);
             e.Property(m => m.RemovedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+        });
+        modelBuilder.Entity<Domain.Notifications.Notification>(e =>
+        {
+            e.Property(n => n.Kind).HasMaxLength(40);
+            e.Property(n => n.Text).HasMaxLength(500);
+            e.Property(n => n.Link).HasMaxLength(200);
+            e.HasIndex(n => n.MembershipId);
+            e.Property(n => n.CreatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(n => n.ReadAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
         });
         modelBuilder.Entity<Domain.Staff.StaffInvitation>(e =>
         {

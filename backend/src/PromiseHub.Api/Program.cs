@@ -38,6 +38,7 @@ app.MapSessionEndpoints();
 app.MapHouseholdEndpoints();
 app.MapTodayEndpoints();
 app.MapSearchEndpoints();
+app.MapNotificationEndpoints();
 app.MapProgramEndpoints();
 app.MapEventEndpoints();
 app.MapAttendanceEndpoints();
