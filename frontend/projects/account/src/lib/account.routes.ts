@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 import { AccountPage } from './account-page/account-page';
+import { ForgotPasswordPage } from './forgot-password/forgot-password-page';
+import { ResetPasswordPage } from './reset-password/reset-password-page';
 import { AcceptInvitePage } from './accept-invite/accept-invite-page';
 import { MfaPage } from './mfa/mfa-page';
 import { OnboardPhonePage } from './onboard-phone/onboard-phone-page';
@@ -25,4 +27,13 @@ export const welcomeRoutes: Routes = [
 /** Your account, mounted by the app at /account inside the staff shell. */
 export const accountRoutes: Routes = [
   { path: '', component: AccountPage, title: 'Your account · PromiseHub' },
+];
+
+/** Recovering access, outside the shell: mounted at /forgot-password and /reset-password. */
+export const forgotRoutes: Routes = [
+  { path: '', component: ForgotPasswordPage, title: 'Reset your password · PromiseHub' },
+];
+
+export const resetRoutes: Routes = [
+  { path: '', component: ResetPasswordPage, title: 'Choose a new password · PromiseHub' },
 ];

@@ -43,3 +43,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0037](0037-guardian-data-requests.md) | Guardian data requests are recorded from the family page and fulfilled once by staff |
 | [0038](0038-audit-log-search.md) | The audit log is searched in the tenant's entries on request and exported as CSV, logging the export |
 | [0039](0039-session-version.md) | Signing out everywhere raises a session version carried in the cookie; recovery codes are stored as hashes |
+| [0040](0040-password-reset.md) | Password reset is a one-hour, single-use emailed link stored as a hash, and it signs out other devices |

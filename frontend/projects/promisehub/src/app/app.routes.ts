@@ -12,6 +12,14 @@ export const routes: Routes = [
   { path: 'sign-in', loadChildren: () => import('@promisehub/account').then((m) => m.routes) },
   { path: 'invite', loadChildren: () => import('@promisehub/account').then((m) => m.inviteRoutes) },
   {
+    path: 'forgot-password',
+    loadChildren: () => import('@promisehub/account').then((m) => m.forgotRoutes),
+  },
+  {
+    path: 'reset-password',
+    loadChildren: () => import('@promisehub/account').then((m) => m.resetRoutes),
+  },
+  {
     path: 'welcome',
     canActivate: [authGuard],
     loadChildren: () => import('@promisehub/account').then((m) => m.welcomeRoutes),

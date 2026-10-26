@@ -1,0 +1,35 @@
+@startuml
+title C4 components — Recovering account access
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+package "Frontend — account library" #E0F2FE {
+  [ForgotPasswordPage]
+  [ResetPasswordPage]
+  [AuthApi]
+}
+package "Backend — PromiseHub.Api" #D1FADF {
+  [AuthEndpoints]
+  [SessionCookie]
+}
+package "Backend — PromiseHub.Application (Identity)" #ECFDF3 {
+  [PasswordResetHandler]
+}
+package "Backend — PromiseHub.Domain / Infrastructure" #F9FAFB {
+  [PasswordReset]
+  [StaffUser]
+  [IEmailSender]
+  [IAuditWriter]
+}
+[ForgotPasswordPage] --> [AuthApi]
+[ResetPasswordPage] --> [AuthApi]
+[AuthApi] --> [AuthEndpoints] : /auth/forgot-password, /auth/reset-password
+[AuthEndpoints] --> [PasswordResetHandler]
+[AuthEndpoints] --> [SessionCookie] : sign in after reset
+[PasswordResetHandler] --> [PasswordReset]
+[PasswordResetHandler] --> [StaffUser] : new hash, session version + 1
+[PasswordResetHandler] --> [IEmailSender]
+[PasswordResetHandler] --> [IAuditWriter]
+@enduml

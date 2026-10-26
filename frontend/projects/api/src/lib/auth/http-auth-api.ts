@@ -4,6 +4,8 @@ import { Observable, catchError, map, of, tap } from 'rxjs';
 import { API_BASE_URL } from '../api-base-url';
 import { SESSION_API } from '../session/session-api.token';
 import { AuthApi } from './auth-api';
+import { ResetCheck } from './reset-check';
+import { ResetOutcome } from './reset-outcome';
 import { SignInOutcome } from './sign-in-outcome';
 import { SignInRequest } from './sign-in-request';
 
@@ -29,6 +31,44 @@ export class HttpAuthApi implements AuthApi {
       tap(() => this.session.reset()),
       map(() => undefined),
     );
+  }
+
+  forgotPassword(email: string): Observable<'sent' | 'error'> {
+    return this.http.post(`${this.baseUrl}/auth/forgot-password`, { email }).pipe(
+      map(() => 'sent' as const),
+      catchError(() => of('error' as const)),
+    );
+  }
+
+  checkReset(token: string): Observable<ResetCheck> {
+    return this.http
+      .get<{ email: string }>(`${this.baseUrl}/auth/reset-password/${encodeURIComponent(token)}`)
+      .pipe(
+        map((r): ResetCheck => ({ status: 'ok', email: r.email })),
+        catchError((e: HttpErrorResponse) =>
+          of<ResetCheck>(e.status === 410 ? { status: 'gone' } : { status: 'error' }),
+        ),
+      );
+  }
+
+  resetPassword(token: string, password: string, repeat: string): Observable<ResetOutcome> {
+    return this.http
+      .post<{ status: string }>(`${this.baseUrl}/auth/reset-password`, { token, password, repeat })
+      .pipe(
+        map((body): ResetOutcome =>
+          body.status === 'mfa-required' ? { status: 'mfa-required' } : { status: 'signed-in' },
+        ),
+        tap((outcome) => outcome.status === 'signed-in' && this.session.reset()),
+        catchError((e: HttpErrorResponse) =>
+          of<ResetOutcome>(
+            e.status === 422
+              ? { status: 'invalid', errors: e.error?.errors ?? {} }
+              : e.status === 410
+                ? { status: 'gone' }
+                : { status: 'error' },
+          ),
+        ),
+      );
   }
 
   private step(call: Observable<{ status: string }>): Observable<SignInOutcome> {

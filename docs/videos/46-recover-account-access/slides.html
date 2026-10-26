@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 46 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="46" data-video-title="Recover account access" data-parts="Introduction|Promises|Asking|Resetting|Expired|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 46</div>
+  <h1>Recover account access</h1>
+  <p class="lead">A link, a new password, back to work</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="From the sign-in page">
+  <h2>What recovery promises</h2>
+  <ul>
+    <li>Same answer whether or not the address exists</li>
+    <li>A link that works once, for one hour, stored scrambled</li>
+    <li>At least 12 characters, typed twice</li>
+    <li>Other devices signed out; audited; signed in</li>
+  </ul>
+</section>
+
+<section id="ask" data-part="2" data-cue="Here is the forgot password page on Jaylen's phone." data-clip="clips/forgot-phone.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Ask for a link</h3><p>Check your email.</p></div>
+</section>
+
+<section id="reset" data-part="3" data-cue="Here is the link from that email." data-clip="clips/reset-phone.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>New password</h3><p>Straight back to Today.</p></div>
+</section>
+
+<section id="expired" data-part="4" data-cue="A link more than an hour old">
+  <h2>When a link has expired</h2>
+  <div class="cols">
+    <img class="shot" alt="The reset page saying the link has expired" src="shots/phone-expired.png">
+    <img class="shot" alt="The reset page naming the field errors" src="shots/desktop-invalid.png">
+  </div>
+</section>
+
+<section id="testing" data-part="5" data-cue="Backend tests cover a link emailed">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Unknown address</td><td>Same 202, no email</td></tr>
+    <tr><td>Link after 61 minutes</td><td>410</td></tr>
+    <tr><td>Phone signed in elsewhere</td><td>401 after reset</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="6" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Never reveals who has an account</li><li>Once, for an hour, stored scrambled</li><li>Other devices signed out</li></ul>
+  <p class="muted">Next: manage organizations</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
