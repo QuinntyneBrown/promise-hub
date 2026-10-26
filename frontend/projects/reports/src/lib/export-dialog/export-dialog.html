@@ -12,9 +12,7 @@
   <ng-container ngProjectAs="[phDialogFooter]">
     <ph-button (click)="ref.close()">Close</ph-button>
     @if (ready(); as e) {
-      <ph-button variant="primary" icon="download" [href]="url(e.id)"
-        >Download {{ e.fileName }}</ph-button
-      >
+      <ph-button variant="primary" icon="download" [href]="url(e.id)">Download CSV</ph-button>
     } @else {
       <ph-button variant="primary" [busy]="busy()" (click)="exportCsv()">Export CSV</ph-button>
     }
