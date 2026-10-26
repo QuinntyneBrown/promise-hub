@@ -31,3 +31,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0025](0025-staff-access.md) | Staff access is a membership read on every request; invitations are hashed links by email |
 | [0026](0026-permitted-child-details.md) | Youth workers read only the children of their sessions, and see age rather than date of birth |
 | [0027](0027-today-summary.md) | Today is one summary endpoint composed on the server from the modules that are on |
+| [0028](0028-global-search.md) | Global search is one roster-scoped endpoint, and its page lives in the households library |

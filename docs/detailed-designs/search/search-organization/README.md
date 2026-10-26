@@ -46,6 +46,10 @@ Domain in `PromiseHub.Domain/Search/`: `SearchHit`, `SearchScope`, `RecentItem` 
 
 `PromiseHub.Infrastructure` adds persisted normalized columns `Child.SearchName`, `Household.SearchName`, `Guardian.SearchName` and `Guardian.PhoneDigits`, maintained by EF Core value generation on save, with indexes `(OrganizationId, SearchName)` and `(OrganizationId, PhoneDigits)` so prefix and contains matches stay within budget on the roster sizes of phase 1. Searching is not audited; opening a result is audited by the detail query where `L2-032` requires it.
 
+### Built so far
+
+Slice 34 delivered `GET /search` (`SearchHandler`) with name, email and phone-digit matching, results filtered by `RosterAccess` and modules, and `SearchPage` at `/search` in the `households` library (ADR 0028). Normalized search columns, recent items and audit-log search are not built.
+
 ### Undecided details
 
 - Whether phone matching should also accept formatted input with separators beyond digit extraction is `<TO SUPPLY>`.
