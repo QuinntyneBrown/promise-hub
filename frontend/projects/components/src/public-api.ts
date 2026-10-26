@@ -51,6 +51,7 @@ export * from './lib/error-summary/error-summary-item';
 export * from './lib/progress-bar/progress-bar';
 export * from './lib/recipient-count/recipient-count';
 export * from './lib/sms-preview/sms-preview';
+export * from './lib/skeleton/skeleton';
 export * from './lib/stat/stat';
 export * from './lib/table/table';
 export * from './lib/table/table-cell';

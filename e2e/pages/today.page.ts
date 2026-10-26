@@ -1,7 +1,7 @@
 import { expect, type Locator } from '@playwright/test';
 import { BasePage } from './base.page';
 
-/** Today, the staff home. This slice has only its empty state. */
+/** Today, the staff home (mock: today): sessions, counts, slips due, coming up and work waiting. */
 export class TodayPage extends BasePage {
   async open(): Promise<void> {
     await super.open('/');
@@ -26,5 +26,25 @@ export class TodayPage extends BasePage {
 
   emptyStateAction(name: string): Locator {
     return this.page.getByRole('link', { name });
+  }
+
+  stat(label: string): Locator {
+    return this.page.getByRole('region', { name: 'At a glance' }).getByText(label).locator('..').getByTestId('stat-value');
+  }
+
+  card(title: string): Locator {
+    return this.page.getByRole('region', { name: title });
+  }
+
+  item(card: string, title: string): Locator {
+    return this.card(card).getByRole('listitem').filter({ hasText: title });
+  }
+
+  async follow(card: string, name: string): Promise<void> {
+    await this.card(card).getByRole('link', { name: new RegExp(name) }).click();
+  }
+
+  get loading(): Locator {
+    return this.page.locator('[aria-busy="true"]');
   }
 }

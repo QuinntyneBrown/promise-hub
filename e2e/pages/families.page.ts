@@ -6,6 +6,8 @@ export class FamiliesPage extends BasePage {
   async open(): Promise<void> {
     await super.open('/families');
     await expect(this.page.getByRole('heading', { level: 1, name: 'Families' })).toBeVisible();
+    // The list arrives after the header; reading names before it would race.
+    await expect(this.list.getByRole('listitem').first().or(this.empty)).toBeVisible();
   }
 
   get list(): Locator {
