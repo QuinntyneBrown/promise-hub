@@ -37,6 +37,10 @@ Switching is a deliberate reload, not a filter. Choosing another organization as
 - **`SessionStore`** — persists the session including `ActiveMembershipId`. The storage mechanism of the session (cookie or server-side) is `<TO SUPPLY>` from the `identity/sign-in` design.
 - **`AuditLog`** — records each switch with person, from-organization and to-organization.
 
+## Built so far
+
+Slice 40 delivered `SwitchOrganizationHandler` (`GET /me/organizations`, `POST /me/organization`), `SessionCookie.ReissueAsync`, the removed-membership fallback in `TenantContextMiddleware`, and the top bar's organization switcher (ADR 0034).
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |
