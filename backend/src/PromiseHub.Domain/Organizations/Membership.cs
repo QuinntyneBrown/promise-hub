@@ -24,7 +24,12 @@ public sealed class Membership : ITenantOwned
     /// <summary>The staff member's own mobile, for alerts; never shown to guardians (L2-009 criterion 3).</summary>
     public string? Mobile { get; private set; }
 
+    /// <summary>The child record a Youth membership links to (L2-045); null for every other role and until an admin links one.</summary>
+    public Guid? ChildId { get; private set; }
+
     public void SetMobile(string mobile) => Mobile = mobile;
+
+    public void LinkChild(Guid childId) => ChildId = childId;
 
     public void ChangeRole(Role role) => Role = role;
 
