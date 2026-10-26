@@ -42,6 +42,7 @@ app.MapSearchEndpoints();
 app.MapNotificationEndpoints();
 app.MapReportEndpoints();
 app.MapBillingEndpoints();
+app.MapAuditEndpoints();
 app.MapProgramEndpoints();
 app.MapEventEndpoints();
 app.MapAttendanceEndpoints();

@@ -24,4 +24,5 @@ public enum Permission
     ViewReports,
     ReadSmallCounts,
     ManageBilling,
+    ViewAudit,
 }
