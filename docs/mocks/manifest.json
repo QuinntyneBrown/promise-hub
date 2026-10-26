@@ -182,6 +182,9 @@
         "error",
         "forbidden",
         "outside-sessions",
+        "youth-account",
+        "youth-invited",
+        "youth-active",
         "edge"
       ]
     },
@@ -550,6 +553,7 @@
       ],
       "states": [
         "default",
+        "resent",
         "loading",
         "empty",
         "error",
@@ -879,11 +883,16 @@
       "route": "/invite/:token",
       "requirements": [
         "L1-016",
-        "L1-004"
+        "L1-004",
+        "L1-023",
+        "L1-024"
       ],
       "states": [
         "default",
+        "youth",
+        "mentor",
         "invalid",
+        "weak",
         "submitting",
         "success",
         "error"
@@ -891,6 +900,28 @@
       "not_applicable": {
         "loading": "The form is static.",
         "empty": "A form has no collection to be empty of."
+      }
+    },
+    {
+      "id": "invite-expired",
+      "kind": "page",
+      "title": "Invitation expired",
+      "route": "/invite/:token",
+      "requirements": [
+        "L1-016",
+        "L1-023",
+        "L1-024"
+      ],
+      "states": [
+        "default",
+        "submitting",
+        "success",
+        "error"
+      ],
+      "not_applicable": {
+        "loading": "The server has already answered 410 when this shows.",
+        "empty": "A message has no collection to be empty of.",
+        "invalid": "There is nothing to fill in: one button asks for a new link."
       }
     },
     {
@@ -2095,6 +2126,23 @@
       "requirements": [
         "L1-016",
         "L1-015"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed",
+        "success"
+      ]
+    },
+    {
+      "id": "invite-youth",
+      "kind": "dialog",
+      "title": "Invite Yusuf to PromiseHub",
+      "opens_from": "child",
+      "requirements": [
+        "L1-016",
+        "L1-023"
       ],
       "states": [
         "default",
