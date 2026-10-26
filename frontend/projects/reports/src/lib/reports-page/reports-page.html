@@ -1,0 +1,87 @@
+@let r = result();
+@let v = report();
+@if (r?.status === 'forbidden') {
+  <ph-error-page
+    icon="lock"
+    title="Reports are for directors and site leads"
+    text="Ask a program director for the numbers you need."
+  >
+    <ph-button variant="primary" link="/">Go to Today</ph-button>
+  </ph-error-page>
+} @else {
+  <ph-page-header title="Reports" subtitle="This season to today">
+    <ph-button variant="primary" icon="download" (click)="openExport()">Export</ph-button>
+  </ph-page-header>
+  <div class="toolbar">
+    <ph-select
+      inputId="rp-program"
+      label="Program"
+      [options]="programOptions()"
+      name="program"
+      [ngModel]="program()"
+      (ngModelChange)="program.set($event)"
+    />
+  </div>
+  @if (v) {
+    <section class="numbers" aria-label="Headline numbers">
+      <ph-stat label="Children served" [value]="'' + v.childrenServed" caption="enrolled now" />
+      <ph-stat label="Attendance rate" [value]="v.attendanceRate + '%'" />
+      <ph-stat label="Sessions delivered" [value]="'' + v.sessionsDelivered" />
+      <ph-stat label="Slips signed online" [value]="'' + v.slipsSigned" />
+    </section>
+    <div class="split">
+      <ph-card title="Demographics" [flush]="true">
+        <ph-table caption="Children by age" [columns]="ageColumns" [rows]="v.ages" />
+        <p class="hint">
+          @if (v.masked) {
+            Counts under 5 show as “&lt;5”.
+          } @else {
+            Exports show counts under 5 as “&lt;5”.
+          }
+        </p>
+      </ph-card>
+      <div class="stack">
+        <ph-card title="Attendance by program">
+          <div class="stack">
+            @for (p of v.programs; track p.id) {
+              <ph-progress-bar
+                [value]="p.attendanceRate ?? 0"
+                [max]="100"
+                [label]="p.name"
+                [caption]="p.attendanceRate === null ? 'No attendance yet' : p.attendanceRate + '%'"
+              />
+            }
+          </div>
+        </ph-card>
+        <ph-card title="Households by language">
+          <div class="stack">
+            @for (l of v.languages; track l.language) {
+              <ph-progress-bar
+                [value]="l.households"
+                [max]="v.childrenServed || 1"
+                [label]="l.language"
+                [caption]="'' + l.households"
+              />
+            }
+          </div>
+        </ph-card>
+      </div>
+    </div>
+  } @else if (r === null) {
+    <div class="numbers" aria-busy="true" aria-label="Building the report">
+      <ph-skeleton shape="card" />
+      <ph-skeleton shape="card" />
+    </div>
+  } @else {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t build the report"
+        text="Try again."
+      >
+        <ph-button variant="primary" (click)="retry()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+}

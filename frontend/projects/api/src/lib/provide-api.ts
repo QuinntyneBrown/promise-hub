@@ -33,6 +33,8 @@ import { HttpNotificationSettingsApi } from './notifications/http-notification-s
 import { HttpNotificationsApi } from './notifications/http-notifications-api';
 import { NOTIFICATION_SETTINGS_API } from './notifications/notification-settings-api.token';
 import { NOTIFICATIONS_API } from './notifications/notifications-api.token';
+import { HttpReportsApi } from './reports/http-reports-api';
+import { REPORTS_API } from './reports/reports-api.token';
 import { HttpSearchApi } from './search/http-search-api';
 import { SEARCH_API } from './search/search-api.token';
 import { HttpTodayApi } from './today/http-today-api';
@@ -68,6 +70,7 @@ export function provideApi(): EnvironmentProviders {
     { provide: STAFF_API, useClass: HttpStaffApi },
     { provide: TODAY_API, useClass: HttpTodayApi },
     { provide: SEARCH_API, useClass: HttpSearchApi },
+    { provide: REPORTS_API, useClass: HttpReportsApi },
     { provide: NOTIFICATIONS_API, useClass: HttpNotificationsApi },
     { provide: NOTIFICATION_SETTINGS_API, useClass: HttpNotificationSettingsApi },
     { provide: INVITATION_API, useClass: HttpInvitationApi },
