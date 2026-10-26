@@ -30,17 +30,15 @@ public sealed class GetHouseholdHandler(IPromiseHubDb db, ITenantContext tenant,
                 return (ResultStatus.Forbidden, null);
             }
         }
-        var contacts = RolePermissions.Has(tenant.Role, Permission.ReadContacts);
         return (ResultStatus.Done, new HouseholdDto(
             household.Id,
             household.Name,
             household.Language,
             [.. guardians.OrderByDescending(g => g.IsPrimary).ThenBy(g => g.Name)
-                .Select(g => new GuardianDto(g.Id, g.Name, g.Relationship, contacts ? g.Mobile : null, contacts ? g.Email : null, g.Language, g.IsPrimary, g.CanPickUp, g.CanSign))],
+                .Select(g => new GuardianDto(g.Id, g.Name, g.Relationship, g.Mobile, g.Email, g.Language, g.IsPrimary, g.CanPickUp, g.CanSign))],
             [.. children.OrderBy(c => c.AgeOn(today) ?? 99)
                 .Select(c => new ChildSummaryDto(c.Id, c.FullName, c.AgeOn(today), c.School, medical ? Flag(c) : null))],
-            !medical,
-            !contacts));
+            !medical));
     }
 
     private static string? Flag(Domain.Households.Child child) =>

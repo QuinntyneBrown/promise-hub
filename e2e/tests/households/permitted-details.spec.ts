@@ -17,14 +17,14 @@ test.describe('Use permitted child details as a youth worker', () => {
     await families.expectAccessible();
   });
 
-  test('Given a child she works with, when the household and child open, then contact and date of birth are hidden and say so', async ({ page }) => {
+  test('Given a child she works with, when the household and child open, then medical details and date of birth are hidden and guardian contact stays', async ({ page }) => {
     const household = new HouseholdPage(page);
     const child = new ChildPage(page);
     await household.open('/families/hh-rivera');
     await household.expectOpen('Rivera');
 
-    await expect(household.restrictedNotice).toContainText('Medical details, dates of birth and guardian contact need a staff role.');
-    await expect(household.guardian('Carmen Rivera')).not.toContainText('905-555-0142');
+    await expect(household.restrictedNotice).toContainText('Medical details and dates of birth need a staff role.');
+    await expect(household.guardian('Carmen Rivera')).toContainText('905-555-0142');
     await household.expectAccessible();
     await household.openChild('Mateo Rivera');
     await expect(child.subtitle).toHaveText('9 years · Bennetto Elementary, Grade 4 · Rivera household');
@@ -49,12 +49,11 @@ test.describe('Use permitted child details as a youth worker', () => {
 test.describe('Site lead', () => {
   test.use({ signedInAs: 'm-jaylen' });
 
-  test('Given a site lead, when the household opens, then guardian contact shows', async ({ page }) => {
-    const household = new HouseholdPage(page);
-    await household.open('/families/hh-tran');
+  test('Given a site lead, when a child outside tonight opens, then the date of birth shows', async ({ page }) => {
+    const child = new ChildPage(page);
+    await child.open('/families/hh-tran/children/c-kevin');
 
-    await household.expectOpen('Tran');
-    await expect(household.guardian('Linh Tran')).toContainText('905-555-0163');
+    await expect(child.subtitle).toHaveText('8 years (born 9 May 2018) · Queen Victoria School, Grade 3 · Tran household');
   });
 });
 

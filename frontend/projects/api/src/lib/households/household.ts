@@ -8,6 +8,4 @@ export interface Household {
   guardians: Guardian[];
   children: ChildSummary[];
   medicalRestricted: boolean;
-  /** True when guardian mobile and email are withheld for the role. */
-  contactsRestricted: boolean;
 }

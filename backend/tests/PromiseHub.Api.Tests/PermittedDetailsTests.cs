@@ -21,30 +21,22 @@ public sealed class PermittedDetailsTests : IAsyncLifetime
     private readonly PromiseHubApiFactory _factory = new();
 
     [Fact]
-    public async Task A_youth_worker_gets_the_child_without_date_of_birth_or_guardian_contact()
+    public async Task A_youth_worker_gets_the_childs_age_without_date_of_birth_and_keeps_guardian_contact()
     {
         var child = await Get(Aisha, $"/children/{Mateo}");
         var household = await Get(Aisha, $"/households/{Rivera}");
 
         Assert.Equal(JsonValueKind.Null, child.GetProperty("dateOfBirth").ValueKind);
         Assert.Equal(9, child.GetProperty("age").GetInt32());
-        Assert.True(household.GetProperty("contactsRestricted").GetBoolean());
-        Assert.All(household.GetProperty("guardians").EnumerateArray(), g =>
-        {
-            Assert.Equal(JsonValueKind.Null, g.GetProperty("mobile").ValueKind);
-            Assert.Equal(JsonValueKind.Null, g.GetProperty("email").ValueKind);
-        });
+        Assert.Contains(household.GetProperty("guardians").EnumerateArray(), g => g.GetProperty("mobile").GetString() == "905-555-0142");
     }
 
     [Fact]
-    public async Task A_site_lead_gets_date_of_birth_and_guardian_contact()
+    public async Task A_site_lead_gets_the_date_of_birth()
     {
         var child = await Get(Jaylen, $"/children/{Mateo}");
-        var household = await Get(Jaylen, $"/households/{Rivera}");
 
         Assert.Equal("2017-03-14", child.GetProperty("dateOfBirth").GetString());
-        Assert.False(household.GetProperty("contactsRestricted").GetBoolean());
-        Assert.Contains(household.GetProperty("guardians").EnumerateArray(), g => g.GetProperty("mobile").GetString() == "905-555-0142");
     }
 
     [Fact]

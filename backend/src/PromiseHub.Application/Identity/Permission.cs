@@ -20,5 +20,5 @@ public enum Permission
     ManageStaff,
     InviteStaff,
     AssignStaff,
-    ReadContacts,
+    ReadDateOfBirth,
 }

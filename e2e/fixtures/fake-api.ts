@@ -8,7 +8,7 @@ const can = {
   writeHouseholds: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
   deleteHouseholds: (m: Membership) => m.role === 'Admin',
   readMedical: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
-  readContacts: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
+  readDateOfBirth: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
   writeMedical: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
   managePrograms: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
   manageEvents: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
@@ -703,7 +703,6 @@ export class FakeApi {
     const visible = h.children.filter((c) => !permitted || permitted.has(c.id));
     if (!visible.length && permitted) return this.forbidden(route);
     const medical = can.readMedical(m);
-    const contacts = can.readContacts(m);
     return route.fulfill({
       json: {
         id: h.id,
@@ -711,12 +710,11 @@ export class FakeApi {
         language: h.language,
         guardians: [...h.guardians]
           .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.name.localeCompare(b.name))
-          .map(({ emailBounced: _, ...g }) => (contacts ? g : { ...g, mobile: null, email: null })),
+          .map(({ emailBounced: _, ...g }) => g),
         children: [...visible]
           .sort((a, b) => (ageOf(a.dateOfBirth) ?? 99) - (ageOf(b.dateOfBirth) ?? 99))
           .map((c) => ({ id: c.id, name: `${c.firstName} ${c.lastName}`, age: ageOf(c.dateOfBirth), school: c.school, medicalFlag: medical ? medicalFlag(c) : null })),
         medicalRestricted: !medical,
-        contactsRestricted: !contacts,
       },
     });
   }
@@ -812,7 +810,7 @@ export class FakeApi {
         name: `${child.firstName} ${child.lastName}`,
         firstName: child.firstName,
         lastName: child.lastName,
-        dateOfBirth: can.readContacts(m) ? child.dateOfBirth : null,
+        dateOfBirth: can.readDateOfBirth(m) ? child.dateOfBirth : null,
         age: ageOf(child.dateOfBirth),
         school: child.school,
         householdId: household.id,

@@ -40,13 +40,13 @@ public sealed class GetChildHandler(IPromiseHubDb db, IAuditWriter audit, ITenan
             await db.SaveChangesAsync(cancellationToken);
         }
         var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
-        var contacts = RolePermissions.Has(tenant.Role, Permission.ReadContacts);
+        var birthDate = RolePermissions.Has(tenant.Role, Permission.ReadDateOfBirth);
         return (ResultStatus.Done, new ChildDto(
             child.Id,
             child.FullName,
             child.FirstName,
             child.LastName,
-            contacts ? child.DateOfBirth : null,
+            birthDate ? child.DateOfBirth : null,
             child.AgeOn(today),
             child.School,
             household.Id,
