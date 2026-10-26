@@ -9,6 +9,16 @@ export abstract class BasePage {
     await this.page.goto(path);
   }
 
+  /** Starts recording the API paths the page requests from now on, to prove what is never fetched. */
+  recordApiPaths(): string[] {
+    const paths: string[] = [];
+    this.page.on('request', (request) => {
+      const url = new URL(request.url());
+      if (url.pathname.startsWith('/api/')) paths.push(url.pathname);
+    });
+    return paths;
+  }
+
   get isPhone(): boolean {
     return (this.page.viewportSize()?.width ?? 1024) < 768;
   }

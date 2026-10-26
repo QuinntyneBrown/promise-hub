@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AUTH_API } from '@promisehub/api';
+import { AUTH_API, SESSION_API, roleHome } from '@promisehub/api';
 import {
   PhAlert,
   PhAuthCard,
@@ -28,6 +28,7 @@ const formatTime = (date: Date) =>
 export class SignInPage {
   private readonly auth = inject(AUTH_API);
   private readonly router = inject(Router);
+  private readonly session = inject(SESSION_API);
 
   readonly returnUrl = input<string | null>(null);
   readonly reason = input<string | null>(null);
@@ -48,6 +49,19 @@ export class SignInPage {
     return `Sign-in paused${time ? ' until ' + time : ' for 15 minutes'}. You can reset your password instead.`;
   }
 
+  /** A deep link wins; otherwise the home of the person's role (L2-046). */
+  private goHome(): void {
+    const target = safeReturnUrl(this.returnUrl());
+    if (target !== '/') {
+      void this.router.navigateByUrl(target);
+      return;
+    }
+    this.session.current().subscribe({
+      next: (session) => void this.router.navigateByUrl(roleHome(session)),
+      error: () => void this.router.navigateByUrl('/'),
+    });
+  }
+
   protected submit(): void {
     this.submitting.set(true);
     this.invalid.set(false);
@@ -58,7 +72,7 @@ export class SignInPage {
         this.submitting.set(false);
         switch (outcome.status) {
           case 'signed-in':
-            void this.router.navigateByUrl(safeReturnUrl(this.returnUrl()));
+            this.goHome();
             break;
           case 'mfa-required':
             void this.router.navigate(['/sign-in/mfa'], {

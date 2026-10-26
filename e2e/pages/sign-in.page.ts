@@ -8,7 +8,7 @@ export class SignInPage extends BasePage {
   }
 
   get email(): Locator {
-    return this.page.getByLabel('Work email');
+    return this.page.getByLabel('Email', { exact: true });
   }
 
   get password(): Locator {
