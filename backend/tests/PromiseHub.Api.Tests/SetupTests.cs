@@ -22,7 +22,7 @@ public sealed class SetupTests : IAsyncLifetime
         Assert.False(Step(setup, "organization"));
         Assert.True(Step(setup, "program"));
         Assert.True(Step(setup, "children"));
-        Assert.False(Step(setup, "slip"));
+        Assert.DoesNotContain(setup.GetProperty("steps").EnumerateArray(), s => s.GetProperty("key").GetString() == "slip");
         Assert.Equal("organization", setup.GetProperty("next").GetString());
         Assert.False(setup.GetProperty("complete").GetBoolean());
     }

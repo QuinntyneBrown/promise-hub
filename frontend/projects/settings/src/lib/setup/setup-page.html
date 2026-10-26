@@ -1,0 +1,72 @@
+@let r = result();
+@let s = setup();
+@if (r?.status === 'forbidden') {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      title="Admins set up the organization"
+      text="Ask an admin or a program director."
+      [headingLevel]="1"
+    >
+      <ph-button link="/">Back to Today</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else if (s) {
+  <ph-page-header
+    [title]="s.complete ? 'You’re set up' : 'Welcome to PromiseHub, ' + firstName()"
+    [subtitle]="s.complete ? 'Everything is in place.' : 'Leave any time; your progress is kept.'"
+  >
+    @if (s.next && link(s.next); as next) {
+      <ph-button variant="primary" icon="arrow-right" [link]="next">Continue setup</ph-button>
+    }
+  </ph-page-header>
+  <div class="stack">
+    <ph-progress-bar
+      [value]="done(s)"
+      [max]="s.steps.length"
+      label="Setup progress"
+      [caption]="done(s) + ' of ' + s.steps.length"
+      tone="success"
+    />
+    <ph-card [flush]="true">
+      <ph-list label="Setup steps" [inset]="true">
+        @for (step of s.steps; track step.key) {
+          <ph-list-item
+            [title]="copy(step.key).title"
+            [meta]="copy(step.key).meta"
+            [link]="link(step.key)"
+            [muted]="step.done"
+          >
+            @if (step.done) {
+              <ph-badge tone="success">Done</ph-badge>
+            } @else if (step.key === s.next) {
+              <ph-badge tone="info">Next</ph-badge>
+            }
+          </ph-list-item>
+        }
+      </ph-list>
+    </ph-card>
+    @if (s.complete) {
+      <div>
+        <ph-button variant="primary" link="/">Go to Today</ph-button>
+      </div>
+    }
+  </div>
+} @else if (r === null) {
+  <ph-page-header title="Set up" />
+  <div aria-busy="true" aria-label="Loading setup">
+    <ph-skeleton shape="card" />
+  </div>
+} @else {
+  <ph-page-header title="Set up" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t check your progress"
+      text="Try again."
+    >
+      <ph-button variant="primary" (click)="retry()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}

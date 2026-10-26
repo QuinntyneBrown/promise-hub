@@ -1,1 +1,1 @@
-export { routes } from './lib/settings.routes';
+export { routes, setupRoutes } from './lib/settings.routes';

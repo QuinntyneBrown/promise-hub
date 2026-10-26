@@ -1,0 +1,35 @@
+<ph-page-header title="Your organization" subtitle="Step 1 · the name families see" />
+<form class="stack form" novalidate (ngSubmit)="save()">
+  @if (summary().length) {
+    <ph-error-summary [items]="summary()" />
+  }
+  @if (failed()) {
+    <ph-alert tone="danger" title="That didn’t save" text="Try again." />
+  }
+  <ph-card>
+    <div class="stack">
+      <ph-text-field
+        inputId="name"
+        label="Organization name"
+        name="name"
+        autocomplete="organization"
+        [error]="errors()['name'] ?? null"
+        [ngModel]="name()"
+        (ngModelChange)="name.set($event)"
+      />
+      <ph-text-field
+        inputId="city"
+        label="City"
+        name="city"
+        autocomplete="address-level2"
+        [error]="errors()['city'] ?? null"
+        [ngModel]="city()"
+        (ngModelChange)="city.set($event)"
+      />
+    </div>
+  </ph-card>
+  <div class="actions">
+    <ph-button variant="primary" type="submit" [busy]="busy()">Save and continue</ph-button>
+    <ph-button variant="ghost" link="/setup">Finish later</ph-button>
+  </div>
+</form>

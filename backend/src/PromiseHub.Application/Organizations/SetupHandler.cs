@@ -8,9 +8,9 @@ namespace PromiseHub.Application.Organizations;
 /// <summary>
 /// The organization setup wizard (L2-008). Each step is done when its data exists, so leaving with "Finish later" keeps
 /// progress without a separate record: the organization confirmed, modules chosen, a program, children, a second staff
-/// member or an invitation, and a slip sent.
+/// member or an invitation, and a slip sent (only while Permission slips is on).
 /// </summary>
-public sealed class SetupHandler(IPromiseHubDb db, ITenantContext tenant, IAuditWriter audit, TimeProvider clock)
+public sealed class SetupHandler(IPromiseHubDb db, ITenantContext tenant, IModuleGate modules, IAuditWriter audit, TimeProvider clock)
 {
     public async Task<SetupDto> GetAsync(CancellationToken cancellationToken = default)
     {
@@ -22,8 +22,12 @@ public sealed class SetupHandler(IPromiseHubDb db, ITenantContext tenant, IAudit
             new("program", await db.Programs.AnyAsync(cancellationToken)),
             new("children", await db.Children.AnyAsync(cancellationToken)),
             new("staff", await db.Memberships.CountAsync(m => m.RemovedAt == null, cancellationToken) > 1 || await db.StaffInvitations.AnyAsync(cancellationToken)),
-            new("slip", await db.PermissionSlips.AnyAsync(s => s.Status == SlipStatus.Sent, cancellationToken)),
         };
+        // The first-slip step only exists while Permission slips is on (L2-005).
+        if (await modules.IsOnAsync(Domain.Organizations.ModuleId.Slips, cancellationToken))
+        {
+            steps.Add(new("slip", await db.PermissionSlips.AnyAsync(s => s.Status == SlipStatus.Sent, cancellationToken)));
+        }
         var next = steps.FirstOrDefault(s => !s.Done)?.Key;
         return new SetupDto(steps, next, next is null);
     }
