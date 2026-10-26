@@ -13,6 +13,10 @@ This feature designs the logging pipeline in `PromiseHub.Api` and `PromiseHub.In
 - **queue lag** — age of the oldest scheduled job that is past its due time
 - **on-call channel** — destination for alerts, for example a paging service or a chat channel
 
+## Built so far
+
+Slice 48 delivered one structured `RequestLoggingMiddleware` line per request (tenant, route template, status, duration, correlation id) outside `ExceptionHandlingMiddleware`, which answers a fault with a 500 and a reference only. `RequestMetrics` keeps five minutes of samples per tenant in memory, and `OpsAlertMonitor`, run each minute by `OpsAlertHostedService`, raises the `error-rate` alert (more than 1% of at least 20 requests) and a per-tenant `queue-age` alert (a delivery queued over ten minutes). Each alert is raised once per episode through `IAlertSender`, whose default `LoggingAlertSender` writes a critical `ALERT` line (ADR 0042). Not built yet: the OpenTelemetry exporter and dashboards, a paging integration, the backup-failed and SMS-cap alerts, `TenantLogEnricher`, `PiiDestructuringPolicy`, `CorrelationInterceptor` and `ClientErrorReporter`.
+
 ## Description
 
 ### Backend — `PromiseHub.Api`

@@ -13,6 +13,10 @@ This feature designs where each budget is enforced and where it is measured: bun
 - **virtualized list** — list that renders only the rows inside and near the viewport
 - **95th percentile (p95)** — value that 95 percent of measurements fall under
 
+## Built so far
+
+Slice 48 measures the budgets in CI (ADR 0042). The Playwright `budgets` project runs `e2e/tests/shell/performance-budgets.spec.ts` against the production build on port 4318 with Pixel 7 emulation, one test at a time. It checks cold first contentful paint and DOM interactive on Today, Check-in, Families, Events and Reports, the check-in row update and each search keystroke, all timed inside the page. `PerformanceBudgetTests` reads the server's p95 from `RequestMetrics` for check-ins and for two tenants' concurrent session reads. Not built yet: Lighthouse with 4G throttling, a weekly device run, `PerformanceMarksService` and `TelemetryApi`, a virtualized 212-child roster with frame-rate checks, and the k6 load test across 50 organizations.
+
 ## Description
 
 ### Budgets and where they are measured
