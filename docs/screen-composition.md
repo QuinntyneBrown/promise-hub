@@ -52,6 +52,8 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Report an incident | `new-incident` (default, invalid, submitting, error) | `ph-page-header`, `ph-error-summary`, `ph-card`, `ph-radio-group`, `ph-select`, `ph-text-field` (datetime-local), `ph-textarea`, `ph-alert` (info, danger), `ph-button`, toast | Form state |
 | Incident | `incident` (default, reviewed, error, forbidden) | `ph-breadcrumb`, `ph-page-header`, `ph-badge`, `ph-alert` (success, info), `ph-card` (titled), `ph-description-list`, `ph-timeline` (follow-up, trail), `ph-empty-state`, `ph-button` | — |
 | Staff and roles | `staff` (default, forbidden) | `ph-page-header`, `ph-list`, `ph-list-item`, `ph-badge`, `ph-button`, `ph-error-page` (forbidden), `ph-card`, `ph-empty-state`, toast | — |
+| Accept an invitation | `accept-invite` (default, invalid, error) | `ph-skip-link`, `ph-auth-card`, `ph-text-field`, `ph-alert`, `ph-button` | — |
+| Onboarding: phone / ready | `onboard-staff-phone`, `onboard-staff-ready` | `ph-auth-card`, `ph-stepper`, `ph-text-field`, `ph-list`, `ph-list-item`, `ph-button` | — |
 
 ## Dialogs
 
