@@ -2,4 +2,4 @@
 
 | Design | Effort | Complete |
 |---|---|---|
-| import-roster | 5 days | 75% |
+| import-roster | 5 days | 70% |

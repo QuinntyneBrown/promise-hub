@@ -2,4 +2,4 @@
 
 | Design | Effort | Complete |
 |---|---|---|
-| search-organization | 4 days | 75% |
+| search-organization | 4 days | 70% |
