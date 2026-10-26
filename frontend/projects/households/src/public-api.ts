@@ -1,1 +1,1 @@
-export { routes } from './lib/households.routes';
+export { routes, searchRoutes } from './lib/households.routes';

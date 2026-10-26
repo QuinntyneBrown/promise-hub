@@ -17,6 +17,7 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Screen | Mock | Library components | Built locally |
 |---|---|---|---|
 | Today | `today` (sessions), `today/empty`, `today/roster-only`, `today/loading` | `ph-page-header`, `ph-card` (titled), `ph-empty-state`, `ph-button`, `ph-stat`, `ph-list`, `ph-list-item`, `ph-badge`, `ph-skeleton` | Greeting, date and session counts |
+| Search | `search` (default, loading, empty, error, no-results) | `ph-page-header`, `ph-text-field` (search), `ph-list`, `ph-list-item`, `ph-card`, `ph-empty-state`, `ph-button`, `ph-skeleton` | Result group headings |
 | Not found | `not-found` | `ph-error-page`, `ph-button` | — |
 | Forbidden | `forbidden` | `ph-error-page`, `ph-button` | — |
 | Server error | `server-error` | `ph-error-page`, `ph-button` | Retry reloads |

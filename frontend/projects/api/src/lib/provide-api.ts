@@ -29,6 +29,8 @@ import { INVITATION_API } from './invitations/invitation-api.token';
 import { HttpModulesApi } from './modules/http-modules-api';
 import { HttpStaffApi } from './staff/http-staff-api';
 import { STAFF_API } from './staff/staff-api.token';
+import { HttpSearchApi } from './search/http-search-api';
+import { SEARCH_API } from './search/search-api.token';
 import { HttpTodayApi } from './today/http-today-api';
 import { TODAY_API } from './today/today-api.token';
 import { HttpPickupApi } from './pickups/http-pickup-api';
@@ -61,6 +63,7 @@ export function provideApi(): EnvironmentProviders {
     { provide: PICKUP_API, useClass: HttpPickupApi },
     { provide: STAFF_API, useClass: HttpStaffApi },
     { provide: TODAY_API, useClass: HttpTodayApi },
+    { provide: SEARCH_API, useClass: HttpSearchApi },
     { provide: INVITATION_API, useClass: HttpInvitationApi },
   ]);
 }

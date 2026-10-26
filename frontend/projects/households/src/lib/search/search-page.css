@@ -1,0 +1,18 @@
+.query {
+  display: block;
+  max-width: var(--layout-form-medium);
+  margin-block-end: var(--layout-gutter);
+}
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-gutter);
+}
+.group {
+  font: var(--text-h3);
+  margin: 0 0 var(--space-2);
+}
+.muted {
+  color: var(--color-fg-muted);
+  margin: 0 0 var(--space-3);
+}

@@ -24,6 +24,7 @@
 | [imports](imports.md) | 5 days | 75% |
 | [billing](billing.md) | 10 days | 0% |
 | [audit](audit.md) | 6 days | 25% |
+| [search](search.md) | 4 days | 75% |
 
 ## Roadmap
 
