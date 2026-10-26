@@ -163,6 +163,21 @@ export class CheckInPage extends BasePage {
     return this.dialog.getByRole('link', { name: /^Call / });
   }
 
+  /** Asks the primary guardian by text about the adult named, instead of calling. */
+  async askGuardian(name: string): Promise<void> {
+    await this.pickUpBy('Someone else');
+    await this.dialog.getByLabel('Their name').fill(name);
+    await this.dialog.getByRole('button', { name: /^Ask .+ by text$/ }).click();
+  }
+
+  get guardianAnswer(): Locator {
+    return this.dialog.getByTestId('guardian-answer');
+  }
+
+  get signOutConfirm(): Locator {
+    return this.dialog.getByRole('button', { name: 'Sign out' });
+  }
+
   async someoneElse(name: string, confirmed: boolean): Promise<void> {
     await this.pickUpBy('Someone else');
     await this.dialog.getByLabel('Their name').fill(name);

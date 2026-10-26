@@ -3,6 +3,11 @@ import { GuardianLanguage } from './guardian-text';
 /** The guardian home's strings in English, Spanish and French (L2-027). */
 const TEXT = {
   en: {
+    pickupWaiting: (who: string, child: string) => `${who} is waiting to collect ${child}`,
+    pickupWaitingText: (event: string) => `At ${event}. They aren’t on your approved list.`,
+    approve: 'Approve',
+    refuse: 'Refuse',
+    pickupAnswered: 'Thanks. Staff can see your answer.',
     pickupsHeading: (child: string) => `Who may pick ${child} up, besides you`,
     pickupsNone: 'Only the guardians on file.',
     addPickup: (child: string) => `Add someone for ${child}`,
@@ -39,6 +44,11 @@ const TEXT = {
     none: 'No enrollments yet. Enroll from the link the program sends.',
   },
   es: {
+    pickupWaiting: (who: string, child: string) => `${who} espera para recoger a ${child}`,
+    pickupWaitingText: (event: string) => `En ${event}. No está en su lista aprobada.`,
+    approve: 'Aprobar',
+    refuse: 'Rechazar',
+    pickupAnswered: 'Gracias. El personal ve su respuesta.',
     pickupsHeading: (child: string) => `Quién puede recoger a ${child}, además de usted`,
     pickupsNone: 'Solo los tutores registrados.',
     addPickup: (child: string) => `Agregar a alguien para ${child}`,
@@ -75,6 +85,11 @@ const TEXT = {
     none: 'Todavía no hay inscripciones. Inscríbase con el enlace que envía el programa.',
   },
   fr: {
+    pickupWaiting: (who: string, child: string) => `${who} attend pour venir chercher ${child}`,
+    pickupWaitingText: (event: string) => `À ${event}. Cette personne n’est pas sur votre liste.`,
+    approve: 'Approuver',
+    refuse: 'Refuser',
+    pickupAnswered: 'Merci. L’équipe voit votre réponse.',
     pickupsHeading: (child: string) => `Qui peut venir chercher ${child}, en plus de vous`,
     pickupsNone: 'Seulement les tuteurs inscrits.',
     addPickup: (child: string) => `Ajouter quelqu’un pour ${child}`,

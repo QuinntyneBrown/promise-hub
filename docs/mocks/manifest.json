@@ -1171,6 +1171,7 @@
         "status",
         "no-show",
         "no-show-answered",
+        "pickup-request",
         "declined",
         "none",
         "error"

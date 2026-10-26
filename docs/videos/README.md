@@ -34,6 +34,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 24 | [End a session](24-end-a-session/README.md) | ~2 min | Mark absences, sign out the rest, keep notes; an ended session is read-only |
 | 25 | [Run check-in offline](25-run-check-in-offline/README.md) | ~2 min | Roster and Quick Cards kept on the phone, a queue that syncs in order, conflicts flagged |
 | 26 | [Manage approved pickups](26-manage-approved-pickups/README.md) | ~2 min | Guardians and staff add or remove approved adults; the Quick Card and sign-out follow |
+| 27 | [Confirm an exceptional pickup](27-confirm-an-exceptional-pickup/README.md) | ~2 min | Ask the guardian by text; an approval allows sign-out, a refusal keeps the child and logs an incident |
 
 ## Making or updating a video
 

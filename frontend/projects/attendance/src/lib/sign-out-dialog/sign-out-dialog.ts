@@ -1,7 +1,20 @@
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ATTENDANCE_API, PickupOptions, RosterEntry } from '@promisehub/api';
+import {
+  ATTENDANCE_API,
+  PICKUP_API,
+  PickupOptions,
+  PickupRequest,
+  RosterEntry,
+} from '@promisehub/api';
 import {
   PhAlert,
   PhButton,
@@ -34,6 +47,11 @@ const SOMEONE_ELSE = 'someone-else';
 })
 export class SignOutDialog {
   private readonly api = inject(ATTENDANCE_API);
+  private readonly pickupApi = inject(PICKUP_API);
+  private poll: ReturnType<typeof setInterval> | null = null;
+  /** The guardian's answer when staff asked by text instead of calling (L2-020 criterion 7). */
+  protected readonly request = signal<PickupRequest | null>(null);
+  protected readonly asking = signal(false);
   protected readonly data = inject<SignOutData>(DIALOG_DATA);
   protected readonly ref = inject<DialogRef<SignOutResult>>(DialogRef);
 
@@ -48,6 +66,7 @@ export class SignOutDialog {
   protected idChecked = true;
 
   protected readonly first = this.data.entry.name.split(' ')[0];
+  protected readonly refused = computed(() => this.request()?.status === 'Refused');
   protected readonly someoneElse = computed(() => this.who() === SOMEONE_ELSE);
   protected readonly options = computed<RadioOption[]>(() => {
     const p = this.pickups();
@@ -68,6 +87,7 @@ export class SignOutDialog {
 
   constructor() {
     this.load();
+    inject(DestroyRef).onDestroy(() => this.stopPolling());
   }
 
   protected load(): void {
@@ -80,6 +100,44 @@ export class SignOutDialog {
         this.state.set('error');
       }
     });
+  }
+
+  /** Texts the primary guardian about the adult named and waits for the answer from the family page. */
+  protected askGuardian(): void {
+    this.asking.set(true);
+    this.errors.set({});
+    this.pickupApi
+      .askGuardian(this.data.sessionId, this.data.entry.id, this.otherName)
+      .subscribe((outcome) => {
+        this.asking.set(false);
+        if (outcome.status === 'invalid') return this.errors.set(outcome.errors);
+        if (outcome.status !== 'saved' || !outcome.id) return this.failed.set(true);
+        const id = outcome.id;
+        this.request.set({
+          id,
+          childId: this.data.entry.id,
+          collectorName: this.otherName,
+          status: 'Pending',
+          decidedBy: null,
+          decidedAt: null,
+          incidentId: null,
+        });
+        this.poll = setInterval(() => this.check(id), 1500);
+      });
+  }
+
+  private check(id: string): void {
+    this.pickupApi.request(id).subscribe((r) => {
+      if (r.status !== 'loaded' || r.value.status === 'Pending') return;
+      this.request.set(r.value);
+      this.guardianConfirmed = r.value.status === 'Approved';
+      this.stopPolling();
+    });
+  }
+
+  private stopPolling(): void {
+    if (this.poll) clearInterval(this.poll);
+    this.poll = null;
   }
 
   protected submit(): void {

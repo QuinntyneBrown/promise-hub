@@ -36,6 +36,10 @@ public static class AttendanceEndpoints
             Ok(await handler.HandleAsync(id, command, ct))).RequireModule(ModuleId.Pickup).RequirePermission(Permission.RunSessions);
         app.MapGet("/children/{id:guid}/pickups", async (Guid id, GetPickupOptionsHandler handler, CancellationToken ct) =>
             await handler.HandleAsync(id, ct) is { } pickups ? Results.Ok(pickups) : Results.NotFound()).RequireModule(ModuleId.Pickup);
+        sessions.MapPost("/{id:guid}/pickup-requests", async (Guid id, AskForPickupCommand command, PickupRequestHandler handler, CancellationToken ct) =>
+            (await handler.AskAsync(id, command, ct)).ToHttp("/pickup-requests")).RequireModule(ModuleId.Pickup).RequirePermission(Permission.RunSessions);
+        app.MapGet("/pickup-requests/{id:guid}", async (Guid id, PickupRequestHandler handler, CancellationToken ct) =>
+            await handler.GetAsync(id, ct) is { } request ? Results.Ok(request) : Results.NotFound()).RequireModule(ModuleId.Pickup);
         app.MapPost("/children/{id:guid}/pickups", async (Guid id, AddPickupCommand command, ApprovedPickupsHandler handler, ITenantContext tenant, CancellationToken ct) =>
             (await handler.AddAsync(id, command, false, tenant.ActorName, null, ct)).ToHttp($"/children/{id}/pickups")).RequireModule(ModuleId.Pickup).RequirePermission(Permission.ManagePickups);
         app.MapDelete("/children/{id:guid}/pickups/{pickupId:guid}", async (Guid id, Guid pickupId, ApprovedPickupsHandler handler, ITenantContext tenant, CancellationToken ct) =>

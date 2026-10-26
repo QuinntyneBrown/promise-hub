@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 27 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="27" data-video-title="Confirm an exceptional pickup" data-parts="Introduction|Promises|Jaylen asks|When it's no|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 27</div>
+  <h1>Confirm an exceptional pickup</h1>
+  <p class="lead">Not on the list? Ask the guardian, then act on the answer</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="When someone outside the approved list arrives">
+  <h2>What confirming a pickup promises</h2>
+  <ul>
+    <li>Call, or ask by text from sign-out</li>
+    <li>The guardian approves or refuses on their phone</li>
+    <li>Approval counts as their okay</li>
+    <li>Refusal keeps the child and is logged</li>
+  </ul>
+</section>
+
+<section id="ask" data-part="2" data-cue="Here is the sign-out on Jaylen's laptop." data-clip="clips/ask-guardian-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Ask Carmen by text</h3><p>Approved, then signed out with Rosa.</p></div>
+</section>
+
+<section id="no" data-part="3" data-cue="On Carmen's phone, the family page shows who is waiting">
+  <h2>When the answer is no</h2>
+  <div class="cols">
+    <img class="shot" alt="The family page asking to approve or refuse" src="shots/phone-request.png">
+    <img class="shot" alt="The sign-out dialog after a refusal" src="shots/desktop-refused.png">
+  </div>
+</section>
+
+<section id="testing" data-part="4" data-cue="Backend tests cover the text with the family link">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Approved</td><td>Sign-out allowed</td></tr>
+    <tr><td>Refused</td><td>422 at sign-out, incident logged</td></tr>
+    <tr><td>Decided twice</td><td>404</td></tr>
+    <tr><td>Not checked in</td><td>422</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="5" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Ask by text</li><li>The guardian answers</li><li>No means an incident</li></ul>
+  <p class="muted">Next: messaging families</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

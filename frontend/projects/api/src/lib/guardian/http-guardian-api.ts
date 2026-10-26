@@ -56,6 +56,15 @@ export class HttpGuardianApi implements GuardianApi {
     );
   }
 
+  decidePickup(token: string, requestId: string, approve: boolean): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(
+        `${this.baseUrl}/g/home/${encodeURIComponent(token)}/pickup-requests/${requestId}`,
+        { approve },
+      ),
+    );
+  }
+
   private page<T>(url: string): Observable<GuardianPageResult<T>> {
     return this.http.get<T>(url).pipe(
       map((value): GuardianPageResult<T> => ({ status: 'loaded', value })),

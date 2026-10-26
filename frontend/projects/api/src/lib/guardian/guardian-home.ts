@@ -21,4 +21,12 @@ export interface GuardianHome {
   }[];
   /** No-show texts the household hasn't answered, per session. */
   noShows: { eventId: string; event: string; startsAt: string; children: string[] }[];
+  /** Someone waiting to collect a child, for the guardian to approve or refuse. */
+  pickupRequests?: {
+    id: string;
+    child: string;
+    collector: string;
+    event: string;
+    requestedAt: string;
+  }[];
 }

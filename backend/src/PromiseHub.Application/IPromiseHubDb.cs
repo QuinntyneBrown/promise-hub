@@ -43,6 +43,7 @@ public interface IPromiseHubDb
     DbSet<Domain.Incidents.Incident> Incidents { get; }
     DbSet<Domain.Attendance.NoShowAlert> NoShowAlerts { get; }
     DbSet<Domain.Attendance.ApprovedPickup> ApprovedPickups { get; }
+    DbSet<Domain.Attendance.PickupRequest> PickupRequests { get; }
     DbSet<Domain.Incidents.IncidentFollowUp> IncidentFollowUps { get; }
     DbSet<GuardianVerification> GuardianVerifications { get; }
     DbSet<TrustedGuardianDevice> TrustedGuardianDevices { get; }

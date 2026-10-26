@@ -92,6 +92,23 @@
       @if (r?.status === 'loaded') {
         @let home = r.value;
         <h1>{{ h().heading(home.firstName) }}</h1>
+        @if (pickupAnswered()) {
+          <ph-alert tone="success" [title]="h().pickupAnswered" />
+        }
+        @for (r of home.pickupRequests ?? []; track r.id) {
+          <ph-alert
+            tone="warning"
+            [title]="h().pickupWaiting(r.collector, r.child)"
+            [text]="h().pickupWaitingText(r.event)"
+          >
+            <ph-button variant="primary" [busy]="busy()" (click)="decidePickup(r.id, true)">{{
+              h().approve
+            }}</ph-button>
+            <ph-button variant="danger" [busy]="busy()" (click)="decidePickup(r.id, false)">{{
+              h().refuse
+            }}</ph-button>
+          </ph-alert>
+        }
         @if (answered(); as reply) {
           <ph-alert
             tone="success"

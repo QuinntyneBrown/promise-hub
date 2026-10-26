@@ -118,3 +118,4 @@ export * from './lib/offline/queued-attendance';
 export * from './lib/pickups/new-pickup';
 export * from './lib/pickups/pickup-api';
 export * from './lib/pickups/pickup-api.token';
+export * from './lib/pickups/pickup-request';

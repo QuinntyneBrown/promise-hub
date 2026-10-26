@@ -56,6 +56,8 @@ public static class GuardianEndpoints
             var (problem, done) = await handler.RemovePickupAsync(Request(token, http), childId, pickupId, ct);
             return problem is not null ? ToHttp(problem) : done!.ToHttp();
         });
+        g.MapPost("/home/{token}/pickup-requests/{requestId:guid}", async (string token, Guid requestId, DecidePickupRequest body, GuardianHomeHandler handler, HttpContext http, CancellationToken ct) =>
+            ToHttp(await handler.DecidePickupAsync(Request(token, http), requestId, body, ct)));
         var enroll = g.MapGroup("/enroll/{slug}");
         enroll.MapGet("", async (string slug, PromiseHub.Application.Enrollment.GuardianEnrollmentHandler handler, CancellationToken ct) =>
             ToHttp(await handler.PageAsync(slug, ct)));
