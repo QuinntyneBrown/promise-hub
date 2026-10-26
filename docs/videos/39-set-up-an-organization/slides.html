@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 39 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="39" data-video-title="Set up an organization" data-parts="Introduction|Promises|Naming|Mistakes|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 39</div>
+  <h1>Set up an organization</h1>
+  <p class="lead">A checklist that remembers where you left off</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="Setup has up to six steps">
+  <h2>What setup promises</h2>
+  <ul>
+    <li>Organization, modules, program, children, staff, slip</li>
+    <li>Done when the data says so</li>
+    <li>Each step opens the screen that does the job</li>
+    <li>Finish later loses nothing</li>
+  </ul>
+</section>
+
+<section id="name" data-part="2" data-cue="Here is Set up on Grace's laptop." data-clip="clips/setup-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Naming Northgate</h3><p>The step ticks; staff is next.</p></div>
+</section>
+
+<section id="mistakes" data-part="3" data-cue="If the name is left empty">
+  <h2>Mistakes and who can set up</h2>
+  <div class="cols">
+    <img class="shot" alt="The organization step saying to enter the name" src="shots/desktop-invalid.png">
+    <img class="shot" alt="The setup checklist on a phone" src="shots/phone-setup.png">
+  </div>
+</section>
+
+<section id="testing" data-part="4" data-cue="Backend tests cover which steps are done">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Empty name</td><td>422, nothing saved</td></tr>
+    <tr><td>Permission slips off</td><td>No slip step</td></tr>
+    <tr><td>Site lead</td><td>403</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="5" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Progress from the data</li><li>Steps reuse real screens</li><li>Finish later loses nothing</li></ul>
+  <p class="muted">Next: switch organizations</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
