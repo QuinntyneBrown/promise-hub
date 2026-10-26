@@ -11,3 +11,18 @@
   font: var(--text-h3);
   margin: 0;
 }
+.glance {
+  display: grid;
+  gap: var(--layout-gutter);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%%, 12rem), 1fr));
+  margin-block-end: var(--layout-gutter);
+}
+.wide {
+  grid-column: 1 / -1;
+}
+.cards {
+  display: grid;
+  gap: var(--layout-gutter);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%%, 20rem), 1fr));
+  margin-block-start: var(--layout-gutter);
+}

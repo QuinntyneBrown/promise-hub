@@ -18,6 +18,8 @@ const can = {
   sendMessages: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
   manageSlips: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
   managePickups: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
+  reviewIncidents: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
+  reviewEnrollments: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
 };
 
 type ImportField = 'ChildName' | 'DateOfBirth' | 'School' | 'GuardianName' | 'GuardianPhone' | 'GuardianEmail' | 'Allergies' | 'Language' | 'Notes' | 'Skip';
@@ -355,6 +357,7 @@ export class FakeApi {
     ['POST', /^\/api\/auth\/sign-out$/, (route) => this.signOut(route)],
     ['GET', /^\/api\/settings\/modules$/, (route) => this.getModules(route)],
     ['PUT', /^\/api\/settings\/modules$/, (route) => this.saveModules(route)],
+    ['GET', /^\/api\/today$/, (route) => this.today(route)],
     ['GET', /^\/api\/households$/, (route) => this.listHouseholds(route)],
     ['POST', /^\/api\/households$/, (route) => this.createHousehold(route)],
     ['GET', /^\/api\/households\/(?<id>[^/]+)$/, (route, p) => this.getHousehold(route, p['id']!)],
@@ -2754,6 +2757,51 @@ export class FakeApi {
       this.deliverSlip(m, slip, event, true);
     }
     return route.fulfill({ status: 204 });
+  }
+
+  /** Today's summary from the modules that are on and the work the role may do. Mirrors backend TodayHandler. */
+  private async today(route: Route): Promise<void> {
+    const m = await this.rosterCaller(route);
+    if (!m) return;
+    const on = this.modules.get(m.organizationId)!;
+    const programs = this.programs.filter((p) => p.organizationId === m.organizationId);
+    const ownEvents = this.events.filter((e) => e.organizationId === m.organizationId);
+    const tomorrow = '2026-11-06T05:00:00Z';
+    const horizon = '2026-11-20T05:00:00Z';
+    const slipsDue = on.includes('Slips')
+      ? ownEvents
+          .filter((e) => e.requiresSlip && this.slipOf(e.id)?.status === 'Sent' && this.slipOf(e.id)!.signBy >= '2026-11-05')
+          .map((e) => {
+            const slip = this.slipOf(e.id)!;
+            const responses = this.slipResponses(m, slip, e);
+            const signed = responses.filter((r) => r.status === 'Signed').length;
+            return { eventId: e.id, title: slip.title || e.name, signBy: slip.signBy, signed, expected: responses.length, unsigned: responses.length - signed };
+          })
+          .sort((a, b) => a.signBy.localeCompare(b.signBy))
+      : null;
+    const comingUp = ownEvents
+      .filter((e) => e.status === 'Scheduled' && e.startsAt >= tomorrow && e.startsAt < horizon)
+      .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
+      .map((e) => ({ id: e.id, name: e.name, startsAt: e.startsAt, place: e.place, requiresSlip: e.requiresSlip }));
+    const programIds = new Set(programs.map((p) => p.id));
+    const tasks = [
+      on.includes('Incidents') && can.reviewIncidents(m)
+        ? { kind: 'incidents', count: this.incidents.filter((i) => i.organizationId === m.organizationId && i.status === 'NeedsReview').length }
+        : null,
+      can.reviewEnrollments(m) ? { kind: 'enrollments', count: this.enrollmentRequests.filter((r) => programIds.has(r.programId) && r.status === 'WaitingReview').length } : null,
+      on.includes('Pickup') && can.managePickups(m)
+        ? { kind: 'pickups', count: this.pickupRequests.filter((r) => ownEvents.some((e) => e.id === r.eventId) && r.status === 'Pending').length }
+        : null,
+    ].filter((t) => t && t.count > 0);
+    return route.fulfill({
+      json: {
+        activeChildren: new Set(programs.filter((p) => p.status === 'Active').flatMap((p) => p.roster)).size,
+        households: this.households.filter((h) => h.organizationId === m.organizationId).length,
+        slipsDue,
+        comingUp,
+        tasks,
+      },
+    });
   }
 
   private async listSlips(route: Route): Promise<void> {

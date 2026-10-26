@@ -58,6 +58,8 @@ The slice runs from the shell components in the `promisehub` application to the 
 
 ## Built so far
 
+Slice 33 composed Today from the modules that are on: `GET /today` (`TodayHandler`, ADR 0027) gives counts, slips due, what is coming up and the work waiting, and the page renders a card only for a module that is on, with skeletons while loading.
+
 Slice 01 delivered the shell (`Shell` in the app) composed from `ph-skip-link`, `ph-top-bar`, `ph-bottom-navigation` and the `ph-nav-drawer` More menu (CDK Dialog, closes on Escape). Navigation is a static list until module configuration (slice 03) filters it. The avatar opens the same drawer until the account menu arrives with sign-out (slice 02).
 
 ## Requirements

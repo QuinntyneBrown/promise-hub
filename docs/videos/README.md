@@ -40,6 +40,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 30 | [Start an invited shift](30-start-an-invited-shift/README.md) | ~2 min | Accept an invitation, add a mobile for alerts, and land on tonight's session |
 | 31 | [Coordinate staff coverage](31-coordinate-staff-coverage/README.md) | ~2 min | Two weeks of sessions with gaps flagged; coordinators assign staff and invite youth workers |
 | 32 | [Use permitted child details](32-use-permitted-child-details/README.md) | ~2 min | Youth workers see the children of their sessions, age not date of birth; anything else is a logged 403 |
+| 33 | [Monitor today's work](33-monitor-todays-work/README.md) | ~2 min | Today composes counts, slips due, coming up and work waiting from the modules that are on |
 
 ## Making or updating a video
 

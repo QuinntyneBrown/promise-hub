@@ -3,6 +3,37 @@
     [title]="'Welcome, ' + firstName()"
     [subtitle]="s.organizationName + ' · ' + today"
   />
+  @let r = summary();
+  @if (has('Roster')) {
+    <section class="glance" aria-label="At a glance" [attr.aria-busy]="r === null">
+      @switch (r?.status) {
+        @case ('loaded') {
+          @if (r?.status === 'loaded') {
+            <ph-stat label="Active children" [value]="'' + r.value.activeChildren" />
+            <ph-stat label="Households" [value]="'' + r.value.households" />
+            @if (r.value.slipsDue) {
+              <ph-stat
+                label="Slips unsigned"
+                [value]="unsigned(r.value)"
+                [caption]="r.value.slipsDue.length + ' due'"
+              />
+            }
+          }
+        }
+        @case ('error') {
+          <ph-card class="wide" [flush]="true">
+            <ph-empty-state icon="warning" tone="error" title="Today didn’t load" text="Try again.">
+              <ph-button (click)="reload()">Try again</ph-button>
+            </ph-empty-state>
+          </ph-card>
+        }
+        @default {
+          <ph-skeleton shape="card" />
+          <ph-skeleton shape="card" />
+        }
+      }
+    </section>
+  }
   @if (sessions(); as list) {
     @if (list.length) {
       <div class="sessions">
@@ -31,6 +62,58 @@
           <ph-button link="/import" icon="upload">Import a roster</ph-button>
         </ph-empty-state>
       </ph-card>
+    }
+  }
+  @if (r?.status === 'loaded') {
+    @if (r.status === 'loaded') {
+      <div class="cards">
+        @if (r.value.tasks.length) {
+          <ph-card title="Waiting for you" [flush]="true">
+            <ph-list label="Waiting for you" [inset]="true">
+              @for (t of r.value.tasks; track t.kind) {
+                <ph-list-item [title]="taskTitle(t)" [link]="taskLink(t)" />
+              }
+            </ph-list>
+          </ph-card>
+        }
+        @if (r.value.slipsDue) {
+          <ph-card title="Slips due" [flush]="true">
+            <ph-list label="Slips due" [inset]="true">
+              @for (slip of r.value.slipsDue; track slip.eventId) {
+                <ph-list-item
+                  [title]="slip.title"
+                  [meta]="
+                    slip.signed + ' of ' + slip.expected + ' signed · due ' + date(slip.signBy)
+                  "
+                  [link]="['/events', slip.eventId]"
+                >
+                  @if (slip.unsigned) {
+                    <ph-badge tone="warning">{{ slip.unsigned }} unsigned</ph-badge>
+                  }
+                </ph-list-item>
+              } @empty {
+                <ph-list-item
+                  title="No slips waiting"
+                  meta="Sent slips show here until they’re due."
+                />
+              }
+            </ph-list>
+          </ph-card>
+        }
+        <ph-card title="Coming up" [flush]="true">
+          <ph-list label="Coming up" [inset]="true">
+            @for (e of r.value.comingUp; track e.id) {
+              <ph-list-item
+                [title]="e.name"
+                [meta]="dateTime(e.startsAt) + (e.place ? ' · ' + e.place : '')"
+                [link]="has('Slips') ? ['/events', e.id] : null"
+              />
+            } @empty {
+              <ph-list-item title="Nothing in the next two weeks" />
+            }
+          </ph-list>
+        </ph-card>
+      </div>
     }
   }
 }

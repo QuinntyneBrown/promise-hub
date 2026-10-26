@@ -46,6 +46,7 @@ public static class DependencyInjection
         services.AddScoped<CheckInHandler>();
         services.AddScoped<SessionAccess>();
         services.AddScoped<RosterAccess>();
+        services.AddScoped<Reports.TodayHandler>();
         services.AddScoped<Messaging.AudienceResolver>();
         services.AddScoped<Messaging.SmsCap>();
         services.AddScoped<Messaging.PreviewMessageHandler>();

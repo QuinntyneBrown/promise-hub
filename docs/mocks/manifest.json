@@ -32,6 +32,7 @@
       ],
       "states": [
         "default",
+        "roster-only",
         "loading",
         "empty",
         "error",

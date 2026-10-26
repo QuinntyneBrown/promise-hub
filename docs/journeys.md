@@ -23,7 +23,7 @@
 | Program director | Send guardian messages | Choose recipients, language, and channel; review delivery and failures. | [9 days](detailed-designs/messaging/compose-and-send-message/README.md) | 55% · [video](videos/10-send-guardian-messages/README.md) |
 | Program director | Produce grant reports | Filter attendance, demographics, and outcomes and export funder-ready results. | [8 days](detailed-designs/reports/export-report/README.md) | 0% |
 | Program director | Manage waitlists | Review capacity and move eligible children into programs. | [3 days](detailed-designs/enrollment/enroll-guardian/README.md) | 95% · [video](videos/18-manage-waitlists/README.md) |
-| Program director | Monitor today's work | See sessions, missing slips, alerts, and tasks in one place. | [2 days](detailed-designs/shell/compose-navigation/README.md) | 0% |
+| Program director | Monitor today's work | See sessions, missing slips, alerts, and tasks in one place. | [2 days](detailed-designs/shell/compose-navigation/README.md) | 85% · [video](videos/33-monitor-todays-work/README.md) |
 | Admin / office manager | Set up an organization | Choose modules and create the first program, roster, staff, and slip. | [5 days](detailed-designs/organizations/set-up-organization/README.md) | 0% |
 | Admin / office manager | Import a roster | Map spreadsheet columns, review records, and create households and children. | [5 days](detailed-designs/imports/import-roster/README.md) | 75% · [video](videos/14-import-a-roster/README.md) |
 | Admin / office manager | Review enrollment | Accept, reject, or waitlist submitted children and update rosters. | [3 days](detailed-designs/enrollment/enroll-guardian/README.md) | 80% · [video](videos/16-review-enrollment/README.md) |
