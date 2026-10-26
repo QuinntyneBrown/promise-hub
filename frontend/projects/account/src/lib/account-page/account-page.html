@@ -1,0 +1,58 @@
+@let r = result();
+@let a = account();
+@if (a) {
+  <ph-page-header title="Your account" [subtitle]="a.name" />
+  <div class="stack">
+    <ph-card title="Profile">
+      <ph-description-list [facts]="facts(a)" />
+    </ph-card>
+    <ph-card title="Two-step sign-in">
+      <div class="stack">
+        <div class="row">
+          <p class="muted">
+            {{ a.twoStepOn ? 'Authenticator app on.' : 'Not set up yet.' }}
+            {{ a.recoveryCodesLeft }} recovery codes left.
+          </p>
+          @if (a.twoStepOn) {
+            <ph-badge tone="success">On</ph-badge>
+          }
+        </div>
+        <p class="muted">
+          Recovery codes let you sign in if you lose your phone. Making new ones stops the old ones.
+        </p>
+        <div>
+          <ph-button icon="key" hasPopup="dialog" (click)="newCodes()"
+            >Make new recovery codes</ph-button
+          >
+        </div>
+      </div>
+    </ph-card>
+    <ph-card title="Devices">
+      <div class="stack">
+        <p class="muted">
+          Lost a phone or used a shared computer? Sign out everywhere else; you stay signed in here.
+        </p>
+        <div>
+          <ph-button hasPopup="dialog" (click)="signOutOthers()"
+            >Sign out everywhere else</ph-button
+          >
+        </div>
+      </div>
+    </ph-card>
+  </div>
+} @else if (r === null) {
+  <ph-page-header title="Your account" />
+  <div aria-busy="true" aria-label="Loading your account"><ph-skeleton shape="card" /></div>
+} @else {
+  <ph-page-header title="Your account" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load your account"
+      text="Try again."
+    >
+      <ph-button variant="primary" (click)="load()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}

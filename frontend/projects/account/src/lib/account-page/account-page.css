@@ -1,0 +1,16 @@
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-gutter);
+  max-width: var(--layout-form-medium);
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  align-items: center;
+}
+.muted {
+  color: var(--color-fg-muted);
+  margin: 0;
+}

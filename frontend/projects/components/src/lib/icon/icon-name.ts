@@ -33,6 +33,7 @@ export const ICONS = {
   'arrow-right': '<path d="M5 12h14m0 0-6-6m6 6-6 6"/>',
   upload: '<path d="M12 15V3m0 0-4 4m4-4 4 4M4 17v3h16v-3"/>',
   download: '<path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v3h16v-3"/>',
+  key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M15 5l3 3M18 5l1 1"/>',
   eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
   'eye-off':
     '<path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4.2M6.6 6.6A17 17 0 0 0 2 12s3.5 7 10 7a10 10 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2"/>',

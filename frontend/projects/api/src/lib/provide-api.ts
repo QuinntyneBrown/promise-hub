@@ -41,6 +41,8 @@ import { HttpPrivacyApi } from './privacy/http-privacy-api';
 import { PRIVACY_API } from './privacy/privacy-api.token';
 import { AUDIT_API } from './audit/audit-api.token';
 import { HttpAuditApi } from './audit/http-audit-api';
+import { ACCOUNT_API } from './account/account-api.token';
+import { HttpAccountApi } from './account/http-account-api';
 import { HttpSearchApi } from './search/http-search-api';
 import { HttpSetupApi } from './setup/http-setup-api';
 import { SETUP_API } from './setup/setup-api.token';
@@ -78,6 +80,7 @@ export function provideApi(): EnvironmentProviders {
     { provide: STAFF_API, useClass: HttpStaffApi },
     { provide: TODAY_API, useClass: HttpTodayApi },
     { provide: SEARCH_API, useClass: HttpSearchApi },
+    { provide: ACCOUNT_API, useClass: HttpAccountApi },
     { provide: AUDIT_API, useClass: HttpAuditApi },
     { provide: PRIVACY_API, useClass: HttpPrivacyApi },
     { provide: BILLING_API, useClass: HttpBillingApi },

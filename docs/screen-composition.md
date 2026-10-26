@@ -17,6 +17,7 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Screen | Mock | Library components | Built locally |
 |---|---|---|---|
 | Today | `today` (sessions), `today/empty`, `today/roster-only`, `today/loading` | `ph-page-header`, `ph-card` (titled), `ph-empty-state`, `ph-button`, `ph-stat`, `ph-list`, `ph-list-item`, `ph-badge`, `ph-skeleton` | Greeting, date and session counts |
+| Your account | `account` (default, loading, error) | `ph-page-header`, `ph-card`, `ph-description-list`, `ph-badge`, `ph-button`, `ph-empty-state`, `ph-skeleton`; `recovery-codes` and `sign-out-all` dialogs with `ph-dialog`, `ph-alert`, `ph-button` | Recovery code list |
 | Audit log | `audit-log` (default, loading, empty, error, no-results, long, forbidden) | `ph-page-header`, `ph-text-field` (search), `ph-select`, `ph-table`, `ph-button` (paging, export link), `ph-card`, `ph-empty-state`, `ph-skeleton` | — |
 | Billing | `billing` (default, loading, error, free, limit-reached, payment-failed, forbidden) | `ph-page-header`, `ph-card`, `ph-description-list`, `ph-progress-bar`, `ph-alert`, `ph-button`, `ph-empty-state`, `ph-skeleton`; change-plan dialog with `ph-dialog`, `ph-radio-group`, `ph-alert` | — |
 | Privacy and data | `settings-privacy` (default, loading, error, submitting, success, forbidden) | `ph-page-header`, `ph-tabs`, `ph-card`, `ph-description-list`, `ph-radio-group`, `ph-button`, `ph-empty-state`, `ph-skeleton`, toast | — |

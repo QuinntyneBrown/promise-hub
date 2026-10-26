@@ -170,3 +170,6 @@ export * from './lib/audit/audit-api';
 export * from './lib/audit/audit-api.token';
 export * from './lib/audit/audit-filter';
 export * from './lib/audit/audit-log';
+export * from './lib/account/account';
+export * from './lib/account/account-api';
+export * from './lib/account/account-api.token';

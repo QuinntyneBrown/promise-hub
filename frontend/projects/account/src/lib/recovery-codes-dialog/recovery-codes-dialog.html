@@ -1,0 +1,30 @@
+<ph-dialog
+  title="Recovery codes"
+  description="Each code signs you in once if you lose your phone. Keep them somewhere safe."
+>
+  @if (failed()) {
+    <ph-alert tone="danger" title="That didn’t work" text="Try again." />
+  }
+  @if (codes(); as list) {
+    <ph-alert
+      tone="warning"
+      title="Save these now"
+      text="You won’t see them again. Your old codes no longer work."
+    />
+    <ul class="codes" aria-label="Recovery codes">
+      @for (code of list; track code) {
+        <li>{{ code }}</li>
+      }
+    </ul>
+  } @else {
+    <p>Making new codes stops the old ones.</p>
+  }
+  <ng-container ngProjectAs="[phDialogFooter]">
+    @if (codes()) {
+      <ph-button variant="primary" (click)="ref.close(true)">I’ve saved them</ph-button>
+    } @else {
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" [busy]="busy()" (click)="make()">Make new codes</ph-button>
+    }
+  </ng-container>
+</ph-dialog>
