@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { CdkMenu, CdkMenuItem, CdkMenuItemRadio, CdkMenuTrigger } from '@angular/cdk/menu';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { PhAvatar } from '../avatar/avatar';
@@ -13,11 +13,14 @@ import { NavItem } from '../navigation/nav-item';
  * search (from 1280px), notifications and the account button. It never shows the organization
  * inline and never overflows: `wide` items wait for 1024px and `overflow` items live in More.
  */
+import type { OrgOption } from './org-option';
+
 @Component({
   selector: 'ph-top-bar',
   imports: [
     CdkMenu,
     CdkMenuItem,
+    CdkMenuItemRadio,
     CdkMenuTrigger,
     FormsModule,
     RouterLink,
@@ -39,11 +42,18 @@ export class PhTopBar {
   readonly avatarTint = input<AvatarTint>('sky');
   readonly unread = input(0);
   readonly menuOpen = input(false);
+  /** The person's organizations; the switcher shows only when there are two or more (L2-002). */
+  readonly organizations = input<OrgOption[]>([]);
 
   readonly moreRequested = output<void>();
   readonly signOutRequested = output<void>();
   readonly notificationsRequested = output<void>();
   readonly searched = output<string>();
+  readonly organizationChosen = output<string>();
+
+  protected readonly activeOrganization = computed(
+    () => this.organizations().find((o) => o.active) ?? null,
+  );
 
   protected query = '';
 }

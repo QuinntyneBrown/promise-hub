@@ -3,6 +3,22 @@
     <ph-brand-mark />
     <span class="topbar__brand-name">PromiseHub</span>
   </a>
+  @if (organizations().length > 1) {
+    <div class="org-switcher">
+      <button
+        class="org-switcher__button"
+        type="button"
+        [attr.aria-label]="
+          'Organization: ' + (activeOrganization()?.name ?? '') + '. Switch organization'
+        "
+        [cdkMenuTriggerFor]="orgMenu"
+      >
+        <ph-avatar [name]="activeOrganization()?.name ?? ''" size="sm" tint="peach" />
+        <span class="org-switcher__name">{{ activeOrganization()?.name }}</span>
+        <ph-icon class="org-switcher__chevron" name="chevron-down" size="sm" />
+      </button>
+    </div>
+  }
   <nav class="topbar__nav" aria-label="Primary">
     @for (item of items(); track item.link) {
       @if (item.placement !== 'overflow') {
@@ -89,5 +105,32 @@
         <ph-icon name="sign-out" />Sign out
       </button>
     </li>
+  </ul>
+</ng-template>
+
+<ng-template #orgMenu>
+  <ul class="menu org-switcher__menu" cdkMenu aria-label="Switch organization">
+    <li class="menu__header" role="none">
+      <span class="menu__title">Your organizations</span>
+      <span class="menu__caption">Separate data and settings.</span>
+    </li>
+    @for (o of organizations(); track o.id) {
+      <li role="none">
+        <button
+          class="menu__item org-switcher__option"
+          cdkMenuItemRadio
+          type="button"
+          [cdkMenuItemChecked]="o.active"
+          (cdkMenuItemTriggered)="!o.active && organizationChosen.emit(o.id)"
+        >
+          <ph-avatar [name]="o.name" size="sm" tint="peach" />
+          <span class="org-switcher__option-text">
+            <span class="org-switcher__option-name">{{ o.name }}</span>
+            <span class="org-switcher__option-type">{{ o.caption }}</span>
+          </span>
+          <ph-icon class="org-switcher__check" name="check-circle" size="sm" />
+        </button>
+      </li>
+    }
   </ul>
 </ng-template>

@@ -11,6 +11,8 @@
       (searched)="search($event)"
       [unread]="unread()"
       (notificationsRequested)="openNotifications()"
+      [organizations]="organizations()"
+      (organizationChosen)="switchOrganization($event)"
     />
   }
   <main id="main" class="container">

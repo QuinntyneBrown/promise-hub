@@ -372,6 +372,8 @@ export class FakeApi {
     ['POST', /^\/api\/auth\/mfa$/, (route) => this.mfa(route)],
     ['POST', /^\/api\/auth\/sign-out$/, (route) => this.signOut(route)],
     ['GET', /^\/api\/setup$/, (route) => this.setup(route)],
+    ['GET', /^\/api\/me\/organizations$/, (route) => this.myOrganizations(route)],
+    ['POST', /^\/api\/me\/organization$/, (route) => this.switchOrganization(route)],
     ['GET', /^\/api\/settings\/organization$/, (route) => this.getOrganizationProfile(route)],
     ['PUT', /^\/api\/settings\/organization$/, (route) => this.saveOrganizationProfile(route)],
     ['GET', /^\/api\/settings\/notifications$/, (route) => this.getNotificationSettings(route)],
@@ -597,6 +599,34 @@ export class FakeApi {
       return this.unauthenticated(route);
     }
     this.membershipId = null;
+    return route.fulfill({ status: 204 });
+  }
+
+  /** Removed memberships (as an admin would remove them); a session in one falls back to the person's next. */
+  private removedMemberships = new Set<string>();
+
+  removeMembership(id: string): void {
+    this.removedMemberships.add(id);
+  }
+
+  /** Mirrors backend SwitchOrganizationHandler: a person is their memberships with the same email. */
+  private async myOrganizations(route: Route): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    const mine = memberships
+      .filter((x) => x.email === m.email && !this.removedMemberships.has(x.id))
+      .map((x) => ({ membershipId: x.id, name: organizations.find((o) => o.id === x.organizationId)!.name, role: x.role, active: x.id === m.id }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    return route.fulfill({ json: { organizations: mine } });
+  }
+
+  private async switchOrganization(route: Route): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    const b = route.request().postDataJSON() as { membershipId: string };
+    const target = memberships.find((x) => x.id === b.membershipId && x.email === m.email && !this.removedMemberships.has(x.id));
+    if (!target) return route.fulfill({ status: 404 });
+    this.membershipId = target.id;
     return route.fulfill({ status: 204 });
   }
 
