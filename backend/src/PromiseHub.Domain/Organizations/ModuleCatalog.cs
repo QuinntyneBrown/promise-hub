@@ -5,6 +5,10 @@ public static class ModuleCatalog
 {
     public static readonly IReadOnlyList<ModuleId> All = Enum.GetValues<ModuleId>();
 
+    /// <summary>The eight operations modules of the "Whole suite" preset. The Waypoint modules are switched on one at a time (ADR 0043).</summary>
+    public static readonly IReadOnlyList<ModuleId> Suite =
+        [ModuleId.Roster, ModuleId.Slips, ModuleId.RollCall, ModuleId.QuickCards, ModuleId.Pickup, ModuleId.Messages, ModuleId.Incidents, ModuleId.Reports];
+
     public static string Name(ModuleId module) => module switch
     {
         ModuleId.Roster => "Roster",
@@ -15,6 +19,9 @@ public static class ModuleCatalog
         ModuleId.Messages => "Messages",
         ModuleId.Incidents => "Incident log",
         ModuleId.Reports => "Reports",
+        ModuleId.Learning => "Learning",
+        ModuleId.Mentoring => "Mentoring",
+        ModuleId.PublicWebsite => "Public website",
         _ => module.ToString(),
     };
 

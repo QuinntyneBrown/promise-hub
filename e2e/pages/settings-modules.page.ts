@@ -28,6 +28,11 @@ export class SettingsModulesPage extends BasePage {
     return this.list.getByRole('switch', { name: `${name} on` });
   }
 
+  /** The dependency caption of a module that is on while a module it needs is off. */
+  needs(name: string): Locator {
+    return this.list.getByRole('listitem').filter({ has: this.page.getByTestId('list-title').getByText(name, { exact: true }) }).getByText(/^Needs /);
+  }
+
   error(name: string): Locator {
     return this.list.getByRole('listitem').filter({ hasText: name }).getByTestId('list-error');
   }
@@ -42,6 +47,10 @@ export class SettingsModulesPage extends BasePage {
 
   async preset(name: string): Promise<void> {
     await this.page.getByRole('group', { name: 'Presets' }).getByRole('button', { name }).click();
+  }
+
+  async scrollToTop(): Promise<void> {
+    await this.page.getByRole('heading', { level: 1, name: 'Modules' }).scrollIntoViewIfNeeded();
   }
 
   async save(): Promise<void> {

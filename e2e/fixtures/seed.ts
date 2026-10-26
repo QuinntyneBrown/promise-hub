@@ -1,6 +1,8 @@
 // Seeded in-memory data for the fake API. Mirrors backend DatabaseSeeder: two organizations and the Harbourview cast.
 
-export type ModuleId = 'Roster' | 'Slips' | 'RollCall' | 'QuickCards' | 'Pickup' | 'Messages' | 'Incidents' | 'Reports';
+export type ModuleId =
+  | 'Roster' | 'Slips' | 'RollCall' | 'QuickCards' | 'Pickup' | 'Messages' | 'Incidents' | 'Reports'
+  | 'Learning' | 'Mentoring' | 'PublicWebsite';
 
 /** Mirrors backend ModuleCatalog: names, order and dependencies. */
 export const moduleCatalog: { id: ModuleId; name: string; needs: ModuleId[] }[] = [
@@ -12,6 +14,10 @@ export const moduleCatalog: { id: ModuleId; name: string; needs: ModuleId[] }[] 
   { id: 'Messages', name: 'Messages', needs: ['Roster'] },
   { id: 'Incidents', name: 'Incident log', needs: ['Roster'] },
   { id: 'Reports', name: 'Reports', needs: ['Roster'] },
+  // From Waypoint (ADR 0043); off until an admin turns them on.
+  { id: 'Learning', name: 'Learning', needs: ['Roster'] },
+  { id: 'Mentoring', name: 'Mentoring', needs: ['Roster'] },
+  { id: 'PublicWebsite', name: 'Public website', needs: ['Roster'] },
 ];
 
 export interface Organization {

@@ -28,7 +28,7 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
         Add(new Organization(Northgate, "Northgate Community Church Kids", "Burlington, Ontario", Plan.Free, phone: "289-555-0190"));
 
         // Harbourview runs the whole suite; Northgate, on the Free plan, runs check-in only (L2-004, L2-005).
-        Modules(Harbourview, ModuleCatalog.All);
+        Modules(Harbourview, ModuleCatalog.Suite);
         Modules(Northgate, [ModuleId.Roster, ModuleId.RollCall, ModuleId.QuickCards]);
 
         Staff(Harbourview, "Jaylen Okafor", "jaylen@harbourview.example", Role.SiteLead);

@@ -16,7 +16,7 @@ public sealed class PlatformOrganizationsHandler(IPromiseHubDb db, TenantContext
 {
     private static readonly Dictionary<string, IReadOnlyList<ModuleId>> Presets = new()
     {
-        ["Whole suite"] = ModuleCatalog.All,
+        ["Whole suite"] = ModuleCatalog.Suite,
         ["Just check-in"] = [ModuleId.Roster, ModuleId.RollCall, ModuleId.QuickCards],
         ["Just slips"] = [ModuleId.Roster, ModuleId.Slips],
     };
