@@ -33,6 +33,8 @@ public sealed class SmsUsagePeriod : ITenantOwned
 
     public void Release(int segments) => Used = Math.Max(0, Used - segments);
 
+    public void ChangeCap(int cap) => Cap = cap;
+
     /// <summary>The monthly cap by plan until admins can raise it.</summary>
     public static int CapFor(Plan plan) => plan switch
     {

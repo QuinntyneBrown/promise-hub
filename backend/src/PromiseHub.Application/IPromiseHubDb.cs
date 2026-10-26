@@ -51,6 +51,7 @@ public interface IPromiseHubDb
     DbSet<StaffUser> StaffUsers { get; }
     DbSet<SignInAttempt> SignInAttempts { get; }
     DbSet<Domain.Notifications.Notification> Notifications { get; }
+    DbSet<Domain.Notifications.NotificationSettings> NotificationSettings { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

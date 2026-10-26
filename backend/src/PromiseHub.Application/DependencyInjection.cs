@@ -50,6 +50,8 @@ public static class DependencyInjection
         services.AddScoped<Search.SearchHandler>();
         services.AddScoped<Notifications.NotificationWriter>();
         services.AddScoped<Notifications.NotificationsHandler>();
+        services.AddScoped<Notifications.NotificationSettingsReader>();
+        services.AddScoped<Notifications.NotificationSettingsHandler>();
         services.AddScoped<Messaging.AudienceResolver>();
         services.AddScoped<Messaging.SmsCap>();
         services.AddScoped<Messaging.PreviewMessageHandler>();
