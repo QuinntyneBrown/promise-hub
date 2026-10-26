@@ -2,4 +2,4 @@
 
 | Design | Effort | Complete |
 |---|---|---|
-| read-own-record | 1 day | 0% |
+| read-own-record | 1 day | 100% |

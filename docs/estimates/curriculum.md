@@ -2,4 +2,4 @@
 
 | Design | Effort | Complete |
 |---|---|---|
-| open-curriculum | 1 day | 0% |
+| open-curriculum | 1 day | 100% |

@@ -2,4 +2,4 @@
 
 | Design | Effort | Complete |
 |---|---|---|
-| serve-public-site | 1 day | 0% |
+| serve-public-site | 1 day | 100% |

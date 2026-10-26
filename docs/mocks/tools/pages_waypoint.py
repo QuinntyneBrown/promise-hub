@@ -54,7 +54,7 @@ def mentoring(S):
 def website(S):
     hero = page_header(ORG, "Hamilton, Ontario · after-school tutoring, sports and mentoring for children and teens")
     S.add("default", "A visitor opens Harbourview’s public page while Public website is on: published content only, no sign-in.",
-          main=hero + card(empty("Our pages are being written", "Call 905-555-0100 to ask about programs and how to join.", icon_name="globe"), cls="card--flush"),
+          main=hero + card(empty("Our pages are being written", "Programs, open cohorts and ways to join appear here once they are published.", icon_name="globe"), cls="card--flush"),
           notes=note("Anonymous and read-only. The organization comes from the slug in the address; the server answers 404 for an unknown slug or while the module is off.", "top: 5rem; right: 1rem;"))
     S.add("loading", "The public page loading.", main=page_header(ORG, "") + skeleton_list(2, "Loading the page"))
     S.add("error", "The public page failed to load.", main=hero + failed("We couldn’t load this page"))
