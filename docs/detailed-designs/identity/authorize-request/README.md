@@ -43,6 +43,8 @@ Every integration test for an endpoint includes a role matrix case and a cross-t
 
 ## Built so far
 
+Slice 32 added the first field policy beyond medical, `ReadDateOfBirth`, and a roster row scope: `RosterAccess` limits youth workers to the children of their sessions, with 403 and an `AccessDenied` audit entry for anything else (ADR 0026).
+
 Slice 29 made the per-request membership check honour removed access (`Membership.RemovedAt`) and added `ManageStaff` (ADR 0025).
 
 Slice 02 delivered `Permission`, `RolePermissions` (in `PromiseHub.Application/Identity/`, ADR 0003) and a `RequirePermission` extension backed by an ASP.NET Core authorization requirement that reads the role of the membership resolved for the request; `/settings/*` answers 403 for roles without `ManageSettings`. Slice 09 added the first row scope: `RunAnySession` and `SessionAccess` limit youth workers to the sessions they are assigned to (`SessionStaff`), with `ResultStatus.Forbidden` written as 403 (ADR 0012). Field policies, other row scopes, role changes and removals arrive with their features.

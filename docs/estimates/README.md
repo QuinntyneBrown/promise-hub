@@ -5,7 +5,7 @@
 
 | Subsystem | Effort | Complete |
 |---|---|---|
-| [identity](identity.md) | 11 days | 53% |
+| [identity](identity.md) | 11 days | 62% |
 | [organizations](organizations.md) | 34 days | 26% |
 | [platform](platform.md) | 24 days | 23% |
 | [shell](shell.md) | 9 days | 40% |
