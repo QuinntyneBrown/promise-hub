@@ -42,7 +42,7 @@ By the end, the viewer can:
 | 00:42-01:02 | Faults | Server error page and Try again |
 | 01:02-01:28 | Alerts | Error rate and queue age |
 | 01:28-02:00 | Budgets | Check-in on a phone; the budget table |
-| 02:00-02:49 | Testing, recap | Cases and what is deferred |
+| 02:00-02:52 | Testing, recap | Cases and what is deferred |
 
 ## Demo commands
 

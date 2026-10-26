@@ -8,7 +8,7 @@ Every request writes one structured log line: the organization, the route templa
 
 ## When something breaks
 
-Here is Jaylen opening PromiseHub on a laptop while the server is failing. She gets the server error page, which says nothing was lost and offers Try again. When the server is back, Try again opens Today as if nothing happened. On our side, that fault was logged with its reference, and counted.
+Here is Jaylen opening PromiseHub on a laptop while the server is failing. She gets the server error page, which says nothing was lost, shows a reference she can quote to support, and offers Try again. When the server is back, Try again opens Today as if nothing happened. On our side, that same reference is on the fault's log line, and the fault was counted.
 
 ## Alerts for on-call
 
