@@ -590,6 +590,7 @@
         "default",
         "loading",
         "error",
+        "forbidden",
         "submitting",
         "success"
       ],

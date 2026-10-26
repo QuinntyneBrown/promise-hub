@@ -162,3 +162,6 @@ export * from './lib/billing/billing';
 export * from './lib/billing/billing-api';
 export * from './lib/billing/billing-api.token';
 export * from './lib/billing/plan-change';
+export * from './lib/privacy/privacy-api';
+export * from './lib/privacy/privacy-api.token';
+export * from './lib/privacy/privacy-settings';

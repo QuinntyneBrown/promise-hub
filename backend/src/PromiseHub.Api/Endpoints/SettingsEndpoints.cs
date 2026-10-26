@@ -15,6 +15,9 @@ public static class SettingsEndpoints
         settings.MapPut("/organization", async (SaveOrganizationCommand command, SetupHandler handler, CancellationToken ct) =>
             (await handler.SaveOrganizationAsync(command, ct)).ToHttp());
         app.MapGet("/setup", (SetupHandler handler, CancellationToken ct) => handler.GetAsync(ct)).RequirePermission(Permission.ManageSettings);
+        settings.MapGet("/privacy", (PrivacyHandler handler, CancellationToken ct) => handler.GetAsync(ct));
+        settings.MapPut("/privacy", async (SavePrivacyCommand command, PrivacyHandler handler, CancellationToken ct) =>
+            (await handler.SaveAsync(command, ct)).ToHttp());
         settings.MapGet("/notifications", (NotificationSettingsHandler handler, CancellationToken ct) => handler.GetAsync(ct));
         settings.MapPut("/notifications", async (SaveNotificationSettingsCommand command, NotificationSettingsHandler handler, CancellationToken ct) =>
             (await handler.SaveAsync(command, ct)).ToHttp());

@@ -48,8 +48,9 @@ public abstract class ApiFactoryBase : WebApplicationFactory<Program>
     {
         builder.UseEnvironment("Testing");
         builder.UseSetting("ConnectionStrings:PromiseHub", ConnectionString);
-        // The tests run the send job by hand.
+        // The tests run the send and retention jobs by hand.
         builder.UseSetting("Messaging:Dispatch", "false");
+        builder.UseSetting("Privacy:Retention", "false");
         builder.UseSetting("Sms:InboundSecret", InboundSmsSecret);
         builder.ConfigureServices(services =>
         {

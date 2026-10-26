@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 42 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="42" data-video-title="Configure privacy" data-parts="Introduction|Promises|Retention|Who|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 42</div>
+  <h1>Configure privacy</h1>
+  <p class="lead">Where data lives, and how long it stays</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="Every organization has a region">
+  <h2>What privacy promises</h2>
+  <ul>
+    <li>A fixed region: Canada, Toronto</li>
+    <li>Consent kept 7 years, 3 years, or until a request</li>
+    <li>A nightly job per organization removes details</li>
+    <li>Counts stay; saving is audited</li>
+  </ul>
+</section>
+
+<section id="retention" data-part="2" data-cue="Here is Privacy and data on Tom's laptop." data-clip="clips/privacy-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Three years</h3><p>From tonight, older details go.</p></div>
+</section>
+
+<section id="who" data-part="3" data-cue="Site leads who open the page">
+  <h2>Who can change it</h2>
+  <div class="cols">
+    <img class="shot" alt="A site lead told that admins set privacy" src="shots/desktop-forbidden.png">
+    <img class="shot" alt="Privacy and data on a phone" src="shots/phone-privacy.png">
+  </div>
+</section>
+
+<section id="testing" data-part="4" data-cue="Backend tests cover the region">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>3 years, signature 2 years old</td><td>Kept</td></tr>
+    <tr><td>3 years, signature 4 years old</td><td>Details removed, status kept</td></tr>
+    <tr><td>5 years chosen</td><td>Refused</td></tr>
+    <tr><td>Site lead</td><td>403</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="5" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>The region is fixed</li><li>Retention is a choice</li><li>The job keeps the promise</li></ul>
+  <p class="muted">Next: request household data</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

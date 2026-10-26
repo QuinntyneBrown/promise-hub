@@ -24,6 +24,11 @@ public sealed class Organization
     /// <summary>The number guardians call, shown in the footer of every guardian page.</summary>
     public string? Phone { get; private set; }
 
+    /// <summary>Where the organization's data is stored; set when it is created and changed only by a platform admin (L2-030).</summary>
+    public string Region { get; private set; } = DefaultRegion;
+
+    public const string DefaultRegion = "Canada (Toronto region)";
+
     /// <summary>When an admin confirmed the name and city in setup (L2-008); null until then.</summary>
     public DateTimeOffset? ProfileConfirmedAt { get; private set; }
 

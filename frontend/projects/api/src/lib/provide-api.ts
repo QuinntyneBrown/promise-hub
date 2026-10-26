@@ -37,6 +37,8 @@ import { HttpReportsApi } from './reports/http-reports-api';
 import { REPORTS_API } from './reports/reports-api.token';
 import { BILLING_API } from './billing/billing-api.token';
 import { HttpBillingApi } from './billing/http-billing-api';
+import { HttpPrivacyApi } from './privacy/http-privacy-api';
+import { PRIVACY_API } from './privacy/privacy-api.token';
 import { HttpSearchApi } from './search/http-search-api';
 import { HttpSetupApi } from './setup/http-setup-api';
 import { SETUP_API } from './setup/setup-api.token';
@@ -74,6 +76,7 @@ export function provideApi(): EnvironmentProviders {
     { provide: STAFF_API, useClass: HttpStaffApi },
     { provide: TODAY_API, useClass: HttpTodayApi },
     { provide: SEARCH_API, useClass: HttpSearchApi },
+    { provide: PRIVACY_API, useClass: HttpPrivacyApi },
     { provide: BILLING_API, useClass: HttpBillingApi },
     { provide: SETUP_API, useClass: HttpSetupApi },
     { provide: REPORTS_API, useClass: HttpReportsApi },
