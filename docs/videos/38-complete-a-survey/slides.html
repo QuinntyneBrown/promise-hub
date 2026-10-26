@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 38 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="38" data-video-title="Complete a survey" data-parts="Introduction|Promises|Answering|Sending|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 38</div>
+  <h1>Complete a survey</h1>
+  <p class="lead">A minute on a phone, in the family's language</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="After a session, a director or site lead sends a survey from Reports.">
+  <h2>What surveys promise</h2>
+  <ul>
+    <li>A link per child, verified like every guardian link</li>
+    <li>In the household's language</li>
+    <li>A rating from 1 to 5 and a comment</li>
+    <li>Answered once; closes after a week; counted in reports</li>
+  </ul>
+</section>
+
+<section id="answer" data-part="2" data-cue="Here is Carmen's survey on her phone." data-clip="clips/survey-phone.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>In Spanish</h3><p>Four out of five, a comment, sent.</p></div>
+</section>
+
+<section id="send" data-part="3" data-cue="Marisol sends the survey from Reports">
+  <h2>Sending, and when it closes</h2>
+  <div class="cols">
+    <img class="shot" alt="The send a survey dialog on Reports" src="shots/desktop-send.png">
+    <img class="shot" alt="A closed survey on a phone, in Spanish" src="shots/phone-closed.png">
+  </div>
+</section>
+
+<section id="testing" data-part="4" data-cue="Backend tests cover a link per child">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Second answer</td><td>409</td></tr>
+    <tr><td>After a week</td><td>Closed</td></tr>
+    <tr><td>Youth worker sends</td><td>403</td></tr>
+    <tr><td>Reports off</td><td>404</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="5" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Verified like every guardian link</li><li>The household's language</li><li>Once, then counted in reports</li></ul>
+  <p class="muted">Next: set up an organization</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

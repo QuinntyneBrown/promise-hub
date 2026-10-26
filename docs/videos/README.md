@@ -45,6 +45,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 35 | [Review notifications](35-review-notifications/README.md) | ~2 min | The bell counts unread notices; the center lists them newest first and marks them read |
 | 36 | [Configure notifications](36-configure-notifications/README.md) | ~2 min | An admin sets the no-show delay, supervisor emails and the SMS cap; jobs follow them |
 | 37 | [Produce grant reports](37-produce-grant-reports/README.md) | ~2 min | Report numbers from the data, a program filter, small counts masked and CSV exports that expire in a week |
+| 38 | [Complete a survey](38-complete-a-survey/README.md) | ~2 min | A survey per child on a verified guardian link, in the household's language, answered once and counted in reports |
 
 ## Making or updating a video
 
