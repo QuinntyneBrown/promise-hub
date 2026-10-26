@@ -9,6 +9,8 @@
       [personContext]="context(s)"
       (signOutRequested)="signOut()"
       (searched)="search($event)"
+      [unread]="unread()"
+      (notificationsRequested)="openNotifications()"
     />
   }
   <main id="main" class="container">

@@ -46,6 +46,14 @@ export class ShellPage extends BasePage {
     await this.menu.getByRole('link', { name: label }).click();
   }
 
+  get bell(): Locator {
+    return this.page.getByRole('banner').getByRole('button', { name: /^Notifications/ });
+  }
+
+  async openNotifications(): Promise<void> {
+    await this.bell.click();
+  }
+
   get accountMenu(): Locator {
     return this.page.getByRole('menu', { name: /^Account menu for/ });
   }

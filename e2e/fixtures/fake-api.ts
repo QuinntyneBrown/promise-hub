@@ -204,6 +204,8 @@ export class FakeApi {
     trail?: { text: string; at: string }[];
   }[] = [];
   /** No-show texts the job sent, and the guardian's reply: "event:child" → state and time. */
+  /** In-app notifications: recipient membership, kind, text, link and read time. */
+  private notifications: { id: string; organizationId: string; membershipId: string; kind: string; text: string; link: string; createdAt: string; readAt: string | null }[] = [];
   private noShows = new Map<string, { state: 'TextSent' | 'OnTheWay' | 'Absent'; at: string }>();
   /** Household home links as texted with an enrollment decision: token → household. */
   private homeLinks = new Map<string, string>([
@@ -269,6 +271,7 @@ export class FakeApi {
     const m = memberships.find((x) => x.id === reporterId)!;
     const id = `inc-${this.nextId++}`;
     this.incidents.push({ id, organizationId: m.organizationId, reporterId, reportedBy: m.personName, category, childId, occurredAt: '2026-10-21T18:40:00Z', place: 'Gym', whatHappened: 'Fell during the relay.', actionTaken: 'Ice pack.', guardianContact: 'LeftMessage', severity: 'Minor', status: 'NeedsReview', reportedAt: NOW.toISOString() });
+    this.notifyIncident(m, id, childId, category);
     return id;
   }
 
@@ -359,6 +362,9 @@ export class FakeApi {
     ['PUT', /^\/api\/settings\/modules$/, (route) => this.saveModules(route)],
     ['GET', /^\/api\/today$/, (route) => this.today(route)],
     ['GET', /^\/api\/search$/, (route) => this.search(route)],
+    ['GET', /^\/api\/notifications$/, (route) => this.listNotifications(route)],
+    ['POST', /^\/api\/notifications\/read-all$/, (route) => this.readAllNotifications(route)],
+    ['POST', /^\/api\/notifications\/(?<id>[^/]+)\/read$/, (route, p) => this.readNotification(route, p['id']!)],
     ['GET', /^\/api\/households$/, (route) => this.listHouseholds(route)],
     ['POST', /^\/api\/households$/, (route) => this.createHousehold(route)],
     ['GET', /^\/api\/households\/(?<id>[^/]+)$/, (route, p) => this.getHousehold(route, p['id']!)],
@@ -2270,6 +2276,7 @@ export class FakeApi {
     if (!b['severity']) errors['severity'] = 'Choose the severity.';
     if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
     const id = `inc-${this.nextId++}`;
+    this.notifyIncident(m, id, child!.id, b['category']!);
     this.incidents.push({ id, organizationId: m.organizationId, reporterId: m.id, reportedBy: m.personName, category: b['category']!, childId: child!.id, occurredAt: new Date(b['occurredAt']!).toISOString(), place: b['place'] || 'Other', whatHappened: b['whatHappened']!.trim(), actionTaken: b['actionTaken']!.trim(), guardianContact: b['guardianContact']!, severity: b['severity']!, status: 'NeedsReview', reportedAt: NOW.toISOString() });
     return route.fulfill({ status: 201, json: { id } });
   }
@@ -2840,6 +2847,57 @@ export class FakeApi {
           .map((e) => ({ id: e.id, name: e.name, startsAt: e.startsAt, place: e.place }))
       : null;
     return route.fulfill({ json: { children, households, events } });
+  }
+
+  /** Notifies everyone who reviews incidents in the reporter's organization. Mirrors backend NotificationWriter. */
+  private notifyIncident(reporter: Membership, incidentId: string, childId: string, category: string): void {
+    const child = this.households.flatMap((h) => h.children).find((c) => c.id === childId);
+    const name = child ? `${child.firstName} ${child.lastName}` : 'a child';
+    for (const r of memberships.filter((x) => x.organizationId === reporter.organizationId && can.reviewIncidents(x))) {
+      this.notifications.push({
+        id: `n-${this.nextId++}`,
+        organizationId: reporter.organizationId,
+        membershipId: r.id,
+        kind: 'incidents',
+        text: `Incident reported by ${reporter.personName}: ${name}, ${category.toLowerCase()}.`,
+        link: `/incidents/${incidentId}`,
+        createdAt: new Date(NOW.getTime() + this.nextId * 1000).toISOString(),
+        readAt: null,
+      });
+    }
+  }
+
+  private visibleNotifications(m: Membership) {
+    const on = this.modules.get(m.organizationId)!;
+    return this.notifications
+      .filter((n) => n.membershipId === m.id && n.organizationId === m.organizationId)
+      .filter((n) => (n.kind === 'incidents' ? on.includes('Incidents') : true))
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
+
+  private async listNotifications(route: Route): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    const mine = this.visibleNotifications(m);
+    return route.fulfill({
+      json: { unread: mine.filter((n) => !n.readAt).length, items: mine.map(({ id, kind, text, link, createdAt, readAt }) => ({ id, kind, text, link, createdAt, readAt })) },
+    });
+  }
+
+  private async readNotification(route: Route, id: string): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    const n = this.notifications.find((x) => x.id === id && x.membershipId === m.id);
+    if (!n) return route.fulfill({ status: 404 });
+    n.readAt ??= NOW.toISOString();
+    return route.fulfill({ status: 204 });
+  }
+
+  private async readAllNotifications(route: Route): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    for (const n of this.visibleNotifications(m)) n.readAt ??= NOW.toISOString();
+    return route.fulfill({ status: 204 });
   }
 
   private async listSlips(route: Route): Promise<void> {

@@ -1,2 +1,2 @@
-export { routes } from './lib/today.routes';
+export { notificationRoutes, routes } from './lib/today.routes';
 export { TodayPage } from './lib/today-page';
