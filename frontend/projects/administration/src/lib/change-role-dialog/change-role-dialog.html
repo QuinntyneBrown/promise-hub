@@ -1,0 +1,25 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    [title]="'Change role for ' + data.name"
+    description="It applies the next time they do anything."
+  >
+    @if (failed()) {
+      <ph-alert
+        tone="danger"
+        title="That didn’t go through"
+        text="The role didn’t change. Try again."
+      />
+    }
+    <ph-radio-group
+      legend="Role"
+      name="role"
+      [options]="roles"
+      [error]="errors()['role'] ?? null"
+      [(ngModel)]="role"
+    />
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Change role</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

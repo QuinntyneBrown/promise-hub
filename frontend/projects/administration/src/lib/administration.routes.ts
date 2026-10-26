@@ -1,4 +1,7 @@
-// Scaffold only. Overwrite or delete as implementation requires. No product logic is implemented.
 import { Routes } from '@angular/router';
+import { StaffPage } from './staff-page/staff-page';
 
-export const routes: Routes = [];
+/** Mounted by the app at /settings/staff; staff access is always part of the product. */
+export const routes: Routes = [
+  { path: '', component: StaffPage, title: 'Staff and roles · PromiseHub' },
+];

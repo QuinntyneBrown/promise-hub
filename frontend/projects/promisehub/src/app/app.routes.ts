@@ -23,6 +23,10 @@ export const routes: Routes = [
         loadChildren: () => import('@promisehub/today').then((m) => m.routes),
       },
       {
+        path: 'settings/staff',
+        loadChildren: () => import('@promisehub/administration').then((m) => m.routes),
+      },
+      {
         path: 'settings',
         loadChildren: () => import('@promisehub/settings').then((m) => m.routes),
       },

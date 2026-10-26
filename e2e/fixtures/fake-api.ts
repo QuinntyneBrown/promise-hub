@@ -385,6 +385,11 @@ export class FakeApi {
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/sign-outs$/, (route, p) => this.signChildOut(route, p['id']!)],
     ['GET', /^\/api\/children\/(?<id>[^/]+)\/pickups$/, (route, p) => this.pickups(route, p['id']!)],
     ['POST', /^\/api\/children\/(?<id>[^/]+)\/pickups$/, (route, p) => this.addPickup(route, p['id']!)],
+    ['GET', /^\/api\/staff$/, (route) => this.listStaff(route)],
+    ['POST', /^\/api\/staff\/invitations$/, (route) => this.inviteStaff(route)],
+    ['DELETE', /^\/api\/staff\/invitations\/(?<id>[^/]+)$/, (route, p) => this.withdrawInvitation(route, p['id']!)],
+    ['PUT', /^\/api\/staff\/(?<id>[^/]+)\/role$/, (route, p) => this.changeRole(route, p['id']!)],
+    ['DELETE', /^\/api\/staff\/(?<id>[^/]+)$/, (route, p) => this.removeStaff(route, p['id']!)],
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/pickup-requests$/, (route, p) => this.askForPickup(route, p['id']!)],
     ['GET', /^\/api\/pickup-requests\/(?<id>[^/]+)$/, (route, p) => this.pickupRequest(route, p['id']!)],
     ['PUT', /^\/api\/g\/home\/(?<token>[^/]+)\/household$/, (route, p) => this.guardianUpdateHousehold(route, p['token']!)],
@@ -443,6 +448,10 @@ export class FakeApi {
     ['PUT', /^\/api\/children\/(?<id>[^/]+)\/medical$/, (route, p) => this.updateMedical(route, p['id']!)],
   ];
 
+  /** Staff changes in this test: roles changed, access removed and invitations sent (seeded memberships stay as they are). */
+  private roleOverrides = new Map<string, string>();
+  private removedMembers = new Set<string>();
+  private invitations: { id: string; organizationId: string; email: string; role: string; invitedBy: string; withdrawn: boolean }[] = [];
   /** Staff asked a guardian about an adult not on the approved list. */
   private pickupRequests: { id: string; eventId: string; childId: string; householdId: string; collector: string; status: 'Pending' | 'Approved' | 'Refused'; decidedBy: string | null }[] = [];
   /** Approved adults besides the guardians, as added by staff or the family. */
@@ -1328,6 +1337,83 @@ export class FakeApi {
     const id = `pu-${this.nextId++}`;
     this.extraPickups.push({ id, childId, householdId: household.id, name, relationship, removed: false });
     return id;
+  }
+
+  private async adminCaller(route: Route): Promise<Membership | null> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) {
+      await this.unauthenticated(route);
+      return null;
+    }
+    if (m.role !== 'Admin') {
+      await this.forbidden(route);
+      return null;
+    }
+    return m;
+  }
+
+  private staffOf(m: Membership) {
+    return memberships.filter((x) => x.organizationId === m.organizationId && !this.removedMembers.has(x.id));
+  }
+
+  private async listStaff(route: Route): Promise<void> {
+    const m = await this.adminCaller(route);
+    if (!m) return;
+    return route.fulfill({
+      json: {
+        members: this.staffOf(m)
+          .map((x) => ({ id: x.id, name: x.personName, email: x.email, role: this.roleOverrides.get(x.id) ?? x.role, isYou: x.id === m.id }))
+          .sort((a, z) => a.name.localeCompare(z.name)),
+        invitations: this.invitations
+          .filter((i) => i.organizationId === m.organizationId && !i.withdrawn)
+          .map((i) => ({ id: i.id, email: i.email, role: i.role, invitedBy: i.invitedBy, invitedAt: NOW.toISOString(), expiresAt: NOW.toISOString() })),
+      },
+    });
+  }
+
+  private async inviteStaff(route: Route): Promise<void> {
+    const m = await this.adminCaller(route);
+    if (!m) return;
+    const b = route.request().postDataJSON() as { email?: string; role?: string };
+    const email = (b.email ?? '').trim().toLowerCase();
+    const errors: Record<string, string> = {};
+    if (!/^[^@]+@[^@]+\.[^@]+$/.test(email)) errors['email'] = 'Enter a work email like name@example.org.';
+    if (!['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker', 'VolunteerCoordinator'].includes(b.role ?? '')) errors['role'] = 'Choose a role.';
+    const member = this.staffOf(m).find((x) => x.email === email);
+    if (!errors['email'] && member) errors['email'] = `${member.personName} already has access.`;
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    const id = `inv-${this.nextId++}`;
+    this.invitations.push({ id, organizationId: m.organizationId, email, role: b.role!, invitedBy: m.personName, withdrawn: false });
+    return route.fulfill({ status: 201, json: { id } });
+  }
+
+  private async withdrawInvitation(route: Route, id: string): Promise<void> {
+    const m = await this.adminCaller(route);
+    if (!m) return;
+    const i = this.invitations.find((x) => x.id === id && x.organizationId === m.organizationId && !x.withdrawn);
+    if (!i) return route.fulfill({ status: 404 });
+    i.withdrawn = true;
+    return route.fulfill({ status: 204 });
+  }
+
+  private async changeRole(route: Route, id: string): Promise<void> {
+    const m = await this.adminCaller(route);
+    if (!m) return;
+    const target = this.staffOf(m).find((x) => x.id === id);
+    if (!target) return route.fulfill({ status: 404 });
+    if (target.id === m.id) return route.fulfill({ status: 422, json: { errors: { role: 'You can’t change your own role.' } } });
+    this.roleOverrides.set(id, (route.request().postDataJSON() as { role: string }).role);
+    return route.fulfill({ status: 204 });
+  }
+
+  private async removeStaff(route: Route, id: string): Promise<void> {
+    const m = await this.adminCaller(route);
+    if (!m) return;
+    const target = this.staffOf(m).find((x) => x.id === id);
+    if (!target) return route.fulfill({ status: 404 });
+    if (target.id === m.id) return route.fulfill({ status: 422, json: { errors: { member: 'You can’t remove your own access. Ask another admin.' } } });
+    this.removedMembers.add(id);
+    return route.fulfill({ status: 204 });
   }
 
   /** The guardian answers the latest waiting pickup request from their phone, as the family page would. */

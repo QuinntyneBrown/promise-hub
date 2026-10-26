@@ -119,3 +119,6 @@ export * from './lib/pickups/new-pickup';
 export * from './lib/pickups/pickup-api';
 export * from './lib/pickups/pickup-api.token';
 export * from './lib/pickups/pickup-request';
+export * from './lib/staff/staff-api';
+export * from './lib/staff/staff-api.token';
+export * from './lib/staff/staff-list';
