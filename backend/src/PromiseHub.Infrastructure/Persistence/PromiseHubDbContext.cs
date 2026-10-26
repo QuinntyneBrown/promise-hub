@@ -47,6 +47,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Attendance.NoShowAlert> NoShowAlerts => Set<Domain.Attendance.NoShowAlert>();
     public DbSet<Domain.Attendance.ApprovedPickup> ApprovedPickups => Set<Domain.Attendance.ApprovedPickup>();
     public DbSet<Domain.Attendance.PickupRequest> PickupRequests => Set<Domain.Attendance.PickupRequest>();
+    public DbSet<Domain.Staff.StaffInvitation> StaffInvitations => Set<Domain.Staff.StaffInvitation>();
     public DbSet<Domain.Incidents.IncidentFollowUp> IncidentFollowUps => Set<Domain.Incidents.IncidentFollowUp>();
     public DbSet<GuardianVerification> GuardianVerifications => Set<GuardianVerification>();
     public DbSet<TrustedGuardianDevice> TrustedGuardianDevices => Set<TrustedGuardianDevice>();
@@ -70,6 +71,19 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(m => m.PersonName).HasMaxLength(200);
             e.Property(m => m.Email).HasMaxLength(320);
             e.Property(m => m.Role).HasConversion<string>().HasMaxLength(40);
+            e.Property(m => m.RemovedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+        });
+        modelBuilder.Entity<Domain.Staff.StaffInvitation>(e =>
+        {
+            e.Property(i => i.Email).HasMaxLength(320);
+            e.Property(i => i.Role).HasConversion<string>().HasMaxLength(40);
+            e.Property(i => i.TokenHash).HasMaxLength(64);
+            e.HasIndex(i => i.TokenHash).IsUnique();
+            e.Property(i => i.InvitedBy).HasMaxLength(200);
+            e.Property(i => i.InvitedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(i => i.ExpiresAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(i => i.AcceptedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.Property(i => i.WithdrawnAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
         });
         modelBuilder.Entity<ModuleConfiguration>(e =>
         {

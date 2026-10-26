@@ -46,6 +46,7 @@ app.MapImportEndpoints();
 app.MapEnrollmentEndpoints();
 app.MapIncidentEndpoints();
 app.MapSmsWebhookEndpoints();
+app.MapStaffEndpoints();
 app.MapSettingsEndpoints();
 
 app.Run();

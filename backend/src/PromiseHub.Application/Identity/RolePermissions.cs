@@ -24,6 +24,7 @@ public static class RolePermissions
         Permission.ReviewEnrollments => role is Role.Admin or Role.ProgramDirector,
         Permission.ReviewIncidents => role is Role.Admin or Role.ProgramDirector,
         Permission.ManagePickups => role is Role.Admin or Role.ProgramDirector or Role.SiteLead,
+        Permission.ManageStaff => role is Role.Admin,
         _ => false,
     };
 }

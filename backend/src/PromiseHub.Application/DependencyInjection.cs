@@ -55,6 +55,7 @@ public static class DependencyInjection
         services.AddScoped<Attendance.EndSessionHandler>();
         services.AddScoped<Attendance.ApprovedPickupsHandler>();
         services.AddScoped<Attendance.PickupRequestHandler>();
+        services.AddScoped<Staff.StaffAccessHandler>();
         services.AddScoped<Messaging.ListMessagesHandler>();
         services.AddScoped<Messaging.GetMessageHandler>();
         services.AddScoped<Messaging.GetSmsCapHandler>();
