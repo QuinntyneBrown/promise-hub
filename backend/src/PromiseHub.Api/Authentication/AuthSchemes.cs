@@ -10,4 +10,5 @@ public static class AuthSchemes
 
     public const string MembershipClaim = "membership_id";
     public const string UserClaim = "user_id";
+    public const string SessionVersionClaim = "session_version";
 }

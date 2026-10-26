@@ -25,7 +25,7 @@ public static class InvitationEndpoints
             {
                 return Results.Json(new { errors }, statusCode: StatusCodes.Status422UnprocessableEntity);
             }
-            await http.SignInAsync(AuthSchemes.Session, AuthenticationSetup.SessionPrincipal(result.UserId!.Value, result.MembershipId!.Value));
+            await SessionCookie.SignInAsync(http, result.UserId!.Value, result.MembershipId!.Value);
             return Results.Ok(new { status = "signed-in" });
         }).AllowAnonymous();
         app.MapPut("/me/phone", async (PhoneCommand command, InvitationHandler handler, CancellationToken ct) => (await handler.SavePhoneAsync(command, ct)).ToHttp());

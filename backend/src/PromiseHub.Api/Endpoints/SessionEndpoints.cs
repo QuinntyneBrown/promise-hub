@@ -1,3 +1,4 @@
+using PromiseHub.Application.Identity;
 using PromiseHub.Api.Authentication;
 using PromiseHub.Application.Organizations;
 
@@ -8,6 +9,20 @@ public static class SessionEndpoints
     public static IEndpointRouteBuilder MapSessionEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapGet("/me", (GetSessionHandler handler, CancellationToken ct) => handler.HandleAsync(ct));
+        app.MapGet("/me/account", (AccountHandler handler, CancellationToken ct) => handler.GetAsync(ct));
+        app.MapPost("/me/recovery-codes", async (AccountHandler handler, HttpContext http, CancellationToken ct) =>
+            Guid.TryParse(http.User.FindFirst(AuthSchemes.UserClaim)?.Value, out var userId) && await handler.NewRecoveryCodesAsync(userId, ct) is { } codes
+                ? Results.Ok(codes)
+                : Results.NotFound());
+        app.MapPost("/me/sign-out-others", async (AccountHandler handler, HttpContext http, CancellationToken ct) =>
+        {
+            if (!Guid.TryParse(http.User.FindFirst(AuthSchemes.UserClaim)?.Value, out var userId) || await handler.SignOutOthersAsync(userId, ct) is null)
+            {
+                return Results.NotFound();
+            }
+            await SessionCookie.ReissueAsync(http, Guid.Parse(http.User.FindFirst(AuthSchemes.MembershipClaim)!.Value));
+            return Results.NoContent();
+        });
         app.MapGet("/me/organizations", (SwitchOrganizationHandler handler, CancellationToken ct) => handler.ListAsync(ct));
         app.MapPost("/me/organization", async (SwitchOrganizationCommand command, SwitchOrganizationHandler handler, HttpContext http, CancellationToken ct) =>
         {

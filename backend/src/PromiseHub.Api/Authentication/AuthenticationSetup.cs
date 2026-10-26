@@ -39,9 +39,13 @@ public static class AuthenticationSetup
         return services;
     }
 
-    public static ClaimsPrincipal SessionPrincipal(Guid userId, Guid membershipId) =>
+    public static ClaimsPrincipal SessionPrincipal(Guid userId, Guid membershipId, int sessionVersion) =>
         new(new ClaimsIdentity(
-            [new Claim(AuthSchemes.UserClaim, userId.ToString()), new Claim(AuthSchemes.MembershipClaim, membershipId.ToString())],
+            [
+                new Claim(AuthSchemes.UserClaim, userId.ToString()),
+                new Claim(AuthSchemes.MembershipClaim, membershipId.ToString()),
+                new Claim(AuthSchemes.SessionVersionClaim, sessionVersion.ToString(System.Globalization.CultureInfo.InvariantCulture)),
+            ],
             AuthSchemes.Session));
 
     public static ClaimsPrincipal MfaPendingPrincipal(Guid userId) =>
