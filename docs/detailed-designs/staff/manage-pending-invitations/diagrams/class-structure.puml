@@ -1,0 +1,56 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+title Class structure — Manage pending invitations
+class StaffInvitation <<entity, tenant-owned>> {
+  +Id: Guid
+  +OrganizationId: Guid
+  +Email: string
+  +Role: Role
+  +ChildId: Guid?
+  +TokenHash: string
+  +InvitedBy: string
+  +InvitedAt: DateTimeOffset
+  +ExpiresAt: DateTimeOffset
+  +AcceptedAt: DateTimeOffset?
+  +WithdrawnAt: DateTimeOffset?
+  +ReplacementRequestedAt: DateTimeOffset?
+  +Open(now): bool
+  +Expired(now): bool
+  +Reissue(tokenHash, now)
+  +RequestReplacement(now): bool
+  +Accept(now)
+  +Withdraw(now)
+}
+enum InvitationState {
+  Open
+  Expired
+  Withdrawn
+  Used
+}
+StaffInvitation ..> InvitationState : State(now)
+class StaffAccessHandler {
+  +ListAsync(): StaffListDto
+  +ResendAsync(id): Result
+  +WithdrawAsync(id): Result
+}
+class StaffInvitationDto <<record>> {
+  +Id: Guid
+  +Email: string
+  +Role: string
+  +ChildName: string?
+  +Status: string
+  +ReplacementRequested: bool
+  +ExpiresAt: DateTimeOffset
+}
+StaffAccessHandler ..> StaffInvitation : reissues, withdraws
+StaffAccessHandler ..> StaffInvitationDto : lists
+@enduml

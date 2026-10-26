@@ -1,0 +1,43 @@
+@startuml
+title UML sequence behaviour — Invite a youth from the child record
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Tom (Admin)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "ChildPage" as page
+  participant "InviteYouthDialog" as dlg
+  participant "StaffApi" as sapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "StaffEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application and Domain" #ECFDF3
+  participant "YouthInvitationHandler" as h
+  participant "InvitationIssuer" as iss
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+  participant "IEmailSender" as mail
+end box
+actor -> page : open Yusuf's record
+page -> sapi : youthAccount(childId)
+sapi -> ep : GET /children/{id}/youth-account
+ep -> ep : Learning on? else 404; ManageStaff? else 403
+ep -> h : AccountAsync
+h -> db : child (tenant filter), membership linked, open invitation
+ep --> page : status none
+actor -> dlg : yusuf.haddad@example.com
+dlg -> sapi : inviteYouth
+sapi -> ep : POST /children/{id}/youth-invitation
+ep -> h : InviteAsync
+h -> h : email, age 12 to 18, no account, none waiting (L2-051)
+h -> iss : IssueAsync(Youth, childId)
+iss -> db : invitation with token hash, audit
+iss -> mail : "Join Harbourview Youth Collective on PromiseHub"
+ep --> dlg : 201
+dlg --> page : closed(true)
+page --> actor : toast "Invitation sent", card shows invited
+@enduml

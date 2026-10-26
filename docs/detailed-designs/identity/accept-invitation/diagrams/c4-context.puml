@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Accept an invitation
+Person(invitee, "Invitee", "Youth, mentor, volunteer or staff member")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+System_Ext(mail, "Email provider", "Delivers invitation links")
+Rel(mail, invitee, "Delivers the link to")
+Rel(invitee, ph, "Accepts the invitation using", "HTTPS")
+@enduml

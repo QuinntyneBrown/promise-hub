@@ -19,7 +19,12 @@ One folder per subsystem, one folder per vertically sliced feature, each with a 
 | identity | revoke-sessions | L2-049 |
 | identity | recover-expired-session | L2-050 |
 | identity | handle-deactivated-account | L2-050 |
+| identity | accept-invitation | L2-052, L2-053 |
+| identity | set-secure-password | L2-053 |
+| identity | replace-expired-invitation | L2-054 |
 | staff | invite-and-onboard-staff | L2-009 |
+| staff | issue-invitations | L2-051 |
+| staff | manage-pending-invitations | L2-052, L2-054 |
 | households | maintain-household | L2-011 |
 | enrollment | enroll-guardian | L2-013 |
 | imports | import-roster | L2-010 |

@@ -1,0 +1,12 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Manage pending invitations
+Person(admin, "Admin", "Resends or withdraws invitations")
+Person(invitee, "Invitee", "Receives a fresh link")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+System_Ext(mail, "Email provider", "Delivers invitation links")
+Rel(admin, ph, "Manages invitations using", "HTTPS")
+Rel(ph, mail, "Sends fresh links via")
+Rel(mail, invitee, "Delivers the link to")
+@enduml

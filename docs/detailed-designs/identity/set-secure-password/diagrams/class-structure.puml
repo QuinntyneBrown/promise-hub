@@ -1,0 +1,30 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+title Class structure — Password policy
+class PasswordPolicy <<static>> {
+  +Minimum: int = 12
+  +Maximum: int = 128
+  +Check(password, email): string?
+}
+interface IPasswordHasher {
+  +Hash(password): string
+  +Verify(hash, password): bool
+}
+class PasswordHasher
+class InvitationHandler
+class PasswordResetHandler
+PasswordHasher ..|> IPasswordHasher
+InvitationHandler ..> PasswordPolicy
+PasswordResetHandler ..> PasswordPolicy
+InvitationHandler ..> IPasswordHasher
+PasswordResetHandler ..> IPasswordHasher
+@enduml

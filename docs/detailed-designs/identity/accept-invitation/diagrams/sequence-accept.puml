@@ -1,0 +1,41 @@
+@startuml
+title UML sequence behaviour — A youth accepts and lands on Learning
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Yusuf (invited youth)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "AcceptInvitePage" as page
+  participant "InvitationApi" as iapi
+  participant "SessionApi" as sess
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "InvitationEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application and Domain" #ECFDF3
+  participant "InvitationHandler" as h
+  participant "PasswordPolicy" as pp
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+  participant "IEmailSender" as mail
+end box
+actor -> page : open /invite/{token}
+page -> iapi : get(token)
+iapi -> ep : GET /invitations/{token}
+ep -> h : GetAsync
+h -> db : invitation by token hash, organization, child
+ep --> page : 200 email, Harbourview, Youth, Tom Nguyen, suggested name
+actor -> page : name and password
+page -> iapi : accept
+iapi -> ep : POST /invitations/{token}/accept
+ep -> h : AcceptAsync
+h -> pp : Check(password, email) (L2-053)
+h -> db : StaffUser, Membership(Youth) linked to Yusuf's record, invitation accepted, audit (L2-052)
+ep --> iapi : 200 signed-in + session cookie
+page -> sess : current()
+sess --> page : role Youth, modules include Learning
+page --> actor : Learning (Today when Learning is off) (L2-046)
+@enduml

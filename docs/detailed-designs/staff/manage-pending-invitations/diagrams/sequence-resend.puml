@@ -1,0 +1,35 @@
+@startuml
+title UML sequence behaviour — Resend an expired invitation
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Tom (Admin)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "StaffPage" as page
+  participant "StaffApi" as sapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "StaffEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application and Domain" #ECFDF3
+  participant "StaffAccessHandler" as h
+  participant "InvitationIssuer" as iss
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+  participant "IEmailSender" as mail
+end box
+actor -> page : Resend yusuf.haddad@example.com
+page -> sapi : resend(id)
+sapi -> ep : POST /staff/invitations/{id}/resend
+ep -> ep : ManageStaff? else 403
+ep -> h : ResendAsync(id)
+h -> db : invitation (tenant filter); accepted or withdrawn → 404
+h -> iss : ReissueAsync
+iss -> db : new token hash, expires in 14 days, request flag cleared, audit (L2-052)
+iss -> mail : fresh link
+ep --> page : 204
+page --> actor : toast "Invitation resent", list reloads
+@enduml
