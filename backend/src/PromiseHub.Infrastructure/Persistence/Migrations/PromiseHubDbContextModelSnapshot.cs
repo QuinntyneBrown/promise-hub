@@ -1517,6 +1517,45 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.ToTable("Programs");
                 });
 
+            modelBuilder.Entity("PromiseHub.Domain.Reports.ReportExport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("CreatedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("ExpiresAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Rows")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.ToTable("ReportExports");
+                });
+
             modelBuilder.Entity("PromiseHub.Domain.Slips.PermissionSlip", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2113,6 +2152,15 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                 });
 
             modelBuilder.Entity("PromiseHub.Domain.Programs.Program", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Reports.ReportExport", b =>
                 {
                     b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
                         .WithMany()

@@ -1,4 +1,4 @@
-// Scaffold only. Overwrite or delete as implementation requires. No product logic is implemented.
 import { Routes } from '@angular/router';
+import { ReportsPage } from './reports-page/reports-page';
 
-export const routes: Routes = [];
+export const routes: Routes = [{ path: '', component: ReportsPage, title: 'Reports · PromiseHub' }];

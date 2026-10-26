@@ -20,6 +20,8 @@ const can = {
   managePickups: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
   reviewIncidents: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
   reviewEnrollments: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
+  viewReports: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
+  readSmallCounts: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
 };
 
 type ImportField = 'ChildName' | 'DateOfBirth' | 'School' | 'GuardianName' | 'GuardianPhone' | 'GuardianEmail' | 'Allergies' | 'Language' | 'Notes' | 'Skip';
@@ -228,6 +230,8 @@ export class FakeApi {
   /** The six-digit code the fake texts to a contact on file. */
   readonly guardianCode = '482913';
   private smsUsed = new Map<string, number>();
+  /** Report exports by id: organization, file name and CSV. */
+  private reportExports = new Map<string, { organizationId: string; fileName: string; csv: string }>();
   /** Notification settings per organization, when saved; otherwise the defaults. */
   private notificationSettings = new Map<string, { noShowDelayMinutes: number; emailSupervisorsOnIncidents: boolean; smsCap: number }>();
   /** Who works each session; youth workers run only these (as seeded: Jaylen and Aisha tonight). */
@@ -366,6 +370,9 @@ export class FakeApi {
     ['PUT', /^\/api\/settings\/modules$/, (route) => this.saveModules(route)],
     ['GET', /^\/api\/today$/, (route) => this.today(route)],
     ['GET', /^\/api\/search$/, (route) => this.search(route)],
+    ['GET', /^\/api\/reports$/, (route) => this.report(route)],
+    ['POST', /^\/api\/reports\/exports$/, (route) => this.exportReport(route)],
+    ['GET', /^\/api\/reports\/exports\/(?<id>[^/]+)$/, (route, p) => this.downloadExport(route, p['id']!)],
     ['GET', /^\/api\/notifications$/, (route) => this.listNotifications(route)],
     ['POST', /^\/api\/notifications\/read-all$/, (route) => this.readAllNotifications(route)],
     ['POST', /^\/api\/notifications\/(?<id>[^/]+)\/read$/, (route, p) => this.readNotification(route, p['id']!)],
@@ -2928,6 +2935,83 @@ export class FakeApi {
     if (!m) return this.unauthenticated(route);
     for (const n of this.visibleNotifications(m)) n.readAt ??= NOW.toISOString();
     return route.fulfill({ status: 204 });
+  }
+
+  private async reportsCaller(route: Route): Promise<Membership | null> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) {
+      await this.unauthenticated(route);
+      return null;
+    }
+    if (!this.modules.get(m.organizationId)!.includes('Reports')) {
+      await route.fulfill({ status: 404 });
+      return null;
+    }
+    if (!can.viewReports(m)) {
+      await this.forbidden(route);
+      return null;
+    }
+    return m;
+  }
+
+  /** Mirrors backend ReportCalculator. */
+  private computeReport(m: Membership, programId: string | null, mask: boolean) {
+    const programs = this.programs.filter((p) => p.organizationId === m.organizationId && (!programId || p.id === programId));
+    const childIds = new Set(programs.flatMap((p) => p.roster));
+    const own = this.households.filter((h) => h.organizationId === m.organizationId);
+    const children = own.flatMap((h) => h.children.map((c) => ({ c, h }))).filter(({ c }) => childIds.has(c.id));
+    const sessions = this.events.filter((e) => programs.some((p) => p.id === e.programId) && e.status !== 'Cancelled' && e.startsAt <= NOW.toISOString());
+    const rate = (events: FakeEvent[]): number | null => {
+      const recs = events.flatMap((e) => [...this.sessionRecords(e.id).values()]);
+      const present = recs.filter((r) => r.status === 'Present' || r.status === 'SignedOut').length;
+      const absent = recs.filter((r) => r.status === 'Absent').length;
+      return present + absent ? Math.round((100 * present) / (present + absent)) : null;
+    };
+    const count = (n: number) => (mask && n > 0 && n < 5 ? '<5' : String(n));
+    const bands: [string, number, number][] = [['Under 6', 0, 5], ['6–8', 6, 8], ['9–11', 9, 11], ['12–13', 12, 13], ['14 and over', 14, 200]];
+    const languages = new Map<string, number>();
+    for (const h of own.filter((x) => children.some(({ h: ch }) => ch.id === x.id))) languages.set(h.language, (languages.get(h.language) ?? 0) + 1);
+    return {
+      childrenServed: children.length,
+      attendanceRate: rate(sessions) ?? 0,
+      sessionsDelivered: sessions.length,
+      slipsSigned: 0,
+      ages: bands.map(([band, min, max]) => ({ band, count: count(children.filter(({ c }) => (ageOf(c.dateOfBirth) ?? -1) >= min && (ageOf(c.dateOfBirth) ?? -1) <= max).length) })),
+      programs: programs
+        .filter((p) => p.status === 'Active')
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map((p) => ({ id: p.id, name: p.name, attendanceRate: rate(sessions.filter((e) => e.programId === p.id)) })),
+      languages: [...languages.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([language, households]) => ({ language, households })),
+      masked: mask,
+    };
+  }
+
+  private async report(route: Route): Promise<void> {
+    const m = await this.reportsCaller(route);
+    if (!m) return;
+    const programId = new URL(route.request().url()).searchParams.get('programId');
+    return route.fulfill({ json: this.computeReport(m, programId, !can.readSmallCounts(m)) });
+  }
+
+  private async exportReport(route: Route): Promise<void> {
+    const m = await this.reportsCaller(route);
+    if (!m) return;
+    const b = route.request().postDataJSON() as { programId: string | null };
+    const r = this.computeReport(m, b.programId, true);
+    const csv = ['Measure,Value', `Children served,${r.childrenServed}`, '', 'Age,Children', ...r.ages.map((a) => `${a.band},${a.count}`)].join('\n');
+    const id = `export-${this.nextId++}`;
+    const org = organizations.find((o) => o.id === m.organizationId)!;
+    const fileName = `${org.name.toLowerCase().split(' ').join('-')}-report-2026-11-05.csv`;
+    this.reportExports.set(id, { organizationId: m.organizationId, fileName, csv });
+    return route.fulfill({ status: 201, json: { id, fileName, rows: r.ages.length + r.programs.length + r.languages.length + 4, expiresAt: '2026-11-12T21:12:00Z' } });
+  }
+
+  private async downloadExport(route: Route, id: string): Promise<void> {
+    const m = await this.reportsCaller(route);
+    if (!m) return;
+    const e = this.reportExports.get(id);
+    if (!e || e.organizationId !== m.organizationId) return route.fulfill({ status: 404 });
+    return route.fulfill({ status: 200, contentType: 'text/csv', headers: { 'content-disposition': `attachment; filename="${e.fileName}"` }, body: e.csv });
   }
 
   private async listSlips(route: Route): Promise<void> {

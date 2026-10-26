@@ -1,0 +1,25 @@
+.toolbar {
+  max-width: var(--layout-control-width);
+  margin-block-end: var(--layout-gutter);
+}
+.numbers {
+  display: grid;
+  gap: var(--layout-gutter);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 12rem), 1fr));
+  margin-block-end: var(--layout-gutter);
+}
+.split {
+  display: grid;
+  gap: var(--layout-gutter);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+}
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-gutter);
+}
+.hint {
+  color: var(--color-fg-muted);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+}

@@ -146,3 +146,7 @@ export * from './lib/notifications/notifications-api.token';
 export * from './lib/notifications/notification-settings';
 export * from './lib/notifications/notification-settings-api';
 export * from './lib/notifications/notification-settings-api.token';
+export * from './lib/reports/report';
+export * from './lib/reports/report-export';
+export * from './lib/reports/reports-api';
+export * from './lib/reports/reports-api.token';

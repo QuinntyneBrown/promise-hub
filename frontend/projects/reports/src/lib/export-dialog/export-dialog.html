@@ -1,0 +1,20 @@
+<ph-dialog title="Export the report" description="Counts under 5 are written as “<5”.">
+  @if (failed()) {
+    <ph-alert tone="danger" title="The export didn’t finish" text="Try again." />
+  }
+  @if (ready(); as e) {
+    <ph-alert
+      tone="success"
+      [title]="'Export ready: ' + e.fileName"
+      text="The link works for 7 days."
+    />
+  }
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close()">Close</ph-button>
+    @if (ready(); as e) {
+      <ph-button variant="primary" icon="download" [href]="url(e.id)">Download CSV</ph-button>
+    } @else {
+      <ph-button variant="primary" [busy]="busy()" (click)="exportCsv()">Export CSV</ph-button>
+    }
+  </ng-container>
+</ph-dialog>

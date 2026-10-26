@@ -446,6 +446,7 @@
       ],
       "states": [
         "default",
+        "forbidden",
         "loading",
         "empty",
         "error",

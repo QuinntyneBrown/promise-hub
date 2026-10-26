@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 37 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="37" data-video-title="Produce grant reports" data-parts="Introduction|Promises|Building|Masking|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 37</div>
+  <h1>Produce grant reports</h1>
+  <p class="lead">Funder numbers without retyping a thing</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="Every number comes from data the organization already keeps">
+  <h2>What reports promise</h2>
+  <ul>
+    <li>From enrollment, check-in and slips</li>
+    <li>A program filter narrows every number</li>
+    <li>Counts under 5 written as “&lt;5”</li>
+    <li>Exports audited; links expire in 7 days</li>
+  </ul>
+</section>
+
+<section id="build" data-part="2" data-cue="Here is Reports on Marisol's laptop." data-clip="clips/reports-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Filter, then export</h3><p>Tutoring only, then a CSV.</p></div>
+</section>
+
+<section id="mask" data-part="3" data-cue="A site lead sees the same report">
+  <h2>Masked counts and access</h2>
+  <div class="cols">
+    <img class="shot" alt="Reports for a site lead with counts under five shown as less than five" src="shots/desktop-masked.png">
+    <img class="shot" alt="Reports on a phone" src="shots/phone-reports.png">
+  </div>
+</section>
+
+<section id="testing" data-part="4" data-cue="Backend tests cover the numbers">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Site lead, count of 3</td><td>&lt;5</td></tr>
+    <tr><td>Export after 8 days</td><td>410</td></tr>
+    <tr><td>Youth worker</td><td>403</td></tr>
+    <tr><td>Reports off</td><td>404</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="5" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>From the data, never retyped</li><li>Small counts protected</li><li>Links expire in a week</li></ul>
+  <p class="muted">Next: complete a survey</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

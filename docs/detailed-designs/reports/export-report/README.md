@@ -50,6 +50,10 @@ Domain in `PromiseHub.Domain/Reports/`: `Export` (`OrganizationId`, `RequestedBy
 - The PDF board summary format is `<TO SUPPLY>` and may ship after phase 1.
 - Object storage provider and signing scheme are `<TO SUPPLY>`.
 
+## Built so far
+
+Slice 37 delivered CSV exports stored as `ReportExport` with a seven-day link, masking, audit, and `ExportDialog` (ADR 0031). Funder XLSX templates and background exports with email are not built.
+
 ## Requirements
 
 The feature realizes the following level-2 (L2) requirement and enforces the cross-cutting ones listed with it.

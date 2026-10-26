@@ -1,7 +1,7 @@
 # Estimates
 
 - Overall effort: 216 days
-- Complete: 50%
+- Complete: 52%
 
 | Subsystem | Effort | Complete |
 |---|---|---|
@@ -20,7 +20,7 @@
 | [slips](slips.md) | 17 days | 73% |
 | [guardian](guardian.md) | 9 days | 59% |
 | [incidents](incidents.md) | 6 days | 75% |
-| [reports](reports.md) | 10 days | 0% |
+| [reports](reports.md) | 10 days | 57% |
 | [imports](imports.md) | 5 days | 75% |
 | [billing](billing.md) | 10 days | 0% |
 | [audit](audit.md) | 6 days | 25% |
