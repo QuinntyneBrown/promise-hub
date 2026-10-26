@@ -23,6 +23,12 @@ public sealed class SignInHandler(IPromiseHubDb db, IPasswordHasher hasher, Time
         var valid = user?.PasswordHash is { } hash && hasher.Verify(hash, command.Password);
         var membership = valid ? await ActiveMembership.ForAsync(db, email, cancellationToken) : null;
         db.SignInAttempts.Add(new SignInAttempt(Guid.NewGuid(), email, now, membership is not null));
+        if (membership is null && valid)
+        {
+            // Told only after the right password, so it never reveals whether an email has an account (L2-050).
+            await db.SaveChangesAsync(cancellationToken);
+            return new SignInResult(SignInStatus.Deactivated);
+        }
         if (membership is null)
         {
             if (failures.Count + 1 == SignInPolicy.MaxFailures)

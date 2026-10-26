@@ -79,6 +79,9 @@ export class SignInPage {
               queryParams: { returnUrl: this.returnUrl() },
             });
             break;
+          case 'deactivated':
+            void this.router.navigateByUrl('/account-deactivated');
+            break;
           case 'locked':
             this.lockedUntil.set(outcome.lockedUntil);
             break;

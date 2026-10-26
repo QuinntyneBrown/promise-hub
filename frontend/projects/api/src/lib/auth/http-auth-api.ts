@@ -87,9 +87,11 @@ export class HttpAuthApi implements AuthApi {
         of<SignInOutcome>(
           error.status === 423
             ? { status: 'locked', lockedUntil: error.error?.lockedUntil ?? '' }
-            : error.status === 401
-              ? { status: 'invalid' }
-              : { status: 'error' },
+            : error.status === 403 && error.error?.code === 'account-deactivated'
+              ? { status: 'deactivated' }
+              : error.status === 401
+                ? { status: 'invalid' }
+                : { status: 'error' },
         ),
       ),
     );

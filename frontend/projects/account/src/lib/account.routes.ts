@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { AccountDeactivatedPage } from './account-deactivated/account-deactivated-page';
 import { AccountPage } from './account-page/account-page';
 import { ForgotPasswordPage } from './forgot-password/forgot-password-page';
 import { ResetPasswordPage } from './reset-password/reset-password-page';
@@ -42,4 +43,9 @@ export const resetRoutes: Routes = [
 /** After signing out, outside the shell: mounted at /signed-out (L2-048). */
 export const signedOutRoutes: Routes = [
   { path: '', component: SignedOutPage, title: 'Signed out · PromiseHub' },
+];
+
+/** An account whose every membership was removed, outside the shell: mounted at /account-deactivated (L2-050). */
+export const deactivatedRoutes: Routes = [
+  { path: '', component: AccountDeactivatedPage, title: 'Account inactive · PromiseHub' },
 ];

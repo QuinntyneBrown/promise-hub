@@ -21,6 +21,10 @@ export const routes: Routes = [
     loadChildren: () => import('@promisehub/account').then((m) => m.resetRoutes),
   },
   {
+    path: 'account-deactivated',
+    loadChildren: () => import('@promisehub/account').then((m) => m.deactivatedRoutes),
+  },
+  {
     path: 'signed-out',
     loadChildren: () => import('@promisehub/account').then((m) => m.signedOutRoutes),
   },

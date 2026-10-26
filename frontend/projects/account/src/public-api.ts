@@ -1,5 +1,6 @@
 export {
   accountRoutes,
+  deactivatedRoutes,
   forgotRoutes,
   inviteRoutes,
   resetRoutes,

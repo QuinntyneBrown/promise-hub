@@ -4,4 +4,5 @@ export type SignInOutcome =
   | { status: 'mfa-required' }
   | { status: 'invalid' }
   | { status: 'locked'; lockedUntil: string }
+  | { status: 'deactivated' }
   | { status: 'error' };

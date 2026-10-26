@@ -593,6 +593,14 @@ export class FakeApi {
       // A fault answers as the API's ExceptionHandlingMiddleware does: a code and a reference to quote (L2-041).
       return route.fulfill(failure >= 500 ? { status: failure, json: { code: 'server-error', reference: FAULT_REFERENCE } } : { status: failure });
     }
+    // A removed membership continues in the person's next one, or the account is inactive (L2-002, L2-050).
+    const current = memberships.find((x) => x.id === this.membershipId);
+    if (current && this.removedMemberships.has(current.id)) {
+      const next = memberships.find((x) => x.email === current.email && !this.removedMemberships.has(x.id));
+      // Like the cookie, the session stays and every request answers the same until someone signs in again.
+      if (!next && !url.pathname.startsWith('/api/auth')) return route.fulfill({ status: 401, json: { code: 'account-deactivated' } });
+      if (next) this.membershipId = next.id;
+    }
     // A suspended organization is closed to its staff; platform administration stays open (L2-003).
     const caller = memberships.find((x) => x.id === this.membershipId);
     if (caller && this.suspended.has(caller.organizationId) && !url.pathname.startsWith('/api/platform') && !url.pathname.startsWith('/api/auth')) {
@@ -713,8 +721,12 @@ export class FakeApi {
       return route.fulfill({ status: 423, json: { code: 'locked', lockedUntil: '2026-11-05T21:27:00Z' } });
     }
     const membership = memberships
-      .filter((m) => m.email === key)
+      .filter((m) => m.email === key && !this.removedMemberships.has(m.id))
       .sort((a, b) => a.organizationId.localeCompare(b.organizationId))[0];
+    // The right password with every membership removed: told only now, never for a wrong password (L2-050).
+    if (!membership && password === seededPassword && memberships.some((m) => m.email === key)) {
+      return route.fulfill({ status: 403, json: { code: 'account-deactivated' } });
+    }
     if (!membership || password !== seededPassword) {
       this.failSignIn(key, 1);
       return route.fulfill({ status: 401, json: { code: 'invalid-credentials' } });
@@ -896,6 +908,11 @@ export class FakeApi {
 
   /** Removed memberships (as an admin would remove them); a session in one falls back to the person's next. */
   private removedMemberships = new Set<string>();
+
+  /** An admin removes every membership of this person (L2-050). */
+  deactivate(email: string): void {
+    for (const m of memberships.filter((x) => x.email === email)) this.removedMemberships.add(m.id);
+  }
 
   removeMembership(id: string): void {
     this.removedMemberships.add(id);

@@ -11,7 +11,10 @@ public sealed class TenantContextMiddleware(RequestDelegate next)
 {
     public async Task InvokeAsync(HttpContext context, TenantContext tenant, IPromiseHubDb db)
     {
-        if (context.User.Identity?.IsAuthenticated == true)
+        // Signing in, the second factor and password reset are anonymous and start their own session, so a stale cookie
+        // on a shared device (an ended, removed or inactive one) never stops the next person signing in (L2-048, L2-050).
+        var startsASession = context.Request.Path.StartsWithSegments("/auth") && !context.Request.Path.StartsWithSegments("/auth/sign-out");
+        if (context.User.Identity?.IsAuthenticated == true && !startsASession)
         {
             var claimed = Guid.TryParse(context.User.FindFirst(AuthSchemes.MembershipClaim)?.Value, out var membershipId)
                 ? await db.Memberships.IgnoreQueryFilters().AsNoTracking().FirstOrDefaultAsync(m => m.Id == membershipId, context.RequestAborted)
@@ -24,6 +27,12 @@ public sealed class TenantContextMiddleware(RequestDelegate next)
                 if (membership is not null)
                 {
                     await SessionCookie.ReissueAsync(context, membership.Id);
+                }
+                else
+                {
+                    // No organization left: the account is inactive, and the app says so (L2-050).
+                    await Problems.Write(context.Response, StatusCodes.Status401Unauthorized, "account-deactivated");
+                    return;
                 }
             }
             // A cookie from before "sign out everywhere" carries an older session version (L2-031).
