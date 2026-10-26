@@ -237,6 +237,8 @@ export class FakeApi {
   private smsUsed = new Map<string, number>();
   /** Consent retention per organization, when saved (null: until deleted by request); otherwise 7 years. */
   private retention = new Map<string, number | null>();
+  /** Guardian data requests: household, kind, email and who fulfilled it. */
+  private dataRequests: { id: string; organizationId: string; householdId: string; household: string; kind: 'Export' | 'Delete'; email: string; fulfilledBy: string | null }[] = [];
   /** Plans changed in billing, and organizations whose last payment failed (with when). */
   private plans = new Map<string, 'Free' | 'Standard' | 'Plus'>();
   private paymentFailed = new Map<string, string>();
@@ -384,6 +386,9 @@ export class FakeApi {
     ['GET', /^\/api\/settings\/organization$/, (route) => this.getOrganizationProfile(route)],
     ['PUT', /^\/api\/settings\/organization$/, (route) => this.saveOrganizationProfile(route)],
     ['GET', /^\/api\/settings\/privacy$/, (route) => this.getPrivacy(route)],
+    ['GET', /^\/api\/settings\/data-requests$/, (route) => this.listDataRequests(route)],
+    ['POST', /^\/api\/settings\/data-requests\/(?<id>[^/]+)\/fulfil$/, (route, p) => this.fulfilDataRequest(route, p['id']!)],
+    ['POST', /^\/api\/g\/home\/(?<token>[^/]+)\/data-requests$/, (route, p) => this.askForData(route, p['token']!)],
     ['PUT', /^\/api\/settings\/privacy$/, (route) => this.savePrivacy(route)],
     ['GET', /^\/api\/settings\/notifications$/, (route) => this.getNotificationSettings(route)],
     ['PUT', /^\/api\/settings\/notifications$/, (route) => this.saveNotificationSettings(route)],
@@ -709,6 +714,46 @@ export class FakeApi {
     if (!b.city?.trim()) errors['city'] = 'Enter the city you work in.';
     if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
     this.profiles.set(organizationId, { name: b.name.trim(), city: b.city.trim() });
+    return route.fulfill({ status: 204 });
+  }
+
+  /** A request a guardian already sent (seeded as the API would store it). */
+  askedForData(householdId: string, kind: 'Export' | 'Delete', email = 'carmen.rivera@example.com'): void {
+    const h = this.households.find((x) => x.id === householdId)!;
+    this.dataRequests.push({ id: `dr-${this.nextId++}`, organizationId: h.organizationId, householdId, household: h.name, kind, email, fulfilledBy: null });
+  }
+
+  /** Mirrors backend DataRequestHandler. */
+  private async askForData(route: Route, token: string): Promise<void> {
+    const householdId = this.homeLinks.get(token);
+    const household = householdId ? this.households.find((h) => h.id === householdId) : undefined;
+    if (!household) return route.fulfill({ status: 410, json: { code: 'link-expired' } });
+    if (!this.trustedHouseholds.has(household.id)) return route.fulfill({ status: 401, json: { code: 'verification-required' } });
+    const b = route.request().postDataJSON() as { kind: 'Export' | 'Delete'; email: string };
+    if (!b.email?.trim()) return route.fulfill({ status: 422, json: { errors: { email: 'Enter an email.' } } });
+    const id = `dr-${this.nextId++}`;
+    this.dataRequests.push({ id, organizationId: household.organizationId, householdId: household.id, household: household.name, kind: b.kind, email: b.email.trim(), fulfilledBy: null });
+    return route.fulfill({ status: 201, json: { id } });
+  }
+
+  private async listDataRequests(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    const requests = this.dataRequests
+      .filter((r) => r.organizationId === organizationId)
+      .sort((a, b) => Number(!!a.fulfilledBy) - Number(!!b.fulfilledBy))
+      .map((r) => ({ id: r.id, household: r.household, kind: r.kind, email: r.email, requestedAt: NOW.toISOString(), status: r.fulfilledBy ? 'Fulfilled' : 'Open', fulfilledBy: r.fulfilledBy }));
+    return route.fulfill({ json: { requests } });
+  }
+
+  private async fulfilDataRequest(route: Route, id: string): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    const r = this.dataRequests.find((x) => x.id === id && x.organizationId === organizationId);
+    if (!r) return route.fulfill({ status: 404 });
+    if (r.fulfilledBy) return route.fulfill({ status: 409 });
+    r.fulfilledBy = memberships.find((m) => m.id === this.membershipId)!.personName;
+    if (r.kind === 'Delete') this.households = this.households.filter((h) => h.id !== r.householdId);
     return route.fulfill({ status: 204 });
   }
 

@@ -16,6 +16,14 @@ export class SettingsPrivacyPage extends BasePage {
     return this.page.getByRole('radio', { name: label });
   }
 
+  request(household: string): Locator {
+    return this.page.getByRole('list', { name: 'Requests from guardians' }).getByRole('listitem').filter({ hasText: `${household} household` });
+  }
+
+  async fulfil(household: string): Promise<void> {
+    await this.request(household).getByRole('button').click();
+  }
+
   async save(): Promise<void> {
     await this.page.getByRole('button', { name: 'Save retention' }).click();
   }

@@ -67,6 +67,14 @@ export class GuardianHomePage extends BasePage {
     await dialog.getByRole('button', { name: /^(Save|Guardar|Enregistrer)$/ }).click();
   }
 
+  /** Opens the data request, picks copy or deletion and sends it to the email (left as filled in when not given). */
+  async askForData(open: string, kind: string, send: string, email?: string): Promise<void> {
+    await this.page.getByRole('button', { name: open }).click();
+    await this.dialog.getByRole('radio', { name: kind }).check();
+    if (email !== undefined) await this.dialog.getByRole('textbox').fill(email);
+    await this.dialog.getByRole('button', { name: send }).click();
+  }
+
   get dialog(): Locator {
     return this.page.getByRole('dialog');
   }

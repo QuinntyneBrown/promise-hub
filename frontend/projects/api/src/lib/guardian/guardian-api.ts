@@ -13,6 +13,8 @@ export interface GuardianApi {
   slip(token: string): Observable<GuardianSlipResult>;
   home(token: string): Observable<GuardianPageResult<GuardianHome>>;
   survey(token: string): Observable<GuardianPageResult<GuardianSurvey>>;
+  /** Asks for a copy (Export) or deletion (Delete) of the household's data (L2-030 criterion 4). */
+  requestData(token: string, kind: 'Export' | 'Delete', email: string): Observable<WriteOutcome>;
   answerSurvey(token: string, rating: number | null, comment: string): Observable<WriteOutcome>;
   answerNoShow(
     token: string,

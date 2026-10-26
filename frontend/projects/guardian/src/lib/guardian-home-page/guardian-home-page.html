@@ -162,6 +162,19 @@
             </div>
           </ph-card>
         }
+        <ph-card [title]="dataText().heading">
+          <div class="stack">
+            @if (dataRequested()) {
+              <ph-alert tone="success" [title]="dataText().sent" />
+            }
+            <p>{{ dataText().intro }}</p>
+            <div>
+              <ph-button hasPopup="dialog" (click)="requestData(home)">{{
+                dataText().open
+              }}</ph-button>
+            </div>
+          </div>
+        </ph-card>
         @for (child of home.children; track child.id) {
           <ph-card [title]="h().medicalHeading(child.firstName)">
             <div class="stack">

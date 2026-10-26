@@ -28,6 +28,11 @@ import {
   GuardianDetailsData,
   GuardianDetailsDialog,
 } from '../guardian-details-dialog/guardian-details-dialog';
+import { dataRequestText } from '../data-request-text';
+import {
+  GuardianDataRequestData,
+  GuardianDataRequestDialog,
+} from '../guardian-data-request-dialog/guardian-data-request-dialog';
 import {
   GuardianPickupData,
   GuardianPickupDialog,
@@ -192,6 +197,23 @@ export class GuardianHomePage {
         this.load(this.token());
       } else this.failed.set(true);
     });
+  }
+
+  protected readonly dataText = computed(() => dataRequestText(this.language()));
+  protected readonly dataRequested = signal(false);
+
+  /** Asks for a copy or deletion of the household's data (L2-030 criterion 4). */
+  protected requestData(home: GuardianHome): void {
+    this.dialogs
+      .open<boolean, GuardianDataRequestData, GuardianDataRequestDialog>(
+        GuardianDataRequestDialog,
+        {
+          token: this.token(),
+          text: this.dataText(),
+          email: home.contact?.email ?? null,
+        },
+      )
+      .closed.subscribe((done) => done && this.dataRequested.set(true));
   }
 
   /** Opens the correction dialog for the guardian's contact (no child) or a child's medical details (L2-011 criterion 7). */

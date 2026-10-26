@@ -165,3 +165,4 @@ export * from './lib/billing/plan-change';
 export * from './lib/privacy/privacy-api';
 export * from './lib/privacy/privacy-api.token';
 export * from './lib/privacy/privacy-settings';
+export * from './lib/privacy/data-request';

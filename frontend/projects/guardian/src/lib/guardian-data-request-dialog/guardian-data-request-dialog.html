@@ -1,0 +1,26 @@
+<form novalidate (ngSubmit)="send()">
+  <ph-dialog [title]="data.text.title" [description]="data.text.description">
+    @if (failed()) {
+      <ph-alert tone="danger" [title]="data.text.failed" />
+    }
+    <ph-radio-group
+      [legend]="data.text.legend"
+      [options]="options"
+      name="kind"
+      [(ngModel)]="kind"
+    />
+    <ph-text-field
+      inputId="email"
+      [label]="data.text.email"
+      type="email"
+      autocomplete="email"
+      name="email"
+      [error]="errors()['email'] ?? null"
+      [(ngModel)]="email"
+    />
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">{{ data.text.cancel }}</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">{{ data.text.send }}</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

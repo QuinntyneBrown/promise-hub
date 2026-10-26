@@ -53,6 +53,8 @@ Admins view residency and set retention on `settings-privacy`. The region is sho
 
 ## Built so far
 
+Slice 43 added guardian data requests: `DataRequest`, `DataRequestHandler` (ask from the family page, fulfil export or deletion once, audited), the family page's "Your data" card and the requests list on Settings › Privacy (ADR 0037).
+
 Slice 42 delivered `Organization.Region`, `PrivacySettings` with `GET`/`PUT /settings/privacy`, the nightly `RetentionRunner` and `ApplyRetentionHandler`, and `SettingsPrivacyPage` (ADR 0036). Family anonymization and the full export are not built.
 
 ## Requirements
