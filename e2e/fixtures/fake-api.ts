@@ -235,6 +235,8 @@ export class FakeApi {
   /** The six-digit code the fake texts to a contact on file. */
   readonly guardianCode = '482913';
   private smsUsed = new Map<string, number>();
+  /** Consent retention per organization, when saved (null: until deleted by request); otherwise 7 years. */
+  private retention = new Map<string, number | null>();
   /** Plans changed in billing, and organizations whose last payment failed (with when). */
   private plans = new Map<string, 'Free' | 'Standard' | 'Plus'>();
   private paymentFailed = new Map<string, string>();
@@ -381,6 +383,8 @@ export class FakeApi {
     ['POST', /^\/api\/me\/organization$/, (route) => this.switchOrganization(route)],
     ['GET', /^\/api\/settings\/organization$/, (route) => this.getOrganizationProfile(route)],
     ['PUT', /^\/api\/settings\/organization$/, (route) => this.saveOrganizationProfile(route)],
+    ['GET', /^\/api\/settings\/privacy$/, (route) => this.getPrivacy(route)],
+    ['PUT', /^\/api\/settings\/privacy$/, (route) => this.savePrivacy(route)],
     ['GET', /^\/api\/settings\/notifications$/, (route) => this.getNotificationSettings(route)],
     ['PUT', /^\/api\/settings\/notifications$/, (route) => this.saveNotificationSettings(route)],
     ['GET', /^\/api\/settings\/modules$/, (route) => this.getModules(route)],
@@ -705,6 +709,25 @@ export class FakeApi {
     if (!b.city?.trim()) errors['city'] = 'Enter the city you work in.';
     if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
     this.profiles.set(organizationId, { name: b.name.trim(), city: b.city.trim() });
+    return route.fulfill({ status: 204 });
+  }
+
+  /** Mirrors backend PrivacyHandler. */
+  private async getPrivacy(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    const years = this.retention.has(organizationId) ? this.retention.get(organizationId)! : 7;
+    return route.fulfill({ json: { region: 'Canada (Toronto region)', consentRetentionYears: years } });
+  }
+
+  private async savePrivacy(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    const b = route.request().postDataJSON() as { consentRetentionYears: number | null };
+    if (b.consentRetentionYears !== null && ![7, 3].includes(b.consentRetentionYears)) {
+      return route.fulfill({ status: 422, json: { errors: { consentRetentionYears: 'Choose 7 years, 3 years or until deleted by request.' } } });
+    }
+    this.retention.set(organizationId, b.consentRetentionYears);
     return route.fulfill({ status: 204 });
   }
 

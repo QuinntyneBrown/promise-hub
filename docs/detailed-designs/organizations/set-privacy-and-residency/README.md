@@ -51,6 +51,10 @@ Admins view residency and set retention on `settings-privacy`. The region is sho
 - **`JobRunner`** — schedules `ApplyRetentionJob` per tenant; the schedule interval is `<TO SUPPLY>`.
 - **`AuditLog`** — records retention saves, region changes, each data request, each fulfilment and each retention deletion.
 
+## Built so far
+
+Slice 42 delivered `Organization.Region`, `PrivacySettings` with `GET`/`PUT /settings/privacy`, the nightly `RetentionRunner` and `ApplyRetentionHandler`, and `SettingsPrivacyPage` (ADR 0036). Family anonymization and the full export are not built.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

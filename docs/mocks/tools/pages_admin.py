@@ -104,6 +104,7 @@ def settings_privacy(S):
     S.add("default", "Where data lives, how long it is kept, and how guardian export and deletion requests are handled.", nav="settings", user=M, main=hdr + body())
     S.add("loading", "Loading.", nav="settings", main=page_header("Privacy and data", "") + settings_nav("settings-privacy") + skeleton_form(4))
     S.add("error", "Failed to load.", nav="settings", main=page_header("Privacy and data", "") + settings_nav("settings-privacy") + card(empty("We couldn’t load privacy settings", "Try again.", action=btn("Try again", "primary", icon_name="refresh"), error=True, icon_name="alert-triangle"), cls="card--flush form-width--md"))
+    S.add("forbidden", "A site lead opening privacy settings.", nav="settings", user=J, main=page_header("Privacy and data", "") + card(empty("Admins set privacy", "Ask an admin or a program director.", action=btn("Back to Today", "", href=page("today")), icon_name="lock"), cls="card--flush"))
     S.add("submitting", "Saving retention.", nav="settings", user=M, main=hdr + body(busy=True))
     S.add("success", "Saved.", nav="settings", user=M, main=hdr + body(saved=True), toast_html=toast_region(toast("success", "Retention saved")))
 

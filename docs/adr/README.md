@@ -39,3 +39,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0033](0033-setup-wizard.md) | Setup progress is read from the organization's data, and each step reuses its feature's screen |
 | [0034](0034-switch-organization.md) | Switching moves the session cookie to another membership and reloads the app |
 | [0035](0035-billing.md) | Plans are fixed terms in the domain; limits are enforced where children join; payments are modelled, not processed |
+| [0036](0036-privacy-retention.md) | Region is fixed per organization; consent retention is a setting applied by a nightly per-tenant job |
