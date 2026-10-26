@@ -43,6 +43,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 33 | [Monitor today's work](33-monitor-todays-work/README.md) | ~2 min | Today composes counts, slips due, coming up and work waiting from the modules that are on |
 | 34 | [Search records](34-search-records/README.md) | ~2 min | Staff find permitted children, families and events by name, email or phone digits |
 | 35 | [Review notifications](35-review-notifications/README.md) | ~2 min | The bell counts unread notices; the center lists them newest first and marks them read |
+| 36 | [Configure notifications](36-configure-notifications/README.md) | ~2 min | An admin sets the no-show delay, supervisor emails and the SMS cap; jobs follow them |
 
 ## Making or updating a video
 

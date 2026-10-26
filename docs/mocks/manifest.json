@@ -567,7 +567,8 @@
         "error",
         "invalid",
         "submitting",
-        "success"
+        "success",
+        "forbidden"
       ],
       "not_applicable": {
         "empty": "Settings always have values."

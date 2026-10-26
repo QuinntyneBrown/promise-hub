@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 36 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="36" data-video-title="Configure notifications" data-parts="Introduction|Promises|Changing them|Who|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 36</div>
+  <h1>Configure notifications</h1>
+  <p class="lead">Each organization's own rhythm for alerts and texts</p>
+</section>
+
+<section id="promises" data-part="1" data-cue="A new organization starts with sensible defaults">
+  <h2>What the settings promise</h2>
+  <ul>
+    <li>No-show text after 15 minutes, 5 to 60 allowed</li>
+    <li>Supervisor incident emails, on or off</li>
+    <li>A monthly text cap, never below what's used</li>
+    <li>Jobs read them on every run; saves are audited</li>
+  </ul>
+</section>
+
+<section id="change" data-part="2" data-cue="Here is Settings › Notifications on Tom's laptop." data-clip="clips/settings-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Desktop</span><h3>Delay and cap</h3><p>A cap below what's used is refused.</p></div>
+</section>
+
+<section id="who" data-part="3" data-cue="Site leads and youth workers who open the page">
+  <h2>Who can change them</h2>
+  <div class="cols">
+    <img class="shot" alt="A site lead told that admins configure notifications" src="shots/desktop-forbidden.png">
+    <img class="shot" alt="Notification settings on a phone" src="shots/phone-settings.png">
+  </div>
+</section>
+
+<section id="testing" data-part="4" data-cue="Backend tests cover the defaults">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Delay 10 minutes</td><td>Text goes sooner</td></tr>
+    <tr><td>Supervisor emails off</td><td>No email, notice still arrives</td></tr>
+    <tr><td>Site lead</td><td>403</td></tr>
+    <tr><td>Another organization</td><td>Its own defaults</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="5" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Defaults first</li><li>Jobs follow the settings</li><li>The cap never drops below what's used</li></ul>
+  <p class="muted">Next: produce grant reports</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

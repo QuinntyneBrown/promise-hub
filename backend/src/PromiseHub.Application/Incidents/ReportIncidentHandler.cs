@@ -14,7 +14,7 @@ namespace PromiseHub.Application.Incidents;
 /// Records an incident from the structured form (page: new-incident): every required fact is named when missing and nothing
 /// is saved; a complete report needs review, is audited and is emailed at once to the program directors (L2-023 criterion 1).
 /// </summary>
-public sealed class ReportIncidentHandler(IPromiseHubDb db, ITenantContext tenant, IEmailSender email, IAuditWriter audit, TimeProvider clock, NotificationWriter notifications)
+public sealed class ReportIncidentHandler(IPromiseHubDb db, ITenantContext tenant, IEmailSender email, IAuditWriter audit, TimeProvider clock, NotificationWriter notifications, NotificationSettingsReader settings)
 {
     public async Task<Result> HandleAsync(ReportIncidentCommand command, CancellationToken cancellationToken = default)
     {
@@ -60,6 +60,10 @@ public sealed class ReportIncidentHandler(IPromiseHubDb db, ITenantContext tenan
         await notifications.NotifyAsync(Permission.ReviewIncidents, "incidents",
             $"Incident reported by {tenant.ActorName}: {child.FullName}, {incident.Category.ToString().ToLowerInvariant()}.", $"/incidents/{incident.Id}", cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
+        if (!await settings.EmailSupervisorsOnIncidentsAsync(cancellationToken))
+        {
+            return Result.Created(incident.Id);
+        }
         var supervisors = await db.Memberships.AsNoTracking().Where(m => m.Role == Role.ProgramDirector && m.RemovedAt == null).Select(m => m.Email).ToListAsync(cancellationToken);
         foreach (var to in supervisors)
         {

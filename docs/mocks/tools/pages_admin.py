@@ -85,6 +85,7 @@ def settings_notifications(S):
     S.add("invalid", "Delay out of range and a cap below what is already used.", nav="settings", user=M, main=hdr + form(err={"delay": "Choose between 5 and 60 minutes.", "cap": "Can’t be below 1,212, already used this month."}).replace('value="15"', 'value="2"').replace('value="2000"', 'value="1000"'))
     S.add("submitting", "Saving.", nav="settings", user=M, main=hdr + form(busy=True))
     S.add("success", "Saved.", nav="settings", user=M, main=hdr + form(saved=True), toast_html=toast_region(toast("success", "Notification settings saved")))
+    S.add("forbidden", "A site lead opening notification settings.", nav="settings", user=J, main=page_header("Notifications", "") + card(empty("Admins configure notifications", "Ask an admin or a program director.", action=btn("Back to Today", "", href=page("today")), icon_name="lock"), cls="card--flush"))
 
 
 # ------------------------------------------------------------------ Privacy and data

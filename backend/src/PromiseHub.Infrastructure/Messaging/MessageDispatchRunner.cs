@@ -37,7 +37,7 @@ public sealed class MessageDispatchRunner(IServiceScopeFactory scopes, TimeProvi
             var withSessions = (await db.Events.IgnoreQueryFilters().AsNoTracking()
                 .Where(e => e.NoShowAlert && e.Status != Domain.Events.EventStatus.Cancelled)
                 .Select(e => new { e.OrganizationId, e.StartsAt, e.EndsAt }).ToListAsync(cancellationToken))
-                .Where(e => e.StartsAt + Application.Attendance.NoShowRules.Delay <= now && e.EndsAt > now).Select(e => e.OrganizationId);
+                .Where(e => e.StartsAt + Application.Attendance.NoShowRules.MinDelay <= now && e.EndsAt > now).Select(e => e.OrganizationId);
             organizations = [.. withDeliveries.Union(withSlips).Union(withReminders).Union(withSessions)];
         }
         foreach (var organizationId in organizations)

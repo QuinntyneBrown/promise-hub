@@ -33,7 +33,7 @@
 | Admin / office manager | Manage billing | Check child and SMS usage, review limits, and change plans. | [8 days](detailed-designs/billing/meter-plan-and-usage/README.md) | 0% |
 | Admin / office manager | Configure privacy | Set data residency, retention, and guardian data request handling. | [5 days](detailed-designs/organizations/set-privacy-and-residency/README.md) | 0% |
 | Admin / office manager | Review audit history | Search sensitive actions by person, record, and time. | [5 days](detailed-designs/audit/record-and-search-audit/README.md) | 0% |
-| Admin / office manager | Configure notifications | Set reminder, no-show, and messaging preferences. | [3 days](detailed-designs/notifications/notify-in-app/README.md) | 0% |
+| Admin / office manager | Configure notifications | Set reminder, no-show, and messaging preferences. | [3 days](detailed-designs/notifications/notify-in-app/README.md) | 70% · [video](videos/36-configure-notifications/README.md) |
 | Youth worker | Start an invited shift | Accept an invitation, complete setup, and reach today's assigned session. | [4 days](detailed-designs/staff/invite-and-onboard-staff/README.md) | 80% · [video](videos/30-start-an-invited-shift/README.md) |
 | Youth worker | Record attendance | Check children in or out within assigned permissions. | [3 days](detailed-designs/attendance/check-in-and-sign-out/README.md) | 75% · [video](videos/09-record-attendance-as-youth-worker/README.md) |
 | Youth worker | Report an incident | Submit a structured report for supervisor review. | [3 days](detailed-designs/incidents/report-and-review-incident/README.md) | 90% · [video](videos/20-report-an-incident-as-a-youth-worker/README.md) |

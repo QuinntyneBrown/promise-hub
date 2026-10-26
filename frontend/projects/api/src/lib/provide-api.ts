@@ -29,7 +29,9 @@ import { INVITATION_API } from './invitations/invitation-api.token';
 import { HttpModulesApi } from './modules/http-modules-api';
 import { HttpStaffApi } from './staff/http-staff-api';
 import { STAFF_API } from './staff/staff-api.token';
+import { HttpNotificationSettingsApi } from './notifications/http-notification-settings-api';
 import { HttpNotificationsApi } from './notifications/http-notifications-api';
+import { NOTIFICATION_SETTINGS_API } from './notifications/notification-settings-api.token';
 import { NOTIFICATIONS_API } from './notifications/notifications-api.token';
 import { HttpSearchApi } from './search/http-search-api';
 import { SEARCH_API } from './search/search-api.token';
@@ -67,6 +69,7 @@ export function provideApi(): EnvironmentProviders {
     { provide: TODAY_API, useClass: HttpTodayApi },
     { provide: SEARCH_API, useClass: HttpSearchApi },
     { provide: NOTIFICATIONS_API, useClass: HttpNotificationsApi },
+    { provide: NOTIFICATION_SETTINGS_API, useClass: HttpNotificationSettingsApi },
     { provide: INVITATION_API, useClass: HttpInvitationApi },
   ]);
 }

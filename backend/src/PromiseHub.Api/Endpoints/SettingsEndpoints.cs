@@ -1,3 +1,4 @@
+using PromiseHub.Application.Notifications;
 using PromiseHub.Api.Authorization;
 using PromiseHub.Application.Identity;
 using PromiseHub.Application.Organizations;
@@ -11,6 +12,9 @@ public static class SettingsEndpoints
     {
         var settings = app.MapGroup("/settings").RequirePermission(Permission.ManageSettings);
         settings.MapGet("/organization", (GetOrganizationSettingsHandler handler, CancellationToken ct) => handler.HandleAsync(ct));
+        settings.MapGet("/notifications", (NotificationSettingsHandler handler, CancellationToken ct) => handler.GetAsync(ct));
+        settings.MapPut("/notifications", async (SaveNotificationSettingsCommand command, NotificationSettingsHandler handler, CancellationToken ct) =>
+            (await handler.SaveAsync(command, ct)).ToHttp());
         settings.MapGet("/modules", (GetModulesHandler handler, CancellationToken ct) => handler.HandleAsync(ct));
         settings.MapPut("/modules", async (SaveModulesRequest request, SaveModulesHandler handler, CancellationToken ct) =>
         {

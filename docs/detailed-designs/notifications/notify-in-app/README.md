@@ -59,6 +59,8 @@ Sources that publish in phase 1: `incidents/report-and-review-incident` (inciden
 
 Slice 35 delivered `Notification`, `NotificationWriter` (incident reports notify reviewers), `GET /notifications` with read and read-all, module-hidden kinds, the bell's unread count in the shell and the notification center at `/notifications` (ADR 0029). The bell panel, other producers, digests and push are not built.
 
+Slice 36 added `NotificationSettings` with `GET`/`PUT /settings/notifications`, the no-show delay, supervisor incident emails and the SMS cap honoured by the jobs, and `SettingsNotificationsPage` (ADR 0030).
+
 ## Requirements
 
 The feature realizes the following level-2 (L2) requirement and enforces the cross-cutting ones listed with it.
