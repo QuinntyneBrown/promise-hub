@@ -863,6 +863,7 @@
       "states": [
         "default",
         "error",
+        "forbidden",
         "success"
       ],
       "not_applicable": {
