@@ -13,6 +13,12 @@ One folder per subsystem, one folder per vertically sliced feature, each with a 
 | organizations | set-privacy-and-residency | L2-030 |
 | identity | sign-in | L2-006 |
 | identity | authorize-request | L2-007, L2-045 |
+| identity | sign-in-as-youth-or-mentor | L2-046 |
+| identity | recover-locked-account | L2-047 |
+| identity | end-user-session | L2-048 |
+| identity | revoke-sessions | L2-049 |
+| identity | recover-expired-session | L2-050 |
+| identity | handle-deactivated-account | L2-050 |
 | staff | invite-and-onboard-staff | L2-009 |
 | households | maintain-household | L2-011 |
 | enrollment | enroll-guardian | L2-013 |

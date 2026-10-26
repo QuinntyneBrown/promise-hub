@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 50 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="50" data-video-title="Sign in as a youth or mentor" data-parts="Introduction|Role home|Module off|Lockout|Sign out|States|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 50</div>
+  <h1>Sign in as a youth or mentor</h1>
+  <p class="lead">A home per role, a lock, a clean sign-out and clear states</p>
+</section>
+
+<section id="role-home" data-part="1" data-cue="There is one sign-in page for everyone.">
+  <h2>One sign-in, a home per role</h2>
+  <table class="facts">
+    <tr><th>Role</th><th>Lands on</th></tr>
+    <tr><td>Youth</td><td>Learning, while it is on</td></tr>
+    <tr><td>Mentor</td><td>Mentoring, while it is on</td></tr>
+    <tr><td>Everyone else</td><td>Today</td></tr>
+    <tr><td>Opened a link first</td><td>That link</td></tr>
+  </table>
+  <p class="muted small">frontend/projects/api/src/lib/session/role-home.ts</p>
+</section>
+
+<section id="youth" data-part="1" data-cue="Here is Sofía, a youth at Harbourview, on her phone." data-clip="clips/youth-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Sofía signs in</h3><p>Default sign-in, then Learning.</p></div>
+</section>
+
+<section id="mentor" data-part="1" data-cue="Daniel, a mentor, signs in on a laptop" data-clip="clips/mentor-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Daniel signs in</h3><p>Mentoring, nobody assigned yet.</p></div>
+</section>
+
+<section id="module-off" data-part="2" data-cue="The home only points at a module that is on." data-clip="clips/module-off-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Learning off at Northgate</h3><p>Lucía lands on Today; <code>/learning/me</code> answers 404.</p></div>
+</section>
+
+<section id="locked" data-part="3" data-cue="Five wrong passwords in a row lock that email" data-clip="clips/locked-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Fifth try, then paused</h3><p>423 with the time the lock ends.</p></div>
+</section>
+
+<section id="locked-shots" data-part="3" data-cue="The count is now consecutive">
+  <h2>Error, then locked</h2>
+  <div class="cols">
+    <img class="shot" alt="Sign-in on a phone with the wrong-password message" src="shots/phone-invalid.png">
+    <img class="shot" alt="Sign-in on a phone paused until 4:27 pm with Reset password" src="shots/phone-locked.png">
+  </div>
+  <p class="muted small">Audited: SignInLocked per organization · SignInUnlocked on reset</p>
+</section>
+
+<section id="sign-out" data-part="4" data-cue="Youth often share a phone or a program laptop." data-clip="clips/sign-out-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Signed out</h3><p>Ended on the server; Back shows sign-in.</p></div>
+</section>
+
+<section id="states" data-part="5" data-cue="A session idle for twelve hours times out." data-clip="clips/inactive-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Account inactive</h3><p>Only after the right password.</p></div>
+</section>
+
+<section id="state-shots" data-part="5" data-cue="A wrong password still gets the generic message">
+  <h2>Default and empty, on a phone</h2>
+  <div class="cols">
+    <img class="shot" alt="Sign-in on a phone" src="shots/phone-sign-in.png">
+    <img class="shot" alt="Today on a phone with nothing to do yet" src="shots/phone-today-learning-off.png">
+  </div>
+</section>
+
+<section id="desktop-shots" data-part="6" data-cue="The API tests sign in youth and mentors">
+  <h2>Empty and success, on a laptop</h2>
+  <div class="cols">
+    <img class="shot" alt="Mentoring on a laptop with no youth assigned yet" src="shots/desktop-mentoring.png">
+    <img class="shot" alt="The signed-out page on a laptop" src="shots/desktop-signed-out.png">
+  </div>
+</section>
+
+<section id="testing" data-part="6" data-cue="They check the consecutive lock">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Learning or Mentoring off</td><td>404, lands on Today</td></tr>
+    <tr><td>Sixth try after five failures</td><td>423 locked</td></tr>
+    <tr><td>Copied cookie after sign-out</td><td>401</td></tr>
+    <tr><td>Removed everywhere, right password</td><td>403 account-deactivated</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="7" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>A home for each role while its module is on</li><li>Five wrong tries lock; a reset unlocks</li><li>Sign-out ends the session and clears the device</li></ul>
+  <p class="muted">Next: youth and mentors accept their invitations</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

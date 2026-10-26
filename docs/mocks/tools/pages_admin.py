@@ -248,9 +248,9 @@ def auth_head(title: str, text: str = "") -> str:
 
 @screen("sign-in", "page", "Sign in", route="/sign-in", reqs=[R_SEC], shell="auth", na={"loading": "The form is static.", "empty": "A form has no collection to be empty of."})
 def sign_in(S):
-    def form(err=None, busy=False, alert_html=""):
+    def form(err=None, busy=False, alert_html="", who="jaylen@harbourview.example"):
         e = err or {}
-        return (f'<form class="stack" action="#" method="post" novalidate>{alert_html}' + field("email", "Work email", type_="email", value="jaylen@harbourview.example", autofocus=True, autocomplete="username", error=e.get("email", ""))
+        return (f'<form class="stack" action="#" method="post" novalidate>{alert_html}' + field("email", "Email", type_="email", value=who, autofocus=True, autocomplete="username", error=e.get("email", ""))
                 + f'<div class="field"><label class="field__label" for="pw">Password</label><div class="input-group"><input class="input" id="pw" name="pw" type="password" autocomplete="current-password" value="{"" if e else "harbour-tutoring-2026"}"{" aria-invalid=\"true\" aria-describedby=\"pw-error\"" if e.get("pw") else ""}><button class="btn btn--ghost btn--icon input-group__btn" type="button" aria-label="Show password" aria-pressed="false">{icon("eye")}</button></div>{f"<div class=\"field__error\" id=\"pw-error\">{esc(e["pw"])}</div>" if e.get("pw") else ""}</div>'
                 + switch("remember", "Keep me signed in on this phone", checked=True)
                 + btn("Sign in", "primary", type_="submit", busy=busy, size="lg", block=True) + f'<p class="text-center"><a href="{page("forgot-password")}">Forgot your password?</a></p></form>')
@@ -261,7 +261,23 @@ def sign_in(S):
     S.add("mfa", "Second step for admins: a six-digit code from the authenticator app.", main=auth_head("Enter your code", "From your authenticator app.") +
           f'<form class="stack" action="#" method="post" novalidate>{field("code", "Six-digit code", value="", inputmode="numeric", autocomplete="one-time-code", attrs=" maxlength=\"6\" pattern=\"[0-9]*\"", autofocus=True)}{switch("trust", "Don’t ask again on this laptop for 30 days", checked=True)}{btn("Continue", "primary", type_="submit", size="lg", block=True)}<p class="text-center"><a href="{dialog("recovery-codes")}">Use a recovery code</a> · <a href="{page("sign-in")}">Start over</a></p></form>')
     S.add("expired", "Session expired after inactivity; sign back in, work is kept.", main=auth_head("Your session timed out", "Signed out after 12 hours. Your draft incident report is saved.") + form())
+    S.add("youth", "Sofía (Youth) signs in with the same form; she lands on Learning, a mentor on Mentoring, and Today when that module is off.", main=auth_head("Sign in to PromiseHub", ORG) + form(who="sofia@harbourview.example"),
+          notes=note("After sign-in the home follows the role: Youth → /learning, Mentor → /mentoring, everyone else → Today. A deep link wins over the home.", "top: 5rem; right: 1rem;"))
     S.add("locked", "Too many attempts: locked for 15 minutes, reset offered.", main=auth_head("Sign in to PromiseHub", ORG) + form(alert_html=alert("warning", "Too many tries", "Sign-in paused until 4:27 pm. You can reset your password instead.", actions=btn("Reset password", "primary", size="sm", href=page("forgot-password")))).replace('<button class="btn btn--primary btn--lg btn--block" type="submit">Sign in</button>', '<button class="btn btn--primary btn--lg btn--block" type="submit" disabled>Sign in</button>'))
+
+
+@screen("signed-out", "page", "Signed out", route="/signed-out", reqs=[R_SEC], shell="auth", na={"loading": "Nothing loads: the page is shown after the session has ended.", "empty": "A confirmation has no collection to be empty of.", "error": "Signing out always ends here; a failed request still clears the device."})
+def signed_out(S):
+    S.add("default", "After Sign out: the session is ended on the server and this device keeps none of the person's data, so a shared phone is safe to hand on.",
+          main=auth_head("You’re signed out", "This device no longer keeps your PromiseHub data. On a shared device, close the browser too.") + btn("Sign in again", "primary", href=page("sign-in"), size="lg", block=True),
+          notes=note("The back button leads to sign-in, never to a page of the last person's data.", "top: 5rem; right: 1rem;"))
+
+
+@screen("account-deactivated", "page", "Account inactive", route="/account-deactivated", reqs=[R_SEC], shell="auth", na={"loading": "Nothing loads: the server has already answered.", "empty": "A message has no collection to be empty of.", "error": "This page is itself the refusal."})
+def account_deactivated(S):
+    S.add("default", "A youth whose account was turned off signs in with the right password: sign-in is refused and the page says who can restore it.",
+          main=auth_head("This account is inactive", "Your access to PromiseHub was turned off. Nothing has been deleted; ask your program director or admin to turn it back on.") + btn("Back to sign in", "", href=page("sign-in"), size="lg", block=True),
+          notes=note("Shown only after a correct password, so it never reveals whether an email has an account. A session whose account is turned off lands here on its next request.", "top: 5rem; right: 1rem;"))
 
 
 @screen("forgot-password", "page", "Forgot password", route="/forgot-password", reqs=[R_SEC], shell="auth", na={"loading": "The form is static.", "empty": "A form has no collection to be empty of."})

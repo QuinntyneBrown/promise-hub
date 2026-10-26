@@ -51,6 +51,7 @@ public interface IPromiseHubDb
     DbSet<StaffUser> StaffUsers { get; }
     DbSet<Domain.Identity.PasswordReset> PasswordResets { get; }
     DbSet<SignInAttempt> SignInAttempts { get; }
+    DbSet<EndedSession> EndedSessions { get; }
     DbSet<Domain.Notifications.Notification> Notifications { get; }
     DbSet<Domain.Notifications.NotificationSettings> NotificationSettings { get; }
     DbSet<Domain.Reports.ReportExport> ReportExports { get; }

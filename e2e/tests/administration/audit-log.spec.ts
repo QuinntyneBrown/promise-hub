@@ -28,6 +28,19 @@ test.describe('Review audit history as an admin', () => {
     await expect(log.rows().first()).toContainText('medical details');
   });
 
+  // Traces to: L2-047 criterion 5 — the lock is audited in the youth's organization.
+  test('Given Sofía locked herself out, when Tom filters by Sign-in locked, then the lock shows with her name', async ({ page, api }) => {
+    api.failSignIn('sofia@harbourview.example', 5);
+    const log = new AuditLogPage(page);
+    await log.open();
+
+    await log.action('Sign-in locked');
+
+    await expect(log.rows()).toHaveCount(1);
+    await expect(log.rows().first()).toContainText('Sofía Rivera');
+    await expect(log.rows().first()).toContainText('Sign-in locked after 5 failed attempts');
+  });
+
   test('Given a wider period, when chosen, then older entries appear and export follows the filters', async ({ page }) => {
     const log = new AuditLogPage(page);
     await log.open();

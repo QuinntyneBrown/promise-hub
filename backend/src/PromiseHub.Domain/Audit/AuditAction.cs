@@ -19,4 +19,7 @@ public enum AuditAction
     Cancelled,
     Switched,
     YouthLinked,
+    SignInLocked,
+    SignInUnlocked,
+    SignedOut,
 }

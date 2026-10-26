@@ -137,6 +137,7 @@ Edit tokens and shared component CSS first. Edit catalogue metadata and generato
 | Quick Card phone facts | The .quick-card-specific two-column rule overrode the narrower generic phone rule | Matched specificity in the phone rule so labels stack above values below 640px, as documented; no information is removed. |
 | Core catalogue | Tooltip, spinner and complete sidebar/pagination specimens were not all present in mocks | Documented core compositions using inherited roles and tokens; source sections identify core additions explicitly. |
 | Waypoint foundation mocks (ADR 0043) | Youth, mentor and volunteer shells, Learning, Curriculum, Mentoring and public website pages | Composed only from existing components (top bar, tab bar, nav drawer, card, list, icon tile, empty state, skeleton, guardian bar); no token or component added. The navigation pattern documents the participant-role and module-off states. |
+| Sign in as a youth or mentor (prompt 50) | Signed-out and account-inactive pages, the youth state of sign-in | Composed only from the existing authentication card, brand mark and button; the sign-in email field is labelled "Email" because youth sign in too. No token or component added. |
 | Inherited component CSS | Includes historical selectors unused by PromiseHub | Retained for compatibility; catalogue scope is the PromiseHub evidence plus the core set. Do not interpret unused inherited selectors as implemented product features. |
 
 ## Verification

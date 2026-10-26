@@ -1,0 +1,22 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+title Class structure — Expired session
+class authGuard <<CanActivateFn>> {
+  +(route, state): Observable<boolean | UrlTree>
+}
+class SignInPage {
+  +returnUrl: string | null
+  +reason: string | null
+  #expired: boolean
+}
+authGuard ..> SignInPage : reason=expired, returnUrl
+@enduml

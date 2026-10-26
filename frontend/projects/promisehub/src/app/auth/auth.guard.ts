@@ -22,6 +22,10 @@ export const authGuard: CanActivateFn = (_route, state) => {
         if (error.status !== 401) {
           return of(true);
         }
+        // Every membership was removed: the account is inactive (L2-050).
+        if (error.error?.code === 'account-deactivated') {
+          return of(router.createUrlTree(['/account-deactivated']));
+        }
         const reason = error.error?.code === 'session-expired' ? 'expired' : null;
         return of(
           router.createUrlTree(['/sign-in'], { queryParams: { returnUrl: state.url, reason } }),

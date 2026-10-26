@@ -9,10 +9,10 @@ using PromiseHub.Domain.Organizations;
 
 namespace PromiseHub.Api.Endpoints;
 
-/// <summary>The first endpoint of each Waypoint module (ADR 0043): each names its permission and its module, never the fallback.</summary>
-public static class WaypointEndpoints
+/// <summary>The first endpoint of each of the Learning, Mentoring and Public website modules (ADR 0043): each names its permission and its module, never the fallback.</summary>
+public static class ParticipantModuleEndpoints
 {
-    public static IEndpointRouteBuilder MapWaypointEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapParticipantModuleEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapGet("/learning/me", (LearnerHandler handler, CancellationToken ct) => handler.HandleAsync(ct))
             .RequireModule(ModuleId.Learning).RequirePermission(Permission.Learn);

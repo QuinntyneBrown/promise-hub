@@ -8,7 +8,7 @@ export class SignInPage extends BasePage {
   }
 
   get email(): Locator {
-    return this.page.getByLabel('Work email');
+    return this.page.getByLabel('Email', { exact: true });
   }
 
   get password(): Locator {
@@ -44,6 +44,11 @@ export class SignInPage extends BasePage {
     await this.email.fill(email);
     await this.password.fill(password);
     await this.submit.click();
+  }
+
+  /** Follows Reset password from the locked state (mock: sign-in/locked). */
+  async resetFromLock(): Promise<void> {
+    await this.alert.getByRole('link', { name: 'Reset password' }).click();
   }
 
   async enterCode(code: string): Promise<void> {

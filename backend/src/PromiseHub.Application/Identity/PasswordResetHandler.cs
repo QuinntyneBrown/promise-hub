@@ -67,11 +67,18 @@ public sealed class PasswordResetHandler(IPromiseHubDb db, TenantContext tenant,
             return new ResetPasswordResult(true, null, null);
         }
         var now = clock.GetUtcNow();
+        var locked = SignInLock.IsLocked(await SignInLock.ConsecutiveFailuresAsync(db, user.Email, now, cancellationToken));
         user.ChangePassword(hasher.Hash(command.Password!));
         user.EndOtherSessions();
         reset.Use(now);
         tenant.Resolve(membership);
         audit.Record(new AuditEvent(AuditAction.Updated, "StaffUser", user.Id, "Reset password by emailed link"));
+        // The reset is a successful sign-in: it ends a lock, and the count starts again (L2-047).
+        db.SignInAttempts.Add(new SignInAttempt(Guid.NewGuid(), user.Email, now, true));
+        if (locked)
+        {
+            audit.Record(new AuditEvent(AuditAction.SignInUnlocked, "StaffUser", user.Id, "Unlocked sign-in by password reset"));
+        }
         await db.SaveChangesAsync(cancellationToken);
         return new ResetPasswordResult(false, null, SignInPolicy.RequiresMfa(membership.Role) && user.MfaSecret is not null
             ? new SignInResult(SignInStatus.MfaRequired, user.Id)

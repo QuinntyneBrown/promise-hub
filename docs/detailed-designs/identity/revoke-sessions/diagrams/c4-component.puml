@@ -1,0 +1,22 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Keep sessions secure
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(auth, "AuthApi", "Contract + HTTP client", "Sends the cookie with credentials")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(cookie, "Cookie authentication", "ASP.NET Core", "HttpOnly, Secure, SameSite=Strict, 12 h sliding")
+  Component(sc, "SessionCookie", "API helper", "Issues user, membership, version, session id")
+  Component(mw, "TenantContextMiddleware", "Middleware", "Version and ended-session checks")
+  Component(acc, "AccountHandler", "Application handler", "Sign out everywhere else")
+  Component(r, "PasswordResetHandler", "Application handler", "Reset raises the version")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Staff users, memberships, sign-in attempts, ended sessions, audit entries")
+}
+Rel(auth, cookie, "cookie on every request")
+Rel(cookie, mw, "authenticated principal")
+Rel(mw, db, "session version, ended sessions")
+Rel(acc, db, "version + 1")
+Rel(r, db, "version + 1")
+Rel(sc, cookie, "signs in")
+@enduml

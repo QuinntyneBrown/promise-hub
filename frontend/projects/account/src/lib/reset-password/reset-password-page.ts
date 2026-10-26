@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, effect, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AUTH_API, ResetCheck } from '@promisehub/api';
+import { AUTH_API, ResetCheck, SESSION_API, roleHome } from '@promisehub/api';
 import { PhAlert, PhAuthCard, PhButton, PhSkipLink, PhTextField } from '@promisehub/components';
 
 /** Reset password (mock: reset-password): from the emailed link, choose a new password and carry on signed in. */
@@ -14,6 +14,7 @@ import { PhAlert, PhAuthCard, PhButton, PhSkipLink, PhTextField } from '@promise
 export class ResetPasswordPage {
   private readonly auth = inject(AUTH_API);
   private readonly router = inject(Router);
+  private readonly session = inject(SESSION_API);
 
   /** The token from the emailed link's query string. */
   readonly token = input<string>('');
@@ -41,7 +42,11 @@ export class ResetPasswordPage {
       this.busy.set(false);
       switch (r.status) {
         case 'signed-in':
-          void this.router.navigateByUrl('/');
+          // The home of the person's role, as after signing in (L2-046).
+          this.session.current().subscribe({
+            next: (session) => void this.router.navigateByUrl(roleHome(session)),
+            error: () => void this.router.navigateByUrl('/'),
+          });
           break;
         case 'mfa-required':
           void this.router.navigate(['/sign-in/mfa']);

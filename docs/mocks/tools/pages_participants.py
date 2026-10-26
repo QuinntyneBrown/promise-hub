@@ -1,4 +1,4 @@
-"""The Waypoint foundation (ADR 0043): the first page of each new library, shown while its module is on.
+"""Learning, Curriculum, Mentoring and the public website (ADR 0043): the first page of each new library, shown while its module is on.
 Learning (youth) and Curriculum (authors) follow Learning, Mentoring follows Mentoring, and the public website
 follows Public website. The journeys of prompts 50 to 81 fill these pages; until then each is its own empty state."""
 from kit import *  # noqa: F401,F403

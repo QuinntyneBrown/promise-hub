@@ -130,6 +130,7 @@ public static class DependencyInjection
         services.AddScoped<GetModulesHandler>();
         services.AddScoped<SaveModulesHandler>();
         services.AddScoped<SignInHandler>();
+        services.AddScoped<SessionSignOutHandler>();
         services.AddScoped<CompleteMfaHandler>();
         services.AddScoped<Learning.LearnerHandler>();
         services.AddScoped<Staff.LinkYouthHandler>();

@@ -2,6 +2,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, of, tap } from 'rxjs';
 import { API_BASE_URL } from '../api-base-url';
+import { OfflineStore } from '../offline/offline-store';
 import { SESSION_API } from '../session/session-api.token';
 import { AuthApi } from './auth-api';
 import { ResetCheck } from './reset-check';
@@ -14,6 +15,7 @@ export class HttpAuthApi implements AuthApi {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL);
   private readonly session = inject(SESSION_API);
+  private readonly offline = inject(OfflineStore);
 
   signIn(request: SignInRequest): Observable<SignInOutcome> {
     return this.step(this.http.post<{ status: string }>(`${this.baseUrl}/auth/sign-in`, request));
@@ -28,7 +30,11 @@ export class HttpAuthApi implements AuthApi {
   signOut(): Observable<void> {
     return this.http.post<void>(`${this.baseUrl}/auth/sign-out`, null).pipe(
       catchError(() => of(undefined)),
-      tap(() => this.session.reset()),
+      // The device forgets the session and its saved data even when the request fails (L2-048).
+      tap(() => {
+        this.session.reset();
+        this.offline.clear();
+      }),
       map(() => undefined),
     );
   }
@@ -81,9 +87,11 @@ export class HttpAuthApi implements AuthApi {
         of<SignInOutcome>(
           error.status === 423
             ? { status: 'locked', lockedUntil: error.error?.lockedUntil ?? '' }
-            : error.status === 401
-              ? { status: 'invalid' }
-              : { status: 'error' },
+            : error.status === 403 && error.error?.code === 'account-deactivated'
+              ? { status: 'deactivated' }
+              : error.status === 401
+                ? { status: 'invalid' }
+                : { status: 'error' },
         ),
       ),
     );

@@ -5,7 +5,7 @@ using PromiseHub.Infrastructure.Persistence.Seed;
 
 namespace PromiseHub.Api.Tests;
 
-// L2-007 criteria 8 and 11: the Waypoint roles (ADR 0043) reach only what their role was granted.
+// L2-007 criteria 8 and 11: the participant roles (ADR 0043) reach only what their role was granted.
 public sealed class ParticipantRoleTests : IAsyncLifetime
 {
     private static readonly Guid Sofia = DatabaseSeeder.MembershipId(DatabaseSeeder.Harbourview, "sofia@harbourview.example");

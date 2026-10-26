@@ -11,4 +11,7 @@ public static class AuthSchemes
     public const string MembershipClaim = "membership_id";
     public const string UserClaim = "user_id";
     public const string SessionVersionClaim = "session_version";
+
+    /// <summary>One per sign-in; recorded as an ended session at sign-out (L2-048).</summary>
+    public const string SessionIdClaim = "session_id";
 }

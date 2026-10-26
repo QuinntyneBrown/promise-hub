@@ -1,0 +1,32 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+title Class structure — Ended sessions
+class EndedSession {
+  +Id: Guid
+  +UserId: Guid
+  +EndedAt: DateTimeOffset
+  +ExpiresAt: DateTimeOffset
+}
+class SessionSignOutHandler {
+  +HandleAsync(sessionId: Guid, userId: Guid): Task
+}
+class TenantContextMiddleware {
+  +InvokeAsync(context): Task
+}
+class StaffUser {
+  +Id: Guid
+  +SessionVersion: int
+}
+SessionSignOutHandler ..> EndedSession : records, prunes
+TenantContextMiddleware ..> EndedSession : refuses
+EndedSession --> StaffUser : UserId
+@enduml

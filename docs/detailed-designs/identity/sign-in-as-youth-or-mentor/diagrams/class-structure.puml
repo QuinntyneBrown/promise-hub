@@ -1,0 +1,39 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+title Class structure — Role home
+class Session {
+  +personName: string
+  +role: Role
+  +organizationName: string
+  +modules: ModuleId[]
+}
+enum Role {
+  Admin
+  ProgramDirector
+  SiteLead
+  YouthWorker
+  VolunteerCoordinator
+  Youth
+  Mentor
+  Volunteer
+}
+class RoleHome <<function>> {
+  +roleHome(session: Session): string
+}
+class SignInPage {
+  +returnUrl: string | null
+  #submit(): void
+}
+Session --> Role
+RoleHome ..> Session : reads role and modules
+SignInPage ..> RoleHome : no return URL
+@enduml

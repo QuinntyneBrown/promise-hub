@@ -250,7 +250,10 @@ export class FakeApi {
   readonly guardianCode = '482913';
   private smsUsed = new Map<string, number>();
   /** Password reset links: token → email and whether it is still usable. */
-  private resetLinks = new Map<string, { email: string; usable: boolean }>([['tok-reset-jaylen', { email: 'jaylen@harbourview.example', usable: true }]]);
+  private resetLinks = new Map<string, { email: string; usable: boolean }>([
+    ['tok-reset-jaylen', { email: 'jaylen@harbourview.example', usable: true }],
+    ['tok-reset-sofia', { email: 'sofia@harbourview.example', usable: true }],
+  ]);
   resetRequestedFor: string | null = null;
   /** Recovery codes left per person, and whether the other devices were signed out. */
   private recoveryCodes = new Map<string, number>();
@@ -590,6 +593,14 @@ export class FakeApi {
       // A fault answers as the API's ExceptionHandlingMiddleware does: a code and a reference to quote (L2-041).
       return route.fulfill(failure >= 500 ? { status: failure, json: { code: 'server-error', reference: FAULT_REFERENCE } } : { status: failure });
     }
+    // A removed membership continues in the person's next one, or the account is inactive (L2-002, L2-050).
+    const current = memberships.find((x) => x.id === this.membershipId);
+    if (current && this.removedMemberships.has(current.id)) {
+      const next = memberships.find((x) => x.email === current.email && !this.removedMemberships.has(x.id));
+      // Like the cookie, the session stays and every request answers the same until someone signs in again.
+      if (!next && !url.pathname.startsWith('/api/auth')) return route.fulfill({ status: 401, json: { code: 'account-deactivated' } });
+      if (next) this.membershipId = next.id;
+    }
     // A suspended organization is closed to its staff; platform administration stays open (L2-003).
     const caller = memberships.find((x) => x.id === this.membershipId);
     if (caller && this.suspended.has(caller.organizationId) && !url.pathname.startsWith('/api/platform') && !url.pathname.startsWith('/api/auth')) {
@@ -634,7 +645,7 @@ export class FakeApi {
   }
 
   /** The caller when signed in, their module is on and their role holds the permission; otherwise answers 401, 404 or 403. */
-  private async waypointCaller(route: Route, module: ModuleId, allowed: (m: Membership) => boolean): Promise<Membership | null> {
+  private async participantModuleCaller(route: Route, module: ModuleId, allowed: (m: Membership) => boolean): Promise<Membership | null> {
     const m = memberships.find((x) => x.id === this.membershipId);
     if (!m) {
       await this.unauthenticated(route);
@@ -653,7 +664,7 @@ export class FakeApi {
 
   /** GET /learning/me: the youth's own linked child only (L2-007 criterion 9, L2-045). */
   private async learner(route: Route): Promise<void> {
-    const m = await this.waypointCaller(route, 'Learning', can.learn);
+    const m = await this.participantModuleCaller(route, 'Learning', can.learn);
     if (!m) return;
     const linked = this.youthLinks.get(m.id);
     const found = linked ? this.households.flatMap((h) => h.children).find((c) => c.id === linked) : undefined;
@@ -663,13 +674,13 @@ export class FakeApi {
   }
 
   private async curriculum(route: Route): Promise<void> {
-    if (!(await this.waypointCaller(route, 'Learning', can.authorCurriculum))) return;
+    if (!(await this.participantModuleCaller(route, 'Learning', can.authorCurriculum))) return;
     return route.fulfill({ json: { tracks: [] } });
   }
 
   /** GET /mentoring/youth: only the youth assigned to the mentor; there are no assignments yet. */
   private async mentoredYouth(route: Route): Promise<void> {
-    if (!(await this.waypointCaller(route, 'Mentoring', can.mentorYouth))) return;
+    if (!(await this.participantModuleCaller(route, 'Mentoring', can.mentorYouth))) return;
     return route.fulfill({ json: { youth: [] } });
   }
 
@@ -682,6 +693,27 @@ export class FakeApi {
     return route.fulfill({ json: { name: organization.name, city: organization.city } });
   }
 
+  /** Five consecutive failures for this email, as if they had just been made (L2-047). */
+  lock(email: string): void {
+    this.signInFailures.set(email, 5);
+  }
+
+  /** Records failed sign-ins; the fifth consecutive one starts the lock, audited in each organization of the email (L2-047). */
+  failSignIn(email: string, times: number): void {
+    for (let i = 0; i < times; i++) {
+      const failures = (this.signInFailures.get(email) ?? 0) + 1;
+      this.signInFailures.set(email, failures);
+      if (failures !== 5) continue;
+      for (const m of memberships.filter((x) => x.email === email)) {
+        this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'SignInLocked', record: 'StaffUser', summary: 'Sign-in locked after 5 failed attempts', device: null });
+      }
+    }
+  }
+
+  isLocked(email: string): boolean {
+    return (this.signInFailures.get(email) ?? 0) >= 5;
+  }
+
   private async signIn(route: Route): Promise<void> {
     const { email, password } = route.request().postDataJSON() as { email: string; password: string };
     const key = email.trim().toLowerCase();
@@ -689,12 +721,18 @@ export class FakeApi {
       return route.fulfill({ status: 423, json: { code: 'locked', lockedUntil: '2026-11-05T21:27:00Z' } });
     }
     const membership = memberships
-      .filter((m) => m.email === key)
+      .filter((m) => m.email === key && !this.removedMemberships.has(m.id))
       .sort((a, b) => a.organizationId.localeCompare(b.organizationId))[0];
+    // The right password with every membership removed: told only now, never for a wrong password (L2-050).
+    if (!membership && password === seededPassword && memberships.some((m) => m.email === key)) {
+      return route.fulfill({ status: 403, json: { code: 'account-deactivated' } });
+    }
     if (!membership || password !== seededPassword) {
-      this.signInFailures.set(key, (this.signInFailures.get(key) ?? 0) + 1);
+      this.failSignIn(key, 1);
       return route.fulfill({ status: 401, json: { code: 'invalid-credentials' } });
     }
+    // Only consecutive failures count: a success starts the count again.
+    this.signInFailures.delete(key);
     if (MFA_ROLES.has(membership.role)) {
       this.mfaPending = membership.id;
       return route.fulfill({ json: { status: 'mfa-required' } });
@@ -717,9 +755,12 @@ export class FakeApi {
   }
 
   private async signOut(route: Route): Promise<void> {
-    if (!this.membershipId) {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) {
       return this.unauthenticated(route);
     }
+    // The session ends on the server and the sign-out is audited in its organization (L2-048).
+    this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'SignedOut', record: 'StaffUser', summary: 'Signed out', device: null });
     this.membershipId = null;
     return route.fulfill({ status: 204 });
   }
@@ -868,6 +909,11 @@ export class FakeApi {
   /** Removed memberships (as an admin would remove them); a session in one falls back to the person's next. */
   private removedMemberships = new Set<string>();
 
+  /** An admin removes every membership of this person (L2-050). */
+  deactivate(email: string): void {
+    for (const m of memberships.filter((x) => x.email === email)) this.removedMemberships.add(m.id);
+  }
+
   removeMembership(id: string): void {
     this.removedMemberships.add(id);
   }
@@ -919,7 +965,12 @@ export class FakeApi {
     if (b.repeat !== b.password) errors['repeat'] = 'The two passwords don’t match.';
     if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
     link.usable = false;
-    this.membershipId = memberships.find((m) => m.email === link.email)!.id;
+    const member = memberships.find((m) => m.email === link.email)!;
+    if (this.isLocked(link.email)) {
+      this.auditEntries.push({ organizationId: member.organizationId, when: NOW.toISOString(), who: member.personName, action: 'SignInUnlocked', record: 'StaffUser', summary: 'Unlocked sign-in by password reset', device: null });
+    }
+    this.signInFailures.delete(link.email);
+    this.membershipId = member.id;
     return route.fulfill({ json: { status: 'signed-in' } });
   }
 

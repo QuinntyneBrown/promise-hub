@@ -1,0 +1,37 @@
+@startuml
+title UML sequence behaviour — Every way a session ends
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Daniel (Mentor)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "AuthApi" as auth
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "Cookie authentication" as cookie
+  participant "TenantContextMiddleware" as mw
+end box
+box "Backend — PromiseHub.Application and Domain" #ECFDF3
+  participant "AccountHandler" as acc
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> auth : any page
+auth -> cookie : request with .PromiseHub.Session
+alt idle for more than 12 hours
+  cookie --> auth : 401 session-expired
+else cookie valid
+  cookie -> mw : principal
+  mw -> db : person's session version
+  alt version raised by sign out everywhere or reset
+    mw --> auth : 401
+  else session id ended by sign-out
+    mw --> auth : 401
+  else
+    mw -> acc : request continues (L2-049)
+  end
+end
+@enduml

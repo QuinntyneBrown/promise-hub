@@ -47,3 +47,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0041](0041-platform-organizations.md) | Platform admins are a flag on the person; suspension is a timestamp enforced per request and per job |
 | [0042](0042-in-process-metrics-alerts-and-ci-budgets.md) | Request metrics and alerts run in process; performance budgets are measured in the Playwright suite on the production build |
 | [0043](0043-merge-waypoint.md) | Waypoint merges in as the Learning, Mentoring and Public website modules, the Youth, Mentor and Volunteer roles and existing features |
+| [0044](0044-participant-sign-in-and-session-endings.md) | Youth and mentors share staff sign-in; the role home is chosen in the app; sign-out ends the session on the server |

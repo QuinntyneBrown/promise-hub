@@ -19,7 +19,7 @@ STAFF = {
     "priya": dict(name="Priya Raman", initials="PR", color="mint", role="Volunteer coordinator"),
     "tom": dict(name="Tom Nguyen", initials="TN", color="sun", role="Admin"),
     "aisha": dict(name="Aisha Bello", initials="AB", color="rose", role="Youth worker"),
-    # From Waypoint (ADR 0043): mentors and a volunteer at Harbourview, a mentor at Northgate.
+    # Participants (ADR 0043): mentors and a volunteer at Harbourview, a mentor at Northgate.
     "daniel": dict(name="Daniel Osei", initials="DO", color="sage", role="Mentor"),
     "hana": dict(name="Hana Kim", initials="HK", color="peach", role="Mentor"),
     "leo": dict(name="Leo Martins", initials="LM", color="sky", role="Volunteer"),

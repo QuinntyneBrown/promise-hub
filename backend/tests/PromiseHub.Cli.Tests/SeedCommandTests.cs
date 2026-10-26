@@ -33,9 +33,9 @@ public sealed class SeedCommandTests : IDisposable
         Assert.Equal(first, Snapshot());
     }
 
-    // L2-042 criterion 4: the Waypoint cast (ADR 0043) in both organizations, linked to their child records.
+    // L2-042 criterion 4: the participant cast (ADR 0043) in both organizations, linked to their child records.
     [Fact]
-    public async Task Seed_creates_the_Waypoint_cast_in_both_organizations_with_youth_linked_to_their_child_records()
+    public async Task Seed_creates_the_participant_cast_in_both_organizations_with_youth_linked_to_their_child_records()
     {
         await CliApp.RunAsync(["migrate"], ConnectionString);
         await CliApp.RunAsync(["seed"], ConnectionString);

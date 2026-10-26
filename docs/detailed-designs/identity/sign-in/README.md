@@ -46,6 +46,8 @@ ADR 0005 settles the cookie name (`.PromiseHub.Session`), `SameSite=Strict` and 
 
 ## Built so far
 
+Prompt 50 (ADR 0044) opened this sign-in to youth and mentors with a role home (`sign-in-as-youth-or-mentor`), made the lock count consecutive failures and audited the lock and the unlock (`recover-locked-account`), ended sessions on the server at sign-out (`end-user-session`) and added the account-inactive state (`handle-deactivated-account`). The email field is labelled "Email".
+
 Slice 45 added the account page (`GET /me/account`), recovery codes stored as hashes, and signing out everywhere through `StaffUser.SessionVersion` checked on every request (ADR 0039).
 
 Slice 02 delivered `SignInPage` (default, invalid, submitting, error, expired and locked) and `MfaPage` in `account`, the auth guard and account-menu sign-out in the shell, `POST /auth/sign-in`, `/auth/mfa` and `/auth/sign-out`, `SignInHandler`, `CompleteMfaHandler`, the attempt-based lockout, TOTP verification and audited sign-ins. Sessions are cookie tickets (ADR 0005), so `SessionMiddleware`, `ISessionStore`, `StaffSession`, recovery codes, trusted devices, sign-out-everywhere and the session-expired dialog that replays a form are deferred to `manage-sessions` and `recover-account-access`; today an expired session returns to sign-in with the destination kept.

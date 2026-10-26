@@ -2,6 +2,7 @@ import { test, expect } from '../../fixtures/test';
 import { seededMfaCode, seededPassword } from '../../fixtures/seed';
 import { ShellPage } from '../../pages/shell.page';
 import { SignInPage } from '../../pages/sign-in.page';
+import { SignedOutPage } from '../../pages/signed-out.page';
 
 // L2-006 staff sign-in, L2-007 (role in the account menu), L2-035 accessibility.
 test.describe('Sign in', () => {
@@ -110,14 +111,15 @@ test.describe('Session', () => {
     await shell.expectAccessible();
   });
 
-  test('Given a signed-in site lead, when they sign out, then sign-in shows and Today needs signing in again', async ({ page }) => {
+  // L2-048: signing out ends on the signed-out page.
+  test('Given a signed-in site lead, when they sign out, then the signed-out page shows and Today needs signing in again', async ({ page }) => {
     const shell = new ShellPage(page);
     await shell.open('/');
 
     await shell.signOut();
 
+    await new SignedOutPage(page).expectShown();
     const signIn = new SignInPage(page);
-    await signIn.expectShown();
     await signIn.open('/');
     await signIn.expectShown();
   });

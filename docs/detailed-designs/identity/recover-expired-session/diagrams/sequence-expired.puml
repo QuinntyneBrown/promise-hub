@@ -1,0 +1,32 @@
+@startuml
+title UML sequence behaviour — Timed out, then back to the page
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Sofía (Youth)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "authGuard" as guard
+  participant "SignInPage" as page
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "Cookie authentication" as cookie
+end box
+box "Backend — PromiseHub.Application and Domain" #ECFDF3
+  participant "SignInHandler" as h
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> guard : opens /learning after 13 hours
+guard -> cookie : GET /me
+cookie --> guard : 401 session-expired
+guard --> page : /sign-in?reason=expired&returnUrl=/learning
+page --> actor : Your session timed out (L2-050)
+actor -> page : email and password
+page -> h : POST /auth/sign-in
+h -> db : verify, audit
+h --> page : signed-in
+page --> actor : back on /learning
+@enduml

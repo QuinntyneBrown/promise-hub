@@ -61,6 +61,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<TrustedGuardianDevice> TrustedGuardianDevices => Set<TrustedGuardianDevice>();
     public DbSet<StaffUser> StaffUsers => Set<StaffUser>();
     public DbSet<SignInAttempt> SignInAttempts => Set<SignInAttempt>();
+    public DbSet<EndedSession> EndedSessions => Set<EndedSession>();
 
     // Read by the query filter on every query, so the filter follows the current tenant.
     private Guid CurrentOrganizationId => tenant.OrganizationId;
@@ -446,6 +447,12 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(a => a.Email).HasMaxLength(320);
             e.Property(a => a.At).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.HasIndex(a => new { a.Email, a.At });
+        });
+        modelBuilder.Entity<EndedSession>(e =>
+        {
+            e.Property(s => s.Id).ValueGeneratedNever();
+            e.Property(s => s.EndedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(s => s.ExpiresAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
         });
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes().Where(t => typeof(ITenantOwned).IsAssignableFrom(t.ClrType)))

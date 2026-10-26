@@ -1,0 +1,38 @@
+@startuml
+title UML sequence behaviour — Sign out on a shared phone
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Sofía (Youth)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "Shell" as shell
+  participant "AuthApi" as auth
+  participant "OfflineStore" as off
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "AuthEndpoints" as ep
+  participant "TenantContextMiddleware" as mw
+end box
+box "Backend — PromiseHub.Application and Domain" #ECFDF3
+  participant "SessionSignOutHandler" as h
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> shell : Sign out
+shell -> auth : signOut()
+auth -> ep : POST /auth/sign-out
+ep -> h : session id, user id
+h -> db : add EndedSession, prune expired ones
+h -> db : audit SignedOut in Harbourview (L2-048)
+ep --> auth : 204, cookie removed
+auth -> off : clear()
+auth --> shell : done (also on a failed request)
+shell --> actor : /signed-out
+== later, a copy of the old cookie ==
+actor -> mw : GET /me with the copied cookie
+mw -> db : session id is ended
+mw --> actor : 401
+@enduml

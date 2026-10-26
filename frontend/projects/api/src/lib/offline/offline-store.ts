@@ -32,6 +32,17 @@ export class OfflineStore {
     );
   }
 
+  /** Forgets everything this device keeps for offline check-in, when someone signs out (L2-048). */
+  clear(): void {
+    try {
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith(PREFIX))
+        .forEach((k) => localStorage.removeItem(k));
+    } catch {
+      // Storage is blocked: there is nothing kept to forget.
+    }
+  }
+
   private load<T>(key: string): T | null {
     try {
       const raw = localStorage.getItem(PREFIX + key);

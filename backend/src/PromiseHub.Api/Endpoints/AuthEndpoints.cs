@@ -19,6 +19,7 @@ public static class AuthEndpoints
                 SignInStatus.SignedIn => await StartSession(http, result, request.Remember),
                 SignInStatus.MfaRequired => await StartMfa(http, result),
                 SignInStatus.Locked => Results.Json(new { code = "locked", lockedUntil = result.LockedUntil }, statusCode: StatusCodes.Status423Locked),
+                SignInStatus.Deactivated => Results.Json(new { code = "account-deactivated" }, statusCode: StatusCodes.Status403Forbidden),
                 _ => Results.Json(new { code = "invalid-credentials" }, statusCode: StatusCodes.Status401Unauthorized),
             };
         }).AllowAnonymous();
@@ -62,8 +63,12 @@ public static class AuthEndpoints
             return await StartSession(http, result, persistent: request.TrustDevice);
         }).AllowAnonymous();
 
-        auth.MapPost("/sign-out", async (HttpContext http) =>
+        auth.MapPost("/sign-out", async (HttpContext http, SessionSignOutHandler handler, CancellationToken ct) =>
         {
+            if (Guid.TryParse(http.User.FindFirst(AuthSchemes.UserClaim)?.Value, out var userId))
+            {
+                await handler.HandleAsync(SessionCookie.SessionId(http), userId, ct);
+            }
             await http.SignOutAsync(AuthSchemes.Session);
             return Results.NoContent();
         }).AllowAnyMember();

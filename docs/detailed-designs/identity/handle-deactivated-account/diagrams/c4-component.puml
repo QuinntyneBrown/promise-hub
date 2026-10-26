@@ -1,0 +1,23 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Handle a deactivated account
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "SignInPage", "Angular page", "Navigates on deactivated")
+  Component(guard, "authGuard", "Route guard", "401 account-deactivated")
+  Component(inactive, "AccountDeactivatedPage", "Angular page", "This account is inactive")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "AuthEndpoints", "Minimal API", "403 account-deactivated")
+  Component(h, "SignInHandler", "Application handler", "No current membership")
+  Component(mw, "TenantContextMiddleware", "Middleware", "401 account-deactivated")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Staff users, memberships, sign-in attempts, ended sessions, audit entries")
+}
+Rel(page, ep, "POST /auth/sign-in")
+Rel(ep, h, "SignInCommand")
+Rel(h, db, "memberships")
+Rel(guard, mw, "GET /me")
+Rel(mw, db, "membership removed?")
+Rel(page, inactive, "navigate")
+Rel(guard, inactive, "redirect")
+@enduml

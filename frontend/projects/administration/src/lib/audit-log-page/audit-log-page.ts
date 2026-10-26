@@ -77,6 +77,8 @@ export class AuditLogPage {
     { value: 'Sent', label: 'Sent' },
     { value: 'Exported', label: 'Exported' },
     { value: 'SignedIn', label: 'Signed in' },
+    { value: 'SignInLocked', label: 'Sign-in locked' },
+    { value: 'SignInUnlocked', label: 'Sign-in unlocked' },
     { value: 'AccessDenied', label: 'Access denied' },
   ];
   protected readonly periods: SelectOption[] = [

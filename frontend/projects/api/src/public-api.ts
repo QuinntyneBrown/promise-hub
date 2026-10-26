@@ -58,6 +58,7 @@ export * from './lib/quick-cards/quick-card-api.token';
 export * from './lib/session/can';
 export * from './lib/session/permission';
 export * from './lib/session/role';
+export * from './lib/session/role-home';
 export * from './lib/session/role-labels';
 export * from './lib/session/session';
 export * from './lib/session/session-api';

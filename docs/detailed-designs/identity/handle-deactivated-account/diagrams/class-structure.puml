@@ -1,0 +1,33 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+title Class structure — Deactivated account
+enum SignInStatus {
+  SignedIn
+  MfaRequired
+  Invalid
+  Locked
+  Deactivated
+}
+class Membership {
+  +Id: Guid
+  +OrganizationId: Guid
+  +Email: string
+  +RemovedAt: DateTimeOffset?
+}
+class ActiveMembership <<static>> {
+  +ForAsync(db, email): Task<Membership?>
+}
+class SignInHandler
+SignInHandler ..> ActiveMembership
+ActiveMembership ..> Membership : RemovedAt == null
+SignInHandler ..> SignInStatus
+@enduml

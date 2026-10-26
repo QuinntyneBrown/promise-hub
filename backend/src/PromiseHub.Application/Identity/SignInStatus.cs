@@ -6,4 +6,7 @@ public enum SignInStatus
     MfaRequired,
     Invalid,
     Locked,
+
+    /// <summary>The password is right but every membership was removed (L2-050).</summary>
+    Deactivated,
 }

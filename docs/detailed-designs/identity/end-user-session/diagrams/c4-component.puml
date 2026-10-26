@@ -1,0 +1,24 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — End a session on a shared device
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(shell, "Shell", "Angular shell", "Account menu, Sign out")
+  Component(auth, "AuthApi", "Contract + HTTP client", "POST /auth/sign-out")
+  Component(off, "OfflineStore", "Browser storage", "Saved rosters and Quick Cards")
+  Component(done, "SignedOutPage", "Angular page", "You're signed out")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "AuthEndpoints", "Minimal API", "/auth/sign-out")
+  Component(h, "SessionSignOutHandler", "Application handler", "Ends the session, audits")
+  Component(mw, "TenantContextMiddleware", "Middleware", "Refuses ended sessions")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Staff users, memberships, sign-in attempts, ended sessions, audit entries")
+}
+Rel(shell, auth, "signOut")
+Rel(auth, off, "clear")
+Rel(shell, done, "navigate")
+Rel(auth, ep, "POST /auth/sign-out")
+Rel(ep, h, "session id")
+Rel(h, db, "EndedSessions, AuditEntries")
+Rel(mw, db, "is the session ended?")
+@enduml
