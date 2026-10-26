@@ -38,6 +38,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 28 | [Update household details](28-update-household-details/README.md) | ~2 min | Families correct contact, language and children's health from the family page; staff see it at once |
 | 29 | [Manage staff access](29-manage-staff-access/README.md) | ~2 min | Invite staff with a role, change roles and remove access, effective on the next action |
 | 30 | [Start an invited shift](30-start-an-invited-shift/README.md) | ~2 min | Accept an invitation, add a mobile for alerts, and land on tonight's session |
+| 31 | [Coordinate staff coverage](31-coordinate-staff-coverage/README.md) | ~2 min | Two weeks of sessions with gaps flagged; coordinators assign staff and invite youth workers |
 
 ## Making or updating a video
 
