@@ -1,0 +1,15 @@
+<form novalidate (ngSubmit)="save()">
+  <ph-dialog
+    [title]="'Suspend ' + data.name + '?'"
+    description="Access and messaging stop until reinstated. Nothing is deleted."
+  >
+    @if (failed()) {
+      <ph-alert tone="danger" title="Couldn’t suspend" text="Try again." />
+    }
+    <ph-radio-group legend="Reason" [options]="reasons" name="reason" [(ngModel)]="reason" />
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close(false)">Cancel</ph-button>
+      <ph-button variant="danger" type="submit" [busy]="busy()">Suspend</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

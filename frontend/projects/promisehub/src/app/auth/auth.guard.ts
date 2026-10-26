@@ -15,6 +15,10 @@ export const authGuard: CanActivateFn = (_route, state) => {
     .pipe(
       map(() => true),
       catchError((error: HttpErrorResponse) => {
+        // A suspended organization is closed to its staff (L2-003).
+        if (error.status === 403 && error.error?.code === 'suspended') {
+          return of(router.createUrlTree(['/sign-in'], { queryParams: { reason: 'suspended' } }));
+        }
         if (error.status !== 401) {
           return of(true);
         }

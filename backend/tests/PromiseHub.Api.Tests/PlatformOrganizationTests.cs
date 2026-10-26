@@ -62,7 +62,7 @@ public sealed class PlatformOrganizationTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.UnprocessableEntity, added.StatusCode);
         var errors = (await added.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("errors");
         Assert.Equal("Enter the organization’s name.", errors.GetProperty("name").GetString());
-        Assert.Equal("Enter the first admin’s email.", errors.GetProperty("adminEmail").GetString());
+        Assert.Equal("That doesn’t look like an email address.", errors.GetProperty("adminEmail").GetString());
     }
 
     [Fact]

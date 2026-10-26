@@ -1,0 +1,113 @@
+@let r = result();
+@let all = this.all();
+@if (r?.status === 'forbidden') {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      title="Platform admins only"
+      text="Your organization’s settings are under Settings."
+      [headingLevel]="1"
+    >
+      <ph-button link="/settings">Open Settings</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else if (all) {
+  <ph-page-header title="Organizations" [subtitle]="subtitle()">
+    <ph-button variant="primary" icon="plus" hasPopup="dialog" (click)="add()"
+      >Add organization</ph-button
+    >
+  </ph-page-header>
+  @if (all.length) {
+    <div class="toolbar">
+      <ph-text-field
+        class="search"
+        inputId="org-q"
+        type="search"
+        label="Find an organization"
+        [labelHidden]="true"
+        placeholder="Find an organization"
+        name="q"
+        [ngModel]="query()"
+        (ngModelChange)="query.set($event)"
+      />
+      <div class="chips" role="group" aria-label="Filter organizations">
+        <ph-chip [pressed]="filter() === 'all'" (click)="filter.set('all')"
+          >All {{ counts().all }}</ph-chip
+        >
+        <ph-chip [pressed]="filter() === 'Standard'" (click)="filter.set('Standard')"
+          >Standard {{ counts().Standard }}</ph-chip
+        >
+        <ph-chip [pressed]="filter() === 'Free'" (click)="filter.set('Free')"
+          >Free {{ counts().Free }}</ph-chip
+        >
+        <ph-chip [pressed]="filter() === 'SettingUp'" (click)="filter.set('SettingUp')"
+          >Setting up {{ counts().SettingUp }}</ph-chip
+        >
+        <ph-chip [pressed]="filter() === 'Suspended'" (click)="filter.set('Suspended')"
+          >Suspended {{ counts().Suspended }}</ph-chip
+        >
+      </div>
+    </div>
+    @if (visible().length) {
+      <ph-table caption="Organizations" [columns]="columns" [rows]="rows()">
+        <ng-template #rowActions let-i>
+          @let o = visible()[i];
+          @if (o.status === 'Suspended') {
+            <ph-button
+              variant="ghost"
+              size="sm"
+              [label]="'Reinstate ' + o.name"
+              (click)="reinstate(o)"
+              >Reinstate</ph-button
+            >
+          } @else {
+            <ph-button
+              variant="ghost"
+              size="sm"
+              hasPopup="dialog"
+              [label]="'Suspend ' + o.name"
+              (click)="suspend(o)"
+              >Suspend</ph-button
+            >
+          }
+        </ng-template>
+      </ph-table>
+    } @else {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="search"
+          [title]="
+            query()
+              ? 'No organization matches “' + query() + '”'
+              : 'No organizations in this filter'
+          "
+          text="Check the spelling."
+        >
+          <ph-button (click)="query.set(''); filter.set('all')">Clear search</ph-button>
+        </ph-empty-state>
+      </ph-card>
+    }
+  } @else {
+    <ph-card [flush]="true">
+      <ph-empty-state icon="globe" title="No organizations yet" text="Add the first one.">
+        <ph-button variant="primary" icon="plus" hasPopup="dialog" (click)="add()"
+          >Add organization</ph-button
+        >
+      </ph-empty-state>
+    </ph-card>
+  }
+} @else if (r === null) {
+  <div aria-busy="true" aria-label="Loading organizations"><ph-skeleton shape="card" /></div>
+} @else {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load organizations"
+      text="Try again."
+      [headingLevel]="1"
+    >
+      <ph-button variant="primary" (click)="load()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}

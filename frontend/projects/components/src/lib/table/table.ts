@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  TemplateRef,
+  contentChild,
+  input,
+} from '@angular/core';
 import { PhBadge } from '../badge/badge';
 import { TableCell } from './table-cell';
 import { TableColumn } from './table-column';
@@ -6,7 +13,7 @@ import { TableColumn } from './table-column';
 /** Table (design system: table): rows of records under labelled columns, scrolling sideways on a phone. */
 @Component({
   selector: 'ph-table',
-  imports: [PhBadge],
+  imports: [NgTemplateOutlet, PhBadge],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './table.html',
   styleUrl: './table.scss',
@@ -18,6 +25,9 @@ export class PhTable {
   readonly rows = input.required<Record<string, TableCell>[]>();
   /** Inside a flush card: no border of its own. */
   readonly flush = input(false);
+  /** Heading of the last column when the page gives a `#rowActions` template; the template gets the row's index. */
+  readonly actionsLabel = input('Actions');
+  protected readonly rowActions = contentChild<TemplateRef<{ $implicit: number }>>('rowActions');
 
   protected text(cell: TableCell): string {
     return cell === null ? '' : typeof cell === 'string' ? cell : cell.text;

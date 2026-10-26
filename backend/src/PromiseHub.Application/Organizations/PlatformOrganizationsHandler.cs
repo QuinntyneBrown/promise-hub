@@ -60,9 +60,13 @@ public sealed class PlatformOrganizationsHandler(IPromiseHubDb db, TenantContext
         {
             errors["name"] = "An organization with this name already exists.";
         }
-        if (!address.Contains('@', StringComparison.Ordinal) || !address.Split('@')[^1].Contains('.', StringComparison.Ordinal))
+        if (address.Length == 0)
         {
             errors["adminEmail"] = "Enter the first admin’s email.";
+        }
+        else if (!address.Contains('@', StringComparison.Ordinal) || !address.Split('@')[^1].Contains('.', StringComparison.Ordinal))
+        {
+            errors["adminEmail"] = "That doesn’t look like an email address.";
         }
         if (!Enum.TryParse<Plan>(command.Plan, out var plan))
         {

@@ -40,6 +40,7 @@ export class SignInPage {
   protected readonly failed = signal(false);
   protected readonly lockedUntil = signal<string | null>(null);
   protected readonly expired = computed(() => this.reason() === 'expired');
+  protected readonly suspended = computed(() => this.reason() === 'suspended');
 
   protected lockedText(): string {
     const until = this.lockedUntil();

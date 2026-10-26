@@ -16,6 +16,9 @@
         @for (c of columns(); track c.key) {
           <th scope="col">{{ c.label }}</th>
         }
+        @if (rowActions()) {
+          <th scope="col">{{ actionsLabel() }}</th>
+        }
       </tr>
     </thead>
     <tbody>
@@ -28,6 +31,11 @@
               } @else {
                 {{ text(row[c.key] ?? null) }}
               }
+            </td>
+          }
+          @if (rowActions(); as actions) {
+            <td class="actions">
+              <ng-container *ngTemplateOutlet="actions; context: { $implicit: $index }" />
             </td>
           }
         </tr>
