@@ -35,7 +35,7 @@
               type="password"
               name="password"
               autocomplete="new-password"
-              help="At least 12 characters. A short sentence works well."
+              help="At least 12 characters, and not your email. A short sentence works well."
               [error]="errors()['password'] ?? null"
               [(ngModel)]="password"
             />

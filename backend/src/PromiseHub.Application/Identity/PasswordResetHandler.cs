@@ -10,14 +10,12 @@ namespace PromiseHub.Application.Identity;
 
 /// <summary>
 /// Recovering access (L2-044): ask for a link by email (the answer never reveals whether the address exists), check the
-/// link, and set a new password of at least 12 characters. Resetting uses the link up, signs out other devices, is
+/// link, and set a new password that meets the password policy (L2-053). Resetting uses the link up, signs out other devices, is
 /// audited and signs the person in, through two-step sign-in where their role needs it.
 /// </summary>
 public sealed class PasswordResetHandler(IPromiseHubDb db, TenantContext tenant, IPasswordHasher hasher, IEmailSender email,
     GuardianLinkOptions links, IAuditWriter audit, TimeProvider clock)
 {
-    public const int MinimumPassword = 12;
-
     public async Task RequestAsync(ForgotPasswordCommand command, CancellationToken cancellationToken = default)
     {
         var address = SignInPolicy.Normalize(command.Email ?? string.Empty);
@@ -48,9 +46,10 @@ public sealed class PasswordResetHandler(IPromiseHubDb db, TenantContext tenant,
             return new ResetPasswordResult(true, null, null);
         }
         var errors = new Dictionary<string, string>();
-        if ((command.Password ?? string.Empty).Length < MinimumPassword)
+        var user = await db.StaffUsers.SingleAsync(u => u.Id == reset.UserId, cancellationToken);
+        if (PasswordPolicy.Check(command.Password, user.Email) is { } weak)
         {
-            errors["password"] = $"Use at least {MinimumPassword} characters.";
+            errors["password"] = weak;
         }
         if (command.Repeat != command.Password)
         {
@@ -60,7 +59,6 @@ public sealed class PasswordResetHandler(IPromiseHubDb db, TenantContext tenant,
         {
             return new ResetPasswordResult(false, errors, null);
         }
-        var user = await db.StaffUsers.SingleAsync(u => u.Id == reset.UserId, cancellationToken);
         var membership = await ActiveMembership.ForAsync(db, user.Email, cancellationToken);
         if (membership is null)
         {

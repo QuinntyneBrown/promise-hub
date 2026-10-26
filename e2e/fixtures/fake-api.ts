@@ -129,6 +129,15 @@ interface AudienceBody {
 
 const GSM7 = '@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#¤%&\'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà';
 
+/** The password policy as the server applies it (L2-053): 12 to 128 characters and not the email's name. */
+function passwordProblem(password: string | undefined, email: string): string | null {
+  const value = password ?? '';
+  if (value.length < 12) return 'Use at least 12 characters.';
+  if (value.length > 128) return 'Use at most 128 characters.';
+  const local = email.split('@')[0]!;
+  return local.length >= 3 && value.toLowerCase().includes(local.toLowerCase()) ? 'Don’t use your email in your password.' : null;
+}
+
 /** SMS segments as the server counts them: 160/153 GSM-7 characters, 70/67 otherwise. */
 function segmentsOf(text: string): number {
   const gsm = [...text].every((c) => GSM7.includes(c));
@@ -961,7 +970,8 @@ export class FakeApi {
     const link = this.resetLinks.get(b.token);
     if (!link?.usable) return route.fulfill({ status: 410 });
     const errors: Record<string, string> = {};
-    if ((b.password ?? '').length < 12) errors['password'] = 'Use at least 12 characters.';
+    const weak = passwordProblem(b.password, link.email);
+    if (weak) errors['password'] = weak;
     if (b.repeat !== b.password) errors['repeat'] = 'The two passwords don’t match.';
     if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
     link.usable = false;
@@ -1953,7 +1963,8 @@ export class FakeApi {
     const b = route.request().postDataJSON() as { name?: string; password?: string };
     const errors: Record<string, string> = {};
     if (!b.name?.trim()) errors['name'] = 'Enter your name.';
-    if ((b.password ?? '').length < 12) errors['password'] = 'Use at least 12 characters.';
+    const weak = passwordProblem(b.password, i.email);
+    if (weak) errors['password'] = weak;
     if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
     i.accepted = true;
     // The new worker signs in as the seeded youth worker membership (the fake has no account store).

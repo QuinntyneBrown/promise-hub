@@ -17,8 +17,6 @@ namespace PromiseHub.Application.Staff;
 /// </summary>
 public sealed class InvitationHandler(IPromiseHubDb db, TenantContext tenant, IPasswordHasher hasher, IAuditWriter audit, TimeProvider clock)
 {
-    public const int MinimumPassword = 12;
-
     public async Task<(bool Open, InvitationDto? Invitation)> GetAsync(string token, CancellationToken cancellationToken = default)
     {
         var invitation = await FindAsync(token, cancellationToken);
@@ -50,9 +48,9 @@ public sealed class InvitationHandler(IPromiseHubDb db, TenantContext tenant, IP
                 errors["password"] = "Use the password you already have for PromiseHub.";
             }
         }
-        else if ((command.Password ?? string.Empty).Length < MinimumPassword)
+        else if (PasswordPolicy.Check(command.Password, invitation.Email) is { } weak)
         {
-            errors["password"] = $"Use at least {MinimumPassword} characters.";
+            errors["password"] = weak;
         }
         if (errors.Count > 0)
         {

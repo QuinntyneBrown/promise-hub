@@ -16,6 +16,10 @@ export class AcceptInvitePage extends BasePage {
     return this.page.getByTestId('invited-email');
   }
 
+  get passwordHelp(): Locator {
+    return this.page.getByTestId('password-help');
+  }
+
   fieldError(field: 'name' | 'password' | 'mobile'): Locator {
     return this.page.getByTestId(`${field}-error`);
   }
