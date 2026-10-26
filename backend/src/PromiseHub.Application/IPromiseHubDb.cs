@@ -52,6 +52,7 @@ public interface IPromiseHubDb
     DbSet<SignInAttempt> SignInAttempts { get; }
     DbSet<Domain.Notifications.Notification> Notifications { get; }
     DbSet<Domain.Notifications.NotificationSettings> NotificationSettings { get; }
+    DbSet<Domain.Reports.ReportExport> ReportExports { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

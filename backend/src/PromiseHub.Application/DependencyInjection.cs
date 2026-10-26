@@ -47,6 +47,8 @@ public static class DependencyInjection
         services.AddScoped<SessionAccess>();
         services.AddScoped<RosterAccess>();
         services.AddScoped<Reports.TodayHandler>();
+        services.AddScoped<Reports.ReportCalculator>();
+        services.AddScoped<Reports.ReportsHandler>();
         services.AddScoped<Search.SearchHandler>();
         services.AddScoped<Notifications.NotificationWriter>();
         services.AddScoped<Notifications.NotificationsHandler>();

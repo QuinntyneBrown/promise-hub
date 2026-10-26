@@ -21,4 +21,6 @@ public enum Permission
     InviteStaff,
     AssignStaff,
     ReadDateOfBirth,
+    ViewReports,
+    ReadSmallCounts,
 }
