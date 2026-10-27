@@ -1,0 +1,119 @@
+@let r = result();
+@switch (r?.status) {
+  @case ('loaded') {
+    @if (r?.status === 'loaded') {
+      @let q = r.value;
+      <ph-breadcrumb
+        [items]="[
+          { label: 'Curriculum', link: '/curriculum' },
+          { label: q.moduleTitle, link: '/curriculum/modules/' + q.moduleId },
+          { label: q.title },
+        ]"
+      />
+      <ph-page-header [title]="q.title" [subtitle]="'Quiz · ' + q.moduleTitle">
+        <ph-badge [tone]="statusTone(q.status)" data-testid="quiz-status">{{
+          statusLabel(q.status)
+        }}</ph-badge>
+      </ph-page-header>
+      <div class="split">
+        <div class="stack">
+          <ph-card
+            [title]="q.questions.length ? 'Questions (' + q.questions.length + ')' : 'Questions'"
+            [flush]="true"
+          >
+            @if (q.questions.length) {
+              <ph-list label="Questions, in order" [inset]="true">
+                @for (question of q.questions; track question.id; let i = $index, last = $last) {
+                  <ph-list-item
+                    [title]="i + 1 + '. ' + question.text"
+                    [meta]="questionMeta(question)"
+                  >
+                    <div class="cluster cluster--tight">
+                      <ph-button
+                        variant="ghost"
+                        icon="edit"
+                        [iconOnly]="true"
+                        hasPopup="dialog"
+                        [label]="'Edit question ' + (i + 1)"
+                        (click)="editQuestion(q, i)"
+                      />
+                      <ph-button
+                        variant="ghost"
+                        icon="trash"
+                        [iconOnly]="true"
+                        hasPopup="dialog"
+                        [label]="'Delete question ' + (i + 1)"
+                        (click)="deleteQuestion(q, i)"
+                      />
+                    </div>
+                  </ph-list-item>
+                }
+              </ph-list>
+            } @else {
+              <ph-empty-state
+                icon="curriculum"
+                title="No questions yet"
+                text="Add the questions youth answer. Mark the correct answer for each one."
+              />
+            }
+            <ng-container ngProjectAs="[phCardFooter]">
+              <ph-button
+                variant="ghost"
+                size="sm"
+                icon="plus"
+                hasPopup="dialog"
+                (click)="addQuestion(q)"
+                >Add question</ph-button
+              >
+            </ng-container>
+          </ph-card>
+        </div>
+      </div>
+    }
+  }
+  @case ('not-found') {
+    <ph-breadcrumb [items]="[{ label: 'Curriculum', link: '/curriculum' }, { label: 'Quiz' }]" />
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="search"
+        title="We can’t find that quiz"
+        text="It may have been removed, or belong to another organization."
+        [headingLevel]="1"
+      >
+        <ph-button link="/curriculum">Back to Curriculum</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('forbidden') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="lock"
+        title="Program directors write the curriculum"
+        text="Ask an admin or a program director of your organization."
+        [headingLevel]="1"
+      >
+        <ph-button link="/">Back to Today</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case (undefined) {
+    <ph-page-header title="Quiz" />
+    <div aria-busy="true" aria-label="Loading the quiz" class="split">
+      <ph-skeleton shape="card" />
+      <ph-skeleton shape="card" />
+    </div>
+  }
+  @default {
+    <ph-page-header title="Quiz" />
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load this quiz"
+        text="Check your connection and try again."
+      >
+        <ph-button variant="primary" icon="refresh" (click)="reload()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+}

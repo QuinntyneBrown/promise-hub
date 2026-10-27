@@ -8,3 +8,7 @@ export { NewLessonDialog } from './lib/new-lesson-dialog/new-lesson-dialog';
 export { CurriculumStatusDialog } from './lib/curriculum-status-dialog/curriculum-status-dialog';
 export { DeleteLessonDialog } from './lib/delete-lesson-dialog/delete-lesson-dialog';
 export { TrackCohortsDialog } from './lib/track-cohorts-dialog/track-cohorts-dialog';
+export { QuizBuilderPage } from './lib/quiz-builder-page/quiz-builder-page';
+export { NewAssessmentDialog } from './lib/new-assessment-dialog/new-assessment-dialog';
+export { QuizQuestionDialog } from './lib/quiz-question-dialog/quiz-question-dialog';
+export { DeleteQuestionDialog } from './lib/delete-question-dialog/delete-question-dialog';

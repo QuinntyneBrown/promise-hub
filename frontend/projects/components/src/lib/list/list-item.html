@@ -5,7 +5,7 @@
   <div class="body">
     <div class="title" data-testid="list-title">{{ title() }}</div>
     @if (meta()) {
-      <div class="meta">{{ meta() }}</div>
+      <div class="meta" data-testid="list-meta">{{ meta() }}</div>
     }
     @if (caption()) {
       <span class="caption">{{ caption() }}</span>

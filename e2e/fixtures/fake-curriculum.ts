@@ -1,4 +1,5 @@
 import type { Route } from '@playwright/test';
+import { FakeAssessments, type CurriculumSource } from './fake-assessments';
 import type { FakeProgram } from './programs';
 
 export type ContentStatus = 'Draft' | 'InReview' | 'Published';
@@ -101,8 +102,32 @@ function sameSet(sent: string[] | undefined, current: string[]): boolean {
  * Curriculum authoring as the API answers it (L2-066, L2-067, ADR 0050): tracks, their ordered modules and lessons. Every call
  * reaches it only after FakeApi checked the Learning module and AuthorCurriculum, and it sees only the caller's organization.
  */
-export class FakeCurriculum {
+export class FakeCurriculum implements CurriculumSource {
   private nextId = 1;
+
+  /** Quizzes and assignments of the modules (L2-073, L2-074). */
+  readonly assessments = new FakeAssessments(this);
+
+  /** Gives a quiz two questions. */
+  seedQuestions(quizId: string): void {
+    this.assessments.seedQuestions(quizId);
+  }
+
+  moduleOf(org: string, id: string): FakeModule | undefined {
+    return this.module(org, id);
+  }
+
+  trackOf(id: string): FakeTrack {
+    return this.tracks.find((t) => t.id === id)!;
+  }
+
+  lessonsOf(moduleId: string): FakeLesson[] {
+    return this.liveLessons(moduleId);
+  }
+
+  followingNames(org: string, trackId: string): string[] {
+    return this.following(org, trackId).map((p) => p.name);
+  }
 
   /** The organization's programs come from FakeApi; a program follows at most one track (ADR 0050). */
   constructor(private readonly programs: () => FakeProgram[]) {}
@@ -411,6 +436,7 @@ export class FakeCurriculum {
         earlierModules: siblings.filter((s) => s.position < m.position).map((s) => ({ id: s.id, title: s.title })),
         lessons: this.liveLessons(m.id).map((l) => ({ id: l.id, title: l.title, minutes: l.minutes, status: l.status })),
         programs: this.following(org, track.id).map((p) => p.name),
+        ...this.assessments.summaries(m.id),
       },
     });
   }

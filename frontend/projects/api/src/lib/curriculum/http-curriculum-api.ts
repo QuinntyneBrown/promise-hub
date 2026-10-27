@@ -13,6 +13,8 @@ import { LessonFields } from './lesson-fields';
 import { ModuleDetail } from './module-detail';
 import { ModuleFields } from './module-fields';
 import { NewTrack } from './new-track';
+import { QuestionFields } from './question-fields';
+import { QuizDetail } from './quiz-detail';
 
 @Injectable()
 export class HttpCurriculumApi implements CurriculumApi {
@@ -113,5 +115,36 @@ export class HttpCurriculumApi implements CurriculumApi {
     return toWrite(
       this.http.put<null>(`${this.baseUrl}/curriculum/tracks/${trackId}/cohorts`, { programIds }),
     );
+  }
+
+  createQuiz(moduleId: string, lessonId: string | null, title: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<{ id: string }>(`${this.baseUrl}/curriculum/quizzes`, {
+        moduleId,
+        lessonId,
+        title,
+      }),
+    );
+  }
+
+  quiz(id: string): Observable<LoadResult<QuizDetail>> {
+    return toLoad(this.http.get<QuizDetail>(`${this.baseUrl}/curriculum/quizzes/${id}`));
+  }
+
+  addQuestion(quizId: string, fields: QuestionFields): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<{ id: string }>(
+        `${this.baseUrl}/curriculum/quizzes/${quizId}/questions`,
+        fields,
+      ),
+    );
+  }
+
+  updateQuestion(id: string, fields: QuestionFields): Observable<WriteOutcome> {
+    return toWrite(this.http.put<null>(`${this.baseUrl}/curriculum/quiz-questions/${id}`, fields));
+  }
+
+  deleteQuestion(id: string): Observable<WriteOutcome> {
+    return toWrite(this.http.delete<null>(`${this.baseUrl}/curriculum/quiz-questions/${id}`));
   }
 }

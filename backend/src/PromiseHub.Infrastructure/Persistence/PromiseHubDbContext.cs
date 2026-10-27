@@ -63,6 +63,8 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Curriculum.Track> Tracks => Set<Domain.Curriculum.Track>();
     public DbSet<Domain.Curriculum.CurriculumModule> CurriculumModules => Set<Domain.Curriculum.CurriculumModule>();
     public DbSet<Domain.Curriculum.Lesson> Lessons => Set<Domain.Curriculum.Lesson>();
+    public DbSet<Domain.Curriculum.Quiz> Quizzes => Set<Domain.Curriculum.Quiz>();
+    public DbSet<Domain.Curriculum.QuizQuestion> QuizQuestions => Set<Domain.Curriculum.QuizQuestion>();
     public DbSet<Domain.Learning.LessonProgress> LessonProgress => Set<Domain.Learning.LessonProgress>();
     public DbSet<Domain.Curriculum.CodingStep> CodingSteps => Set<Domain.Curriculum.CodingStep>();
     public DbSet<Domain.Learning.CodingWorkspace> CodingWorkspaces => Set<Domain.Learning.CodingWorkspace>();
@@ -161,6 +163,23 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(l => l.Kind).HasConversion<string>().HasMaxLength(20);
             e.Property(l => l.Passage).HasMaxLength(Domain.Curriculum.Lesson.MaximumPassage);
             e.Property(l => l.StarterCode).HasMaxLength(Domain.Curriculum.Lesson.MaximumCode);
+        });
+        modelBuilder.Entity<Domain.Curriculum.Quiz>(e =>
+        {
+            e.Property(q => q.Title).HasMaxLength(Domain.Curriculum.Quiz.MaximumTitle);
+            e.Property(q => q.Feedback).HasConversion<string>().HasMaxLength(20);
+            e.Property(q => q.Status).HasConversion<string>().HasMaxLength(20);
+            e.HasOne<Domain.Curriculum.CurriculumModule>().WithMany().HasForeignKey(q => q.ModuleId);
+            e.HasOne<Domain.Curriculum.Lesson>().WithMany().HasForeignKey(q => q.LessonId);
+        });
+        modelBuilder.Entity<Domain.Curriculum.QuizQuestion>(e =>
+        {
+            e.Property(q => q.Text).HasMaxLength(Domain.Curriculum.QuizQuestion.MaximumText);
+            e.Property(q => q.Type).HasConversion<string>().HasMaxLength(20);
+            e.Property(q => q.Options).HasMaxLength(1300);
+            e.Property(q => q.Correct).HasMaxLength(20);
+            e.Property(q => q.Answers).HasMaxLength(2100);
+            e.HasOne<Domain.Curriculum.Quiz>().WithMany().HasForeignKey(q => q.QuizId);
         });
         modelBuilder.Entity<Domain.Curriculum.CodingStep>(e =>
         {
