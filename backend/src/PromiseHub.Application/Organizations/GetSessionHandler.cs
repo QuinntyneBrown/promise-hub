@@ -16,6 +16,7 @@ public sealed class GetSessionHandler(IPromiseHubDb db, ITenantContext tenant, I
             organization.Id,
             organization.Name,
             organization.Plan.ToString(),
-            [.. ModuleCatalog.All.Where(modules.Contains).Select(m => m.ToString())]);
+            [.. ModuleCatalog.All.Where(modules.Contains).Select(m => m.ToString())],
+            tenant.MembershipId);
     }
 }

@@ -93,6 +93,17 @@
           </ph-list>
         </ph-card>
       }
+      @if (m.assignments.length) {
+        <ph-card title="Assignments" [flush]="true">
+          <ph-list label="Assignments">
+            @for (a of m.assignments; track a.id) {
+              <ph-list-item [title]="a.title" [meta]="assignmentMeta(a)" [link]="assignmentLink(a)">
+                <ph-badge [tone]="tone[a.status]">{{ label[a.status] }}</ph-badge>
+              </ph-list-item>
+            }
+          </ph-list>
+        </ph-card>
+      }
     </div>
   </div>
 } @else if (r.status === 'locked') {

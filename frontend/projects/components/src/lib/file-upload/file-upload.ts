@@ -3,7 +3,10 @@ import { PhIcon } from '../icon/icon';
 
 let nextId = 0;
 
-/** File upload (design system: file-upload): a drop zone with a button that opens the file picker; emits the chosen file. */
+/**
+ * File upload (design system: file-upload): a drop zone with a button that opens the file picker; emits the chosen file. With an error it
+ * shows the invalid state: a danger border, the message under the zone and the input described by it.
+ */
 @Component({
   selector: 'ph-file-upload',
   imports: [PhIcon],
@@ -17,9 +20,16 @@ export class PhFileUpload {
   readonly accept = input<string | null>(null);
   readonly buttonLabel = input('Choose file');
   readonly busy = input(false);
+  readonly error = input<string | null>(null);
+  /** The file input's id; generated when not given. */
+  readonly inputId = input<string | null>(null);
   readonly fileSelected = output<File>();
 
-  protected readonly id = `ph-file-${nextId++}`;
+  private readonly generated = `ph-file-${nextId++}`;
+
+  protected id(): string {
+    return this.inputId() ?? this.generated;
+  }
   protected readonly over = signal(false);
 
   protected picked(input: HTMLInputElement): void {

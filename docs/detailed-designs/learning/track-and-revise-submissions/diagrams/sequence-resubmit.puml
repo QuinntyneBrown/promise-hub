@@ -1,0 +1,44 @@
+@startuml
+title UML sequence behaviour — Reading feedback and resubmitting
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Youth (Sofía)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "SubmissionPage" as st
+  participant "SubmitPage (revise)" as page
+  participant "LearningApi" as lapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "LearningEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "SubmissionViewHandler" as vh
+  participant "SubmissionCommand" as h
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  participant "IFileStore" as fs
+  database "PromiseHub database" as db
+end box
+actor -> st : opens her submission
+st -> lapi : submission(id)
+lapi -> ep : GET /learning/submissions/{id}
+ep -> vh : HandleAsync (own membership only, L2-078 c5)
+vh -> db : submission + events
+vh --> st : NeedsRevision, note from Daniel, history (c1, c3)
+actor -> page : Revise your submission, edits, Resubmit
+page -> lapi : resubmit(id, text, link, file?, removeFile, attest)
+lapi -> ep : POST /learning/submissions/{id}/resubmit (multipart)
+ep -> h : ResubmitAsync
+alt status is not NeedsRevision
+  h --> ep : 409 not-revisable (c4)
+else
+  h -> fs : save new file (replaces the old one)
+  h -> db : work replaced, Round+1, Submitted, Resubmitted event, audit Updated (c3)
+  h -> fs : delete replaced file
+  h --> ep : 200 { id }
+end
+page -> st : open the status (learn-submission/resubmitted)
+@enduml

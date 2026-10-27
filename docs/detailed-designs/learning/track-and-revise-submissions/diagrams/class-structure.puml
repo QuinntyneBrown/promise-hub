@@ -1,0 +1,20 @@
+@startuml
+title Class structure — Track and revise a submission
+skinparam classAttributeIconSize 0
+class AssignmentSubmission {
+  Status, Round, Late, Feedback?, ReviewerName?, Points?
+  Resubmit(text, link, file?, at)
+  StartReview(by, at)
+  RequestRevision(note, by, at)
+  Accept(points, note, by, at)
+}
+class SubmissionEvent { Kind, ActorName, Note?, At }
+enum SubmissionEventKind { Submitted, ReviewStarted, RevisionRequested, Resubmitted, Accepted }
+class SubmissionViewHandler { HandleAsync(id); FileAsync(id) }
+class SubmissionViewDto { Status, Late, Text, Link, File, Feedback, Points, TotalPoints, History }
+class SubmissionCommand { ResubmitAsync(id, work) }
+AssignmentSubmission "1" *-- "1..*" SubmissionEvent
+SubmissionEvent --> SubmissionEventKind
+SubmissionViewHandler ..> SubmissionViewDto
+SubmissionCommand ..> AssignmentSubmission
+@enduml

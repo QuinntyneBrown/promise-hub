@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using PromiseHub.Api.Authorization;
 using PromiseHub.Api.Modules;
 using PromiseHub.Application.Identity;
@@ -7,7 +8,7 @@ using PromiseHub.Domain.Organizations;
 namespace PromiseHub.Api.Endpoints;
 
 /// <summary>
-/// A youth's lessons and quizzes (L2-068 to L2-070, L2-075, L2-076, ADR 0051, ADR 0055): the Learning module, the Learn permission, then the consent gate (L2-056) and the
+/// A youth's lessons and quizzes (L2-068 to L2-070, L2-075 to L2-078, ADR 0051, ADR 0055, ADR 0056): the Learning module, the Learn permission, then the consent gate (L2-056) and the
 /// placement gate (L2-060) on every endpoint. Locks and visibility are decided by LearnerProgress in the handlers.
 /// </summary>
 public static class LearningEndpoints
@@ -42,6 +43,34 @@ public static class LearningEndpoints
         {
             var submitted = await handler.SubmitAsync(id, request, ct);
             return submitted.Status == Application.ResultStatus.Done ? Results.Ok(new { id = submitted.Value }) : submitted.ToHttp();
+        });
+        learning.MapGet("/assignments/{id:guid}", async (Guid id, AssignmentBriefHandler handler, CancellationToken ct) => (await handler.HandleAsync(id, ct)).ToHttp());
+        learning.MapPost("/assignments/{id:guid}/submission", async (Guid id, HttpRequest request, SubmissionCommand handler, CancellationToken ct) =>
+        {
+            if (await SubmissionForm.ReadAsync(request, ct) is not { } form)
+            {
+                return SubmissionForm.Refused();
+            }
+            await using var file = form.File?.Content;
+            var submitted = await handler.SubmitAsync(id, form, ct);
+            return submitted.Status == Application.ResultStatus.Done
+                ? Results.Created($"/learning/submissions/{submitted.Value}", new { id = submitted.Value })
+                : submitted.ToHttp();
+        }).DisableAntiforgery().WithMetadata(new RequestSizeLimitAttribute(SubmissionForm.MaximumBody));
+        learning.MapPost("/submissions/{id:guid}/resubmit", async (Guid id, HttpRequest request, SubmissionCommand handler, CancellationToken ct) =>
+        {
+            if (await SubmissionForm.ReadAsync(request, ct) is not { } form)
+            {
+                return SubmissionForm.Refused();
+            }
+            await using var file = form.File?.Content;
+            return (await handler.ResubmitAsync(id, form, ct)).ToHttp();
+        }).DisableAntiforgery().WithMetadata(new RequestSizeLimitAttribute(SubmissionForm.MaximumBody));
+        learning.MapGet("/submissions/{id:guid}", async (Guid id, SubmissionViewHandler handler, CancellationToken ct) => (await handler.HandleAsync(id, ct)).ToHttp());
+        learning.MapGet("/submissions/{id:guid}/file", async (Guid id, SubmissionViewHandler handler, CancellationToken ct) =>
+        {
+            var file = await handler.FileAsync(id, ct);
+            return file.Value is { } f ? Results.File(f.Content, f.ContentType, f.FileName) : file.ToHttp();
         });
         // Streamed under the youth's session cookie with range requests, so the player can seek (ADR 0051).
         learning.MapGet("/lessons/{id:guid}/video", async (Guid id, LessonVideoStream handler, CancellationToken ct) =>

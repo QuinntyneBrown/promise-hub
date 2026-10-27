@@ -25,6 +25,11 @@ export function formatSeason(startsOn: string, endsOn: string): string {
   return start === end ? start : `${start}–${end}`;
 }
 
+/** "Thu 19 Nov" for a date (yyyy-mm-dd) or a moment. */
+export function formatDay(iso: string): string {
+  return day.format(new Date(iso.length === 10 ? `${iso}T12:00:00Z` : iso)).replace(',', '');
+}
+
 /** "14 Nov 2026". */
 export function formatDate(iso: string): string {
   return date.format(new Date(iso.length === 10 ? `${iso}T12:00:00Z` : iso));

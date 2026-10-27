@@ -1,0 +1,163 @@
+@let r = result();
+<ph-breadcrumb
+  [items]="
+    r?.status === 'loaded'
+      ? [
+          { label: 'Learning', link: '/learning' },
+          { label: r.value.moduleTitle, link: '/learning/modules/' + r.value.moduleId },
+          { label: r.value.title },
+        ]
+      : [{ label: 'Learning', link: '/learning' }, { label: 'Assignment' }]
+  "
+/>
+@if (r === null) {
+  <ph-page-header title="Assignment" />
+  <div class="split" aria-busy="true" aria-label="Loading the assignment">
+    <ph-skeleton shape="card" />
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (r.status === 'loaded') {
+  @let a = r.value;
+  <ph-page-header [title]="a.title" [subtitle]="subtitle(a)">
+    <ph-badge [tone]="statusTone(a)" data-testid="assignment-status">{{ statusLabel(a) }}</ph-badge>
+  </ph-page-header>
+  @if (
+    draftSavedAt &&
+    (!a.submission || a.submission.status === 'NeedsRevision') &&
+    a.dueState !== 'closed'
+  ) {
+    <ph-alert title="You have a draft" [text]="'Saved on this device on ' + draftSavedAt + '.'" />
+  } @else if (a.submission?.status === 'NeedsRevision') {
+    <ph-alert
+      tone="warning"
+      [title]="(a.mentorName ?? 'Your mentor') + ' asked for a revision'"
+      text="Read the note, then update your work and send it again."
+    />
+  } @else if (!a.submission && a.dueState === 'late') {
+    <ph-alert
+      tone="warning"
+      title="This is past its due date"
+      [text]="'You can still submit. ' + (a.mentorName ?? 'Your mentor') + ' will see it was late.'"
+    />
+  } @else if (!a.submission && a.dueState === 'closed') {
+    <ph-alert
+      title="Submissions are closed"
+      [text]="
+        'The due date and grace period have passed. Talk to ' +
+        (a.mentorName ?? 'your mentor') +
+        ' if you need more time.'
+      "
+    />
+  }
+  <div class="split">
+    <div class="stack">
+      <div class="kpis" role="group" aria-label="When and how to submit">
+        <ph-stat label="Due" [value]="due(a)" [caption]="dueCaption(a)" />
+        <ph-stat
+          label="Submit"
+          [value]="typesShort(a.submissionTypes)"
+          [caption]="typesLong(a.submissionTypes)"
+        />
+        <ph-stat
+          label="Points"
+          [value]="'' + a.totalPoints"
+          [caption]="'Reviewed by ' + (a.mentorName ?? 'your mentor')"
+        />
+      </div>
+      <ph-card title="The task">
+        <p class="task">{{ a.brief }}</p>
+      </ph-card>
+      <div class="actions">
+        @if (a.submission; as s) {
+          @if (s.status === 'NeedsRevision') {
+            <ph-button variant="ghost" [link]="'/learning/submissions/' + s.id"
+              >See the note</ph-button
+            >
+            <ph-button
+              variant="primary"
+              icon="edit"
+              [link]="'/learning/assignments/' + a.id + '/submit'"
+              >Revise your submission</ph-button
+            >
+          } @else {
+            <ph-button variant="ghost" [link]="'/learning/modules/' + a.moduleId"
+              >Back to the module</ph-button
+            >
+            <ph-button variant="primary" icon="arrow-right" [link]="'/learning/submissions/' + s.id"
+              >See your submission</ph-button
+            >
+          }
+        } @else if (a.dueState === 'closed') {
+          <ph-button variant="primary" [link]="'/learning/modules/' + a.moduleId"
+            >Back to the module</ph-button
+          >
+        } @else {
+          <ph-button variant="ghost" [link]="'/learning/modules/' + a.moduleId"
+            >Back to the module</ph-button
+          >
+          <ph-button
+            variant="primary"
+            icon="arrow-right"
+            [link]="'/learning/assignments/' + a.id + '/submit'"
+            >{{ draftSavedAt ? 'Continue your draft' : 'Start submission' }}</ph-button
+          >
+        }
+      </div>
+    </div>
+    <div class="stack">
+      <ph-card title="How it’s graded">
+        <div class="stack">
+          <ph-table caption="How it’s graded" [columns]="columns" [rows]="rows(a)" />
+          <p class="text-muted">
+            Total possible: <strong>{{ a.totalPoints }} points</strong>
+          </p>
+        </div>
+      </ph-card>
+      <ph-card title="Who reviews it">
+        <div class="reviewer">
+          <ph-avatar [name]="a.mentorName ?? 'Mentor'" tint="sage" />
+          <div>
+            <strong>{{ a.mentorName ?? 'Your mentor' }}</strong>
+            <div class="text-muted">
+              Your mentor reviews what you send and may ask for a revision.
+            </div>
+          </div>
+        </div>
+      </ph-card>
+    </div>
+  </div>
+} @else if (r.status === 'locked') {
+  <ph-page-header title="Assignment" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      [title]="'Finish ' + r.unlockAfter + ' first'"
+      [text]="'This assignment unlocks when ' + r.unlockAfter + ' is done.'"
+    >
+      <ph-button link="/learning">Back to Learning</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else if (r.status === 'not-found') {
+  <ph-page-header title="Assignment" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="search"
+      title="We can’t find that assignment"
+      text="It may not be published yet, or your program doesn’t follow it."
+    >
+      <ph-button link="/learning">Back to Learning</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-page-header title="Assignment" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load this assignment"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}

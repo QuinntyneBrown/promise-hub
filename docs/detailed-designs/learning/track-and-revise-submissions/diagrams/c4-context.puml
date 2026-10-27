@@ -1,0 +1,12 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Track and revise a submission
+Person(y, "Youth", "Phone or shared laptop")
+Person(a, "Program director", "Publishes assignments (L2-074)")
+Person(m, "Mentor", "Reviews submissions (prompt 63)")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(a, ph, "Publishes assignments", "HTTPS")
+Rel(y, ph, "Follows and revises submissions", "HTTPS")
+Rel(m, ph, "Reviews submissions", "HTTPS")
+@enduml

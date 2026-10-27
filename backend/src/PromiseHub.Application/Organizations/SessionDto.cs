@@ -6,4 +6,5 @@ public sealed record SessionDto(
     Guid OrganizationId,
     string OrganizationName,
     string Plan,
-    IReadOnlyList<string> Modules);
+    IReadOnlyList<string> Modules,
+    Guid MembershipId);

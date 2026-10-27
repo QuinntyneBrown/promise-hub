@@ -59,3 +59,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0053](0053-application-pipeline-and-placement.md) | The application pipeline is the organization’s enrollment requests; placing accepts a request into the chosen program; notes are staff-only rows |
 | [0054](0054-quizzes-and-assignments-belong-to-modules.md) | Quizzes and assignments belong to a module, are attached to the module or one of its lessons, and keep their answers and rubric with them |
 | [0055](0055-quiz-attempts-are-scored-on-the-server-and-the-best-counts.md) | Quiz attempts are per membership, autosaved, scored on the server at submit and then locked; the best scored attempt counts |
+| [0056](0056-assignment-submissions-carry-their-file-and-history-and-drafts-stay-on-the-device.md) | An assignment submission is one row per youth and assignment, carries its file and its history, and is revised in place; drafts stay on the device |

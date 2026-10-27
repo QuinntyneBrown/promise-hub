@@ -156,6 +156,31 @@ export class FakeAssessments {
     );
   }
 
+  /**
+   * The published Serve someone this week youth submit (L2-077): after Pick Up the Towel, a text reflection and a photo, a 25-point
+   * rubric of three criteria, due Thu 19 Nov 2026 with a 2-day grace period and late work allowed.
+   */
+  assignmentJourney(changes: Partial<FakeAssignment> = {}): void {
+    Object.assign(
+      this.assignments.find((a) => a.id === 'as-serve')!,
+      {
+        status: 'Published',
+        brief:
+          'This week, put Pick Up the Towel into practice. Choose one person to serve without being asked, at home, at school or in your cohort. Afterwards, tell us what you did, how it felt and what you noticed. A photo or a short note is enough.',
+        submissionTypes: ['Text', 'Photo'],
+        rubric: [
+          { description: 'Chose someone and served without being asked', points: 10 },
+          { description: 'Described what they did and how it felt', points: 10 },
+          { description: 'Named one thing they noticed', points: 5 },
+        ],
+        dueDate: '2026-11-19',
+        graceDays: 2,
+        allowLate: true,
+      } satisfies Partial<FakeAssignment>,
+      changes,
+    );
+  }
+
   private quiz(org: string, id: string): FakeQuiz | undefined {
     return this.quizzes.find((q) => q.id === id && q.organizationId === org);
   }

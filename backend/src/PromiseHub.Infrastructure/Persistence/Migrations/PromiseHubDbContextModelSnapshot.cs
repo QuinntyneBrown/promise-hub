@@ -1708,6 +1708,85 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.ToTable("IncidentFollowUps");
                 });
 
+            modelBuilder.Entity("PromiseHub.Domain.Learning.AssignmentSubmission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("AssignmentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Feedback")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("FileBytes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("FileKey")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FileKind")
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FileName")
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FileType")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Late")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Link")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("MembershipId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Points")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ReviewerName")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Round")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("SubmittedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Text")
+                        .HasMaxLength(5000)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignmentId");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("MembershipId", "AssignmentId")
+                        .IsUnique();
+
+                    b.ToTable("AssignmentSubmissions");
+                });
+
             modelBuilder.Entity("PromiseHub.Domain.Learning.CodingWorkspace", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1886,6 +1965,44 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("QuizAttempts");
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Learning.SubmissionEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ActorName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("At")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("SubmissionId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("SubmissionId");
+
+                    b.ToTable("SubmissionEvents");
                 });
 
             modelBuilder.Entity("PromiseHub.Domain.Learning.YouthOnboarding", b =>
@@ -3339,6 +3456,27 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("PromiseHub.Domain.Learning.AssignmentSubmission", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Curriculum.Assignment", null)
+                        .WithMany()
+                        .HasForeignKey("AssignmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Organizations.Membership", null)
+                        .WithMany()
+                        .HasForeignKey("MembershipId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("PromiseHub.Domain.Learning.CodingWorkspace", b =>
                 {
                     b.HasOne("PromiseHub.Domain.Curriculum.Lesson", null)
@@ -3419,6 +3557,21 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.HasOne("PromiseHub.Domain.Curriculum.Quiz", null)
                         .WithMany()
                         .HasForeignKey("QuizId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Learning.SubmissionEvent", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Learning.AssignmentSubmission", null)
+                        .WithMany()
+                        .HasForeignKey("SubmissionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

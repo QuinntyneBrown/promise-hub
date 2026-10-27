@@ -1,0 +1,14 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Protect unsaved work
+Person(y, "Youth", "Phone or shared laptop browser")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular 22", "router guard, CDK Dialog, DraftStore")
+  ContainerDb(ls, "Device storage", "localStorage", "Drafts keyed by membership and assignment")
+  Container(api, "PromiseHub API", "ASP.NET Core, .NET 10", "Receives only submitted work")
+}
+Rel(y, web, "Uses", "HTTPS")
+Rel(web, ls, "Saves, restores and clears drafts")
+Rel(web, api, "Submits", "multipart/HTTPS")
+@enduml

@@ -619,6 +619,11 @@ export class FakeApi {
     ['PUT', /^\/api\/learning\/attempts\/(?<id>[^/]+)\/answers$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.quizzes.save(route, m.id, p['id']!, (q) => this.learningState.quizPlace(m.id, programs, q)))],
     ['POST', /^\/api\/learning\/attempts\/(?<id>[^/]+)\/submit$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.quizzes.submit(route, m.id, p['id']!, (q) => this.learningState.quizPlace(m.id, programs, q)))],
     ['GET', /^\/api\/learning\/attempts\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.quizzes.result(route, m.id, p['id']!, (q) => this.learningState.quizPlace(m.id, programs, q)))],
+    ['GET', /^\/api\/learning\/assignments\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.assignmentBrief(route, m, programs, p['id']!))],
+    ['POST', /^\/api\/learning\/assignments\/(?<id>[^/]+)\/submission$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.work.submit(route, m.id, m.personName, this.learningState.assignmentPlace(m.id, programs, p['id']!)))],
+    ['GET', /^\/api\/learning\/submissions\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.work.view(route, m.id, p['id']!, (a) => this.learningState.assignmentPlace(m.id, programs, a), (t) => this.youthMentorName(m, t)))],
+    ['GET', /^\/api\/learning\/submissions\/(?<id>[^/]+)\/file$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.work.file(route, m.id, p['id']!, (a) => this.learningState.assignmentPlace(m.id, programs, a)))],
+    ['POST', /^\/api\/learning\/submissions\/(?<id>[^/]+)\/resubmit$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.work.resubmit(route, m.id, m.personName, p['id']!, (a) => this.learningState.assignmentPlace(m.id, programs, a)))],
     ['POST', /^\/api\/learning\/lessons\/(?<id>[^/]+)\/complete$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.completeLesson(route, m.id, programs, p['id']!))],
     ['POST', /^\/api\/learning\/consent-request$/, (route) => this.askGuardian(route)],
     ['GET', /^\/api\/learning\/onboarding$/, (route) => this.onboarding(route)],
@@ -905,6 +910,7 @@ export class FakeApi {
         organizationName: organization.name,
         plan: organization.plan,
         modules: this.modules.get(organization.id),
+        membershipId: membership.id,
       },
     });
   }
@@ -948,6 +954,27 @@ export class FakeApi {
     const programs = this.placementsOf(m);
     if (!programs.length) return route.fulfill({ status: 403, json: { code: 'no-cohort' } });
     return handle(m, programs);
+  }
+
+  /** GET /learning/assignments/{id}: the brief with her mentor's name. */
+  private assignmentBrief(route: Route, m: Membership, programs: FakeProgram[], id: string): Promise<void> {
+    const place = this.learningState.assignmentPlace(m.id, programs, id);
+    return this.learningState.work.brief(route, m.id, place, place ? this.youthMentorName(m, place.trackId) : null);
+  }
+
+  /** The youth's mentor (ADR 0056): her own, else the lead mentor of a program of hers that follows the track. */
+  private youthMentorName(m: Membership, trackId: string): string | null {
+    const childId = this.youthLinks.get(m.id);
+    if (!childId) return null;
+    const mentors = this.activeMentors(m.organizationId);
+    const leads = this.placementsOf(m)
+      .filter((p) => this.curriculumState.programTracks.get(p.id) === trackId)
+      .map((p) => this.cohortMentors.get(p.id)?.lead);
+    for (const id of [this.youthMentors.get(childId), ...leads]) {
+      const found = mentors.find((x) => x.id === id);
+      if (found) return found.name;
+    }
+    return null;
   }
 
   /** Every active program of the youth's organization with their child on the roster. */

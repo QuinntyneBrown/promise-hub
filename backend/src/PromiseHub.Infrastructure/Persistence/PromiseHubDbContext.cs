@@ -72,6 +72,8 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Learning.CodingWorkspace> CodingWorkspaces => Set<Domain.Learning.CodingWorkspace>();
     public DbSet<Domain.Learning.ProjectSubmission> ProjectSubmissions => Set<Domain.Learning.ProjectSubmission>();
     public DbSet<Domain.Learning.QuizAttempt> QuizAttempts => Set<Domain.Learning.QuizAttempt>();
+    public DbSet<Domain.Learning.AssignmentSubmission> AssignmentSubmissions => Set<Domain.Learning.AssignmentSubmission>();
+    public DbSet<Domain.Learning.SubmissionEvent> SubmissionEvents => Set<Domain.Learning.SubmissionEvent>();
     public DbSet<DataRequest> DataRequests => Set<DataRequest>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
     public DbSet<Domain.Incidents.IncidentFollowUp> IncidentFollowUps => Set<Domain.Incidents.IncidentFollowUp>();
@@ -236,6 +238,31 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Ignore(a => a.Submitted);
             e.HasOne<Membership>().WithMany().HasForeignKey(a => a.MembershipId);
             e.HasOne<Domain.Curriculum.Quiz>().WithMany().HasForeignKey(a => a.QuizId);
+        });
+        modelBuilder.Entity<Domain.Learning.AssignmentSubmission>(e =>
+        {
+            e.HasIndex(a => new { a.MembershipId, a.AssignmentId }).IsUnique();
+            e.Property(a => a.Text).HasMaxLength(Domain.Learning.AssignmentSubmission.MaximumText);
+            e.Property(a => a.Link).HasMaxLength(Domain.Learning.AssignmentSubmission.MaximumLink);
+            e.Property(a => a.FileName).HasMaxLength(255);
+            e.Property(a => a.FileKind).HasConversion<string>().HasMaxLength(10);
+            e.Property(a => a.FileType).HasMaxLength(100);
+            e.Property(a => a.FileKey).HasMaxLength(300);
+            e.Property(a => a.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(a => a.Feedback).HasMaxLength(Domain.Learning.AssignmentSubmission.MaximumFeedback);
+            e.Property(a => a.ReviewerName).HasMaxLength(200);
+            e.Property(a => a.SubmittedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.HasOne<Membership>().WithMany().HasForeignKey(a => a.MembershipId);
+            e.HasOne<Domain.Curriculum.Assignment>().WithMany().HasForeignKey(a => a.AssignmentId);
+        });
+        modelBuilder.Entity<Domain.Learning.SubmissionEvent>(e =>
+        {
+            e.HasIndex(x => x.SubmissionId);
+            e.Property(x => x.Kind).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.ActorName).HasMaxLength(200);
+            e.Property(x => x.Note).HasMaxLength(Domain.Learning.AssignmentSubmission.MaximumFeedback);
+            e.Property(x => x.At).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.HasOne<Domain.Learning.AssignmentSubmission>().WithMany().HasForeignKey(x => x.SubmissionId);
         });
         modelBuilder.Entity<Domain.Learning.LessonProgress>(e =>
         {

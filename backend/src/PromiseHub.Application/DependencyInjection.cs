@@ -155,6 +155,10 @@ public static class DependencyInjection
         services.AddScoped<Learning.QuizIntroHandler>();
         services.AddScoped<Learning.QuizAttemptCommand>();
         services.AddScoped<Learning.QuizResultHandler>();
+        services.AddScoped<Learning.YouthMentorName>();
+        services.AddScoped<Learning.AssignmentBriefHandler>();
+        services.AddScoped<Learning.SubmissionCommand>();
+        services.AddScoped<Learning.SubmissionViewHandler>();
         services.AddScoped<Staff.LinkYouthHandler>();
         services.AddScoped<Staff.InvitationIssuer>();
         services.AddScoped<Staff.YouthInvitationHandler>();
