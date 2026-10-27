@@ -59,7 +59,7 @@
 | Youth | Complete lessons | Work through gated lessons, including coding tracks. | [13 days](detailed-designs/learning/browse-curriculum/README.md) | 100% · [video](videos/57-complete-lessons/README.md) |
 | Youth | Take quizzes | Attempt quizzes and see scores and results. | [7 days](detailed-designs/learning/take-quizzes/README.md) | 100% · [video](videos/61-take-quizzes/README.md) |
 | Youth | Submit assignments | Submit work and follow it through review and revision. | [9 days](detailed-designs/learning/submit-assignments/README.md) | 100% · [video](videos/62-submit-assignments/README.md) |
-| Youth | View journey and progress | See badges, the journey roadmap and overall progress. | [10 days](detailed-designs/learning/view-learning-journey/README.md) | 0% |
+| Youth | View journey and progress | See badges, the journey roadmap and overall progress. | [10 days](detailed-designs/learning/view-learning-journey/README.md) | 100% · [video](videos/65-view-journey-and-progress/README.md) |
 | Youth | Write reflections | Write private-by-default reflections after a lesson. | [4 days](prompts/66-write-reflections.md) | 0% |
 | Youth | Reset a password as a youth or mentor | Recover a youth or mentor account through an emailed link. | [4 days](prompts/77-reset-a-password.md) | 0% |
 | Mentor | Use the mentor dashboard | See the roster of assigned youth and each youth's record. | [7 days](detailed-designs/mentoring/manage-mentor-roster/README.md) | 100% · [video](videos/55-use-the-mentor-dashboard/README.md) |
