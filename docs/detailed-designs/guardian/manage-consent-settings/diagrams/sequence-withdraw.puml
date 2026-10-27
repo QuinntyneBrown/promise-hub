@@ -1,0 +1,33 @@
+@startuml
+title UML sequence behaviour — Withdraw consent
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Person" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "Page" as page
+  participant "Dialog" as dlg
+  participant "API client" as gapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "Endpoints" as ep
+end box
+box "Backend — PromiseHub.Application and Domain" #ECFDF3
+  participant "Handler" as h
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : Withdraw consent
+page -> dlg : open (focus on Cancel)
+actor -> dlg : Withdraw consent
+dlg --> page : confirmed
+page -> gapi : withdrawConsent(token)
+gapi -> ep : POST /g/consent/{token}/withdraw
+ep -> h : WithdrawAsync (consent link, trusted device)
+h -> db : consent in force → Withdraw(by, now), audit Withdrawn (L2-058)
+ep --> page : 204
+page --> actor : guardian-consent/withdrawn
+@enduml

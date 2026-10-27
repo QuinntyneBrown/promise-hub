@@ -13,6 +13,8 @@ import { GuardianPageResult } from './guardian-page-result';
 import { GuardianSlip } from './guardian-slip';
 import { GuardianSlipResult } from './guardian-slip-result';
 import { GuardianVerifyOutcome } from './guardian-verify-outcome';
+import { GuardianConsent } from './guardian-consent';
+import { ConsentAnswers } from './consent-answers';
 
 @Injectable()
 export class HttpGuardianApi implements GuardianApi {
@@ -21,6 +23,22 @@ export class HttpGuardianApi implements GuardianApi {
 
   slip(token: string): Observable<GuardianSlipResult> {
     return this.page<GuardianSlip>(`${this.baseUrl}/g/slips/${encodeURIComponent(token)}`);
+  }
+
+  consent(token: string): Observable<GuardianPageResult<GuardianConsent>> {
+    return this.page<GuardianConsent>(`${this.baseUrl}/g/consent/${encodeURIComponent(token)}`);
+  }
+
+  giveConsent(token: string, answers: ConsentAnswers): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(`${this.baseUrl}/g/consent/${encodeURIComponent(token)}/sign`, answers),
+    );
+  }
+
+  withdrawConsent(token: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(`${this.baseUrl}/g/consent/${encodeURIComponent(token)}/withdraw`, {}),
+    );
   }
 
   requestData(token: string, kind: 'Export' | 'Delete', email: string): Observable<WriteOutcome> {

@@ -1,11 +1,15 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, catchError, map, of } from 'rxjs';
 import { API_BASE_URL } from '../api-base-url';
 import { toLoad } from '../http-results';
 import { LoadResult } from '../load-result';
 import { LearningApi } from './learning-api';
 import { Learner } from './learner';
+import { Lessons } from './lessons';
+import { LessonsResult } from './lessons-result';
+import { ConsentRequestOutcome } from '../consent/consent-request-outcome';
+import { toConsentRequest } from '../consent/to-consent-request';
 
 @Injectable()
 export class HttpLearningApi implements LearningApi {
@@ -14,5 +18,28 @@ export class HttpLearningApi implements LearningApi {
 
   learner(): Observable<LoadResult<Learner>> {
     return toLoad(this.http.get<Learner>(`${this.baseUrl}/learning/me`));
+  }
+
+  lessons(): Observable<LessonsResult> {
+    return this.http.get<Lessons>(`${this.baseUrl}/learning/lessons`).pipe(
+      map((value): LessonsResult => ({ status: 'loaded', value })),
+      catchError((error: HttpErrorResponse) =>
+        of<LessonsResult>(
+          error.status === 403 && error.error?.code === 'consent-required'
+            ? { status: 'consent-required', consentAge: error.error?.consentAge ?? 18 }
+            : error.status === 404
+              ? { status: 'not-found' }
+              : error.status === 403
+                ? { status: 'forbidden' }
+                : { status: 'error' },
+        ),
+      ),
+    );
+  }
+
+  askGuardian(): Observable<ConsentRequestOutcome> {
+    return toConsentRequest(
+      this.http.post<{ sentTo: string[] }>(`${this.baseUrl}/learning/consent-request`, null),
+    );
   }
 }

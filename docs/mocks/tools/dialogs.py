@@ -351,3 +351,20 @@ def offline_queue(S):
     S.add("busy", "Retrying.", **over("check-in", "offline", overlays=box(busy=True)))
     S.add("failed", "Still offline.", **over("check-in", "offline", overlays=box(alert_html=alert("warning", "Still no signal", "Retrying every 30 seconds."))))
     S.add("success", "Synced.", **over("check-in", "offline", overlays=dialog_box("All synced", "", "<p>2 check-ins sent at 4:19 pm.</p>", btn("Done", "primary", attrs=" autofocus"), icon_name="check-circle", form=False)))
+
+
+# ------------------------------------------------------------------ Guardian consent (prompt 52)
+CONSENT_WORDING = ("I consent to my child taking part in lessons, mentoring and program activities at Harbourview Youth Collective, "
+                   "and to staff contacting them about their program.")
+
+simple("consent-policy", "Edit consent policy", "settings-privacy", [R_PRIVACY, "L1-013", "L1-023"], "Youth under this age need a guardian’s consent before they use Learning. Saving is logged.",
+       lambda e: select("age", "Consent needed under", ["13 years", "14 years", "15 years", "16 years", "17 years", "18 years", "19 years"], selected="18 years",
+                        help_="Changing it applies from each youth’s next request; consents already given stay valid.")
+                 + textarea("wording", "Wording guardians sign", value="" if e else CONSENT_WORDING, rows=4, error=(e or {}).get("wording", ""),
+                            help_="20 to 2,000 characters. Each consent keeps the wording the guardian read."),
+       "Save policy", icon_name="shield", invalid_err={"wording": "Write the wording guardians sign, at least 20 characters."})
+
+simple("withdraw-consent", "Withdraw consent for Sofía?", "guardian-consent", ["L1-013", "L1-023", "L1-017"], "Sofía can’t use Learning until a guardian consents again. Staff can see it.",
+       lambda e: "<p>Your consent record stays; the withdrawal is added to it with the time.</p>",
+       "Withdraw consent", icon_name="x-circle", danger=True, base_state="given",
+       opens_kw={})

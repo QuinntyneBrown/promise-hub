@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Unlock minor participation
+Person(user, "Guardian, youth or staff", "Phone or laptop browser")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular 22", "Guardian pages, Learning, child record, settings")
+  Container(api, "PromiseHub API", "ASP.NET Core, .NET 10", "Endpoints, filters, handlers")
+  ContainerDb(db, "PromiseHub database", "SQLite via EF Core", "Tenant-filtered rows")
+}
+System_Ext(msg, "SMS and email providers", "Deliver links and copies")
+Rel(user, web, "Uses", "HTTPS")
+Rel(web, api, "Calls", "JSON/HTTPS")
+Rel(api, db, "Reads and writes", "EF Core")
+Rel(api, msg, "Sends")
+@enduml

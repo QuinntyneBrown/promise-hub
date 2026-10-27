@@ -54,6 +54,7 @@ public static class DependencyInjection
         services.AddScoped<SwitchOrganizationHandler>();
         services.AddScoped<Billing.PlanLimit>();
         services.AddScoped<PrivacyHandler>();
+        services.AddScoped<ConsentPolicyHandler>();
         services.AddScoped<AccountHandler>();
         services.AddScoped<PasswordResetHandler>();
         services.AddScoped<Audit.AuditLogHandler>();
@@ -117,6 +118,11 @@ public static class DependencyInjection
         services.AddScoped<Guardian.VerifyGuardianCodeHandler>();
         services.AddScoped<Guardian.GuardianSlipHandler>();
         services.AddScoped<Guardian.GuardianHomeHandler>();
+        services.AddScoped<Guardian.ConsentGate>();
+        services.AddScoped<Guardian.ConsentRequestSender>();
+        services.AddScoped<Guardian.ChildConsentHandler>();
+        services.AddScoped<Guardian.GuardianConsentHandler>();
+        services.AddScoped<Guardian.ConsentRequestHandler>();
         services.AddScoped<Incidents.ReportIncidentHandler>();
         services.AddScoped<Incidents.IncidentQueries>();
         services.AddScoped<Incidents.IncidentReviewHandler>();

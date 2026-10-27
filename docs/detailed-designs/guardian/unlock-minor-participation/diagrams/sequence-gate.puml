@@ -1,0 +1,40 @@
+@startuml
+title UML sequence behaviour — Open Learning before and after consent
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Person" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "Page" as page
+  participant "LearningApi" as lapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "Endpoints" as ep
+  participant "RequireGuardianConsent" as f
+end box
+box "Backend — PromiseHub.Application and Domain" #ECFDF3
+  participant "ConsentGate" as g
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : open /learning
+page -> lapi : lessons()
+lapi -> ep : GET /learning/lessons
+ep -> f : Learning on, Learn permission
+f -> g : GatedAsync(membership)
+g -> db : child 12, consent age 18, no consent in force
+f --> page : 403 consent-required (L2-056)
+page --> actor : consent-required
+note over actor, db : Carmen consents from the consent link
+actor -> page : Check again
+page -> lapi : lessons()
+lapi -> ep : GET /learning/lessons
+ep -> f : filter
+f -> g : GatedAsync(membership)
+g -> db : consent in force
+ep --> page : 200 lessons [] (L2-056 criterion 5)
+page --> actor : No lessons yet
+@enduml

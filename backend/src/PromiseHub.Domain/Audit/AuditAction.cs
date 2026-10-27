@@ -22,4 +22,5 @@ public enum AuditAction
     SignInLocked,
     SignInUnlocked,
     SignedOut,
+    Withdrawn,
 }

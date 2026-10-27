@@ -8,6 +8,7 @@ import { WriteOutcome } from '../write-outcome';
 import { DataRequest } from './data-request';
 import { PrivacyApi } from './privacy-api';
 import { PrivacySettings } from './privacy-settings';
+import { ConsentPolicy } from './consent-policy';
 
 @Injectable()
 export class HttpPrivacyApi implements PrivacyApi {
@@ -32,6 +33,14 @@ export class HttpPrivacyApi implements PrivacyApi {
 
   exportUrl(id: string): string {
     return `${this.baseUrl}/settings/data-requests/${id}/export`;
+  }
+
+  consentPolicy(): Observable<LoadResult<ConsentPolicy>> {
+    return toLoad(this.http.get<ConsentPolicy>(`${this.baseUrl}/settings/consent`));
+  }
+
+  saveConsentPolicy(policy: ConsentPolicy): Observable<WriteOutcome> {
+    return toWrite(this.http.put<null>(`${this.baseUrl}/settings/consent`, policy));
   }
 
   saveRetention(years: number | null): Observable<WriteOutcome> {

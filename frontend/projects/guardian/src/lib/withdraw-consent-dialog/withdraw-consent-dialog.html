@@ -1,0 +1,15 @@
+<form novalidate (ngSubmit)="withdraw()">
+  <ph-dialog
+    [title]="data.text.withdrawTitle(data.child)"
+    [description]="data.text.withdrawText(data.child)"
+  >
+    @if (failed()) {
+      <ph-alert tone="danger" [title]="data.text.failed" [text]="data.text.failedText" />
+    }
+    <p>{{ data.text.withdrawKeep }}</p>
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">{{ data.text.cancel }}</ph-button>
+      <ph-button variant="danger" type="submit" [busy]="busy()">{{ data.text.withdraw }}</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

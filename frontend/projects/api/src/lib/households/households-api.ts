@@ -11,6 +11,8 @@ import type { MedicalChanges } from './medical-changes';
 import type { NewChild } from './new-child';
 import type { NewFamily } from './new-family';
 import type { NewGuardian } from './new-guardian';
+import type { ChildConsent } from '../consent/child-consent';
+import type { ConsentRequestOutcome } from '../consent/consent-request-outcome';
 
 export interface HouseholdsApi {
   list(q: string, filter: string): Observable<LoadResult<HouseholdList>>;
@@ -25,4 +27,8 @@ export interface HouseholdsApi {
   updateChild(id: string, changes: ChildChanges): Observable<WriteOutcome>;
   updateMedical(id: string, changes: MedicalChanges): Observable<WriteOutcome>;
   delete(id: string, reason: string, confirmName: string): Observable<WriteOutcome>;
+  /** A child's guardian consent (L2-058); not found while Roster is off. */
+  consent(childId: string): Observable<LoadResult<ChildConsent>>;
+  /** Texts or emails the household a consent link (admins and program directors). */
+  sendConsentLink(childId: string): Observable<ConsentRequestOutcome>;
 }

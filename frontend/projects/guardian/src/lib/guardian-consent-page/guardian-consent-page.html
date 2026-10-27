@@ -1,0 +1,181 @@
+@let r = result();
+@let text = t();
+@let ct = c();
+<ph-guardian-shell
+  [organization]="organization()"
+  [phone]="phone()"
+  [contactText]="text.footer(organization() ?? '')"
+  [skipLabel]="text.skip"
+>
+  @switch (r?.status) {
+    @case (undefined) {
+      <h1>{{ text.loading }}</h1>
+    }
+    @case ('verify') {
+      @if (step() === 'locked') {
+        <h1>{{ text.verifyHeading }}</h1>
+        <ph-alert tone="danger" [title]="text.locked" />
+      } @else if (step() === 'code') {
+        <h1>{{ text.codeHeading }}</h1>
+        <p>{{ text.codeText }}</p>
+        <form class="stack" novalidate (ngSubmit)="verify()">
+          <ph-text-field
+            inputId="code"
+            [label]="text.codeLabel"
+            name="code"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            [error]="errors()['code'] ?? null"
+            [(ngModel)]="code"
+          />
+          <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
+            text.continue
+          }}</ph-button>
+          <ph-button variant="ghost" (click)="step.set('contact')">{{
+            text.differentContact
+          }}</ph-button>
+        </form>
+      } @else {
+        <h1>{{ text.verifyHeading }}</h1>
+        <p>{{ text.verifyText(organization() ?? '') }}</p>
+        <form class="stack" novalidate (ngSubmit)="requestCode()">
+          <ph-text-field
+            inputId="contact"
+            [label]="text.contactLabel"
+            name="contact"
+            autocomplete="tel"
+            [(ngModel)]="contact"
+          />
+          <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
+            text.sendCode
+          }}</ph-button>
+        </form>
+      }
+    }
+    @case ('gone') {
+      <h1>{{ text.expiredHeading }}</h1>
+      <ph-card>
+        <div class="stack">
+          <p>{{ text.expiredText(organization() ?? 'the organization') }}</p>
+          @if (phone(); as number) {
+            <div>
+              <ph-button variant="primary" icon="phone" [href]="'tel:' + number">{{
+                text.call(number)
+              }}</ph-button>
+            </div>
+          }
+        </div>
+      </ph-card>
+    }
+    @case ('not-found') {
+      <ph-empty-state
+        icon="lock"
+        [title]="text.notAvailable"
+        [text]="text.notAvailableText"
+        [headingLevel]="1"
+      />
+    }
+    @case ('error') {
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        [title]="text.errorHeading"
+        [text]="text.tryAgain"
+        [headingLevel]="1"
+      >
+        <ph-button variant="primary" (click)="load(token())">{{ text.tryAgain }}</ph-button>
+      </ph-empty-state>
+    }
+    @case ('loaded') {
+      @if (r?.status === 'loaded') {
+        @let s = r.value;
+        @if (s.status === 'Given') {
+          <div class="stack" role="status">
+            <h1>{{ justSigned() ? ct.signedHeading(s.guardianName) : ct.givenHeading }}</h1>
+            <p>
+              {{
+                justSigned() ? ct.signedText(s.child.firstName) : ct.givenText(s.child.firstName)
+              }}
+            </p>
+          </div>
+          <ph-card [title]="ct.record">
+            <div data-testid="consent-record">
+              <ph-description-list [facts]="recordFacts(s)" />
+            </div>
+          </ph-card>
+          <div>
+            <ph-button variant="ghost" hasPopup="dialog" (click)="withdraw(s)">{{
+              ct.withdraw
+            }}</ph-button>
+          </div>
+        } @else {
+          @if (s.status === 'Withdrawn') {
+            <h1>{{ ct.withdrawnHeading }}</h1>
+            <ph-alert
+              tone="warning"
+              [title]="ct.withdrawnTitle(s.child.firstName)"
+              [text]="
+                ct.withdrawnText(s.withdrawnBy ?? '', s.withdrawnAt ? when(s.withdrawnAt) : '')
+              "
+            />
+          } @else {
+            <div>
+              <h1>{{ ct.heading(s.child.firstName) }}</h1>
+              <p>
+                {{ ct.intro(s.guardianName, s.child.firstName, s.organization, s.consentAge) }}
+              </p>
+            </div>
+          }
+          @if (failed()) {
+            <ph-alert tone="danger" [title]="ct.failed" [text]="ct.failedText" />
+          }
+          <form class="stack" novalidate (ngSubmit)="give()">
+            <ph-card [title]="ct.what">
+              <div class="stack">
+                <p data-testid="consent-wording">{{ s.wording }}</p>
+                @if (ct.englishBinding) {
+                  <p>{{ ct.englishBinding }}</p>
+                }
+                <p>{{ ct.withdrawAnyTime }}</p>
+              </div>
+            </ph-card>
+            <ph-card [title]="ct.about(s.child.firstName)">
+              <ph-description-list [facts]="aboutFacts(s)" />
+            </ph-card>
+            <ph-card [title]="ct.sign">
+              <div class="stack">
+                <ph-select
+                  inputId="consent-relationship"
+                  [label]="ct.relationshipLabel(s.child.firstName)"
+                  name="relationship"
+                  [options]="relationshipOptions()"
+                  [error]="errors()['relationship'] ?? null"
+                  [(ngModel)]="relationship"
+                />
+                <ph-checkbox
+                  inputId="consent-agree"
+                  [label]="ct.agree(s.child.firstName)"
+                  name="agree"
+                  [error]="errors()['agree'] ?? null"
+                  [(ngModel)]="agree"
+                />
+                <ph-text-field
+                  inputId="consent-name"
+                  [label]="ct.nameLabel"
+                  name="name"
+                  autocomplete="name"
+                  [help]="ct.nameHelp"
+                  [error]="errors()['name'] ?? null"
+                  [(ngModel)]="name"
+                />
+                <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
+                  ct.give
+                }}</ph-button>
+              </div>
+            </ph-card>
+          </form>
+        }
+      }
+    }
+  }
+</ph-guardian-shell>

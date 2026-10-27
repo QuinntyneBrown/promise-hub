@@ -19,4 +19,34 @@ export class LearningPage extends BasePage {
   async apiStatus(): Promise<number> {
     return this.page.evaluate(async () => (await fetch('/api/learning/me')).status);
   }
+
+  /** The consent-required state (mock: consent-required). */
+  get consentRequired(): Locator {
+    return this.page.getByRole('heading', { name: 'A guardian needs to give consent' });
+  }
+
+  get asked(): Locator {
+    return this.page.getByRole('heading', { name: 'We asked your guardian' });
+  }
+
+  get noGuardian(): Locator {
+    return this.page.getByRole('heading', { name: 'We can’t reach a guardian' });
+  }
+
+  get gate(): Locator {
+    return this.page.getByTestId('consent-gate');
+  }
+
+  async askGuardian(): Promise<void> {
+    await this.page.getByRole('button', { name: 'Ask my guardian' }).click();
+  }
+
+  async checkAgain(): Promise<void> {
+    await this.page.getByRole('button', { name: 'Check again' }).click();
+  }
+
+  /** What the API answers this signed-in person for their lessons. */
+  async lessonsStatus(): Promise<number> {
+    return this.page.evaluate(async () => (await fetch('/api/learning/lessons')).status);
+  }
 }

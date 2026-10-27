@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DataRequest, PRIVACY_API } from '@promisehub/api';
+import { ConsentPolicy, DataRequest, PRIVACY_API } from '@promisehub/api';
 import {
   Fact,
   PhButton,
   PhCard,
   PhBadge,
+  PhDialogs,
   PhDescriptionList,
   PhEmptyState,
   PhList,
@@ -18,6 +19,7 @@ import {
   ToastService,
   PhInlineMessage,
 } from '@promisehub/components';
+import { ConsentPolicyDialog } from '../consent-policy-dialog/consent-policy-dialog';
 import { SETTINGS_SECTIONS } from '../settings-sections';
 
 /** Settings › Privacy and data (mock: settings-privacy): the region, consent retention and guardian requests. */
@@ -45,6 +47,7 @@ import { SETTINGS_SECTIONS } from '../settings-sections';
 export class SettingsPrivacyPage {
   private readonly api = inject(PRIVACY_API);
   private readonly toasts = inject(ToastService);
+  private readonly dialogs = inject(PhDialogs);
 
   protected readonly sections = SETTINGS_SECTIONS;
   protected readonly state = signal<'loading' | 'loaded' | 'forbidden' | 'error'>('loading');
@@ -53,6 +56,8 @@ export class SettingsPrivacyPage {
   protected readonly saving = signal(false);
   protected readonly requests = signal<DataRequest[]>([]);
   protected readonly fulfilling = signal<string | null>(null);
+  /** The guardian consent policy; null while Roster is off (the API answers 404) or before it loads. */
+  protected readonly consent = signal<ConsentPolicy | null>(null);
   protected readonly options: RadioOption[] = [
     { value: '7', label: '7 years after the event' },
     { value: '3', label: '3 years after the event' },
@@ -79,6 +84,7 @@ export class SettingsPrivacyPage {
         );
         this.state.set('loaded');
         this.loadRequests();
+        this.loadConsent();
       } else {
         this.state.set(r.status === 'forbidden' ? 'forbidden' : 'error');
       }
@@ -89,6 +95,34 @@ export class SettingsPrivacyPage {
     this.api
       .requests()
       .subscribe((r) => r.status === 'loaded' && this.requests.set(r.value.requests));
+  }
+
+  private loadConsent(): void {
+    this.api
+      .consentPolicy()
+      .subscribe((r) => this.consent.set(r.status === 'loaded' ? r.value : null));
+  }
+
+  protected consentFacts(policy: ConsentPolicy): Fact[] {
+    return [
+      { key: 'consent-age', term: 'Consent needed under', value: `${policy.consentAge} years` },
+      { key: 'consent-wording', term: 'Wording guardians sign', value: policy.wording },
+    ];
+  }
+
+  /** Edits the consent age and wording in a dialog (dialog: consent-policy). */
+  protected editConsent(policy: ConsentPolicy): void {
+    this.dialogs
+      .open<boolean, ConsentPolicy, ConsentPolicyDialog>(ConsentPolicyDialog, policy)
+      .closed.subscribe((saved) => {
+        if (!saved) return;
+        this.toasts.show({
+          tone: 'success',
+          title: 'Consent policy saved',
+          text: 'It applies from each youth’s next request.',
+        });
+        this.loadConsent();
+      });
   }
 
   protected requestMeta(r: DataRequest): string {

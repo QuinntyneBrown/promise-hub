@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Configure the consent policy
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "SettingsPrivacyPage", "Angular page", "Guardian consent card")
+  Component(dlg, "ConsentPolicyDialog", "CDK dialog", "Age, wording")
+  Component(papi, "PrivacyApi", "Contract + HTTP client", "consentPolicy, saveConsentPolicy")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "SettingsEndpoints", "Minimal API", "ManageSettings, Roster")
+  Component(h, "ConsentPolicyHandler", "Application handler", "Get, save")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Links, consents, policy, audit entries")
+}
+Rel(page, papi, "consentPolicy")
+Rel(dlg, papi, "saveConsentPolicy")
+Rel(papi, ep, "GET, PUT /settings/consent")
+Rel(ep, h, "calls")
+Rel(h, db, "policy, audit entry")
+@enduml

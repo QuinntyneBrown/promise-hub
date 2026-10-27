@@ -3,17 +3,18 @@ using PromiseHub.Domain.Organizations;
 namespace PromiseHub.Domain.Guardian;
 
 /// <summary>
-/// A link texted or emailed to one household for one purpose: signing a child's slip, or the household's home page when
-/// there is no slip. Only the token's hash is stored;
+/// A link texted or emailed to one household for one purpose: signing a child's slip, answering a survey, a guardian's consent
+/// for a youth, or the household's home page. Only the token's hash is stored;
 /// three wrong codes lock it for 15 minutes; a contact change revokes it (L2-026).
 /// </summary>
 public sealed class GuardianLink : ITenantOwned
 {
     public const int MaxFailedCodes = 3;
 
-    public GuardianLink(Guid id, Guid organizationId, Guid householdId, Guid? slipId, Guid? childId, string tokenHash, DateTimeOffset createdAt, Guid? surveyId = null)
+    public GuardianLink(Guid id, Guid organizationId, Guid householdId, Guid? slipId, Guid? childId, string tokenHash, DateTimeOffset createdAt, Guid? surveyId = null, bool forConsent = false)
     {
         SurveyId = surveyId;
+        ForConsent = forConsent;
         Id = id;
         OrganizationId = organizationId;
         HouseholdId = householdId;
@@ -31,6 +32,9 @@ public sealed class GuardianLink : ITenantOwned
 
     /// <summary>The survey this link answers, for a survey link.</summary>
     public Guid? SurveyId { get; private set; }
+
+    /// <summary>A consent link for <see cref="ChildId"/> (ADR 0046); it lives 30 days.</summary>
+    public bool ForConsent { get; private set; }
     public string TokenHash { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset? RevokedAt { get; private set; }

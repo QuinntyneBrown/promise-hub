@@ -59,6 +59,18 @@
           </div>
         </ph-card>
       </form>
+      @if (consent(); as policy) {
+        <ph-card title="Guardian consent">
+          <div class="stack">
+            <ph-description-list [facts]="consentFacts(policy)" />
+            <div>
+              <ph-button icon="edit" hasPopup="dialog" (click)="editConsent(policy)"
+                >Edit consent policy</ph-button
+              >
+            </div>
+          </div>
+        </ph-card>
+      }
       <ph-card title="Requests from guardians">
         <div class="stack">
           <ph-inline-message

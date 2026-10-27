@@ -1,12 +1,12 @@
 # Estimates
 
-- Overall effort: 245 days
-- Complete: 67%
+- Overall effort: 253 days
+- Complete: 68%
 
 | Subsystem | Effort | Complete |
 |---|---|---|
 | [identity](identity.md) | 25 days | 85% |
-| [organizations](organizations.md) | 34 days | 70% |
+| [organizations](organizations.md) | 35 days | 71% |
 | [platform](platform.md) | 28 days | 45% |
 | [shell](shell.md) | 9 days | 51% |
 | [households](households.md) | 6 days | 80% |
@@ -18,14 +18,14 @@
 | [messaging](messaging.md) | 14 days | 46% |
 | [notifications](notifications.md) | 8 days | 60% |
 | [slips](slips.md) | 17 days | 70% |
-| [guardian](guardian.md) | 9 days | 84% |
+| [guardian](guardian.md) | 15 days | 91% |
 | [incidents](incidents.md) | 6 days | 70% |
 | [reports](reports.md) | 10 days | 52% |
 | [imports](imports.md) | 5 days | 70% |
 | [billing](billing.md) | 10 days | 50% |
 | [audit](audit.md) | 6 days | 80% |
 | [search](search.md) | 4 days | 70% |
-| [learning](learning.md) | 1 day | 100% |
+| [learning](learning.md) | 2 days | 100% |
 | [curriculum](curriculum.md) | 1 day | 100% |
 | [mentoring](mentoring.md) | 1 day | 100% |
 | [website](website.md) | 1 day | 100% |

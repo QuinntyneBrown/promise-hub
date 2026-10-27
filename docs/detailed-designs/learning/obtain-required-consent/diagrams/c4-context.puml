@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Obtain required consent
+Person(user, "Youth", "Asks a guardian for consent")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+System_Ext(msg, "SMS and email providers", "Deliver the consent link")
+Rel(user, ph, "Uses", "HTTPS")
+Rel(ph, msg, "Sends through")
+@enduml

@@ -36,6 +36,7 @@ public interface IPromiseHubDb
     DbSet<SmsUsagePeriod> SmsUsagePeriods { get; }
     DbSet<SlipSignature> SlipSignatures { get; }
     DbSet<GuardianLink> GuardianLinks { get; }
+    DbSet<GuardianConsent> GuardianConsents { get; }
     DbSet<SlipReminder> SlipReminders { get; }
     DbSet<Domain.Imports.ImportSession> ImportSessions { get; }
     DbSet<Domain.Enrollment.EnrollmentSession> EnrollmentSessions { get; }
@@ -58,6 +59,7 @@ public interface IPromiseHubDb
     DbSet<Domain.Surveys.Survey> Surveys { get; }
     DbSet<Domain.Surveys.SurveyResponse> SurveyResponses { get; }
     DbSet<PrivacySettings> PrivacySettings { get; }
+    DbSet<ConsentPolicy> ConsentPolicies { get; }
     DbSet<DataRequest> DataRequests { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

@@ -39,6 +39,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<SmsUsagePeriod> SmsUsagePeriods => Set<SmsUsagePeriod>();
     public DbSet<SlipSignature> SlipSignatures => Set<SlipSignature>();
     public DbSet<GuardianLink> GuardianLinks => Set<GuardianLink>();
+    public DbSet<GuardianConsent> GuardianConsents => Set<GuardianConsent>();
     public DbSet<SlipReminder> SlipReminders => Set<SlipReminder>();
     public DbSet<Domain.Imports.ImportSession> ImportSessions => Set<Domain.Imports.ImportSession>();
     public DbSet<Domain.Enrollment.EnrollmentSession> EnrollmentSessions => Set<Domain.Enrollment.EnrollmentSession>();
@@ -54,6 +55,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Surveys.Survey> Surveys => Set<Domain.Surveys.Survey>();
     public DbSet<Domain.Surveys.SurveyResponse> SurveyResponses => Set<Domain.Surveys.SurveyResponse>();
     public DbSet<PrivacySettings> PrivacySettings => Set<PrivacySettings>();
+    public DbSet<ConsentPolicy> ConsentPolicies => Set<ConsentPolicy>();
     public DbSet<DataRequest> DataRequests => Set<DataRequest>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
     public DbSet<Domain.Incidents.IncidentFollowUp> IncidentFollowUps => Set<Domain.Incidents.IncidentFollowUp>();
@@ -85,6 +87,11 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
         });
         modelBuilder.Entity<Domain.Notifications.NotificationSettings>(e => e.HasIndex(s => s.OrganizationId).IsUnique());
         modelBuilder.Entity<PrivacySettings>(e => e.HasIndex(s => s.OrganizationId).IsUnique());
+        modelBuilder.Entity<ConsentPolicy>(e =>
+        {
+            e.HasIndex(s => s.OrganizationId).IsUnique();
+            e.Property(s => s.Wording).HasMaxLength(ConsentPolicy.MaximumWording);
+        });
         modelBuilder.Entity<DataRequest>(e =>
         {
             e.Property(r => r.Kind).HasConversion<string>().HasMaxLength(20);
@@ -408,6 +415,22 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.HasIndex(l => l.TokenHash).IsUnique();
             e.Property(l => l.LockedUntil).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
             e.HasOne<Household>().WithMany().HasForeignKey(l => l.HouseholdId);
+        });
+        modelBuilder.Entity<GuardianConsent>(e =>
+        {
+            e.Property(c => c.SignedBy).HasMaxLength(200);
+            e.Property(c => c.Relationship).HasMaxLength(60);
+            e.Property(c => c.Wording).HasMaxLength(ConsentPolicy.MaximumWording);
+            e.Property(c => c.WordingHash).HasMaxLength(64);
+            e.Property(c => c.Language).HasMaxLength(50);
+            e.Property(c => c.Device).HasMaxLength(300);
+            e.Property(c => c.Reference).HasMaxLength(20);
+            e.Property(c => c.WithdrawnBy).HasMaxLength(200);
+            e.Property(c => c.SignedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(c => c.WithdrawnAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.HasIndex(c => c.ChildId);
+            e.HasOne<Child>().WithMany().HasForeignKey(c => c.ChildId);
+            e.HasOne<GuardianLink>().WithMany().HasForeignKey(c => c.LinkId);
         });
         modelBuilder.Entity<GuardianVerification>(e =>
         {

@@ -1,0 +1,68 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+title Class structure — Unlock minor participation
+class GuardianConsent <<entity, tenant-owned>> {
+  +Id: Guid
+  +OrganizationId: Guid
+  +ChildId: Guid
+  +HouseholdId: Guid
+  +SignedBy: string
+  +Relationship: string
+  +Wording: string
+  +WordingHash: string
+  +Language: string
+  +Device: string?
+  +Reference: string
+  +SignedAt: DateTimeOffset
+  +WithdrawnAt: DateTimeOffset?
+  +WithdrawnBy: string?
+  +InForce: bool
+  +Withdraw(by, now)
+}
+class GuardianLink <<entity, tenant-owned>> {
+  +HouseholdId: Guid
+  +ChildId: Guid?
+  +ForConsent: bool
+  +TokenHash: string
+  +CreatedAt: DateTimeOffset
+  +RevokedAt: DateTimeOffset?
+}
+class ConsentPolicy <<entity, tenant-owned>> {
+  +ConsentAge: int
+  +Wording: string
+  +Change(age, wording)
+}
+class ConsentGate {
+  +StatusAsync(childId): ConsentStatus
+  +GatedAsync(membershipId): bool
+}
+
+class GuardianConsentHandler {
+  +GetAsync(request): GuardianResult
+  +SignAsync(request, body): GuardianResult
+  +WithdrawAsync(request, body): GuardianResult
+}
+class ConsentRequestSender {
+  +SendAsync(child, askedBy): ConsentRequestResult
+}
+class ConsentPolicyHandler {
+  +GetAsync(): ConsentPolicyDto
+  +SaveAsync(command): Result
+}
+GuardianConsentHandler ..> GuardianLink : resolves
+GuardianConsentHandler ..> GuardianConsent : creates, withdraws
+ConsentGate ..> ConsentPolicy : consent age
+ConsentGate ..> GuardianConsent : in force
+ConsentRequestSender ..> GuardianLink : issues ForConsent
+ConsentPolicyHandler ..> ConsentPolicy : upserts
+GuardianConsent "*" --> "1" GuardianLink : signed through
+@enduml

@@ -185,6 +185,10 @@
         "youth-account",
         "youth-invited",
         "youth-active",
+        "consent-needed",
+        "consent-sent",
+        "consent-given",
+        "consent-withdrawn",
         "edge"
       ]
     },
@@ -600,7 +604,8 @@
         "error",
         "forbidden",
         "submitting",
-        "success"
+        "success",
+        "consent-saved"
       ],
       "not_applicable": {
         "empty": "Settings always have values."
@@ -1507,6 +1512,56 @@
       }
     },
     {
+      "id": "guardian-consent",
+      "kind": "page",
+      "title": "Guardian consent",
+      "route": "/g/consent/:token",
+      "requirements": [
+        "L1-013",
+        "L1-023",
+        "L1-015",
+        "L1-017"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "verify",
+        "invalid",
+        "submitting",
+        "error",
+        "signed",
+        "given",
+        "withdrawn",
+        "expired",
+        "not-found",
+        "es"
+      ],
+      "not_applicable": {
+        "empty": "A consent link always names one child."
+      }
+    },
+    {
+      "id": "consent-required",
+      "kind": "page",
+      "title": "Consent required",
+      "route": "/learning",
+      "requirements": [
+        "L1-023",
+        "L1-013"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "busy",
+        "sent",
+        "no-guardian",
+        "error"
+      ],
+      "not_applicable": {
+        "empty": "The state itself is the empty Learning page for a youth without consent."
+      }
+    },
+    {
       "id": "check-in-sheet",
       "kind": "dialog",
       "title": "Check in Kevin Tran",
@@ -2323,6 +2378,42 @@
       ],
       "not_applicable": {
         "invalid": "No inputs."
+      }
+    },
+    {
+      "id": "consent-policy",
+      "kind": "dialog",
+      "title": "Edit consent policy",
+      "opens_from": "settings-privacy",
+      "requirements": [
+        "L1-015",
+        "L1-013",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ]
+    },
+    {
+      "id": "withdraw-consent",
+      "kind": "dialog",
+      "title": "Withdraw consent for Sofía?",
+      "opens_from": "guardian-consent",
+      "requirements": [
+        "L1-013",
+        "L1-023",
+        "L1-017"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "invalid": "The dialog has no inputs to validate."
       }
     },
     {

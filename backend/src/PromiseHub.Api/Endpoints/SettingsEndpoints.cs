@@ -1,5 +1,6 @@
 using PromiseHub.Application.Notifications;
 using PromiseHub.Api.Authorization;
+using PromiseHub.Api.Modules;
 using PromiseHub.Application.Identity;
 using PromiseHub.Application.Organizations;
 using PromiseHub.Domain.Organizations;
@@ -22,6 +23,9 @@ public static class SettingsEndpoints
         settings.MapGet("/privacy", (PrivacyHandler handler, CancellationToken ct) => handler.GetAsync(ct));
         settings.MapPut("/privacy", async (SavePrivacyCommand command, PrivacyHandler handler, CancellationToken ct) =>
             (await handler.SaveAsync(command, ct)).ToHttp());
+        settings.MapGet("/consent", (ConsentPolicyHandler handler, CancellationToken ct) => handler.GetAsync(ct)).RequireModule(ModuleId.Roster);
+        settings.MapPut("/consent", async (SaveConsentPolicyCommand command, ConsentPolicyHandler handler, CancellationToken ct) =>
+            (await handler.SaveAsync(command, ct)).ToHttp()).RequireModule(ModuleId.Roster);
         settings.MapGet("/notifications", (NotificationSettingsHandler handler, CancellationToken ct) => handler.GetAsync(ct));
         settings.MapPut("/notifications", async (SaveNotificationSettingsCommand command, NotificationSettingsHandler handler, CancellationToken ct) =>
             (await handler.SaveAsync(command, ct)).ToHttp());

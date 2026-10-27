@@ -14,6 +14,10 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 export class PhCheckbox implements ControlValueAccessor {
   readonly label = input.required<string>();
   readonly labelHidden = input(false);
+  /** Shown under the box and announced with it, when the box must be ticked to continue. */
+  readonly error = input<string | null>(null);
+  /** Ties the error to the box; required with an error. */
+  readonly inputId = input<string | null>(null);
 
   protected readonly checked = signal(false);
   protected readonly disabled = signal(false);

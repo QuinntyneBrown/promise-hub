@@ -126,6 +126,33 @@
             }
           </ph-card>
         }
+        @let cs = consent();
+        @if (cs?.status === 'loaded' && cs.value.required) {
+          @let k = cs.value;
+          <ph-card title="Guardian consent" [flush]="true">
+            <ph-list label="Guardian consent" [inset]="true">
+              <ph-list-item title="Guardian consent" [meta]="consentMeta(c, k)">
+                <ph-badge
+                  [tone]="
+                    k.status === 'Given'
+                      ? 'success'
+                      : k.status === 'Withdrawn'
+                        ? 'danger'
+                        : 'warning'
+                  "
+                  >{{ k.status }}</ph-badge
+                >
+              </ph-list-item>
+            </ph-list>
+            @if (k.status !== 'Given' && canWrite()) {
+              <div phCardFooter>
+                <ph-button icon="send" [busy]="sendingConsent()" (click)="sendConsentLink(c)"
+                  >Send consent link</ph-button
+                >
+              </div>
+            }
+          </ph-card>
+        }
       </div>
     }
   }

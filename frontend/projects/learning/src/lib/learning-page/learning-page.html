@@ -1,5 +1,6 @@
 <ph-page-header title="Learning" subtitle="Your lessons, quizzes, assignments and badges." />
 @let r = result();
+@let a = asked();
 @if (r === null) {
   <div aria-busy="true" aria-label="Loading your lessons">
     <ph-skeleton shape="card" />
@@ -14,6 +15,49 @@
       <ph-button link="/">Back to Today</ph-button>
     </ph-empty-state>
   </ph-card>
+} @else if (r.status === 'consent-required') {
+  <div class="stack" data-testid="consent-gate">
+    @if (a?.status === 'error' || a?.status === 'forbidden') {
+      <ph-alert tone="danger" title="That didn’t go through" text="Nothing was sent. Try again." />
+    }
+    <ph-card [flush]="true">
+      @if (a?.status === 'sent') {
+        <ph-empty-state
+          icon="send"
+          title="We asked your guardian"
+          [text]="
+            'We sent a secure link to ' +
+            a.sentTo.join(', ') +
+            '. Learning opens as soon as they sign.'
+          "
+        >
+          <ph-button (click)="reload()">Check again</ph-button>
+        </ph-empty-state>
+      } @else if (a?.status === 'no-guardian') {
+        <ph-empty-state
+          icon="phone"
+          title="We can’t reach a guardian"
+          text="Ask the program staff to add a guardian’s mobile number or email to your record."
+        >
+          <ph-button link="/">Back to Today</ph-button>
+        </ph-empty-state>
+      } @else {
+        <ph-empty-state
+          icon="shield"
+          title="A guardian needs to give consent"
+          [text]="
+            'Because you’re under ' +
+            r.consentAge +
+            ', a parent or guardian approves your account before you start. We’ll text them a secure link; it takes them a minute.'
+          "
+        >
+          <ph-button variant="primary" icon="send" [busy]="asking()" (click)="askGuardian()"
+            >Ask my guardian</ph-button
+          >
+        </ph-empty-state>
+      }
+    </ph-card>
+  </div>
 } @else {
   <ph-card [flush]="true">
     <ph-empty-state

@@ -7,10 +7,17 @@ import type { GuardianHome } from './guardian-home';
 import type { GuardianPageResult } from './guardian-page-result';
 import type { GuardianSlipResult } from './guardian-slip-result';
 import type { GuardianVerifyOutcome } from './guardian-verify-outcome';
+import type { GuardianConsent } from './guardian-consent';
+import type { ConsentAnswers } from './consent-answers';
 
 /** Guardian pages: a link, a six-digit code, then the slip or the household's home. The device cookie is HttpOnly and never read here. */
 export interface GuardianApi {
   slip(token: string): Observable<GuardianSlipResult>;
+  /** The consent page for one youth (L2-055). */
+  consent(token: string): Observable<GuardianPageResult<GuardianConsent>>;
+  giveConsent(token: string, answers: ConsentAnswers): Observable<WriteOutcome>;
+  /** Withdraws the consent in force (L2-058). */
+  withdrawConsent(token: string): Observable<WriteOutcome>;
   home(token: string): Observable<GuardianPageResult<GuardianHome>>;
   survey(token: string): Observable<GuardianPageResult<GuardianSurvey>>;
   /** Asks for a copy (Export) or deletion (Delete) of the household's data (L2-030 criterion 4). */

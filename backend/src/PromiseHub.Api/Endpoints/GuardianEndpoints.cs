@@ -43,6 +43,12 @@ public static class GuardianEndpoints
             ToHttp(await handler.SignAsync(Request(token, http), body, ct)));
         g.MapPost("/slips/{token}/decline", async (string token, DeclineSlipRequest body, GuardianSlipHandler handler, HttpContext http, CancellationToken ct) =>
             ToHttp(await handler.DeclineAsync(Request(token, http), body, ct)));
+        g.MapGet("/consent/{token}", async (string token, GuardianConsentHandler handler, HttpContext http, CancellationToken ct) =>
+            ToHttp(await handler.GetAsync(Request(token, http), ct)));
+        g.MapPost("/consent/{token}/sign", async (string token, GiveConsentRequest body, GuardianConsentHandler handler, HttpContext http, CancellationToken ct) =>
+            ToHttp(await handler.SignAsync(Request(token, http), body, ct)));
+        g.MapPost("/consent/{token}/withdraw", async (string token, WithdrawConsentRequest body, GuardianConsentHandler handler, HttpContext http, CancellationToken ct) =>
+            ToHttp(await handler.WithdrawAsync(Request(token, http), body, ct)));
         g.MapGet("/survey/{token}", async (string token, PromiseHub.Application.Surveys.GuardianSurveyHandler handler, HttpContext http, CancellationToken ct) =>
             ToHttp(await handler.GetAsync(Request(token, http), ct)));
         g.MapPost("/survey/{token}", async (string token, PromiseHub.Application.Surveys.SurveyAnswerRequest body, PromiseHub.Application.Surveys.GuardianSurveyHandler handler, HttpContext http, CancellationToken ct) =>

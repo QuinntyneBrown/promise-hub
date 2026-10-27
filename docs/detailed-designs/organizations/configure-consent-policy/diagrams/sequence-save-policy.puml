@@ -1,0 +1,33 @@
+@startuml
+title UML sequence behaviour — Save the consent policy
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Person" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "Page" as page
+  participant "Dialog" as dlg
+  participant "PrivacyApi" as papi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "Endpoints" as ep
+end box
+box "Backend — PromiseHub.Application and Domain" #ECFDF3
+  participant "Handler" as h
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : Edit consent policy
+page -> dlg : open with age 18 and the wording
+actor -> dlg : 16, wording
+dlg -> papi : saveConsentPolicy(16, wording)
+papi -> ep : PUT /settings/consent
+ep -> h : SaveAsync (13–19, 20–2,000 characters)
+h -> db : ConsentPolicy upsert, audit Updated (L2-056 criterion 1)
+ep --> dlg : 204
+dlg --> page : closed
+page --> actor : toast "Consent policy saved"
+@enduml

@@ -1,0 +1,21 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Manage guardian consent
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "GuardianConsentPage", "Angular page", "Verify, read, sign")
+  Component(gapi, "GuardianApi", "Contract + HTTP client", "consent, giveConsent")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "GuardianEndpoints", "Minimal API", "Anonymous /g/consent")
+  Component(h, "GuardianConsentHandler", "Application handler", "Get, sign")
+  Component(acc, "GuardianAccess", "Application service", "Link → household, organization, device")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Links, consents, policy, audit entries")
+}
+Rel(page, gapi, "consent, giveConsent")
+Rel(gapi, ep, "GET, POST /g/consent/{token}")
+Rel(ep, h, "calls")
+Rel(h, acc, "resolves the link")
+Rel(h, db, "consent, audit entry")
+Rel(acc, db, "link, device")
+@enduml

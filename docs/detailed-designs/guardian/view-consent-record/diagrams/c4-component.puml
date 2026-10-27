@@ -1,0 +1,23 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — View the consent record
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "ChildPage", "Angular page", "Guardian consent card")
+  Component(hapi, "HouseholdsApi", "Contract + HTTP client", "consent, sendConsentLink")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "HouseholdEndpoints", "Minimal API", "Roster")
+  Component(h, "ChildConsentHandler", "Application handler", "Status and send")
+  Component(g, "ConsentGate", "Application service", "StatusAsync")
+  Component(s, "ConsentRequestSender", "Application service", "Issue and deliver")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Links, consents, policy, audit entries")
+}
+Rel(page, hapi, "consent, sendConsentLink")
+Rel(hapi, ep, "GET /children/{id}/consent, POST …/consent-request")
+Rel(ep, h, "calls")
+Rel(h, g, "status")
+Rel(h, s, "send")
+Rel(g, db, "policy, consents")
+Rel(s, db, "link, audit entry")
+@enduml

@@ -511,6 +511,29 @@ def child(S):
     active = card(ul_list([list_item("Yusuf Haddad", "yusuf.haddad@example.com · signs in to Learning", person=y, end=badge("Active", "success"))], card=False), title="Youth account", tid="youth", cls="card--flush")
     S.add("youth-active", "Once Yusuf accepted: the card names his account; a second invitation is not offered.", nav="families", user=T,
           main=yhdr + f'<div class="split"><div class="stack">{ymed}</div><div class="stack">{active}</div></div>')
+    # Guardian consent (L2-055 to L2-058): a youth under the consent age needs a guardian's consent before Learning.
+    so = CHILD["sofia"]
+    shdr = breadcrumb([("Families", page("families")), ("Rivera", page("household"))], "Sofía Rivera") + \
+        f'<div class="page-header"><div class="cluster">{avatar(so, "lg")}<div><h1>Sofía Rivera</h1><p class="subtitle">12 years (born 2 Jun 2014) · Grade 7, Bennetto Elementary · Rivera household</p></div></div><div class="cluster">{btn("Edit", "", icon_name="edit", data_href=dialog("edit-child"))}</div></div>'
+    smed = card(facts([("Allergies", "None"), ("Medication", "Blue inhaler in her bag"), ("Conditions", "Asthma"), ("Updated", "By Carmen Rivera · Tue 2 Sep 2026")]), title="Medical and emergency", tid="med")
+    saccount = card(ul_list([list_item("Sofía Rivera", "sofia@harbourview.example · signs in to Learning", person=so, end=badge("Active", "success"))], card=False), title="Youth account", tid="youth", cls="card--flush")
+    def consent_card(meta, status_badge, action=""):
+        return card(ul_list([list_item("Guardian consent", meta, lead=f'<span class="icon-tile icon-tile--sm" aria-hidden="true">{icon("shield", "icon--sm")}</span>', end=status_badge)], card=False)
+                    + (f'<div class="card__footer">{action}</div>' if action else ""), title="Guardian consent", tid="consent", cls="card--flush")
+    send = btn("Send consent link", "", icon_name="send")
+    needed = consent_card("Needed before Sofía can use Learning · under 18", badge("Needed", "warning"), send)
+    S.add("consent-needed", "Tom on Sofía’s record: she is 12 with a youth account and no consent yet; he can text the household a consent link.", nav="families", user=T,
+          main=shdr + f'<div class="split"><div class="stack">{smed}</div><div class="stack">{saccount}{needed}</div></div>',
+          notes=note("Shown while Roster is on, for a child under the consent age with a youth account. Only admins and program directors send the link.", "top: 5rem; right: 1rem;"))
+    sent = consent_card("Link sent · 5 Nov 2026, 15:30", badge("Needed", "warning"), send)
+    S.add("consent-sent", "After sending: who got the link; the status stays Needed until a guardian signs.", nav="families", user=T,
+          main=shdr + f'<div class="split"><div class="stack">{smed}</div><div class="stack">{saccount}{sent}</div></div>', toast_html=toast_region(toast("success", "Consent link sent", "Sent to •••-•••-0142.")))
+    given = consent_card("Given by Carmen Rivera (Parent) · 5 Nov 2026, 15:41 · GC-4F7A2C", badge("Given", "success"))
+    S.add("consent-given", "Once Carmen signed: who, when and the reference.", nav="families", user=T,
+          main=shdr + f'<div class="split"><div class="stack">{smed}</div><div class="stack">{saccount}{given}</div></div>')
+    withdrawn = consent_card("Withdrawn by Carmen Rivera · 5 Nov 2026, 15:52", badge("Withdrawn", "danger"), send)
+    S.add("consent-withdrawn", "After a withdrawal: Sofía is gated again and staff can send a new link.", nav="families", user=T,
+          main=shdr + f'<div class="split"><div class="stack">{smed}</div><div class="stack">{saccount}{withdrawn}</div></div>')
     S.add("edge", "Longest name, four allergies, six pickups and 120 sessions of attendance.", nav="families", user=T,
           main=hdr().replace("Mateo Rivera", LONG_CHILD).replace("Rivera household", "Fitzgerald-Vanderbroucke household") +
           f'<div class="split"><div class="stack">{medical.replace("Peanuts (anaphylaxis); tree nuts (hives)", "Peanuts, tree nuts, sesame, shellfish (anaphylaxis); latex (contact rash); grass pollen (seasonal)").replace("Carmen Rivera", LONG_GUARDIAN)}{pickups.replace("Carmen Rivera", LONG_GUARDIAN)}</div><div class="stack">{att.replace("39 of 43 sessions this season · 91%", "1,104 of 1,180 sessions since 2023 · 93.6%")}</div></div>')

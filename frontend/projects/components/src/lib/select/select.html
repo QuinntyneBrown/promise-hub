@@ -4,7 +4,7 @@
   [id]="inputId()"
   [disabled]="disabled()"
   [attr.aria-invalid]="error() ? 'true' : null"
-  [attr.aria-describedby]="error() ? inputId() + '-error' : null"
+  [attr.aria-describedby]="error() ? inputId() + '-error' : help() ? inputId() + '-help' : null"
   (change)="update($any($event.target).value)"
   (blur)="onTouched()"
 >
@@ -12,6 +12,9 @@
     <option [value]="option.value" [selected]="option.value === value()">{{ option.label }}</option>
   }
 </select>
+@if (help()) {
+  <div class="help" [id]="inputId() + '-help'">{{ help() }}</div>
+}
 @if (error()) {
   <div class="error" [id]="inputId() + '-error'" [attr.data-testid]="inputId() + '-error'">
     {{ error() }}
