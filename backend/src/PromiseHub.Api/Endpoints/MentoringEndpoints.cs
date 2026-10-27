@@ -6,7 +6,10 @@ using PromiseHub.Domain.Organizations;
 
 namespace PromiseHub.Api.Endpoints;
 
-/// <summary>The mentor's own pages (L2-063 to L2-065, ADR 0049): Mentoring on, Mentor role only, every read scoped by <see cref="MentorScope"/>.</summary>
+/// <summary>
+/// The mentor's own pages (L2-063 to L2-065, ADR 0049): Mentoring on, Mentor role only, every read scoped by <see cref="MentorScope"/>.
+/// Reviews, grading and quiz approval also need Learning (L2-080, L2-081, ADR 0057).
+/// </summary>
 public static class MentoringEndpoints
 {
     public static IEndpointRouteBuilder MapMentoringEndpoints(this IEndpointRouteBuilder app)
@@ -24,6 +27,8 @@ public static class MentoringEndpoints
             var (status, cohort) = await handler.HandleAsync(programId, ct);
             return cohort is not null ? Results.Ok(cohort) : new Application.Result(status).ToHttp();
         });
+        var reviews = mentoring.MapGroup("").RequireModule(ModuleId.Learning);
+        reviews.MapGet("/reviews", (ReviewQueueHandler handler, CancellationToken ct) => handler.HandleAsync(ct));
         return app;
     }
 }

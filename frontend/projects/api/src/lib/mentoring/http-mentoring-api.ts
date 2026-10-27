@@ -11,6 +11,7 @@ import { MentorCohort } from './mentor-cohort';
 import { MentorDashboard } from './mentor-dashboard';
 import { MentorYouthRecord } from './mentor-youth-record';
 import { MentoringApi } from './mentoring-api';
+import { ReviewQueue } from './review-queue';
 
 @Injectable()
 export class HttpMentoringApi implements MentoringApi {
@@ -31,6 +32,10 @@ export class HttpMentoringApi implements MentoringApi {
 
   mentorCohort(programId: string): Observable<LoadResult<MentorCohort>> {
     return toLoad(this.http.get<MentorCohort>(`${this.baseUrl}/mentoring/cohorts/${programId}`));
+  }
+
+  reviews(): Observable<LoadResult<ReviewQueue>> {
+    return toLoad(this.http.get<ReviewQueue>(`${this.baseUrl}/mentoring/reviews`));
   }
 
   cohort(programId: string): Observable<LoadResult<CohortMentoring>> {

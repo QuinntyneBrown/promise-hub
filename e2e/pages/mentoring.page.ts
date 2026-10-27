@@ -53,6 +53,11 @@ export class MentoringPage extends BasePage {
     return this.page.getByRole('heading', { name: 'Recent activity' });
   }
 
+  /** The Reviews button, with the number waiting; only while Learning is on. */
+  get reviewsButton(): Locator {
+    return this.page.getByRole('link', { name: /^Reviews/ });
+  }
+
   async viewAll(): Promise<void> {
     await this.page.getByRole('link', { name: /^View all/ }).click();
   }

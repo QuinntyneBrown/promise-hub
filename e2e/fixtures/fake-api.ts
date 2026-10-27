@@ -2,6 +2,7 @@ import type { Page, Route } from '@playwright/test';
 import { type FakeChild, type FakeGuardian, type FakeHousehold, ageOf, hasMedicalFlag, medicalFlag, reachable, seedHouseholds } from './households';
 import { FakeCurriculum } from './fake-curriculum';
 import { FakeLearning } from './fake-learning';
+import { FakeReviews, type YouthAccounts } from './fake-reviews';
 import { type FakeEvent, type FakeProgram, NOW, seedEvents, seedPrograms } from './programs';
 import { type Membership, type ModuleId, moduleCatalog, memberships, organizations, seededMfaCode, seededPassword } from './seed';
 
@@ -660,6 +661,7 @@ export class FakeApi {
     ['DELETE', /^\/api\/curriculum\/lessons\/(?<id>[^/]+)\/video$/, (route, p) => this.author(route, (org) => this.curriculumState.removeVideo(route, org, p['id']!))],
     ['GET', /^\/api\/mentoring\/youth$/, (route) => this.mentoredYouth(route)],
     ['GET', /^\/api\/mentoring\/dashboard$/, (route) => this.mentorDashboard(route)],
+    ['GET', /^\/api\/mentoring\/reviews$/, (route) => this.mentorReviews(route, (m, youth) => this.reviews.queue(route, m.organizationId, youth))],
     ['GET', /^\/api\/mentoring\/youth\/(?<id>[^/]+)$/, (route, p) => this.mentorYouthRecord(route, p['id']!)],
     ['GET', /^\/api\/mentoring\/cohorts\/(?<id>[^/]+)$/, (route, p) => this.mentorCohort(route, p['id']!)],
     ['GET', /^\/api\/programs\/(?<id>[^/]+)\/mentoring$/, (route, p) => this.cohortMentoring(route, p['id']!)],
@@ -1101,6 +1103,24 @@ export class FakeApi {
     const m = await this.participantModuleCaller(route, 'Mentoring', can.mentorYouth);
     if (!m) return;
     return route.fulfill({ json: { youth: this.mentorScope(m).youth.map((c) => this.mentoredYouthRow(c)) } });
+  }
+
+  /** The mentor's reviews (L2-080, L2-081, ADR 0057). */
+  readonly reviews = new FakeReviews(this.curriculumState, this.learningState.work, this.learningState.quizzes);
+
+  /** Every review endpoint: Mentoring and Learning on and MentorYouth, then his youth accounts. */
+  private async mentorReviews(route: Route, then: (m: Membership, youth: YouthAccounts) => Promise<void>): Promise<void> {
+    const m = await this.participantModuleCaller(route, 'Mentoring', can.mentorYouth);
+    if (!m) return;
+    if (!this.modules.get(m.organizationId)!.includes('Learning')) return route.fulfill({ status: 404 });
+    const children = new Set(this.mentorScope(m).youth.map((c) => c.id));
+    const youth: YouthAccounts = new Map(
+      [...this.youthLinks]
+        .filter(([id, child]) => children.has(child) && !this.removedMembers.has(id))
+        .map(([id]) => [id, memberships.find((x) => x.id === id)!.personName] as [string, string])
+        .filter(([id]) => memberships.some((x) => x.id === id && x.organizationId === m.organizationId)),
+    );
+    return then(m, youth);
   }
 
   /** GET /mentoring/dashboard (L2-063): youth, cohorts and, while Roll Call is on, attendance of the last 7 and 14 days. */
