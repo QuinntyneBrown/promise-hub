@@ -3,6 +3,7 @@ import type { LoadResult } from '../load-result';
 import type { WriteOutcome } from '../write-outcome';
 import type { AssignedYouth } from './assigned-youth';
 import type { CohortMentoring } from './cohort-mentoring';
+import type { MentorCohort } from './mentor-cohort';
 import type { MentorDashboard } from './mentor-dashboard';
 import type { MentorYouthRecord } from './mentor-youth-record';
 
@@ -13,6 +14,8 @@ export interface MentoringApi {
   dashboard(): Observable<LoadResult<MentorDashboard>>;
   /** One of the caller’s youth; forbidden when the youth is not assigned to them. */
   youthRecord(childId: string): Observable<LoadResult<MentorYouthRecord>>;
+  /** A cohort the caller leads or supports; forbidden otherwise. */
+  mentorCohort(programId: string): Observable<LoadResult<MentorCohort>>;
   /** A cohort's team, each roster child's mentor and the active mentors; only while Mentoring is on. */
   cohort(programId: string): Observable<LoadResult<CohortMentoring>>;
   assignYouth(

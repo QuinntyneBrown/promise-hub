@@ -481,6 +481,7 @@ export class FakeApi {
     ['GET', /^\/api\/mentoring\/youth$/, (route) => this.mentoredYouth(route)],
     ['GET', /^\/api\/mentoring\/dashboard$/, (route) => this.mentorDashboard(route)],
     ['GET', /^\/api\/mentoring\/youth\/(?<id>[^/]+)$/, (route, p) => this.mentorYouthRecord(route, p['id']!)],
+    ['GET', /^\/api\/mentoring\/cohorts\/(?<id>[^/]+)$/, (route, p) => this.mentorCohort(route, p['id']!)],
     ['GET', /^\/api\/programs\/(?<id>[^/]+)\/mentoring$/, (route, p) => this.cohortMentoring(route, p['id']!)],
     ['PUT', /^\/api\/programs\/(?<id>[^/]+)\/mentors$/, (route, p) => this.setCohortMentors(route, p['id']!)],
     ['PUT', /^\/api\/programs\/(?<id>[^/]+)\/youth\/(?<child>[^/]+)\/mentor$/, (route, p) => this.assignYouthMentorRoute(route, p['id']!, p['child']!)],
@@ -957,6 +958,39 @@ export class FakeApi {
     const row = this.mentoredYouthRow(child);
     return route.fulfill({
       json: { id: child.id, name: row.name, preferredName: done?.preferredName ?? null, pronouns: done?.pronouns ?? null, age: row.age, school: child.school, programs: row.programs, mentor, guardians, recentAttendance },
+    });
+  }
+
+  /** GET /mentoring/cohorts/{programId} (L2-065): a cohort on the mentor's team; 404 outside the organization, 403 (audited) otherwise. */
+  private async mentorCohort(route: Route, programId: string): Promise<void> {
+    const m = await this.participantModuleCaller(route, 'Mentoring', can.mentorYouth);
+    if (!m) return;
+    const program = this.programs.find((p) => p.id === programId && p.organizationId === m.organizationId);
+    if (!program) return route.fulfill({ status: 404 });
+    const mine = this.mentorScope(m).cohorts.find((c) => c.program.id === programId);
+    if (!mine) {
+      this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'AccessDenied', record: 'Program', summary: `${program.name} · not on the mentor’s team`, device: null });
+      return route.fulfill({ status: 403, json: { code: 'forbidden' } });
+    }
+    const mentors = this.activeMentors(m.organizationId);
+    const nameOf = (id: string | undefined) => mentors.find((x) => x.id === id)?.name ?? null;
+    const team = this.cohortMentors.get(programId)!;
+    const children = this.households.flatMap((h) => h.children);
+    const members = program.roster
+      .map((id) => children.find((c) => c.id === id)!)
+      .sort((a, b) => `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`))
+      .map((c) => ({ id: c.id, name: `${c.firstName} ${c.lastName}`, age: ageOf(c.dateOfBirth), mentor: nameOf(this.youthMentors.get(c.id)) }));
+    return route.fulfill({
+      json: {
+        programId,
+        name: program.name,
+        term: program.term,
+        schedule: program.schedule,
+        role: mine.isLead ? 'Lead' : 'Supporting',
+        lead: nameOf(team.lead),
+        supporting: team.supporting.map((id) => nameOf(id)).filter((n): n is string => !!n).sort(),
+        members,
+      },
     });
   }
 

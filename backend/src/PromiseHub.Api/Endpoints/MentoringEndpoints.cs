@@ -19,6 +19,11 @@ public static class MentoringEndpoints
             var (status, record) = await handler.HandleAsync(childId, ct);
             return record is not null ? Results.Ok(record) : new Application.Result(status).ToHttp();
         });
+        mentoring.MapGet("/cohorts/{programId:guid}", async (Guid programId, MentorCohortHandler handler, CancellationToken ct) =>
+        {
+            var (status, cohort) = await handler.HandleAsync(programId, ct);
+            return cohort is not null ? Results.Ok(cohort) : new Application.Result(status).ToHttp();
+        });
         return app;
     }
 }

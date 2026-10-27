@@ -211,6 +211,8 @@ export * from './lib/mentoring/mentor-activity';
 export * from './lib/mentoring/mentor-youth-record';
 export * from './lib/mentoring/mentor-guardian-contact';
 export * from './lib/mentoring/mentor-attendance';
+export * from './lib/mentoring/mentor-cohort';
+export * from './lib/mentoring/mentor-cohort-member';
 export * from './lib/mentoring/mentoring-api';
 export * from './lib/mentoring/mentoring-api.token';
 export * from './lib/website/public-site';
