@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 52 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="52" data-video-title="Give guardian consent for a youth" data-parts="Introduction|The gate|Consent|Staff|Withdraw|Policy|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 52</div>
+  <h1>Give guardian consent for a youth</h1>
+  <p class="lead">A gate on the server, a verified link for the guardian, a withdrawal that takes effect at once</p>
+</section>
+
+<section id="gate" data-part="1" data-cue="Sofía is twelve and signs in to Harbourview" data-clip="clips/youth-gate-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Sofía at the gate</h3><p><code>GET /learning/lessons</code> → 403 consent-required; Ask my guardian → 202.</p></div>
+</section>
+
+<section id="gate-shots" data-part="1" data-cue="She taps Ask my guardian">
+  <h2>Default and success, on a phone</h2>
+  <div class="cols">
+    <img class="shot" alt="Learning on a phone: a guardian needs to give consent" src="shots/phone-consent-required.png">
+    <img class="shot" alt="We asked your guardian, naming the masked number" src="shots/phone-asked.png">
+  </div>
+  <p class="muted small">RequireGuardianConsent() · ADR 0046</p>
+</section>
+
+<section id="consent" data-part="2" data-cue="Carmen opens the text." data-clip="clips/guardian-consent-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Carmen consents</h3><p>Code, Spanish page, two mistakes, then signed.</p></div>
+</section>
+
+<section id="consent-shots" data-part="2" data-cue="Her first try has no relationship">
+  <h2>Verify, error and success</h2>
+  <div class="cols three">
+    <img class="shot" alt="Confirme que es usted: the code step" src="shots/phone-verify.png">
+    <img class="shot" alt="Each field says why: relationship, the box and the name" src="shots/phone-consent-invalid.png">
+    <img class="shot" alt="Consentimiento dado with the record and reference" src="shots/phone-consent-signed.png">
+  </div>
+</section>
+
+<section id="record" data-part="2" data-cue="PromiseHub records her name as on file">
+  <h2>What a consent keeps</h2>
+  <table class="facts">
+    <tr><th>Field</th><th>Example</th></tr>
+    <tr><td>Signed by, relationship</td><td>Carmen Rivera, Parent</td></tr>
+    <tr><td>When, device, language</td><td>5 Nov 2026 16:41, her phone, Spanish</td></tr>
+    <tr><td>Wording and its SHA-256</td><td>The organization's wording as shown</td></tr>
+    <tr><td>Reference</td><td>GC-4F7A2C</td></tr>
+  </table>
+  <p class="muted small">GuardianConsent · audited as Signed · a copy emailed to the signer</p>
+</section>
+
+<section id="open" data-part="2" data-cue="Sofía taps Check again" data-clip="clips/learning-open-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Learning opens</h3><p>No staff step.</p></div>
+</section>
+
+<section id="staff" data-part="3" data-cue="On Sofía's record, staff see a Guardian consent card" data-clip="clips/child-consent-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Tom sends the link</h3><p><code>GET /children/{id}/consent</code>, <code>POST …/consent-request</code>.</p></div>
+</section>
+
+<section id="staff-rules" data-part="3" data-cue="Admins and program directors can send the consent link">
+  <h2>Who sees what</h2>
+  <table class="facts">
+    <tr><th>Caller</th><th>Read</th><th>Send</th></tr>
+    <tr><td>Admin, program director</td><td>200</td><td>202</td></tr>
+    <tr><td>Site lead, youth worker, coordinator</td><td>200</td><td>403</td></tr>
+    <tr><td>Youth, mentor, volunteer</td><td>403</td><td>403</td></tr>
+    <tr><td>Another organization's child, or Roster off</td><td>404</td><td>404</td></tr>
+  </table>
+</section>
+
+<section id="withdraw" data-part="4" data-cue="Carmen can change her mind from the same link." data-clip="clips/withdraw-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Withdraw</h3><p>A CDK dialog confirms; the youth is gated at once.</p></div>
+</section>
+
+<section id="withdraw-shots" data-part="4" data-cue="The record keeps both the consent and the withdrawal">
+  <h2>Confirm, then withdrawn</h2>
+  <div class="cols">
+    <img class="shot" alt="The withdraw consent dialog in Spanish" src="shots/phone-withdraw-dialog.png">
+    <img class="shot" alt="Consentimiento retirado with the form to consent again" src="shots/phone-withdrawn.png">
+  </div>
+</section>
+
+<section id="policy" data-part="5" data-cue="Admins and program directors set the consent age" data-clip="clips/policy-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Consent policy</h3><p>13 to 19, default 18; wording 20 to 2,000 characters.</p></div>
+</section>
+
+<section id="testing" data-part="6" data-cue="The API tests check the default policy">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Youth under the age, no consent</td><td>403 consent-required, every request</td></tr>
+    <tr><td>Wrong name, unticked box, no relationship</td><td>422, nothing stored</td></tr>
+    <tr><td>Link over 30 days, or replaced</td><td>410</td></tr>
+    <tr><td>Withdrawal mid-session</td><td>Next request 403, record kept</td></tr>
+    <tr><td>Learning or Roster off, another organization</td><td>404</td></tr>
+  </table>
+</section>
+
+<section id="desktop-shots" data-part="6" data-cue="The browser tests run each screen">
+  <h2>Default, on a laptop</h2>
+  <div class="cols">
+    <img class="shot" alt="Sofía's record with Guardian consent needed" src="shots/desktop-child-needed.png">
+    <img class="shot" alt="Privacy and data with the Guardian consent card" src="shots/desktop-privacy-consent.png">
+  </div>
+</section>
+
+<section id="recap" data-part="7" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Consent is checked on the server on every protected youth request</li><li>A guardian consents from a verified link, in their language, with a typed name</li><li>A withdrawal gates the youth at once and keeps the record</li></ul>
+  <p class="muted">Next: a new youth completes first-run onboarding</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
