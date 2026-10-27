@@ -2,6 +2,7 @@ import type { Page, Route } from '@playwright/test';
 import { type FakeChild, type FakeGuardian, type FakeHousehold, ageOf, hasMedicalFlag, medicalFlag, reachable, seedHouseholds } from './households';
 import { FakeBadges } from './fake-badges';
 import { FakeCurriculum } from './fake-curriculum';
+import { FakeProgression } from './fake-progression';
 import { FakeLearning } from './fake-learning';
 import { FakeReviews, type YouthAccounts } from './fake-reviews';
 import { type FakeEvent, type FakeProgram, NOW, seedEvents, seedPrograms } from './programs';
@@ -579,6 +580,9 @@ export class FakeApi {
   /** Badges and their awards (L2-084, L2-085); tests read and change it, such as clear. */
   readonly badges = new FakeBadges(this.curriculumState, () => this.reviews.competencies, () => memberships);
 
+  /** The progression framework (L2-086); its competencies are the ones mentors assess in reviews. */
+  readonly progression = new FakeProgression(() => this.reviews.competencies);
+
   /** Sets the modules on for an organization, as Settings › Modules would. */
   setModules(organizationId: string, on: ModuleId[]): void {
     this.modules.set(organizationId, on);
@@ -668,6 +672,12 @@ export class FakeApi {
     ['PUT', /^\/api\/curriculum\/badges\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.badges.update(route, org, p['id']!))],
     ['DELETE', /^\/api\/curriculum\/badges\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.badges.remove(route, org, p['id']!))],
     ['POST', /^\/api\/curriculum\/badges\/(?<id>[^/]+)\/awards$/, (route, p) => this.author(route, (org) => this.awardBadgeByHand(route, org, p['id']!))],
+    ['GET', /^\/api\/curriculum\/progression$/, (route) => this.author(route, (org) => this.progression.get(route, org))],
+    ['POST', /^\/api\/curriculum\/progression\/stages$/, (route) => this.author(route, (org) => this.progression.addStage(route, org))],
+    ['PUT', /^\/api\/curriculum\/progression\/stages\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.progression.updateStage(route, org, p['id']!))],
+    ['PUT', /^\/api\/curriculum\/progression\/stage-order$/, (route) => this.author(route, (org) => this.progression.reorder(route, org))],
+    ['POST', /^\/api\/curriculum\/progression\/stages\/(?<id>[^/]+)\/competencies$/, (route, p) => this.author(route, (org) => this.progression.addCompetency(route, org, p['id']!))],
+    ['DELETE', /^\/api\/curriculum\/progression\/competencies\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.progression.removeCompetency(route, org, p['id']!))],
     ['POST', /^\/api\/curriculum\/lessons\/(?<id>[^/]+)\/video$/, (route, p) => this.author(route, (org) => this.curriculumState.uploadVideo(route, org, p['id']!, memberships.find((x) => x.id === this.membershipId)!.personName))],
     ['DELETE', /^\/api\/curriculum\/lessons\/(?<id>[^/]+)\/video$/, (route, p) => this.author(route, (org) => this.curriculumState.removeVideo(route, org, p['id']!))],
     ['GET', /^\/api\/mentoring\/youth$/, (route) => this.mentoredYouth(route)],

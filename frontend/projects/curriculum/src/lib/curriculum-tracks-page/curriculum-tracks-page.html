@@ -1,6 +1,7 @@
 <ph-page-header title="Curriculum" subtitle="Tracks, modules and lessons your youth work through.">
   @if (result()?.status === 'loaded') {
     <ph-button icon="award" link="/curriculum/badges">Badges</ph-button>
+    <ph-button icon="programs" link="/curriculum/progression">Progression</ph-button>
     <ph-button variant="primary" icon="plus" hasPopup="dialog" (click)="newTrack()"
       >New track</ph-button
     >

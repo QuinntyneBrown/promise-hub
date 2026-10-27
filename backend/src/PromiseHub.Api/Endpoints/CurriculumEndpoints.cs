@@ -86,6 +86,17 @@ public static class CurriculumEndpoints
             var award = await handler.AwardAsync(id, request, ct);
             return award.Status == ResultStatus.Done ? Results.Created($"/curriculum/badges/{id}/awards/{award.Value}", new { id = award.Value }) : award.ToHttp();
         });
+        curriculum.MapGet("/progression", (ProgressionHandler handler, CancellationToken ct) => handler.HandleAsync(ct));
+        curriculum.MapPost("/progression/stages", async (StageCommand command, ProgressionCommands handler, CancellationToken ct) =>
+            (await handler.AddStageAsync(command, ct)).ToHttp("/curriculum/progression/stages"));
+        curriculum.MapPut("/progression/stages/{id:guid}", async (Guid id, StageCommand command, ProgressionCommands handler, CancellationToken ct) =>
+            (await handler.UpdateStageAsync(id, command, ct)).ToHttp());
+        curriculum.MapPut("/progression/stage-order", async (StageOrderCommand command, ProgressionCommands handler, CancellationToken ct) =>
+            (await handler.ReorderAsync(command.StageIds, ct)).ToHttp());
+        curriculum.MapPost("/progression/stages/{id:guid}/competencies", async (Guid id, CompetencyCommand command, ProgressionCommands handler, CancellationToken ct) =>
+            (await handler.AddCompetencyAsync(id, command, ct)).ToHttp("/curriculum/progression/competencies"));
+        curriculum.MapDelete("/progression/competencies/{id:guid}", async (Guid id, ProgressionCommands handler, CancellationToken ct) =>
+            (await handler.RemoveCompetencyAsync(id, ct)).ToHttp());
         curriculum.MapPost("/lessons/{id:guid}/video", async (Guid id, HttpRequest request, LessonVideoHandler handler, LessonVideoOptions options, CancellationToken ct) =>
         {
             if (!request.HasFormContentType || request.ContentLength > options.MaxBytes + FormOverhead)

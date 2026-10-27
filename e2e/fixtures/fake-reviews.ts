@@ -12,6 +12,8 @@ export interface FakeCompetency {
   organizationId: string;
   name: string;
   description: string;
+  /** The progression stage it earns (L2-086, ADR 0058). */
+  stageId: string;
   /** Removed from the progression framework (L2-086); mentors no longer assess it. */
   removed?: boolean;
 }
@@ -207,14 +209,14 @@ export class FakeReviews {
 
   /** The seeded frameworks, as DatabaseSeeder adds them. */
   competencies: FakeCompetency[] = [
-    { id: 'cp-serves', organizationId: 'org-harbourview', name: 'Serves others', description: 'Notices what needs doing and helps without being asked.' },
-    { id: 'cp-speaks', organizationId: 'org-harbourview', name: 'Speaks up', description: 'Shares ideas in the group and says when something is wrong.' },
-    { id: 'cp-leads', organizationId: 'org-harbourview', name: 'Leads a small group', description: 'Guides a discussion and keeps a small group on track.' },
-    { id: 'cp-follows', organizationId: 'org-harbourview', name: 'Follows through', description: 'Finishes what they start and keeps their promises.' },
-    { id: 'cp-works', organizationId: 'org-harbourview', name: 'Works with others', description: 'Listens, takes turns and helps the group decide.' },
-    { id: 'cp-ng-kind', organizationId: 'org-northgate', name: 'Shows kindness', description: 'Includes others and helps when someone is left out.' },
-    { id: 'cp-ng-new', organizationId: 'org-northgate', name: 'Tries new things', description: 'Has a go at something new, even when it feels hard.' },
-    { id: 'cp-ng-works', organizationId: 'org-northgate', name: 'Works with others', description: 'Listens, takes turns and helps the group decide.' },
+    { id: 'cp-serves', stageId: 'st-explorer', organizationId: 'org-harbourview', name: 'Serves others', description: 'Notices what needs doing and helps without being asked.' },
+    { id: 'cp-speaks', stageId: 'st-contributor', organizationId: 'org-harbourview', name: 'Speaks up', description: 'Shares ideas in the group and says when something is wrong.' },
+    { id: 'cp-leads', stageId: 'st-leader', organizationId: 'org-harbourview', name: 'Leads a small group', description: 'Guides a discussion and keeps a small group on track.' },
+    { id: 'cp-follows', stageId: 'st-contributor', organizationId: 'org-harbourview', name: 'Follows through', description: 'Finishes what they start and keeps their promises.' },
+    { id: 'cp-works', stageId: 'st-explorer', organizationId: 'org-harbourview', name: 'Works with others', description: 'Listens, takes turns and helps the group decide.' },
+    { id: 'cp-ng-kind', stageId: 'st-ng-explorer', organizationId: 'org-northgate', name: 'Shows kindness', description: 'Includes others and helps when someone is left out.' },
+    { id: 'cp-ng-new', stageId: 'st-ng-explorer', organizationId: 'org-northgate', name: 'Tries new things', description: 'Has a go at something new, even when it feels hard.' },
+    { id: 'cp-ng-works', stageId: 'st-ng-contributor', organizationId: 'org-northgate', name: 'Works with others', description: 'Listens, takes turns and helps the group decide.' },
   ];
 
   readonly competencyAssessments: FakeAssessment[] = [];
@@ -226,7 +228,7 @@ export class FakeReviews {
 
   private sheet(org: string, childId: string, name: string): object {
     const items = this.competencies
-      .filter((c) => c.organizationId === org)
+      .filter((c) => c.organizationId === org && !c.removed)
       .map((c) => {
         const a = this.competencyAssessments.filter((x) => x.childId === childId && x.competencyId === c.id).at(-1);
         return { id: c.id, name: c.name, description: c.description, level: a?.level ?? 'NotStarted', notes: a?.notes ?? null, assessedBy: a?.by ?? null, assessedAt: a?.at ?? null };
@@ -244,7 +246,7 @@ export class FakeReviews {
     const items = ((route.request().postDataJSON() as { items: { competencyId: string; level: string; notes: string | null }[] }).items ?? []);
     const errors: Record<string, string> = {};
     items.forEach((i, n) => {
-      if (!this.competencies.some((c) => c.id === i.competencyId && c.organizationId === org)) errors['items'] = 'Assess only your organization’s competencies.';
+      if (!this.competencies.some((c) => c.id === i.competencyId && c.organizationId === org && !c.removed)) errors['items'] = 'Assess only your organization’s competencies.';
       if (!LEVELS.includes(i.level)) errors[`items.${n}.level`] = 'Choose a level.';
       if ((i.notes?.trim().length ?? 0) > 2000) errors[`items.${n}.notes`] = 'Keep the note to 2,000 characters.';
     });

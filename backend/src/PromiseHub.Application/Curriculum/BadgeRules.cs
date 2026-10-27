@@ -53,7 +53,7 @@ public static class BadgeRules
                 target = id;
             }
         }
-        if (command.CompetencyId is { } competencyId && !await db.Competencies.AnyAsync(c => c.Id == competencyId, cancellationToken))
+        if (command.CompetencyId is { } competencyId && !await db.Competencies.AnyAsync(c => c.Id == competencyId && c.RemovedAt == null, cancellationToken))
         {
             errors["competencyId"] = "Choose a competency of the progression framework.";
         }

@@ -58,7 +58,7 @@ public sealed class BadgesHandler(IPromiseHubDb db)
         var assignments = (await db.Assignments.AsNoTracking().ToListAsync(cancellationToken))
             .OrderBy(a => order.GetValueOrDefault(a.ModuleId)).ThenBy(a => a.Title)
             .Select(a => new BadgeTargetDto(a.Id, $"{moduleTitles.GetValueOrDefault(a.ModuleId)} · {a.Title}")).ToList();
-        var competencies = await db.Competencies.AsNoTracking().OrderBy(c => c.Position)
+        var competencies = await db.Competencies.AsNoTracking().Where(c => c.RemovedAt == null).OrderBy(c => c.Position)
             .Select(c => new BadgeCompetencyDto(c.Id, c.Name)).ToListAsync(cancellationToken);
         return new BadgeOptionsDto(lessons, modules.Select(m => new BadgeTargetDto(m.Id, $"{tracks.GetValueOrDefault(m.TrackId)} · {m.Title}")).ToList(),
             quizzes, assignments, competencies);

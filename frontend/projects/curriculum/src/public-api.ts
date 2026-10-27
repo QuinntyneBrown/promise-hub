@@ -18,3 +18,7 @@ export { BadgesPage } from './lib/badges-page/badges-page';
 export { BadgeBuilderPage } from './lib/badge-builder-page/badge-builder-page';
 export { DeleteBadgeDialog } from './lib/delete-badge-dialog/delete-badge-dialog';
 export { AwardBadgeDialog } from './lib/award-badge-dialog/award-badge-dialog';
+export { ProgressionPage } from './lib/progression-page/progression-page';
+export { ProgressionStageDialog } from './lib/progression-stage-dialog/progression-stage-dialog';
+export { ProgressionCompetencyDialog } from './lib/progression-competency-dialog/progression-competency-dialog';
+export { RemoveCompetencyDialog } from './lib/remove-competency-dialog/remove-competency-dialog';

@@ -20,6 +20,8 @@ import { LessonDetail } from './lesson-detail';
 import { LessonFields } from './lesson-fields';
 import { ModuleDetail } from './module-detail';
 import { ModuleFields } from './module-fields';
+import { Progression } from './progression';
+import { StageFields } from './stage-fields';
 import { NewTrack } from './new-track';
 import { QuestionFields } from './question-fields';
 import { QuizDetail } from './quiz-detail';
@@ -232,6 +234,43 @@ export class HttpCurriculumApi implements CurriculumApi {
       this.http.post<{ id: string }>(`${this.baseUrl}/curriculum/badges/${id}/awards`, {
         membershipId,
       }),
+    );
+  }
+
+  progression(): Observable<LoadResult<Progression>> {
+    return toLoad(this.http.get<Progression>(`${this.baseUrl}/curriculum/progression`));
+  }
+
+  addStage(fields: StageFields): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<{ id: string }>(`${this.baseUrl}/curriculum/progression/stages`, fields),
+    );
+  }
+
+  updateStage(id: string, fields: StageFields): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.put<null>(`${this.baseUrl}/curriculum/progression/stages/${id}`, fields),
+    );
+  }
+
+  reorderStages(stageIds: string[]): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.put<null>(`${this.baseUrl}/curriculum/progression/stage-order`, { stageIds }),
+    );
+  }
+
+  addCompetency(stageId: string, fields: StageFields): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<{ id: string }>(
+        `${this.baseUrl}/curriculum/progression/stages/${stageId}/competencies`,
+        fields,
+      ),
+    );
+  }
+
+  removeCompetency(id: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.delete<null>(`${this.baseUrl}/curriculum/progression/competencies/${id}`),
     );
   }
 }

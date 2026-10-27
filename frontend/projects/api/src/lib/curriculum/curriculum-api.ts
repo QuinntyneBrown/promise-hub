@@ -14,6 +14,8 @@ import type { LessonDetail } from './lesson-detail';
 import type { LessonFields } from './lesson-fields';
 import type { ModuleDetail } from './module-detail';
 import type { ModuleFields } from './module-fields';
+import type { Progression } from './progression';
+import type { StageFields } from './stage-fields';
 import type { NewTrack } from './new-track';
 import type { QuestionFields } from './question-fields';
 import type { QuizDetail } from './quiz-detail';
@@ -61,4 +63,10 @@ export interface CurriculumApi {
   updateBadge(id: string, fields: BadgeFields): Observable<WriteOutcome>;
   deleteBadge(id: string): Observable<WriteOutcome>;
   awardBadge(id: string, membershipId: string | null): Observable<AwardOutcome>;
+  progression(): Observable<LoadResult<Progression>>;
+  addStage(fields: StageFields): Observable<WriteOutcome>;
+  updateStage(id: string, fields: StageFields): Observable<WriteOutcome>;
+  reorderStages(stageIds: string[]): Observable<WriteOutcome>;
+  addCompetency(stageId: string, fields: StageFields): Observable<WriteOutcome>;
+  removeCompetency(id: string): Observable<WriteOutcome>;
 }

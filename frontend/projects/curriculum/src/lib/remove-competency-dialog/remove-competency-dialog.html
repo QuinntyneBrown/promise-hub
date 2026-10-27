@@ -1,0 +1,18 @@
+<ph-dialog
+  [title]="'Remove ' + data.name + '?'"
+  description="Mentors stop assessing it. The assessments they already made are kept."
+  icon="trash"
+  tone="danger"
+>
+  @if (failed()) {
+    <ph-alert
+      tone="danger"
+      title="That didn’t go through"
+      text="The competency was not removed. Try again."
+    />
+  }
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close()">Cancel</ph-button>
+    <ph-button variant="danger" [busy]="busy()" (click)="confirm()">Remove competency</ph-button>
+  </ng-container>
+</ph-dialog>
