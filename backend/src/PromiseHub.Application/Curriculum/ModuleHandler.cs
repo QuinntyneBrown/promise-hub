@@ -19,7 +19,10 @@ public sealed class ModuleHandler(IPromiseHubDb db, CurriculumPrograms programs)
         return new ModuleDetailDto(module.Id, track.Id, track.Name, module.Title, module.Description, module.PrerequisiteModuleId, module.Anchor,
             module.Status.ToString(), module.Position, siblings.Count,
             siblings.Where(m => m.Position < module.Position).Select(m => new ModuleRefDto(m.Id, m.Title)).ToList(), lessons,
-            await programs.FollowingAsync(track.Id, cancellationToken), await QuizzesAsync(id, cancellationToken));
+            await programs.FollowingAsync(track.Id, cancellationToken), await QuizzesAsync(id, cancellationToken),
+            await db.Assignments.AsNoTracking().Where(a => a.ModuleId == id).OrderBy(a => a.Title)
+                .Select(a => new AssignmentSummaryDto(a.Id, a.Title, a.LessonId == null ? null : db.Lessons.Where(l => l.Id == a.LessonId && l.DeletedAt == null).Select(l => l.Title).FirstOrDefault(),
+                    a.Status.ToString(), a.TotalPoints)).ToListAsync(cancellationToken));
     }
 
     private async Task<List<QuizSummaryDto>> QuizzesAsync(Guid moduleId, CancellationToken cancellationToken)

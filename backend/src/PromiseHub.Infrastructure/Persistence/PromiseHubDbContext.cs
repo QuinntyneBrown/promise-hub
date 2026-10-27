@@ -65,6 +65,8 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Curriculum.Lesson> Lessons => Set<Domain.Curriculum.Lesson>();
     public DbSet<Domain.Curriculum.Quiz> Quizzes => Set<Domain.Curriculum.Quiz>();
     public DbSet<Domain.Curriculum.QuizQuestion> QuizQuestions => Set<Domain.Curriculum.QuizQuestion>();
+    public DbSet<Domain.Curriculum.Assignment> Assignments => Set<Domain.Curriculum.Assignment>();
+    public DbSet<Domain.Curriculum.RubricCriterion> RubricCriteria => Set<Domain.Curriculum.RubricCriterion>();
     public DbSet<Domain.Learning.LessonProgress> LessonProgress => Set<Domain.Learning.LessonProgress>();
     public DbSet<Domain.Curriculum.CodingStep> CodingSteps => Set<Domain.Curriculum.CodingStep>();
     public DbSet<Domain.Learning.CodingWorkspace> CodingWorkspaces => Set<Domain.Learning.CodingWorkspace>();
@@ -180,6 +182,19 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(q => q.Correct).HasMaxLength(20);
             e.Property(q => q.Answers).HasMaxLength(2100);
             e.HasOne<Domain.Curriculum.Quiz>().WithMany().HasForeignKey(q => q.QuizId);
+        });
+        modelBuilder.Entity<Domain.Curriculum.Assignment>(e =>
+        {
+            e.Property(a => a.Title).HasMaxLength(Domain.Curriculum.Quiz.MaximumTitle);
+            e.Property(a => a.Brief).HasMaxLength(Domain.Curriculum.Assignment.MaximumBrief);
+            e.Property(a => a.Status).HasConversion<string>().HasMaxLength(20);
+            e.HasOne<Domain.Curriculum.CurriculumModule>().WithMany().HasForeignKey(a => a.ModuleId);
+            e.HasOne<Domain.Curriculum.Lesson>().WithMany().HasForeignKey(a => a.LessonId);
+        });
+        modelBuilder.Entity<Domain.Curriculum.RubricCriterion>(e =>
+        {
+            e.Property(c => c.Description).HasMaxLength(Domain.Curriculum.RubricCriterion.MaximumDescription);
+            e.HasOne<Domain.Curriculum.Assignment>().WithMany().HasForeignKey(c => c.AssignmentId);
         });
         modelBuilder.Entity<Domain.Curriculum.CodingStep>(e =>
         {

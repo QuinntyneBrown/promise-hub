@@ -18,6 +18,24 @@ export interface FakeQuiz {
   status: ContentStatus;
 }
 
+export type SubmissionType = 'Text' | 'Photo' | 'Link' | 'File';
+
+export interface FakeAssignment {
+  id: string;
+  organizationId: string;
+  moduleId: string;
+  lessonId: string | null;
+  title: string;
+  brief: string | null;
+  submissionTypes: SubmissionType[];
+  rubric: { description: string; points: number }[];
+  dueDate: string | null;
+  graceDays: number;
+  allowLate: boolean;
+  requireApproval: boolean;
+  status: ContentStatus;
+}
+
 export interface FakeQuestion {
   id: string;
   quizId: string;
@@ -68,6 +86,24 @@ export class FakeAssessments {
 
   questions: FakeQuestion[] = [];
 
+  assignments: FakeAssignment[] = [
+    {
+      id: 'as-serve',
+      organizationId: 'org-harbourview',
+      moduleId: 'cm-serving',
+      lessonId: 'l-towel',
+      title: 'Serve someone this week',
+      brief: null,
+      submissionTypes: ['Text'],
+      rubric: [],
+      dueDate: null,
+      graceDays: 0,
+      allowLate: false,
+      requireApproval: false,
+      status: 'Draft',
+    },
+  ];
+
   /** Gives a quiz two questions: a multiple choice and a true or false. */
   seedQuestions(quizId: string): void {
     this.questions.push(
@@ -102,8 +138,12 @@ export class FakeAssessments {
   }
 
   /** The module editor's Quizzes and assignments card. */
-  summaries(moduleId: string): { quizzes: unknown[] } {
+  summaries(moduleId: string): { quizzes: unknown[]; assignments: unknown[] } {
     return {
+      assignments: this.assignments
+        .filter((a) => a.moduleId === moduleId)
+        .sort((a, b) => a.title.localeCompare(b.title))
+        .map((a) => ({ id: a.id, title: a.title, lessonTitle: this.lessonTitle(a), status: a.status, totalPoints: a.rubric.reduce((n, c) => n + c.points, 0) })),
       quizzes: this.quizzes
         .filter((q) => q.moduleId === moduleId)
         .sort((a, b) => a.title.localeCompare(b.title))
@@ -283,6 +323,115 @@ export class FakeAssessments {
     if (status !== 'Draft' && status !== 'Published') return unprocessable(route, { status: 'Choose Draft or Published.' });
     if (status === 'Published' && !this.questionsOf(id).length) return unprocessable(route, { status: 'Add a question before publishing the quiz.' });
     q.status = status;
+    return route.fulfill({ status: 204 });
+  }
+
+  private assignment(org: string, id: string): FakeAssignment | undefined {
+    return this.assignments.find((a) => a.id === id && a.organizationId === org);
+  }
+
+  /** POST /curriculum/assignments. */
+  createAssignment(route: Route, org: string): Promise<void> {
+    const b = route.request().postDataJSON() as { moduleId: string; lessonId?: string | null; title?: string };
+    if (!this.curriculum.moduleOf(org, b.moduleId)) return route.fulfill({ status: 404 });
+    const title = clean(b.title);
+    if (!title) return unprocessable(route, { title: 'Give the assignment a title.' });
+    if (title.length > 120) return unprocessable(route, { title: 'Keep the title under 120 characters.' });
+    const lessonError = this.lessonError(b.moduleId, b.lessonId);
+    if (lessonError) return unprocessable(route, { lessonId: lessonError });
+    const id = `as-${this.nextId++}`;
+    this.assignments.push({
+      id,
+      organizationId: org,
+      moduleId: b.moduleId,
+      lessonId: b.lessonId ?? null,
+      title,
+      brief: null,
+      submissionTypes: ['Text'],
+      rubric: [],
+      dueDate: null,
+      graceDays: 0,
+      allowLate: false,
+      requireApproval: false,
+      status: 'Draft',
+    });
+    return route.fulfill({ status: 201, json: { id } });
+  }
+
+  /** GET /curriculum/assignments/{id}. */
+  getAssignment(route: Route, org: string, id: string): Promise<void> {
+    const a = this.assignment(org, id);
+    if (!a) return route.fulfill({ status: 404 });
+    const m = this.curriculum.moduleOf(org, a.moduleId)!;
+    const t = this.curriculum.trackOf(m.trackId);
+    return route.fulfill({
+      json: {
+        id: a.id,
+        moduleId: m.id,
+        moduleTitle: m.title,
+        trackId: t.id,
+        trackName: t.name,
+        title: a.title,
+        lessonId: a.lessonId,
+        status: a.status,
+        brief: a.brief,
+        submissionTypes: a.submissionTypes,
+        rubric: a.rubric,
+        totalPoints: a.rubric.reduce((n, c) => n + c.points, 0),
+        dueDate: a.dueDate,
+        graceDays: a.graceDays,
+        allowLate: a.allowLate,
+        requireApproval: a.requireApproval,
+        lessons: this.curriculum.lessonsOf(m.id).map((l) => ({ id: l.id, position: l.position, title: l.title })),
+        programs: this.curriculum.followingNames(org, t.id),
+      },
+    });
+  }
+
+  /** PUT /curriculum/assignments/{id}: saved with the whole rubric, checked as AssignmentCommands checks it. */
+  updateAssignment(route: Route, org: string, id: string): Promise<void> {
+    const a = this.assignment(org, id);
+    if (!a) return route.fulfill({ status: 404 });
+    const b = route.request().postDataJSON() as {
+      title?: string;
+      lessonId?: string | null;
+      brief?: string;
+      submissionTypes?: string[];
+      rubric?: { description?: string; points?: number }[];
+      dueDate?: string | null;
+      graceDays?: number;
+      allowLate?: boolean;
+      requireApproval?: boolean;
+    };
+    const errors: Record<string, string> = {};
+    const title = clean(b.title);
+    if (!title) errors['title'] = 'Give the assignment a title.';
+    else if (title.length > 120) errors['title'] = 'Keep the title under 120 characters.';
+    const brief = clean(b.brief);
+    if (!brief) errors['brief'] = 'Describe the task.';
+    else if (brief.length > 5000) errors['brief'] = 'Keep the task under 5,000 characters.';
+    const ways: SubmissionType[] = ['Text', 'Photo', 'Link', 'File'];
+    const sent = b.submissionTypes ?? [];
+    if (!sent.length || !sent.every((t) => ways.includes(t as SubmissionType))) errors['submissionTypes'] = 'Choose at least one way to submit.';
+    const rubric = (b.rubric ?? []).map((c) => ({ description: clean(c.description), points: c.points ?? 0 }));
+    if (rubric.length > 10) errors['rubric'] = 'Keep the rubric to 10 criteria.';
+    else if (rubric.some((c) => !c.description || c.description.length > 200 || c.points < 1 || c.points > 100)) errors['rubric'] = 'Give each criterion a description and 1 to 100 points.';
+    const grace = b.graceDays ?? 0;
+    if (grace < 0 || grace > 14) errors['graceDays'] = 'Choose a grace period of up to 14 days.';
+    const lessonError = this.lessonError(a.moduleId, b.lessonId);
+    if (lessonError) errors['lessonId'] = lessonError;
+    if (Object.keys(errors).length) return unprocessable(route, errors);
+    Object.assign(a, {
+      title,
+      lessonId: b.lessonId ?? null,
+      brief,
+      submissionTypes: ways.filter((w) => sent.includes(w)),
+      rubric: rubric.map((c) => ({ description: c.description!, points: c.points })),
+      dueDate: b.dueDate ?? null,
+      graceDays: grace,
+      allowLate: !!b.allowLate,
+      requireApproval: !!b.requireApproval,
+    });
     return route.fulfill({ status: 204 });
   }
 }

@@ -1,6 +1,6 @@
 namespace PromiseHub.Application.Curriculum;
 
-/// <summary>One module for the module editor (L2-066 criterion 4): its fields, place in the track and the earlier modules it may require, its lessons and its quizzes (L2-073 criterion 1).</summary>
+/// <summary>One module for the module editor (L2-066 criterion 4): its fields, place in the track and the earlier modules it may require, its lessons, quizzes and assignments (L2-073, L2-074 criterion 1).</summary>
 public sealed record ModuleDetailDto(
     Guid Id,
     Guid TrackId,
@@ -15,4 +15,5 @@ public sealed record ModuleDetailDto(
     IReadOnlyList<ModuleRefDto> EarlierModules,
     IReadOnlyList<LessonSummaryDto> Lessons,
     IReadOnlyList<string> Programs,
-    IReadOnlyList<QuizSummaryDto> Quizzes);
+    IReadOnlyList<QuizSummaryDto> Quizzes,
+    IReadOnlyList<AssignmentSummaryDto> Assignments);

@@ -5,6 +5,8 @@ import { API_BASE_URL } from '../api-base-url';
 import { toLoad, toWrite } from '../http-results';
 import { LoadResult } from '../load-result';
 import { WriteOutcome } from '../write-outcome';
+import { AssignmentDetail } from './assignment-detail';
+import { AssignmentFields } from './assignment-fields';
 import { CurriculumApi } from './curriculum-api';
 import { ContentStatus } from './content-status';
 import { Curriculum } from './curriculum';
@@ -165,5 +167,27 @@ export class HttpCurriculumApi implements CurriculumApi {
     return toWrite(
       this.http.put<null>(`${this.baseUrl}/curriculum/quizzes/${id}/status`, { status }),
     );
+  }
+
+  createAssignment(
+    moduleId: string,
+    lessonId: string | null,
+    title: string,
+  ): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<{ id: string }>(`${this.baseUrl}/curriculum/assignments`, {
+        moduleId,
+        lessonId,
+        title,
+      }),
+    );
+  }
+
+  assignment(id: string): Observable<LoadResult<AssignmentDetail>> {
+    return toLoad(this.http.get<AssignmentDetail>(`${this.baseUrl}/curriculum/assignments/${id}`));
+  }
+
+  updateAssignment(id: string, fields: AssignmentFields): Observable<WriteOutcome> {
+    return toWrite(this.http.put<null>(`${this.baseUrl}/curriculum/assignments/${id}`, fields));
   }
 }

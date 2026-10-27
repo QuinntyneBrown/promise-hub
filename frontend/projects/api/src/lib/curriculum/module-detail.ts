@@ -1,3 +1,4 @@
+import type { AssignmentSummary } from './assignment-summary';
 import type { ContentStatus } from './content-status';
 import type { LessonSummary } from './lesson-summary';
 import type { ModuleRef } from './module-ref';
@@ -21,4 +22,6 @@ export interface ModuleDetail {
   programs: string[];
   /** The module's quizzes, by title. */
   quizzes: QuizSummary[];
+  /** The module's assignments, by title. */
+  assignments: AssignmentSummary[];
 }

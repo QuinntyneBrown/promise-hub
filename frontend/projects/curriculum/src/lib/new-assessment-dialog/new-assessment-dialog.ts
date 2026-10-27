@@ -49,6 +49,9 @@ export class NewAssessmentDialog {
   }
 
   private call(): Observable<WriteOutcome> {
-    return this.api.createQuiz(this.data.moduleId, this.lessonId || null, this.title);
+    const lessonId = this.lessonId || null;
+    return this.data.kind === 'quiz'
+      ? this.api.createQuiz(this.data.moduleId, lessonId, this.title)
+      : this.api.createAssignment(this.data.moduleId, lessonId, this.title);
   }
 }

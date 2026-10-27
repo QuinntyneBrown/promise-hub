@@ -12,3 +12,5 @@ export { QuizBuilderPage } from './lib/quiz-builder-page/quiz-builder-page';
 export { NewAssessmentDialog } from './lib/new-assessment-dialog/new-assessment-dialog';
 export { QuizQuestionDialog } from './lib/quiz-question-dialog/quiz-question-dialog';
 export { DeleteQuestionDialog } from './lib/delete-question-dialog/delete-question-dialog';
+export { AssignmentBuilderPage } from './lib/assignment-builder-page/assignment-builder-page';
+export { RubricCriterionDialog } from './lib/rubric-criterion-dialog/rubric-criterion-dialog';

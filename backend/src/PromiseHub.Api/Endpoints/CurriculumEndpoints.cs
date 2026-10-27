@@ -62,6 +62,12 @@ public static class CurriculumEndpoints
             (await handler.UpdateAsync(id, command, ct)).ToHttp());
         curriculum.MapDelete("/quiz-questions/{id:guid}", async (Guid id, QuestionCommands handler, CancellationToken ct) =>
             (await handler.DeleteAsync(id, ct)).ToHttp());
+        curriculum.MapPost("/assignments", async (CreateAssignmentCommand command, AssignmentCommands handler, CancellationToken ct) =>
+            (await handler.CreateAsync(command, ct)).ToHttp("/curriculum/assignments"));
+        curriculum.MapGet("/assignments/{id:guid}", async (Guid id, AssignmentHandler handler, CancellationToken ct) =>
+            await handler.HandleAsync(id, ct) is { } assignment ? Results.Ok(assignment) : Results.NotFound());
+        curriculum.MapPut("/assignments/{id:guid}", async (Guid id, SaveAssignmentCommand command, AssignmentCommands handler, CancellationToken ct) =>
+            (await handler.UpdateAsync(id, command, ct)).ToHttp());
         curriculum.MapPost("/lessons/{id:guid}/video", async (Guid id, HttpRequest request, LessonVideoHandler handler, LessonVideoOptions options, CancellationToken ct) =>
         {
             if (!request.HasFormContentType || request.ContentLength > options.MaxBytes + FormOverhead)

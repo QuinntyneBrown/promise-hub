@@ -10,6 +10,7 @@ import {
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import {
+  AssignmentSummary,
   CURRICULUM_API,
   LessonSummary,
   LoadResult,
@@ -210,6 +211,12 @@ export class ModuleEditorPage {
   protected quizMeta(q: QuizSummary): string {
     const where = q.lessonTitle ? `After ${q.lessonTitle}` : 'The whole module';
     return `Quiz · ${where} · ${q.questionCount} question${q.questionCount === 1 ? '' : 's'}`;
+  }
+
+  /** "Assignment · After Pick Up the Towel · 25 points". */
+  protected assignmentMeta(a: AssignmentSummary): string {
+    const where = a.lessonTitle ? `After ${a.lessonTitle}` : 'The whole module';
+    return `Assignment · ${where} · ${a.totalPoints} point${a.totalPoints === 1 ? '' : 's'}`;
   }
 
   protected newAssessment(m: ModuleDetail, kind: 'quiz' | 'assignment'): void {

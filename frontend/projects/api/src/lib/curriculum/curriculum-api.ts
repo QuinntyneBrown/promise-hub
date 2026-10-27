@@ -1,6 +1,8 @@
 import type { Observable } from 'rxjs';
 import type { LoadResult } from '../load-result';
 import type { WriteOutcome } from '../write-outcome';
+import type { AssignmentDetail } from './assignment-detail';
+import type { AssignmentFields } from './assignment-fields';
 import type { ContentStatus } from './content-status';
 import type { Curriculum } from './curriculum';
 import type { LessonDetail } from './lesson-detail';
@@ -39,4 +41,11 @@ export interface CurriculumApi {
   updateQuiz(id: string, settings: QuizSettings): Observable<WriteOutcome>;
   reorderQuestions(quizId: string, questionIds: string[]): Observable<WriteOutcome>;
   setQuizStatus(id: string, status: ContentStatus): Observable<WriteOutcome>;
+  createAssignment(
+    moduleId: string,
+    lessonId: string | null,
+    title: string,
+  ): Observable<WriteOutcome>;
+  assignment(id: string): Observable<LoadResult<AssignmentDetail>>;
+  updateAssignment(id: string, fields: AssignmentFields): Observable<WriteOutcome>;
 }
