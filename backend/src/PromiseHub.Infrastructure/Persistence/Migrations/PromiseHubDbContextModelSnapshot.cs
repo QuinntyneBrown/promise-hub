@@ -2107,6 +2107,56 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.ToTable("QuizAttempts");
                 });
 
+            modelBuilder.Entity("PromiseHub.Domain.Learning.Reflection", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Action")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("CreatedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("LessonId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("MembershipId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Mood")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("SavedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Shared")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(5000)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LessonId");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("MembershipId", "LessonId")
+                        .IsUnique();
+
+                    b.ToTable("Reflections");
+                });
+
             modelBuilder.Entity("PromiseHub.Domain.Learning.SubmissionEvent", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3827,6 +3877,27 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.HasOne("PromiseHub.Domain.Curriculum.Quiz", null)
                         .WithMany()
                         .HasForeignKey("QuizId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Learning.Reflection", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Curriculum.Lesson", null)
+                        .WithMany()
+                        .HasForeignKey("LessonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Organizations.Membership", null)
+                        .WithMany()
+                        .HasForeignKey("MembershipId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

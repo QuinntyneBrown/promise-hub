@@ -8,7 +8,7 @@ using PromiseHub.Domain.Organizations;
 namespace PromiseHub.Api.Endpoints;
 
 /// <summary>
-/// A youth's lessons and quizzes (L2-068 to L2-070, L2-075 to L2-078, ADR 0051, ADR 0055, ADR 0056): the Learning module, the Learn permission, then the consent gate (L2-056) and the
+/// A youth's lessons, quizzes and reflections (L2-068 to L2-070, L2-075 to L2-078, L2-089, ADR 0051, ADR 0055, ADR 0056): the Learning module, the Learn permission, then the consent gate (L2-056) and the
 /// placement gate (L2-060) on every endpoint. Locks and visibility are decided by LearnerProgress in the handlers.
 /// </summary>
 public static class LearningEndpoints
@@ -24,6 +24,9 @@ public static class LearningEndpoints
         learning.MapGet("/modules/{id:guid}", async (Guid id, ModuleViewHandler handler, CancellationToken ct) => (await handler.HandleAsync(id, ct)).ToHttp());
         learning.MapGet("/lessons/{id:guid}", async (Guid id, LessonViewHandler handler, CancellationToken ct) => (await handler.HandleAsync(id, ct)).ToHttp());
         learning.MapPost("/lessons/{id:guid}/complete", async (Guid id, LessonCompletion handler, CancellationToken ct) => (await handler.CompleteAsync(id, ct)).ToHttp());
+        learning.MapGet("/lessons/{id:guid}/reflection", async (Guid id, ReflectionHandler handler, CancellationToken ct) => (await handler.GetAsync(id, ct)).ToHttp());
+        learning.MapPut("/lessons/{id:guid}/reflection", async (Guid id, SaveReflectionRequest request, ReflectionHandler handler, CancellationToken ct) =>
+            (await handler.SaveAsync(id, request, ct)).ToHttp());
         learning.MapGet("/coding/{id:guid}", async (Guid id, CodingLessonHandler handler, CancellationToken ct) => (await handler.HandleAsync(id, ct)).ToHttp());
         learning.MapPut("/coding/{id:guid}/progress", async (Guid id, SaveCodingRequest request, CodingProgressCommand handler, CancellationToken ct) =>
             (await handler.SaveAsync(id, request, ct)).ToHttp());

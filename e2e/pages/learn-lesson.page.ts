@@ -35,6 +35,10 @@ export class LearnLessonPage extends BasePage {
     await this.page.getByRole('button', { name: 'A− smaller text' }).click();
   }
 
+  async writeReflection(): Promise<void> {
+    await this.page.getByRole('link', { name: 'Write your reflection' }).click();
+  }
+
   async markComplete(): Promise<void> {
     await this.page.getByRole('button', { name: 'Mark complete' }).click();
   }
