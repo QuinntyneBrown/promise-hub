@@ -11,3 +11,4 @@ export { LeaveGradeDialog } from './lib/leave-grade-dialog/leave-grade-dialog';
 export { QuizApprovalsPage } from './lib/quiz-approvals-page/quiz-approvals-page';
 export { ApproveQuizDialog } from './lib/approve-quiz-dialog/approve-quiz-dialog';
 export { ApproveAllQuizzesDialog } from './lib/approve-all-quizzes-dialog/approve-all-quizzes-dialog';
+export { CompetenciesPage } from './lib/competencies-page/competencies-page';

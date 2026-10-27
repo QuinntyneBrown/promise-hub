@@ -6,6 +6,26 @@ import type { FakeSubmission, FakeSubmissions } from './fake-submissions';
 
 const NOW = '2026-11-05T15:20:00Z';
 
+/** One competency of an organization's framework (L2-082). */
+export interface FakeCompetency {
+  id: string;
+  organizationId: string;
+  name: string;
+  description: string;
+}
+
+/** One assessment of a child on a competency, appended (ADR 0057). */
+export interface FakeAssessment {
+  childId: string;
+  competencyId: string;
+  level: string;
+  notes: string | null;
+  by: string;
+  at: string;
+}
+
+const LEVELS = ['NotStarted', 'Developing', 'Proficient', 'Mastered'];
+
 /** A mentor's youth accounts, by membership id with the youth's name (ADR 0057). */
 export type YouthAccounts = Map<string, string>;
 
@@ -181,5 +201,58 @@ export class FakeReviews {
     const waiting = this.quizzes.attempts.filter((t) => youth.has(t.membershipId) && t.status === 'AwaitingApproval');
     waiting.forEach((t) => this.approveAttempt(t, null));
     return route.fulfill({ json: { approved: waiting.length } });
+  }
+
+  /** The seeded frameworks, as DatabaseSeeder adds them. */
+  competencies: FakeCompetency[] = [
+    { id: 'cp-serves', organizationId: 'org-harbourview', name: 'Serves others', description: 'Notices what needs doing and helps without being asked.' },
+    { id: 'cp-speaks', organizationId: 'org-harbourview', name: 'Speaks up', description: 'Shares ideas in the group and says when something is wrong.' },
+    { id: 'cp-leads', organizationId: 'org-harbourview', name: 'Leads a small group', description: 'Guides a discussion and keeps a small group on track.' },
+    { id: 'cp-follows', organizationId: 'org-harbourview', name: 'Follows through', description: 'Finishes what they start and keeps their promises.' },
+    { id: 'cp-works', organizationId: 'org-harbourview', name: 'Works with others', description: 'Listens, takes turns and helps the group decide.' },
+    { id: 'cp-ng-kind', organizationId: 'org-northgate', name: 'Shows kindness', description: 'Includes others and helps when someone is left out.' },
+    { id: 'cp-ng-new', organizationId: 'org-northgate', name: 'Tries new things', description: 'Has a go at something new, even when it feels hard.' },
+    { id: 'cp-ng-works', organizationId: 'org-northgate', name: 'Works with others', description: 'Listens, takes turns and helps the group decide.' },
+  ];
+
+  readonly competencyAssessments: FakeAssessment[] = [];
+
+  /** Seeds an assessment, as if saved earlier. */
+  assess(a: FakeAssessment): void {
+    this.competencyAssessments.push(a);
+  }
+
+  private sheet(org: string, childId: string, name: string): object {
+    const items = this.competencies
+      .filter((c) => c.organizationId === org)
+      .map((c) => {
+        const a = this.competencyAssessments.filter((x) => x.childId === childId && x.competencyId === c.id).at(-1);
+        return { id: c.id, name: c.name, description: c.description, level: a?.level ?? 'NotStarted', notes: a?.notes ?? null, assessedBy: a?.by ?? null, assessedAt: a?.at ?? null };
+      });
+    return { childId, name, items, proficientOrMastered: items.filter((i) => i.level === 'Proficient' || i.level === 'Mastered').length, total: items.length };
+  }
+
+  /** GET /mentoring/youth/{childId}/competencies; FakeApi checked the child and scope. */
+  competencySheet(route: Route, org: string, childId: string, name: string): Promise<void> {
+    return route.fulfill({ json: this.sheet(org, childId, name) });
+  }
+
+  /** PUT /mentoring/youth/{childId}/competencies: appends an assessment for each changed competency. */
+  saveCompetencies(route: Route, org: string, childId: string, name: string, mentor: string, at: string): Promise<void> {
+    const items = ((route.request().postDataJSON() as { items: { competencyId: string; level: string; notes: string | null }[] }).items ?? []);
+    const errors: Record<string, string> = {};
+    items.forEach((i, n) => {
+      if (!this.competencies.some((c) => c.id === i.competencyId && c.organizationId === org)) errors['items'] = 'Assess only your organization’s competencies.';
+      if (!LEVELS.includes(i.level)) errors[`items.${n}.level`] = 'Choose a level.';
+      if ((i.notes?.trim().length ?? 0) > 2000) errors[`items.${n}.notes`] = 'Keep the note to 2,000 characters.';
+    });
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    for (const i of items) {
+      const notes = i.notes?.trim() || null;
+      const before = this.competencyAssessments.filter((x) => x.childId === childId && x.competencyId === i.competencyId).at(-1);
+      if ((before?.level ?? 'NotStarted') === i.level && (before?.notes ?? null) === notes) continue;
+      this.competencyAssessments.push({ childId, competencyId: i.competencyId, level: i.level, notes, by: mentor, at });
+    }
+    return route.fulfill({ json: this.sheet(org, childId, name) });
   }
 }

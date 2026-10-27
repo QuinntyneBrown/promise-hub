@@ -74,6 +74,8 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Learning.QuizAttempt> QuizAttempts => Set<Domain.Learning.QuizAttempt>();
     public DbSet<Domain.Learning.AssignmentSubmission> AssignmentSubmissions => Set<Domain.Learning.AssignmentSubmission>();
     public DbSet<Domain.Learning.SubmissionEvent> SubmissionEvents => Set<Domain.Learning.SubmissionEvent>();
+    public DbSet<Domain.Mentoring.Competency> Competencies => Set<Domain.Mentoring.Competency>();
+    public DbSet<Domain.Mentoring.CompetencyAssessment> CompetencyAssessments => Set<Domain.Mentoring.CompetencyAssessment>();
     public DbSet<DataRequest> DataRequests => Set<DataRequest>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
     public DbSet<Domain.Incidents.IncidentFollowUp> IncidentFollowUps => Set<Domain.Incidents.IncidentFollowUp>();
@@ -259,6 +261,23 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(a => a.SubmittedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.HasOne<Membership>().WithMany().HasForeignKey(a => a.MembershipId);
             e.HasOne<Domain.Curriculum.Assignment>().WithMany().HasForeignKey(a => a.AssignmentId);
+        });
+        modelBuilder.Entity<Domain.Mentoring.Competency>(e =>
+        {
+            e.HasIndex(c => new { c.OrganizationId, c.Position });
+            e.Property(c => c.Name).HasMaxLength(Domain.Mentoring.Competency.MaximumName);
+            e.Property(c => c.Description).HasMaxLength(Domain.Mentoring.Competency.MaximumDescription);
+        });
+        modelBuilder.Entity<Domain.Mentoring.CompetencyAssessment>(e =>
+        {
+            e.HasIndex(a => new { a.ChildId, a.CompetencyId });
+            e.Property(a => a.Level).HasConversion<string>().HasMaxLength(20);
+            e.Property(a => a.Notes).HasMaxLength(Domain.Mentoring.CompetencyAssessment.MaximumNotes);
+            e.Property(a => a.AssessorName).HasMaxLength(200);
+            e.Property(a => a.At).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.HasOne<Domain.Households.Child>().WithMany().HasForeignKey(a => a.ChildId);
+            e.HasOne<Domain.Mentoring.Competency>().WithMany().HasForeignKey(a => a.CompetencyId);
+            e.HasOne<Membership>().WithMany().HasForeignKey(a => a.AssessorMembershipId);
         });
         modelBuilder.Entity<Domain.Learning.SubmissionEvent>(e =>
         {

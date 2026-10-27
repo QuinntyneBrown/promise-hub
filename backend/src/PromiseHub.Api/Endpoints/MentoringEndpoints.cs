@@ -27,6 +27,16 @@ public static class MentoringEndpoints
             var (status, cohort) = await handler.HandleAsync(programId, ct);
             return cohort is not null ? Results.Ok(cohort) : new Application.Result(status).ToHttp();
         });
+        mentoring.MapGet("/youth/{childId:guid}/competencies", async (Guid childId, CompetenciesHandler handler, CancellationToken ct) =>
+        {
+            var (result, sheet) = await handler.GetAsync(childId, ct);
+            return sheet is not null ? Results.Ok(sheet) : result.ToHttp();
+        });
+        mentoring.MapPut("/youth/{childId:guid}/competencies", async (Guid childId, SaveCompetenciesRequest request, CompetenciesHandler handler, CancellationToken ct) =>
+        {
+            var (result, sheet) = await handler.SaveAsync(childId, request, ct);
+            return sheet is not null ? Results.Ok(sheet) : result.ToHttp();
+        });
         var reviews = mentoring.MapGroup("").RequireModule(ModuleId.Learning);
         reviews.MapGet("/reviews", (ReviewQueueHandler handler, CancellationToken ct) => handler.HandleAsync(ct));
         reviews.MapGet("/submissions/{id:guid}", async (Guid id, SubmissionReviewHandler handler, CancellationToken ct) => (await handler.HandleAsync(id, ct)).ToHttp());

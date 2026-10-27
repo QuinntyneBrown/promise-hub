@@ -669,6 +669,8 @@ export class FakeApi {
     ['POST', /^\/api\/mentoring\/quiz-attempts\/(?<id>[^/]+)\/approve$/, (route, p) => this.mentorReviews(route, (_m, youth) => this.reviews.approveQuiz(route, youth, p['id']!))],
     ['POST', /^\/api\/mentoring\/submissions\/(?<id>[^/]+)\/grade$/, (route, p) => this.mentorReviews(route, (m, youth) => this.reviews.grade(route, youth, p['id']!, m.personName))],
     ['GET', /^\/api\/mentoring\/youth\/(?<id>[^/]+)$/, (route, p) => this.mentorYouthRecord(route, p['id']!)],
+    ['GET', /^\/api\/mentoring\/youth\/(?<id>[^/]+)\/competencies$/, (route, p) => this.mentorCompetencies(route, p['id']!, false)],
+    ['PUT', /^\/api\/mentoring\/youth\/(?<id>[^/]+)\/competencies$/, (route, p) => this.mentorCompetencies(route, p['id']!, true)],
     ['GET', /^\/api\/mentoring\/cohorts\/(?<id>[^/]+)$/, (route, p) => this.mentorCohort(route, p['id']!)],
     ['GET', /^\/api\/programs\/(?<id>[^/]+)\/mentoring$/, (route, p) => this.cohortMentoring(route, p['id']!)],
     ['PUT', /^\/api\/programs\/(?<id>[^/]+)\/mentors$/, (route, p) => this.setCohortMentors(route, p['id']!)],
@@ -1199,6 +1201,22 @@ export class FakeApi {
     return route.fulfill({
       json: { id: child.id, name: row.name, preferredName: done?.preferredName ?? null, pronouns: done?.pronouns ?? null, age: row.age, school: child.school, programs: row.programs, mentor, guardians, recentAttendance },
     });
+  }
+
+  /** GET and PUT /mentoring/youth/{childId}/competencies (L2-082): Mentoring on; 404 outside the organization, 403 (audited) outside the scope. */
+  private async mentorCompetencies(route: Route, childId: string, save: boolean): Promise<void> {
+    const m = await this.participantModuleCaller(route, 'Mentoring', can.mentorYouth);
+    if (!m) return;
+    const child = this.households.filter((h) => h.organizationId === m.organizationId).flatMap((h) => h.children).find((c) => c.id === childId);
+    if (!child) return route.fulfill({ status: 404 });
+    if (!this.mentorScope(m).youth.some((c) => c.id === childId)) {
+      this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'AccessDenied', record: 'Child', summary: 'Competencies outside the mentor’s youth', device: null });
+      return route.fulfill({ status: 403, json: { code: 'forbidden' } });
+    }
+    const name = `${child.firstName} ${child.lastName}`;
+    return save
+      ? this.reviews.saveCompetencies(route, m.organizationId, childId, name, m.personName, NOW.toISOString())
+      : this.reviews.competencySheet(route, m.organizationId, childId, name);
   }
 
   /** GET /mentoring/cohorts/{programId} (L2-065): a cohort on the mentor's team; 404 outside the organization, 403 (audited) otherwise. */

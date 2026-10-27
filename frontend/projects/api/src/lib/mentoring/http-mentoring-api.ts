@@ -14,6 +14,8 @@ import { MentoringApi } from './mentoring-api';
 import { GradeOutcome } from './grade-outcome';
 import { GradeRequest } from './grade-request';
 import { ApproveAllOutcome } from './approve-all-outcome';
+import { CompetencyChange } from './competency-change';
+import { CompetencySheet } from './competency-sheet';
 import { QuizApprovals } from './quiz-approvals';
 import { ReviewQueue } from './review-queue';
 import { SubmissionReview } from './submission-review';
@@ -85,6 +87,25 @@ export class HttpMentoringApi implements MentoringApi {
         map((body): ApproveAllOutcome => ({ status: 'saved', approved: body.approved })),
         catchError(() => of<ApproveAllOutcome>({ status: 'error' })),
       );
+  }
+
+  competencies(childId: string): Observable<LoadResult<CompetencySheet>> {
+    return toLoad(
+      this.http.get<CompetencySheet>(
+        `${this.baseUrl}/mentoring/youth/${encodeURIComponent(childId)}/competencies`,
+      ),
+    );
+  }
+
+  saveCompetencies(childId: string, items: CompetencyChange[]): Observable<WriteOutcome> {
+    return toWrite(
+      this.http
+        .put<CompetencySheet>(
+          `${this.baseUrl}/mentoring/youth/${encodeURIComponent(childId)}/competencies`,
+          { items },
+        )
+        .pipe(map(() => null)),
+    );
   }
 
   cohort(programId: string): Observable<LoadResult<CohortMentoring>> {

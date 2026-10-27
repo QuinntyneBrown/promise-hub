@@ -190,6 +190,7 @@ public static class DependencyInjection
         services.AddScoped<Mentoring.SubmissionReviewHandler>();
         services.AddScoped<Mentoring.GradeSubmissionHandler>();
         services.AddScoped<Mentoring.QuizApprovalHandler>();
+        services.AddScoped<Mentoring.CompetenciesHandler>();
         services.AddScoped<Website.PublicWebsiteHandler>();
         return services;
     }

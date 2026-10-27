@@ -9,6 +9,8 @@ import type { MentorYouthRecord } from './mentor-youth-record';
 import type { GradeOutcome } from './grade-outcome';
 import type { GradeRequest } from './grade-request';
 import type { ApproveAllOutcome } from './approve-all-outcome';
+import type { CompetencyChange } from './competency-change';
+import type { CompetencySheet } from './competency-sheet';
 import type { QuizApprovals } from './quiz-approvals';
 import type { ReviewQueue } from './review-queue';
 import type { SubmissionReview } from './submission-review';
@@ -34,6 +36,10 @@ export interface MentoringApi {
   /** Approves the auto-score, or the override (0 to 100) when given; invalid carries { override }. */
   approveQuiz(attemptId: string, override: number | null): Observable<WriteOutcome>;
   approveAllQuizzes(): Observable<ApproveAllOutcome>;
+  /** One of the caller's youth's competencies; forbidden when the youth is not theirs. */
+  competencies(childId: string): Observable<LoadResult<CompetencySheet>>;
+  /** Saves every competency's level and note; only changed ones become new assessments. */
+  saveCompetencies(childId: string, items: CompetencyChange[]): Observable<WriteOutcome>;
   /** A cohort's team, each roster child's mentor and the active mentors; only while Mentoring is on. */
   cohort(programId: string): Observable<LoadResult<CohortMentoring>>;
   assignYouth(

@@ -59,4 +59,8 @@ export class MentorYouthDetailPage extends BasePage {
   async apiStatus(childId: string): Promise<number> {
     return this.page.evaluate(async (id) => (await fetch(`/api/mentoring/youth/${id}`)).status, childId);
   }
+
+  async openCompetencies(): Promise<void> {
+    await this.page.getByRole('link', { name: 'Competencies' }).click();
+  }
 }

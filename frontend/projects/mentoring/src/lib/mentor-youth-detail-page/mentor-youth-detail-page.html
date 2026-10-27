@@ -14,7 +14,11 @@
   </div>
 } @else if (r.status === 'loaded') {
   @let y = r.value;
-  <ph-page-header [title]="y.name" [subtitle]="subtitle(y)" />
+  <ph-page-header [title]="y.name" [subtitle]="subtitle(y)">
+    <ph-button icon="sparkle" [link]="['/mentoring/youth', y.id, 'competencies']"
+      >Competencies</ph-button
+    >
+  </ph-page-header>
   <div class="split">
     <div class="stack">
       <ph-card title="About">
