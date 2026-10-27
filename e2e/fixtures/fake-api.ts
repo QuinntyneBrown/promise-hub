@@ -752,7 +752,7 @@ export class FakeApi {
     });
   }
 
-  /** GET /learning/lessons: youth work, refused with 403 consent-required until a guardian consents (L2-056, L2-057). */
+  /** GET /learning/lessons: youth work, refused with 403 consent-required until a guardian consents (L2-056, L2-057), then no-cohort until placed (L2-060). */
   private async lessons(route: Route): Promise<void> {
     const m = await this.participantModuleCaller(route, 'Learning', can.learn);
     if (!m) return;
@@ -760,6 +760,8 @@ export class FakeApi {
     if (childId && this.consentRequired(m.organizationId, childId) && this.consentStatusName(childId) !== 'Given') {
       return route.fulfill({ status: 403, json: { code: 'consent-required', consentAge: this.consentPolicyOf(m.organizationId).consentAge } });
     }
+    // Program content stays locked until the youth is placed in a program (L2-060, ADR 0047).
+    if (!this.placementOf(m)) return route.fulfill({ status: 403, json: { code: 'no-cohort' } });
     return route.fulfill({ json: { lessons: [] } });
   }
 

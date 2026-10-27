@@ -27,6 +27,33 @@
       </ph-empty-state>
     </ph-card>
   </div>
+} @else if (r.status === 'no-cohort') {
+  <div class="stack">
+    @if (resumeStep(); as step) {
+      <ph-alert
+        tone="info"
+        title="Finish setting up"
+        [text]="'You stopped at step ' + step + ' of 3.'"
+        data-testid="resume-setup"
+      >
+        <ph-button variant="primary" link="/learning/welcome">Pick up where I left off</ph-button>
+      </ph-alert>
+    }
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="sparkle"
+        title="You’re not in a program yet"
+        [text]="
+          'Welcome' +
+          (name() ? ', ' + name() : '') +
+          '! Lessons, badges and your journey open the moment program staff add you to a program. Hang tight, it’s usually quick.'
+        "
+      >
+        <p phEmptyStateDetail class="hint">Waiting to be added</p>
+        <ph-button icon="refresh" (click)="reload()">Check again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  </div>
 } @else if (r.status === 'consent-required') {
   <div class="stack" data-testid="consent-gate">
     @if (a?.status === 'error' || a?.status === 'forbidden') {

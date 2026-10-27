@@ -32,11 +32,13 @@ export class HttpLearningApi implements LearningApi {
         of<LessonsResult>(
           error.status === 403 && error.error?.code === 'consent-required'
             ? { status: 'consent-required', consentAge: error.error?.consentAge ?? 18 }
-            : error.status === 404
-              ? { status: 'not-found' }
-              : error.status === 403
-                ? { status: 'forbidden' }
-                : { status: 'error' },
+            : error.status === 403 && error.error?.code === 'no-cohort'
+              ? { status: 'no-cohort' }
+              : error.status === 404
+                ? { status: 'not-found' }
+                : error.status === 403
+                  ? { status: 'forbidden' }
+                  : { status: 'error' },
         ),
       ),
     );

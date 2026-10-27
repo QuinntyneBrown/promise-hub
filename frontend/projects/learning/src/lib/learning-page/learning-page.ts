@@ -27,6 +27,7 @@ import { Subject, startWith, switchMap } from 'rxjs';
   imports: [PhAlert, PhButton, PhCard, PhEmptyState, PhPageHeader, PhSkeleton],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './learning-page.html',
+  styleUrl: './learning-page.css',
 })
 export class LearningPage {
   private readonly api = inject(LEARNING_API);
@@ -56,6 +57,12 @@ export class LearningPage {
       }
       this.setup.set(setup);
     });
+  }
+
+  /** The name the youth goes by, once the setup has loaded. */
+  protected name(): string | null {
+    const s = this.setup();
+    return s?.status === 'loaded' ? s.value.preferredName : null;
   }
 
   /** The step an unfinished setup stopped at, or null. */
