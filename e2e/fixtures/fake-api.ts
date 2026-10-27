@@ -1,6 +1,7 @@
 import type { Page, Route } from '@playwright/test';
 import { type FakeChild, type FakeGuardian, type FakeHousehold, ageOf, hasMedicalFlag, medicalFlag, reachable, seedHouseholds } from './households';
 import { FakeCurriculum } from './fake-curriculum';
+import { FakeLearning } from './fake-learning';
 import { type FakeEvent, type FakeProgram, NOW, seedEvents, seedPrograms } from './programs';
 import { type Membership, type ModuleId, moduleCatalog, memberships, organizations, seededMfaCode, seededPassword } from './seed';
 
@@ -449,6 +450,9 @@ export class FakeApi {
   /** Curriculum authoring state (tracks, modules, lessons); tests call its helpers, such as clear. */
   readonly curriculumState = new FakeCurriculum(() => this.programs);
 
+  /** A youth's lessons and progress (L2-068 to L2-070); tests mark lessons done with learningState.complete. */
+  readonly learningState = new FakeLearning(this.curriculumState);
+
   /** Sets the modules on for an organization, as Settings › Modules would. */
   setModules(organizationId: string, on: ModuleId[]): void {
     this.modules.set(organizationId, on);
@@ -476,7 +480,15 @@ export class FakeApi {
   private readonly routes: [string, RegExp, Handler][] = [
     ['GET', /^\/api\/me$/, (route) => this.me(route)],
     ['GET', /^\/api\/learning\/me$/, (route) => this.learner(route)],
-    ['GET', /^\/api\/learning\/lessons$/, (route) => this.lessons(route)],
+    ['GET', /^\/api\/learning\/home$/, (route) => this.youthWork(route, (m, programs) => this.learningState.home(route, m.id, programs))],
+    ['GET', /^\/api\/learning\/tracks\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.track(route, m.id, programs, p['id']!))],
+    ['GET', /^\/api\/learning\/modules\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.module(route, m.id, programs, p['id']!))],
+    ['GET', /^\/api\/learning\/lessons\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.lesson(route, m.id, programs, p['id']!))],
+    ['GET', /^\/api\/learning\/lessons\/(?<id>[^/]+)\/video$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.video(route, m.id, programs, p['id']!))],
+    ['GET', /^\/api\/learning\/coding\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.coding(route, m.id, programs, p['id']!))],
+    ['PUT', /^\/api\/learning\/coding\/(?<id>[^/]+)\/progress$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.saveCoding(route, m.id, programs, p['id']!))],
+    ['POST', /^\/api\/learning\/coding\/(?<id>[^/]+)\/submission$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.submit(route, m.id, programs, p['id']!))],
+    ['POST', /^\/api\/learning\/lessons\/(?<id>[^/]+)\/complete$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.completeLesson(route, m.id, programs, p['id']!))],
     ['POST', /^\/api\/learning\/consent-request$/, (route) => this.askGuardian(route)],
     ['GET', /^\/api\/learning\/onboarding$/, (route) => this.onboarding(route)],
     ['PUT', /^\/api\/learning\/onboarding$/, (route) => this.saveOnboardingStep(route)],
@@ -779,17 +791,23 @@ export class FakeApi {
     });
   }
 
-  /** GET /learning/lessons: youth work, refused with 403 consent-required until a guardian consents (L2-056, L2-057), then no-cohort until placed (L2-060). */
-  private async lessons(route: Route): Promise<void> {
-    const m = await this.participantModuleCaller(route, 'Learning', can.learn);
+  /**
+   * Every youth-work endpoint (L2-068 to L2-070): refused with 403 consent-required until a guardian consents (L2-056, L2-057),
+   * then no-cohort until placed (L2-060); the handler gets the programs the youth is placed in.
+   */
+  private async youthWork(route: Route, handle: (m: Membership, programs: FakeProgram[]) => Promise<void>): Promise<void> {
+    const m = await this.consentedYouth(route);
     if (!m) return;
+    const programs = this.placementsOf(m);
+    if (!programs.length) return route.fulfill({ status: 403, json: { code: 'no-cohort' } });
+    return handle(m, programs);
+  }
+
+  /** Every active program of the youth's organization with their child on the roster. */
+  private placementsOf(m: Membership): FakeProgram[] {
     const childId = this.youthLinks.get(m.id);
-    if (childId && this.consentRequired(m.organizationId, childId) && this.consentStatusName(childId) !== 'Given') {
-      return route.fulfill({ status: 403, json: { code: 'consent-required', consentAge: this.consentPolicyOf(m.organizationId).consentAge } });
-    }
-    // Program content stays locked until the youth is placed in a program (L2-060, ADR 0047).
-    if (!this.placementOf(m)) return route.fulfill({ status: 403, json: { code: 'no-cohort' } });
-    return route.fulfill({ json: { lessons: [] } });
+    if (!childId) return [];
+    return this.programs.filter((p) => p.organizationId === m.organizationId && p.status === 'Active' && p.roster.includes(childId));
   }
 
   /** The caller for a Learning endpoint that a youth without consent in force is refused (L2-056); null when answered already. */

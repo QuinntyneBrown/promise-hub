@@ -1,0 +1,43 @@
+@startuml
+title UML sequence behaviour — Streaming and seeking a lesson video
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Youth (Sofía)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "LessonPage / PhVideoPlayer" as page
+  participant "LearningApi" as lapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "LearningEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "LessonVideoStream" as h
+  participant "LearnerProgress" as prog
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+  participant "IFileStore" as fs
+end box
+actor -> page : opens Pick Up the Towel
+page -> ep : GET /learning/lessons/{id}/video (session cookie; Range: bytes=0-)
+ep -> h : OpenAsync(id)
+h -> prog : visible? unlocked? (L2-068 c3 to c7)
+alt invisible or no video
+  ep --> page : 404
+else locked
+  ep --> page : 403 locked
+else
+  h -> db : VideoKey, VideoContentType
+  h -> fs : OpenReadAsync(key)
+  ep --> page : 206 Partial Content (L2-069 c3)
+end
+actor -> page : seeks to 3:10
+page -> ep : GET … Range: bytes=N-
+ep --> page : 206 from N
+alt network or decode error
+  page --> actor : "The video couldn’t load", Retry video; text stays (c3)
+end
+@enduml

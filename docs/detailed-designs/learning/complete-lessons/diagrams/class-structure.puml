@@ -1,0 +1,41 @@
+@startuml
+title Class structure — Complete a lesson
+skinparam classAttributeIconSize 0
+class Lesson <<entity>> {
+  Kind : LessonKind
+  Title : string
+  Reading : string?
+  Passage : string?
+  Body : string?
+  LeaderNotes : string?
+}
+enum LessonKind {
+  Reading
+  Scripture
+  Coding
+  Project
+}
+class LessonProgress <<entity>> {
+  MembershipId : Guid
+  LessonId : Guid
+  CompletedAt : DateTimeOffset
+}
+class LessonViewHandler {
+  HandleAsync(id) : Outcome<LessonViewDto>
+}
+class LessonCompletion {
+  CompleteAsync(id) : Outcome<CompletionDto>
+}
+class LessonViewDto <<record>> {
+  Kind, Title, Reading, Passage
+  Objectives[], Body, Prompts[]
+  Position, LessonCount, HasVideo, Done
+  Next : LessonRef?
+}
+class LearnerProgress
+Lesson --> LessonKind
+LessonViewHandler --> LearnerProgress
+LessonViewHandler ..> LessonViewDto
+LessonCompletion --> LearnerProgress
+LessonCompletion --> LessonProgress
+@enduml

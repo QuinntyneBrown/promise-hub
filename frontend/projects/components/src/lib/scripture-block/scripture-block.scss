@@ -1,0 +1,30 @@
+:host {
+  display: block;
+}
+.scripture {
+  margin: 0;
+  padding: var(--space-4) var(--space-5);
+  border-inline-start: var(--border-width-thick) solid var(--color-accent);
+  border-radius: var(--radius-md);
+  background: var(--color-accent-subtle);
+}
+.text {
+  margin: 0;
+  font: var(--text-body-lg);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-fg-default);
+  overflow-wrap: anywhere;
+}
+.scripture--lg .text {
+  font-size: var(--font-size-xl);
+}
+.scripture--xl .text {
+  font-size: var(--font-size-2xl);
+}
+.reference {
+  display: block;
+  margin-top: var(--space-2);
+  font: var(--text-label);
+  font-style: normal;
+  color: var(--color-fg-accent);
+}

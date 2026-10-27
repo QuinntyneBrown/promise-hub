@@ -1,7 +1,7 @@
 import { expect, type Locator } from '@playwright/test';
 import { BasePage } from './base.page';
 
-/** Learning, the youth's lessons (mock: learning). */
+/** Learning, the youth’s home: where she left off, progress and tracks (mock: learn-home). */
 export class LearningPage extends BasePage {
   async open(): Promise<void> {
     await super.open('/learning');
@@ -59,8 +59,38 @@ export class LearningPage extends BasePage {
     await this.page.getByRole('link', { name: 'Pick up where I left off' }).click();
   }
 
+  /** The Learning home's tracks card (mock: learn-home): shown once lessons open. */
+  get yourTracks(): Locator {
+    return this.page.getByRole('heading', { name: 'Your tracks' });
+  }
+
+  /** One track on the home, by name. */
+  track(name: string): Locator {
+    return this.page.getByRole('link', { name: new RegExp(name) });
+  }
+
+  get continueCard(): Locator {
+    return this.page.getByRole('region', { name: 'Continue where you left off' });
+  }
+
+  async continueLesson(): Promise<void> {
+    await this.continueCard.getByRole('link', { name: 'Continue lesson' }).click();
+  }
+
+  get overall(): Locator {
+    return this.page.getByRole('progressbar', { name: 'Your lessons' });
+  }
+
+  get greeting(): Locator {
+    return this.page.locator('ph-page-header').getByText(/^Hi, /);
+  }
+
+  get caughtUp(): Locator {
+    return this.page.getByRole('heading', { name: 'You’re all caught up' });
+  }
+
   /** What the API answers this signed-in person for their lessons. */
   async lessonsStatus(): Promise<number> {
-    return this.page.evaluate(async () => (await fetch('/api/learning/lessons')).status);
+    return this.page.evaluate(async () => (await fetch('/api/learning/home')).status);
   }
 }

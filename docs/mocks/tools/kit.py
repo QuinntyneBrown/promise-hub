@@ -149,6 +149,10 @@ ICONS = {
     "language": '<path d="M4 5h9M8.5 3v2M11 5c-1 4-4 7-7 9M6 8c1.5 3 4 5 7 6M13 20l4-10 4 10M14.5 17h5"/>',
     "pin": '<path d="M12 17v5M8 7h8l-1 6 3 2H6l3-2z"/><path d="M9 2h6v5H9z"/>',
     "id-card": '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16a3 3 0 0 1 6 0M15 10h3M15 14h3"/>',
+    # Learning (prompt 57): lesson kinds and the video player.
+    "book": '<path d="M4 4h6a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4zM20 4h-6a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h7z"/>',
+    "code": '<path d="m8 8-5 4 5 4M16 8l5 4-5 4M14 4l-4 16"/>',
+    "play": '<path d="M7 4v16l13-8z"/>',
 }
 
 
@@ -509,7 +513,7 @@ TABBAR = [("today", "Today", "home"), ("check-in", "Check-in", "clipboard"), ("f
 
 # Participant roles (ADR 0043): their own sections only, each shown while its module is on. No search, no Settings.
 NAV_ROLE = {
-    "youth": [("today", "Today", "home", "today"), ("learning", "Learning", "star", "learning")],
+    "youth": [("today", "Today", "home", "today"), ("learn-home", "Learning", "star", "learning")],
     "mentor": [("today", "Today", "home", "today"), ("mentor-dashboard", "Mentoring", "users", "mentor-dashboard")],
     "volunteer": [("today", "Today", "home", "today"), ("check-in", "Check-in", "clipboard", "check-in")],
 }
@@ -531,7 +535,7 @@ def topbar(current: str, user: dict, *, unread: int = 2, kind: str = "page", men
     links = []
     participant = role in NAV_ROLE
     for sid, label, _ic, cur in (NAV_ROLE[role] if participant else NAV_STAFF):
-        if modules is not None and sid not in modules:
+        if modules is not None and cur not in modules:
             continue
         a = ' aria-current="page"' if cur == current else ""
         md = " nav-link--md" if sid in ("programs", "messages", "reports") else ""
@@ -554,10 +558,10 @@ def topbar(current: str, user: dict, *, unread: int = 2, kind: str = "page", men
 def tabbar(current: str, kind: str = "page", *, checkin_badge: int = 0, modules: list | None = None, role: str = "staff") -> str:
     items = []
     participant = role in NAV_ROLE
-    for sid, label, ic in ([(i[0], i[1], i[2]) for i in NAV_ROLE[role]] if participant else TABBAR):
-        if modules is not None and sid not in modules:
+    for sid, label, ic, cur in ([(i[0], i[1], i[2], i[3]) for i in NAV_ROLE[role]] if participant else [(t[0], t[1], t[2], t[0]) for t in TABBAR]):
+        if modules is not None and cur not in modules:
             continue
-        a = ' aria-current="page"' if sid == current else ""
+        a = ' aria-current="page"' if cur == current else ""
         b = f'<span class="badge badge--count" aria-label="{checkin_badge} not checked in">{checkin_badge}</span>' if (sid == "check-in" and checkin_badge) else ""
         items.append(f'<a href="{rel(kind, "page", sid)}"{a}>{icon(ic)}{esc(label)}{b}</a>')
     items.append(f'<button type="button" aria-haspopup="dialog" aria-expanded="false" data-href="{rel(kind, "dialog", "main-menu", role if participant else "default")}">{icon("menu")}More</button>')

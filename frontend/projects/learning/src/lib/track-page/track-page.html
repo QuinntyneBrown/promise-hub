@@ -1,0 +1,82 @@
+@let r = result();
+<ph-breadcrumb
+  [items]="[
+    { label: 'Learning', link: '/learning' },
+    { label: r?.status === 'loaded' ? r.value.name : 'Track' },
+  ]"
+/>
+@if (r === null) {
+  <ph-page-header title="Track" />
+  <div aria-busy="true" aria-label="Loading modules">
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (r.status === 'loaded') {
+  @let t = r.value;
+  <ph-page-header [title]="t.name" [subtitle]="t.description" />
+  <div class="stack">
+    @if (t.tracks.length > 1) {
+      <ph-button-group
+        label="Your tracks"
+        [options]="options(t)"
+        [value]="t.id"
+        (choose)="switchTo($event)"
+      />
+    }
+    @if (t.modules.length) {
+      <ph-card title="Track progress">
+        <ph-progress-bar
+          [value]="t.completedLessons"
+          [max]="t.totalLessons"
+          [label]="t.name"
+          [caption]="t.completedLessons + ' of ' + t.totalLessons + ' lessons'"
+        />
+      </ph-card>
+      <ph-card title="Modules" [flush]="true">
+        <ph-list label="Modules, in order">
+          @for (m of t.modules; track m.id; let i = $index) {
+            <ph-list-item
+              [title]="i + 1 + '. ' + m.title"
+              [meta]="meta(m)"
+              [link]="m.status === 'locked' ? null : ['/learning/modules', m.id]"
+            >
+              <ph-badge [tone]="tone[m.status]">{{ label[m.status] }}</ph-badge>
+            </ph-list-item>
+          }
+        </ph-list>
+      </ph-card>
+    } @else {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="programs"
+          title="No modules published yet"
+          text="Your program team is still setting up this track. Check back soon."
+        >
+          <ph-button link="/learning">Back to Learning</ph-button>
+        </ph-empty-state>
+      </ph-card>
+    }
+  </div>
+} @else if (r.status === 'not-found') {
+  <ph-page-header title="Track" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="search"
+      title="We can’t find that track"
+      text="It may not be published yet, or your program doesn’t follow it."
+    >
+      <ph-button link="/learning">Back to Learning</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-page-header title="Track" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load this track"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}

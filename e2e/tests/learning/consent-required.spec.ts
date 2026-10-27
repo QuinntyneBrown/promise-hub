@@ -19,7 +19,7 @@ test.describe('Consent required', () => {
 
     await learning.expectOpen();
     await expect(learning.consentRequired).toBeVisible();
-    await expect(learning.emptyState).toHaveCount(0);
+    await expect(learning.yourTracks).toHaveCount(0);
     expect(await learning.lessonsStatus()).toBe(403);
     await learning.expectAccessible();
     await learning.expectNoHorizontalScroll();
@@ -46,7 +46,7 @@ test.describe('Consent required', () => {
     api.giveConsent('c-sofia');
     await learning.checkAgain();
 
-    await expect(learning.emptyState).toBeVisible();
+    await expect(learning.yourTracks).toBeVisible();
     expect(await learning.lessonsStatus()).toBe(200);
   });
 
@@ -92,7 +92,7 @@ test.describe('An adult youth', () => {
 
     await learning.open();
 
-    await expect(learning.emptyState).toBeVisible();
+    await expect(learning.yourTracks).toBeVisible();
     await expect(learning.consentRequired).toHaveCount(0);
   });
 });

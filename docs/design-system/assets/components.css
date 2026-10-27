@@ -1815,3 +1815,38 @@ main.container > .steps { width: 100%; max-width: none; }
 /* Org switcher inside the staff top bar: the brand name steps aside for the organization. */
 .topbar:has(.org-switcher) .topbar__brand-name { display: none; }
 .topbar .org-switcher { margin-inline-start: calc(-1 * var(--space-2)); }
+
+/* ---------------------------------------------------------------- Learning (prompt 57, ADR 0051)
+   Button group: one choice pressed among related views (a youth's tracks). Each item is a real button with aria-pressed. */
+.button-group { display: inline-flex; flex-wrap: wrap; gap: var(--space-1); padding: var(--space-1); border-radius: var(--radius-full); background: var(--color-bg-subtle); max-width: 100%; }
+.button-group > .btn { --btn-height: var(--control-height-sm); border-radius: var(--radius-full); border-color: transparent; background: transparent; color: var(--color-fg-muted); box-shadow: none; }
+.button-group > .btn:hover { background: var(--color-bg-subtle-hover); color: var(--color-fg-default); }
+.button-group > .btn[aria-pressed="true"] { background: var(--color-bg-surface); color: var(--color-fg-default); box-shadow: var(--shadow-1); }
+.button-group--block { display: flex; }
+.button-group--block > .btn { flex: 1 1 0; }
+@media (forced-colors: active) { .button-group > .btn[aria-pressed="true"] { border: var(--border-width-thick) solid Highlight; } }
+
+/* Scripture block: a quoted passage with its reference, read at the lesson's text size. */
+.scripture { margin: 0; padding: var(--space-4) var(--space-5); border-inline-start: var(--border-width-thick) solid var(--color-accent); border-radius: var(--radius-md); background: var(--color-accent-subtle); }
+.scripture__text { margin: 0; font: var(--text-body-lg); line-height: var(--line-height-relaxed); color: var(--color-fg-default); }
+.scripture__reference { display: block; margin-top: var(--space-2); font: var(--text-label); color: var(--color-fg-accent); }
+
+/* Reading: lesson text with an adjustable size (A− / A+). */
+.reading { font: var(--text-body); line-height: var(--line-height-relaxed); white-space: pre-line; overflow-wrap: anywhere; max-width: 68ch; }
+.reading--lg { font-size: var(--font-size-lg); }
+.reading--xl { font-size: var(--font-size-xl); }
+.reading--lg .scripture__text { font-size: var(--font-size-xl); }
+.reading--xl .scripture__text { font-size: var(--font-size-2xl); }
+.text-size { display: inline-flex; gap: var(--space-1); }
+
+/* Video player failure: the lesson text stays readable and Retry reloads the video. */
+.video-player__failed { display: grid; place-items: center; height: 100%; padding: var(--space-4); text-align: center; }
+
+/* Code playground: an editable code area, Run, and a sandboxed preview. */
+.code-playground { display: grid; gap: var(--space-3); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1024px) { .code-playground { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.code-playground__editor { width: 100%; min-height: calc(var(--space-12) * 4); padding: var(--space-3); border-radius: var(--radius-md); border: var(--border-width-hairline) solid var(--color-border-strong); background: var(--color-bg-surface-sunken); color: var(--color-fg-default); font: var(--text-code); white-space: pre; resize: vertical; }
+.code-playground__editor:focus-visible { outline: var(--focus-ring-width) solid var(--color-focus-ring); outline-offset: var(--focus-ring-offset); }
+.code-playground__preview { display: grid; place-items: center; min-height: calc(var(--space-12) * 4); border-radius: var(--radius-md); border: var(--border-width-hairline) dashed var(--color-border-strong); background: var(--color-bg-surface); color: var(--color-fg-muted); font: var(--text-body-sm); overflow: hidden; }
+.code-playground__preview iframe { width: 100%; height: 100%; min-height: calc(var(--space-12) * 4); border: 0; background: Canvas; }
+.code-playground__preview:has(iframe) { place-items: stretch; }

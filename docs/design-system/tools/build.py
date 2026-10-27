@@ -89,7 +89,7 @@ for file in files:
 def fallback(slug, variant='default'):
     samples = {
         'button': '<button class="btn" type="button">Save changes</button>',
-        'button-group': '<div role="group" aria-label="Session days" class="cluster"><button type="button" class="btn" aria-pressed="true">Monday</button><button type="button" class="btn" aria-pressed="false">Wednesday</button></div>',
+        'button-group': '<div role="group" aria-label="Your tracks" class="button-group"><button type="button" class="btn" aria-pressed="true">Leadership Foundations</button><button type="button" class="btn" aria-pressed="false">Digital Skills</button></div>',
         'link': '<a href="#sources">View source mocks</a>',
         'text-field': '<label class="field"><span class="field__label">Guardian email</span><input class="input" type="email" autocomplete="email" value="carmen.rivera@example.com"><span class="field__hint">We will send permission slips here.</span></label>',
         'textarea': '<label class="field"><span class="field__label">Message to guardians</span><textarea class="textarea" rows="3">Please bring a water bottle to the museum trip.</textarea><span class="field__hint">Keep personal medical information out of group messages.</span></label>',

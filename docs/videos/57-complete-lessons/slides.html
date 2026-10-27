@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 57 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="57" data-video-title="Complete lessons" data-parts="Introduction|Home|Gating|Lesson|Video|Coding|Project|States|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 57</div>
+  <h1>Complete lessons</h1>
+  <p class="lead">A youth's tracks, modules that unlock in order, lessons with video, and coding lessons and projects</p>
+</section>
+
+<section id="home" data-part="1" data-cue="Sofía is twelve." data-clip="clips/home-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Learning home and tracks</h3><p><code>GET /learning/home</code>, <code>GET /learning/tracks/{id}</code>, the track switch is <code>ph-button-group</code>.</p></div>
+</section>
+
+<section id="home-shots" data-part="1" data-cue="Speaking Up is locked, says what unlocks it">
+  <h2>Where she left off, and her track</h2>
+  <div class="cols">
+    <img class="shot" alt="Learning: continue Pick Up the Towel, her progress and two tracks" src="shots/desktop-home.png">
+    <img class="shot" alt="Leadership Foundations: done, not started and locked modules" src="shots/desktop-track.png">
+  </div>
+</section>
+
+<section id="gating" data-part="2" data-cue="A module unlocks when its prerequisite module is done">
+  <h2>One rule, on the server</h2>
+  <table class="facts">
+    <tr><th>Item</th><th>Locked while</th><th>Answer</th></tr>
+    <tr><td>Module</td><td>Its published prerequisite is not done</td><td>403 <code>locked</code>, <code>unlockAfter</code></td></tr>
+    <tr><td>Lesson</td><td>Its module is locked, or an earlier lesson is not done</td><td>403 <code>locked</code>, <code>unlockAfter</code></td></tr>
+    <tr><td>Draft, unfollowed, other organization</td><td>Always</td><td>404</td></tr>
+  </table>
+  <p class="muted small"><code>LearnerProgress</code> serves every read and write · progress per youth membership in <code>LessonProgress</code> · ADR 0051</p>
+</section>
+
+<section id="gating-shot" data-part="2" data-cue="A locked module or lesson answers forbidden">
+  <h2>Locked on a phone</h2>
+  <div class="cols">
+    <img class="shot" alt="Finish Leading by Serving first" src="shots/phone-locked.png">
+    <img class="shot" alt="Leading by Serving: lessons done, next and locked" src="shots/desktop-module.png">
+  </div>
+</section>
+
+<section id="lesson" data-part="3" data-cue="Pick Up the Towel shows what she will learn" data-clip="clips/lesson-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Reading and completing</h3><p><code>GET /learning/lessons/{id}</code>, <code>POST …/complete</code>, audited as Completed on <code>LessonProgress</code>.</p></div>
+</section>
+
+
+<section id="video" data-part="4" data-cue="The video player uses the browser's own controls.">
+  <h2>The lesson video</h2>
+  <div class="cols">
+    <img class="shot" alt="Pick Up the Towel with its video playing beside the lesson" src="shots/desktop-lesson-video.png">
+    <img class="shot" alt="The video couldn’t load, with Retry video" src="shots/desktop-video-failed.png">
+  </div>
+  <p class="muted small"><code>ph-video-player</code> · <code>GET /learning/lessons/{id}/video</code> · <code>IFileStore.OpenReadAsync</code> · 206 for <code>Range</code></p>
+</section>
+
+<section id="coding" data-part="5" data-cue="Your First Webpage teaches in steps" data-clip="clips/coding-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Coding lessons and projects</h3><p><code>ph-code-sample</code>, <code>ph-code-playground</code> in a sandboxed, script-blocking preview, <code>PUT /learning/coding/{id}/progress</code>.</p></div>
+</section>
+
+
+<section id="project" data-part="6" data-cue="The submission is stored once as submitted">
+  <h2>Submitted to her mentor</h2>
+  <div class="cols">
+    <img class="shot" alt="Submit Build Your Event Page? with a note to the mentor" src="shots/desktop-submit-dialog.png">
+    <img class="shot" alt="Submitted, read only, Sent for review" src="shots/desktop-project-submitted.png">
+  </div>
+  <p class="muted small"><code>POST /learning/coding/{id}/submission</code> · once, as Submitted · audited on <code>ProjectSubmission</code></p>
+</section>
+
+
+<section id="states" data-part="7" data-cue="With no published track, Learning says no lessons yet." data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Empty, failed, off</h3><p>No lessons yet, Try again, a failed video, and Learning off going to Today.</p></div>
+</section>
+
+<section id="states-shots" data-part="7" data-cue="Turn Learning off, and every learning page goes to Today">
+  <h2>Who is refused, and how</h2>
+  <div class="cols">
+    <table class="facts">
+      <tr><th>Caller</th><th>Answer</th></tr>
+      <tr><td>Staff, mentor, volunteer</td><td>403</td></tr>
+      <tr><td>Youth without consent</td><td>403 <code>consent-required</code></td></tr>
+      <tr><td>Youth in no program</td><td>403 <code>no-cohort</code></td></tr>
+      <tr><td>Learning off</td><td>404, pages go to Today</td></tr>
+      <tr><td>Another organization</td><td>404</td></tr>
+    </table>
+    <img class="shot" alt="No lessons yet" src="shots/desktop-empty.png">
+  </div>
+</section>
+
+<section id="testing" data-part="8" data-cue="The API tests cover the home">
+  <h2>How it is tested</h2>
+  <div class="cols">
+    <ul>
+      <li><code>LearningBrowseTests</code>, <code>LearningLessonsTests</code>, <code>LearningVideoTests</code></li>
+      <li><code>LearningCodingTests</code>, <code>LearningProjectTests</code>, <code>LocalFileStoreTests</code></li>
+      <li><code>e2e/tests/learning/</code>: browse, lessons, lesson-video, coding, project</li>
+      <li>Phone and laptop, axe on every screen, fake API</li>
+    </ul>
+    <img class="shot" alt="Learning on a phone" src="shots/phone-home.png">
+  </div>
+</section>
+
+<section id="phone" data-part="8" data-cue="The browser tests run every screen on a phone" data-clip="clips/phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>On a phone</h3><p>Learning, a locked module and a scripture lesson at 390 pixels, no sideways scrolling.</p></div>
+</section>
+
+<section id="recap" data-part="9" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Recap</h2>
+  <ul class="recap"><li>Only published content of the tracks her programs follow</li><li>Modules and lessons unlock in order; the server enforces every lock</li><li>Progress, code and submissions saved on the server; the preview never runs her scripts</li></ul>
+  <p class="muted">Next: apply or refer a youth to a program</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

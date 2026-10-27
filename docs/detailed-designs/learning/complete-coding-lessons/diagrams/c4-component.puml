@@ -1,0 +1,26 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Complete a coding lesson
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(cp, "CodingPage", "Angular page", "learn-coding-lesson")
+  Component(pg, "PhCodeSample / PhCodePlayground / PhCheckboxGroup", "components library", "sandboxed preview")
+  Component(lapi, "LearningApi", "Contract + HTTP client", "LEARNING_API")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "LearningEndpoints", "Minimal API", "coding/{id}, progress")
+  Component(ch, "CodingLessonHandler", "Handler", "steps, workspace")
+  Component(cc, "CodingProgressCommand", "Handler", "save, complete + audit")
+  Component(prog, "LearnerProgress", "Service", "visible tracks, module and lesson status, locks")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Tracks, CurriculumModules, Lessons, LessonProgress")
+}
+Rel(cp, pg, "composes")
+Rel(cp, lapi, "coding, saveCoding")
+Rel(lapi, ep, "JSON/HTTPS")
+Rel(ep, ch, "GET")
+Rel(ep, cc, "PUT")
+Rel(ch, prog, "status")
+Rel(cc, prog, "status")
+Rel(prog, db, "reads")
+Rel(cc, db, "writes + audit")
+@enduml

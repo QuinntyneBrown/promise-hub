@@ -1,0 +1,37 @@
+@startuml
+title Class structure — Complete a coding lesson
+skinparam classAttributeIconSize 0
+class CodingStep <<entity>> {
+  Id : Guid
+  OrganizationId : Guid
+  LessonId : Guid
+  Position : int
+  Title : string
+  Instructions : string
+  Sample : string?
+  CheckLabel : string
+}
+class CodingWorkspace <<entity>> {
+  MembershipId : Guid
+  LessonId : Guid
+  Code : string
+  CheckedStepIds : string
+  UpdatedAt : DateTimeOffset
+}
+class Lesson <<entity>> {
+  Kind : LessonKind
+  StarterCode : string?
+}
+class CodingLessonHandler {
+  HandleAsync(id) : Outcome<CodingViewDto>
+}
+class CodingProgressCommand {
+  SaveAsync(id, code, checkedStepIds) : Outcome<CodingSavedDto>
+}
+Lesson "1" *-- "many" CodingStep : ordered
+CodingWorkspace --> Lesson
+CodingLessonHandler --> CodingStep
+CodingLessonHandler --> CodingWorkspace
+CodingProgressCommand --> CodingWorkspace
+CodingProgressCommand --> LessonProgress
+@enduml

@@ -1,0 +1,26 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Complete a lesson
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(lp, "LessonPage", "Angular page", "learn-lesson, learn-lesson-scripture")
+  Component(sb, "ph-scripture-block / ph-video-player", "components library", "")
+  Component(lapi, "LearningApi", "Contract + HTTP client", "LEARNING_API")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "LearningEndpoints", "Minimal API", "lessons/{id}, complete")
+  Component(lv, "LessonViewHandler", "Handler", "youth-safe projection")
+  Component(lc, "LessonCompletion", "Handler", "LessonProgress + audit")
+  Component(prog, "LearnerProgress", "Service", "visible tracks, module and lesson status, locks")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Tracks, CurriculumModules, Lessons, LessonProgress")
+}
+Rel(lp, sb, "composes")
+Rel(lp, lapi, "lesson, completeLesson")
+Rel(lapi, ep, "JSON/HTTPS")
+Rel(ep, lv, "GET")
+Rel(ep, lc, "POST")
+Rel(lv, prog, "status")
+Rel(lc, prog, "status")
+Rel(prog, db, "reads")
+Rel(lc, db, "writes + audit")
+@enduml

@@ -22,7 +22,7 @@ test.describe('Not in a program yet', () => {
 
     await learning.expectOpen();
     await expect(learning.noCohort).toBeVisible();
-    await expect(learning.emptyState).toHaveCount(0);
+    await expect(learning.yourTracks).toHaveCount(0);
     expect(await learning.lessonsStatus()).toBe(403);
     await learning.expectAccessible();
     await learning.expectNoHorizontalScroll();
@@ -36,7 +36,7 @@ test.describe('Not in a program yet', () => {
     api.placeInProgram('c-nadia', 'p-tutoring');
     await learning.checkAgain();
 
-    await expect(learning.emptyState).toBeVisible();
+    await expect(learning.yourTracks).toBeVisible();
     expect(await learning.lessonsStatus()).toBe(200);
   });
 

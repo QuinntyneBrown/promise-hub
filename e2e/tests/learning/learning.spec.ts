@@ -14,6 +14,7 @@ test.describe('Learning', () => {
     api.setModules('org-harbourview', [...SUITE, 'Learning']);
     api.giveConsent('c-sofia');
     api.saveOnboarding('m-sofia', { step: 3, preferredName: 'Sofía', completed: true });
+    api.curriculumState.clear('org-harbourview');
     const learning = new LearningPage(page);
     await new TodayPage(page).open();
 

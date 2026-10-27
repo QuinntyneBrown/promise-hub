@@ -15,10 +15,6 @@ public static class ParticipantModuleEndpoints
     {
         app.MapGet("/learning/me", (LearnerHandler handler, CancellationToken ct) => handler.HandleAsync(ct))
             .RequireModule(ModuleId.Learning).RequirePermission(Permission.Learn);
-        // Youth work: closed to a youth under the consent age until a guardian consents (L2-056, L2-057, ADR 0046), then to a youth
-        // not placed in a program (L2-060, ADR 0047). Empty until prompt 57.
-        app.MapGet("/learning/lessons", () => new LessonsDto([]))
-            .RequireModule(ModuleId.Learning).RequirePermission(Permission.Learn).RequireGuardianConsent().RequirePlacement();
         // Open to a gated youth, so the gate can ask a guardian (L2-056 criterion 3).
         app.MapPost("/learning/consent-request", async (ConsentRequestHandler handler, CancellationToken ct) =>
             ConsentRequestHttp.ToHttp(await handler.RequestAsync(ct)))

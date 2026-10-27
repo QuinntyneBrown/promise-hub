@@ -55,7 +55,7 @@ test.describe('Resume setup', () => {
     await learning.open();
 
     await learning.expectOpen();
-    await expect(learning.emptyState).toBeVisible();
+    await expect(learning.yourTracks).toBeVisible();
     await expect(learning.resume).toHaveCount(0);
     await expect(page).toHaveURL(/\/learning$/);
   });

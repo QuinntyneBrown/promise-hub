@@ -23,6 +23,13 @@ public sealed class LocalFileStore(string rootPath) : IFileStore
 
     public Task<bool> ExistsAsync(string key, CancellationToken cancellationToken) => Task.FromResult(File.Exists(PathFor(key)));
 
+    public Task<Stream?> OpenReadAsync(string key, CancellationToken cancellationToken)
+    {
+        var path = PathFor(key);
+        Stream? stream = File.Exists(path) ? new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 64 * 1024, useAsync: true) : null;
+        return Task.FromResult(stream);
+    }
+
     private string PathFor(string key)
     {
         var path = Path.GetFullPath(Path.Combine(_root, key));

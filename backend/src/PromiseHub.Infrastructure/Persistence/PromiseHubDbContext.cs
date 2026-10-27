@@ -62,6 +62,10 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Curriculum.Track> Tracks => Set<Domain.Curriculum.Track>();
     public DbSet<Domain.Curriculum.CurriculumModule> CurriculumModules => Set<Domain.Curriculum.CurriculumModule>();
     public DbSet<Domain.Curriculum.Lesson> Lessons => Set<Domain.Curriculum.Lesson>();
+    public DbSet<Domain.Learning.LessonProgress> LessonProgress => Set<Domain.Learning.LessonProgress>();
+    public DbSet<Domain.Curriculum.CodingStep> CodingSteps => Set<Domain.Curriculum.CodingStep>();
+    public DbSet<Domain.Learning.CodingWorkspace> CodingWorkspaces => Set<Domain.Learning.CodingWorkspace>();
+    public DbSet<Domain.Learning.ProjectSubmission> ProjectSubmissions => Set<Domain.Learning.ProjectSubmission>();
     public DbSet<DataRequest> DataRequests => Set<DataRequest>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
     public DbSet<Domain.Incidents.IncidentFollowUp> IncidentFollowUps => Set<Domain.Incidents.IncidentFollowUp>();
@@ -153,6 +157,44 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(l => l.VideoUploadedBy).HasMaxLength(200);
             e.Property(l => l.VideoUploadedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
             e.HasOne<Domain.Curriculum.CurriculumModule>().WithMany().HasForeignKey(l => l.ModuleId);
+            e.Property(l => l.Kind).HasConversion<string>().HasMaxLength(20);
+            e.Property(l => l.Passage).HasMaxLength(Domain.Curriculum.Lesson.MaximumPassage);
+            e.Property(l => l.StarterCode).HasMaxLength(Domain.Curriculum.Lesson.MaximumCode);
+        });
+        modelBuilder.Entity<Domain.Curriculum.CodingStep>(e =>
+        {
+            e.Property(c => c.Title).HasMaxLength(Domain.Curriculum.CodingStep.MaximumTitle);
+            e.Property(c => c.Instructions).HasMaxLength(Domain.Curriculum.CodingStep.MaximumInstructions);
+            e.Property(c => c.Sample).HasMaxLength(Domain.Curriculum.CodingStep.MaximumSample);
+            e.Property(c => c.CheckLabel).HasMaxLength(Domain.Curriculum.CodingStep.MaximumCheckLabel);
+            e.HasOne<Domain.Curriculum.Lesson>().WithMany().HasForeignKey(c => c.LessonId);
+        });
+        modelBuilder.Entity<Domain.Learning.CodingWorkspace>(e =>
+        {
+            e.HasIndex(w => new { w.MembershipId, w.LessonId }).IsUnique();
+            e.Property(w => w.Code).HasMaxLength(Domain.Curriculum.Lesson.MaximumCode);
+            e.Property(w => w.CheckedStepIds).HasMaxLength(4000);
+            e.Ignore(w => w.Checked);
+            e.Property(w => w.UpdatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.HasOne<Membership>().WithMany().HasForeignKey(w => w.MembershipId);
+            e.HasOne<Domain.Curriculum.Lesson>().WithMany().HasForeignKey(w => w.LessonId);
+        });
+        modelBuilder.Entity<Domain.Learning.ProjectSubmission>(e =>
+        {
+            e.HasIndex(p => new { p.MembershipId, p.LessonId }).IsUnique();
+            e.Property(p => p.Code).HasMaxLength(Domain.Curriculum.Lesson.MaximumCode);
+            e.Property(p => p.Note).HasMaxLength(Domain.Learning.ProjectSubmission.MaximumNote);
+            e.Property(p => p.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(p => p.SubmittedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.HasOne<Membership>().WithMany().HasForeignKey(p => p.MembershipId);
+            e.HasOne<Domain.Curriculum.Lesson>().WithMany().HasForeignKey(p => p.LessonId);
+        });
+        modelBuilder.Entity<Domain.Learning.LessonProgress>(e =>
+        {
+            e.HasIndex(p => new { p.MembershipId, p.LessonId }).IsUnique();
+            e.Property(p => p.CompletedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.HasOne<Membership>().WithMany().HasForeignKey(p => p.MembershipId);
+            e.HasOne<Domain.Curriculum.Lesson>().WithMany().HasForeignKey(p => p.LessonId);
         });
         modelBuilder.Entity<DataRequest>(e =>
         {

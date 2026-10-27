@@ -328,7 +328,7 @@ def main_menu(S):
     S.add("default", "The More menu on a phone: every section, current one marked, sign out at the end.", **over("today", overlays=drawer()))
     S.add("director", "The same menu for the program director, from Programs; Curriculum shows while Learning is on.", **over("programs", overlays=drawer(STAFF["marisol"], "programs", director_links)))
     S.add("youth", "A youth’s menu: Today, Learning, notifications and account only; no staff sections, no Settings.",
-          **over("today", "youth", overlays=drawer(YOUTH["sofia"], "today", [("today", "Today", "home"), ("learning", "Learning", "star")] + tail)))
+          **over("today", "youth", overlays=drawer(YOUTH["sofia"], "today", [("today", "Today", "home"), ("learn-home", "Learning", "star")] + tail)))
     S.add("mentor", "A mentor’s menu: Today, Mentoring, notifications and account.",
           **over("today", "mentor", overlays=drawer(STAFF["daniel"], "today", [("today", "Today", "home"), ("mentor-dashboard", "Mentoring", "users")] + tail)))
     S.add("volunteer", "A volunteer’s menu: Today, Check-in for their assigned sessions, notifications and account.",
@@ -446,3 +446,11 @@ simple("curriculum-status", "Status of Leading by Serving", "curriculum-module",
 simple("delete-lesson", "Delete Pick Up the Towel?", "curriculum-lesson", ["L2-067", R_CURRIC],
        "Youth stop seeing it at once. Their progress is kept in the archive, and the lesson can be restored by support.",
        lambda e: "", "Delete lesson", icon_name="trash", danger=True, failed_text="The lesson was not deleted. Try again.")
+
+# ------------------------------------------------------------------ Complete lessons (prompt 57)
+simple("submit-project", "Submit “Build Your Event Page”?", "learn-coding-project", ["L2-070", "L1-023"],
+       "Your mentor will review it. You can’t change it while it’s under review.",
+       lambda e: textarea("note", "Note to your mentor", value="I used my first bit of CSS for the colours." if not e else "x" * 40 + "…", rows=3, optional=True,
+                          help_="Up to 1,000 characters.", error=(e or {}).get("note", "")),
+       "Submit for review", icon_name="send", invalid_err={"note": "Keep the note under 1,000 characters."},
+       failed_text="Your project was not sent. Try again.")

@@ -1,5 +1,5 @@
 """Learning and the public website (ADR 0043): the first page of each new library, shown while its module is on.
-Learning (youth) follows Learning; Curriculum moved to pages_curriculum.py (prompt 56), and the public website
+Learning (youth) moved to pages_learning.py (prompt 57); Curriculum moved to pages_curriculum.py (prompt 56), and the public website
 follows Public website. The journeys of prompts 50 to 81 fill these pages; until then each is its own empty state."""
 from kit import *  # noqa: F401,F403
 from reg import screen
@@ -13,22 +13,6 @@ NA_PLACEHOLDER = "Until the journeys add content, the default state is the empty
 
 def failed(title: str) -> str:
     return card(empty(title, "Check your connection and try again.", action=btn("Try again", "primary", icon_name="refresh"), error=True, icon_name="alert-triangle"), cls="card--flush")
-
-
-@screen("learning", "page", "Learning", route="/learning", reqs=[R_LEARN, "L1-002"], na={"empty": NA_PLACEHOLDER})
-def learning(S):
-    hdr = page_header("Learning", "Your lessons, quizzes, assignments and badges.")
-    kw = dict(nav="learning", role="youth", user=SOFIA, unread=0, modules=["today", "learning"])
-    S.add("default", "Sofía opens Learning before any track is published: the page explains what will appear and where to go meanwhile.", **kw,
-          main=hdr + card(empty("No lessons yet", "When your program publishes a track, its lessons appear here.",
-                                action=btn("Back to Today", "", href=page("today", "youth")), icon_name="star"), cls="card--flush"),
-          notes=note("Loaded only while Learning is on; the server answers 404 for /learning/me when it is off.", "top: 5rem; right: 1rem;"))
-    S.add("loading", "Learning loading.", **kw, main=hdr + skeleton_list(3, "Loading your lessons"))
-    S.add("error", "Learning failed to load; the shell stays.", **kw, main=hdr + failed("We couldn’t load your lessons"))
-    S.add("resume", "Sofía chose Finish later on step 2: Learning offers to pick up where she stopped.", **kw,
-          main=hdr + alert("info", "Finish setting up", "You stopped at step 2 of 3.", actions=btn("Pick up where I left off", "primary", href=page("youth-welcome", "preferences")))
-          + card(empty("No lessons yet", "When your program publishes a track, its lessons appear here.",
-                       action=btn("Back to Today", "", href=page("today", "youth")), icon_name="star"), cls="card--flush"))
 
 
 @screen("website", "page", "Public website", route="/site/harbourview", reqs=[R_SITE], shell="guardian", na={"empty": NA_PLACEHOLDER})

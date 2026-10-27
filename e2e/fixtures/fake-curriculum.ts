@@ -24,8 +24,25 @@ export interface FakeModule {
   status: ContentStatus;
 }
 
+export type LessonKind = 'Reading' | 'Scripture' | 'Coding' | 'Project';
+
+export interface FakeCodingStep {
+  id: string;
+  title: string;
+  instructions: string;
+  sample: string | null;
+  checkLabel: string;
+}
+
 export interface FakeLesson {
   id: string;
+  /** Reading, Scripture, Coding or Project (ADR 0051); authoring it is deferred, so authored lessons are Reading. */
+  kind: LessonKind;
+  /** The passage a scripture lesson quotes. */
+  passage: string | null;
+  /** Where a coding lesson or project starts. */
+  starterCode: string | null;
+  steps: FakeCodingStep[];
   organizationId: string;
   moduleId: string;
   title: string;
@@ -43,6 +60,10 @@ export interface FakeLesson {
 
 const lesson = (id: string, moduleId: string, title: string, position: number, status: ContentStatus, minutes: number | null, body: string | null = null): FakeLesson => ({
   id,
+  kind: 'Reading',
+  passage: null,
+  starterCode: null,
+  steps: [],
   organizationId: 'org-harbourview',
   moduleId,
   title,
@@ -191,6 +212,72 @@ export class FakeCurriculum {
     lesson('l-voice', 'cm-speaking', 'Finding Your Voice', 1, 'Draft', 10),
     lesson('l-listen', 'cm-speaking', 'Listening First', 2, 'Draft', 10),
   ];
+
+  /**
+   * The curriculum Sofía works through in the complete-lessons mocks (prompt 57): Leading by Serving and Speaking Up published in
+   * order, Last in Line a scripture lesson, and Digital Skills published with Web Basics (a coding lesson and a project), followed by
+   * Saturday Sports, which Sofía joins.
+   */
+  youthJourney(): void {
+    const set = <T>(list: T[], pick: (x: T) => boolean, patch: Partial<T>) => Object.assign(list.find(pick)!, patch);
+    set(this.modules, (m) => m.id === 'cm-serving', { status: 'Published' });
+    set(this.modules, (m) => m.id === 'cm-speaking', { status: 'Published', prerequisiteModuleId: 'cm-serving', description: 'Saying what you think, kindly and clearly.' });
+    set(this.lessons, (l) => l.id === 'l-line', {
+      status: 'Published',
+      kind: 'Scripture',
+      reading: 'Mark 10:35–45',
+      passage: '“For even the Son of Man did not come to be served, but to serve, and to give his life as a ransom for many.”',
+      body: 'James and John wanted the best seats. Here greatness flips: whoever wants to be great must serve.\n\nThis week, watch for one person you can quietly serve without being asked.',
+      objectives: ['What real greatness looks like'],
+      prompts: ['Where are you being asked to serve when you’d rather be served?'],
+    });
+    set(this.lessons, (l) => l.id === 'l-coach', { status: 'Published', body: 'A coach makes everyone around them better.' });
+    set(this.lessons, (l) => l.id === 'l-voice', { status: 'Published', body: 'Say what you think, kindly and clearly.' });
+    set(this.tracks, (t) => t.id === 't-digital', { status: 'Published' });
+    this.modules.push({
+      id: 'cm-web',
+      organizationId: 'org-harbourview',
+      trackId: 't-digital',
+      title: 'Web Basics',
+      description: 'Every website is just text with tags.',
+      prerequisiteModuleId: null,
+      anchor: null,
+      position: 2,
+      status: 'Published',
+    });
+    this.lessons.push(
+      {
+        ...lesson('l-webpage', 'cm-web', 'Your First Webpage', 1, 'Published', 20, 'Every website is just text with tags. Let’s build one from scratch.'),
+        kind: 'Coding',
+        starterCode: '<h1>Change me</h1>\n<p>Write your own line here.</p>',
+        steps: [
+          {
+            id: 's-skeleton',
+            title: 'Every page has a skeleton',
+            instructions: 'HTML uses tags in angle brackets. A tag that opens must also close.',
+            sample: '<!doctype html>\n<html>\n  <body>\n    <h1>Hello!</h1>\n  </body>\n</html>',
+            checkLabel: 'I know what an HTML tag is',
+          },
+          {
+            id: 's-heading',
+            title: 'Add a heading and a paragraph',
+            instructions: 'Use <h1> for a title and <p> for a paragraph.',
+            sample: '<h1>Harbourview Youth Night</h1>\n<p>Come build, belong and grow.</p>',
+            checkLabel: 'I added a heading and a paragraph',
+          },
+          { id: 's-run', title: 'Make it yours', instructions: 'Edit the page below and run it.', sample: null, checkLabel: 'I edited the page and ran it' },
+        ],
+      },
+      {
+        ...lesson('l-event', 'cm-web', 'Build Your Event Page', 2, 'Published', 40, 'Make a one-page invite for a Harbourview youth night: a big heading, the date and place, and a “Come through” link.'),
+        kind: 'Project',
+        starterCode: '<h1>Our event</h1>',
+      },
+    );
+    this.programTracks.set('p-sports', 't-digital');
+    const sports = this.programs().find((p) => p.id === 'p-sports')!;
+    if (!sports.roster.includes('c-sofia')) sports.roster.push('c-sofia');
+  }
 
   /** Removes every track of an organization, for the empty state. */
   clear(organizationId: string): void {

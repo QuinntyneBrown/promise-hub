@@ -1,0 +1,24 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Browse curriculum
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(home, "LearningPage", "Angular page", "learn-home")
+  Component(track, "TrackPage", "Angular page", "learn-track, ph-button-group")
+  Component(mod, "ModulePage", "Angular page", "learn-module")
+  Component(lapi, "LearningApi", "Contract + HTTP client", "LEARNING_API")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "LearningEndpoints", "Minimal API", "home, tracks, modules")
+  Component(hh, "LearningHomeHandler / TrackViewHandler / ModuleViewHandler", "Handlers", "403 locked, 404 invisible")
+  Component(prog, "LearnerProgress", "Service", "visible tracks, module and lesson status, locks")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Tracks, CurriculumModules, Lessons, LessonProgress")
+}
+Rel(home, lapi, "home")
+Rel(track, lapi, "track(id)")
+Rel(mod, lapi, "module(id)")
+Rel(lapi, ep, "JSON/HTTPS")
+Rel(ep, hh, "GET")
+Rel(hh, prog, "statuses")
+Rel(prog, db, "reads")
+@enduml

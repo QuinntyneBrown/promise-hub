@@ -1,0 +1,38 @@
+@startuml
+title UML sequence behaviour — Submitting a coding project
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Youth (Sofía)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "CodingPage / SubmitProjectDialog" as page
+  participant "LearningApi" as lapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "LearningEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "ProjectSubmissionCommand" as h
+  participant "LearnerProgress" as prog
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+
+end box
+actor -> page : Submit for review, note to mentor
+page -> lapi : submitProject(id, code, note)
+lapi -> ep : POST /learning/coding/{id}/submission
+ep -> h : SubmitAsync
+h -> prog : unlocked project? (L2-070 c5)
+alt empty code or note > 1,000
+  h --> ep : 422 (c4)
+else already submitted
+  h --> ep : 409 (c4)
+else
+  h -> db : ProjectSubmission Submitted + LessonProgress + audit (c4)
+  ep --> lapi : 201
+  page --> actor : Submitted, read only; next lesson unlocked
+end
+@enduml

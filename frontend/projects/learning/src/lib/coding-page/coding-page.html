@@ -1,0 +1,170 @@
+@let r = result();
+<ph-breadcrumb
+  [items]="
+    r?.status === 'loaded'
+      ? [
+          { label: 'Learning', link: '/learning' },
+          { label: r.value.moduleTitle, link: '/learning/modules/' + r.value.moduleId },
+          { label: r.value.title },
+        ]
+      : [{ label: 'Learning', link: '/learning' }, { label: 'Coding lesson' }]
+  "
+/>
+@if (r === null) {
+  <ph-page-header title="Coding lesson" />
+  <div aria-busy="true" aria-label="Loading the coding lesson">
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (r.status === 'loaded') {
+  @let c = r.value;
+  @if (c.kind === 'Project') {
+    <ph-page-header [title]="c.title" [subtitle]="subtitle(c)">
+      <ph-badge [tone]="c.submission ? 'info' : 'neutral'">{{
+        c.submission ? 'Submitted' : 'Draft'
+      }}</ph-badge>
+    </ph-page-header>
+    <div class="stack">
+      @if (failed()) {
+        <ph-alert
+          tone="danger"
+          title="We couldn’t save your draft"
+          text="Your code is still here. Try again."
+        />
+      }
+      @if (c.body) {
+        <ph-card title="The brief">
+          <p class="instructions">{{ c.body }}</p>
+        </ph-card>
+      }
+      <ph-card title="Build it">
+        <ph-code-playground label="Your page" [(code)]="code" [readonly]="!!c.submission" />
+        @if (errors()['code']; as e) {
+          <ph-alert tone="danger" title="Your code wasn’t saved" [text]="e" />
+        }
+      </ph-card>
+      @if (c.submission) {
+        <ph-alert
+          tone="info"
+          title="Sent for review"
+          text="Your mentor will look at it. You’ll see their feedback here."
+        />
+      } @else {
+        <div class="actions">
+          <ph-button variant="ghost" [busy]="busy()" (click)="save(c)">Save draft</ph-button>
+          <ph-button variant="primary" icon="send" hasPopup="dialog" (click)="submit(c)"
+            >Submit for review</ph-button
+          >
+        </div>
+      }
+    </div>
+  } @else {
+    <ph-page-header [title]="c.title" [subtitle]="subtitle(c)" />
+    <div class="stack">
+      @if (failed()) {
+        <ph-alert
+          tone="danger"
+          title="We couldn’t save your progress"
+          text="Your code is still here. Try again."
+        />
+      }
+      @if (c.body) {
+        <p class="lead">{{ c.body }}</p>
+      }
+      @for (s of c.steps; track s.id; let i = $index) {
+        <ph-card [title]="i + 1 + '. ' + s.title">
+          <p class="instructions">{{ s.instructions }}</p>
+          @if (s.sample) {
+            <ph-code-sample [code]="s.sample" [label]="'Example: ' + s.title" />
+          }
+        </ph-card>
+      }
+      <ph-card title="Your turn">
+        <ph-code-playground label="Try it yourself" [(code)]="code" />
+        @if (errors()['code']; as e) {
+          <ph-alert tone="danger" title="Your code wasn’t saved" [text]="e" />
+        }
+      </ph-card>
+      @if (c.steps.length) {
+        <ph-card title="Checklist">
+          <div class="stack">
+            <ph-checkbox-group
+              legend="Before you finish"
+              name="checklist"
+              [options]="options(c)"
+              [error]="errors()['checkedStepIds'] ?? null"
+              [ngModel]="ticked()"
+              (ngModelChange)="ticked.set($event)"
+            />
+            <ph-progress-bar
+              [value]="ticked().length"
+              [max]="c.steps.length"
+              label="Checklist"
+              [caption]="ticked().length + ' of ' + c.steps.length"
+              [tone]="ticked().length === c.steps.length ? 'success' : 'accent'"
+            />
+          </div>
+        </ph-card>
+      }
+      @if (saved() || c.done) {
+        @let a = after(c);
+        <ph-alert
+          tone="success"
+          title="Lesson complete"
+          [text]="
+            a.title
+              ? 'Nice work. ' + a.title + ' is unlocked.'
+              : 'Nice work. ' + c.moduleTitle + ' is complete.'
+          "
+        >
+          @if (a.link) {
+            <ph-button variant="primary" icon="arrow-right" [link]="a.link">{{
+              'Next: ' + a.title
+            }}</ph-button>
+          }
+        </ph-alert>
+      }
+      <div class="actions">
+        <ph-button variant="ghost" [link]="'/learning/modules/' + c.moduleId"
+          >Back to the module</ph-button
+        >
+        <ph-button variant="primary" icon="check" [busy]="busy()" (click)="save(c)"
+          >Save progress</ph-button
+        >
+      </div>
+    </div>
+  }
+} @else if (r.status === 'locked') {
+  <ph-page-header title="Coding lesson" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      [title]="'Finish ' + r.unlockAfter + ' first'"
+      [text]="'Lessons open in order. This one unlocks when ' + r.unlockAfter + ' is done.'"
+    >
+      <ph-button link="/learning">Back to Learning</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else if (r.status === 'not-found') {
+  <ph-page-header title="Coding lesson" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="search"
+      title="We can’t find that lesson"
+      text="It may not be published yet, or your program doesn’t follow it."
+    >
+      <ph-button link="/learning">Back to Learning</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-page-header title="Coding lesson" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load this coding lesson"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}
