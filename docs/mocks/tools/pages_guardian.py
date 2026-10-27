@@ -51,13 +51,22 @@ def guardian_home(S):
 def enroll(S):
     intro = '<h1>Enroll in After‑School Tutoring</h1><p class="text-muted">Mon–Thu, 4–6 pm · Harbourview Community Centre · Sep 2026 to Jun 2027 · free</p>'
 
-    def identify(err=None, busy=False):
+    def who(as_="guardian"):
+        return fieldset("Who is applying?", choice("applying", "I’m a parent or guardian", small="Enroll your own children.", checked=as_ == "guardian")
+                        + choice("applying", "I’m the young person", small="Ages 12 to 18, applying for yourself.", checked=as_ == "youth")
+                        + choice("applying", "I’m referring a young person", small="A teacher, counsellor, social worker or coach.", checked=as_ == "referrer"))
+
+    def identify(err=None, busy=False, as_="guardian", value="905-555-0142"):
         e = err or {}
+        lead = {"guardian": "Enter the phone number or email you gave us.", "youth": "Enter your own phone number or email.", "referrer": "Enter your work phone number or email."}[as_]
         return (f'<form class="card stack" action="#" method="post" novalidate>' + (form_summary([(k, m) for k, m in e.items()]) if e else "")
-                + '<p>Enter the phone number or email you gave us.</p>'
-                + field("contact", "Mobile number or email", type_="text", value="905-555-0142" if not e else "905-555", inputmode="email", autocomplete="tel", autofocus=True, error=e.get("contact", ""), help_="We’ll send a 6-digit code. No password.")
+                + who(as_) + f'<p>{lead}</p>'
+                + field("contact", "Mobile number or email", type_="text", value=value if not e else "905-555", inputmode="email", autocomplete="tel", autofocus=True, error=e.get("contact", ""), help_="We’ll send a 6-digit code. No password.")
                 + btn("Send me a code", "primary", type_="submit", busy=busy, size="lg") + "</form>" + g_footer())
-    S.add("default", "Step 0: the guardian identifies with the phone or email on file; a code replaces a password.", main=intro + identify())
+    S.add("default", "Step 0: who is applying (a guardian by default), then the phone or email on file; a code replaces a password (L2-071).", main=intro + identify())
+    S.add("youth", "A young person applies for themselves: their own phone gets the code (L2-071).", main=intro + identify(as_="youth", value="905-555-0311"))
+    S.add("referrer", "A referrer (a teacher, a counsellor) applies for a young person with their work email (L2-071).", main=intro + identify(as_="referrer", value="rachel.ellis@bennetto.example.ca"))
+    S.add("too-many", "Three codes in 15 minutes: the next one waits (L2-071).", main=intro + alert("danger", "Too many codes", "Wait 15 minutes, then ask for a new one.") + identify())
     S.add("code", "Enter the 6-digit code that was texted.", main=intro + f'<form class="card stack" action="#" method="post" novalidate><p>Code texted to <strong>905-555-0142</strong>.</p>{field("code", "6-digit code", value="", inputmode="numeric", autocomplete="one-time-code", attrs=" maxlength=\"6\" pattern=\"[0-9]*\"", autofocus=True, help_="Valid for 10 minutes.")}{btn("Continue", "primary", type_="submit", size="lg")}<p class="center"><button class="btn btn--ghost" type="button">Send a new code</button> <a class="btn btn--ghost" href="{page("enroll")}">Use a different number</a></p></form>' + g_footer())
     S.add("invalid", "An incomplete phone number.", main=intro + identify(err={"contact": "Enter a full mobile number or an email."}))
     S.add("submitting", "Sending the code.", main=intro + identify(busy=True))
@@ -88,6 +97,65 @@ def enroll_household(S):
     S.add("invalid", "Missing mobile and a malformed email.", main=hdr + form(err={"ph": "Enter a mobile number.", "em": "Enter a valid email, or leave it empty."}).replace('value="905-555-0142"', 'value=""').replace('value="carmen.rivera@example.com"', 'value="carmen.rivera@"'))
     S.add("submitting", "Saving.", main=hdr + form(busy=True))
     S.add("error", "Saving failed; nothing typed is lost.", main=hdr + alert("danger", "We couldn’t save that", "Nothing is lost. Tap Looks right again.") + form())
+
+    def their(referrer=False, err=None):
+        e = err or {}
+        name, phone = ("Tanya Campbell", "905-555-0320") if referrer else ("Denise Johnson", "905-555-0310")
+        if e.get("guardianName"):
+            name = ""
+        lead = "We’ll contact them about next steps and consent." if referrer else "Required if you’re under 18. We ask them to consent before you start."
+        return (f'<form class="stack" action="#" method="post" novalidate>' + (form_summary([(k, m) for k, m in e.items()]) if e else "")
+                + card(f'<p>{lead}</p>' + field("guardianName", "Guardian’s full name", value=name, required=True, autofocus=True, error=e.get("guardianName", ""))
+                       + field("mobile", "Guardian’s mobile number", type_="tel", value=phone, inputmode="tel", error=e.get("mobile", ""), help_="A mobile number or an email.")
+                       + field("email", "Guardian’s email", type_="email", value="", optional=True)
+                       + select("lang", "Language for messages", ["English", "Español", "Français"], selected="English"), title="Parent or guardian", tid="guardian")
+                + f'<div class="cluster" style="justify-content: space-between;">{btn("Back", "ghost", href=page("enroll-youth", "referrer" if referrer else "default"))}{btn("Continue", "primary", type_="submit", size="lg")}</div></form>' + g_footer())
+    S.add("youth", "Malik gives his parent’s details; she is asked to consent before he starts (L2-071).", main='<h1>Your parent or guardian</h1>' + g_steps(1) + their())
+    S.add("referrer", "Rachel gives Zoe’s guardian’s details; the office contacts the family (L2-071).", main='<h1>Their parent or guardian</h1>' + g_steps(2, 5) + their(referrer=True))
+    S.add("guardian-invalid", "No guardian name on a young person’s application (L2-071).", main='<h1>Your parent or guardian</h1>' + g_steps(1) + their(err={"guardianName": "Enter your parent or guardian’s name."}))
+
+
+# ------------------------------------------------------------------ Enroll: referrer (L2-071)
+@screen("enroll-referrer", "page", "Enroll: referrer", route="/g/enroll/:program/referrer", reqs=["L2-071", R_ENROLL, R_ACCESS], shell="guardian", na={"empty": "A new form with the referrer’s contact filled in.", "loading": "Shown at once after the code; nothing to fetch for a referral."})
+def enroll_referrer(S):
+    def form(err=None, busy=False):
+        e = err or {}
+        name, role = ("", "") if e else ("Rachel Ellis", "Guidance counsellor")
+        return (f'<form class="stack" action="#" method="post" novalidate>' + (form_summary([(k, m) for k, m in e.items()]) if e else "")
+                + card('<p>We contact you only about this referral.</p>'
+                       + field("referrerName", "Your full name", value=name, required=True, autocomplete="name", autofocus=True, error=e.get("referrerName", ""))
+                       + field("referrerRole", "Your role", value=role, required=True, help_="How you know the young person, for example teacher or social worker.", error=e.get("referrerRole", ""))
+                       + field("referrerOrganization", "School or organization", value="Bennetto Elementary" if not e else "", optional=True)
+                       + field("referrerContact", "Your contact", value="rachel.ellis@bennetto.example.ca", readonly=True, help_="The email you verified."), title="You", tid="you")
+                + f'<div class="cluster" style="justify-content: space-between;">{btn("Back", "ghost", href=page("enroll", "referrer"))}{btn("Continue", "primary", type_="submit", busy=busy, size="lg")}</div></form>' + g_footer())
+    hdr = '<h1>About you</h1>' + g_steps(0, 5)
+    S.add("default", "A referrer says who they are and how they know the young person.", main=hdr + form())
+    S.add("invalid", "Name and role left empty.", main=hdr + form(err={"referrerName": "Enter your full name.", "referrerRole": "Tell us how you know the young person."}))
+    S.add("submitting", "Saving.", main=hdr + form(busy=True))
+    S.add("error", "Saving failed; nothing typed is lost.", main=hdr + alert("danger", "We couldn’t save that", "Nothing is lost. Tap Continue again.") + form())
+
+
+# ------------------------------------------------------------------ Enroll: the young person (L2-071)
+@screen("enroll-youth", "page", "Enroll: the young person", route="/g/enroll/:program/youth", reqs=["L2-071", R_ENROLL, R_ACCESS], shell="guardian", na={"empty": "A new form; the referrer state shows it for someone else.", "loading": "Shown at once after the code; nothing to fetch."})
+def enroll_youth(S):
+    def form(err=None, busy=False, referrer=False, dob="2012-04-18"):
+        e = err or {}
+        first, last = ("Zoe", "Campbell") if referrer else ("Malik", "Johnson")
+        if e.get("name"):
+            first = last = ""
+        why = "" if e.get("reason") else ("Zoe is curious and kind, and needs somewhere to belong after school." if referrer else "I want to learn to code and help with the younger kids.")
+        return (f'<form class="stack" action="#" method="post" novalidate>' + (form_summary([("youth-" + k, m) for k, m in e.items()]) if e else "")
+                + card(f'<div class="two-col">{field("youth-name", "First name", value=first, required=True, autocomplete="off" if referrer else "given-name", autofocus=True, error=e.get("name", ""))}{field("youth-last", "Last name", value=last, required=True)}</div>'
+                       + field("youth-dob", "Date of birth", type_="date", value=dob, required=True, error=e.get("dob", ""), help_="Young people aged 12 to 18 can apply for themselves." if not referrer else "")
+                       + field("youth-school", "School and grade", value="Bennetto Elementary, Grade 8" if referrer else "Sir John A. Macdonald, Grade 9", optional=True)
+                       + textarea("youth-reason", "Why are you referring them?" if referrer else "Why are you interested?", value=why, rows=3, error=e.get("reason", ""), help_="A sentence or two is plenty."), title="Who you’re referring" if referrer else "You", tid="youth")
+                + f'<div class="cluster" style="justify-content: space-between;">{btn("Back", "ghost", href=page("enroll-referrer") if referrer else page("enroll", "youth"))}{btn("Continue", "primary", type_="submit", busy=busy, size="lg")}</div></form>' + g_footer())
+    S.add("default", "Malik, 14, tells us about himself and why he’s interested.", main='<h1>About you</h1>' + g_steps(0) + form())
+    S.add("referrer", "Rachel refers Zoe Campbell, 13, and says why.", main='<h1>The young person</h1>' + g_steps(1, 5) + form(referrer=True))
+    S.add("invalid", "No name and no reason.", main='<h1>About you</h1>' + g_steps(0) + form(err={"name": "Enter the young person’s first and last name.", "reason": "Tell us why you’re interested."}))
+    S.add("too-young", "Too young to apply alone: a guardian applies instead.", main='<h1>About you</h1>' + g_steps(0) + form(err={"dob": "Young people aged 12 to 18 can apply for themselves. Ask a parent or guardian to apply for you."}, dob="2016-02-10"))
+    S.add("submitting", "Saving.", main='<h1>About you</h1>' + g_steps(0) + form(busy=True))
+    S.add("error", "Saving failed; nothing typed is lost.", main='<h1>About you</h1>' + g_steps(0) + alert("danger", "We couldn’t save that", "Nothing is lost. Tap Continue again.") + form())
 
 
 # ------------------------------------------------------------------ Enroll: children
@@ -130,6 +198,22 @@ def enroll_review(S):
     S.add("error", "Submitting failed; kept on the device.", main=hdr + alert("danger", "We couldn’t send your enrollment", "Nothing is lost. Tap Sign and submit again.") + f'<form class="stack" action="#" method="post" novalidate>{summary}{consent()}</form>' + g_footer())
     S.add("success", "Submitted: what happens next, and the one link to keep.", main=g_steps(3) + card(f'<div class="stack center" style="align-items: center;"><span class="empty__icon" aria-hidden="true">{icon("check-circle", "icon--lg")}</span><h1>Thank you, Carmen</h1><p class="text-muted">Mateo and Sofía are enrolled, pending office review. We’ll text you within two days.</p>'
                                                                                            f'<p><strong>Keep this link:</strong> <a href="{page("guardian-update")}">harbourview.promisehub.app/g/rivera</a></p>{btn("Done", "primary", href=page("guardian-home"), size="lg")}</div>', cls="card--success") + g_footer())
+    def app_summary(rows):
+        return card('<div class="summary">' + "".join(f'<div class="summary__row"><span class="summary__label">{k}</span><span class="summary__value">{v}</span></div>' for k, v in rows) + "</div>", title="Check everything", tid="sum")
+    youth_rows = [("Program", "After‑School Tutoring · Mon–Thu, 4–6 pm"), ("Applying", "Malik Johnson, 14, for himself"), ("Why", "I want to learn to code and help with the younger kids."), ("Parent or guardian", "Denise Johnson · 905-555-0310")]
+    ref_rows = [("Program", "After‑School Tutoring · Mon–Thu, 4–6 pm"), ("Referred by", "Rachel Ellis · Guidance counsellor, Bennetto Elementary"), ("Young person", "Zoe Campbell, 13"), ("Why", "Zoe is curious and kind, and needs somewhere to belong after school."), ("Parent or guardian", "Tanya Campbell · 905-555-0320")]
+
+    def agree(label, err="", busy=False):
+        return (switch("consent", label, checked=not err, attrs=' role="switch"' + (' aria-invalid="true" aria-describedby="consent-error"' if err else ""))
+                + (f'<div class="field__error" id="consent-error">{esc(err)}</div>' if err else "") + btn("Submit", "primary", type_="submit", busy=busy, size="lg"))
+    youth_agree = "I agree to the privacy notice, and I understand my parent or guardian must consent before I start."
+    ref_agree = "The family knows about this referral and agrees to be contacted."
+    S.add("youth", "Malik checks his application; under 18, his guardian consents later (L2-071).", main='<h1>Check and submit</h1>' + g_steps(2) + f'<form class="stack" action="#" method="post" novalidate>{app_summary(youth_rows)}{card(agree(youth_agree), tag="div")}</form>' + g_footer())
+    S.add("referrer", "Rachel checks the referral and confirms the family agrees to be contacted (L2-071).", main='<h1>Check and submit</h1>' + g_steps(3, 5) + f'<form class="stack" action="#" method="post" novalidate>{app_summary(ref_rows)}{card(agree(ref_agree), tag="div")}</form>' + g_footer())
+    S.add("referrer-invalid", "Submitted without confirming the family agrees (L2-071).", main='<h1>Check and submit</h1>' + g_steps(3, 5) + f'<form class="stack" action="#" method="post" novalidate>{app_summary(ref_rows)}{card(agree(ref_agree, err="Confirm the family agrees to be contacted."), tag="div")}</form>' + g_footer())
+    S.add("duplicate", "The same young person already has an open application: nothing is submitted twice (L2-071).", main='<h1>Check and submit</h1>' + g_steps(2) + alert("warning", "Malik already has an application for After‑School Tutoring", "We have it, and we’ll be in touch. Questions? Text or call 905-555-0100.") + f'<form class="stack" action="#" method="post" novalidate>{app_summary(youth_rows)}</form>' + g_footer())
+    S.add("submitted-youth", "Malik’s application is in: what happens next, with his guardian’s consent still to come (L2-071).", main=g_steps(3) + card(f'<div class="stack center" style="align-items: center;" role="status"><span class="empty__icon" aria-hidden="true">{icon("check-circle", "icon--lg")}</span><h1>Thank you, Malik</h1><p class="text-muted">Your application for After‑School Tutoring is in. Malik is waiting for review.</p><p>We’ll ask Denise Johnson to give consent before you start. We sent a confirmation to 905-555-0311.</p></div>', cls="card--success") + g_footer())
+    S.add("submitted-referrer", "Rachel’s referral is in: the office contacts the family (L2-071).", main=g_steps(4, 5) + card(f'<div class="stack center" style="align-items: center;" role="status"><span class="empty__icon" aria-hidden="true">{icon("check-circle", "icon--lg")}</span><h1>Thank you, Rachel</h1><p class="text-muted">Your referral for Zoe is in. Zoe is waiting for review.</p><p>We’ll contact Tanya Campbell about next steps. We sent a confirmation to rachel.ellis@bennetto.example.ca.</p></div>', cls="card--success") + g_footer())
     S.add("waitlisted", "Submitted into a full program: waitlist position and what happens.", main=g_steps(3) + card(f'<div class="stack center" style="align-items: center;"><span class="empty__icon" aria-hidden="true">{icon("clock", "icon--lg")}</span><h1>You’re 2nd on the waitlist</h1><p class="text-muted">Nikolai is saved. If a place opens, we text you first.</p>{btn("Done", "primary", href=page("guardian-home"), size="lg")}</div>', cls="card--warning") + g_footer())
 
 

@@ -1,0 +1,57 @@
+@startuml
+title UML sequence behaviour — A young person applies, or a referrer refers
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Young person (Malik) or referrer (Rachel)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "GuardianEnrollPage" as page
+  participant "GuardianEnrollmentApi" as gapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "GuardianEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "GuardianEnrollmentHandler" as h
+  participant "EnrollmentLink" as link
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+  participant "SMS / email" as out
+end box
+actor -> page : Who is applying? Young person / referrer (c1)
+page -> gapi : requestCode(slug, contact)
+gapi -> ep : POST /g/enroll/{slug}/code
+ep -> h : RequestCodeAsync
+h -> link : program, tenant, Roster on? (c10)
+alt fourth code in 15 minutes
+  h --> ep : 429 too-many (c9)
+else
+  h -> out : code
+end
+actor -> page : code, then details steps
+page -> gapi : save(draft with applyingAs, referrer, reason)
+gapi -> ep : PUT /g/enroll/{slug}/draft
+ep -> h : SaveAsync
+alt missing or too long, age outside 12 to 18
+  h --> ep : 422 field errors (c3, c4, c11)
+else
+  h -> db : draft on the session
+end
+actor -> page : agree, Submit (c5)
+page -> gapi : submit(slug, consent)
+gapi -> ep : POST /g/enroll/{slug}/submit
+ep -> h : SubmitAsync
+alt not agreed
+  h --> ep : 422 consent (c5)
+else open request for the same name and birth date
+  h --> ep : 409 duplicate (c8)
+else
+  h -> db : new household, guardian, child, EnrollmentRequest (AppliedAs, referrer, reason, SeasonConsent) + audit (c6)
+  h -> out : acknowledgement to the verified contact (c7)
+  ep --> gapi : 200 status, position, appliedAs
+  page --> actor : Thank you; waiting for review
+end
+@enduml

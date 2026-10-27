@@ -1,0 +1,21 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Submit an application or referral
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "GuardianEnrollPage", "Angular page", "enroll, enroll-referrer, enroll-youth, enroll-household, enroll-review")
+  Component(gapi, "GuardianEnrollmentApi", "Contract + HTTP client", "GUARDIAN_ENROLLMENT_API")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "GuardianEndpoints", "Minimal API", "/g/enroll/{slug}: code, verify, draft, submit")
+  Component(link, "EnrollmentLink", "Service", "slug to program and tenant, Roster gate, device session")
+  Component(h, "GuardianEnrollmentHandler", "Handler", "per-path validation, consent, duplicates, rate limit, acknowledgement")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "EnrollmentSessions, EnrollmentRequests, Households, Guardians, Children, AuditEvents")
+}
+Rel(page, gapi, "requestCode, verify, save, submit")
+Rel(gapi, ep, "JSON/HTTPS")
+Rel(ep, h, "calls")
+Rel(h, link, "resolves")
+Rel(link, db, "reads")
+Rel(h, db, "writes + audit")
+@enduml

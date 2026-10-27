@@ -1,0 +1,55 @@
+@startuml
+title Class structure — Submit an application or referral
+skinparam classAttributeIconSize 0
+class EnrollmentDraft <<record>> {
+  Household : EnrollmentHouseholdDraft
+  Children : List<EnrollmentChildDraft>
+  ApplyingAs : string?
+  Referrer : EnrollmentReferrerDraft?
+  Reason : string?
+}
+class EnrollmentReferrerDraft <<record>> {
+  Name : string?
+  Role : string?
+  Organization : string?
+}
+enum EnrollmentApplicant {
+  Guardian
+  Youth
+  Referrer
+}
+class EnrollmentSession <<entity>> {
+  Contact : string
+  CodesSent : int
+  CodesSince : DateTimeOffset?
+  CanSendCode(now) : bool
+}
+class EnrollmentRequest <<entity>> {
+  OrganizationId : Guid
+  ProgramId : Guid
+  ChildId : Guid
+  HouseholdId : Guid
+  Status : EnrollmentRequestStatus
+  AppliedAs : EnrollmentApplicant
+  ReferrerName : string?
+  ReferrerRole : string?
+  ReferrerOrganization : string?
+  ReferrerContact : string?
+  Reason : string?
+  SeasonConsent : bool
+}
+class GuardianEnrollmentHandler {
+  RequestCodeAsync(slug, request)
+  SaveAsync(slug, device, draft)
+  SubmitAsync(slug, device, request)
+}
+class Household <<entity>>
+class Child <<entity>>
+EnrollmentDraft *-- EnrollmentReferrerDraft
+EnrollmentRequest --> EnrollmentApplicant
+GuardianEnrollmentHandler ..> EnrollmentDraft : validates
+GuardianEnrollmentHandler --> EnrollmentSession
+GuardianEnrollmentHandler ..> EnrollmentRequest : creates
+GuardianEnrollmentHandler ..> Household : creates
+GuardianEnrollmentHandler ..> Child : creates
+@enduml
