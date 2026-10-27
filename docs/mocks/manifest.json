@@ -1913,6 +1913,56 @@
       ]
     },
     {
+      "id": "curriculum-badge",
+      "kind": "page",
+      "title": "Badges",
+      "route": "/curriculum/badges",
+      "requirements": [
+        "L2-084",
+        "L2-085",
+        "L2-032",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "deleted",
+        "loading",
+        "empty",
+        "error",
+        "new",
+        "edit",
+        "automatic",
+        "invalid",
+        "busy",
+        "saved",
+        "failed",
+        "awarded",
+        "not-found",
+        "forbidden"
+      ]
+    },
+    {
+      "id": "curriculum-progression",
+      "kind": "page",
+      "title": "Progression framework",
+      "route": "/curriculum/progression",
+      "requirements": [
+        "L2-086",
+        "L2-082",
+        "L2-032",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "added",
+        "removed",
+        "loading",
+        "empty",
+        "error",
+        "forbidden"
+      ]
+    },
+    {
       "id": "learn-home",
       "kind": "page",
       "title": "Learning",
@@ -3568,6 +3618,99 @@
         "busy": "Leaving or staying is instant; Save draft and leave shows the page's own busy Save draft.",
         "invalid": "The dialog has no inputs to validate.",
         "failed": "A failed draft save keeps the page open with its own failed alert."
+      }
+    },
+    {
+      "id": "award-badge",
+      "kind": "dialog",
+      "title": "Award Speaks Up",
+      "opens_from": "curriculum-badge",
+      "requirements": [
+        "L2-085",
+        "L2-032",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed",
+        "already"
+      ]
+    },
+    {
+      "id": "delete-badge",
+      "kind": "dialog",
+      "title": "Delete Speaks Up?",
+      "opens_from": "curriculum-badge",
+      "requirements": [
+        "L2-084",
+        "L2-032",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "invalid": "The dialog has no inputs to validate."
+      }
+    },
+    {
+      "id": "progression-stage",
+      "kind": "dialog",
+      "title": "Add stage",
+      "opens_from": "curriculum-progression",
+      "requirements": [
+        "L2-086",
+        "L2-032",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed",
+        "edit"
+      ]
+    },
+    {
+      "id": "progression-competency",
+      "kind": "dialog",
+      "title": "Add competency to Explorer",
+      "opens_from": "curriculum-progression",
+      "requirements": [
+        "L2-086",
+        "L2-082",
+        "L2-032",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ]
+    },
+    {
+      "id": "remove-competency",
+      "kind": "dialog",
+      "title": "Remove Works with others?",
+      "opens_from": "curriculum-progression",
+      "requirements": [
+        "L2-086",
+        "L2-082",
+        "L2-032",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "invalid": "The dialog has no inputs to validate."
       }
     },
     {

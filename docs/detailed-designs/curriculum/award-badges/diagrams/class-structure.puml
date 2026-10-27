@@ -1,0 +1,33 @@
+@startuml
+title Class structure — Award badges
+skinparam classAttributeIconSize 0
+class BadgeAwarder {
+  +AwardAsync(organizationId, membershipId) : int
+  -MeetsAsync(Badge, membershipId) : bool
+  -ModuleDoneAsync(moduleId, membershipId) : bool
+}
+class BadgeAwardCommand {
+  +AwardAsync(badgeId, membershipId) : Gated
+}
+class BadgeAward {
+  +Id : Guid
+  +OrganizationId : Guid
+  +BadgeId : Guid
+  +MembershipId : Guid
+  +AwardedAt : DateTimeOffset
+  +AwardedBy : string?
+}
+class Badge
+class LessonProgress
+class QuizAttempt
+class AssignmentSubmission
+class Notification
+BadgeAwarder ..> Badge : automatic, not deleted
+BadgeAwarder ..> LessonProgress
+BadgeAwarder ..> QuizAttempt
+BadgeAwarder ..> AssignmentSubmission
+BadgeAwarder ..> BadgeAward : creates once
+BadgeAwarder ..> Notification : creates
+BadgeAwardCommand ..> BadgeAward : creates once
+Badge "1" o-- "*" BadgeAward
+@enduml

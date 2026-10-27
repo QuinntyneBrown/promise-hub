@@ -86,6 +86,9 @@ One folder per subsystem, one folder per vertically sliced feature, each with a 
 | curriculum | upload-lesson-video | L2-067, L2-031 |
 | curriculum | author-quizzes | L2-073 |
 | curriculum | author-assignments | L2-074 |
+| curriculum | author-badges | L2-084 |
+| curriculum | award-badges | L2-085 |
+| curriculum | author-progression-framework | L2-086, L2-082 |
 | mentoring | list-assigned-youth (journeys 55, 63, 67, 68, 69 add more; see [mentoring](mentoring/README.md)) | L2-005, L2-007 |
 | mentoring | assign-mentors | L2-062, L2-007 |
 | mentoring | manage-mentor-roster | L2-063, L2-065, L2-062 |

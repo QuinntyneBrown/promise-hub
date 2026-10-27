@@ -61,3 +61,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0055](0055-quiz-attempts-are-scored-on-the-server-and-the-best-counts.md) | Quiz attempts are per membership, autosaved, scored on the server at submit and then locked; the best scored attempt counts |
 | [0056](0056-assignment-submissions-carry-their-file-and-history-and-drafts-stay-on-the-device.md) | An assignment submission is one row per youth and assignment, carries its file and its history, and is revised in place; drafts stay on the device |
 | [0057](0057-mentor-reviews-grade-in-place-with-a-version-and-competencies-are-appended.md) | A mentor grades a submission in place against its version, approves quiz results onto the attempt, and appends competency assessments |
+| [0058](0058-badges-are-evaluated-after-learning-events-and-stages-group-competencies.md) | Badges are evaluated after each learning event and awarded once; stages group the existing competencies |

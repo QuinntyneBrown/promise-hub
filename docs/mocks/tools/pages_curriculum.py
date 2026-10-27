@@ -68,7 +68,8 @@ def track_card(name: str, key: str, desc: str, st: str, rows, cohorts: str) -> s
 @screen("curriculum-tracks", "page", "Curriculum", route="/curriculum", reqs=["L2-066", "L2-007", R_LEARN])
 def curriculum_tracks(S):
     hdr = page_header("Curriculum", "Tracks, modules and lessons your youth work through.",
-                      btn("New track", "primary", icon_name="plus", attrs=' aria-haspopup="dialog"', data_href=dialog("new-track")))
+                      btn("Badges", "", icon_name="award", href=page("curriculum-badge")) + btn("Progression", "", icon_name="list", href=page("curriculum-progression"))
+                      + btn("New track", "primary", icon_name="plus", attrs=' aria-haspopup="dialog"', data_href=dialog("new-track")))
     numbers = kpis([("Tracks", "2", "1 published"), ("Modules", "4", "1 published"), ("Lessons", "8", "")])
     tracks = (track_card("Leadership Foundations", "leadership", "Growing as a leader at home, at school and in the cohort.", "Published", LEADERSHIP, "After‑School Tutoring and Saturday Sports")
               + track_card("Digital Skills", "digital", "Using technology safely and creatively.", "Draft", DIGITAL, "no cohort yet"))
@@ -363,3 +364,177 @@ def curriculum_assignment(S):
     S.add("error", "The assignment failed to load.", **KW, main=assessment_crumbs("Assignment") + page_header("Assignment") + failed("We couldn’t load this assignment"))
     S.add("not-found", "An assignment of another organization, or an unknown address.", **KW, main=assessment_crumbs("Assignment") + page_header("Assignment") + not_found("assignment"))
     S.add("forbidden", "A youth worker opening an assignment directly: 403.", nav="today", user=STAFF["aisha"], main=page_header("Assignment") + forbidden())
+
+
+# ---------------------------------------------------------------- Badges and progression (prompt 64, L2-084 to L2-086)
+# Ported from Waypoint's badge builder and progression editor. Badges belong to the organization: an automatic badge names one rule
+# and the lesson, module, quiz or assignment it watches, and the server awards it once when a youth meets it; a badge by hand is
+# awarded by a program director. The progression framework is ordered stages, each earned through its competencies.
+BADGE_ICONS = [("Star", "star"), ("Medal", "award"), ("Heart", "heart"), ("Flag", "flag"), ("Book", "book"), ("Sparkle", "sparkle"), ("People", "users"), ("Tick", "check-circle")]
+BADGE_RULES = ["Completes a lesson", "Completes a module", "Passes a quiz", "Has an assignment accepted"]
+BADGES = [
+    ("First Steps", "star", "Finished a first lesson.", "Automatic", "Completes a lesson · Pick Up the Towel", "", 2),
+    ("Servant Heart", "heart", "Finished Leading by Serving.", "Automatic", "Completes a module · Leading by Serving", "Serves others", 1),
+    ("Quiz Champion", "award", "Passed the Leading by Serving quiz.", "Automatic", "Passes a quiz · Leading by Serving quiz", "", 0),
+    ("Served Someone", "check-circle", "Had Serve someone this week accepted.", "Automatic", "Has an assignment accepted · Serve someone this week", "Serves others", 1),
+    ("Speaks Up", "flag", "Shared an idea with the whole group.", "By hand", "A program director awards it", "Speaks up", 1),
+    ("Encourager", "sparkle", "Lifted someone up in the group.", "By hand", "A program director awards it", "", 0),
+]
+COMPETENCY_OPTIONS = ["None", "Serves others", "Works with others", "Speaks up", "Follows through", "Leads a small group"]
+
+
+def medal(name: str, icon_name: str, caption: str, *, locked: bool = False, small: bool = False) -> str:
+    cls = "achievement-badge" + (" achievement-badge--locked" if locked else "") + (" achievement-badge--sm" if small else "")
+    return (f'<div class="{cls}"><span class="achievement-badge__medal" aria-hidden="true">{icon(icon_name)}</span>'
+            f'<span class="achievement-badge__name">{esc(name)}</span><span class="achievement-badge__caption">{esc(caption)}</span></div>')
+
+
+def badges_crumbs(cur: str) -> str:
+    return breadcrumb([("Curriculum", page("curriculum-tracks")), ("Badges", page("curriculum-badge"))], cur)
+
+
+@screen("curriculum-badge", "page", "Badges", route="/curriculum/badges", reqs=["L2-084", "L2-085", "L2-032", R_LEARN])
+def curriculum_badge(S):
+    new_btn = btn("New badge", "primary", icon_name="plus", href=page("curriculum-badge", "new"))
+    hdr = breadcrumb([("Curriculum", page("curriculum-tracks"))], "Badges") + page_header("Badges", "What youth earn as they learn, and how they earn it.", new_btn)
+    numbers = kpis([("Badges", "6", "4 automatic · 2 by hand"), ("Awarded", "5", "to 2 youth"), ("Most earned", "First Steps", "2 youth")])
+
+    def rows(items=BADGES):
+        out = []
+        for name, ic, _desc, kind, rule, comp, n in items:
+            meta = f'{esc(rule)}{" · " + esc(comp) if comp else ""} · earned by {n} youth'
+            out.append(list_item(esc(name), meta, href=page("curriculum-badge", "edit" if kind == "By hand" else "automatic"),
+                                 lead=f'<span class="icon-tile" aria-hidden="true">{icon(ic)}</span>', end=badge(kind, "info" if kind == "Automatic" else "")))
+        return ul_list(out, card=False, label="Badges")
+
+    listing = card(rows(), title="All badges", tid="all-badges", cls="card--flush")
+    S.add("default", "Marisol opens Badges from Curriculum: each badge with how it is earned, the competency it counts toward and how many youth hold it.", **KW,
+          main=hdr + numbers + listing,
+          notes=note("Automatic badges are awarded by the server when a youth completes the lesson or module, passes the quiz or has the assignment accepted; once each.", "top: 5rem; right: 1rem;"))
+    S.add("deleted", "Marisol deleted Encourager: it leaves the list and a toast says youth who earned it keep it.", **KW,
+          main=hdr + kpis([("Badges", "5", "4 automatic · 1 by hand"), ("Awarded", "5", "to 2 youth"), ("Most earned", "First Steps", "2 youth")])
+          + card(rows(BADGES[:5]), title="All badges", tid="all-badges", cls="card--flush"),
+          toast_html=toast_region(toast("success", "Badge deleted", "Youth who earned Encourager keep it.")))
+    S.add("loading", "Badges loading: skeletons in the same layout.", **KW, main=hdr + skeleton_kpis(3) + skeleton_list(4, "Loading badges"))
+    S.add("empty", "No badges yet: one action, New badge.", **KW,
+          main=breadcrumb([("Curriculum", page("curriculum-tracks"))], "Badges") + page_header("Badges", "What youth earn as they learn, and how they earn it.")
+          + card(empty("No badges yet", "Celebrate what youth reach: award a badge automatically when they finish a lesson, a module, a quiz or an assignment, or by hand.",
+                       action=new_btn, icon_name="award"), cls="card--flush"))
+    S.add("error", "Badges failed to load; the shell stays.", **KW, main=hdr + failed("We couldn’t load the badges"))
+
+    def form(name="Speaks Up", ic="flag", desc="Shared an idea with the whole group.", automatic=False, rule="Completes a module", target="Leadership Foundations · Leading by Serving",
+             comp="Speaks up", err=None, failed_=False, busy=False):
+        err = err or {}
+        summary = form_summary(list(err.items())) if err else ""
+        fail = alert("danger", "We couldn’t save the badge", "Your changes are still here. Try again.") if failed_ else ""
+        details = (summary + fail
+                   + field("name", "Badge name", value="" if "name" in err else name, required=True, error=err.get("name", ""), help_="Up to 60 characters. Youth see it on their journey.")
+                   + textarea("description", "What it celebrates", value=desc, rows=2, optional=True, help_="Up to 200 characters.")
+                   + select("icon", "Icon", [label for label, _ in BADGE_ICONS], selected=next(label for label, key in BADGE_ICONS if key == ic)))
+        earned = fieldset("How it’s earned", choice("kind", "Automatically, by a rule", small="The server awards it once when a youth meets the rule.", checked=automatic)
+                          + choice("kind", "By hand", small="A program director awards it to a youth.", checked=not automatic))
+        if automatic:
+            targets = {"Completes a module": ["Leadership Foundations · Knowing Yourself", "Leadership Foundations · Leading by Serving"],
+                       "Completes a lesson": ["Leading by Serving · Pick Up the Towel", "Leading by Serving · Last in Line"]}.get(rule, [target])
+            earned += (f'<div class="two-col">{select("rule", "Rule", BADGE_RULES, selected=rule)}'
+                       f'{select("target", "Which one", [""] + targets if "target" in err else targets, selected="" if "target" in err else target, error=err.get("target", ""))}</div>')
+        earned += select("competency", "Counts toward", COMPETENCY_OPTIONS, selected=comp or "None", optional=True, help_="Links the badge to a competency of the progression framework.")
+        actions = f'<div class="form-actions">{btn("Cancel", "ghost", href=page("curriculum-badge"))}{btn("Save badge", "primary", type_="submit", busy=busy)}</div>'
+        return (f'<form class="stack" action="#" method="post" novalidate>{card(f"<div class=\"stack\">{details}</div>", title="Badge", tid="badge")}'
+                f'{card(f"<div class=\"stack\">{earned}</div>", title="Earning it", tid="earning")}{actions}</form>')
+
+    def side(name="Speaks Up", ic="flag", caption="Shared an idea with the whole group.", holders=None, manual=True, new=False):
+        preview = card(medal(name, ic, caption), title="Preview", tid="preview")
+        if new:
+            return preview
+        holders = holders if holders is not None else [(YOUTH["sofia"], "Awarded by Marisol Delgado · Wed 4 Nov")]
+        foot = btn("Award badge", "", size="sm", icon_name="award", attrs=' aria-haspopup="dialog"', data_href=dialog("award-badge")) if manual else ""
+        if holders:
+            body = ul_list([list_item(esc(p["name"]), esc(how), person=p) for p, how in holders], card=False, label="Youth who earned it")
+        else:
+            body = f'<p class="text-muted">No youth has earned it yet.</p>'
+        return preview + card(body, title=f"Earned by ({len(holders)})", tid="earned", cls="card--flush", footer=foot)
+
+    def edit_hdr(name="Speaks Up", kind="By hand"):
+        return badges_crumbs(name) + page_header(f'{esc(name)} {badge(kind, "info" if kind == "Automatic" else "")}', "Badge · counts toward Speaks up" if kind == "By hand" else "Badge · counts toward Serves others",
+                                                 btn("Delete", "ghost", icon_name="trash", attrs=' aria-haspopup="dialog"', aria_label=f"Delete {name}", data_href=dialog("delete-badge")))
+
+    def edit(f, s, name="Speaks Up", kind="By hand"):
+        return edit_hdr(name, kind) + f'<div class="split"><div class="stack">{f}</div><div class="stack">{s}</div></div>'
+
+    new_layout = (badges_crumbs("New badge") + page_header("New badge", "Name it, pick its icon and choose how youth earn it.")
+                  + f'<div class="split"><div class="stack">{form(name="", ic="star", desc="", comp="")}</div><div class="stack">{side("New badge", "star", "How youth earn it shows here.", new=True)}</div></div>')
+    S.add("new", "New badge: an empty builder with a live preview; nothing is saved until Save badge.", **KW, main=new_layout)
+    S.add("edit", "Marisol opens Speaks Up, a badge by hand: its details, the competency it counts toward, who holds it and Award badge.", **KW, main=edit(form(), side()))
+    servant = form("Servant Heart", "heart", "Finished Leading by Serving.", automatic=True, comp="Serves others")
+    S.add("automatic", "Servant Heart, an automatic badge: the rule Completes a module and the module it watches; no Award badge, the server awards it.", **KW,
+          main=edit(servant, side("Servant Heart", "heart", "Finished Leading by Serving.", [(YOUTH["sofia"], "Automatically · Thu 5 Nov")], manual=False), "Servant Heart", "Automatic"),
+          notes=note("Changing the rule does not take a badge away from youth who already earned it.", "top: 5rem; right: 1rem;"))
+    S.add("invalid", "Saving an automatic badge with no name and no module chosen: errors beside the fields and in the focused summary.", **KW,
+          main=edit(form("Servant Heart", "heart", "Finished Leading by Serving.", automatic=True, comp="Serves others", err={"name": "Give the badge a name.", "target": "Choose the module that earns it."}),
+                    side("Servant Heart", "heart", "Finished Leading by Serving.", [], manual=False), "Servant Heart", "Automatic"))
+    S.add("busy", "Saving: the button is busy and the form cannot be sent twice.", **KW, main=edit(form(busy=True), side()))
+    S.add("saved", "Saved: a toast confirms and the page stays.", **KW, main=edit(form(), side()), toast_html=toast_region(toast("success", "Badge saved", "Speaks Up")))
+    S.add("failed", "The save failed: inputs kept, an alert offers a retry.", **KW, main=edit(form(failed_=True), side()))
+    S.add("awarded", "Marisol awarded Speaks Up to Nadia: she joins Earned by with Marisol’s name, and a toast confirms.", **KW,
+          main=edit(form(), side(holders=[(YOUTH["nadia"], "Awarded by Marisol Delgado · Thu 5 Nov"), (YOUTH["sofia"], "Awarded by Marisol Delgado · Wed 4 Nov")])),
+          toast_html=toast_region(toast("success", "Badge awarded", "Nadia Haddad earned Speaks Up.")))
+    S.add("not-found", "A deleted badge, one of another organization, or an unknown address.", **KW,
+          main=badges_crumbs("Badge") + page_header("Badge") + card(empty("We can’t find that badge", "It may have been deleted, or belong to another organization.",
+                                                                          action=btn("Back to Badges", "", href=page("curriculum-badge")), icon_name="search"), cls="card--flush"))
+    S.add("forbidden", "A site lead opening Badges directly: only admins and program directors author; the server answers 403.", nav="today", user=STAFF["jaylen"],
+          main=page_header("Badges") + forbidden())
+
+
+STAGES = [
+    ("Explorer", "Finding their place in the group", [("Serves others", "Notices what needs doing and helps without being asked."), ("Works with others", "Listens, takes turns and helps the group decide.")]),
+    ("Contributor", "Takes part and helps others take part", [("Speaks up", "Shares ideas in the group and says when something is wrong."), ("Follows through", "Finishes what they start and keeps their promises.")]),
+    ("Leader", "Leads others in the cohort", [("Leads a small group", "Guides a discussion and keeps a small group on track.")]),
+]
+
+
+@screen("curriculum-progression", "page", "Progression framework", route="/curriculum/progression", reqs=["L2-086", "L2-082", "L2-032", R_LEARN])
+def curriculum_progression(S):
+    add = btn("Add stage", "primary", icon_name="plus", attrs=' aria-haspopup="dialog"', data_href=dialog("progression-stage"))
+    hdr = (breadcrumb([("Curriculum", page("curriculum-tracks"))], "Progression")
+           + page_header("Progression framework", "The stages youth grow through, and the competencies that earn each one.", add))
+
+    def stage_card(i, name, desc, comps, n):
+        key = f"stage-{i + 1}"
+        actions = (f'<span class="cluster cluster--snug">{icon_btn("edit", f"Edit {name}", data_href=dialog("progression-stage", "edit"))}'
+                   f'{icon_btn("arrow-up", f"Move {name} up", attrs=" disabled" if i == 0 else "")}'
+                   f'{icon_btn("arrow-down", f"Move {name} down", attrs=" disabled" if i == n - 1 else "")}</span>')
+        head = (f'<div class="cluster cluster--between"><div><h2 class="card__title" id="{key}">{i + 1}. {esc(name)}</h2>'
+                f'<p class="text-muted">{esc(desc)}</p></div>{actions}</div>')
+        if comps:
+            items = [list_item(esc(c), esc(d), end=icon_btn("trash", f"Remove {c}", data_href=dialog("remove-competency"))) for c, d in comps]
+            body = ul_list(items, card=False, label=f"Competencies of {name}")
+        else:
+            body = '<p class="text-muted">No competencies yet. Add what a youth shows to reach this stage.</p>'
+        foot = btn("Add competency", "ghost", size="sm", icon_name="plus", attrs=' aria-haspopup="dialog"', aria_label=f"Add competency to {name}", data_href=dialog("progression-competency"))
+        return f'<section class="card stack" aria-labelledby="{key}">{head}{body}<p class="card__footer">{foot}</p></section>'
+
+    def how(stages):
+        steps = "".join(f"<li>{esc(n)}</li>" for n, _, _ in stages)
+        return card(f'<p>A youth reaches a stage once their mentor marks every competency in it, and in the stages before it, Proficient or Mastered.</p>'
+                    f'<ol class="stack stack--snug">{steps}</ol><p class="text-caption">Mentors assess these competencies on each youth’s record. Badges can count toward one, such as Servant Heart toward Serves others.</p>',
+                    title="How youth advance", tid="how")
+
+    def layout(stages=STAGES):
+        n = len(stages)
+        cards = "".join(stage_card(i, nm, d, c, n) for i, (nm, d, c) in enumerate(stages))
+        return hdr + f'<div class="split"><div class="stack">{cards}</div><div class="stack">{how(stages)}</div></div>'
+
+    S.add("default", "Marisol opens the progression framework: three stages in order, each with the competencies that earn it, and how youth advance.", **KW, main=layout(),
+          notes=note("Move up and Move down save the whole stage order on the server. Removing a competency keeps the assessments mentors already made.", "top: 5rem; right: 1rem;"))
+    S.add("added", "Marisol added the stage Mentor: it is last, with no competencies yet, and a toast confirms.", **KW,
+          main=layout(STAGES + [("Mentor", "Helps a newer youth find their feet", [])]), toast_html=toast_region(toast("success", "Stage added", "Mentor")))
+    S.add("removed", "Marisol removed Works with others from Explorer: mentors stop assessing it and a toast confirms.", **KW,
+          main=layout([(STAGES[0][0], STAGES[0][1], STAGES[0][2][:1])] + STAGES[1:]), toast_html=toast_region(toast("success", "Competency removed", "Works with others. Earlier assessments are kept.")))
+    S.add("loading", "The framework loading.", **KW, main=hdr + f'<div class="split">{skeleton_list(4, "Loading stages")}{skeleton_list(2, "Loading how youth advance")}</div>')
+    S.add("empty", "No stages yet: one action, Add stage.", **KW,
+          main=breadcrumb([("Curriculum", page("curriculum-tracks"))], "Progression") + page_header("Progression framework", "The stages youth grow through, and the competencies that earn each one.")
+          + card(empty("No stages yet", "A stage is a step on a youth’s journey, such as Explorer or Leader. Add one, then the competencies that earn it.",
+                       action=add, icon_name="list"), cls="card--flush"))
+    S.add("error", "The framework failed to load; the shell stays.", **KW, main=hdr + failed("We couldn’t load the progression framework"))
+    S.add("forbidden", "A youth worker opening the framework directly: 403.", nav="today", user=STAFF["aisha"], main=page_header("Progression framework") + forbidden())

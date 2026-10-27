@@ -1,0 +1,41 @@
+@startuml
+title UML sequence behaviour — Awarding a badge by hand
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Program director (Marisol)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "BadgeBuilderPage" as page
+  participant "AwardBadgeDialog" as dlg
+  participant "CurriculumApi" as capi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "CurriculumEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "BadgeAwardCommand" as cmd
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : Award badge
+page -> dlg : open (badge, youth who can still earn it)
+actor -> dlg : Nadia Haddad
+dlg -> capi : awardBadge(badgeId, membershipId)
+capi -> ep : POST /curriculum/badges/{id}/awards (AuthorCurriculum, Learning — L2-085 c6)
+ep -> cmd : AwardAsync
+cmd -> db : badge of the organization, by hand, not deleted
+alt automatic
+  cmd --> dlg : 409 automatic
+else not an active youth of the organization
+  cmd --> dlg : 422 membershipId
+else already holds it
+  cmd --> dlg : 409 already-awarded (L2-085 c5)
+else
+  cmd -> db : BadgeAward (Marisol, now) + Notification + audit Created (L2-085 c4)
+  cmd --> dlg : 201
+  dlg --> page : closed; Earned by reloads; toast
+end
+@enduml

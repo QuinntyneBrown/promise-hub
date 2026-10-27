@@ -1,0 +1,49 @@
+@startuml
+title Class structure — Author badges
+skinparam classAttributeIconSize 0
+class Badge {
+  +Id : Guid
+  +OrganizationId : Guid
+  +Name : string
+  +Icon : string
+  +Description : string?
+  +Kind : BadgeKind
+  +Rule : BadgeRule?
+  +TargetId : Guid?
+  +CompetencyId : Guid?
+  +CreatedAt : DateTimeOffset
+  +DeletedAt : DateTimeOffset?
+  +Update(...)
+  +Delete(at)
+}
+enum BadgeKind { Automatic
+Manual }
+enum BadgeRule { LessonCompleted
+ModuleCompleted
+QuizPassed
+AssignmentAccepted }
+class BadgeAward {
+  +BadgeId : Guid
+  +MembershipId : Guid
+  +AwardedAt : DateTimeOffset
+  +AwardedBy : string?
+}
+class Competency {
+  +StageId : Guid?
+  +RemovedAt : DateTimeOffset?
+}
+class BadgeCommands {
+  +CreateAsync(BadgeCommand)
+  +UpdateAsync(id, BadgeCommand)
+  +DeleteAsync(id)
+}
+class BadgeRules {
+  +CheckAsync(BadgeCommand) : Dictionary
+}
+Badge --> BadgeKind
+Badge --> BadgeRule
+Badge "1" o-- "*" BadgeAward : earned as
+Badge ..> Competency : counts toward
+BadgeCommands ..> BadgeRules
+BadgeCommands ..> Badge : creates
+@enduml
