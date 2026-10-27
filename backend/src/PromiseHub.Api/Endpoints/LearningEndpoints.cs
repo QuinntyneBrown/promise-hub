@@ -20,6 +20,12 @@ public static class LearningEndpoints
         learning.MapGet("/modules/{id:guid}", async (Guid id, ModuleViewHandler handler, CancellationToken ct) => (await handler.HandleAsync(id, ct)).ToHttp());
         learning.MapGet("/lessons/{id:guid}", async (Guid id, LessonViewHandler handler, CancellationToken ct) => (await handler.HandleAsync(id, ct)).ToHttp());
         learning.MapPost("/lessons/{id:guid}/complete", async (Guid id, LessonCompletion handler, CancellationToken ct) => (await handler.CompleteAsync(id, ct)).ToHttp());
+        // Streamed under the youth's session cookie with range requests, so the player can seek (ADR 0051).
+        learning.MapGet("/lessons/{id:guid}/video", async (Guid id, LessonVideoStream handler, CancellationToken ct) =>
+        {
+            var video = await handler.OpenAsync(id, ct);
+            return video.Value is { } v ? Results.Stream(v.Content, v.ContentType, enableRangeProcessing: true) : video.ToHttp();
+        });
         return app;
     }
 }

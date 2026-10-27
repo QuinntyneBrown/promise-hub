@@ -77,6 +77,10 @@ export class HttpLearningApi implements LearningApi {
     );
   }
 
+  lessonVideoUrl(id: string): string {
+    return `${this.baseUrl}/learning/lessons/${encodeURIComponent(id)}/video`;
+  }
+
   askGuardian(): Observable<ConsentRequestOutcome> {
     return toConsentRequest(
       this.http.post<{ sentTo: string[] }>(`${this.baseUrl}/learning/consent-request`, null),

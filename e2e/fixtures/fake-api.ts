@@ -484,6 +484,7 @@ export class FakeApi {
     ['GET', /^\/api\/learning\/tracks\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.track(route, m.id, programs, p['id']!))],
     ['GET', /^\/api\/learning\/modules\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.module(route, m.id, programs, p['id']!))],
     ['GET', /^\/api\/learning\/lessons\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.lesson(route, m.id, programs, p['id']!))],
+    ['GET', /^\/api\/learning\/lessons\/(?<id>[^/]+)\/video$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.video(route, m.id, programs, p['id']!))],
     ['POST', /^\/api\/learning\/lessons\/(?<id>[^/]+)\/complete$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.completeLesson(route, m.id, programs, p['id']!))],
     ['POST', /^\/api\/learning\/consent-request$/, (route) => this.askGuardian(route)],
     ['GET', /^\/api\/learning\/onboarding$/, (route) => this.onboarding(route)],

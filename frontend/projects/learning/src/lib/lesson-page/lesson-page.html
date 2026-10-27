@@ -59,6 +59,13 @@
       </div>
     }
   </ng-template>
+  <ng-template #watch>
+    @if (l.hasVideo) {
+      <ph-card title="Watch">
+        <ph-video-player [src]="videoUrl(l.id)" [label]="l.title" />
+      </ph-card>
+    }
+  </ng-template>
   <ng-template #prompts>
     @for (p of l.prompts; track $index) {
       <p class="prompt">{{ p }}</p>
@@ -101,6 +108,7 @@
           </div>
         </div>
       </ph-card>
+      <ng-container *ngTemplateOutlet="watch" />
       @if (l.prompts.length) {
         <ph-card title="Reflect before you move on">
           <ng-container *ngTemplateOutlet="prompts" />
@@ -125,6 +133,7 @@
         <ng-container *ngTemplateOutlet="finish" />
       </div>
       <div class="stack">
+        <ng-container *ngTemplateOutlet="watch" />
         @if (l.objectives.length) {
           <ph-card title="What you’ll learn" [flush]="true">
             <ph-list label="What you’ll learn">

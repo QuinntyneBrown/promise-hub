@@ -13,6 +13,7 @@ import {
   PhPageHeader,
   PhScriptureBlock,
   PhSkeleton,
+  PhVideoPlayer,
   ToastService,
 } from '@promisehub/components';
 import { Subject, startWith, switchMap, tap } from 'rxjs';
@@ -39,6 +40,7 @@ const SIZES: TextSize[] = ['md', 'lg', 'xl'];
     PhPageHeader,
     PhScriptureBlock,
     PhSkeleton,
+    PhVideoPlayer,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './lesson-page.html',
@@ -49,6 +51,7 @@ export class LessonPage {
   private readonly toasts = inject(ToastService);
   private readonly refresh$ = new Subject<void>();
   protected readonly lessonLink = lessonLink;
+  protected readonly videoUrl = (id: string) => this.api.lessonVideoUrl(id);
 
   /** Route parameter. */
   readonly id = input.required<string>();

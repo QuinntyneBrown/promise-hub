@@ -66,4 +66,26 @@ export class LearnLessonPage extends BasePage {
   async apiStatus(id: string): Promise<number> {
     return this.page.evaluate(async (l) => (await fetch(`/api/learning/lessons/${l}`)).status, id);
   }
+
+  /** The lesson video player (design system: video-player). */
+  get player(): Locator {
+    return this.page.getByRole('figure', { name: /lesson video/ });
+  }
+
+  get video(): Locator {
+    return this.player.locator('video');
+  }
+
+  /** The media element's readyState: 1 or more once its metadata has loaded. */
+  async videoReadyState(): Promise<number> {
+    return this.video.evaluate((v) => (v as HTMLVideoElement).readyState);
+  }
+
+  get videoFailed(): Locator {
+    return this.page.getByText('The video couldn’t load');
+  }
+
+  async retryVideo(): Promise<void> {
+    await this.page.getByRole('button', { name: 'Retry video' }).click();
+  }
 }

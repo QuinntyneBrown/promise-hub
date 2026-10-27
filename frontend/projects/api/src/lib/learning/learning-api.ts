@@ -25,6 +25,8 @@ export interface LearningApi {
   lesson(id: string): Observable<GatedResult<LessonView>>;
   /** Marks a reading or scripture lesson done (L2-069 criterion 4). */
   completeLesson(id: string): Observable<GatedResult<LessonCompletion>>;
+  /** Where a lesson's video streams from, for the video player (ADR 0051). */
+  lessonVideoUrl(id: string): string;
   /** Asks the guardians of the youth's household for consent. */
   askGuardian(): Observable<ConsentRequestOutcome>;
   /** The youth's first-run setup with its defaults and their program (L2-059). */

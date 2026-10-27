@@ -76,5 +76,6 @@ export * from './lib/textarea/textarea';
 export * from './lib/toast/toast-message';
 export * from './lib/toast/toast-region';
 export * from './lib/toast/toast.service';
+export * from './lib/video-player/video-player';
 export * from './lib/top-bar/org-option';
 export * from './lib/top-bar/top-bar';

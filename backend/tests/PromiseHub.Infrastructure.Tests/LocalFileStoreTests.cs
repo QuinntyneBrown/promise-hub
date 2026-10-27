@@ -21,6 +21,23 @@ public sealed class LocalFileStoreTests : IDisposable
         Assert.False(await store.ExistsAsync(key, CancellationToken.None));
     }
 
+    // Traces to: L2-069 criterion 3 (a stored lesson video is read back as a seekable stream).
+    [Fact]
+    public async Task A_stored_file_opens_as_a_seekable_stream_and_a_missing_one_as_null()
+    {
+        var store = new LocalFileStore(_root);
+        var key = $"lessons/{Guid.NewGuid()}/{Guid.NewGuid()}/{Guid.NewGuid():N}.mp4";
+        await store.SaveAsync(key, new MemoryStream([1, 2, 3, 4]), CancellationToken.None);
+
+        await using var stream = await store.OpenReadAsync(key, CancellationToken.None);
+
+        Assert.NotNull(stream);
+        Assert.True(stream.CanSeek);
+        stream.Seek(2, SeekOrigin.Begin);
+        Assert.Equal(3, stream.ReadByte());
+        Assert.Null(await store.OpenReadAsync("lessons/missing.mp4", CancellationToken.None));
+    }
+
     [Fact]
     public async Task A_key_that_leaves_the_root_is_refused()
     {

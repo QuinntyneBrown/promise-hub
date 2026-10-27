@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import type { Route } from '@playwright/test';
 import type { FakeCurriculum, FakeLesson, FakeModule, FakeTrack } from './fake-curriculum';
 import type { FakeProgram } from './programs';
@@ -276,5 +277,27 @@ export class FakeLearning {
     const completed = m.lessons.every((x, i) => i === index || x.done);
     const next = m.lessons.slice(index + 1).find((x) => !x.done)?.lesson ?? null;
     return { nextLessonId: next?.id ?? null, nextLessonTitle: next?.title ?? null, nextLessonKind: next?.kind ?? null, moduleCompleted: completed };
+  }
+
+  /** Answers every video request with 500, to show the player's failed state. */
+  failVideos = false;
+
+  /** GET /learning/lessons/{id}/video: the stored file with range support, only for a lesson the youth may open (ADR 0051). */
+  video(route: Route, membershipId: string, programs: FakeProgram[], id: string): Promise<void> {
+    if (this.failVideos) return route.fulfill({ status: 500 });
+    const found = this.findLesson(this.tracks(membershipId, programs), id);
+    if (!found || !found.lesson.lesson.video) return route.fulfill({ status: 404 });
+    if (found.lesson.locked) return route.fulfill({ status: 403, json: { code: 'locked', unlockAfter: found.lesson.unlockAfter } });
+    const bytes = readFileSync(new URL('./media/lesson.webm', import.meta.url));
+    const range = /bytes=(\d+)-(\d*)/.exec(route.request().headers()['range'] ?? '');
+    if (!range) return route.fulfill({ status: 200, contentType: 'video/webm', body: bytes, headers: { 'accept-ranges': 'bytes' } });
+    const start = Number(range[1]);
+    const end = range[2] ? Math.min(Number(range[2]), bytes.length - 1) : bytes.length - 1;
+    return route.fulfill({
+      status: 206,
+      contentType: 'video/webm',
+      body: bytes.subarray(start, end + 1),
+      headers: { 'accept-ranges': 'bytes', 'content-range': `bytes ${start}-${end}/${bytes.length}` },
+    });
   }
 }

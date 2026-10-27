@@ -24,4 +24,7 @@ public sealed class FakeFileStore : IFileStore
     }
 
     public Task<bool> ExistsAsync(string key, CancellationToken cancellationToken) => Task.FromResult(_files.ContainsKey(key));
+
+    public Task<Stream?> OpenReadAsync(string key, CancellationToken cancellationToken) =>
+        Task.FromResult<Stream?>(_files.TryGetValue(key, out var bytes) ? new MemoryStream(bytes, writable: false) : null);
 }
