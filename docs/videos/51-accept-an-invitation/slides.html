@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 51 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="51" data-video-title="Accept an invitation as a youth or mentor" data-parts="Introduction|One invitation|Youth|Mentors|Accepting|Expired|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 51</div>
+  <h1>Accept an invitation as a youth or mentor</h1>
+  <p class="lead">Invited from the child record or Staff and roles, one password rule, a fresh link when it expires</p>
+</section>
+
+<section id="one-invitation" data-part="1" data-cue="Staff invitations already existed">
+  <h2>One invitation for every role</h2>
+  <table class="facts">
+    <tr><th>Role</th><th>Invited from</th><th>Lands on</th></tr>
+    <tr><td>Youth</td><td>Their child record, Learning on</td><td>Learning</td></tr>
+    <tr><td>Mentor</td><td>Staff and roles, Mentoring on</td><td>Mentoring</td></tr>
+    <tr><td>Volunteer</td><td>Staff and roles</td><td>Today</td></tr>
+    <tr><td>Staff roles</td><td>Staff and roles</td><td>The phone step</td></tr>
+  </table>
+  <p class="muted small">StaffInvitation.ChildId · ADR 0045</p>
+</section>
+
+<section id="invite-youth" data-part="2" data-cue="Here is Tom, an admin at Harbourview" data-clip="clips/invite-youth-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Tom invites Yusuf</h3><p>Youth account card, then <code>invite-youth</code>.</p></div>
+</section>
+
+<section id="youth-shots" data-part="2" data-cue="The card appears only for admins">
+  <h2>Empty, then invited</h2>
+  <div class="cols">
+    <img class="shot" alt="Yusuf's record on a laptop with no youth account yet" src="shots/desktop-child-no-account.png">
+    <img class="shot" alt="Yusuf's record with the invitation waiting and the toast Invitation sent" src="shots/desktop-child-invited.png">
+  </div>
+  <p class="muted small">Learning off → 404 · another organization's child → 404 · other roles → 403</p>
+</section>
+
+<section id="mentors" data-part="3" data-cue="Mentors and volunteers are invited from Staff and roles">
+  <h2>Mentors and volunteers</h2>
+  <table class="facts">
+    <tr><th>Invitation</th><th>Answer</th></tr>
+    <tr><td>Mentor, Mentoring on</td><td>201, emailed</td></tr>
+    <tr><td>Mentor, Mentoring off</td><td>422 “Turn on Mentoring to invite mentors.”</td></tr>
+    <tr><td>Volunteer</td><td>201, emailed</td></tr>
+    <tr><td>Youth from Staff and roles</td><td>422 “Invite youth from their child record.”</td></tr>
+  </table>
+</section>
+
+<section id="accept-youth" data-part="4" data-cue="Yusuf opens the link on his phone." data-clip="clips/accept-youth-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Yusuf joins</h3><p>Email in the password is refused; then Learning.</p></div>
+</section>
+
+<section id="accept-mentor" data-part="4" data-cue="Grace, invited as a mentor" data-clip="clips/accept-mentor-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Grace joins</h3><p>Mentor, lands on Mentoring.</p></div>
+</section>
+
+<section id="expired" data-part="5" data-cue="If Yusuf opens his link on day fifteen" data-clip="clips/expired-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Expired link</h3><p>410 “expired”, then 202 for the request.</p></div>
+</section>
+
+<section id="resend" data-part="5" data-cue="On Staff and roles, Tom sees the expired invitation" data-clip="clips/resend-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Resend</h3><p>A fresh 14-day link; the old one answers 410.</p></div>
+</section>
+
+<section id="testing" data-part="6" data-cue="The API tests invite a youth">
+  <h2>How it is tested</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>Learning off, youth-account endpoints</td><td>404</td></tr>
+    <tr><td>Another organization's child or invitation</td><td>404</td></tr>
+    <tr><td>Program director, site lead, participants</td><td>403</td></tr>
+    <tr><td>Password with the email's name</td><td>422 on accept and reset</td></tr>
+    <tr><td>Used or withdrawn link</td><td>410 with the reason</td></tr>
+  </table>
+</section>
+
+<section id="expired-shots" data-part="6" data-cue="They check the password rule on both the invitation and the reset">
+  <h2>Default, error and success, on a phone</h2>
+  <div class="cols three">
+    <img class="shot" alt="The invitation on a phone with Yusuf's name filled in" src="shots/phone-accept-youth.png">
+    <img class="shot" alt="The password refused because it contains the email" src="shots/phone-weak-password.png">
+    <img class="shot" alt="We've let Tom Nguyen know" src="shots/phone-expired-sent.png">
+  </div>
+</section>
+
+<section id="desktop-shots" data-part="6" data-cue="The browser tests run each journey">
+  <h2>Default and empty, on a laptop</h2>
+  <div class="cols">
+    <img class="shot" alt="Staff and roles with an expired invitation that asked for a new link" src="shots/desktop-staff-invitations.png">
+    <img class="shot" alt="Mentoring on a laptop with no youth assigned yet" src="shots/desktop-mentoring.png">
+  </div>
+</section>
+
+<section id="recap" data-part="7" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>One invitation for every role; a youth one links to its child</li><li>One password rule everywhere</li><li>An expired link asks for a new one; Resend replaces it</li></ul>
+  <p class="muted">Next: a guardian gives consent for a youth</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
