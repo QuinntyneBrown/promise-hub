@@ -60,6 +60,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 50 | [Sign in as a youth or mentor](50-sign-in-as-youth-or-mentor/README.md) | ~4 min | Youth land on Learning and mentors on Mentoring, a consecutive lock with an audited unlock, sign-out that ends the session on the server, and the inactive state |
 | 51 | [Accept an invitation as a youth or mentor](51-accept-an-invitation/README.md) | ~4 min | An admin invites a youth from the child record and a mentor from Staff and roles, one password rule, the youth lands on Learning, and an expired link asks for a new one that Resend replaces |
 | 52 | [Give guardian consent for a youth](52-give-guardian-consent/README.md) | ~4 min | A youth under the consent age is held at a server-side gate and asks a guardian, the guardian consents from a verified link in Spanish, staff see the status and send a link, a withdrawal gates the youth at once, and admins set the age and wording |
+| 53 | [Complete first-run onboarding](53-complete-first-run-onboarding/README.md) | ~4 min | A youth goes through three setup steps saved on the server (name and pronouns, preferences, their program), can finish later and resume at that step, and a youth in no program sees a waiting state while lessons stay locked on the server |
 
 ## Making or updating a video
 

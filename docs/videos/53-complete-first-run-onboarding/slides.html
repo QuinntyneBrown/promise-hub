@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 53 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="53" data-video-title="Complete first-run onboarding" data-parts="Introduction|First visit|Mistakes|Resume|Waiting|Consent|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 53</div>
+  <h1>Complete first-run onboarding</h1>
+  <p class="lead">Three steps saved on the server, a way to resume, and a waiting state before placement</p>
+</section>
+
+<section id="first-run" data-part="1" data-cue="Nadia is eighteen and has a youth account at Harbourview" data-clip="clips/first-run-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Nadia’s first visit</h3><p><code>GET /learning/onboarding</code> → not-started, so Learning opens <code>/learning/welcome</code>.</p></div>
+</section>
+
+<section id="steps-shots" data-part="1" data-cue="Every Continue saves the step on the server.">
+  <h2>You, preferences, your program</h2>
+  <div class="cols three">
+    <img class="shot" alt="Step 1: what should we call you and pronouns" src="shots/phone-welcome-you.png">
+    <img class="shot" alt="Step 2: lesson reminders, mentor messages, announcements" src="shots/phone-welcome-preferences.png">
+    <img class="shot" alt="Step 3: After-School Tutoring with its schedule and dates" src="shots/phone-welcome-program.png">
+  </div>
+  <p class="muted small">PUT /learning/onboarding · one YouthOnboarding row per youth membership</p>
+</section>
+
+<section id="done" data-part="1" data-cue="She taps Finish, the setup is marked complete">
+  <h2>Finished</h2>
+  <div class="cols">
+    <img class="shot" alt="Learning with the toast You’re all set, Nadia" src="shots/phone-learning-done.png">
+    <div class="card"><p><code>POST /learning/onboarding/complete</code> → 204</p><p>Audited as Completed on <code>YouthOnboarding</code></p><p class="muted">Learning never opens setup again</p></div>
+  </div>
+</section>
+
+<section id="mistakes" data-part="2" data-cue="If she clears her name and continues" data-clip="clips/invalid-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Invalid, then a failed save</h3><p>422 field by field; a 500 keeps the answers.</p></div>
+</section>
+
+<section id="mistakes-shots" data-part="2" data-cue="A name longer than sixty characters">
+  <h2>Invalid and error</h2>
+  <table class="facts">
+    <tr><th>Sent</th><th>Answer</th></tr>
+    <tr><td>Blank name</td><td>422 “Tell us what to call you.”</td></tr>
+    <tr><td>Over 60 characters</td><td>422 “Use 60 characters or fewer.”</td></tr>
+    <tr><td>Pronouns outside she/her, he/him, they/them</td><td>422 “Choose pronouns from the list.”</td></tr>
+    <tr><td>Step outside 1 to 3</td><td>422, nothing saved</td></tr>
+  </table>
+</section>
+
+<section id="resume" data-part="3" data-cue="Nadia does not have to finish in one go." data-clip="clips/resume-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Finish later, then resume</h3><p>Saved at step 2; Learning offers to pick up there.</p></div>
+</section>
+
+<section id="resume-shots" data-part="3" data-cue="From then on Learning never sends her back automatically.">
+  <h2>On a laptop</h2>
+  <div class="cols">
+    <img class="shot" alt="Step 2 on a laptop" src="shots/desktop-welcome-preferences.png">
+    <img class="shot" alt="Learning: Finish setting up, you stopped at step 2 of 3" src="shots/desktop-resume.png">
+  </div>
+</section>
+
+<section id="waiting" data-part="4" data-cue="Sometimes a youth has an account before staff place them anywhere." data-clip="clips/no-cohort-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Not in a program yet</h3><p>Waiting note, waiting state, then placed.</p></div>
+</section>
+
+<section id="waiting-shots" data-part="4" data-cue="The lock is on the server">
+  <h2>Empty, then placed</h2>
+  <div class="cols">
+    <img class="shot" alt="Program step: you’re not in a program yet" src="shots/phone-welcome-waiting.png">
+    <img class="shot" alt="Learning: you’re not in a program yet, with Check again" src="shots/phone-no-cohort.png">
+  </div>
+  <p class="muted small">GET /learning/lessons → 403 no-cohort · RequirePlacement() · ADR 0047</p>
+</section>
+
+<section id="consent" data-part="5" data-cue="A youth under the consent age, like Sofía at twelve">
+  <h2>The order of the gates</h2>
+  <table class="facts">
+    <tr><th>Caller</th><th>Answer</th></tr>
+    <tr><td>Youth under the consent age, no consent</td><td>403 consent-required, first</td></tr>
+    <tr><td>Youth in no program</td><td>403 no-cohort on lessons</td></tr>
+    <tr><td>Learning off</td><td>404; the welcome redirects to Today</td></tr>
+    <tr><td>Staff, mentor, volunteer</td><td>403</td></tr>
+  </table>
+</section>
+
+<section id="testing" data-part="6" data-cue="The API tests read the defaults from the record">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>YouthOnboardingTests</code>: defaults, saving, validation, finishing and audit, consent, module, roles, another organization</li>
+    <li><code>NoCohortTests</code>: no-cohort, enrolled, ended and archived, consent first, own organization only</li>
+    <li><code>youth-welcome</code>, <code>resume-setup</code>, <code>no-cohort</code> specs on phone and laptop, with axe</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="7" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Setup opens once, on the first visit, and every step is saved on the server</li><li>Finish later keeps the answers; Learning offers to pick up there</li><li>A youth in no program waits, and lessons stay locked until staff place them</li></ul>
+  <p class="muted">Next: youth complete lessons</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
