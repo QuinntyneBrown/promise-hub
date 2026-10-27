@@ -92,6 +92,8 @@ test.describe('Setting a cohort’s mentors', () => {
     await expect(programs.dialog).toBeHidden();
     await expect(programs.mentorsCard.getByRole('listitem')).toHaveText([/Daniel Osei\s*Lead mentor/, /Hana Kim\s*Supporting mentor/]);
     await expect(programs.toast('Mentors saved')).toBeVisible();
+    // Closing the dialog returns focus to Assign mentors, below the roster on a phone; rows then sit under the sticky bars.
+    await programs.scrollToTop();
     await programs.expectAccessible();
     await programs.expectNoHorizontalScroll();
   });

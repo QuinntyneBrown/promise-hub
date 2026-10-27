@@ -99,7 +99,7 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Delete household | `delete-household` (default, invalid, busy) | `ph-dialog`, `ph-radio-group`, `ph-text-field`, `ph-button` |
 | Add a child to a program | `enroll-in-program` | `ph-dialog`, `ph-text-field`, `ph-list`, `ph-list-item`, `ph-button` |
 | Remove from roster | `remove-from-roster` | `ph-dialog`, `ph-radio-group`, `ph-button` |
-| Assign a mentor to a youth | `assign-mentor` (default, busy, invalid, failed) | `ph-dialog`, `ph-select` (with help and error), `ph-alert` (failed), `ph-button` (busy; Remove mentor when one is assigned) |
+| Assign a mentor to a youth | `assign-mentor` (default, busy, invalid, failed, assigned) | `ph-dialog`, `ph-select` (with help and error), `ph-alert` (failed), `ph-button` (busy; Remove mentor when one is assigned) |
 | Cohort mentors | `cohort-mentors` (default, busy, invalid, failed) | `ph-dialog`, `ph-select` (lead), `ph-checkbox-group` (supporting), `ph-alert` (failed), `ph-button` (busy) |
 | Review enrollment | `review-enrollment` (default, invalid, full) | `ph-dialog`, `ph-radio-group`, `ph-textarea`, `ph-alert` (danger), `ph-button` |
 | Move in | `move-in` | `ph-dialog`, `ph-textarea`, `ph-alert` (danger), `ph-button` |

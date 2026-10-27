@@ -28,7 +28,7 @@ Backend:
 - **`MentorAssignmentEndpoints`** (`PromiseHub.Api`) — `GET /programs/{id}/mentoring` (any staff role), `PUT /programs/{id}/mentors`, `PUT` and `DELETE /programs/{id}/youth/{childId}/mentor` (`ManagePrograms`), all under `RequireModule(Roster)` and `RequireModule(Mentoring)`.
 - **`PromiseHub.Application/Mentoring/`** — `CohortMentoringHandler` (read), `AssignYouthMentorHandler` (assign, remove), `SetCohortMentorsHandler` (replace the team), `ActiveMentors` (the organization's active Mentor memberships) and `MentoringHandler` (the caller's youth: direct assignments plus the active rosters of non-archived programs whose team includes the caller, distinct, ordered by name).
 - **`PromiseHub.Domain/Mentoring/`** — `YouthMentor` (organization, child, mentor membership, assigned at; unique per child) and `CohortMentor` (organization, program, mentor membership, is lead; unique per program and mentor), both tenant-owned.
-- **`PromiseHub.Infrastructure`** — `PromiseHubDbContext` maps both with the organization query filter; the `CohortMentors` migration adds the tables and `Program.Term`.
+- **`PromiseHub.Infrastructure`** — `PromiseHubDbContext` maps both with the organization query filter; the `MentorAssignments` migration adds both tables (the term column is the `ProgramTerm` migration).
 
 Rules: the child must be on the program's active roster (else 404); the mentor must be an active mentor of the organization (else 422); writes to an archived program answer 422; every write is audited (Updated on `YouthMentor` or `CohortMentors`, Deleted on `YouthMentor`). A program of another organization is not found (ADR 0002).
 

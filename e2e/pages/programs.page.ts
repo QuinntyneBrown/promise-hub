@@ -148,6 +148,11 @@ export class ProgramsPage extends BasePage {
     await this.dialog.getByRole('button', { name: label }).click();
   }
 
+  /** Back to the top, so rows scrolled under the sticky top bar or the tab bar are not read as overlapping targets. */
+  async scrollToTop(): Promise<void> {
+    await this.page.evaluate(() => window.scrollTo(0, 0));
+  }
+
   async apiStatus(path: string): Promise<number> {
     return this.page.evaluate(async (p) => (await fetch(p)).status, path);
   }

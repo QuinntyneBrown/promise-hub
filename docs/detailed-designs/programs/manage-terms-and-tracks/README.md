@@ -25,7 +25,7 @@ Backend:
 
 - **`SaveProgramCommand`** gains `Term`; **`ProgramRules.Check`** refuses more than 40 characters with "Keep the term under 40 characters."; **`ProgramRules.Clean`** stores a blank term as none.
 - **`CreateProgramHandler`** and **`UpdateProgramHandler`** save it and audit Created or Updated on `Program` with the term in the before and after values.
-- **`Program.Term`** (`Domain/Programs/`), a nullable column added by the `CohortMentors` migration; **`ProgramDto`** and **`ProgramSummaryDto`** return it.
+- **`Program.Term`** (`Domain/Programs/`), a nullable column of up to 40 characters added by the `ProgramTerm` migration; **`ProgramDto`** and **`ProgramSummaryDto`** return it.
 
 Open questions: a term table with one active term, filtering Programs by term and tracks wait for curriculum (prompt 56).
 

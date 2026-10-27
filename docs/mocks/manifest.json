@@ -1830,7 +1830,8 @@
         "default",
         "busy",
         "invalid",
-        "failed"
+        "failed",
+        "assigned"
       ]
     },
     {

@@ -124,53 +124,6 @@
               </div>
             }
           </ph-card>
-          @if (mentoring(); as m) {
-            <ph-card title="Mentors" [flush]="true">
-              @if (m.lead || m.supporting.length) {
-                <ph-list label="Mentors" [inset]="true">
-                  @if (m.lead) {
-                    <ph-list-item
-                      [title]="m.lead.name"
-                      meta="Lead mentor"
-                      [avatar]="m.lead.name"
-                      avatarTint="sage"
-                    />
-                  }
-                  @for (s of m.supporting; track s.id) {
-                    <ph-list-item
-                      [title]="s.name"
-                      meta="Supporting mentor"
-                      [avatar]="s.name"
-                      avatarTint="peach"
-                    />
-                  }
-                </ph-list>
-                @if (canManage() && !archived) {
-                  <div phCardFooter>
-                    <ph-button
-                      variant="ghost"
-                      size="sm"
-                      hasPopup="dialog"
-                      (click)="editMentors(p, m)"
-                      >Edit mentors</ph-button
-                    >
-                  </div>
-                }
-              } @else {
-                <ph-empty-state
-                  icon="mentoring"
-                  title="No mentors yet"
-                  text="Choose a lead mentor and any supporting mentors for this cohort."
-                >
-                  @if (canManage() && !archived) {
-                    <ph-button variant="primary" hasPopup="dialog" (click)="editMentors(p, m)"
-                      >Assign mentors</ph-button
-                    >
-                  }
-                </ph-empty-state>
-              }
-            </ph-card>
-          }
           <ph-card title="Events" [flush]="true">
             <ph-list label="Program events" [inset]="true">
               @for (e of p.events; track e.id) {
@@ -187,6 +140,57 @@
             </ph-list>
           </ph-card>
         </div>
+        @if (mentoring(); as m) {
+          <div class="stack">
+            @if (m) {
+              <ph-card title="Mentors" [flush]="true">
+                @if (m.lead || m.supporting.length) {
+                  <ph-list label="Mentors" [inset]="true">
+                    @if (m.lead) {
+                      <ph-list-item
+                        [title]="m.lead.name"
+                        meta="Lead mentor"
+                        [avatar]="m.lead.name"
+                        avatarTint="sage"
+                      />
+                    }
+                    @for (s of m.supporting; track s.id) {
+                      <ph-list-item
+                        [title]="s.name"
+                        meta="Supporting mentor"
+                        [avatar]="s.name"
+                        avatarTint="peach"
+                      />
+                    }
+                  </ph-list>
+                  @if (canManage() && !archived) {
+                    <div phCardFooter>
+                      <ph-button
+                        variant="ghost"
+                        size="sm"
+                        hasPopup="dialog"
+                        (click)="editMentors(p, m)"
+                        >Edit mentors</ph-button
+                      >
+                    </div>
+                  }
+                } @else {
+                  <ph-empty-state
+                    icon="mentoring"
+                    title="No mentors yet"
+                    text="Choose a lead mentor and any supporting mentors for this cohort."
+                  >
+                    @if (canManage() && !archived) {
+                      <ph-button variant="primary" hasPopup="dialog" (click)="editMentors(p, m)"
+                        >Assign mentors</ph-button
+                      >
+                    }
+                  </ph-empty-state>
+                }
+              </ph-card>
+            }
+          </div>
+        }
       </div>
     }
   }
