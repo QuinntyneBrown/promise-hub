@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 63 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="63" data-video-title="Grade and assess" data-parts="Introduction|Queue|Grade|Revise|Checks|Quizzes|Competencies|Phone|States|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 63</div>
+  <h1>Grade and assess</h1>
+  <p class="lead">A mentor grades submissions, approves quiz results and assesses competencies</p>
+</section>
+
+<section id="queue" data-part="1" data-cue="Daniel Osei mentors Sofía Rivera and Nadia Haddad at Harbourview." data-clip="clips/reviews-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>The review queue</h3><p>Reviews · 4 from Mentoring, oldest first, Late marked, filters for assignments and quizzes.</p></div>
+</section>
+
+<section id="queue-api" data-part="1" data-cue="The server builds this list from his youth only">
+  <h2>Only his youth</h2>
+  <div class="cols">
+    <img class="shot" alt="Reviews: two submissions and two quiz results" src="shots/desktop-reviews.png">
+    <ul class="small">
+      <li><code>GET /mentoring/reviews</code>: Submitted or In review submissions and quiz attempts awaiting approval</li>
+      <li>His youth: assigned directly or through a cohort he is on (<code>MentorScope</code>)</li>
+      <li>Mentoring and Learning on, <code>MentorYouth</code> only</li>
+      <li>Another mentor's youth or organization: never read</li>
+    </ul>
+  </div>
+</section>
+
+<section id="grade" data-part="2" data-cue="Review opens Sofía's submission." data-clip="clips/grade-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Grading a submission</h3><p>What she sent beside the rubric, 10, 10 and 5, a comment, Approve and Accepted.</p></div>
+</section>
+
+<section id="approved" data-part="2" data-cue="A dialog names the points, and on confirming the submission is Accepted.">
+  <h2>Accepted</h2>
+  <div class="cols">
+    <img class="shot" alt="Approve Sofía’s submission? 25 of 25 points" src="shots/desktop-approve-dialog.png">
+    <img class="shot" alt="Approved: Sofía sees 25 of 25 points and your comment" src="shots/desktop-approved.png">
+  </div>
+</section>
+
+<section id="revise" data-part="3" data-cue="Nadia's work needs more." data-clip="clips/revise-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Drafts and revisions</h3><p>Save draft keeps In review; Request revision with a required note sends it back.</p></div>
+</section>
+
+<section id="checks" data-part="4" data-cue="Every score must be a whole number from zero to that criterion's points">
+  <h2>What the server checks</h2>
+  <div class="cols">
+    <table class="facts">
+      <tr><th>Check</th><th>Refused with</th></tr>
+      <tr><td>A score outside 0 to the criterion's points</td><td>422 <code>scores.N</code></td></tr>
+      <tr><td>Approve with a criterion unscored</td><td>422 <code>scores.N</code></td></tr>
+      <tr><td>Revise without a note</td><td>422 <code>comment</code></td></tr>
+      <tr><td>Already Accepted or Needs revision</td><td>409 <code>not-reviewable</code></td></tr>
+      <tr><td>A version that has moved on</td><td>409 <code>stale</code></td></tr>
+    </table>
+    <img class="shot" alt="Fix these to continue: Give 0 to 10 points" src="shots/desktop-invalid.png">
+  </div>
+</section>
+
+<section id="stale" data-part="4" data-cue="If another mentor of hers saved a grade after Daniel opened it">
+  <h2>No silent overwrite</h2>
+  <div class="cols">
+    <img class="shot" alt="This submission changed after you opened it, with Load the latest" src="shots/desktop-conflict.png">
+    <ul class="small">
+      <li><code>AssignmentSubmission.Version</code>: a concurrency token every change advances</li>
+      <li>The grade sends the version it was read at</li>
+      <li>A race past the check is caught by EF Core and answered the same</li>
+      <li>Status, scores, history, notification and audit: one save</li>
+    </ul>
+  </div>
+</section>
+
+<section id="quizzes" data-part="5" data-cue="Some quizzes count only once a mentor approves the score." data-clip="clips/quiz-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Quiz approvals</h3><p>Nadia’s 75% approved with an override of 80, then Approve all.</p></div>
+</section>
+
+<section id="quiz-rules" data-part="5" data-cue="The auto-score is kept beside it for the audit">
+  <h2>Only approved scores count</h2>
+  <div class="cols">
+    <img class="shot" alt="Approve this quiz score? Override score 80" src="shots/desktop-approve-quiz.png">
+    <ul class="small">
+      <li><code>POST /mentoring/quiz-attempts/{id}/approve</code> with an optional override, 0 to 100</li>
+      <li><code>AutoScore</code> kept; the approved score becomes the attempt's score and pass</li>
+      <li><code>POST /mentoring/quiz-approvals/approve-all</code>: each at its auto-score, each audited</li>
+      <li>Set per quiz: Mentor approves each score</li>
+    </ul>
+  </div>
+</section>
+
+<section id="competencies" data-part="6" data-cue="From Sofía's record, Competencies shows Harbourview's five" data-clip="clips/competency-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Competencies</h3><p>Serves others to Proficient with a note, Speaks up to Developing, Save changes.</p></div>
+</section>
+
+<section id="assessments" data-part="6" data-cue="Saving keeps a new assessment, with who and when">
+  <h2>Assessments are kept</h2>
+  <div class="cols">
+    <img class="shot" alt="Competencies saved: 2 of 5 proficient or mastered" src="shots/desktop-competencies-saved.png">
+    <ul class="small">
+      <li><code>PUT /mentoring/youth/{childId}/competencies</code></li>
+      <li>One <code>CompetencyAssessment</code> per changed competency, audited Created</li>
+      <li>The latest per competency shows; earlier ones stay</li>
+      <li>Mentoring only: Learning off changes nothing</li>
+    </ul>
+  </div>
+</section>
+
+<section id="phone" data-part="7" data-cue="On a phone the queue and the grade page stack in one column" data-clip="clips/phone.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>On a phone</h3><p>Reviews and the rubric in one column, every field labelled with its range.</p></div>
+</section>
+
+<section id="states" data-part="8" data-cue="A score out of range or missing shows beside its field" data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>The other states</h3><p>Invalid, stale, failed, not his youth, all caught up and Learning off.</p></div>
+</section>
+
+<section id="testing" data-part="9" data-cue="The API tests cover the queue">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><span class="file">MentorReviewQueueTests</span>, <span class="file">MentorGradeTests</span>, <span class="file">MentorQuizApprovalTests</span>, <span class="file">MentorCompetencyTests</span></li>
+    <li>Cross-tenant, other roles, another mentor's youth, Learning and Mentoring off</li>
+    <li><span class="file">e2e/tests/mentoring/</span>: reviews, grade, quiz approvals and competency specs, phone and laptop, axe on every state</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="10" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Recap</h2>
+  <ul class="recap">
+    <li>Mentors see only their own youth's work</li>
+    <li>Grades are checked and totalled on the server; stale saves are refused</li>
+    <li>Only approved quiz scores count</li>
+    <li>Competency assessments are kept; the latest shows</li>
+  </ul>
+  <p class="muted">Next: authoring badges and progression</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
