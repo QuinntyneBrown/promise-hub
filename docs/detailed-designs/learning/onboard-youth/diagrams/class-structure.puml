@@ -1,0 +1,66 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+title Class structure — Onboard a youth
+class YouthOnboarding <<entity, tenant-owned>> {
+  +Id: Guid
+  +OrganizationId: Guid
+  +MembershipId: Guid
+  +Step: int
+  +PreferredName: string
+  +Pronouns: string?
+  +LessonReminders: bool
+  +MentorMessages: bool
+  +Announcements: bool
+  +StartedAt: DateTimeOffset
+  +CompletedAt: DateTimeOffset?
+  +Save(step, name, pronouns, reminders, mentor, announcements)
+  +Complete(now)
+}
+class Membership <<entity, tenant-owned>> {
+  +Id: Guid
+  +Role: Role
+  +ChildId: Guid?
+}
+class OnboardingHandler {
+  +GetAsync(): YouthOnboardingDto
+  +SaveAsync(SaveOnboardingRequest): OnboardingSaveResult
+  +CompleteAsync(): OnboardingCompleteResult
+}
+class OnboardingRules {
+  +Validate(request): IDictionary<string,string>
+}
+class Placement {
+  +ForMembershipAsync(membershipId): OnboardingProgramDto?
+}
+class YouthOnboardingDto <<record>> {
+  +Status: string
+  +Step: int
+  +PreferredName: string
+  +Pronouns: string?
+  +LessonReminders: bool
+  +MentorMessages: bool
+  +Announcements: bool
+  +Program: OnboardingProgramDto?
+}
+class OnboardingProgramDto <<record>> {
+  +Name: string
+  +Schedule: string?
+  +StartsOn: DateOnly
+  +EndsOn: DateOnly
+}
+YouthOnboarding --> Membership : belongs to
+OnboardingHandler ..> YouthOnboarding : reads and writes
+OnboardingHandler ..> OnboardingRules : validates with
+OnboardingHandler ..> Placement : asks
+OnboardingHandler ..> YouthOnboardingDto : answers
+YouthOnboardingDto *-- OnboardingProgramDto
+@enduml

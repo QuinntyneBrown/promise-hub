@@ -1,0 +1,23 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Onboard a youth
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(lpage, "LearningPage", "Angular page", "Opens setup once; resume alert")
+  Component(wpage, "YouthWelcomePage", "Angular page", "youth-welcome")
+  Component(lapi, "LearningApi", "Contract + HTTP client", "onboarding, saveOnboarding, completeOnboarding")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "ParticipantModuleEndpoints", "Minimal API", "Learning module, Learn permission, consent filter")
+  Component(h, "OnboardingHandler", "Application handler", "Get, save, complete")
+  Component(p, "Placement", "Application service", "Active enrollment in a non-archived program")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "YouthOnboarding, enrollments, audit entries")
+}
+Rel(lpage, lapi, "onboarding")
+Rel(wpage, lapi, "onboarding, save, complete")
+Rel(lapi, ep, "GET/PUT /learning/onboarding, POST /learning/onboarding/complete")
+Rel(ep, h, "calls")
+Rel(h, p, "program for the step")
+Rel(h, db, "setup row, audit entry")
+Rel(p, db, "enrollments, programs")
+@enduml

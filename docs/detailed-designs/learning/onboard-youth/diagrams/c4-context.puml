@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Onboard a youth
+Person(user, "Youth", "Sets up their Learning account after the first sign-in")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(user, ph, "Uses", "HTTPS")
+@enduml
