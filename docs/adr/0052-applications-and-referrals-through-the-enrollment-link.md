@@ -16,9 +16,10 @@ Prompt 58 ports Waypoint's public application and referral form (`L2-INTAKE-001`
 - **Consent.** One agreement switch per path: the season consent for a guardian or a young person aged 18; for a young person under 18 a privacy acknowledgement that a guardian must consent; for a referrer that the family agrees to be contacted. `EnrollmentRequest.SeasonConsent` records whether the season consent was given, so review knows to collect it. Guardian consent for youth accounts stays L2-056 (ADR 0046).
 - **Eligibility.** A young person applying for themselves must be 12 to 18 on the day (Waypoint's range, ADR 0043). Guardians and referrers have no age rule beyond the program's own.
 - **Duplicates.** A submission is refused with 409 `duplicate` when the program already has an open request (Waiting review or Waitlisted) for a child of the organization with the same first name, last name and date of birth, compared trimmed and case-insensitively.
+- **Contact shown back.** The draft answers the verified contact as `contact`; the referrer's step shows it as a fact rather than a read-only field.
 - **Rate limiting.** The enrollment session counts codes: a fourth code for the same contact and program within 15 minutes answers 429 `too-many` and sends nothing. Wrong codes keep their own lock (three, 15 minutes). This is per session in the database rather than ASP.NET rate-limiting middleware, so it holds across API instances and is testable with the fake clock.
 - **Acknowledgement.** After the submission is saved, one text or email to the verified contact says the organization received the application. It uses the same senders as the code and does not count against the SMS cap, like codes.
-- **Audit.** The submission stays one Created audit event on `Enrollment`, its summary naming who applied ("Malik Johnson for himself", "referred by Rachel Ellis").
+- **Audit.** The submission stays one Created audit event on `Enrollment`, its summary naming who applied ("Malik Johnson applying for themselves", "Zoe Campbell referred by Rachel Ellis").
 
 ## Consequences
 

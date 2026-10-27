@@ -21,7 +21,7 @@ Frontend (`frontend/projects/guardian/`, where guardian enrollment lives since p
 - **`GuardianEnrollPage`** (`/g/enroll/:slug`) — the contact step gains `ph-radio-group` "Who is applying?" with a hint per option (`enroll`, `enroll/youth`, `enroll/referrer`). After the code, the steps depend on the path:
   - Guardian: household, children, review with the season consent (unchanged).
   - Young person: About you (`enroll-youth`: first and last name, date of birth, school, why), Your parent or guardian (`enroll-household/youth`), Check and submit (`enroll-review/youth`).
-  - Referrer: About you (`enroll-referrer`: name, role, organization, the verified contact), The young person (`enroll-youth/referrer`), Their parent or guardian (`enroll-household/referrer`), Check and submit (`enroll-review/referrer`).
+  - Referrer: About you (`enroll-referrer`: name, role, organization, and the verified contact as a fact), The young person (`enroll-youth/referrer`), Their parent or guardian (`enroll-household/referrer`), Check and submit (`enroll-review/referrer`).
   - A 429 on the code shows "Too many codes" (`enroll/too-many`); a 409 duplicate on submit shows "{name} already has an application for {program}" (`enroll-review/duplicate`); the submitted state names the young person, and the guardian to be asked for consent or contacted (`enroll-review/submitted-youth`, `enroll-review/submitted-referrer`).
 - Strings live in `enroll-text.ts` in English, Spanish and French (L2-027).
 - **`GuardianEnrollmentApi`** (`frontend/projects/api/`, `GUARDIAN_ENROLLMENT_API`) — `EnrollmentDraft` gains `applyingAs`, `referrer` and `reason`; `requestCode` answers `too-many`; `submit` answers `duplicate` with the name; the submitted result carries `appliedAs` and `seasonConsent`.
@@ -39,7 +39,7 @@ Backend:
 
 ## Built so far
 
-Not built yet.
+Prompt 58 delivered everything above in four slices: the young person's path, the referrer's path, tenancy and the Roster gate, and the acknowledgement, the code limit and duplicates. Migrations `EnrollmentApplications` and `EnrollmentCodeLimit`. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/ApplicationTests.cs`, `e2e/tests/enrollment/apply.spec.ts`; the guardian path stays covered by `EnrollmentTests.cs` and `e2e/tests/guardian/enroll.spec.ts`. Showing who applied, the reason and the referrer to staff, and merging a new household into an existing family, arrive with review and placement (prompt 59).
 
 ## Requirements
 
