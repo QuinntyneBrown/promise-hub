@@ -311,13 +311,14 @@ def curriculum_assignment(S):
         add = btn("Add criterion", "ghost", size="sm", icon_name="plus", attrs=' aria-haspopup="dialog"', data_href=dialog("rubric-criterion"))
         e = f'<div class="field__error" id="rubric-error">{esc(err)}</div>' if err else ""
         if not rows:
+            foot = f'<span class="cluster cluster--between"><span class="text-muted">Total possible: <strong>0 points</strong></span>{add}</span>'
             return card(empty("No criteria yet", "Mentors grade against the rubric. Add at least one criterion with its points before publishing.", icon_name="list") + e,
-                        title="Rubric", tid="rubric", cls="card--flush", footer=add)
+                        title="Rubric", tid="rubric", cls="card--flush", footer=foot)
         items = [list_item(esc(d), f"{p} points", end=f'<span class="cluster cluster--snug">{icon_btn("edit", f"Edit criterion {i + 1}", data_href=dialog("rubric-criterion", "edit"))}'
                                                         f'{icon_btn("trash", f"Remove criterion {i + 1}")}</span>') for i, (d, p) in enumerate(rows)]
         total = sum(p for _, p in rows)
-        return card(ul_list(items, card=False, label="Rubric criteria") + f'<p class="list__meta" style="padding: var(--space-3) var(--space-4);">Total possible: <strong>{total} points</strong></p>' + e,
-                    title="Rubric", tid="rubric", cls="card--flush", footer=add)
+        foot = f'<span class="cluster cluster--between"><span class="text-muted">Total possible: <strong>{total} points</strong></span>{add}</span>'
+        return card(ul_list(items, card=False, label="Rubric criteria") + e, title="Rubric", tid="rubric", cls="card--flush", footer=foot)
 
     def form(err=None, failed_=False, busy=False, new=False):
         err = err or {}

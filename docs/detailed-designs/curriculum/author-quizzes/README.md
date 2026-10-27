@@ -40,7 +40,7 @@ Open questions: deleting a whole quiz, locking a quiz once youth have attempted 
 
 ## Built so far
 
-<TO SUPPLY> after implementation.
+Prompt 60 delivered everything above, in four slices: the quiz with its questions of four types, its rules with the question order and status, then the attachment fallback when a lesson is deleted. The question dialog shows the options error on Option A and drops trailing blank options before sending. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/CurriculumQuizzesTests.cs`, `backend/tests/PromiseHub.Api.Tests/CurriculumAssignmentsTests.cs` (the lesson fallback), `e2e/tests/curriculum/curriculum-quizzes.spec.ts`.
 
 ## Requirements
 

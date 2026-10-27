@@ -33,7 +33,7 @@ Open questions: deleting an assignment, per-youth assigned-work records with the
 
 ## Built so far
 
-<TO SUPPLY> after implementation.
+Prompt 60 delivered everything above. The rubric total and Add criterion share the Rubric card's footer, and a rubric the server refuses is named in a Check the rubric alert under the card. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/CurriculumAssignmentsTests.cs`, `e2e/tests/curriculum/curriculum-assignments.spec.ts`.
 
 ## Requirements
 

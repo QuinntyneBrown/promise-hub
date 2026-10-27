@@ -462,6 +462,7 @@ simple("track-cohorts", "Cohorts following Leadership Foundations", "curriculum-
 STATUS_MODULE = fieldset("Status", choice("status", "Draft", small="Only authors see it") + choice("status", "In review", small="Ready for another author to check", checked=False)
                          + choice("status", "Published", small="Youth in the cohorts below see it", checked=True))
 STATUS_COHORTS = facts([("Visible to", "After‑School Tutoring and Saturday Sports, once its track is published")])
+ASSESSMENT_COHORTS = facts([("Visible to", "After‑School Tutoring and Saturday Sports, once Leading by Serving and Leadership Foundations are published")])
 simple("curriculum-status", "Status of Leading by Serving", "curriculum-module", ["L2-066", "L2-067", "L2-073", "L2-074", R_CURRIC],
        "Publishing makes the module visible to youth in the cohorts that follow Leadership Foundations.",
        lambda e: (fieldset("Status", choice("status", "Draft", small="Only authors see it") + choice("status", "In review", small="Ready for another author to check")
@@ -477,16 +478,16 @@ simple("curriculum-status", "Status of Leading by Serving", "curriculum-module",
            "quiz": ("The same dialog for a quiz: Draft or Published; publishing needs a question.",
                     dialog_box("Status of Leading by Serving quiz", "Publishing makes it visible to youth in the cohorts that follow the track, once the track and module are published.",
                                fieldset("Status", choice("status", "Draft", small="Only authors see it", checked=True) + choice("status", "Published", small="Youth in the cohorts below see it"))
-                               + STATUS_COHORTS, footer("Save status"), icon_name="eye", form=True)),
+                               + ASSESSMENT_COHORTS, footer("Save status"), icon_name="eye", form=True)),
            "quiz-invalid": ("Publishing a quiz with no questions is refused.",
                             dialog_box("Status of Leading by Serving quiz", "Publishing makes it visible to youth in the cohorts that follow the track, once the track and module are published.",
                                        fieldset("Status", choice("status", "Draft", small="Only authors see it") + choice("status", "Published", small="Youth in the cohorts below see it", checked=True, invalid=True),
                                                 fid="status", error="Add a question before publishing the quiz.")
-                                       + STATUS_COHORTS, footer("Save status"), icon_name="eye", form=True)),
+                                       + ASSESSMENT_COHORTS, footer("Save status"), icon_name="eye", form=True)),
            "assignment": ("The same dialog for an assignment: publishing assigns it to youth in the cohorts that follow the track; it needs a task, a way to submit and a rubric.",
                           dialog_box("Status of Serve someone this week", "Publishing assigns it to youth in the cohorts that follow the track, once the track and module are published.",
                                      fieldset("Status", choice("status", "Draft", small="Only authors see it", checked=True) + choice("status", "Published", small="Youth in the cohorts below are assigned it"))
-                                     + STATUS_COHORTS, footer("Save status"), icon_name="eye", form=True)),
+                                     + ASSESSMENT_COHORTS, footer("Save status"), icon_name="eye", form=True)),
            "track": ("The same dialog for a track: Draft or Published; nothing in a draft track reaches youth.",
                      dialog_box("Status of Digital Skills", "Nothing in a draft track reaches youth, whatever its modules say.",
                                 fieldset("Status", choice("status", "Draft", small="Only authors see it", checked=True) + choice("status", "Published", small="Published modules reach the cohorts that follow it"))
@@ -522,12 +523,11 @@ simple("new-assessment", "New quiz", "curriculum-module", ["L2-073", "L2-074", R
 def options_body(texts, correct, *, multiple=False, err=None):
     err = err or {}
     letters = "ABCDEF"
-    fields_ = "".join(field(f"option-{letters[i].lower()}", f"Option {letters[i]}", value=t) for i, t in enumerate(texts))
+    fields_ = "".join(field(f"option-{letters[i].lower()}", f"Option {letters[i]}", value=t, error=err.get("options", "") if i == 0 else "") for i, t in enumerate(texts))
     fields_ += btn("Add option", "ghost", size="sm", icon_name="plus")
     marks = "".join(choice("correct", f"{letters[i]} · {esc(t)}", type_="checkbox" if multiple else "radio", checked=i in correct, invalid="correct" in err)
                     for i, t in enumerate(texts))
-    return (fieldset("Options", fields_, hint="2 to 6 options.", fid="options", error=err.get("options", ""))
-            + fieldset("Correct answers" if multiple else "Correct answer", marks, fid="correct", error=err.get("correct", "")))
+    return (fields_ + fieldset("Correct answers" if multiple else "Correct answer", marks, fid="correct", error=err.get("correct", "")))
 
 
 MC = ["Packed the kit bags for everyone", "Went home early", "Asked the coach for help", "Chose the starting team"]
