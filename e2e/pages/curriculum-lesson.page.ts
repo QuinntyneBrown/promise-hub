@@ -1,5 +1,5 @@
-import { expect, type Locator } from "@playwright/test";
-import { BasePage } from "./base.page";
+import { expect, type Locator } from '@playwright/test';
+import { BasePage } from './base.page';
 
 /** The lesson editor (mock: curriculum-lesson): content, leader notes, status, delete and the lesson video. */
 export class CurriculumLessonPage extends BasePage {
@@ -8,25 +8,20 @@ export class CurriculumLessonPage extends BasePage {
   }
 
   async expectOpen(title: string): Promise<void> {
-    await expect(
-      this.page.getByRole("heading", {
-        level: 1,
-        name: new RegExp(`^${title}`),
-      }),
-    ).toBeVisible();
+    await expect(this.page.getByRole('heading', { level: 1, name: new RegExp(`^${title}`) })).toBeVisible();
     await expect(this.title).toHaveValue(title);
   }
 
   get subtitle(): Locator {
-    return this.page.getByTestId("page-subtitle");
+    return this.page.getByTestId('page-subtitle');
   }
 
   get status(): Locator {
-    return this.page.getByTestId("lesson-status");
+    return this.page.getByTestId('lesson-status');
   }
 
   get title(): Locator {
-    return this.page.getByLabel("Lesson title");
+    return this.page.getByLabel('Lesson title');
   }
 
   get reading(): Locator {
@@ -34,7 +29,7 @@ export class CurriculumLessonPage extends BasePage {
   }
 
   get minutes(): Locator {
-    return this.page.getByLabel("Estimated minutes");
+    return this.page.getByLabel('Estimated minutes');
   }
 
   get objectives(): Locator {
@@ -42,7 +37,7 @@ export class CurriculumLessonPage extends BasePage {
   }
 
   get body(): Locator {
-    return this.page.getByLabel("Teaching content");
+    return this.page.getByLabel('Teaching content');
   }
 
   get prompts(): Locator {
@@ -58,53 +53,43 @@ export class CurriculumLessonPage extends BasePage {
   }
 
   get errorSummary(): Locator {
-    return this.page
-      .getByRole("alert")
-      .filter({ hasText: "Fix these to continue" });
+    return this.page.getByRole('alert').filter({ hasText: 'Fix these to continue' });
   }
 
   get notFound(): Locator {
-    return this.page.getByRole("heading", {
-      name: "We can’t find that lesson",
-    });
+    return this.page.getByRole('heading', { name: 'We can’t find that lesson' });
   }
 
   get toast(): Locator {
-    return this.page.getByTestId("toast");
+    return this.page.getByTestId('toast');
   }
 
   get dialog(): Locator {
-    return this.page.getByRole("dialog");
+    return this.page.getByRole('dialog');
   }
 
   async save(): Promise<void> {
-    await this.page.getByRole("button", { name: "Save lesson" }).click();
+    await this.page.getByRole('button', { name: 'Save lesson' }).click();
   }
 
-  async changeStatus(status: "Draft" | "Published"): Promise<void> {
-    await this.page
-      .getByRole("button", { name: "Status", exact: true })
-      .click();
+  async changeStatus(status: 'Draft' | 'Published'): Promise<void> {
+    await this.page.getByRole('button', { name: 'Status', exact: true }).click();
     await expect(this.dialog).toBeVisible();
-    await this.dialog
-      .getByRole("radio", { name: new RegExp(`^${status}`) })
-      .check();
-    await this.dialog.getByRole("button", { name: "Save status" }).click();
+    await this.dialog.getByRole('radio', { name: new RegExp(`^${status}`) }).check();
+    await this.dialog.getByRole('button', { name: 'Save status' }).click();
   }
 
   get statusError(): Locator {
-    return this.dialog.getByRole("group", { name: "Status" }).locator(".error");
+    return this.dialog.getByRole('group', { name: 'Status' }).locator('.error');
   }
 
   async delete(): Promise<void> {
-    await this.page
-      .getByRole("button", { name: "Delete", exact: true })
-      .click();
+    await this.page.getByRole('button', { name: 'Delete', exact: true }).click();
     await expect(this.dialog).toBeVisible();
   }
 
   async confirmDelete(): Promise<void> {
-    await this.dialog.getByRole("button", { name: "Delete lesson" }).click();
+    await this.dialog.getByRole('button', { name: 'Delete lesson' }).click();
   }
 
   async apiStatus(path: string): Promise<number> {
@@ -112,15 +97,15 @@ export class CurriculumLessonPage extends BasePage {
   }
 
   get videoCard(): Locator {
-    return this.page.getByRole("region", { name: "Video" });
+    return this.page.getByRole('region', { name: 'Video' });
   }
 
   get attachedVideo(): Locator {
-    return this.videoCard.getByRole("list", { name: "Lesson video" });
+    return this.videoCard.getByRole('list', { name: 'Lesson video' });
   }
 
   get chooseVideo(): Locator {
-    return this.videoCard.getByLabel("Choose video");
+    return this.videoCard.getByLabel('Choose video');
   }
 
   get uploading(): Locator {
@@ -128,15 +113,11 @@ export class CurriculumLessonPage extends BasePage {
   }
 
   get videoRefused(): Locator {
-    return this.videoCard
-      .getByRole("alert")
-      .filter({ hasText: "That file isn’t a video we can use" });
+    return this.videoCard.getByRole('alert').filter({ hasText: 'That file isn’t a video we can use' });
   }
 
   get uploadFailed(): Locator {
-    return this.videoCard
-      .getByRole("alert")
-      .filter({ hasText: "The upload didn’t finish" });
+    return this.videoCard.getByRole('alert').filter({ hasText: 'The upload didn’t finish' });
   }
 
   async attach(name: string, mimeType: string, buffer: Buffer): Promise<void> {
@@ -144,8 +125,6 @@ export class CurriculumLessonPage extends BasePage {
   }
 
   async removeVideo(name: string): Promise<void> {
-    await this.videoCard
-      .getByRole("button", { name: `Remove the video ${name}` })
-      .click();
+    await this.videoCard.getByRole('button', { name: `Remove the video ${name}` }).click();
   }
 }

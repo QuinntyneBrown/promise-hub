@@ -1,90 +1,71 @@
-import { expect, type Locator } from "@playwright/test";
-import { BasePage } from "./base.page";
+import { expect, type Locator } from '@playwright/test';
+import { BasePage } from './base.page';
 
 /** Mentoring, the mentor dashboard (mock: mentor-dashboard). */
 export class MentoringPage extends BasePage {
   async open(): Promise<void> {
-    await super.open("/mentoring");
+    await super.open('/mentoring');
   }
 
   async expectOpen(): Promise<void> {
-    await expect(
-      this.page.getByRole("heading", { level: 1, name: "Mentoring" }),
-    ).toBeVisible();
+    await expect(this.page.getByRole('heading', { level: 1, name: 'Mentoring' })).toBeVisible();
   }
 
   get emptyState(): Locator {
-    return this.page.getByRole("heading", { name: "No youth assigned yet" });
+    return this.page.getByRole('heading', { name: 'No youth assigned yet' });
   }
 
   get forbidden(): Locator {
-    return this.page.getByRole("heading", { name: "Mentoring is for mentors" });
+    return this.page.getByRole('heading', { name: 'Mentoring is for mentors' });
   }
 
   get failed(): Locator {
-    return this.page.getByRole("heading", {
-      name: "We couldn’t load your dashboard",
-    });
+    return this.page.getByRole('heading', { name: 'We couldn’t load your dashboard' });
   }
 
   async retry(): Promise<void> {
-    await this.page.getByRole("button", { name: "Try again" }).click();
+    await this.page.getByRole('button', { name: 'Try again' }).click();
   }
 
   /** The first youth on the dashboard, by name. */
   get youth(): Locator {
-    return this.page
-      .getByRole("list", { name: "Your youth" })
-      .getByTestId("list-title");
+    return this.page.getByRole('list', { name: 'Your youth' }).getByTestId('list-title');
   }
 
   get cohorts(): Locator {
-    return this.page
-      .getByRole("list", { name: "Your cohorts" })
-      .getByTestId("list-title");
+    return this.page.getByRole('list', { name: 'Your cohorts' }).getByTestId('list-title');
   }
 
   /** The value of one of the numbers at the top: My youth, My cohorts, Checked in this week. */
   stat(label: string): Locator {
-    return this.page
-      .locator("ph-stat")
-      .filter({ hasText: label })
-      .getByTestId("stat-value");
+    return this.page.locator('ph-stat').filter({ hasText: label }).getByTestId('stat-value');
   }
 
   get statLabels(): Locator {
-    return this.page.locator("ph-stat .label");
+    return this.page.locator('ph-stat .label');
   }
 
   get activity(): Locator {
-    return this.page
-      .getByRole("list", { name: "Recent activity" })
-      .getByRole("listitem");
+    return this.page.getByRole('list', { name: 'Recent activity' }).getByRole('listitem');
   }
 
   get activityHeading(): Locator {
-    return this.page.getByRole("heading", { name: "Recent activity" });
+    return this.page.getByRole('heading', { name: 'Recent activity' });
   }
 
   async viewAll(): Promise<void> {
-    await this.page.getByRole("link", { name: /^View all/ }).click();
+    await this.page.getByRole('link', { name: /^View all/ }).click();
   }
 
   async openYouth(name: string): Promise<void> {
-    await this.page
-      .getByRole("list", { name: "Your youth" })
-      .getByRole("link", { name: new RegExp(`^${name}`) })
-      .click();
+    await this.page.getByRole('list', { name: 'Your youth' }).getByRole('link', { name: new RegExp(`^${name}`) }).click();
   }
 
   async openCohort(name: string): Promise<void> {
-    await this.page
-      .getByRole("list", { name: "Your cohorts" })
-      .getByRole("link", { name: new RegExp(`^${name}`) })
-      .click();
+    await this.page.getByRole('list', { name: 'Your cohorts' }).getByRole('link', { name: new RegExp(`^${name}`) }).click();
   }
 
-  async apiStatus(path = "/api/mentoring/youth"): Promise<number> {
+  async apiStatus(path = '/api/mentoring/youth'): Promise<number> {
     return this.page.evaluate(async (p) => (await fetch(p)).status, path);
   }
 }

@@ -1,18 +1,18 @@
-import { expect, type Locator } from "@playwright/test";
-import { BasePage } from "./base.page";
+import { expect, type Locator } from '@playwright/test';
+import { BasePage } from './base.page';
 
 /** The staff shell: top bar, phone tab bar, More menu and skip link. */
 export class ShellPage extends BasePage {
   get topNav(): Locator {
-    return this.page.getByRole("navigation", { name: "Primary", exact: true });
+    return this.page.getByRole('navigation', { name: 'Primary', exact: true });
   }
 
   get tabBar(): Locator {
-    return this.page.getByRole("navigation", { name: "Primary, phone" });
+    return this.page.getByRole('navigation', { name: 'Primary, phone' });
   }
 
   get menu(): Locator {
-    return this.page.getByRole("dialog", { name: "Menu" });
+    return this.page.getByRole('dialog', { name: 'Menu' });
   }
 
   get primaryNavigation(): Locator {
@@ -20,62 +20,51 @@ export class ShellPage extends BasePage {
   }
 
   async visibleNavigationLabels(): Promise<string[]> {
-    const items = this.primaryNavigation.locator("a:visible, button:visible");
+    const items = this.primaryNavigation.locator('a:visible, button:visible');
     return (await items.allInnerTexts()).map((t) => t.trim());
   }
 
   async openMenu(): Promise<void> {
-    await this.primaryNavigation.getByRole("button", { name: "More" }).click();
+    await this.primaryNavigation.getByRole('button', { name: 'More' }).click();
     await expect(this.menu).toBeVisible();
   }
 
   async menuLabels(): Promise<string[]> {
-    return (await this.menu.getByRole("link").allInnerTexts()).map((t) =>
-      t.trim(),
-    );
+    return (await this.menu.getByRole('link').allInnerTexts()).map((t) => t.trim());
   }
 
   async menuIdentity(): Promise<string> {
-    return (await this.menu.getByTestId("menu-identity").innerText())
-      .replace(/\s+/g, " ")
-      .trim();
+    return (await this.menu.getByTestId('menu-identity').innerText()).replace(/\s+/g, ' ').trim();
   }
 
   async closeMenuWithEscape(): Promise<void> {
-    await this.page.keyboard.press("Escape");
+    await this.page.keyboard.press('Escape');
     await expect(this.menu).toBeHidden();
   }
 
   async goToFromMenu(label: string): Promise<void> {
-    await this.menu.getByRole("link", { name: label }).click();
+    await this.menu.getByRole('link', { name: label }).click();
   }
 
   get organizationSwitcher(): Locator {
-    return this.page
-      .getByRole("banner")
-      .getByRole("button", { name: /^Organization: / });
+    return this.page.getByRole('banner').getByRole('button', { name: /^Organization: / });
   }
 
   async switchTo(name: string): Promise<void> {
     await this.organizationSwitcher.click();
-    await this.page
-      .getByRole("menu", { name: "Switch organization" })
-      .getByRole("menuitemradio", { name: new RegExp(name) })
-      .click();
+    await this.page.getByRole('menu', { name: 'Switch organization' }).getByRole('menuitemradio', { name: new RegExp(name) }).click();
   }
 
   get organizationMenu(): Locator {
-    return this.page.getByRole("menu", { name: "Switch organization" });
+    return this.page.getByRole('menu', { name: 'Switch organization' });
   }
 
   get search(): Locator {
-    return this.page.getByRole("banner").getByRole("search");
+    return this.page.getByRole('banner').getByRole('search');
   }
 
   get bell(): Locator {
-    return this.page
-      .getByRole("banner")
-      .getByRole("button", { name: /^Notifications/ });
+    return this.page.getByRole('banner').getByRole('button', { name: /^Notifications/ });
   }
 
   async openNotifications(): Promise<void> {
@@ -83,42 +72,36 @@ export class ShellPage extends BasePage {
   }
 
   get accountMenu(): Locator {
-    return this.page.getByRole("menu", { name: /^Account menu for/ });
+    return this.page.getByRole('menu', { name: /^Account menu for/ });
   }
 
   async openAccountMenu(): Promise<void> {
-    await this.page.getByRole("button", { name: /^Account menu for/ }).click();
+    await this.page.getByRole('button', { name: /^Account menu for/ }).click();
     await expect(this.accountMenu).toBeVisible();
   }
 
   async signOut(): Promise<void> {
     await this.openAccountMenu();
-    await this.accountMenu.getByRole("menuitem", { name: "Sign out" }).click();
+    await this.accountMenu.getByRole('menuitem', { name: 'Sign out' }).click();
   }
 
   /** The check-in data this device keeps for working offline (L2-028). */
   async offlineKeys(): Promise<string[]> {
-    return this.page.evaluate(() =>
-      Object.keys(localStorage).filter((k) =>
-        k.startsWith("promisehub.offline."),
-      ),
-    );
+    return this.page.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('promisehub.offline.')));
   }
 
   async accountButtonName(): Promise<string | null> {
-    return this.page
-      .getByRole("button", { name: /^Account menu for/ })
-      .getAttribute("aria-label");
+    return this.page.getByRole('button', { name: /^Account menu for/ }).getAttribute('aria-label');
   }
 
   async skipToContent(): Promise<void> {
-    await this.page.keyboard.press("Tab");
-    const skip = this.page.getByRole("link", { name: "Skip to content" });
+    await this.page.keyboard.press('Tab');
+    const skip = this.page.getByRole('link', { name: 'Skip to content' });
     await expect(skip).toBeFocused();
-    await skip.press("Enter");
+    await skip.press('Enter');
   }
 
   async expectMainFocused(): Promise<void> {
-    await expect(this.page.locator("main")).toBeFocused();
+    await expect(this.page.locator('main')).toBeFocused();
   }
 }
