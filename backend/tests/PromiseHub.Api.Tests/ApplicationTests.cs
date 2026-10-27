@@ -13,6 +13,7 @@ namespace PromiseHub.Api.Tests;
 public sealed partial class ApplicationTests : IAsyncLifetime
 {
     private static readonly Guid Marisol = DatabaseSeeder.MembershipId(DatabaseSeeder.Harbourview, "marisol@harbourview.example");
+    private static readonly Guid Tom = DatabaseSeeder.MembershipId(DatabaseSeeder.Harbourview, "tom@harbourview.example");
     private static readonly Guid WinterCamp = DatabaseSeeder.ProgramId(DatabaseSeeder.Harbourview, "Winter Camp 2026");
 
     private readonly PromiseHubApiFactory _factory = new();
@@ -152,6 +153,36 @@ public sealed partial class ApplicationTests : IAsyncLifetime
         Assert.Equal("<script>alert(1)</script>", Query("SELECT Reason FROM EnrollmentRequests WHERE AppliedAs = 'Referrer'").Single());
     }
 
+    [Fact]
+    public async Task An_application_belongs_to_the_organization_of_the_link_even_when_the_contact_is_another_organizations_family()
+    {
+        var slug = await Open();
+        await Verify(slug, "289-555-0101");
+        var draft = await _client.GetFromJsonAsync<JsonElement>($"/g/enroll/{slug}/draft");
+        Assert.Empty(draft.GetProperty("children").EnumerateArray());
+        await SaveYouth(slug);
+
+        await _client.PostAsJsonAsync($"/g/enroll/{slug}/submit", new { consent = true });
+
+        Assert.Equal(Upper(DatabaseSeeder.Harbourview), Query("SELECT r.OrganizationId FROM EnrollmentRequests r JOIN Children c ON c.Id = r.ChildId WHERE c.FirstName = 'Malik'").Single());
+        Assert.Equal(Upper(DatabaseSeeder.Harbourview), Query("SELECT OrganizationId FROM Households WHERE Name = 'Johnson'").Single());
+    }
+
+    [Fact]
+    public async Task With_Roster_off_every_step_of_an_application_answers_404()
+    {
+        var slug = await Open();
+        await Verify(slug, "905-555-0311");
+        await SaveYouth(slug);
+        await _factory.ClientFor(Tom).PutAsJsonAsync("/settings/modules", new { on = Array.Empty<string>() });
+
+        Assert.Equal(HttpStatusCode.NotFound, (await _client.PostAsJsonAsync($"/g/enroll/{slug}/code", new { contact = "905-555-0311" })).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await _client.GetAsync($"/g/enroll/{slug}/draft")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await SaveYouth(slug)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await _client.PostAsJsonAsync($"/g/enroll/{slug}/submit", new { consent = true })).StatusCode);
+        Assert.Empty(Query("SELECT Id FROM EnrollmentRequests WHERE AppliedAs = 'Youth'"));
+    }
+
     private async Task<string> Open()
     {
         var response = await _factory.ClientFor(Marisol).PostAsync($"/programs/{WinterCamp}/enrollment/open", null);
@@ -193,6 +224,8 @@ public sealed partial class ApplicationTests : IAsyncLifetime
     private IEnumerable<string> Codes() =>
         Sms.Sent.Select(s => s.Text).Concat(_factory.Services.GetRequiredService<FakeEmailSender>().Bodies.Select(b => b.Body))
             .Where(t => t.Contains("code is", StringComparison.Ordinal));
+
+    private static string Upper(Guid id) => id.ToString().ToUpperInvariant();
 
     private FakeSmsSender Sms => _factory.Services.GetRequiredService<FakeSmsSender>();
 

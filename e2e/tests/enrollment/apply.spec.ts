@@ -115,3 +115,19 @@ test.describe('Refer a young person', () => {
     await enroll.expectNoHorizontalScroll();
   });
 });
+
+test.describe('Applications with Roster off', () => {
+  test.use({ signedInAs: null });
+
+  test('Given the Roster module is off, when a young person or referrer opens the link, then the page is not available and there is no way to apply', async ({ page, api }) => {
+    const slug = api.openEnrollment('p-winter');
+    api.setModules('org-harbourview', []);
+    const enroll = new GuardianEnrollPage(page);
+
+    await enroll.open(slug);
+
+    await expect(enroll.heading).toHaveText('This page isn’t available');
+    await expect(enroll.applyingAs('I’m the young person')).toHaveCount(0);
+    await enroll.expectAccessible();
+  });
+});
