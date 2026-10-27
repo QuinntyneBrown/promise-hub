@@ -611,6 +611,7 @@ export class FakeApi {
   private readonly routes: [string, RegExp, Handler][] = [
     ['GET', /^\/api\/me$/, (route) => this.me(route)],
     ['GET', /^\/api\/learning\/me$/, (route) => this.learner(route)],
+    ['GET', /^\/api\/learning\/progress$/, (route) => this.youthWork(route, (m, programs) => this.journey.progress(route, m, programs, this.youthLinks.get(m.id) ?? null, this.youthAttendance(m)))],
     ['GET', /^\/api\/learning\/badges$/, (route) => this.youthWork(route, (m, programs) => this.journey.badges(route, m, programs))],
     ['GET', /^\/api\/learning\/journey$/, (route) => this.youthWork(route, (m, programs) => this.journey.journey(route, m, programs, this.youthLinks.get(m.id) ?? null))],
     ['GET', /^\/api\/learning\/home$/, (route) => this.youthWork(route, (m, programs) => this.learningState.home(route, m.id, programs))],
@@ -994,6 +995,19 @@ export class FakeApi {
   private assignmentBrief(route: Route, m: Membership, programs: FakeProgram[], id: string): Promise<void> {
     const place = this.learningState.assignmentPlace(m.id, programs, id);
     return this.learningState.work.brief(route, m.id, place, place ? this.youthMentorName(m, place.trackId) : null);
+  }
+
+  /** Her child's marked attendance, or null while Roll Call is off (L2-088 criteria 3 and 4). */
+  private youthAttendance(m: Membership): { eventId: string; name: string; startsAt: string; status: string }[] | null {
+    if (!this.modules.get(m.organizationId)!.includes('RollCall')) return null;
+    const childId = this.youthLinks.get(m.id);
+    if (!childId) return [];
+    return this.events
+      .filter((e) => e.organizationId === m.organizationId)
+      .flatMap((e) => {
+        const r = this.attendance.get(e.id)?.get(childId);
+        return r && r.status !== 'NotYet' ? [{ eventId: e.id, name: e.name, startsAt: e.startsAt, status: r.status === 'Absent' ? 'Absent' : 'Present' }] : [];
+      });
   }
 
   /** The youth's mentor (ADR 0056): her own, else the lead mentor of a program of hers that follows the track. */

@@ -172,7 +172,7 @@ def panel(v: str, body: str) -> str:
 
 @screen("learn-progress", "page", "Your progress", route="/learning/progress", reqs=R_PROGRESS)
 def learn_progress(S):
-    hdr = crumbs("Your progress") + page_header("Your progress", "Sofía Rivera · After‑School Tutoring")
+    hdr = crumbs("Your progress") + page_header("Your progress", "The full picture of how you’re growing.")
     overview_numbers = kpis([("Overall progress", "44%", "4 of 9 lessons"), ("Quiz average", "85%", "2 quizzes scored"),
                              ("Streak", "3 weeks", "A lesson every week"), ("Attendance", "92%", "11 of 12 sessions")])
     comps = card(ul_list([list_item(esc(n), f"{esc(stage)} stage", end=badge(lvl, kind)) for n, stage, lvl, kind in COMPETENCIES], card=False, label="Your competencies"),

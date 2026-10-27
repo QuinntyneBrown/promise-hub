@@ -40,6 +40,7 @@ import { SubmitOutcome } from './submit-outcome';
 import { toSubmitOutcome } from './to-submit-outcome';
 import { Journey } from './journey';
 import { LearnerBadges } from './learner-badges';
+import { LearnerProgressView } from './learner-progress-view';
 
 @Injectable()
 export class HttpLearningApi implements LearningApi {
@@ -75,6 +76,10 @@ export class HttpLearningApi implements LearningApi {
 
   badges(): Observable<LoadResult<LearnerBadges>> {
     return toLoad(this.http.get<LearnerBadges>(`${this.baseUrl}/learning/badges`));
+  }
+
+  progress(): Observable<LoadResult<LearnerProgressView>> {
+    return toLoad(this.http.get<LearnerProgressView>(`${this.baseUrl}/learning/progress`));
   }
 
   track(id: string): Observable<GatedResult<TrackView>> {
