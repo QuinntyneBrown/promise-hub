@@ -28,6 +28,11 @@
         [caption]="j.completedLessons + ' of ' + j.totalLessons + ' lessons'"
       />
       <ph-stat label="Streak" [value]="weeks(j.streakWeeks)" caption="A lesson every week" />
+      <ph-stat
+        label="Badges"
+        [value]="j.badges.earned + ' of ' + j.badges.total"
+        caption="Earned so far"
+      />
       @if (stage(j); as s) {
         <ph-stat label="Stage" [value]="s.name" [caption]="s.caption" />
       }
@@ -72,6 +77,22 @@
                 </ph-list-item>
               }
             </ph-list>
+          </ph-card>
+        }
+        @if (j.badges.total) {
+          <ph-card title="Badges">
+            <div class="stack">
+              <ph-progress-bar
+                [value]="j.badges.earned"
+                [max]="j.badges.total"
+                label="Badges earned"
+                [caption]="j.badges.earned + ' of ' + j.badges.total + ' earned'"
+              />
+              <ph-achievement-badges label="Your badges" [badges]="medals(j)" />
+              <div>
+                <ph-button icon="arrow-right" link="/learning/badges">See all badges</ph-button>
+              </div>
+            </div>
           </ph-card>
         }
       </div>

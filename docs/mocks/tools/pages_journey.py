@@ -13,7 +13,7 @@ R_PROGRESS = ["L2-088", R_LEARN, "L2-035", "L2-036"]
 # Sofía: 4 of 9 lessons, a lesson in each of the last 3 weeks, 2 of 6 badges, Contributor (stage 2 of 3).
 EARNED = [
     ("First Steps", "star", "Finished a first lesson.", "Earned Mon 12 Oct"),
-    ("Speaks Up", "flag", "Shared an idea with the whole group.", "Earned Thu 29 Oct · from Marisol Vega"),
+    ("Speaks Up", "flag", "Shared an idea with the whole group.", "Earned Thu 29 Oct · from Marisol Delgado"),
 ]
 LOCKED = [
     ("Servant Heart", "heart", "Finish Leading by Serving.", "1 of 3 lessons"),
@@ -138,16 +138,16 @@ def learn_badges(S):
                   title="Still to unlock", tid="to-unlock")
     timeline = card(ul_list([
         list_item("Joined After‑School Tutoring", "Mon 14 Sep · Welcome to PromiseHub", lead=small_medal("flag")),
-        list_item("First Steps badge", "Mon 12 Oct · Finished a first lesson", lead=small_medal("star")),
-        list_item("Speaks Up badge", "Thu 29 Oct · Shared an idea with the whole group", lead=small_medal("flag")),
-        list_item("Next up: Servant Heart", "1 of 3 lessons · Finish Leading by Serving", lead=small_medal("heart"), end=badge("Next", "info")),
+        list_item("First Steps badge", "Mon 12 Oct · Finished a first lesson", lead=small_medal("award")),
+        list_item("Speaks Up badge", "Thu 29 Oct · Shared an idea with the whole group", lead=small_medal("award")),
+        list_item("Next up: Servant Heart", "1 of 3 lessons · Finish Leading by Serving.", lead=small_medal("award"), end=badge("Next", "info")),
     ], card=False, label="Your milestones"), title="Your milestones", tid="milestones", cls="card--flush")
     S.add("default", "Sofía opens Badges: 2 of 6 earned with when, the ones still locked with what earns them and how far she is, and her milestones.", **YKW,
           main=hdr("You’ve earned 2 of 6 badges. Keep going, Sofía.") + f'<div class="split"><div class="stack">{collection}{earned}{locked}</div><div class="stack">{timeline}</div></div>',
           notes=note("Only badges she can earn: by-hand badges and automatic badges whose lesson, module, quiz or assignment is in a track she follows. Deleted badges she earned stay earned.", "top: 5rem; right: 1rem;"))
     S.add("empty", "None earned yet: the locked badges say how to earn each, with one action to start a lesson.", **YKW,
           main=hdr("You’ve earned 0 of 6 badges.") + '<div class="stack">'
-          + card(empty("No badges yet", "Finish your first lesson to earn First Steps.", action=btn("Start a lesson", "primary", href=page("learn-home")), icon_name="star"), cls="card--flush")
+          + card(empty("No badges yet", "Finish a lesson, pass a quiz or have work accepted to earn your first badge.", action=btn("Start a lesson", "primary", href=page("learn-home")), icon_name="star"), cls="card--flush")
           + card(medals([medal("First Steps", "star", "Finished a first lesson. 0 of 1 lessons.", locked=True)]
                         + [medal(n, i, d, locked=True) for n, i, d, _c in LOCKED], "Badges still to unlock"), title="Still to unlock", tid="to-unlock") + '</div>')
     S.add("none", "Her organization has no badges yet: the page says so.", **YKW,

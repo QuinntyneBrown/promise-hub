@@ -63,6 +63,19 @@ export class LearnJourneyPage extends BasePage {
       });
   }
 
+  /** The medals of the Badges card. */
+  get badgeStrip(): Locator {
+    return this.page.getByRole("list", { name: "Your badges" });
+  }
+
+  async seeAllBadges(): Promise<void> {
+    await this.page.getByRole("link", { name: "See all badges" }).click();
+  }
+
+  async openProgress(): Promise<void> {
+    await this.page.getByRole("link", { name: /^Your progress/ }).click();
+  }
+
   get empty(): Locator {
     return this.page.getByRole("heading", {
       name: "Your journey starts with your first track",

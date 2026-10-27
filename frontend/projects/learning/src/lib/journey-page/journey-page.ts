@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Journey, JourneyStage, LEARNING_API, LoadResult, ModuleItem } from '@promisehub/api';
 import {
+  AchievementBadgeItem,
+  PhAchievementBadges,
   PhBadge,
   PhBreadcrumb,
   PhButton,
@@ -10,6 +12,7 @@ import {
   PhList,
   PhListItem,
   PhPageHeader,
+  PhProgressBar,
   PhSkeleton,
   PhStat,
 } from '@promisehub/components';
@@ -34,6 +37,7 @@ const STAGE_TONE: Record<JourneyStage['status'], 'success' | 'info' | 'neutral'>
 @Component({
   selector: 'ph-journey-page',
   imports: [
+    PhAchievementBadges,
     PhBadge,
     PhBreadcrumb,
     PhButton,
@@ -42,6 +46,7 @@ const STAGE_TONE: Record<JourneyStage['status'], 'success' | 'info' | 'neutral'>
     PhList,
     PhListItem,
     PhPageHeader,
+    PhProgressBar,
     PhSkeleton,
     PhStat,
   ],
@@ -99,6 +104,17 @@ export class JourneyPage {
     if (m.status === 'locked') return `Unlocks after ${m.unlockAfter}`;
     const count = `${m.completedLessons} of ${m.lessonCount} lesson${m.lessonCount === 1 ? '' : 's'}`;
     return current ? `${count} · you’re here` : count;
+  }
+
+  /** The medals of the Badges card: every badge she can earn, earned first. */
+  protected medals(j: Journey): AchievementBadgeItem[] {
+    return j.badges.items.map((b) => ({
+      key: b.id,
+      icon: b.icon,
+      name: b.name,
+      caption: b.earned ? 'Earned' : 'Locked',
+      locked: !b.earned,
+    }));
   }
 
   protected reload(): void {

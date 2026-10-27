@@ -1,5 +1,6 @@
 export { routes } from './lib/learning.routes';
 export { AssignmentPage } from './lib/assignment-page/assignment-page';
+export { BadgesPage } from './lib/badges-page/badges-page';
 export { CodingPage } from './lib/coding-page/coding-page';
 export { JourneyPage } from './lib/journey-page/journey-page';
 export { LearningPage } from './lib/learning-page/learning-page';

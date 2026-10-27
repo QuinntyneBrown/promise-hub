@@ -42,7 +42,178 @@ export class FakeJourney {
     private readonly learning: FakeLearning,
     private readonly progression: FakeProgression,
     private readonly reviews: FakeReviews,
+    private readonly badgeBook: FakeBadges,
   ) {}
+
+  /** What earns an automatic badge, naming its target; null when the target is not in a track she follows. */
+  private describe(
+    rule: string | null,
+    targetId: string | null,
+    tracks: TrackState[],
+  ): string | null {
+    const modules = tracks.flatMap((t) => t.modules);
+    if (rule === "LessonCompleted") {
+      const l = modules
+        .flatMap((m) => m.lessons)
+        .find((x) => x.lesson.id === targetId);
+      return l ? `Finish ${l.lesson.title}.` : null;
+    }
+    if (rule === "ModuleCompleted") {
+      const m = modules.find((x) => x.module.id === targetId);
+      return m ? `Finish ${m.module.title}.` : null;
+    }
+    if (rule === "QuizPassed") {
+      const q = modules
+        .flatMap((m) => m.quizzes)
+        .find((x) => x.quiz.id === targetId);
+      return q ? `Pass ${q.quiz.title}.` : null;
+    }
+    if (rule === "AssignmentAccepted") {
+      const a = modules
+        .flatMap((m) => m.assignments)
+        .find((x) => x.assignment.id === targetId);
+      return a ? `Have ${a.assignment.title} accepted.` : null;
+    }
+    return null;
+  }
+
+  private progress(
+    membershipId: string,
+    rule: string | null,
+    targetId: string | null,
+    tracks: TrackState[],
+  ): [number, number] {
+    const modules = tracks.flatMap((t) => t.modules);
+    if (rule === "ModuleCompleted") {
+      const m = modules.find((x) => x.module.id === targetId)!;
+      return [moduleDone(m), m.lessons.length];
+    }
+    if (rule === "LessonCompleted")
+      return [
+        modules.flatMap((m) => m.lessons).find((x) => x.lesson.id === targetId)!
+          .done
+          ? 1
+          : 0,
+        1,
+      ];
+    if (rule === "QuizPassed")
+      return [
+        modules.flatMap((m) => m.quizzes).find((x) => x.quiz.id === targetId)!
+          .passed
+          ? 1
+          : 0,
+        1,
+      ];
+    return [
+      this.learning.work.mine(membershipId, targetId!)?.status === "Accepted"
+        ? 1
+        : 0,
+      1,
+    ];
+  }
+
+  /** Her badges: earned oldest first (deleted or not), and those she can still earn in the order made (L2-087 criteria 4 and 5). */
+  badgesOf(m: Membership, programs: FakeProgram[]) {
+    const tracks = this.learning.tracks(m.id, programs);
+    const book = this.badgeBook.badges.filter(
+      (b) => b.organizationId === m.organizationId,
+    );
+    const mine = this.badgeBook.awards.filter(
+      (a) => a.membershipId === m.id && book.some((b) => b.id === a.badgeId),
+    );
+    const earned = [...mine]
+      .sort((a, b) => a.awardedAt.localeCompare(b.awardedAt))
+      .map((a) => {
+        const b = book.find((x) => x.id === a.badgeId)!;
+        const fallback =
+          b.kind === "Manual" ? "Awarded by hand." : "Earned as you learned.";
+        return {
+          id: b.id,
+          name: b.name,
+          icon: b.icon,
+          description:
+            b.description ??
+            this.describe(b.rule, b.targetId, tracks) ??
+            fallback,
+          awardedAt: a.awardedAt,
+          awardedBy: a.awardedBy,
+        };
+      });
+    const locked = book
+      .filter(
+        (b) =>
+          !b.deleted &&
+          !mine.some((a) => a.badgeId === b.id) &&
+          (b.kind === "Manual" ||
+            this.describe(b.rule, b.targetId, tracks) !== null),
+      )
+      .map((b) => {
+        const [completed, total] =
+          b.kind === "Manual"
+            ? [null, null]
+            : this.progress(m.id, b.rule, b.targetId, tracks);
+        const description =
+          b.kind === "Manual"
+            ? (b.description ?? "Your program team awards it by hand.")
+            : (b.description ?? this.describe(b.rule, b.targetId, tracks)!);
+        return {
+          id: b.id,
+          name: b.name,
+          icon: b.icon,
+          description,
+          kind: b.kind,
+          rule: b.rule,
+          completed,
+          total,
+        };
+      });
+    const milestones: {
+      kind: string;
+      title: string;
+      text: string;
+      at: string | null;
+    }[] = [...programs]
+      .sort((a, b) => a.startsOn.localeCompare(b.startsOn))
+      .map((p) => ({
+        kind: "joined",
+        title: `Joined ${p.name}`,
+        text: "Welcome to PromiseHub",
+        at: `${p.startsOn}T12:00:00Z`,
+      }));
+    milestones.push(
+      ...earned.map((b) => ({
+        kind: "badge",
+        title: `${b.name} badge`,
+        text: b.description,
+        at: b.awardedAt,
+      })),
+    );
+    const next = locked
+      .filter((b) => (b.total ?? 0) > 0)
+      .sort(
+        (a, b) =>
+          b.completed! / b.total! - a.completed! / a.total! ||
+          (a.name < b.name ? -1 : a.name > b.name ? 1 : 0),
+      )[0];
+    if (next) {
+      const progress =
+        next.rule === "ModuleCompleted"
+          ? `${next.completed} of ${next.total} lessons`
+          : `${next.completed} of ${next.total}`;
+      milestones.push({
+        kind: "next",
+        title: `Next up: ${next.name}`,
+        text: `${progress} · ${next.description}`,
+        at: null,
+      });
+    }
+    return { earned, locked, milestones };
+  }
+
+  /** GET /learning/badges. */
+  badges(route: Route, m: Membership, programs: FakeProgram[]): Promise<void> {
+    return route.fulfill({ json: this.badgesOf(m, programs) });
+  }
 
   /** Each competency of the organization not removed, in framework order, with the child's latest level. */
   competencies(
@@ -109,6 +280,7 @@ export class FakeJourney {
     childId: string | null,
   ): Promise<void> {
     const tracks = this.learning.tracks(m.id, programs);
+    const mine = this.badgesOf(m, programs);
     return route.fulfill({
       json: {
         completedLessons: tracks.reduce((n, t) => n + trackDone(t), 0),
@@ -131,6 +303,24 @@ export class FakeJourney {
           })),
         })),
         stages: this.stages(m.organizationId, childId),
+        badges: {
+          earned: mine.earned.length,
+          total: mine.earned.length + mine.locked.length,
+          items: [
+            ...mine.earned.map((b) => ({
+              id: b.id,
+              name: b.name,
+              icon: b.icon,
+              earned: true,
+            })),
+            ...mine.locked.map((b) => ({
+              id: b.id,
+              name: b.name,
+              icon: b.icon,
+              earned: false,
+            })),
+          ],
+        },
       },
     });
   }
