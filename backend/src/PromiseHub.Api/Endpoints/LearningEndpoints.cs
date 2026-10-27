@@ -18,6 +18,8 @@ public static class LearningEndpoints
         learning.MapGet("/home", (LearningHomeHandler handler, CancellationToken ct) => handler.HandleAsync(ct));
         learning.MapGet("/tracks/{id:guid}", async (Guid id, TrackViewHandler handler, CancellationToken ct) => (await handler.HandleAsync(id, ct)).ToHttp());
         learning.MapGet("/modules/{id:guid}", async (Guid id, ModuleViewHandler handler, CancellationToken ct) => (await handler.HandleAsync(id, ct)).ToHttp());
+        learning.MapGet("/lessons/{id:guid}", async (Guid id, LessonViewHandler handler, CancellationToken ct) => (await handler.HandleAsync(id, ct)).ToHttp());
+        learning.MapPost("/lessons/{id:guid}/complete", async (Guid id, LessonCompletion handler, CancellationToken ct) => (await handler.CompleteAsync(id, ct)).ToHttp());
         return app;
     }
 }

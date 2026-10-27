@@ -1,0 +1,24 @@
+.caption {
+  margin: 0 0 var(--space-2);
+  font: var(--text-caption);
+  color: var(--color-fg-muted);
+}
+.prompt {
+  margin: 0;
+  color: var(--color-fg-muted);
+  overflow-wrap: anywhere;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+.narrow {
+  max-width: 48rem;
+}
+.reading-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}

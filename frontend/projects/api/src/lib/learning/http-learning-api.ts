@@ -12,6 +12,8 @@ import { GatedResult } from './gated-result';
 import { toGated } from './to-gated';
 import { TrackView } from './track-view';
 import { ModuleView } from './module-view';
+import { LessonView } from './lesson-view';
+import { LessonCompletion } from './lesson-completion';
 import { ConsentRequestOutcome } from '../consent/consent-request-outcome';
 import { toConsentRequest } from '../consent/to-consent-request';
 import { toWrite } from '../http-results';
@@ -57,6 +59,21 @@ export class HttpLearningApi implements LearningApi {
   module(id: string): Observable<GatedResult<ModuleView>> {
     return toGated(
       this.http.get<ModuleView>(`${this.baseUrl}/learning/modules/${encodeURIComponent(id)}`),
+    );
+  }
+
+  lesson(id: string): Observable<GatedResult<LessonView>> {
+    return toGated(
+      this.http.get<LessonView>(`${this.baseUrl}/learning/lessons/${encodeURIComponent(id)}`),
+    );
+  }
+
+  completeLesson(id: string): Observable<GatedResult<LessonCompletion>> {
+    return toGated(
+      this.http.post<LessonCompletion>(
+        `${this.baseUrl}/learning/lessons/${encodeURIComponent(id)}/complete`,
+        null,
+      ),
     );
   }
 

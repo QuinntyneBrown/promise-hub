@@ -1,0 +1,174 @@
+@let r = result();
+<ph-breadcrumb
+  [items]="
+    r?.status === 'loaded'
+      ? [
+          { label: 'Learning', link: '/learning' },
+          { label: r.value.moduleTitle, link: '/learning/modules/' + r.value.moduleId },
+          { label: r.value.title },
+        ]
+      : [{ label: 'Learning', link: '/learning' }, { label: 'Lesson' }]
+  "
+/>
+@if (r === null) {
+  <ph-page-header title="Lesson" />
+  <div class="split" aria-busy="true" aria-label="Loading the lesson">
+    <ph-skeleton shape="card" />
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (r.status === 'loaded') {
+  @let l = r.value;
+  <ph-page-header [title]="l.title" [subtitle]="subtitle(l)" />
+  <ng-template #finish>
+    @if (failed()) {
+      <ph-alert
+        tone="danger"
+        title="That didn’t go through"
+        text="We couldn’t save that. Try again."
+      />
+    }
+    @if (completion() || l.done) {
+      @let a = after(l);
+      <ph-alert
+        tone="success"
+        title="Lesson complete"
+        [text]="
+          a.title
+            ? 'Nice work. ' + a.title + ' is unlocked.'
+            : 'Nice work. ' + l.moduleTitle + ' is complete.'
+        "
+      >
+        @if (a.link) {
+          <ph-button variant="primary" icon="arrow-right" [link]="a.link">{{
+            'Next: ' + a.title
+          }}</ph-button>
+        } @else {
+          <ph-button variant="primary" [link]="'/learning/modules/' + l.moduleId"
+            >Back to the module</ph-button
+          >
+        }
+      </ph-alert>
+    } @else {
+      <div class="actions">
+        <ph-button variant="ghost" [link]="'/learning/modules/' + l.moduleId"
+          >Back to the module</ph-button
+        >
+        <ph-button variant="primary" icon="check" [busy]="busy()" (click)="complete(l)"
+          >Mark complete</ph-button
+        >
+      </div>
+    }
+  </ng-template>
+  <ng-template #prompts>
+    @for (p of l.prompts; track $index) {
+      <p class="prompt">{{ p }}</p>
+    }
+  </ng-template>
+  @if (l.kind === 'Scripture') {
+    <div class="stack narrow">
+      <ph-card title="Read">
+        <div class="stack">
+          <div class="cluster cluster--between">
+            <p class="caption">{{ l.reading }}</p>
+            <div class="cluster cluster--tight" role="group" aria-label="Text size">
+              <ph-button
+                size="sm"
+                label="A− smaller text"
+                [disabled]="size() === 'md'"
+                (click)="step(-1)"
+                >A−</ph-button
+              >
+              <ph-button
+                size="sm"
+                label="A+ larger text"
+                [disabled]="size() === 'xl'"
+                (click)="step(1)"
+                >A+</ph-button
+              >
+            </div>
+          </div>
+          <div class="reading-group">
+            @if (l.passage) {
+              <ph-scripture-block [text]="l.passage" [reference]="l.reading" [size]="size()" />
+            }
+            <div
+              class="reading"
+              [class.reading--lg]="size() === 'lg'"
+              [class.reading--xl]="size() === 'xl'"
+            >
+              {{ l.body }}
+            </div>
+          </div>
+        </div>
+      </ph-card>
+      @if (l.prompts.length) {
+        <ph-card title="Reflect before you move on">
+          <ng-container *ngTemplateOutlet="prompts" />
+        </ph-card>
+      }
+      <ng-container *ngTemplateOutlet="finish" />
+    </div>
+  } @else {
+    <div class="split">
+      <div class="stack">
+        <ph-card title="The lesson">
+          @if (l.reading) {
+            <p class="caption">{{ 'Reading: ' + l.reading }}</p>
+          }
+          <div class="reading">{{ l.body }}</div>
+        </ph-card>
+        @if (l.prompts.length) {
+          <ph-card title="Think it over">
+            <ng-container *ngTemplateOutlet="prompts" />
+          </ph-card>
+        }
+        <ng-container *ngTemplateOutlet="finish" />
+      </div>
+      <div class="stack">
+        @if (l.objectives.length) {
+          <ph-card title="What you’ll learn" [flush]="true">
+            <ph-list label="What you’ll learn">
+              @for (o of l.objectives; track $index) {
+                <ph-list-item [title]="o" />
+              }
+            </ph-list>
+          </ph-card>
+        }
+      </div>
+    </div>
+  }
+} @else if (r.status === 'locked') {
+  <ph-page-header title="Lesson" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      [title]="'Finish ' + r.unlockAfter + ' first'"
+      [text]="'Lessons open in order. This one unlocks when ' + r.unlockAfter + ' is done.'"
+    >
+      <ph-button link="/learning">Back to Learning</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else if (r.status === 'not-found') {
+  <ph-page-header title="Lesson" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="search"
+      title="We can’t find that lesson"
+      text="It may not be published yet, or your program doesn’t follow it."
+    >
+      <ph-button link="/learning">Back to Learning</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-page-header title="Lesson" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load this lesson"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}

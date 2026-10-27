@@ -155,6 +155,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(l => l.VideoUploadedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
             e.HasOne<Domain.Curriculum.CurriculumModule>().WithMany().HasForeignKey(l => l.ModuleId);
             e.Property(l => l.Kind).HasConversion<string>().HasMaxLength(20);
+            e.Property(l => l.Passage).HasMaxLength(Domain.Curriculum.Lesson.MaximumPassage);
         });
         modelBuilder.Entity<Domain.Learning.LessonProgress>(e =>
         {

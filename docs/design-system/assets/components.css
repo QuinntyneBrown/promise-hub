@@ -1833,8 +1833,10 @@ main.container > .steps { width: 100%; max-width: none; }
 
 /* Reading: lesson text with an adjustable size (A− / A+). */
 .reading { font: var(--text-body); line-height: var(--line-height-relaxed); white-space: pre-line; overflow-wrap: anywhere; max-width: 68ch; }
-.reading--lg, .reading--lg .scripture__text { font-size: var(--font-size-lg); }
-.reading--xl, .reading--xl .scripture__text { font-size: var(--font-size-xl); }
+.reading--lg { font-size: var(--font-size-lg); }
+.reading--xl { font-size: var(--font-size-xl); }
+.reading--lg .scripture__text { font-size: var(--font-size-xl); }
+.reading--xl .scripture__text { font-size: var(--font-size-2xl); }
 .text-size { display: inline-flex; gap: var(--space-1); }
 
 /* Video player failure: the lesson text stays readable and Retry reloads the video. */

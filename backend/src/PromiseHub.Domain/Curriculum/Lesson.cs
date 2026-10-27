@@ -14,6 +14,7 @@ public sealed class Lesson : ITenantOwned
     public const int MaximumLines = 10;
     public const int MaximumLine = 300;
     public const int MaximumNotes = 4000;
+    public const int MaximumPassage = 2000;
 
     public Lesson(Guid id, Guid organizationId, Guid moduleId, string title, int position)
     {
@@ -50,6 +51,9 @@ public sealed class Lesson : ITenantOwned
 
     /// <summary>Reading, Scripture, Coding or Project (ADR 0051); authoring the kind is deferred, so new lessons are Reading.</summary>
     public LessonKind Kind { get; private set; }
+
+    /// <summary>The passage a scripture lesson quotes in its scripture block; its reading is the reference.</summary>
+    public string? Passage { get; private set; }
     public DateTimeOffset? DeletedAt { get; private set; }
 
     /// <summary>The lesson video's file name as uploaded; shown only, never used as a path.</summary>
@@ -75,7 +79,11 @@ public sealed class Lesson : ITenantOwned
 
     public void MoveTo(int position) => Position = position;
 
-    public void SetKind(LessonKind kind) => Kind = kind;
+    public void SetKind(LessonKind kind, string? passage = null)
+    {
+        Kind = kind;
+        Passage = passage;
+    }
 
     public void SetStatus(ContentStatus status) => Status = status;
 

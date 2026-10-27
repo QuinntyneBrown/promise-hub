@@ -220,3 +220,18 @@ a[data-state='hover'] {
   gap: var(--space-3);
   justify-content: flex-end;
 }
+
+/* Reading text of a lesson, with the A− / A+ size steps (design system: scripture-block, reading). */
+.reading {
+  font: var(--text-body);
+  line-height: var(--line-height-relaxed);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  max-width: 68ch;
+}
+.reading--lg {
+  font-size: var(--font-size-lg);
+}
+.reading--xl {
+  font-size: var(--font-size-xl);
+}
