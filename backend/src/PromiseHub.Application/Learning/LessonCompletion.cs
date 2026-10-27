@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PromiseHub.Application.Audit;
+using PromiseHub.Application.Curriculum;
 using PromiseHub.Application.Organizations;
 using PromiseHub.Domain.Audit;
 using PromiseHub.Domain.Curriculum;
@@ -11,7 +12,7 @@ namespace PromiseHub.Application.Learning;
 /// Marks a reading or scripture lesson done for the youth (L2-069 criteria 4 and 5): once, audited once as Completed on
 /// LessonProgress; coding lessons and projects complete through their checklist or submission instead (conflict).
 /// </summary>
-public sealed class LessonCompletion(IPromiseHubDb db, ITenantContext tenant, LearnerProgress progress, IAuditWriter audit, TimeProvider clock)
+public sealed class LessonCompletion(IPromiseHubDb db, ITenantContext tenant, LearnerProgress progress, IAuditWriter audit, TimeProvider clock, BadgeAwarder badges)
 {
     public async Task<Gated<CompletionDto>> CompleteAsync(Guid lessonId, CancellationToken cancellationToken = default)
     {
@@ -43,6 +44,7 @@ public sealed class LessonCompletion(IPromiseHubDb db, ITenantContext tenant, Le
         db.LessonProgress.Add(row);
         audit.Record(new AuditEvent(AuditAction.Completed, "LessonProgress", row.Id, $"{lesson.Title} completed by {tenant.ActorName}"));
         await db.SaveChangesAsync(cancellationToken);
+        await badges.AwardAsync(tenant.MembershipId, cancellationToken);
     }
 
     /// <summary>The next lesson of the module after this one, counting it as done.</summary>

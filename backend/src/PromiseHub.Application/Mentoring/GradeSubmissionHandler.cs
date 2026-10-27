@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using PromiseHub.Application.Audit;
+using PromiseHub.Application.Curriculum;
 using PromiseHub.Application.Learning;
 using PromiseHub.Application.Organizations;
 using PromiseHub.Domain.Audit;
@@ -15,7 +16,7 @@ namespace PromiseHub.Application.Mentoring;
 /// comment; approve accepts it with the total; revise sends it back with the note. Approve and revise notify the youth. The change, its
 /// history step, the notification and the audit entry are one save; a race past the version check is answered stale too.
 /// </summary>
-public sealed class GradeSubmissionHandler(IPromiseHubDb db, ITenantContext tenant, MentorYouthMemberships youth, IAuditWriter audit, TimeProvider clock)
+public sealed class GradeSubmissionHandler(IPromiseHubDb db, ITenantContext tenant, MentorYouthMemberships youth, IAuditWriter audit, TimeProvider clock, BadgeAwarder badges)
 {
     public async Task<Gated<GradeOutcomeDto>> HandleAsync(Guid submissionId, GradeRequest request, CancellationToken cancellationToken = default)
     {
@@ -97,6 +98,10 @@ public sealed class GradeSubmissionHandler(IPromiseHubDb db, ITenantContext tena
         catch (DbUpdateConcurrencyException)
         {
             return Gated<GradeOutcomeDto>.Conflict("stale");
+        }
+        if (decision == "approve")
+        {
+            await badges.AwardAsync(submission.MembershipId, cancellationToken);
         }
         return Gated<GradeOutcomeDto>.Found(new GradeOutcomeDto(submission.Status.ToString(), submission.Points, submission.Version));
     }

@@ -612,24 +612,24 @@ export class FakeApi {
     ['GET', /^\/api\/learning\/lessons\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.lesson(route, m.id, programs, p['id']!))],
     ['GET', /^\/api\/learning\/lessons\/(?<id>[^/]+)\/video$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.video(route, m.id, programs, p['id']!))],
     ['GET', /^\/api\/learning\/coding\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.coding(route, m.id, programs, p['id']!))],
-    ['PUT', /^\/api\/learning\/coding\/(?<id>[^/]+)\/progress$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.saveCoding(route, m.id, programs, p['id']!))],
+    ['PUT', /^\/api\/learning\/coding\/(?<id>[^/]+)\/progress$/, (route, p) => this.youthWork(route, (m, programs) => this.afterLearning(m, this.learningState.saveCoding(route, m.id, programs, p['id']!)))],
     ['POST', /^\/api\/learning\/coding\/(?<id>[^/]+)\/submission$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.submit(route, m.id, programs, p['id']!))],
     ['GET', /^\/api\/learning\/quizzes\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.quizzes.intro(route, m.id, this.learningState.quizPlace(m.id, programs, p['id']!)))],
     ['POST', /^\/api\/learning\/quizzes\/(?<id>[^/]+)\/attempts$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.quizzes.start(route, m.id, this.learningState.quizPlace(m.id, programs, p['id']!)))],
     ['PUT', /^\/api\/learning\/attempts\/(?<id>[^/]+)\/answers$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.quizzes.save(route, m.id, p['id']!, (q) => this.learningState.quizPlace(m.id, programs, q)))],
-    ['POST', /^\/api\/learning\/attempts\/(?<id>[^/]+)\/submit$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.quizzes.submit(route, m.id, p['id']!, (q) => this.learningState.quizPlace(m.id, programs, q)))],
+    ['POST', /^\/api\/learning\/attempts\/(?<id>[^/]+)\/submit$/, (route, p) => this.youthWork(route, (m, programs) => this.afterLearning(m, this.learningState.quizzes.submit(route, m.id, p['id']!, (q) => this.learningState.quizPlace(m.id, programs, q))))],
     ['GET', /^\/api\/learning\/attempts\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.quizzes.result(route, m.id, p['id']!, (q) => this.learningState.quizPlace(m.id, programs, q)))],
     ['GET', /^\/api\/learning\/quizzes\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.quizzes.intro(route, m.id, this.learningState.quizPlace(m.id, programs, p['id']!)))],
     ['POST', /^\/api\/learning\/quizzes\/(?<id>[^/]+)\/attempts$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.quizzes.start(route, m.id, this.learningState.quizPlace(m.id, programs, p['id']!)))],
     ['PUT', /^\/api\/learning\/attempts\/(?<id>[^/]+)\/answers$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.quizzes.save(route, m.id, p['id']!, (q) => this.learningState.quizPlace(m.id, programs, q)))],
-    ['POST', /^\/api\/learning\/attempts\/(?<id>[^/]+)\/submit$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.quizzes.submit(route, m.id, p['id']!, (q) => this.learningState.quizPlace(m.id, programs, q)))],
+    ['POST', /^\/api\/learning\/attempts\/(?<id>[^/]+)\/submit$/, (route, p) => this.youthWork(route, (m, programs) => this.afterLearning(m, this.learningState.quizzes.submit(route, m.id, p['id']!, (q) => this.learningState.quizPlace(m.id, programs, q))))],
     ['GET', /^\/api\/learning\/attempts\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.quizzes.result(route, m.id, p['id']!, (q) => this.learningState.quizPlace(m.id, programs, q)))],
     ['GET', /^\/api\/learning\/assignments\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.assignmentBrief(route, m, programs, p['id']!))],
     ['POST', /^\/api\/learning\/assignments\/(?<id>[^/]+)\/submission$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.work.submit(route, m.id, m.personName, this.learningState.assignmentPlace(m.id, programs, p['id']!)))],
     ['GET', /^\/api\/learning\/submissions\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.work.view(route, m.id, p['id']!, (a) => this.learningState.assignmentPlace(m.id, programs, a), (t) => this.youthMentorName(m, t)))],
     ['GET', /^\/api\/learning\/submissions\/(?<id>[^/]+)\/file$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.work.file(route, m.id, p['id']!, (a) => this.learningState.assignmentPlace(m.id, programs, a)))],
     ['POST', /^\/api\/learning\/submissions\/(?<id>[^/]+)\/resubmit$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.work.resubmit(route, m.id, m.personName, p['id']!, (a) => this.learningState.assignmentPlace(m.id, programs, a)))],
-    ['POST', /^\/api\/learning\/lessons\/(?<id>[^/]+)\/complete$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.completeLesson(route, m.id, programs, p['id']!))],
+    ['POST', /^\/api\/learning\/lessons\/(?<id>[^/]+)\/complete$/, (route, p) => this.youthWork(route, (m, programs) => this.afterLearning(m, this.learningState.completeLesson(route, m.id, programs, p['id']!)))],
     ['POST', /^\/api\/learning\/consent-request$/, (route) => this.askGuardian(route)],
     ['GET', /^\/api\/learning\/onboarding$/, (route) => this.onboarding(route)],
     ['PUT', /^\/api\/learning\/onboarding$/, (route) => this.saveOnboardingStep(route)],
@@ -675,9 +675,9 @@ export class FakeApi {
     ['GET', /^\/api\/mentoring\/submissions\/(?<id>[^/]+)$/, (route, p) => this.mentorReviews(route, (m, youth) => this.reviews.review(route, m.organizationId, youth, p['id']!, m.personName))],
     ['GET', /^\/api\/mentoring\/submissions\/(?<id>[^/]+)\/file$/, (route, p) => this.mentorReviews(route, (_m, youth) => this.reviews.file(route, youth, p['id']!))],
     ['GET', /^\/api\/mentoring\/quiz-approvals$/, (route) => this.mentorReviews(route, (m, youth) => this.reviews.quizApprovals(route, m.organizationId, youth))],
-    ['POST', /^\/api\/mentoring\/quiz-approvals\/approve-all$/, (route) => this.mentorReviews(route, (_m, youth) => this.reviews.approveAll(route, youth))],
-    ['POST', /^\/api\/mentoring\/quiz-attempts\/(?<id>[^/]+)\/approve$/, (route, p) => this.mentorReviews(route, (_m, youth) => this.reviews.approveQuiz(route, youth, p['id']!))],
-    ['POST', /^\/api\/mentoring\/submissions\/(?<id>[^/]+)\/grade$/, (route, p) => this.mentorReviews(route, (m, youth) => this.reviews.grade(route, youth, p['id']!, m.personName))],
+    ['POST', /^\/api\/mentoring\/quiz-approvals\/approve-all$/, (route) => this.mentorReviews(route, (_m, youth) => this.afterReview(youth, this.reviews.approveAll(route, youth)))],
+    ['POST', /^\/api\/mentoring\/quiz-attempts\/(?<id>[^/]+)\/approve$/, (route, p) => this.mentorReviews(route, (_m, youth) => this.afterReview(youth, this.reviews.approveQuiz(route, youth, p['id']!)))],
+    ['POST', /^\/api\/mentoring\/submissions\/(?<id>[^/]+)\/grade$/, (route, p) => this.mentorReviews(route, (m, youth) => this.afterReview(youth, this.reviews.grade(route, youth, p['id']!, m.personName)))],
     ['GET', /^\/api\/mentoring\/youth\/(?<id>[^/]+)$/, (route, p) => this.mentorYouthRecord(route, p['id']!)],
     ['GET', /^\/api\/mentoring\/youth\/(?<id>[^/]+)\/competencies$/, (route, p) => this.mentorCompetencies(route, p['id']!, false)],
     ['PUT', /^\/api\/mentoring\/youth\/(?<id>[^/]+)\/competencies$/, (route, p) => this.mentorCompetencies(route, p['id']!, true)],
@@ -1127,6 +1127,47 @@ export class FakeApi {
   readonly reviews = new FakeReviews(this.curriculumState, this.learningState.work, this.learningState.quizzes);
 
   /** Every review endpoint: Mentoring and Learning on and MentorYouth, then his youth accounts. */
+  /** After a youth's learning event: her automatic badges are checked (L2-085), as BadgeAwarder does. */
+  private async afterLearning(m: Membership, handled: Promise<void>): Promise<void> {
+    await handled;
+    this.awardBadges(m.organizationId, m.id);
+  }
+
+  /** After a mentor's approval or grade: the badges of each of his youth are checked (L2-085). */
+  private async afterReview(youth: YouthAccounts, handled: Promise<void>): Promise<void> {
+    await handled;
+    for (const id of youth.keys()) this.awardBadges(memberships.find((x) => x.id === id)!.organizationId, id);
+  }
+
+  private awardBadges(org: string, membershipId: string): void {
+    const l = this.learningState;
+    const earned = this.badges.evaluate(
+      org,
+      membershipId,
+      {
+        lessonDone: (id) => l.isDone(membershipId, id),
+        quizPassed: (id) => {
+          const quiz = this.curriculumState.assessments.quizzes.find((q) => q.id === id);
+          return !!quiz && l.quizzes.passed(membershipId, quiz);
+        },
+        accepted: (id) => l.work.mine(membershipId, id)?.status === 'Accepted',
+      },
+      NOW.toISOString(),
+    );
+    for (const name of earned) {
+      this.notifications.push({
+        id: `n-${this.nextId++}`,
+        organizationId: org,
+        membershipId,
+        kind: 'learning',
+        text: `You earned the ${name} badge.`,
+        link: '/learning',
+        createdAt: new Date(NOW.getTime() + this.nextId * 1000).toISOString(),
+        readAt: null,
+      });
+    }
+  }
+
   private async mentorReviews(route: Route, then: (m: Membership, youth: YouthAccounts) => Promise<void>): Promise<void> {
     const m = await this.participantModuleCaller(route, 'Mentoring', can.mentorYouth);
     if (!m) return;

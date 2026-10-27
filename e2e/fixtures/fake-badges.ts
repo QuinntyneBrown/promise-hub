@@ -28,6 +28,13 @@ export interface FakeBadgeAward {
   awardedBy: string | null;
 }
 
+/** What a youth has done, as the learning fakes know it. */
+export interface BadgeProgress {
+  lessonDone: (lessonId: string) => boolean;
+  quizPassed: (quizId: string) => boolean;
+  accepted: (assignmentId: string) => boolean;
+}
+
 const ICONS = ['star', 'award', 'heart', 'flag', 'book', 'sparkle', 'people', 'check'];
 const RULES: BadgeRule[] = ['LessonCompleted', 'ModuleCompleted', 'QuizPassed', 'AssignmentAccepted'];
 const NOUN: Record<BadgeRule, string> = {
@@ -125,6 +132,16 @@ export class FakeBadges {
       awardedBy: 'Marisol Delgado',
     },
   ];
+
+  /** Adds a badge of Harbourview, as a program director would. */
+  add(b: Pick<FakeBadge, 'id' | 'name' | 'icon' | 'kind'> & Partial<FakeBadge>): void {
+    this.badges.push({ organizationId: 'org-harbourview', description: null, rule: null, targetId: null, competencyId: null, deleted: false, ...b });
+  }
+
+  /** The youth memberships holding a badge. */
+  holders(badgeId: string): string[] {
+    return this.awards.filter((a) => a.badgeId === badgeId).map((a) => a.membershipId);
+  }
 
   find(id: string): FakeBadge | undefined {
     return this.badges.find((b) => b.id === id);
@@ -331,5 +348,30 @@ export class FakeBadges {
     if (!b) return route.fulfill({ status: 404 });
     b.deleted = true;
     return route.fulfill({ status: 204 });
+  }
+
+  /**
+   * Awards the youth every automatic badge she now meets and does not hold (L2-085, ADR 0058), as BadgeAwarder does after each learning
+   * event; answers the names of the badges awarded so FakeApi can notify her.
+   */
+  evaluate(org: string, membershipId: string, progress: BadgeProgress, at: string): string[] {
+    const c = this.curriculum;
+    const moduleDone = (moduleId: string): boolean => {
+      const module = c.modules.find((m) => m.id === moduleId);
+      if (!module || module.status !== 'Published') return false;
+      const lessons = c.lessons.filter((l) => l.moduleId === moduleId && l.status === 'Published' && !l.deleted);
+      const required = c.assessments.quizzes.filter((q) => q.moduleId === moduleId && q.status === 'Published' && q.requiredToComplete);
+      return lessons.length > 0 && lessons.every((l) => progress.lessonDone(l.id)) && required.every((q) => progress.quizPassed(q.id));
+    };
+    const meets: Record<BadgeRule, (id: string) => boolean> = {
+      LessonCompleted: progress.lessonDone,
+      ModuleCompleted: moduleDone,
+      QuizPassed: progress.quizPassed,
+      AssignmentAccepted: progress.accepted,
+    };
+    const held = new Set(this.awards.filter((a) => a.membershipId === membershipId).map((a) => a.badgeId));
+    const earned = this.badges.filter((b) => b.organizationId === org && !b.deleted && b.kind === 'Automatic' && b.rule && b.targetId && !held.has(b.id) && meets[b.rule](b.targetId));
+    for (const b of earned) this.awards.push({ id: `ba-new-${this.nextId++}`, organizationId: org, badgeId: b.id, membershipId, awardedAt: at, awardedBy: null });
+    return earned.map((b) => b.name);
   }
 }

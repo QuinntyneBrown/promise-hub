@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PromiseHub.Application.Audit;
+using PromiseHub.Application.Curriculum;
 using PromiseHub.Application.Learning;
 using PromiseHub.Application.Organizations;
 using PromiseHub.Domain.Audit;
@@ -14,7 +15,7 @@ namespace PromiseHub.Application.Mentoring;
 /// at the auto-score or an override from 0 to 100, or all at once at their auto-scores. Each approval notifies the youth and is audited with
 /// the auto-score and any override.
 /// </summary>
-public sealed class QuizApprovalHandler(IPromiseHubDb db, ITenantContext tenant, MentorYouthMemberships youth, IAuditWriter audit, TimeProvider clock)
+public sealed class QuizApprovalHandler(IPromiseHubDb db, ITenantContext tenant, MentorYouthMemberships youth, IAuditWriter audit, TimeProvider clock, BadgeAwarder badges)
 {
     public async Task<QuizApprovalsDto> ListAsync(CancellationToken cancellationToken = default)
     {
@@ -49,6 +50,7 @@ public sealed class QuizApprovalHandler(IPromiseHubDb db, ITenantContext tenant,
         var quiz = await db.Quizzes.AsNoTracking().FirstAsync(q => q.Id == attempt.QuizId, cancellationToken);
         Approve(attempt, quiz, request.Override);
         await db.SaveChangesAsync(cancellationToken);
+        await badges.AwardAsync(attempt.MembershipId, cancellationToken);
         return Gated<ApproveAllDto>.Found(new ApproveAllDto(1));
     }
 
@@ -63,6 +65,10 @@ public sealed class QuizApprovalHandler(IPromiseHubDb db, ITenantContext tenant,
             Approve(attempt, quizzes[attempt.QuizId], null);
         }
         await db.SaveChangesAsync(cancellationToken);
+        foreach (var membership in attempts.Select(a => a.MembershipId).Distinct())
+        {
+            await badges.AwardAsync(membership, cancellationToken);
+        }
         return new ApproveAllDto(attempts.Count);
     }
 

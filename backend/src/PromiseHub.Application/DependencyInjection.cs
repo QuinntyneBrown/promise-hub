@@ -177,6 +177,7 @@ public static class DependencyInjection
         services.AddScoped<Curriculum.LessonVideoHandler>();
         services.AddScoped<Curriculum.BadgesHandler>();
         services.AddScoped<Curriculum.BadgeCommands>();
+        services.AddScoped<Curriculum.BadgeAwarder>();
         services.AddScoped<Mentoring.MentoringHandler>();
         services.AddScoped<Mentoring.MentorScope>();
         services.AddScoped<Mentoring.MentoredYouthReader>();
