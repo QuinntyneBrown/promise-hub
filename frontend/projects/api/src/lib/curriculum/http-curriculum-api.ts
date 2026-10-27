@@ -7,6 +7,10 @@ import { LoadResult } from '../load-result';
 import { WriteOutcome } from '../write-outcome';
 import { AssignmentDetail } from './assignment-detail';
 import { AssignmentFields } from './assignment-fields';
+import { BadgeDetail } from './badge-detail';
+import { BadgeFields } from './badge-fields';
+import { BadgeList } from './badge-list';
+import { BadgeOptions } from './badge-options';
 import { CurriculumApi } from './curriculum-api';
 import { ContentStatus } from './content-status';
 import { Curriculum } from './curriculum';
@@ -195,5 +199,29 @@ export class HttpCurriculumApi implements CurriculumApi {
     return toWrite(
       this.http.put<null>(`${this.baseUrl}/curriculum/assignments/${id}/status`, { status }),
     );
+  }
+
+  badges(): Observable<LoadResult<BadgeList>> {
+    return toLoad(this.http.get<BadgeList>(`${this.baseUrl}/curriculum/badges`));
+  }
+
+  badgeOptions(): Observable<LoadResult<BadgeOptions>> {
+    return toLoad(this.http.get<BadgeOptions>(`${this.baseUrl}/curriculum/badges/options`));
+  }
+
+  badge(id: string): Observable<LoadResult<BadgeDetail>> {
+    return toLoad(this.http.get<BadgeDetail>(`${this.baseUrl}/curriculum/badges/${id}`));
+  }
+
+  createBadge(fields: BadgeFields): Observable<WriteOutcome> {
+    return toWrite(this.http.post<{ id: string }>(`${this.baseUrl}/curriculum/badges`, fields));
+  }
+
+  updateBadge(id: string, fields: BadgeFields): Observable<WriteOutcome> {
+    return toWrite(this.http.put<null>(`${this.baseUrl}/curriculum/badges/${id}`, fields));
+  }
+
+  deleteBadge(id: string): Observable<WriteOutcome> {
+    return toWrite(this.http.delete<null>(`${this.baseUrl}/curriculum/badges/${id}`));
   }
 }

@@ -1,5 +1,6 @@
 import type { Page, Route } from '@playwright/test';
 import { type FakeChild, type FakeGuardian, type FakeHousehold, ageOf, hasMedicalFlag, medicalFlag, reachable, seedHouseholds } from './households';
+import { FakeBadges } from './fake-badges';
 import { FakeCurriculum } from './fake-curriculum';
 import { FakeLearning } from './fake-learning';
 import { FakeReviews, type YouthAccounts } from './fake-reviews';
@@ -575,6 +576,9 @@ export class FakeApi {
   /** A youth's lessons and progress (L2-068 to L2-070); tests mark lessons done with learningState.complete. */
   readonly learningState = new FakeLearning(this.curriculumState);
 
+  /** Badges and their awards (L2-084, L2-085); tests read and change it, such as clear. */
+  readonly badges = new FakeBadges(this.curriculumState, () => this.reviews.competencies, () => memberships);
+
   /** Sets the modules on for an organization, as Settings › Modules would. */
   setModules(organizationId: string, on: ModuleId[]): void {
     this.modules.set(organizationId, on);
@@ -657,6 +661,12 @@ export class FakeApi {
     ['GET', /^\/api\/curriculum\/assignments\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.curriculumState.assessments.getAssignment(route, org, p['id']!))],
     ['PUT', /^\/api\/curriculum\/assignments\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.curriculumState.assessments.updateAssignment(route, org, p['id']!))],
     ['PUT', /^\/api\/curriculum\/assignments\/(?<id>[^/]+)\/status$/, (route, p) => this.author(route, (org) => this.curriculumState.assessments.setAssignmentStatus(route, org, p['id']!))],
+    ['GET', /^\/api\/curriculum\/badges$/, (route) => this.author(route, (org) => this.badges.list(route, org))],
+    ['GET', /^\/api\/curriculum\/badges\/options$/, (route) => this.author(route, (org) => this.badges.options(route, org))],
+    ['GET', /^\/api\/curriculum\/badges\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.badges.get(route, org, p['id']!))],
+    ['POST', /^\/api\/curriculum\/badges$/, (route) => this.author(route, (org) => this.badges.create(route, org))],
+    ['PUT', /^\/api\/curriculum\/badges\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.badges.update(route, org, p['id']!))],
+    ['DELETE', /^\/api\/curriculum\/badges\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.badges.remove(route, org, p['id']!))],
     ['POST', /^\/api\/curriculum\/lessons\/(?<id>[^/]+)\/video$/, (route, p) => this.author(route, (org) => this.curriculumState.uploadVideo(route, org, p['id']!, memberships.find((x) => x.id === this.membershipId)!.personName))],
     ['DELETE', /^\/api\/curriculum\/lessons\/(?<id>[^/]+)\/video$/, (route, p) => this.author(route, (org) => this.curriculumState.removeVideo(route, org, p['id']!))],
     ['GET', /^\/api\/mentoring\/youth$/, (route) => this.mentoredYouth(route)],

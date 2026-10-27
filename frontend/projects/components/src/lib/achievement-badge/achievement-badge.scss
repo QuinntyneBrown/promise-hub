@@ -1,0 +1,42 @@
+:host {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: var(--space-2);
+  max-width: 14rem;
+  margin-inline: auto;
+  text-align: center;
+}
+:host(.small) {
+  margin-inline: 0;
+}
+.medal {
+  display: grid;
+  place-items: center;
+  width: var(--size-avatar-xl);
+  height: var(--size-avatar-xl);
+  border-radius: var(--radius-full);
+  border: var(--border-width-thick) solid var(--color-accent);
+  background: var(--color-accent-subtle);
+  color: var(--color-fg-accent);
+}
+:host(.small) .medal {
+  width: var(--size-avatar-md);
+  height: var(--size-avatar-md);
+  border-width: var(--border-width-hairline);
+}
+:host(.locked) .medal {
+  border-color: var(--color-border-strong);
+  background: var(--color-bg-subtle);
+  color: var(--color-fg-muted);
+}
+.name {
+  font: var(--text-label);
+  color: var(--color-fg-default);
+  overflow-wrap: anywhere;
+}
+.caption {
+  font: var(--text-caption);
+  color: var(--color-fg-muted);
+  overflow-wrap: anywhere;
+}

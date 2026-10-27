@@ -12,6 +12,8 @@ export interface FakeCompetency {
   organizationId: string;
   name: string;
   description: string;
+  /** Removed from the progression framework (L2-086); mentors no longer assess it. */
+  removed?: boolean;
 }
 
 /** One assessment of a child on a competency, appended (ADR 0057). */

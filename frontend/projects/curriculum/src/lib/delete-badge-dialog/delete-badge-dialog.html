@@ -1,0 +1,18 @@
+<ph-dialog
+  [title]="'Delete ' + data.name + '?'"
+  description="Youth who earned it keep it. No one else can earn it from now on."
+  icon="trash"
+  tone="danger"
+>
+  @if (failed()) {
+    <ph-alert
+      tone="danger"
+      title="That didn’t go through"
+      text="The badge was not deleted. Try again."
+    />
+  }
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close()">Cancel</ph-button>
+    <ph-button variant="danger" [busy]="busy()" (click)="confirm()">Delete badge</ph-button>
+  </ng-container>
+</ph-dialog>

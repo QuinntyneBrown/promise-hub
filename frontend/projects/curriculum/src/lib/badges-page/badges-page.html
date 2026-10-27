@@ -1,0 +1,81 @@
+<ph-breadcrumb [items]="[{ label: 'Curriculum', link: '/curriculum' }, { label: 'Badges' }]" />
+<ph-page-header title="Badges" subtitle="What youth earn as they learn, and how they earn it.">
+  @if (result()?.status === 'loaded') {
+    <ph-button variant="primary" icon="plus" link="/curriculum/badges/new">New badge</ph-button>
+  }
+</ph-page-header>
+@let r = result();
+@if (r === null) {
+  <div aria-busy="true" aria-label="Loading badges" class="stack">
+    <ph-skeleton shape="card" />
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (r.status === 'loaded') {
+  @if (r.value.badges.length === 0) {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="award"
+        title="No badges yet"
+        text="Celebrate what youth reach: award a badge automatically when they finish a lesson, a module, a quiz or an assignment, or by hand."
+      >
+        <ph-button variant="primary" icon="plus" link="/curriculum/badges/new">New badge</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  } @else {
+    @if (counts(); as c) {
+      <div class="kpis">
+        <ph-stat
+          label="Badges"
+          [value]="'' + c.badges"
+          [caption]="c.automatic + ' automatic · ' + c.manual + ' by hand'"
+          data-testid="kpi-badges"
+        />
+        <ph-stat
+          label="Awarded"
+          [value]="'' + c.awards"
+          [caption]="'to ' + c.youth + ' youth'"
+          data-testid="kpi-awarded"
+        />
+        <ph-stat
+          label="Most earned"
+          [value]="c.most?.name ?? 'None yet'"
+          [caption]="c.most ? c.most.earnedCount + ' youth' : null"
+          data-testid="kpi-most-earned"
+        />
+      </div>
+    }
+    <ph-card title="All badges" [flush]="true">
+      <ph-list label="Badges" [inset]="true">
+        @for (b of r.value.badges; track b.id) {
+          <ph-list-item [title]="b.name" [meta]="meta(b)" [link]="['/curriculum/badges', b.id]">
+            <ph-achievement-badge phListLead size="sm" [icon]="badgeIcon(b.icon)" />
+            <ph-badge [tone]="b.kind === 'Automatic' ? 'info' : 'neutral'">{{
+              b.kind === 'Automatic' ? 'Automatic' : 'By hand'
+            }}</ph-badge>
+          </ph-list-item>
+        }
+      </ph-list>
+    </ph-card>
+  }
+} @else if (r.status === 'forbidden') {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      title="Program directors write the curriculum"
+      text="Ask an admin or a program director of your organization."
+    >
+      <ph-button link="/">Back to Today</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load the badges"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" icon="refresh" (click)="reload()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}

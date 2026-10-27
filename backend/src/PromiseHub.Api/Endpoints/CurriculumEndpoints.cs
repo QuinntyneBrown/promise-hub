@@ -8,7 +8,7 @@ using PromiseHub.Domain.Organizations;
 
 namespace PromiseHub.Api.Endpoints;
 
-/// <summary>Curriculum authoring (L2-066, L2-067, L2-073, L2-074, ADR 0050, ADR 0054): the Learning module and AuthorCurriculum (admins and program directors) on every endpoint.</summary>
+/// <summary>Curriculum authoring (L2-066, L2-067, L2-073, L2-074, L2-084 to L2-086, ADR 0050, ADR 0054, ADR 0058): the Learning module and AuthorCurriculum (admins and program directors) on every endpoint.</summary>
 public static class CurriculumEndpoints
 {
     /// <summary>Room for the multipart boundaries and headers around one file.</summary>
@@ -70,6 +70,16 @@ public static class CurriculumEndpoints
             (await handler.UpdateAsync(id, command, ct)).ToHttp());
         curriculum.MapPut("/assignments/{id:guid}/status", async (Guid id, StatusCommand command, AssignmentCommands handler, CancellationToken ct) =>
             (await handler.SetStatusAsync(id, command.Status, ct)).ToHttp());
+        curriculum.MapGet("/badges", (BadgesHandler handler, CancellationToken ct) => handler.ListAsync(ct));
+        curriculum.MapGet("/badges/options", (BadgesHandler handler, CancellationToken ct) => handler.OptionsAsync(ct));
+        curriculum.MapGet("/badges/{id:guid}", async (Guid id, BadgesHandler handler, CancellationToken ct) =>
+            await handler.GetAsync(id, ct) is { } badge ? Results.Ok(badge) : Results.NotFound());
+        curriculum.MapPost("/badges", async (BadgeCommand command, BadgeCommands handler, CancellationToken ct) =>
+            (await handler.CreateAsync(command, ct)).ToHttp("/curriculum/badges"));
+        curriculum.MapPut("/badges/{id:guid}", async (Guid id, BadgeCommand command, BadgeCommands handler, CancellationToken ct) =>
+            (await handler.UpdateAsync(id, command, ct)).ToHttp());
+        curriculum.MapDelete("/badges/{id:guid}", async (Guid id, BadgeCommands handler, CancellationToken ct) =>
+            (await handler.DeleteAsync(id, ct)).ToHttp());
         curriculum.MapPost("/lessons/{id:guid}/video", async (Guid id, HttpRequest request, LessonVideoHandler handler, LessonVideoOptions options, CancellationToken ct) =>
         {
             if (!request.HasFormContentType || request.ContentLength > options.MaxBytes + FormOverhead)

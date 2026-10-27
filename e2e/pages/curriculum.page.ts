@@ -18,6 +18,16 @@ export class CurriculumPage extends BasePage {
     await expect(this.page.getByRole('region').first().or(this.emptyState)).toBeVisible();
   }
 
+  /** Badges, from the page header (L2-084). */
+  async openBadges(): Promise<void> {
+    await this.page.getByRole('link', { name: 'Badges' }).click();
+  }
+
+  /** The progression framework, from the page header (L2-086). */
+  async openProgression(): Promise<void> {
+    await this.page.getByRole('link', { name: 'Progression' }).click();
+  }
+
   get emptyState(): Locator {
     return this.page.getByRole('heading', { name: 'No tracks yet' });
   }

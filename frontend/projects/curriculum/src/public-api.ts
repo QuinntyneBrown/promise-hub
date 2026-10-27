@@ -14,3 +14,6 @@ export { QuizQuestionDialog } from './lib/quiz-question-dialog/quiz-question-dia
 export { DeleteQuestionDialog } from './lib/delete-question-dialog/delete-question-dialog';
 export { AssignmentBuilderPage } from './lib/assignment-builder-page/assignment-builder-page';
 export { RubricCriterionDialog } from './lib/rubric-criterion-dialog/rubric-criterion-dialog';
+export { BadgesPage } from './lib/badges-page/badges-page';
+export { BadgeBuilderPage } from './lib/badge-builder-page/badge-builder-page';
+export { DeleteBadgeDialog } from './lib/delete-badge-dialog/delete-badge-dialog';

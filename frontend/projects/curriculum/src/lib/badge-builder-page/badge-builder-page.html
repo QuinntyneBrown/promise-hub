@@ -1,0 +1,214 @@
+@let r = result();
+@switch (r?.status) {
+  @case ('loaded') {
+    @if (r?.status === 'loaded') {
+      @let b = r.value.badge;
+      @let o = r.value.options;
+      @let p = preview();
+      <ph-breadcrumb
+        [items]="[
+          { label: 'Curriculum', link: '/curriculum' },
+          { label: 'Badges', link: '/curriculum/badges' },
+          { label: b ? b.name : 'New badge' },
+        ]"
+      />
+      @if (b) {
+        <ph-page-header
+          [title]="b.name"
+          [subtitle]="b.competencyName ? 'Badge · counts toward ' + b.competencyName : 'Badge'"
+        >
+          <ph-badge [tone]="b.kind === 'Automatic' ? 'info' : 'neutral'" data-testid="badge-kind">{{
+            b.kind === 'Automatic' ? 'Automatic' : 'By hand'
+          }}</ph-badge>
+          <ph-button
+            variant="ghost"
+            icon="trash"
+            hasPopup="dialog"
+            [label]="'Delete ' + b.name"
+            (click)="remove(b)"
+            >Delete</ph-button
+          >
+        </ph-page-header>
+      } @else {
+        <ph-page-header
+          title="New badge"
+          subtitle="Name it, pick its icon and choose how youth earn it."
+        />
+      }
+      <div class="split">
+        <form class="stack" novalidate (ngSubmit)="save(b)">
+          @if (summary().length) {
+            <ph-error-summary title="Fix these to continue" [items]="summary()" />
+          }
+          @if (failed()) {
+            <ph-alert
+              tone="danger"
+              title="We couldn’t save the badge"
+              text="Your changes are still here. Try again."
+            />
+          }
+          <ph-card title="Badge">
+            <div class="stack">
+              <ph-text-field
+                inputId="name"
+                label="Badge name"
+                name="name"
+                help="Up to 60 characters. Youth see it on their journey."
+                [error]="errors()['name'] ?? null"
+                [(ngModel)]="form.name"
+                (ngModelChange)="changed()"
+              />
+              <ph-textarea
+                inputId="description"
+                label="What it celebrates"
+                name="description"
+                help="Up to 200 characters."
+                [optional]="true"
+                [error]="errors()['description'] ?? null"
+                [(ngModel)]="form.description"
+                (ngModelChange)="changed()"
+              />
+              <ph-select
+                inputId="icon"
+                label="Icon"
+                name="icon"
+                [options]="icons"
+                [error]="errors()['icon'] ?? null"
+                [(ngModel)]="form.icon"
+                (ngModelChange)="changed()"
+              />
+            </div>
+          </ph-card>
+          <ph-card title="Earning it">
+            <div class="stack">
+              <ph-radio-group
+                legend="How it’s earned"
+                name="kind"
+                [options]="kinds"
+                [error]="errors()['kind'] ?? null"
+                [(ngModel)]="form.kind"
+                (ngModelChange)="changed()"
+              />
+              @if (form.kind === 'Automatic') {
+                <div class="two-col">
+                  <ph-select
+                    inputId="rule"
+                    label="Rule"
+                    name="rule"
+                    [options]="rules"
+                    [error]="errors()['rule'] ?? null"
+                    [(ngModel)]="form.rule"
+                    (ngModelChange)="form.targetId = ''; changed()"
+                  />
+                  <ph-select
+                    inputId="target"
+                    label="Which one"
+                    name="target"
+                    [options]="targets(o)"
+                    [error]="errors()['targetId'] ?? null"
+                    [(ngModel)]="form.targetId"
+                  />
+                </div>
+              }
+              <ph-select
+                inputId="competency"
+                label="Counts toward"
+                name="competency"
+                help="Links the badge to a competency of the progression framework."
+                [options]="competencies(o)"
+                [error]="errors()['competencyId'] ?? null"
+                [(ngModel)]="form.competencyId"
+              />
+            </div>
+          </ph-card>
+          <div class="form-actions">
+            <ph-button variant="ghost" link="/curriculum/badges">Cancel</ph-button>
+            <ph-button variant="primary" type="submit" [busy]="busy()">Save badge</ph-button>
+          </div>
+        </form>
+        <div class="stack">
+          <ph-card title="Preview">
+            <ph-achievement-badge
+              data-testid="badge-preview"
+              [icon]="badgeIcon(form.icon)"
+              [name]="p.name"
+              [caption]="p.caption"
+            />
+          </ph-card>
+          @if (b) {
+            <ph-card [title]="'Earned by (' + b.awards.length + ')'" [flush]="b.awards.length > 0">
+              @if (b.awards.length) {
+                <ph-list label="Youth who earned it" [inset]="true">
+                  @for (a of b.awards; track a.id) {
+                    <ph-list-item
+                      [title]="a.youthName"
+                      [avatar]="a.youthName"
+                      [meta]="
+                        (a.awardedBy ? 'Awarded by ' + a.awardedBy : 'Automatically') +
+                        ' · ' +
+                        formatDay(a.awardedAt)
+                      "
+                    />
+                  }
+                </ph-list>
+              } @else {
+                <p class="text-muted">No youth has earned it yet.</p>
+              }
+            </ph-card>
+          }
+        </div>
+      </div>
+    }
+  }
+  @case ('not-found') {
+    <ph-breadcrumb
+      [items]="[
+        { label: 'Curriculum', link: '/curriculum' },
+        { label: 'Badges', link: '/curriculum/badges' },
+        { label: 'Badge' },
+      ]"
+    />
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="search"
+        title="We can’t find that badge"
+        text="It may have been deleted, or belong to another organization."
+        [headingLevel]="1"
+      >
+        <ph-button link="/curriculum/badges">Back to Badges</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('forbidden') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="lock"
+        title="Program directors write the curriculum"
+        text="Ask an admin or a program director of your organization."
+        [headingLevel]="1"
+      >
+        <ph-button link="/">Back to Today</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case (undefined) {
+    <ph-page-header title="Badge" />
+    <div aria-busy="true" aria-label="Loading the badge" class="split">
+      <ph-skeleton shape="card" />
+      <ph-skeleton shape="card" />
+    </div>
+  }
+  @default {
+    <ph-page-header title="Badge" />
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load this badge"
+        text="Check your connection and try again."
+      >
+        <ph-button variant="primary" icon="refresh" (click)="reload()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+}

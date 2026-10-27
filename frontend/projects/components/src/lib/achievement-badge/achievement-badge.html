@@ -1,0 +1,9 @@
+<span class="medal" aria-hidden="true"
+  ><ph-icon [name]="icon()" [size]="size() === 'sm' ? 'md' : 'lg'"
+/></span>
+@if (name()) {
+  <span class="name">{{ name() }}</span>
+}
+@if (caption()) {
+  <span class="caption">{{ caption() }}</span>
+}
