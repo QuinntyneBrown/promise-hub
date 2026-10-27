@@ -479,6 +479,10 @@ export class FakeApi {
     ['POST', /^\/api\/learning\/onboarding\/complete$/, (route) => this.completeOnboarding(route)],
     ['GET', /^\/api\/curriculum$/, (route) => this.curriculum(route)],
     ['GET', /^\/api\/mentoring\/youth$/, (route) => this.mentoredYouth(route)],
+    ['GET', /^\/api\/programs\/(?<id>[^/]+)\/mentoring$/, (route, p) => this.cohortMentoring(route, p['id']!)],
+    ['PUT', /^\/api\/programs\/(?<id>[^/]+)\/mentors$/, (route, p) => this.setCohortMentors(route, p['id']!)],
+    ['PUT', /^\/api\/programs\/(?<id>[^/]+)\/youth\/(?<child>[^/]+)\/mentor$/, (route, p) => this.assignYouthMentorRoute(route, p['id']!, p['child']!)],
+    ['DELETE', /^\/api\/programs\/(?<id>[^/]+)\/youth\/(?<child>[^/]+)\/mentor$/, (route, p) => this.removeYouthMentor(route, p['id']!, p['child']!)],
     ['GET', /^\/api\/website\/(?<slug>[^/]+)$/, (route, p) => this.website(route, p['slug']!)],
     ['POST', /^\/api\/auth\/sign-in$/, (route) => this.signIn(route)],
     ['POST', /^\/api\/auth\/mfa$/, (route) => this.mfa(route)],
@@ -853,10 +857,123 @@ export class FakeApi {
     return route.fulfill({ json: { tracks: [] } });
   }
 
-  /** GET /mentoring/youth: only the youth assigned to the mentor; there are no assignments yet. */
+  /** GET /mentoring/youth: youth assigned to the mentor directly plus the active rosters of cohorts on their team (L2-062 criterion 5). */
   private async mentoredYouth(route: Route): Promise<void> {
-    if (!(await this.participantModuleCaller(route, 'Mentoring', can.mentorYouth))) return;
-    return route.fulfill({ json: { youth: [] } });
+    const m = await this.participantModuleCaller(route, 'Mentoring', can.mentorYouth);
+    if (!m) return;
+    const ids = new Set([...this.youthMentors].filter(([, mentor]) => mentor === m.id).map(([child]) => child));
+    for (const program of this.programs.filter((p) => p.organizationId === m.organizationId && p.status === 'Active')) {
+      const team = this.cohortMentors.get(program.id);
+      if (team && (team.lead === m.id || team.supporting.includes(m.id))) program.roster.forEach((id) => ids.add(id));
+    }
+    const youth = this.households
+      .filter((h) => h.organizationId === m.organizationId)
+      .flatMap((h) => h.children)
+      .filter((c) => ids.has(c.id))
+      .map((c) => ({ id: c.id, name: `${c.firstName} ${c.lastName}` }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    return route.fulfill({ json: { youth } });
+  }
+
+  /** Each child's one mentor (L2-062): child id to mentor membership id. */
+  private youthMentors = new Map<string, string>();
+  /** Each cohort's mentor team: program id to its lead and supporting mentors. */
+  private cohortMentors = new Map<string, { lead: string; supporting: string[] }>();
+
+  /** Assigns a mentor to a child, as a program director would from a cohort's roster. */
+  assignYouthMentor(childId: string, mentorId: string): void {
+    this.youthMentors.set(childId, mentorId);
+  }
+
+  /** Sets a cohort's mentor team, as a program director would. */
+  setCohortTeam(programId: string, lead: string, supporting: string[] = []): void {
+    this.cohortMentors.set(programId, { lead, supporting });
+  }
+
+  private activeMentors(organizationId: string): { id: string; name: string }[] {
+    return memberships
+      .filter((x) => x.organizationId === organizationId && x.role === 'Mentor' && !this.removedMemberships.has(x.id))
+      .map((x) => ({ id: x.id, name: x.personName }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  /** The caller and the cohort for a mentor assignment endpoint: Roster and Mentoring on, the caller's own program (L2-062 criteria 7, 8). */
+  private async mentoringCohort(route: Route, programId: string, write: boolean): Promise<{ m: Membership; p: FakeProgram } | null> {
+    const m = await this.rosterCaller(route);
+    if (!m) return null;
+    if (write && !can.managePrograms(m)) {
+      await this.forbidden(route);
+      return null;
+    }
+    const p = this.ownProgram(m, programId);
+    if (!this.modules.get(m.organizationId)!.includes('Mentoring') || !p) {
+      await route.fulfill({ status: 404 });
+      return null;
+    }
+    return { m, p };
+  }
+
+  private async cohortMentoring(route: Route, programId: string): Promise<void> {
+    const found = await this.mentoringCohort(route, programId, false);
+    if (!found) return;
+    const { m, p } = found;
+    const mentors = this.activeMentors(m.organizationId);
+    const byId = (id: string | undefined) => mentors.find((x) => x.id === id) ?? null;
+    const team = this.cohortMentors.get(p.id);
+    const children = this.childrenOf(m);
+    const youth = p.roster
+      .map((cid) => children.find((x) => x.child.id === cid))
+      .filter((x) => !!x)
+      .sort((a, b) => a!.child.lastName.localeCompare(b!.child.lastName) || a!.child.firstName.localeCompare(b!.child.firstName))
+      .map((x) => ({ childId: x!.child.id, name: `${x!.child.firstName} ${x!.child.lastName}`, mentor: byId(this.youthMentors.get(x!.child.id)) }));
+    return route.fulfill({
+      json: {
+        programId: p.id,
+        lead: byId(team?.lead),
+        supporting: (team?.supporting ?? []).map(byId).filter((x) => !!x).sort((a, b) => a!.name.localeCompare(b!.name)),
+        youth,
+        mentors,
+      },
+    });
+  }
+
+  private async assignYouthMentorRoute(route: Route, programId: string, childId: string): Promise<void> {
+    const found = await this.mentoringCohort(route, programId, true);
+    if (!found) return;
+    const { m, p } = found;
+    if (!p.roster.includes(childId)) return route.fulfill({ status: 404 });
+    const { mentorId } = route.request().postDataJSON() as { mentorId: string | null };
+    const invalid = (message: string) => route.fulfill({ status: 422, json: { errors: { mentorId: message } } });
+    if (p.status === 'Archived') return invalid(`${p.name} is archived.`);
+    if (!mentorId) return invalid('Choose a mentor.');
+    if (!this.activeMentors(m.organizationId).some((x) => x.id === mentorId)) return invalid('Choose an active mentor.');
+    this.youthMentors.set(childId, mentorId);
+    return route.fulfill({ status: 204 });
+  }
+
+  private async removeYouthMentor(route: Route, programId: string, childId: string): Promise<void> {
+    const found = await this.mentoringCohort(route, programId, true);
+    if (!found) return;
+    if (!found.p.roster.includes(childId)) return route.fulfill({ status: 404 });
+    if (found.p.status === 'Archived') return route.fulfill({ status: 422, json: { errors: { mentorId: `${found.p.name} is archived.` } } });
+    this.youthMentors.delete(childId);
+    return route.fulfill({ status: 204 });
+  }
+
+  private async setCohortMentors(route: Route, programId: string): Promise<void> {
+    const found = await this.mentoringCohort(route, programId, true);
+    if (!found) return;
+    const { m, p } = found;
+    const b = route.request().postDataJSON() as { leadMentorId: string | null; supportingMentorIds: string[] };
+    const supporting = [...new Set(b.supportingMentorIds ?? [])];
+    const errors: Record<string, string> = {};
+    if (p.status === 'Archived') errors['leadMentorId'] = `${p.name} is archived.`;
+    else if (!b.leadMentorId) errors['leadMentorId'] = 'Choose a lead mentor.';
+    else if (supporting.includes(b.leadMentorId)) errors['supportingMentorIds'] = 'The lead mentor can’t also be a supporting mentor.';
+    else if (![b.leadMentorId, ...supporting].every((id) => this.activeMentors(m.organizationId).some((x) => x.id === id))) errors['leadMentorId'] = 'Choose active mentors.';
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    this.cohortMentors.set(p.id, { lead: b.leadMentorId!, supporting });
+    return route.fulfill({ status: 204 });
   }
 
   /** GET /website/{slug}: anonymous; unknown, suspended and module-off all answer 404 (L2-005 criterion 7). */

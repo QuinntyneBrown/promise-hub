@@ -57,6 +57,8 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<PrivacySettings> PrivacySettings => Set<PrivacySettings>();
     public DbSet<ConsentPolicy> ConsentPolicies => Set<ConsentPolicy>();
     public DbSet<Domain.Learning.YouthOnboarding> YouthOnboardings => Set<Domain.Learning.YouthOnboarding>();
+    public DbSet<Domain.Mentoring.YouthMentor> YouthMentors => Set<Domain.Mentoring.YouthMentor>();
+    public DbSet<Domain.Mentoring.CohortMentor> CohortMentors => Set<Domain.Mentoring.CohortMentor>();
     public DbSet<DataRequest> DataRequests => Set<DataRequest>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
     public DbSet<Domain.Incidents.IncidentFollowUp> IncidentFollowUps => Set<Domain.Incidents.IncidentFollowUp>();
@@ -101,6 +103,19 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(o => o.StartedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.Property(o => o.CompletedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
             e.HasOne<Membership>().WithMany().HasForeignKey(o => o.MembershipId);
+        });
+        modelBuilder.Entity<Domain.Mentoring.YouthMentor>(e =>
+        {
+            e.HasIndex(y => new { y.OrganizationId, y.ChildId }).IsUnique();
+            e.Property(y => y.AssignedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.HasOne<Child>().WithMany().HasForeignKey(y => y.ChildId);
+            e.HasOne<Membership>().WithMany().HasForeignKey(y => y.MentorMembershipId);
+        });
+        modelBuilder.Entity<Domain.Mentoring.CohortMentor>(e =>
+        {
+            e.HasIndex(t => new { t.ProgramId, t.MentorMembershipId }).IsUnique();
+            e.HasOne<Domain.Programs.Program>().WithMany().HasForeignKey(t => t.ProgramId);
+            e.HasOne<Membership>().WithMany().HasForeignKey(t => t.MentorMembershipId);
         });
         modelBuilder.Entity<DataRequest>(e =>
         {

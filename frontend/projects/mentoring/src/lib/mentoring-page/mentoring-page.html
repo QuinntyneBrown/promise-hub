@@ -4,6 +4,12 @@
   <div aria-busy="true" aria-label="Loading your youth">
     <ph-skeleton shape="card" />
   </div>
+} @else if (r.status === 'loaded' && r.value.youth.length) {
+  <ph-list label="Youth you mentor">
+    @for (y of r.value.youth; track y.id) {
+      <ph-list-item [title]="y.name" meta="Youth you mentor" [avatar]="y.name" avatarTint="peach" />
+    }
+  </ph-list>
 } @else if (r.status === 'loaded') {
   <ph-card [flush]="true">
     <ph-empty-state

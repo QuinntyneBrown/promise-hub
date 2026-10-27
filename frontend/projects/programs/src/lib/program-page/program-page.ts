@@ -1,6 +1,16 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { LoadResult, PROGRAMS_API, Program, RosterChild, SESSION_API, can } from '@promisehub/api';
+import {
+  CohortMentoring,
+  LoadResult,
+  MENTORING_API,
+  PROGRAMS_API,
+  Program,
+  RosterChild,
+  SESSION_API,
+  YouthMentorRow,
+  can,
+} from '@promisehub/api';
 import {
   PhAlert,
   PhBreadcrumb,
@@ -16,7 +26,9 @@ import {
   formatSeason,
   formatWhen,
 } from '@promisehub/components';
-import { EMPTY, Subject, catchError, startWith, switchMap } from 'rxjs';
+import { EMPTY, Subject, catchError, combineLatest, of, startWith, switchMap } from 'rxjs';
+import { AssignMentorDialog } from '../assign-mentor-dialog/assign-mentor-dialog';
+import { AssignMentorDialogData } from '../assign-mentor-dialog/assign-mentor-dialog-data';
 import { CloseEnrollmentDialog } from '../close-enrollment-dialog/close-enrollment-dialog';
 import { EnrollDialog } from '../enroll-dialog/enroll-dialog';
 import { OpenEnrollmentDialog } from '../open-enrollment-dialog/open-enrollment-dialog';
@@ -24,7 +36,10 @@ import { ArchiveProgramDialog } from '../archive-program-dialog/archive-program-
 import { ProgramActionsDialog } from '../program-actions-dialog/program-actions-dialog';
 import { RemoveFromRosterDialog } from '../remove-from-roster-dialog/remove-from-roster-dialog';
 
-/** A program (mock: program): numbers, roster and events; archived programs are read-only with Restore. */
+/**
+ * A program (mock: program): numbers, roster and events; archived programs are read-only with Restore. While Mentoring is on, the
+ * cohort's mentors and each youth's mentor (L2-062); with it off nothing about mentors is requested or rendered.
+ */
 @Component({
   selector: 'ph-program-page',
   imports: [
@@ -43,6 +58,7 @@ import { RemoveFromRosterDialog } from '../remove-from-roster-dialog/remove-from
 })
 export class ProgramPage {
   private readonly api = inject(PROGRAMS_API);
+  private readonly mentoringApi = inject(MENTORING_API);
   private readonly dialogs = inject(PhDialogs);
   private readonly toasts = inject(ToastService);
   private readonly session = toSignal(
@@ -72,6 +88,24 @@ export class ProgramPage {
     ),
     { initialValue: null },
   );
+  protected readonly mentoringOn = computed(() => !!this.session()?.modules.includes('Mentoring'));
+  /** The cohort's mentoring, or null while loading, with Mentoring off, or when it failed. */
+  protected readonly mentoring = toSignal<CohortMentoring | null>(
+    combineLatest([
+      toObservable(this.programId),
+      toObservable(this.mentoringOn),
+      this.refresh$.pipe(startWith(undefined)),
+    ]).pipe(
+      switchMap(([id, on]) =>
+        on
+          ? this.mentoringApi
+              .cohort(id)
+              .pipe(switchMap((r) => of(r.status === 'loaded' ? r.value : null)))
+          : of(null),
+      ),
+    ),
+    { initialValue: null },
+  );
   protected readonly when = formatWhen;
 
   protected reload(): void {
@@ -89,8 +123,26 @@ export class ProgramPage {
       .join(' · ');
   }
 
-  protected childMeta(c: RosterChild): string {
-    return [c.age !== null ? `${c.age}` : null, c.householdName].filter(Boolean).join(' · ');
+  protected childMeta(c: RosterChild, mentoring: CohortMentoring | null): string {
+    const row = this.youthRow(c, mentoring);
+    const mentor = row ? (row.mentor ? `Mentor: ${row.mentor.name}` : 'No mentor') : null;
+    return [c.age !== null ? `${c.age}` : null, c.householdName, mentor]
+      .filter(Boolean)
+      .join(' · ');
+  }
+
+  protected youthRow(c: RosterChild, mentoring: CohortMentoring | null): YouthMentorRow | null {
+    return mentoring?.youth.find((y) => y.childId === c.id) ?? null;
+  }
+
+  protected assignMentor(p: Program, youth: YouthMentorRow, mentoring: CohortMentoring): void {
+    this.dialogs
+      .open<boolean, AssignMentorDialogData, AssignMentorDialog>(AssignMentorDialog, {
+        program: p,
+        youth,
+        mentors: mentoring.mentors,
+      })
+      .closed.subscribe((saved) => saved && this.reload());
   }
 
   protected upcoming(p: Program): number {

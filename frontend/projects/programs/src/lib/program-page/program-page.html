@@ -86,13 +86,24 @@
           <ph-card [title]="'Roster · ' + p.enrolled" [flush]="true">
             <ph-list label="Roster" [inset]="true">
               @for (c of p.roster; track c.id) {
+                @let youth = youthRow(c, mentoring());
                 <ph-list-item
                   [title]="c.name"
-                  [meta]="childMeta(c)"
+                  [meta]="childMeta(c, mentoring())"
                   [link]="['/families', c.householdId, 'children', c.id]"
                   [avatar]="c.name"
                   avatarTint="peach"
                 >
+                  @if (canManage() && !archived && youth && mentoring(); as m) {
+                    <ph-button
+                      variant="ghost"
+                      size="sm"
+                      hasPopup="dialog"
+                      [label]="'Assign a mentor to ' + c.name"
+                      (click)="assignMentor(p, youth, m)"
+                      >Mentor</ph-button
+                    >
+                  }
                   @if (canManage() && !archived) {
                     <ph-button
                       variant="ghost"

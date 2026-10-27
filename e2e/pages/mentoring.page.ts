@@ -15,6 +15,10 @@ export class MentoringPage extends BasePage {
     return this.page.getByRole('heading', { name: 'No youth assigned yet' });
   }
 
+  get youth(): Locator {
+    return this.page.getByRole('list', { name: 'Youth you mentor' }).getByTestId('list-title');
+  }
+
   async apiStatus(): Promise<number> {
     return this.page.evaluate(async () => (await fetch('/api/mentoring/youth')).status);
   }

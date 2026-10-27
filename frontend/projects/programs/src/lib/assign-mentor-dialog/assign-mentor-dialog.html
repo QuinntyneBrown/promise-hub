@@ -1,0 +1,37 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    [title]="'Assign a mentor to ' + data.youth.name"
+    [description]="data.program.name + ' · a youth has one mentor at a time.'"
+    icon="mentoring"
+  >
+    <div class="stack">
+      @if (failed()) {
+        <ph-alert
+          tone="danger"
+          title="That didn’t go through"
+          [text]="data.youth.name.split(' ')[0] + '’s mentor was not changed. Try again.'"
+        />
+      }
+      <ph-select
+        inputId="mentor"
+        label="Mentor"
+        name="mentor"
+        help="Only active mentors of your organization are listed."
+        [options]="options"
+        [error]="error()"
+        [(ngModel)]="mentorId"
+      />
+    </div>
+    <ng-container ngProjectAs="[phDialogFooter]">
+      @if (data.youth.mentor) {
+        <ph-button variant="ghost" [busy]="busy() === 'remove'" (click)="remove()"
+          >Remove mentor</ph-button
+        >
+      }
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy() === 'assign'"
+        >Assign mentor</ph-button
+      >
+    </ng-container>
+  </ph-dialog>
+</form>
