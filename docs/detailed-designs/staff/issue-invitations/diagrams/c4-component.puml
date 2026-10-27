@@ -1,0 +1,27 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Issue invitations
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(child, "ChildPage", "Angular page", "Youth account card")
+  Component(dlg, "InviteYouthDialog", "CDK dialog", "Email")
+  Component(staffdlg, "InviteStaffDialog", "CDK dialog", "Email and role")
+  Component(sapi, "StaffApi", "Contract + HTTP client", "youthAccount, inviteYouth, invite")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "StaffEndpoints", "Minimal API", "RequireModule(Learning), RequirePermission(ManageStaff)")
+  Component(yh, "YouthInvitationHandler", "Application handler", "Status, age and duplicate checks")
+  Component(sh, "StaffAccessHandler", "Application handler", "Staff, mentor and volunteer invitations")
+  Component(iss, "InvitationIssuer", "Application service", "Token hash, audit, email")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Invitations, staff users, memberships, children, notifications, audit entries")
+}
+Rel(child, sapi, "youthAccount")
+Rel(dlg, sapi, "inviteYouth")
+Rel(staffdlg, sapi, "invite")
+Rel(sapi, ep, "GET/POST /children/{id}/youth-*, POST /staff/invitations")
+Rel(ep, yh, "calls")
+Rel(ep, sh, "calls")
+Rel(yh, iss, "issues")
+Rel(sh, iss, "issues")
+Rel(iss, db, "invitation, audit entry")
+@enduml

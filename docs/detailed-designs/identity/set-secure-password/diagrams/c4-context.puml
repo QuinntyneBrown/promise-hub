@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Set a secure password
+Person(p, "Person setting a password", "Invitee or staff member resetting")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(p, ph, "Sets a password using", "HTTPS")
+@enduml

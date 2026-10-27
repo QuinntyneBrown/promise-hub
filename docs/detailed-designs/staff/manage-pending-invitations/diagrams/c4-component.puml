@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Manage pending invitations
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "StaffPage", "Angular page", "Invitations card, Resend, Withdraw")
+  Component(sapi, "StaffApi", "Contract + HTTP client", "list, resend, withdraw")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "StaffEndpoints", "Minimal API", "RequirePermission(ManageStaff)")
+  Component(sh, "StaffAccessHandler", "Application handler", "List, resend, withdraw")
+  Component(iss, "InvitationIssuer", "Application service", "Reissue, audit, email")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Invitations, staff users, memberships, children, notifications, audit entries")
+}
+Rel(page, sapi, "calls")
+Rel(sapi, ep, "GET /staff, POST /staff/invitations/{id}/resend, DELETE /staff/invitations/{id}")
+Rel(ep, sh, "calls")
+Rel(sh, iss, "reissues")
+Rel(iss, db, "token hash, expiry, audit entry")
+@enduml

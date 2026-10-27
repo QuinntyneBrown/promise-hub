@@ -1,0 +1,30 @@
+@startuml
+title UML sequence behaviour — A password containing the email is refused
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Yusuf" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "AcceptInvitePage" as page
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "InvitationEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application and Domain" #ECFDF3
+  participant "InvitationHandler" as h
+  participant "PasswordPolicy" as pp
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+  participant "IEmailSender" as mail
+end box
+actor -> page : "yusuf.haddad rocks 2026"
+page -> ep : POST /invitations/{token}/accept
+ep -> h : AcceptAsync
+h -> pp : Check(password, "yusuf.haddad@example.com")
+pp --> h : "Don’t use your email in your password." (L2-053)
+ep --> page : 422 errors.password
+page --> actor : inline error under the password field
+@enduml

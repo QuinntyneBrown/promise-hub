@@ -58,6 +58,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 48 | [Operational readiness](48-operational-readiness/README.md) | ~3 min | One log line per request, on-call alerts for errors and stuck queues, and performance budgets measured in CI |
 | 49 | [Merge Waypoint: foundation](49-merge-waypoint-foundation/README.md) | ~4 min | Where Waypoint lands, the Learning, Mentoring and Public website modules, and the Youth, Mentor and Volunteer roles |
 | 50 | [Sign in as a youth or mentor](50-sign-in-as-youth-or-mentor/README.md) | ~4 min | Youth land on Learning and mentors on Mentoring, a consecutive lock with an audited unlock, sign-out that ends the session on the server, and the inactive state |
+| 51 | [Accept an invitation as a youth or mentor](51-accept-an-invitation/README.md) | ~4 min | An admin invites a youth from the child record and a mentor from Staff and roles, one password rule, the youth lands on Learning, and an expired link asks for a new one that Resend replaces |
 
 ## Making or updating a video
 

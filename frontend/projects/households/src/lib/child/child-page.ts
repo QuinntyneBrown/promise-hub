@@ -1,6 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { Child, HOUSEHOLDS_API, LoadResult, SESSION_API, can } from '@promisehub/api';
+import {
+  Child,
+  HOUSEHOLDS_API,
+  LoadResult,
+  SESSION_API,
+  STAFF_API,
+  YouthAccount,
+  can,
+} from '@promisehub/api';
 import {
   Fact,
   PhBreadcrumb,
@@ -9,19 +17,29 @@ import {
   PhDescriptionList,
   PhDialogs,
   PhEmptyState,
+  PhBadge,
   PhErrorPage,
+  PhList,
+  PhListItem,
   PhPageHeader,
   ToastService,
 } from '@promisehub/components';
-import { EMPTY, Subject, catchError, startWith, switchMap } from 'rxjs';
+import { EMPTY, Subject, catchError, of, startWith, switchMap } from 'rxjs';
 import { formatDate } from '../dates';
 import { EditChildDialog } from '../edit-child/edit-child-dialog';
 import { EditMedicalDialog } from '../edit-medical/edit-medical-dialog';
+import { InviteYouthDialog } from '../invite-youth/invite-youth-dialog';
 
-/** A child's profile (mock: child): details and the medical and emergency card. */
+/**
+ * A child's profile (mock: child): details, the medical and emergency card and, for admins while Learning is on, the
+ * youth account of a child aged 12 to 18 (L2-051).
+ */
 @Component({
   selector: 'ph-child-page',
   imports: [
+    PhBadge,
+    PhList,
+    PhListItem,
     PhBreadcrumb,
     PhButton,
     PhCard,
@@ -43,6 +61,8 @@ export class ChildPage {
       .pipe(catchError(() => EMPTY)),
   );
   private readonly refresh$ = new Subject<void>();
+  private readonly staff = inject(STAFF_API);
+  private readonly youthRefresh$ = new Subject<void>();
 
   /** Route parameters. */
   readonly householdId = input.required<string>();
@@ -65,6 +85,55 @@ export class ChildPage {
     ),
     { initialValue: null },
   );
+
+  /** The child whose Youth account card shows: admins only, Learning on, aged 12 to 18 (ADR 0045). */
+  protected readonly youthChild = computed<Child | null>(() => {
+    const session = this.session();
+    const r = this.result();
+    if (!session || r?.status !== 'loaded') return null;
+    const c = r.value;
+    const eligible =
+      can(session.role, 'manageStaff') &&
+      session.modules.includes('Learning') &&
+      c.age !== null &&
+      c.age >= 12 &&
+      c.age <= 18;
+    return eligible ? c : null;
+  });
+  protected readonly youthAccount = toSignal<LoadResult<YouthAccount> | null>(
+    toObservable(this.youthChild).pipe(
+      switchMap((c) =>
+        c
+          ? this.youthRefresh$.pipe(
+              startWith(undefined),
+              switchMap(() => this.staff.youthAccount(c.id)),
+            )
+          : of(null),
+      ),
+    ),
+    { initialValue: null },
+  );
+
+  protected inviteYouth(c: Child): void {
+    this.dialogs
+      .open<boolean, Child, InviteYouthDialog>(InviteYouthDialog, c)
+      .closed.subscribe((sent) => {
+        if (sent) {
+          this.toasts.show({
+            tone: 'success',
+            title: 'Invitation sent',
+            text: `${c.firstName}’s link lasts 14 days.`,
+          });
+          this.youthRefresh$.next();
+        }
+      });
+  }
+
+  /** "Expires 19 Nov 2026", or "Expired …" once the link has timed out and waits to be resent. */
+  protected expiry(iso: string | null): string {
+    if (!iso) return '';
+    return `${new Date(iso).getTime() <= Date.now() ? 'Expired' : 'Expires'} ${formatDate(iso)}`;
+  }
 
   protected reload(): void {
     this.refresh$.next();

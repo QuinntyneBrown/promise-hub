@@ -258,9 +258,14 @@ simple("export-data", "Export", "reports", [R_REPORTS, R_PRIVACY], "For the peri
        success_body=f'<p>harbourview-otf-2026-27-season.xlsx is ready (184 children, 312 sessions). Emailed to marisol@harbourview.example.</p><div class="cluster">{btn("Download", "primary", icon_name="download")}</div>')
 
 simple("invite-staff", "Invite staff", "staff", [R_SEC, R_PRIVACY], "Email link, valid 14 days.",
-       lambda e: field("em", "Work email", type_="email", value="" if e else "sam.lee@example.org", required=True, autofocus=True, error=(e or {}).get("em", "")) + select("role", "Role", ["Youth worker", "Site lead", "Volunteer coordinator", "Admin", "Program director"], selected="Youth worker", help_="Youth workers see medical cards and report incidents.", error=(e or {}).get("role", "")) + fieldset("Programs", choice("p", "After‑School Tutoring", type_="checkbox", checked=True, attrs=' name="p1"') + choice("p", "Saturday Sports", type_="checkbox", attrs=' name="p2"') + choice("p", "Winter Camp 2026", type_="checkbox", attrs=' name="p3"')),
+       lambda e: field("em", "Work email", type_="email", value="" if e else "sam.lee@example.org", required=True, autofocus=True, error=(e or {}).get("em", "")) + select("role", "Role", ["Youth worker", "Site lead", "Volunteer coordinator", "Admin", "Program director", "Mentor", "Volunteer"], selected="Youth worker", help_="Youth workers see medical cards and report incidents. Mentor shows while Mentoring is on.", error=(e or {}).get("role", "")) + fieldset("Programs", choice("p", "After‑School Tutoring", type_="checkbox", checked=True, attrs=' name="p1"') + choice("p", "Saturday Sports", type_="checkbox", attrs=' name="p2"') + choice("p", "Winter Camp 2026", type_="checkbox", attrs=' name="p3"')),
        "Send invitation", icon_name="mail", invalid_err={"em": "Enter a work email."},
        success_body="<p>Sent to sam.lee@example.org. Valid 14 days.</p>")
+
+simple("invite-youth", "Invite Yusuf to PromiseHub", "child", [R_SEC, "L1-023"], "His own email. The account links to Yusuf’s record and signs in to Learning. The link lasts 14 days.",
+       lambda e: field("em", "Yusuf’s email", type_="email", value="" if e else "yusuf.haddad@example.com", required=True, autofocus=True, autocomplete="off", error=(e or {}).get("em", ""), help_="Not a guardian’s email: this is Yusuf’s own sign-in."),
+       "Send invitation", icon_name="mail", invalid_err={"em": "Enter an email like name@example.org."}, base_state="youth-account",
+       success_body="<p>Sent to yusuf.haddad@example.com. Valid 14 days. You can resend or withdraw it from Staff and roles.</p>")
 
 simple("change-role", "Change Priya Raman’s role", "staff", [R_SEC, R_PRIVACY], "Takes effect on her next page load.",
        lambda e: fieldset("Role", choice("role", "Volunteer coordinator <small>Current</small>", checked=True) + choice("role", "Site lead <small>Adds check-in, Quick Cards and medical</small>") + choice("role", "Admin <small>Adds settings and billing; MFA required</small>") + choice("role", "Youth worker")),

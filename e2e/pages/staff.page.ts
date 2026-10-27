@@ -21,18 +21,31 @@ export class StaffPage extends BasePage {
   }
 
   get invitations(): Locator {
-    return this.page.getByRole('list', { name: 'Invitations waiting' });
+    return this.page.getByRole('list', { name: 'Invitations' });
   }
 
   member(name: string): Locator {
     return this.members.getByRole('listitem').filter({ hasText: name });
   }
 
-  async invite(email: string, role: string): Promise<void> {
+  invitation(email: string): Locator {
+    return this.invitations.getByRole('listitem').filter({ hasText: email });
+  }
+
+  async openInvite(): Promise<void> {
     await this.page.getByRole('button', { name: 'Invite staff' }).click();
     await expect(this.dialog).toBeVisible();
+  }
+
+  /** The role's radio; "Volunteer" never matches "Volunteer coordinator". */
+  roleOption(role: string): Locator {
+    return this.dialog.getByRole('radio', { name: new RegExp(`^${role}(?! coordinator)`) });
+  }
+
+  async invite(email: string, role: string): Promise<void> {
+    await this.openInvite();
     await this.dialog.getByLabel('Work email').fill(email);
-    await this.dialog.getByRole('radio', { name: new RegExp(`^${role}`) }).check();
+    await this.roleOption(role).check();
     await this.dialog.getByRole('button', { name: 'Send invitation' }).click();
   }
 
@@ -45,6 +58,14 @@ export class StaffPage extends BasePage {
   async remove(name: string): Promise<void> {
     await this.member(name).getByRole('button', { name: `Remove ${name}` }).click();
     await this.dialog.getByRole('button', { name: 'Remove access' }).click();
+  }
+
+  get toast(): Locator {
+    return this.page.getByTestId('toast');
+  }
+
+  async resend(email: string): Promise<void> {
+    await this.invitations.getByRole('button', { name: `Resend invitation to ${email}` }).click();
   }
 
   async withdraw(email: string): Promise<void> {

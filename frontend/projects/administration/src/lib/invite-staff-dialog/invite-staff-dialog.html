@@ -19,7 +19,7 @@
     <ph-radio-group
       legend="Role"
       name="role"
-      [options]="roles"
+      [options]="roles()"
       [error]="errors()['role'] ?? null"
       [(ngModel)]="role"
     />

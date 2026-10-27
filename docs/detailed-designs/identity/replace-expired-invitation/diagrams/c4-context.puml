@@ -1,0 +1,13 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Replace an expired invitation
+Person(invitee, "Invitee", "Holds an expired link")
+Person(admin, "Admin", "Resends invitations")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+System_Ext(mail, "Email provider", "Delivers invitation links")
+Rel(invitee, ph, "Asks for a new link using", "HTTPS")
+Rel(ph, admin, "Notifies")
+Rel(admin, ph, "Resends using", "HTTPS")
+Rel(ph, mail, "Sends the fresh link via")
+@enduml

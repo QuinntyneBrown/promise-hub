@@ -57,9 +57,15 @@ def staff(S):
     def row(p, extra=""):
         return [f'<div class="cluster cluster--snug">{avatar(p)}{esc(p["name"])}</div>', badge(p["role"], roles[p["role"]]), extra or badge("Active", "success"), f'<div class="row-actions">{btn("Change role", "ghost", size="sm", data_href=dialog("change-role"))}{btn("Remove", "ghost", size="sm", data_href=dialog("remove-staff"))}</div>']
     tbl = table("Staff", ["Person", "Role", "Status", "Actions"], [row(M, badge("Admin · MFA on", "success")), row(T, badge("Admin · MFA on", "success")), row(J), row(STAFF["priya"]), row(STAFF["aisha"])])
-    invites = card(ul_list([list_item("sam.lee@example.org", "Youth worker · invited Mon 2 Nov · expires in 12 days", lead=f'<span class="icon-tile icon-tile--sm" aria-hidden="true">{icon("mail", "icon--sm")}</span>', end=btn("Resend", "ghost", size="sm", data_href=dialog("invite-staff", "success")))], card=False), title="Open invitations · 1", tid="inv", cls="card--flush")
+    mail = f'<span class="icon-tile icon-tile--sm" aria-hidden="true">{icon("mail", "icon--sm")}</span>'
+    acts = btn("Resend", "ghost", size="sm") + btn("Withdraw", "ghost", size="sm")
+    invites = card(ul_list([list_item("sam.lee@example.org", "Youth worker · invited by Tom Nguyen · expires Mon 16 Nov", lead=mail, end=acts),
+                            list_item("grace.adeyemi@example.org", "Mentor · invited by Tom Nguyen · expires Thu 19 Nov", lead=mail, end=acts),
+                            list_item("yusuf.haddad@example.com", "Youth · Yusuf Haddad · invited by Tom Nguyen · expired Wed 4 Nov", lead=mail, end=badge("Expired") + badge("Asked for a new link", "warning") + btn("Resend", "primary", size="sm") + btn("Withdraw", "ghost", size="sm"))], card=False), title="Invitations · 3", tid="inv", cls="card--flush")
     perms = card(table("What each role can see", ["Role", "Medical", "Incidents", "Messages", "Settings"], [["Program director", "Yes", "Read and review", "Send", "All"], ["Admin", "Yes", "No", "Send", "All"], ["Site lead", "Yes", "Report", "Send to own programs", "No"], ["Youth worker", "Yes", "Report", "No", "No"], ["Volunteer coordinator", "No", "No", "Send to volunteers", "No"]], cls="table-wrap--flush"), title="Roles", tid="roles", cls="card--flush")
     S.add("default", "Staff with roles and MFA status; who can see medical data and incidents.", nav="settings", user=T, main=hdr + f'<div class="stack">{tbl}{invites}{perms}</div>')
+    S.add("resent", "Tom resent Yusuf’s expired invitation: a fresh link that lasts 14 days, and the old link stops working.", nav="settings", user=T, main=hdr + f'<div class="stack">{tbl}{invites.replace(badge("Expired") + badge("Asked for a new link", "warning") + btn("Resend", "primary", size="sm"), btn("Resend", "ghost", size="sm")).replace("expired Wed 4 Nov", "expires Thu 19 Nov")}{perms}</div>',
+          toast_html=toast_region(toast("success", "Invitation resent", "yusuf.haddad@example.com has a fresh link for 14 days.")))
     S.add("loading", "Staff loading.", nav="settings", main=page_header("Staff and roles", "") + settings_nav("staff") + skeleton_list(5, "Loading staff"))
     S.add("empty", "Only the founder so far.", nav="settings", user=M, main=page_header("Staff and roles", "1 staff") + settings_nav("staff") + card(empty("It’s just you so far", "Invite the people who run sessions.", action=btn("Invite staff", "primary", icon_name="plus", data_href=dialog("invite-staff")), icon_name="users"), cls="card--flush"))
     S.add("error", "Staff failed to load.", nav="settings", main=page_header("Staff and roles", "") + settings_nav("staff") + card(empty("We couldn’t load staff", "Try again.", action=btn("Try again", "primary", icon_name="refresh"), error=True, icon_name="alert-triangle"), cls="card--flush"))
@@ -304,18 +310,38 @@ def reset_password(S):
     S.add("error", "The link expired.", main=auth_head("This link has expired", "Links work for one hour.") + btn("Send a new link", "primary", href=page("forgot-password"), size="lg", block=True))
 
 
-@screen("accept-invite", "page", "Accept invitation", route="/invite/:token", reqs=[R_SEC, R_TTV], shell="auth", na={"loading": "The form is static.", "empty": "A form has no collection to be empty of."})
+@screen("accept-invite", "page", "Accept invitation", route="/invite/:token", reqs=[R_SEC, R_TTV, "L1-023", "L1-024"], shell="auth", na={"loading": "The form is static.", "empty": "A form has no collection to be empty of."})
 def accept_invite(S):
-    def form(err=None, busy=False):
+    def form(err=None, busy=False, name="Sam Lee", email="sam.lee@example.org", email_label="Work email", join="Join Harbourview Youth", privacy=True):
         e = err or {}
-        return (f'<form class="stack" action="#" method="post" novalidate>{field("name", "Your name", value="Sam Lee", autofocus=True, error=e.get("name", ""))}{field("email", "Work email", type_="email", value="sam.lee@example.org", readonly=True)}'
-                f'{field("pw1", "Choose a password", type_="password", autocomplete="new-password", error=e.get("pw1", ""), help_="At least 12 characters.")}{switch("tos", "I’ve read how PromiseHub handles children’s data", desc="<a href=\"#name\">Privacy summary</a>")}{btn("Join Harbourview Youth", "primary", type_="submit", busy=busy, size="lg", block=True)}</form>')
+        return (f'<form class="stack" action="#" method="post" novalidate>' + (form_summary([(k, m) for k, m in e.items()]) if e else "") + f'{field("name", "Your name", value=name, autofocus=True, autocomplete="name", error=e.get("name", ""))}{field("email", email_label, type_="email", value=email, readonly=True)}'
+                f'<div class="field"><label class="field__label" for="pw1">Choose a password</label><div class="input-group"><input class="input" id="pw1" name="pw1" type="password" autocomplete="new-password" aria-describedby="pw1-help{" pw1-error" if e.get("pw1") else ""}"{" aria-invalid=\"true\"" if e.get("pw1") else ""}><button class="btn btn--ghost btn--icon input-group__btn" type="button" aria-label="Show password" aria-pressed="false">{icon("eye")}</button></div><div class="field__help" id="pw1-help">At least 12 characters, and not your email. A short sentence works well.</div>{f"<div class=\"field__error\" id=\"pw1-error\">{esc(e['pw1'])}</div>" if e.get("pw1") else ""}</div>'
+                + (switch("tos", "I’ve read how PromiseHub handles children’s data", desc="<a href=\"#name\">Privacy summary</a>") if privacy else "") + f'{btn(join, "primary", type_="submit", busy=busy, size="lg", block=True)}</form>')
     S.add("default", "Sam accepts Tom’s invitation as a youth worker.", main=auth_head("Join Harbourview Youth Collective", "Tom Nguyen invited you as a Youth worker.") + form())
-    S.add("invalid", "Missing name and short password.", main=auth_head("Join Harbourview Youth Collective", "Tom Nguyen invited you as a Youth worker.") + form(err={"name": "Enter your name.", "pw1": "Use at least 12 characters."}).replace('value="Sam Lee"', 'value=""'))
+    S.add("youth", "Yusuf (13) opens the invitation Tom sent from his child record: his own email, a name already filled from the record, and the same password rule as staff.",
+          main=auth_head("Join Harbourview Youth Collective", "Tom Nguyen invited you to Learning as a Youth.") + form(name="Yusuf Haddad", email="yusuf.haddad@example.com", email_label="Email", join="Join and start Learning", privacy=False),
+          notes=note("After joining, Yusuf is signed in and lands on Learning (Today if Learning has since been turned off). His account links to his child record.", "top: 5rem; right: 1rem;"))
+    S.add("mentor", "Grace Adeyemi, invited as a mentor from Staff and roles; she lands on Mentoring.",
+          main=auth_head("Join Harbourview Youth Collective", "Tom Nguyen invited you as a Mentor.") + form(name="", email="grace.adeyemi@example.org", email_label="Email", join="Join Harbourview Youth", privacy=False))
+    S.add("invalid", "Missing name, and a password that is too short.", main=auth_head("Join Harbourview Youth Collective", "Tom Nguyen invited you as a Youth worker.") + form(err={"name": "Enter your name.", "pw1": "Use at least 12 characters."}, name=""))
+    S.add("weak", "A long password that contains the email’s name is refused by the same policy as reset.", main=auth_head("Join Harbourview Youth Collective", "Tom Nguyen invited you to Learning as a Youth.") + form(err={"pw1": "Don’t use your email in your password."}, name="Yusuf Haddad", email="yusuf.haddad@example.com", email_label="Email", join="Join and start Learning", privacy=False))
     S.add("submitting", "Creating the account.", main=auth_head("Join Harbourview Youth Collective", "Tom Nguyen invited you as a Youth worker.") + form(busy=True))
     S.add("success", "In: a 30-second orientation with the three things to try first.", main=auth_head("Welcome, Sam", "You’re a Youth worker at Harbourview Youth Collective.") +
           ul_list([list_item("Open tonight’s check-in", "Tap a child to check them in.", lead=f'<span class="icon-tile" aria-hidden="true">{icon("clipboard")}</span>', href=page("check-in")), list_item("Try a Quick Card", "Allergies, contacts and pickups, offline.", lead=f'<span class="icon-tile" aria-hidden="true">{icon("heart-pulse")}</span>', href=page("quick-card")), list_item("Know where incidents go", "Reports go to Marisol Delgado.", lead=f'<span class="icon-tile" aria-hidden="true">{icon("flag")}</span>', href=page("new-incident"))]) + btn("Get set up (2 minutes)", "primary", href=page("onboard-staff-phone"), size="lg", block=True) + f'<p class="text-center"><a href="{page("today")}">Skip to Today</a></p>')
-    S.add("error", "The invitation expired or was withdrawn.", main=auth_head("This invitation has expired", "Invitations last 14 days. Ask Tom Nguyen for a new one.") + f'<a class="btn btn--primary btn--lg btn--block" href="mailto:tom@harbourview.example">{icon("mail")}Email Tom</a>')
+    S.add("error", "The invitation was withdrawn or already used: it can’t be used and there is nothing to request.", main=auth_head("This invitation can’t be used", "It was withdrawn or has already been used. If you already joined, sign in.") + btn("Sign in", "primary", href=page("sign-in"), size="lg", block=True),
+          notes=note("An expired invitation shows invite-expired instead, with a way to ask for a new link.", "top: 5rem; right: 1rem;"))
+
+
+@screen("invite-expired", "page", "Invitation expired", route="/invite/:token", reqs=[R_SEC, "L1-023", "L1-024"], shell="auth", na={"loading": "The server has already answered 410 when this shows.", "empty": "A message has no collection to be empty of.", "invalid": "There is nothing to fill in: one button asks for a new link."})
+def invite_expired(S):
+    head_ = auth_head("This invitation has expired", "Invitations last 14 days to keep accounts safe. Tom Nguyen can send you a fresh link.")
+    def actions(busy=False):
+        return btn("Ask Tom Nguyen for a new link", "primary", type_="submit", busy=busy, size="lg", block=True, icon_name="send") + f'<p class="text-center"><a href="{page("sign-in")}">I already have an account</a></p>'
+    S.add("default", "Yusuf opens his link 15 days later: it can’t be used, and one button tells Tom he needs a fresh one.", main=head_ + f'<form class="stack" action="#" method="post" novalidate>{actions()}</form>',
+          notes=note("The request needs no account: the expired link itself proves which invitation it is. Asking twice sends one request.", "top: 5rem; right: 1rem;"))
+    S.add("submitting", "Sending the request.", main=head_ + f'<form class="stack" action="#" method="post" novalidate>{actions(busy=True)}</form>')
+    S.add("success", "Sent: Tom sees “Asked for a new link” on Staff and roles and resends it.", main=auth_head("We’ve let Tom Nguyen know", "When Tom Nguyen sends a fresh invitation, it arrives by email. The new link lasts 14 days.") + btn("Back to sign in", "", href=page("sign-in"), size="lg", block=True))
+    S.add("error", "The request didn’t go through.", main=head_ + alert("danger", "That didn’t go through", "Try again in a minute.") + f'<form class="stack" action="#" method="post" novalidate>{actions()}</form>')
 
 
 # ------------------------------------------------------------------ First-run setup

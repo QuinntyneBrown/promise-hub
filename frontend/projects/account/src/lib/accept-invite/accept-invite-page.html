@@ -6,9 +6,7 @@
       @if (r?.status === 'open') {
         <ph-auth-card
           [title]="'Join ' + r.invitation.organization"
-          [subtitle]="
-            r.invitation.invitedBy + ' invited you as ' + roleLabels[r.invitation.role] + '.'
-          "
+          [subtitle]="subtitle(r.invitation)"
         >
           <form class="stack" novalidate (ngSubmit)="accept()">
             @if (failed()) {
@@ -35,25 +33,68 @@
               type="password"
               name="password"
               autocomplete="new-password"
-              help="At least 12 characters. A short sentence works well."
+              help="At least 12 characters, and not your email. A short sentence works well."
               [error]="errors()['password'] ?? null"
               [(ngModel)]="password"
             />
-            <ph-button variant="primary" type="submit" size="lg" [busy]="busy()"
-              >Accept and continue</ph-button
-            >
+            <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
+              joinLabel(r.invitation)
+            }}</ph-button>
           </form>
         </ph-auth-card>
       }
     }
     @case ('gone') {
       @if (r?.status === 'gone') {
-        <ph-auth-card
-          title="This invitation has expired"
-          [subtitle]="'Ask ' + (r.invitedBy ?? 'the person who invited you') + ' for a new one.'"
-        >
-          <ph-button link="/sign-in">Sign in instead</ph-button>
-        </ph-auth-card>
+        @if (r.reason === 'expired') {
+          @let inviter = r.invitedBy ?? 'the person who invited you';
+          @if (request() === 'sent') {
+            <ph-auth-card
+              [title]="'We’ve let ' + inviter + ' know'"
+              [subtitle]="
+                'When ' +
+                inviter +
+                ' sends a fresh invitation, it arrives by email. The new link lasts 14 days.'
+              "
+            >
+              <ph-button link="/sign-in" size="lg">Back to sign in</ph-button>
+            </ph-auth-card>
+          } @else {
+            <ph-auth-card
+              title="This invitation has expired"
+              [subtitle]="
+                'Invitations last 14 days to keep accounts safe. ' +
+                inviter +
+                ' can send you a fresh link.'
+              "
+            >
+              <form class="stack" novalidate (ngSubmit)="requestNew()">
+                @if (request() === 'failed') {
+                  <ph-alert
+                    tone="danger"
+                    title="That didn’t go through"
+                    text="Try again in a minute."
+                  />
+                }
+                <ph-button
+                  variant="primary"
+                  type="submit"
+                  size="lg"
+                  [busy]="request() === 'busy'"
+                  >{{ 'Ask ' + inviter + ' for a new link' }}</ph-button
+                >
+                <p class="text-center"><a routerLink="/sign-in">I already have an account</a></p>
+              </form>
+            </ph-auth-card>
+          }
+        } @else {
+          <ph-auth-card
+            title="This invitation can’t be used"
+            subtitle="It was withdrawn or has already been used. If you already joined, sign in."
+          >
+            <ph-button variant="primary" link="/sign-in">Sign in</ph-button>
+          </ph-auth-card>
+        }
       }
     }
     @case ('error') {

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using PromiseHub.Application.Audit;
 using PromiseHub.Application.Guardian;
 using PromiseHub.Application.Identity;
+using PromiseHub.Application.Notifications;
 using PromiseHub.Application.Organizations;
 using PromiseHub.Domain.Audit;
 using PromiseHub.Domain.Identity;
@@ -15,19 +16,22 @@ namespace PromiseHub.Application.Staff;
 /// has gone; accepting with a name and password creates the account (or uses the existing one with its password) and the
 /// membership in the invitation's organization only, then the phone step saves a mobile for alerts.
 /// </summary>
-public sealed class InvitationHandler(IPromiseHubDb db, TenantContext tenant, IPasswordHasher hasher, IAuditWriter audit, TimeProvider clock)
+public sealed class InvitationHandler(IPromiseHubDb db, TenantContext tenant, IPasswordHasher hasher, IAuditWriter audit, NotificationWriter notifications, TimeProvider clock)
 {
-    public const int MinimumPassword = 12;
-
-    public async Task<(bool Open, InvitationDto? Invitation)> GetAsync(string token, CancellationToken cancellationToken = default)
+    public async Task<InvitationLookup> GetAsync(string token, CancellationToken cancellationToken = default)
     {
         var invitation = await FindAsync(token, cancellationToken);
-        if (invitation is null)
-        {
-            return (false, null);
-        }
-        return (invitation.Open(clock.GetUtcNow()), await DtoAsync(invitation, cancellationToken));
+        return invitation is null
+            ? new InvitationLookup(null, "used")
+            : new InvitationLookup(await DtoAsync(invitation, cancellationToken), GoneReason(invitation, clock.GetUtcNow()));
     }
+
+    /// <summary>Why a link no longer works, or null while it is open (L2-052 criterion 3, L2-054 criterion 1).</summary>
+    private static string? GoneReason(StaffInvitation invitation, DateTimeOffset now) =>
+        invitation.AcceptedAt is not null ? "used"
+        : invitation.WithdrawnAt is not null ? "withdrawn"
+        : invitation.Expired(now) ? "expired"
+        : null;
 
     public async Task<AcceptInvitationResult> AcceptAsync(string token, AcceptInvitationCommand command, CancellationToken cancellationToken = default)
     {
@@ -35,7 +39,8 @@ public sealed class InvitationHandler(IPromiseHubDb db, TenantContext tenant, IP
         var now = clock.GetUtcNow();
         if (invitation is null || !invitation.Open(now))
         {
-            return new AcceptInvitationResult(true, null, null, null, invitation is null ? null : await DtoAsync(invitation, cancellationToken));
+            return new AcceptInvitationResult(true, null, null, null, invitation is null ? null : await DtoAsync(invitation, cancellationToken),
+                invitation is null ? "used" : GoneReason(invitation, now));
         }
         var errors = new Dictionary<string, string>();
         if (string.IsNullOrWhiteSpace(command.Name))
@@ -50,9 +55,9 @@ public sealed class InvitationHandler(IPromiseHubDb db, TenantContext tenant, IP
                 errors["password"] = "Use the password you already have for PromiseHub.";
             }
         }
-        else if ((command.Password ?? string.Empty).Length < MinimumPassword)
+        else if (PasswordPolicy.Check(command.Password, invitation.Email) is { } weak)
         {
-            errors["password"] = $"Use at least {MinimumPassword} characters.";
+            errors["password"] = weak;
         }
         if (errors.Count > 0)
         {
@@ -65,12 +70,41 @@ public sealed class InvitationHandler(IPromiseHubDb db, TenantContext tenant, IP
             db.StaffUsers.Add(user);
         }
         var membership = new Membership(Guid.NewGuid(), invitation.OrganizationId, command.Name!.Trim(), invitation.Email, invitation.Role);
+        if (invitation.ChildId is { } childId)
+        {
+            // A youth account links to the child record named on the invitation (L2-052, L2-045).
+            membership.LinkChild(childId);
+        }
         db.Memberships.Add(membership);
         var tracked = await db.StaffInvitations.SingleAsync(i => i.Id == invitation.Id, cancellationToken);
         tracked.Accept(now);
         audit.Record(new AuditEvent(AuditAction.Updated, "StaffInvitation", invitation.Id, $"{membership.PersonName} accepted the invitation as {invitation.Role}"));
         await db.SaveChangesAsync(cancellationToken);
         return new AcceptInvitationResult(false, null, user.Id, membership.Id);
+    }
+
+    /// <summary>
+    /// The holder of an expired link asks for a new one (L2-054): only an expired invitation qualifies; the first request
+    /// marks it, tells the organization's admins and is audited there; later requests change nothing. False when not found.
+    /// </summary>
+    public async Task<bool> RequestNewAsync(string token, CancellationToken cancellationToken = default)
+    {
+        var found = await FindAsync(token, cancellationToken);
+        if (found is null || !found.Expired(clock.GetUtcNow()))
+        {
+            return false;
+        }
+        tenant.ResolveForJob(found.OrganizationId);
+        var invitation = await db.StaffInvitations.SingleAsync(i => i.Id == found.Id, cancellationToken);
+        if (!invitation.RequestReplacement(clock.GetUtcNow()))
+        {
+            return true;
+        }
+        var text = $"{invitation.Email} asked for a new invitation link";
+        audit.Record(new AuditEvent(AuditAction.Updated, "StaffInvitation", invitation.Id, text));
+        await notifications.NotifyAsync(Permission.ManageStaff, "staff", text, "/settings/staff", cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
     public async Task<Result> SavePhoneAsync(PhoneCommand command, CancellationToken cancellationToken = default)
@@ -95,6 +129,9 @@ public sealed class InvitationHandler(IPromiseHubDb db, TenantContext tenant, IP
     private async Task<InvitationDto> DtoAsync(StaffInvitation invitation, CancellationToken cancellationToken)
     {
         var organization = await db.Organizations.AsNoTracking().SingleAsync(o => o.Id == invitation.OrganizationId, cancellationToken);
-        return new InvitationDto(invitation.Email, organization.Name, invitation.Role.ToString(), invitation.InvitedBy);
+        var child = invitation.ChildId is { } childId
+            ? await db.Children.IgnoreQueryFilters().AsNoTracking().FirstOrDefaultAsync(c => c.Id == childId && c.OrganizationId == invitation.OrganizationId, cancellationToken)
+            : null;
+        return new InvitationDto(invitation.Email, organization.Name, invitation.Role.ToString(), invitation.InvitedBy, child?.FullName);
     }
 }

@@ -28,13 +28,16 @@ test.describe('Start an invited shift as a youth worker', () => {
     await invite.expectAccessible();
   });
 
-  test('Given an expired invitation, when it opens, then it says to ask the person who invited them', async ({ page, api }) => {
-    api.sentInvitation('inv-old', 'sam@harbourview.example', 'YouthWorker', true);
+  // Traces to: L2-052 criterion 3
+  test('Given a withdrawn invitation, when it opens, then it says it can’t be used and offers sign in', async ({ page, api }) => {
+    api.sentInvitation('inv-gone', 'ravi.patel@example.org', 'Volunteer');
+    api.withdrawLink('inv-gone');
     const invite = new AcceptInvitePage(page);
 
-    await invite.open('inv-old');
+    await invite.open('inv-gone');
 
-    await expect(invite.heading).toHaveText('This invitation has expired');
-    await expect(page.getByRole('main')).toContainText('Ask Tom Nguyen for a new one.');
+    await expect(invite.heading).toHaveText('This invitation can’t be used');
+    await expect(page.getByRole('link', { name: 'Sign in' })).toBeVisible();
+    await invite.expectAccessible();
   });
 });

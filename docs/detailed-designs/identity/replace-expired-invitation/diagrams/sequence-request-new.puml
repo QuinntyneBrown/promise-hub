@@ -1,0 +1,40 @@
+@startuml
+title UML sequence behaviour — Ask for a new link
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Yusuf (expired link)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "AcceptInvitePage" as page
+  participant "InvitationApi" as iapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "InvitationEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application and Domain" #ECFDF3
+  participant "InvitationHandler" as h
+  participant "NotificationWriter" as nw
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+  participant "IEmailSender" as mail
+end box
+actor -> page : open /invite/{token}, day 15
+page -> iapi : get(token)
+iapi -> ep : GET /invitations/{token}
+ep --> page : 410 reason expired, Tom Nguyen, Harbourview
+page --> actor : invite-expired
+actor -> page : Ask Tom Nguyen for a new link
+page -> iapi : requestNew(token)
+iapi -> ep : POST /invitations/{token}/request-new
+ep -> h : RequestNewAsync
+h -> db : invitation by token hash; not expired → 404
+alt first request
+  h -> db : ReplacementRequestedAt, audit in Harbourview (L2-054)
+  h -> nw : notify ManageStaff "asked for a new invitation link"
+end
+ep --> page : 202
+page --> actor : "We’ve let Tom Nguyen know"
+@enduml

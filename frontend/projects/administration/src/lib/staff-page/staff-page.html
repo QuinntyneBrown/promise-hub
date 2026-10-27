@@ -61,13 +61,23 @@
             }
           </ph-list>
           @if (s.invitations.length) {
-            <ph-card title="Invitations waiting" [flush]="true">
-              <ph-list label="Invitations waiting" [inset]="true">
+            <ph-card [title]="'Invitations · ' + s.invitations.length" [flush]="true">
+              <ph-list label="Invitations" [inset]="true">
                 @for (i of s.invitations; track i.id) {
-                  <ph-list-item
-                    [title]="i.email"
-                    [meta]="roleLabel[i.role] + ' · invited by ' + i.invitedBy"
-                  >
+                  <ph-list-item [title]="i.email" [meta]="invitationMeta(i)">
+                    @if (i.status === 'Expired') {
+                      <ph-badge tone="neutral">Expired</ph-badge>
+                    }
+                    @if (i.replacementRequested) {
+                      <ph-badge tone="warning">Asked for a new link</ph-badge>
+                    }
+                    <ph-button
+                      [variant]="i.replacementRequested ? 'primary' : 'ghost'"
+                      size="sm"
+                      [label]="'Resend invitation to ' + i.email"
+                      (click)="resend(i.id, i.email)"
+                      >Resend</ph-button
+                    >
                     <ph-button
                       variant="ghost"
                       size="sm"

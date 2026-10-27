@@ -9,6 +9,7 @@ import { WriteOutcome } from '../write-outcome';
 import { StaffApi } from './staff-api';
 import { Coverage } from './coverage';
 import { StaffList } from './staff-list';
+import { YouthAccount } from './youth-account';
 
 @Injectable()
 export class HttpStaffApi implements StaffApi {
@@ -29,12 +30,30 @@ export class HttpStaffApi implements StaffApi {
     return toWrite(this.http.delete<null>(`${this.baseUrl}/staff/invitations/${invitationId}`));
   }
 
+  resend(invitationId: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(`${this.baseUrl}/staff/invitations/${invitationId}/resend`, null),
+    );
+  }
+
   changeRole(membershipId: string, role: Role): Observable<WriteOutcome> {
     return toWrite(this.http.put<null>(`${this.baseUrl}/staff/${membershipId}/role`, { role }));
   }
 
   remove(membershipId: string): Observable<WriteOutcome> {
     return toWrite(this.http.delete<null>(`${this.baseUrl}/staff/${membershipId}`));
+  }
+
+  youthAccount(childId: string): Observable<LoadResult<YouthAccount>> {
+    return toLoad(this.http.get<YouthAccount>(`${this.baseUrl}/children/${childId}/youth-account`));
+  }
+
+  inviteYouth(childId: string, email: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<{ id: string }>(`${this.baseUrl}/children/${childId}/youth-invitation`, {
+        email,
+      }),
+    );
   }
 
   coverage(): Observable<LoadResult<Coverage>> {

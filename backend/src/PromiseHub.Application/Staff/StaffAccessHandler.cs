@@ -1,7 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using PromiseHub.Application.Audit;
-using PromiseHub.Application.Guardian;
-using PromiseHub.Application.Messaging;
 using PromiseHub.Application.Organizations;
 using PromiseHub.Domain.Audit;
 using PromiseHub.Domain.Organizations;
@@ -14,16 +12,32 @@ namespace PromiseHub.Application.Staff;
 /// change-role, remove-staff). A changed role applies on the person's next request and a removed membership ends it, since
 /// every request reads the membership afresh. Admins cannot change or remove themselves. Every change is audited.
 /// </summary>
-public sealed class StaffAccessHandler(IPromiseHubDb db, ITenantContext tenant, IEmailSender email, GuardianLinkOptions links, IAuditWriter audit, TimeProvider clock)
+public sealed class StaffAccessHandler(IPromiseHubDb db, ITenantContext tenant, InvitationIssuer issuer, IModuleGate modules, IAuditWriter audit, TimeProvider clock)
 {
     public async Task<StaffListDto> ListAsync(CancellationToken cancellationToken = default)
     {
         var now = clock.GetUtcNow();
         var members = await db.Memberships.AsNoTracking().Where(m => m.RemovedAt == null).OrderBy(m => m.PersonName).ToListAsync(cancellationToken);
-        var invitations = (await db.StaffInvitations.AsNoTracking().ToListAsync(cancellationToken)).Where(i => i.Open(now)).OrderBy(i => i.Email).ToList();
+        // Waiting and expired invitations; accepted and withdrawn ones leave the list (L2-052 criterion 4).
+        var invitations = await db.StaffInvitations.AsNoTracking().Where(i => i.AcceptedAt == null && i.WithdrawnAt == null).OrderBy(i => i.Email).ToListAsync(cancellationToken);
+        var childIds = invitations.Where(i => i.ChildId != null).Select(i => i.ChildId!.Value).ToList();
+        var children = await db.Children.AsNoTracking().Where(c => childIds.Contains(c.Id)).ToDictionaryAsync(c => c.Id, c => c.FullName, cancellationToken);
         return new StaffListDto(
             [.. members.Select(m => new StaffMemberDto(m.Id, m.PersonName, m.Email, m.Role.ToString(), m.Id == tenant.MembershipId))],
-            [.. invitations.Select(i => new StaffInvitationDto(i.Id, i.Email, i.Role.ToString(), i.InvitedBy, i.InvitedAt, i.ExpiresAt))]);
+            [.. invitations.Select(i => new StaffInvitationDto(i.Id, i.Email, i.Role.ToString(), i.InvitedBy, i.InvitedAt, i.ExpiresAt,
+                i.Open(now) ? "Pending" : "Expired", i.ChildId is { } c ? children.GetValueOrDefault(c) : null, i.ReplacementRequestedAt is not null))]);
+    }
+
+    /// <summary>A fresh link on a waiting or expired invitation (L2-052 criterion 5); accepted or withdrawn ones are not found.</summary>
+    public async Task<Result> ResendAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var invitation = await db.StaffInvitations.FirstOrDefaultAsync(i => i.Id == id && i.AcceptedAt == null && i.WithdrawnAt == null, cancellationToken);
+        if (invitation is null)
+        {
+            return Result.NotFound;
+        }
+        await issuer.ReissueAsync(invitation, cancellationToken);
+        return Result.Done;
     }
 
     public async Task<Result> InviteAsync(InviteStaffCommand command, CancellationToken cancellationToken = default)
@@ -42,6 +56,15 @@ public sealed class StaffAccessHandler(IPromiseHubDb db, ITenantContext tenant, 
         {
             errors["role"] = "Coordinators invite youth workers. Ask an admin for other roles.";
         }
+        else if (errors.Count == 0 && role == Role.Youth)
+        {
+            // Every youth account links to a child, so youth are invited from their child record (ADR 0045).
+            errors["role"] = "Invite youth from their child record.";
+        }
+        else if (errors.Count == 0 && role == Role.Mentor && !await modules.IsOnAsync(ModuleId.Mentoring, cancellationToken))
+        {
+            errors["role"] = "Turn on Mentoring to invite mentors.";
+        }
         if (errors.Count == 0)
         {
             var member = await db.Memberships.AsNoTracking().FirstOrDefaultAsync(m => m.Email == address && m.RemovedAt == null, cancellationToken);
@@ -59,21 +82,14 @@ public sealed class StaffAccessHandler(IPromiseHubDb db, ITenantContext tenant, 
         {
             return Result.Invalid(errors);
         }
-        var token = GuardianTokens.New();
-        var invitation = new StaffInvitation(Guid.NewGuid(), tenant.OrganizationId, address, role, GuardianTokens.Hash(token), tenant.ActorName, clock.GetUtcNow());
-        db.StaffInvitations.Add(invitation);
-        audit.Record(new AuditEvent(AuditAction.Created, "StaffInvitation", invitation.Id, $"{address} invited as {role} by {tenant.ActorName}"));
-        await db.SaveChangesAsync(cancellationToken);
-        var organization = await db.Organizations.AsNoTracking().SingleAsync(o => o.Id == tenant.OrganizationId, cancellationToken);
-        await email.SendAsync(address, $"Join {organization.Name} on PromiseHub",
-            $"{tenant.ActorName} invited you to {organization.Name} on PromiseHub. Accept within 14 days: {links.BaseUrl.TrimEnd('/')}/invite/{token}", cancellationToken);
+        var invitation = await issuer.IssueAsync(address, role, null, $"{address} invited as {role} by {tenant.ActorName}", cancellationToken);
         return Result.Created(invitation.Id);
     }
 
     public async Task<Result> WithdrawAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var invitation = await db.StaffInvitations.FirstOrDefaultAsync(i => i.Id == id, cancellationToken);
-        if (invitation is null || !invitation.Open(clock.GetUtcNow()))
+        var invitation = await db.StaffInvitations.FirstOrDefaultAsync(i => i.Id == id && i.AcceptedAt == null && i.WithdrawnAt == null, cancellationToken);
+        if (invitation is null)
         {
             return Result.NotFound;
         }

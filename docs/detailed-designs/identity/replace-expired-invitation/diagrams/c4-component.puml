@@ -1,0 +1,21 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Replace an expired invitation
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "AcceptInvitePage", "Angular page", "Expired state")
+  Component(iapi, "InvitationApi", "Contract + HTTP client", "get, requestNew")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "InvitationEndpoints", "Minimal API", "Anonymous")
+  Component(h, "InvitationHandler", "Application handler", "Expired only, once")
+  Component(nw, "NotificationWriter", "Application service", "Admins of the organization")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Invitations, staff users, memberships, children, notifications, audit entries")
+}
+Rel(page, iapi, "requestNew")
+Rel(iapi, ep, "POST /invitations/{token}/request-new")
+Rel(ep, h, "calls")
+Rel(h, nw, "notifies admins")
+Rel(h, db, "request flag, audit entry")
+Rel(nw, db, "notifications")
+@enduml

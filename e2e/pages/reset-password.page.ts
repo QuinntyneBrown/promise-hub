@@ -23,6 +23,10 @@ export class ResetPasswordPage extends BasePage {
     await this.page.getByRole('button', { name: 'Set password and sign in' }).click();
   }
 
+  get passwordHelp(): Locator {
+    return this.page.getByTestId('password-help');
+  }
+
   fieldError(field: 'password' | 'repeat' | 'email'): Locator {
     return this.page.getByTestId(`${field}-error`);
   }

@@ -1,0 +1,24 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Accept an invitation
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "AcceptInvitePage", "Angular page", "Open, gone, expired states")
+  Component(iapi, "InvitationApi", "Contract + HTTP client", "get, accept")
+  Component(sess, "SessionApi", "Contract + HTTP client", "GET /me")
+  Component(home, "roleHome", "Function in api", "Learning, Mentoring or Today")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "InvitationEndpoints", "Minimal API", "Anonymous")
+  Component(h, "InvitationHandler", "Application handler", "Policy, membership, child link")
+  Component(pp, "PasswordPolicy", "Application rule", "12 to 128, not the email")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Invitations, staff users, memberships, children, notifications, audit entries")
+}
+Rel(page, iapi, "get, accept")
+Rel(page, sess, "current")
+Rel(page, home, "chooses home")
+Rel(iapi, ep, "GET /invitations/{token}, POST .../accept")
+Rel(ep, h, "calls")
+Rel(h, pp, "checks")
+Rel(h, db, "user, membership, invitation, audit entry")
+@enduml

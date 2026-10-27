@@ -1,0 +1,12 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Issue invitations
+Person(admin, "Admin", "Invites youth, mentors and volunteers")
+Person(invitee, "Invitee", "Youth, mentor or volunteer")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+System_Ext(mail, "Email provider", "Delivers invitation links")
+Rel(admin, ph, "Invites using", "HTTPS")
+Rel(ph, mail, "Sends invitation links via")
+Rel(mail, invitee, "Delivers the link to")
+@enduml

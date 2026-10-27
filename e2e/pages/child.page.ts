@@ -40,6 +40,28 @@ export class ChildPage extends BasePage {
     await expect(this.dialog).toBeHidden();
   }
 
+  get youthAccount(): Locator {
+    return this.page.getByRole('region', { name: 'Youth account' });
+  }
+
+  get toast(): Locator {
+    return this.page.getByTestId('toast');
+  }
+
+  dialogError(field: string): Locator {
+    return this.dialog.getByTestId(`${field}-error`);
+  }
+
+  async openInviteYouth(): Promise<void> {
+    await this.youthAccount.getByRole('button', { name: 'Invite to PromiseHub' }).click();
+    await expect(this.dialog).toBeVisible();
+  }
+
+  async sendYouthInvitation(email: string): Promise<void> {
+    await this.dialog.getByRole('textbox', { name: /’s email$/ }).fill(email);
+    await this.dialog.getByRole('button', { name: 'Send invitation' }).click();
+  }
+
   get subtitle(): Locator {
     return this.page.getByTestId('page-subtitle');
   }

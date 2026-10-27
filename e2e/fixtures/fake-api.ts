@@ -129,6 +129,18 @@ interface AudienceBody {
 
 const GSM7 = '@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#¤%&\'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà';
 
+/** The seeded memberships; accepting an invitation adds to the list for one test only. */
+const SEEDED_MEMBERSHIPS = memberships.length;
+
+/** The password policy as the server applies it (L2-053): 12 to 128 characters and not the email's name. */
+function passwordProblem(password: string | undefined, email: string): string | null {
+  const value = password ?? '';
+  if (value.length < 12) return 'Use at least 12 characters.';
+  if (value.length > 128) return 'Use at most 128 characters.';
+  const local = email.split('@')[0]!;
+  return local.length >= 3 && value.toLowerCase().includes(local.toLowerCase()) ? 'Don’t use your email in your password.' : null;
+}
+
 /** SMS segments as the server counts them: 160/153 GSM-7 characters, 70/67 otherwise. */
 function segmentsOf(text: string): number {
   const gsm = [...text].every((c) => GSM7.includes(c));
@@ -289,7 +301,10 @@ export class FakeApi {
   ]);
   private nextId = 1;
 
-  constructor(private membershipId: string | null) {}
+  constructor(private membershipId: string | null) {
+    // Memberships joined by accepting an invitation in an earlier test of this worker are forgotten.
+    memberships.splice(SEEDED_MEMBERSHIPS);
+  }
 
   /** Makes the next calls to a route answer with the given status, as the real API would on a fault. */
   failNext(path: string, status: number): void {
@@ -493,9 +508,11 @@ export class FakeApi {
     ['PUT', /^\/api\/sessions\/(?<id>[^/]+)\/staff$/, (route, p) => this.assignStaff(route, p['id']!)],
     ['GET', /^\/api\/invitations\/(?<token>[^/]+)$/, (route, p) => this.getInvitation(route, p['token']!)],
     ['POST', /^\/api\/invitations\/(?<token>[^/]+)\/accept$/, (route, p) => this.acceptInvitation(route, p['token']!)],
+    ['POST', /^\/api\/invitations\/(?<token>[^/]+)\/request-new$/, (route, p) => this.requestNewLink(route, p['token']!)],
     ['PUT', /^\/api\/me\/phone$/, (route) => this.savePhone(route)],
     ['POST', /^\/api\/staff\/invitations$/, (route) => this.inviteStaff(route)],
     ['DELETE', /^\/api\/staff\/invitations\/(?<id>[^/]+)$/, (route, p) => this.withdrawInvitation(route, p['id']!)],
+    ['POST', /^\/api\/staff\/invitations\/(?<id>[^/]+)\/resend$/, (route, p) => this.resendInvitation(route, p['id']!)],
     ['PUT', /^\/api\/staff\/(?<id>[^/]+)\/role$/, (route, p) => this.changeRole(route, p['id']!)],
     ['DELETE', /^\/api\/staff\/(?<id>[^/]+)$/, (route, p) => this.removeStaff(route, p['id']!)],
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/pickup-requests$/, (route, p) => this.askForPickup(route, p['id']!)],
@@ -551,6 +568,8 @@ export class FakeApi {
     ['GET', /^\/api\/messages\/(?<id>[^/]+)$/, (route, p) => this.getMessage(route, p['id']!)],
     ['GET', /^\/api\/messaging\/sms-cap$/, (route) => this.smsCap(route)],
     ['GET', /^\/api\/children\/(?<id>[^/]+)\/quick-card$/, (route, p) => this.quickCard(route, p['id']!)],
+    ['GET', /^\/api\/children\/(?<id>[^/]+)\/youth-account$/, (route, p) => this.youthAccount(route, p['id']!)],
+    ['POST', /^\/api\/children\/(?<id>[^/]+)\/youth-invitation$/, (route, p) => this.inviteYouth(route, p['id']!)],
     ['GET', /^\/api\/children\/(?<id>[^/]+)$/, (route, p) => this.getChild(route, p['id']!)],
     ['PUT', /^\/api\/children\/(?<id>[^/]+)$/, (route, p) => this.updateChild(route, p['id']!)],
     ['PUT', /^\/api\/children\/(?<id>[^/]+)\/medical$/, (route, p) => this.updateMedical(route, p['id']!)],
@@ -558,9 +577,13 @@ export class FakeApi {
 
   /** Staff changes in this test: roles changed, access removed and invitations sent (seeded memberships stay as they are). */
   private roleOverrides = new Map<string, string>();
-  private invitationLinks = new Map<string, { email: string; role: string; expired: boolean; accepted: boolean }>();
+  private invitationLinks = new Map<string, { email: string; role: string; expired: boolean; accepted: boolean; withdrawn?: boolean; childId: string | null; suggestedName: string | null }>();
   private removedMembers = new Set<string>();
-  private invitations: { id: string; organizationId: string; email: string; role: string; invitedBy: string; withdrawn: boolean }[] = [];
+  private invitations: { id: string; organizationId: string; email: string; role: string; invitedBy: string; withdrawn: boolean; childId?: string; childName?: string; expired?: boolean; replacementRequested?: boolean }[] = [];
+  /** Expired links whose holder asked for a new one in this test (L2-054). */
+  newLinkRequests: string[] = [];
+  /** Emails whose invitation was resent in this test, in order. */
+  resentInvitations: string[] = [];
   /** Staff asked a guardian about an adult not on the approved list. */
   private pickupRequests: { id: string; eventId: string; childId: string; householdId: string; collector: string; status: 'Pending' | 'Approved' | 'Refused'; decidedBy: string | null }[] = [];
   /** Approved adults besides the guardians, as added by staff or the family. */
@@ -961,7 +984,8 @@ export class FakeApi {
     const link = this.resetLinks.get(b.token);
     if (!link?.usable) return route.fulfill({ status: 410 });
     const errors: Record<string, string> = {};
-    if ((b.password ?? '').length < 12) errors['password'] = 'Use at least 12 characters.';
+    const weak = passwordProblem(b.password, link.email);
+    if (weak) errors['password'] = weak;
     if (b.repeat !== b.password) errors['repeat'] = 'The two passwords don’t match.';
     if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
     link.usable = false;
@@ -1934,8 +1958,24 @@ export class FakeApi {
   }
 
   /** An emailed invitation for this test, reachable at /invite/{token}; expired ones answer 410. */
-  sentInvitation(token: string, email: string, role = 'YouthWorker', expired = false): void {
-    this.invitationLinks.set(token, { email, role, expired, accepted: false });
+  sentInvitation(token: string, email: string, role = 'YouthWorker', expired = false, youth: { childId: string; suggestedName: string } | null = null): void {
+    this.invitationLinks.set(token, { email, role, expired, accepted: false, childId: youth?.childId ?? null, suggestedName: youth?.suggestedName ?? null });
+  }
+
+  /** An admin withdrew this emailed invitation; its link answers 410 "withdrawn". */
+  withdrawLink(token: string): void {
+    this.invitationLinks.get(token)!.withdrawn = true;
+  }
+
+  /** An invitation on Harbourview's Staff and roles, as an admin sent it; expired ones stay listed to resend (L2-052). */
+  pendingInvitation(i: { email: string; role: string; childName?: string; expired?: boolean; replacementRequested?: boolean }): void {
+    this.invitations.push({ id: `inv-${this.nextId++}`, organizationId: 'org-harbourview', invitedBy: 'Tom Nguyen', withdrawn: false, ...i });
+  }
+
+  /** The child a youth account made by accepting an invitation links to, by its email. */
+  youthLinkOf(email: string): string | undefined {
+    const m = memberships.find((x) => x.email === email);
+    return m ? this.youthLinks.get(m.id) : undefined;
   }
 
   /** The phone number the new worker saved during onboarding, if any. */
@@ -1943,19 +1983,44 @@ export class FakeApi {
 
   private async getInvitation(route: Route, token: string): Promise<void> {
     const i = this.invitationLinks.get(token);
-    if (!i || i.expired || i.accepted) return route.fulfill({ status: 410, json: { invitedBy: 'Tom Nguyen', organization: 'Harbourview Youth Collective' } });
-    return route.fulfill({ json: { email: i.email, organization: 'Harbourview Youth Collective', role: i.role, invitedBy: 'Tom Nguyen' } });
+    const reason = this.goneReason(i);
+    if (reason) return route.fulfill({ status: 410, json: { reason, invitedBy: i ? 'Tom Nguyen' : null, organization: i ? 'Harbourview Youth Collective' : null } });
+    return route.fulfill({ json: { email: i!.email, organization: 'Harbourview Youth Collective', role: i!.role, invitedBy: 'Tom Nguyen', suggestedName: i!.suggestedName } });
+  }
+
+  /** Anonymous: only an expired link may ask, and asking twice records once (L2-054). */
+  private async requestNewLink(route: Route, token: string): Promise<void> {
+    if (this.goneReason(this.invitationLinks.get(token)) !== 'expired') return route.fulfill({ status: 404 });
+    if (!this.newLinkRequests.includes(token)) this.newLinkRequests.push(token);
+    return route.fulfill({ status: 202 });
+  }
+
+  /** Why a link no longer works, as the server answers it (L2-052, L2-054); an unknown token reads as used. */
+  private goneReason(i: { expired: boolean; accepted: boolean; withdrawn?: boolean } | undefined): string | null {
+    if (!i || i.accepted) return 'used';
+    if (i.withdrawn) return 'withdrawn';
+    return i.expired ? 'expired' : null;
   }
 
   private async acceptInvitation(route: Route, token: string): Promise<void> {
     const i = this.invitationLinks.get(token);
-    if (!i || i.expired || i.accepted) return route.fulfill({ status: 410, json: {} });
+    const reason = this.goneReason(i);
+    if (reason) return route.fulfill({ status: 410, json: { reason, invitedBy: i ? 'Tom Nguyen' : null, organization: i ? 'Harbourview Youth Collective' : null } });
     const b = route.request().postDataJSON() as { name?: string; password?: string };
     const errors: Record<string, string> = {};
     if (!b.name?.trim()) errors['name'] = 'Enter your name.';
-    if ((b.password ?? '').length < 12) errors['password'] = 'Use at least 12 characters.';
+    const weak = passwordProblem(b.password, i.email);
+    if (weak) errors['password'] = weak;
     if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
     i.accepted = true;
+    if (['Youth', 'Mentor', 'Volunteer'].includes(i.role)) {
+      // A participant joins as a new membership of this test; a youth account links to the invitation's child (L2-052).
+      const id = `m-joined-${this.nextId++}`;
+      memberships.push({ id, organizationId: 'org-harbourview', personName: b.name!.trim(), email: i.email, role: i.role as Membership['role'] });
+      if (i.childId) this.youthLinks.set(id, i.childId);
+      this.membershipId = id;
+      return route.fulfill({ json: { status: 'signed-in' } });
+    }
     // The new worker signs in as the seeded youth worker membership (the fake has no account store).
     this.membershipId = 'm-aisha';
     return route.fulfill({ json: { status: 'signed-in' } });
@@ -2010,7 +2075,17 @@ export class FakeApi {
           .sort((a, z) => a.name.localeCompare(z.name)),
         invitations: this.invitations
           .filter((i) => i.organizationId === m.organizationId && !i.withdrawn)
-          .map((i) => ({ id: i.id, email: i.email, role: i.role, invitedBy: i.invitedBy, invitedAt: NOW.toISOString(), expiresAt: NOW.toISOString() })),
+          .map((i) => ({
+            id: i.id,
+            email: i.email,
+            role: i.role,
+            invitedBy: i.invitedBy,
+            invitedAt: '2026-11-05T21:12:00Z',
+            expiresAt: i.expired ? '2026-11-04T21:12:00Z' : '2026-11-19T21:12:00Z',
+            status: i.expired ? 'Expired' : 'Pending',
+            childName: i.childName ?? (i.childId ? this.childName(i.childId) : null),
+            replacementRequested: !!i.replacementRequested,
+          })),
       },
     });
   }
@@ -2023,14 +2098,78 @@ export class FakeApi {
     const email = (b.email ?? '').trim().toLowerCase();
     const errors: Record<string, string> = {};
     if (!/^[^@]+@[^@]+\.[^@]+$/.test(email)) errors['email'] = 'Enter a work email like name@example.org.';
-    if (!['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker', 'VolunteerCoordinator'].includes(b.role ?? '')) errors['role'] = 'Choose a role.';
+    if (!['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker', 'VolunteerCoordinator', 'Youth', 'Mentor', 'Volunteer'].includes(b.role ?? '')) errors['role'] = 'Choose a role.';
     if (!errors['role'] && m.role === 'VolunteerCoordinator' && b.role !== 'YouthWorker') errors['role'] = 'Coordinators invite youth workers. Ask an admin for other roles.';
+    else if (!errors['role'] && b.role === 'Youth') errors['role'] = 'Invite youth from their child record.';
+    else if (!errors['role'] && b.role === 'Mentor' && !this.modules.get(m.organizationId)!.includes('Mentoring')) errors['role'] = 'Turn on Mentoring to invite mentors.';
     const member = this.staffOf(m).find((x) => x.email === email);
     if (!errors['email'] && member) errors['email'] = `${member.personName} already has access.`;
     if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
     const id = `inv-${this.nextId++}`;
     this.invitations.push({ id, organizationId: m.organizationId, email, role: b.role!, invitedBy: m.personName, withdrawn: false });
     return route.fulfill({ status: 201, json: { id } });
+  }
+
+  /** The caller for the youth-account endpoints: an admin, Learning on, a child of their organization (L2-051). */
+  private async youthCaller(route: Route, childId: string): Promise<{ m: Membership; child: { id: string; firstName: string; lastName: string; dateOfBirth: string } } | null> {
+    const m = await this.adminCaller(route);
+    if (!m) return null;
+    const found = this.modules.get(m.organizationId)!.includes('Learning') ? this.ownChild(m, childId) : undefined;
+    if (!found) {
+      await route.fulfill({ status: 404 });
+      return null;
+    }
+    return { m, child: found.child };
+  }
+
+  private linkedYouth(childId: string): Membership | undefined {
+    const id = [...this.youthLinks].find(([, c]) => c === childId)?.[0];
+    return memberships.find((x) => x.id === id && !this.removedMembers.has(x.id));
+  }
+
+  private async youthAccount(route: Route, childId: string): Promise<void> {
+    const found = await this.youthCaller(route, childId);
+    if (!found) return;
+    const member = this.linkedYouth(childId);
+    if (member) return route.fulfill({ json: { status: 'Active', name: member.personName, email: member.email, expiresAt: null } });
+    const waiting = this.invitations.find((i) => i.childId === childId && !i.withdrawn);
+    return route.fulfill({ json: waiting ? { status: 'Invited', name: null, email: waiting.email, expiresAt: '2026-11-19T21:12:00Z' } : { status: 'None', name: null, email: null, expiresAt: null } });
+  }
+
+  private async inviteYouth(route: Route, childId: string): Promise<void> {
+    const found = await this.youthCaller(route, childId);
+    if (!found) return;
+    const { m, child } = found;
+    const email = ((route.request().postDataJSON() as { email?: string }).email ?? '').trim().toLowerCase();
+    const name = `${child.firstName} ${child.lastName}`;
+    const age = ageOf(child.dateOfBirth);
+    const errors: Record<string, string> = {};
+    if (age < 12 || age > 18) errors['childId'] = 'Youth accounts are for ages 12 to 18.';
+    else if (this.linkedYouth(child.id)) errors['childId'] = `${name} already has a youth account.`;
+    else if (this.invitations.some((i) => i.childId === child.id && !i.withdrawn)) errors['childId'] = `An invitation for ${name} is already waiting.`;
+    const member = this.staffOf(m).find((x) => x.email === email);
+    if (!/^[^@]+@[^@]+\.[^@]+$/.test(email)) errors['email'] = 'Enter an email like name@example.org.';
+    else if (member) errors['email'] = `${member.personName} already has access.`;
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    const id = `inv-${this.nextId++}`;
+    this.invitations.push({ id, organizationId: m.organizationId, email, role: 'Youth', invitedBy: m.personName, withdrawn: false, childId: child.id });
+    return route.fulfill({ status: 201, json: { id } });
+  }
+
+  private childName(childId: string): string | null {
+    const c = this.households.flatMap((h) => h.children).find((x) => x.id === childId);
+    return c ? `${c.firstName} ${c.lastName}` : null;
+  }
+
+  private async resendInvitation(route: Route, id: string): Promise<void> {
+    const m = await this.adminCaller(route);
+    if (!m) return;
+    const i = this.invitations.find((x) => x.id === id && x.organizationId === m.organizationId && !x.withdrawn);
+    if (!i) return route.fulfill({ status: 404 });
+    i.expired = false;
+    i.replacementRequested = false;
+    this.resentInvitations.push(i.email);
+    return route.fulfill({ status: 204 });
   }
 
   private async withdrawInvitation(route: Route, id: string): Promise<void> {

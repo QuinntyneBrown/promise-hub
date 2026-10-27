@@ -33,7 +33,9 @@
   }
 </div>
 @if (help()) {
-  <div class="help" [id]="inputId() + '-help'">{{ help() }}</div>
+  <div class="help" [id]="inputId() + '-help'" [attr.data-testid]="inputId() + '-help'">
+    {{ help() }}
+  </div>
 }
 @if (error()) {
   <div class="error" [id]="inputId() + '-error'" [attr.data-testid]="inputId() + '-error'">

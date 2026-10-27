@@ -1,0 +1,60 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+title Class structure — Issue invitations
+class StaffInvitation <<entity, tenant-owned>> {
+  +Id: Guid
+  +OrganizationId: Guid
+  +Email: string
+  +Role: Role
+  +ChildId: Guid?
+  +TokenHash: string
+  +InvitedBy: string
+  +InvitedAt: DateTimeOffset
+  +ExpiresAt: DateTimeOffset
+  +AcceptedAt: DateTimeOffset?
+  +WithdrawnAt: DateTimeOffset?
+  +ReplacementRequestedAt: DateTimeOffset?
+  +Open(now): bool
+  +Expired(now): bool
+  +Reissue(tokenHash, now)
+  +RequestReplacement(now): bool
+  +Accept(now)
+  +Withdraw(now)
+}
+enum InvitationState {
+  Open
+  Expired
+  Withdrawn
+  Used
+}
+StaffInvitation ..> InvitationState : State(now)
+class YouthInvitationHandler {
+  +AccountAsync(childId): YouthAccountDto?
+  +InviteAsync(childId, InviteYouthCommand): Result
+}
+class StaffAccessHandler {
+  +InviteAsync(InviteStaffCommand): Result
+}
+class InvitationIssuer {
+  +IssueAsync(email, role, childId, summary): StaffInvitation
+}
+class YouthAccountDto <<record>> {
+  +Status: string
+  +Email: string?
+  +Name: string?
+  +ExpiresAt: DateTimeOffset?
+}
+YouthInvitationHandler ..> InvitationIssuer
+StaffAccessHandler ..> InvitationIssuer
+InvitationIssuer ..> StaffInvitation : creates
+YouthInvitationHandler ..> YouthAccountDto : answers
+@enduml

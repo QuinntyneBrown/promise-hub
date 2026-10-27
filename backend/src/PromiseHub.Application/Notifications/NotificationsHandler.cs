@@ -15,6 +15,7 @@ public sealed class NotificationsHandler(IPromiseHubDb db, ITenantContext tenant
     {
         ["incidents"] = ModuleId.Incidents,
         ["requests"] = ModuleId.Roster,
+        ["staff"] = ModuleId.Roster,
     };
 
     public async Task<NotificationListDto> ListAsync(CancellationToken cancellationToken = default)

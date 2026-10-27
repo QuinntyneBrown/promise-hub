@@ -23,6 +23,7 @@ export class HttpInvitationApi implements InvitationApi {
             error.status === 410
               ? {
                   status: 'gone',
+                  reason: error.error?.reason ?? 'used',
                   invitedBy: error.error?.invitedBy ?? null,
                   organization: error.error?.organization ?? null,
                 }
@@ -38,6 +39,15 @@ export class HttpInvitationApi implements InvitationApi {
         name,
         password,
       }),
+    );
+  }
+
+  requestNew(token: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(
+        `${this.baseUrl}/invitations/${encodeURIComponent(token)}/request-new`,
+        null,
+      ),
     );
   }
 

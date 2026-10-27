@@ -1,0 +1,23 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Set a secure password
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(acc, "AcceptInvitePage", "Angular page", "Password with Show password")
+  Component(reset, "ResetPasswordPage", "Angular page", "Password and repeat")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ih, "InvitationHandler", "Application handler", "Accept")
+  Component(rh, "PasswordResetHandler", "Application handler", "Reset")
+  Component(pp, "PasswordPolicy", "Application rule", "12 to 128, not the email")
+  Component(hash, "PasswordHasher", "Infrastructure", "PBKDF2, salted")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Invitations, staff users, memberships, children, notifications, audit entries")
+}
+Rel(acc, ih, "POST /invitations/{token}/accept")
+Rel(reset, rh, "POST /auth/reset-password")
+Rel(ih, pp, "Check")
+Rel(rh, pp, "Check")
+Rel(ih, hash, "Hash")
+Rel(rh, hash, "Hash")
+Rel(hash, db, "hash only")
+@enduml

@@ -1,0 +1,67 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+title Class structure — Accept an invitation
+class StaffInvitation <<entity, tenant-owned>> {
+  +Id: Guid
+  +OrganizationId: Guid
+  +Email: string
+  +Role: Role
+  +ChildId: Guid?
+  +TokenHash: string
+  +InvitedBy: string
+  +InvitedAt: DateTimeOffset
+  +ExpiresAt: DateTimeOffset
+  +AcceptedAt: DateTimeOffset?
+  +WithdrawnAt: DateTimeOffset?
+  +ReplacementRequestedAt: DateTimeOffset?
+  +Open(now): bool
+  +Expired(now): bool
+  +Reissue(tokenHash, now)
+  +RequestReplacement(now): bool
+  +Accept(now)
+  +Withdraw(now)
+}
+enum InvitationState {
+  Open
+  Expired
+  Withdrawn
+  Used
+}
+StaffInvitation ..> InvitationState : State(now)
+class Membership <<entity, tenant-owned>> {
+  +Role: Role
+  +ChildId: Guid?
+  +LinkChild(childId)
+}
+class InvitationHandler {
+  +GetAsync(token): InvitationLookup
+  +AcceptAsync(token, AcceptInvitationCommand): AcceptInvitationResult
+}
+class InvitationDto <<record>> {
+  +Email: string
+  +Organization: string
+  +Role: string
+  +InvitedBy: string
+  +SuggestedName: string?
+}
+class AcceptInvitationResult <<record>> {
+  +Gone: bool
+  +Reason: string?
+  +Errors: dictionary?
+  +UserId: Guid?
+  +MembershipId: Guid?
+}
+InvitationHandler ..> StaffInvitation : Accept
+InvitationHandler ..> Membership : creates
+InvitationHandler ..> InvitationDto
+InvitationHandler ..> AcceptInvitationResult
+@enduml
