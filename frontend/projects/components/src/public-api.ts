@@ -41,6 +41,8 @@ export * from './lib/select/select-option';
 export * from './lib/skip-link/skip-link';
 export * from './lib/bulk-action-bar/bulk-action-bar';
 export * from './lib/checkbox/checkbox';
+export * from './lib/checkbox-group/checkbox-group';
+export * from './lib/checkbox-group/checkbox-option';
 export * from './lib/error-summary/error-summary';
 export * from './lib/file-upload/file-upload';
 export * from './lib/roster-mapping/roster-mapping';

@@ -14,6 +14,8 @@ public static class MentorAssignmentEndpoints
         var cohort = app.MapGroup("/programs/{id:guid}").RequireModule(ModuleId.Roster).RequireModule(ModuleId.Mentoring);
         cohort.MapGet("/mentoring", async (Guid id, CohortMentoringHandler handler, CancellationToken ct) =>
             await handler.HandleAsync(id, ct) is { } mentoring ? Results.Ok(mentoring) : Results.NotFound());
+        cohort.MapPut("/mentors", async (Guid id, SetCohortMentorsRequest request, SetCohortMentorsHandler handler, CancellationToken ct) =>
+            (await handler.HandleAsync(id, request.LeadMentorId, request.SupportingMentorIds, ct)).ToHttp()).RequirePermission(Permission.ManagePrograms);
         cohort.MapPut("/youth/{childId:guid}/mentor", async (Guid id, Guid childId, AssignMentorRequest request, AssignYouthMentorHandler handler, CancellationToken ct) =>
             (await handler.AssignAsync(id, childId, request.MentorId, ct)).ToHttp()).RequirePermission(Permission.ManagePrograms);
         cohort.MapDelete("/youth/{childId:guid}/mentor", async (Guid id, Guid childId, AssignYouthMentorHandler handler, CancellationToken ct) =>

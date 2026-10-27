@@ -1,0 +1,28 @@
+<fieldset class="group" [attr.aria-describedby]="describedBy()">
+  <legend class="legend">{{ legend() }}</legend>
+  @if (hint()) {
+    <div class="hint" [id]="id + '-hint'">{{ hint() }}</div>
+  }
+  @for (option of options(); track option.value) {
+    <label class="choice">
+      <input
+        type="checkbox"
+        [value]="option.value"
+        [checked]="value().includes(option.value)"
+        [disabled]="disabled() || !!option.disabled"
+        [attr.aria-invalid]="error() ? 'true' : null"
+        (change)="toggle(option.value, $any($event.target).checked)"
+        (blur)="onTouched()"
+      />
+      <span class="text"
+        >{{ option.label }}
+        @if (option.hint) {
+          <small>{{ option.hint }}</small>
+        }
+      </span>
+    </label>
+  }
+  @if (error()) {
+    <div class="error" [id]="id + '-error'">{{ error() }}</div>
+  }
+</fieldset>

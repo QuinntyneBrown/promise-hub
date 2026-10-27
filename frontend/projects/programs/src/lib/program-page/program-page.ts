@@ -29,6 +29,8 @@ import {
 import { EMPTY, Subject, catchError, combineLatest, of, startWith, switchMap } from 'rxjs';
 import { AssignMentorDialog } from '../assign-mentor-dialog/assign-mentor-dialog';
 import { AssignMentorDialogData } from '../assign-mentor-dialog/assign-mentor-dialog-data';
+import { CohortMentorsDialog } from '../cohort-mentors-dialog/cohort-mentors-dialog';
+import { CohortMentorsDialogData } from '../cohort-mentors-dialog/cohort-mentors-dialog-data';
 import { CloseEnrollmentDialog } from '../close-enrollment-dialog/close-enrollment-dialog';
 import { EnrollDialog } from '../enroll-dialog/enroll-dialog';
 import { OpenEnrollmentDialog } from '../open-enrollment-dialog/open-enrollment-dialog';
@@ -133,6 +135,15 @@ export class ProgramPage {
 
   protected youthRow(c: RosterChild, mentoring: CohortMentoring | null): YouthMentorRow | null {
     return mentoring?.youth.find((y) => y.childId === c.id) ?? null;
+  }
+
+  protected editMentors(p: Program, mentoring: CohortMentoring): void {
+    this.dialogs
+      .open<boolean, CohortMentorsDialogData, CohortMentorsDialog>(CohortMentorsDialog, {
+        program: p,
+        mentoring,
+      })
+      .closed.subscribe((saved) => saved && this.reload());
   }
 
   protected assignMentor(p: Program, youth: YouthMentorRow, mentoring: CohortMentoring): void {

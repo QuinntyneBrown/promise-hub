@@ -73,6 +73,73 @@ test.describe('Assigning a mentor to a youth', () => {
   });
 });
 
+test.describe('Setting a cohort’s mentors', () => {
+  test.use({ signedInAs: 'm-marisol' });
+
+  test('Given a cohort with no mentors, when Marisol makes Daniel lead and Hana supporting, then the Mentors card lists both', async ({ page }) => {
+    const programs = new ProgramsPage(page);
+    await programs.open();
+    await programs.openProgram('After-School Tutoring');
+    await expect(programs.mentorsEmpty).toBeVisible();
+
+    await programs.openCohortMentors();
+    await expect(programs.dialog).toHaveAccessibleName('Mentors for After-School Tutoring');
+    await programs.chooseMentor('Daniel Osei', 'Lead mentor');
+    await programs.toggleSupporting('Hana Kim');
+    await programs.expectAccessible();
+    await programs.submitDialog('Save mentors');
+
+    await expect(programs.dialog).toBeHidden();
+    await expect(programs.mentorsCard.getByRole('listitem')).toHaveText([/Daniel Osei\s*Lead mentor/, /Hana Kim\s*Supporting mentor/]);
+    await expect(programs.toast('Mentors saved')).toBeVisible();
+    await programs.expectAccessible();
+    await programs.expectNoHorizontalScroll();
+  });
+
+  test('Given the cohort-mentors dialog, when saved with no lead or with the lead also supporting, then it explains', async ({ page }) => {
+    const programs = new ProgramsPage(page);
+    await programs.open();
+    await programs.openProgram('After-School Tutoring');
+    await programs.openCohortMentors();
+
+    await programs.submitDialog('Save mentors');
+    await expect(programs.fieldError('lead')).toHaveText('Choose a lead mentor.');
+
+    await programs.chooseMentor('Daniel Osei', 'Lead mentor');
+    await programs.toggleSupporting('Daniel Osei');
+    await programs.submitDialog('Save mentors');
+    await expect(programs.dialog.getByText('The lead mentor can’t also be a supporting mentor.')).toBeVisible();
+    await programs.expectAccessible();
+  });
+
+  test('Given the server fails, when Marisol saves the mentors, then the dialog says so and keeps her choices', async ({ page, api }) => {
+    const programs = new ProgramsPage(page);
+    await programs.open();
+    await programs.openProgram('After-School Tutoring');
+    await programs.openCohortMentors();
+    await programs.chooseMentor('Hana Kim', 'Lead mentor');
+    api.failNext('/api/programs/p-tutoring/mentors', 500);
+
+    await programs.submitDialog('Save mentors');
+
+    await expect(programs.dialog.getByRole('alert')).toContainText('The cohort’s mentors were not changed');
+    await expect(programs.dialog.getByLabel('Lead mentor', { exact: true })).not.toHaveValue('');
+  });
+});
+
+test.describe('The lead mentor’s youth', () => {
+  test.use({ signedInAs: 'm-hana' });
+
+  test('Given Hana leads Saturday Sports, when she opens Mentoring, then its youth are listed', async ({ page, api }) => {
+    api.setCohortTeam('p-sports', 'm-hana');
+    const mentoring = new MentoringPage(page);
+
+    await mentoring.open();
+
+    await expect(mentoring.youth).toHaveText(['Emily Tran', 'Kevin Tran']);
+  });
+});
+
 test.describe('Mentor assignment for a site lead', () => {
   test('Given a site lead, when the program opens, then mentors are shown without the Mentor action', async ({ page }) => {
     const programs = new ProgramsPage(page);

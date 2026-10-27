@@ -111,6 +111,71 @@ public sealed class MentorAssignmentTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.NotFound, (await AssignYouth(Marisol, Sports, Mateo, Daniel)).StatusCode);
     }
 
+    // ---- criterion 4: a cohort's team
+
+    [Fact]
+    public async Task Setting_a_cohorts_team_names_its_lead_and_supporting_mentors_and_is_audited()
+    {
+        var response = await SetTeam(Marisol, Tutoring, Daniel, Hana);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        var mentoring = await Get(Marisol, $"/programs/{Tutoring}/mentoring");
+        Assert.Equal("Daniel Osei", mentoring.GetProperty("lead").GetProperty("name").GetString());
+        Assert.Equal(["Hana Kim"], Names(mentoring.GetProperty("supporting")));
+        Assert.Single(Query("SELECT Id FROM AuditEntries WHERE Action = 'Updated' AND RecordType = 'CohortMentors'"));
+        var roster = new[] { "Jordan Thompson", "Mateo Rivera", "Sofía Rivera", "Yusuf Haddad" };
+        Assert.Equal(roster, Names((await Get(Daniel, "/mentoring/youth")).GetProperty("youth")));
+        Assert.Equal(roster, Names((await Get(Hana, "/mentoring/youth")).GetProperty("youth")));
+    }
+
+    [Fact]
+    public async Task Saving_the_team_again_replaces_it_and_a_mentor_may_lead_one_cohort_and_support_another()
+    {
+        await SetTeam(Marisol, Tutoring, Daniel, Hana);
+        await SetTeam(Marisol, Tutoring, Hana);
+        await SetTeam(Marisol, Sports, Daniel);
+
+        var tutoring = await Get(Marisol, $"/programs/{Tutoring}/mentoring");
+        Assert.Equal("Hana Kim", tutoring.GetProperty("lead").GetProperty("name").GetString());
+        Assert.Empty(tutoring.GetProperty("supporting").EnumerateArray());
+        await AssignYouth(Marisol, Tutoring, Mateo, Daniel);
+        Assert.Equal(["Emily Tran", "Kevin Tran", "Mateo Rivera"], Names((await Get(Daniel, "/mentoring/youth")).GetProperty("youth")));
+    }
+
+    [Fact]
+    public async Task A_team_needs_a_lead_who_is_not_also_supporting_and_only_active_mentors()
+    {
+        var noLead = await _factory.ClientFor(Marisol).PutAsJsonAsync($"/programs/{Tutoring}/mentors", new { leadMentorId = (Guid?)null, supportingMentorIds = new[] { Hana } });
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, noLead.StatusCode);
+        Assert.Equal("Choose a lead mentor.", await Error(noLead, "leadMentorId"));
+
+        var twice = await SetTeam(Marisol, Tutoring, Daniel, Daniel);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, twice.StatusCode);
+        Assert.Equal("The lead mentor can’t also be a supporting mentor.", await Error(twice, "supportingMentorIds"));
+
+        var inactive = await SetTeam(Marisol, Tutoring, Daniel, Samuel);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, inactive.StatusCode);
+        Assert.Equal("Choose active mentors.", await Error(inactive, "leadMentorId"));
+        Assert.Empty(Query("SELECT Id FROM AuditEntries WHERE RecordType = 'CohortMentors'"));
+    }
+
+    // ---- criterion 5: who drops off a mentor's list
+
+    [Fact]
+    public async Task Youth_of_an_archived_cohort_or_an_ended_enrollment_drop_off_unless_assigned_directly()
+    {
+        await SetTeam(Marisol, Tutoring, Daniel);
+        await AssignYouth(Marisol, Tutoring, Mateo, Daniel);
+        var jordan = DatabaseSeeder.ChildId(DatabaseSeeder.Harbourview, "Jordan Thompson");
+        await _factory.ClientFor(Marisol).SendAsync(new HttpRequestMessage(HttpMethod.Delete, $"/programs/{Tutoring}/enrollments/{jordan}") { Content = JsonContent.Create(new { reason = "Moved away" }) });
+
+        Assert.DoesNotContain("Jordan Thompson", Names((await Get(Daniel, "/mentoring/youth")).GetProperty("youth")));
+
+        await _factory.ClientFor(Marisol).PostAsJsonAsync($"/programs/{Tutoring}/archive", new { confirmName = "After-School Tutoring" });
+        Assert.Equal(["Mateo Rivera"], Names((await Get(Daniel, "/mentoring/youth")).GetProperty("youth")));
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, (await SetTeam(Marisol, Tutoring, Hana)).StatusCode);
+    }
+
     // ---- criterion 6: roles
 
     [Fact]
@@ -118,6 +183,7 @@ public sealed class MentorAssignmentTests : IAsyncLifetime
     {
         Assert.Equal(HttpStatusCode.NoContent, (await AssignYouth(Tom, Tutoring, Mateo, Daniel)).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await AssignYouth(Jaylen, Tutoring, Mateo, Hana)).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await SetTeam(Jaylen, Tutoring, Hana)).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await _factory.ClientFor(Aisha).DeleteAsync($"/programs/{Tutoring}/youth/{Mateo}/mentor")).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await _factory.ClientFor(Jaylen).GetAsync($"/programs/{Tutoring}/mentoring")).StatusCode);
 
@@ -137,6 +203,7 @@ public sealed class MentorAssignmentTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.NotFound, (await _factory.ClientFor(Marisol).GetAsync($"/programs/{KidsClub}/mentoring")).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await AssignYouth(Grace, Tutoring, Mateo, Samuel)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await SetTeam(Grace, Tutoring, Samuel)).StatusCode);
 
         await AssignYouth(Marisol, Tutoring, Mateo, Daniel);
         Assert.Equal(["Samuel Boateng"], Names((await Get(Grace, $"/programs/{KidsClub}/mentoring")).GetProperty("mentors")));
@@ -166,6 +233,9 @@ public sealed class MentorAssignmentTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.NotFound, (await _factory.ClientFor(Marisol).GetAsync($"/programs/{Tutoring}/mentoring")).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await AssignYouth(Marisol, Tutoring, Mateo, Daniel)).StatusCode);
     }
+
+    private Task<HttpResponseMessage> SetTeam(Guid caller, Guid program, Guid lead, params Guid[] supporting) =>
+        _factory.ClientFor(caller).PutAsJsonAsync($"/programs/{program}/mentors", new { leadMentorId = lead, supportingMentorIds = supporting });
 
     private Task<HttpResponseMessage> AssignYouth(Guid caller, Guid program, Guid child, Guid mentor) =>
         _factory.ClientFor(caller).PutAsJsonAsync($"/programs/{program}/youth/{child}/mentor", new { mentorId = mentor });
