@@ -56,7 +56,7 @@
 | Youth | Sign in as a youth or mentor | Sign in to the youth or mentor pages with an account linked to their record. | [7 days](detailed-designs/identity/sign-in-as-youth-or-mentor/README.md) | 90% · [video](videos/50-sign-in-as-youth-or-mentor/README.md) |
 | Youth | Accept an invitation as a youth or mentor | Activate an invited youth or mentor account and set a password. | [7 days](detailed-designs/identity/accept-invitation/README.md) | 90% · [video](videos/51-accept-an-invitation/README.md) |
 | Youth | Complete first-run onboarding | Finish guided setup after a youth’s first sign-in. | [3 days](detailed-designs/learning/onboard-youth/README.md) | 100% · [video](videos/53-complete-first-run-onboarding/README.md) |
-| Youth | Complete lessons | Work through gated lessons, including coding tracks. | [13 days](prompts/57-complete-lessons.md) | 0% |
+| Youth | Complete lessons | Work through gated lessons, including coding tracks. | [13 days](detailed-designs/learning/browse-curriculum/README.md) | 100% · [video](videos/57-complete-lessons/README.md) |
 | Youth | Take quizzes | Attempt quizzes and see scores and results. | [7 days](prompts/61-take-quizzes.md) | 0% |
 | Youth | Submit assignments | Submit work and follow it through review and revision. | [14 days](prompts/62-submit-assignments.md) | 0% |
 | Youth | View journey and progress | See badges, the journey roadmap and overall progress. | [10 days](prompts/65-view-journey-and-progress.md) | 0% |
