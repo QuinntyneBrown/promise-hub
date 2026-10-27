@@ -1,0 +1,62 @@
+@startuml
+title Class structure — Take a quiz
+skinparam classAttributeIconSize 0
+class Quiz <<entity>> {
+  ModuleId : Guid
+  LessonId : Guid?
+  PassMark : int
+  AttemptsAllowed : int?
+  Feedback : FeedbackMode
+  Shuffle : bool
+  RequiredToComplete : bool
+  RequireApproval : bool
+}
+class QuizQuestion <<entity>> {
+  Position : int
+  Type : QuestionType
+  Options : string?
+  Correct : string?
+  Answers : string?
+}
+class QuizAttempt <<entity>> {
+  OrganizationId : Guid
+  MembershipId : Guid
+  QuizId : Guid
+  Number : int
+  QuestionOrder : string
+  Answers : string
+  Position : int
+  Status : AttemptStatus
+  Score : int?
+  Correct : int?
+  Total : int?
+  Passed : bool?
+  StartedAt, SubmittedAt
+  Save(answers, position)
+  Submit(correct, total, passMark, approval, at)
+}
+enum AttemptStatus {
+  InProgress
+  Scored
+  AwaitingApproval
+}
+class QuizIntroHandler {
+  HandleAsync(id) : Gated<QuizIntroDto>
+}
+class QuizAttemptCommand {
+  StartAsync(quizId) : Gated<QuizAttemptDto>
+  SaveAsync(attemptId, request) : Gated<bool>
+  SubmitAsync(attemptId, request) : Gated<Guid>
+}
+class QuizScoring {
+  {static} IsRight(question, answer) : bool
+}
+class LearnerProgress
+Quiz "1" -- "*" QuizQuestion
+Quiz "1" -- "*" QuizAttempt
+QuizAttempt --> AttemptStatus
+QuizIntroHandler --> LearnerProgress
+QuizAttemptCommand --> LearnerProgress
+QuizAttemptCommand --> QuizScoring
+QuizAttemptCommand --> QuizAttempt
+@enduml

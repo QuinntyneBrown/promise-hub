@@ -1,0 +1,36 @@
+@startuml
+title UML sequence behaviour — Opening a quiz result
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Youth (Sofía)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "QuizResultPage" as page
+  participant "LearningApi" as lapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "LearningEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "QuizResultHandler" as h
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : opens the result
+page -> lapi : attempt(id)
+lapi -> ep : GET /learning/attempts/{id}
+ep -> h : HandleAsync
+h -> db : her own submitted attempt, its quiz and questions
+alt not hers, in progress, other organization
+  h --> ep : 404 (L2-076 c6)
+else awaiting approval
+  h --> ep : 200 status, no score or review (c3)
+else
+  h -> h : feedback rule allows a review? (c2)
+  h --> ep : 200 score, passed, best, attempts left, review (c1, c2)
+end
+page --> actor : "You passed, Sofía" / "Not this time", Try again while attempts remain (c4)
+@enduml

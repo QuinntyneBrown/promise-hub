@@ -1,0 +1,12 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Review quiz results
+Person(y, "Youth", "Phone or shared laptop")
+Person(a, "Program director", "Builds and publishes quizzes (L2-073)")
+Person(m, "Mentor", "Approves scores of quizzes that need it (prompt 63)")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(a, ph, "Publishes quizzes", "HTTPS")
+Rel(y, ph, "Takes quizzes and reviews results", "HTTPS")
+Rel(m, ph, "Approves scores", "HTTPS")
+@enduml

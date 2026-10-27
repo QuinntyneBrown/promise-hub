@@ -1,0 +1,56 @@
+@startuml
+title UML sequence behaviour — Starting, autosaving and submitting a quiz
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Youth (Sofía)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "QuizPage" as page
+  participant "LearningApi" as lapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "LearningEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "QuizAttemptCommand" as h
+  participant "LearnerProgress" as prog
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : Start quiz
+page -> lapi : startQuiz(quizId)
+lapi -> ep : POST /learning/quizzes/{id}/attempts
+ep -> h : StartAsync
+h -> prog : visible and unlocked? (L2-075 c2, c8)
+alt attempt in progress
+  h --> ep : 200 that attempt with saved answers and position (c3)
+else limit reached
+  h --> ep : 409 no-attempts (c7)
+else
+  h -> db : QuizAttempt n, order fixed + audit Created (c3)
+  h --> ep : 200 questions without correct answers
+end
+actor -> page : chooses an answer, Next
+page -> lapi : saveAnswers(attemptId, answers, position)
+lapi -> ep : PUT /learning/attempts/{id}/answers
+ep -> h : SaveAsync (c4)
+alt submitted
+  h --> ep : 409 submitted (c6)
+else invalid
+  h --> ep : 422
+else
+  h -> db : answers, position
+  page --> actor : "Answers saved"
+end
+actor -> page : Submit answers, confirms in submit-quiz
+page -> lapi : submitQuiz(attemptId, answers, position)
+lapi -> ep : POST /learning/attempts/{id}/submit
+ep -> h : SubmitAsync (c5)
+h -> h : QuizScoring per question
+h -> db : score, passed, Scored or AwaitingApproval + audit Submitted
+h --> ep : 200 attempt id
+page --> actor : opens the result
+@enduml

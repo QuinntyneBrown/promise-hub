@@ -1,0 +1,34 @@
+@startuml
+title Class structure — Review quiz results
+skinparam classAttributeIconSize 0
+class QuizAttempt <<entity>> {
+  Number : int
+  Status : AttemptStatus
+  Score : int?
+  Passed : bool?
+}
+class QuizResultHandler {
+  HandleAsync(attemptId) : Gated<QuizResultDto>
+}
+class QuizResultDto <<record>> {
+  Number, AttemptsAllowed, AttemptsLeft
+  Status, Score, Correct, Total
+  PassMark, Passed, BestScore, CanRetake
+  Feedback, Review[]
+}
+class ReviewQuestionDto <<record>> {
+  Text, Type, Options[]
+  Chosen[], Text answer
+  CorrectOptions[], Accepted[]
+  Right : bool
+}
+class QuizStatus <<record>> {
+  Quiz, Locked, UnlockAfter
+  BestScore, Passed, State
+}
+class LearnerProgress
+QuizResultHandler --> QuizAttempt
+QuizResultHandler ..> QuizResultDto
+QuizResultDto *-- ReviewQuestionDto
+LearnerProgress ..> QuizStatus
+@enduml

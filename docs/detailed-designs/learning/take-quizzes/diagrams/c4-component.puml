@@ -1,0 +1,30 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Take a quiz
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(intro, "QuizIntroPage", "Angular page", "learn-quiz-intro")
+  Component(take, "QuizPage + SubmitQuizDialog", "Angular page, CDK Dialog", "learn-quiz, submit-quiz")
+  Component(opt, "ph-quiz-option / ph-sync-chip", "components library", "")
+  Component(lapi, "LearningApi", "Contract + HTTP client", "LEARNING_API")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "LearningEndpoints", "Minimal API", "quizzes/{id}, attempts")
+  Component(ih, "QuizIntroHandler", "Handler", "rules, attempts, best score")
+  Component(cmd, "QuizAttemptCommand", "Handler", "start, save, submit + audit")
+  Component(sc, "QuizScoring", "Service", "server-side scoring")
+  Component(prog, "LearnerProgress", "Service", "visibility, locks, quiz status")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Quizzes, QuizQuestions, QuizAttempts")
+}
+Rel(intro, lapi, "quiz")
+Rel(take, opt, "composes")
+Rel(take, lapi, "startQuiz, saveAnswers, submitQuiz")
+Rel(lapi, ep, "JSON/HTTPS")
+Rel(ep, ih, "GET")
+Rel(ep, cmd, "POST, PUT")
+Rel(ih, prog, "status")
+Rel(cmd, prog, "status")
+Rel(cmd, sc, "score")
+Rel(prog, db, "reads")
+Rel(cmd, db, "writes + audit")
+@enduml

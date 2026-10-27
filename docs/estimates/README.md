@@ -1,7 +1,7 @@
 # Estimates
 
-- Overall effort: 312 days
-- Complete: 74%
+- Overall effort: 319 days
+- Complete: 72%
 
 | Subsystem | Effort | Complete |
 |---|---|---|
@@ -25,7 +25,7 @@
 | [billing](billing.md) | 10 days | 50% |
 | [audit](audit.md) | 6 days | 80% |
 | [search](search.md) | 4 days | 70% |
-| [learning](learning.md) | 18 days | 100% |
+| [learning](learning.md) | 25 days | 72% |
 | [curriculum](curriculum.md) | 17 days | 95% |
 | [mentoring](mentoring.md) | 11 days | 100% |
 | [website](website.md) | 1 day | 100% |
