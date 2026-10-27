@@ -1,10 +1,20 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  HostListener,
+  computed,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
   AssignmentBrief,
+  DRAFT_STORE,
   GatedResult,
+  SESSION_API,
   LEARNING_API,
   SubmissionType,
   SubmitOutcome,
@@ -28,11 +38,15 @@ import {
   PhTextField,
   PhTextarea,
   ToastService,
+  formatDateTime,
 } from '@promisehub/components';
-import { Subject, map, of, startWith, switchMap, tap } from 'rxjs';
+import { Observable, Subject, combineLatest, map, of, startWith, switchMap, tap } from 'rxjs';
 import { fileKind, fileRefusal, fileSize } from '../assignment-words';
 import { SubmitAssignmentDialog } from '../submit-assignment-dialog/submit-assignment-dialog';
 import { SubmitAssignmentDialogData } from '../submit-assignment-dialog/submit-assignment-dialog-data';
+import { CanLeave } from '../can-leave';
+import { LeaveChoice } from '../unsaved-changes-dialog/leave-choice';
+import { UnsavedChangesDialog } from '../unsaved-changes-dialog/unsaved-changes-dialog';
 import { SubmitView } from './submit-view';
 
 const FIELD: Record<string, string> = {
@@ -45,7 +59,9 @@ const FIELD: Record<string, string> = {
 /**
  * Writes and sends an assignment's work (mock: learn-submit, L2-077 criteria 3 to 5, L2-078 criterion 3): the reflection, link and file
  * the assignment takes and the attestation, checked here as the server checks them, then sent through submit-assignment. Revising a
- * submission sent back shows the mentor's note and her last work, keeping her file unless she removes or replaces it.
+ * submission sent back shows the mentor's note and her last work, keeping her file unless she removes or replaces it. Unsent work is
+ * protected (L2-079): Save draft keeps the reflection and link on this device, a draft is restored on return, and leaving with unsaved
+ * changes asks first through unsaved-changes.
  */
 @Component({
   selector: 'ph-submit-page',
@@ -70,11 +86,18 @@ const FIELD: Record<string, string> = {
   templateUrl: './submit-page.html',
   styleUrl: './submit-page.css',
 })
-export class SubmitPage {
+export class SubmitPage implements CanLeave {
   private readonly api = inject(LEARNING_API);
   private readonly dialogs = inject(PhDialogs);
   private readonly toasts = inject(ToastService);
   private readonly router = inject(Router);
+  private readonly drafts = inject(DRAFT_STORE);
+  private readonly session = inject(SESSION_API);
+  private membershipId = '';
+  /** What the form held when it loaded or was last saved as a draft. */
+  private readonly baseline = signal({ text: '', link: '' });
+  /** Set once the work is sent, so leaving asks nothing. */
+  private sentAway = false;
   private readonly refresh$ = new Subject<void>();
   protected readonly fileSize = fileSize;
 
@@ -89,6 +112,11 @@ export class SubmitPage {
   /** The file of the submission being revised, kept unless removed or replaced. */
   protected readonly kept = signal<SubmittedFile | null>(null);
   protected readonly refused = signal<string | null>(null);
+  /** When the restored draft was saved, while it shows. */
+  protected readonly restored = signal<string | null>(null);
+  protected readonly dirty = computed(
+    () => this.text() !== this.baseline().text || this.link() !== this.baseline().link,
+  );
   protected readonly errors = signal<Record<string, string>>({});
   protected readonly summary = computed<ErrorSummaryItem[]>(() =>
     Object.entries(this.errors()).map(([key, message]) => ({
@@ -104,8 +132,9 @@ export class SubmitPage {
         this.refresh$.pipe(
           startWith(undefined),
           switchMap(() =>
-            this.api.assignment(id).pipe(
-              switchMap((r) => this.withRevision(r)),
+            combineLatest([this.api.assignment(id), this.session.current()]).pipe(
+              tap(([, me]) => (this.membershipId = me.membershipId)),
+              switchMap(([r]) => this.withRevision(r)),
               tap((r) => {
                 if (r.status === 'loaded') this.fill(r.value);
               }),
@@ -139,11 +168,67 @@ export class SubmitPage {
   }
 
   private fill(v: SubmitView): void {
-    this.text.set(v.revising?.text ?? '');
-    this.link.set(v.revising?.link ?? '');
+    const draft =
+      this.alreadySent(v) || this.closed(v)
+        ? null
+        : this.drafts.load(this.membershipId, v.brief.id);
+    this.text.set(draft?.text ?? v.revising?.text ?? '');
+    this.link.set(draft?.link ?? v.revising?.link ?? '');
+    this.baseline.set({ text: this.text(), link: this.link() });
+    this.restored.set(draft ? formatDateTime(draft.savedAt) : null);
     this.kept.set(v.revising?.file ?? null);
     this.file.set(null);
     this.attest.set(false);
+  }
+
+  protected saveDraft(v: SubmitView): void {
+    this.keepDraft(v.brief.id);
+    this.toasts.show({
+      tone: 'success',
+      title: 'Draft saved',
+      text: 'On this device. Your photo isn’t saved in a draft.',
+    });
+  }
+
+  private keepDraft(assignmentId: string): void {
+    this.drafts.save(this.membershipId, assignmentId, {
+      text: this.text(),
+      link: this.link(),
+      savedAt: new Date().toISOString(),
+    });
+    this.baseline.set({ text: this.text(), link: this.link() });
+  }
+
+  protected startOver(v: SubmitView): void {
+    this.drafts.clear(this.membershipId, v.brief.id);
+    this.text.set(v.revising?.text ?? '');
+    this.link.set(v.revising?.link ?? '');
+    this.baseline.set({ text: this.text(), link: this.link() });
+    this.restored.set(null);
+  }
+
+  /** Asks before the router leaves unsent changes (L2-079 criterion 1). */
+  canLeave(): Observable<boolean> | boolean {
+    const r = this.result();
+    if (this.sentAway || !this.dirty() || r?.status !== 'loaded') return true;
+    const assignmentId = r.value.brief.id;
+    return this.dialogs
+      .open<LeaveChoice, null, UnsavedChangesDialog>(UnsavedChangesDialog, null)
+      .closed.pipe(
+        map((choice) => {
+          if (choice === 'save') this.keepDraft(assignmentId);
+          return choice === 'save' || choice === 'discard';
+        }),
+      );
+  }
+
+  /** Closing or reloading the tab with unsent changes: the browser asks (L2-079 criterion 1). */
+  @HostListener('window:beforeunload', ['$event'])
+  protected warn(event: BeforeUnloadEvent): void {
+    if (!this.sentAway && this.dirty()) {
+      event.preventDefault();
+      event.returnValue = '';
+    }
   }
 
   /** Read only while with the mentor: there is nothing to submit here. */
@@ -292,6 +377,8 @@ export class SubmitPage {
   private sent(v: SubmitView, outcome: SubmitOutcome | undefined): void {
     if (!outcome) return;
     if (outcome.status === 'saved') {
+      this.drafts.clear(this.membershipId, v.brief.id);
+      this.sentAway = true;
       this.toasts.show({
         tone: 'success',
         title: v.revising ? 'Resubmitted' : 'Submitted',

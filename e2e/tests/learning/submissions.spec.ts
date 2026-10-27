@@ -375,6 +375,80 @@ test.describe('Submit assignments', () => {
     expect(api.learningState.work.all()[0]!.round).toBe(1);
   });
 
+  test('Given she has written something, when she leaves for the module, then she is asked first; Keep editing keeps her work and Save draft and leave keeps a draft', async ({
+    page,
+    api,
+  }) => {
+    api.learningState.complete('m-sofia', ...TOWEL);
+    const submit = new LearnSubmitPage(page);
+    const assignment = new LearnAssignmentPage(page);
+    await submit.open('as-serve');
+    await submit.write(REFLECTION);
+
+    await submit.leaveForModule();
+    await expect(submit.leaveDialog).toContainText('Your reflection hasn’t been sent or saved.');
+    await submit.expectAccessible();
+    await submit.leaveChoice('Keep editing');
+    await expect(submit.leaveDialog).toHaveCount(0);
+    await expect(submit.reflection).toHaveValue(REFLECTION);
+
+    await submit.leaveForModule();
+    await submit.leaveChoice('Save draft and leave');
+    await expect(new LearnModulePage(page).assignment(ASSIGNMENT)).toBeVisible();
+    expect(await submit.hasDraft('m-sofia', 'as-serve')).toBe(true);
+
+    await assignment.open('as-serve');
+    await expect(assignment.notice).toContainText('You have a draft');
+    await assignment.continueDraftButton.click();
+    await expect(submit.alert('We restored your draft')).toContainText('Add your photo again before you submit.');
+    await expect(submit.reflection).toHaveValue(REFLECTION);
+    await submit.expectAccessible();
+    await submit.startOverButton.click();
+    await expect(submit.reflection).toHaveValue('');
+    expect(await submit.hasDraft('m-sofia', 'as-serve')).toBe(false);
+  });
+
+  test('Given nothing changed, or she chooses Leave without saving, then she leaves and no draft is kept', async ({ page, api }) => {
+    api.learningState.complete('m-sofia', ...TOWEL);
+    const submit = new LearnSubmitPage(page);
+    const module = new LearnModulePage(page);
+    await submit.open('as-serve');
+
+    await submit.leaveForModule();
+    await expect(module.assignment(ASSIGNMENT)).toBeVisible();
+    await expect(submit.leaveDialog).toHaveCount(0);
+
+    await submit.open('as-serve');
+    await submit.write(REFLECTION);
+    await submit.leaveForModule();
+    await submit.leaveChoice('Leave without saving');
+    await expect(module.assignment(ASSIGNMENT)).toBeVisible();
+    expect(await submit.hasDraft('m-sofia', 'as-serve')).toBe(false);
+  });
+
+  test('Given she saves a draft, then a toast confirms, a reload asks only while there are unsaved changes, and the draft is restored; submitting clears it', async ({
+    page,
+    api,
+  }) => {
+    api.learningState.complete('m-sofia', ...TOWEL);
+    const submit = new LearnSubmitPage(page);
+    await submit.open('as-serve');
+    await submit.write('First thoughts.');
+    expect(await submit.reloadAsksFirst()).toBe(true);
+    await submit.write(REFLECTION);
+
+    await submit.saveDraft();
+
+    await expect(submit.toast('Draft saved')).toContainText('Your photo isn’t saved in a draft.');
+    expect(await submit.reloadAsksFirst()).toBe(false);
+    await expect(submit.reflection).toHaveValue(REFLECTION);
+    await submit.attest();
+    await submit.submit();
+    await submit.confirm();
+    await expect(new LearnSubmissionPage(page).status).toHaveText('Submitted');
+    expect(await submit.hasDraft('m-sofia', 'as-serve')).toBe(false);
+  });
+
   test('Given an unknown assignment or one that fails to load, then the page says so', async ({
     page,
     api,

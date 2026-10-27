@@ -56,6 +56,21 @@
       @if (summary().length) {
         <ph-error-summary title="Fix these to continue" [items]="summary()" />
       }
+      @if (restored(); as when) {
+        <ph-alert
+          title="We restored your draft"
+          [text]="
+            'Saved on this device on ' +
+            when +
+            '.' +
+            (takesFiles(v)
+              ? ' Add your ' + (takes(v, 'File') ? 'file' : 'photo') + ' again before you submit.'
+              : '')
+          "
+        >
+          <ph-button variant="ghost" size="sm" (click)="startOver(v)">Start over</ph-button>
+        </ph-alert>
+      }
       @if (refused(); as name) {
         <ph-alert
           tone="danger"
@@ -141,6 +156,7 @@
         but they can ask for a revision.
       </p>
       <div class="actions">
+        <ph-button variant="ghost" icon="check" (click)="saveDraft(v)">Save draft</ph-button>
         <ph-button variant="primary" icon="send" (click)="submit(v)">{{
           v.revising ? 'Resubmit' : 'Submit'
         }}</ph-button>

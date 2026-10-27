@@ -116,6 +116,27 @@ export class LearnSubmitPage extends BasePage {
     return this.page.getByRole('heading', { name });
   }
 
+  /** Follows the breadcrumb back to the module, as leaving the page would. */
+  async leaveForModule(): Promise<void> {
+    await this.page.getByRole('navigation', { name: 'Breadcrumb' }).getByRole('link', { name: 'Leading by Serving' }).click();
+  }
+
+  /** Reloads the tab and answers whether the browser asked before leaving. */
+  async reloadAsksFirst(): Promise<boolean> {
+    let asked = false;
+    this.page.once('dialog', async (dialog) => {
+      asked = dialog.type() === 'beforeunload';
+      await dialog.accept();
+    });
+    await this.page.reload();
+    return asked;
+  }
+
+  /** Whether a draft for this membership and assignment is kept on the device. */
+  async hasDraft(membershipId: string, assignmentId: string): Promise<boolean> {
+    return this.page.evaluate((key) => localStorage.getItem(key) !== null, `promisehub.draft.${membershipId}.${assignmentId}`);
+  }
+
   toast(text: string): Locator {
     return this.page.getByRole('status').filter({ hasText: text });
   }

@@ -1,0 +1,15 @@
+<ph-dialog
+  title="Leave without submitting?"
+  description="Your reflection hasn’t been sent or saved."
+  icon="warning"
+>
+  <p>
+    Save a draft on this device to pick up where you left off, or leave and lose what you wrote.
+    Your photo isn’t kept in a draft.
+  </p>
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button variant="ghost" (click)="ref.close('discard')">Leave without saving</ph-button>
+    <ph-button (click)="ref.close('keep')">Keep editing</ph-button>
+    <ph-button variant="primary" (click)="ref.close('save')">Save draft and leave</ph-button>
+  </ng-container>
+</ph-dialog>

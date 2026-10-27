@@ -10,6 +10,7 @@ import { QuizResultPage } from './quiz-result-page/quiz-result-page';
 import { SubmissionPage } from './submission-page/submission-page';
 import { SubmitPage } from './submit-page/submit-page';
 import { TrackPage } from './track-page/track-page';
+import { unsavedChangesGuard } from './unsaved-changes.guard';
 import { YouthWelcomePage } from './youth-welcome/youth-welcome-page';
 
 export const routes: Routes = [
@@ -26,6 +27,7 @@ export const routes: Routes = [
   {
     path: 'assignments/:id/submit',
     component: SubmitPage,
+    canDeactivate: [unsavedChangesGuard],
     title: 'Submit an assignment · PromiseHub',
   },
   { path: 'submissions/:id', component: SubmissionPage, title: 'Your submission · PromiseHub' },

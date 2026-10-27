@@ -1,6 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { AssignmentBrief, GatedResult, LEARNING_API } from '@promisehub/api';
+import {
+  AssignmentBrief,
+  DRAFT_STORE,
+  GatedResult,
+  LEARNING_API,
+  SESSION_API,
+} from '@promisehub/api';
 import {
   PhAlert,
   PhAvatar,
@@ -14,9 +20,10 @@ import {
   PhStat,
   PhTable,
   TableColumn,
+  formatDateTime,
   formatDay,
 } from '@promisehub/components';
-import { Subject, startWith, switchMap } from 'rxjs';
+import { Subject, combineLatest, map, startWith, switchMap } from 'rxjs';
 import {
   SUBMISSION_LABEL,
   SUBMISSION_TONE,
@@ -48,6 +55,8 @@ import {
 export class AssignmentPage {
   private readonly api = inject(LEARNING_API);
   private readonly refresh$ = new Subject<void>();
+  private readonly drafts = inject(DRAFT_STORE);
+  private readonly session = inject(SESSION_API);
   protected readonly typesShort = typesShort;
   protected readonly typesLong = typesLong;
   protected readonly dueCaption = dueCaption;
@@ -59,6 +68,9 @@ export class AssignmentPage {
   /** Route parameter. */
   readonly id = input.required<string>();
 
+  /** When a draft kept on this device was saved, or null (L2-079 criterion 2). */
+  protected draftSavedAt: string | null = null;
+
   /** Null while loading. */
   protected readonly result = toSignal<GatedResult<AssignmentBrief> | null>(
     toObservable(this.id).pipe(
@@ -66,7 +78,14 @@ export class AssignmentPage {
         this.refresh$.pipe(
           startWith(undefined),
           switchMap(() =>
-            this.api.assignment(id).pipe(startWith<GatedResult<AssignmentBrief> | null>(null)),
+            combineLatest([this.api.assignment(id), this.session.current()]).pipe(
+              map(([r, me]) => {
+                const draft = r.status === 'loaded' ? this.drafts.load(me.membershipId, id) : null;
+                this.draftSavedAt = draft ? formatDateTime(draft.savedAt) : null;
+                return r;
+              }),
+              startWith<GatedResult<AssignmentBrief> | null>(null),
+            ),
           ),
         ),
       ),

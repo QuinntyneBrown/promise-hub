@@ -21,7 +21,13 @@
   <ph-page-header [title]="a.title" [subtitle]="subtitle(a)">
     <ph-badge [tone]="statusTone(a)" data-testid="assignment-status">{{ statusLabel(a) }}</ph-badge>
   </ph-page-header>
-  @if (a.submission?.status === 'NeedsRevision') {
+  @if (
+    draftSavedAt &&
+    (!a.submission || a.submission.status === 'NeedsRevision') &&
+    a.dueState !== 'closed'
+  ) {
+    <ph-alert title="You have a draft" [text]="'Saved on this device on ' + draftSavedAt + '.'" />
+  } @else if (a.submission?.status === 'NeedsRevision') {
     <ph-alert
       tone="warning"
       [title]="(a.mentorName ?? 'Your mentor') + ' asked for a revision'"
@@ -93,7 +99,7 @@
             variant="primary"
             icon="arrow-right"
             [link]="'/learning/assignments/' + a.id + '/submit'"
-            >Start submission</ph-button
+            >{{ draftSavedAt ? 'Continue your draft' : 'Start submission' }}</ph-button
           >
         }
       </div>

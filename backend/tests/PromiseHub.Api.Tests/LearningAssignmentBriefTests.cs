@@ -105,6 +105,15 @@ public sealed class LearningAssignmentBriefTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.NotFound, (await _factory.ClientFor(LearningContent.Nadia).GetAsync($"/learning/assignments/{assignment}")).StatusCode);
     }
 
+    // Traces to: L2-079 criterion 3 (drafts on a device are kept per membership, so the session names it).
+    [Fact]
+    public async Task The_session_names_the_active_membership_that_drafts_are_kept_under()
+    {
+        var me = await Get("/me");
+
+        Assert.Equal(LearningContent.Nadia, me.GetProperty("membershipId").GetGuid());
+    }
+
     private async Task Complete(Guid lesson) =>
         Assert.Equal(HttpStatusCode.OK, (await _factory.ClientFor(LearningContent.Nadia).PostAsync($"/learning/lessons/{lesson}/complete", null)).StatusCode);
 

@@ -910,6 +910,7 @@ export class FakeApi {
         organizationName: organization.name,
         plan: organization.plan,
         modules: this.modules.get(organization.id),
+        membershipId: membership.id,
       },
     });
   }
