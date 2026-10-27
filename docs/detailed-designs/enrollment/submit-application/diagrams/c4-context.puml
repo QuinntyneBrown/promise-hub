@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Submit an application or referral
+Person(g, "Guardian", "Enrolls their own children")
+Person(y, "Young person", "Applies for themselves, ages 12 to 18")
+Person(r, "Referrer", "Teacher, counsellor, social worker or coach")
+Person(s, "Program director / admin", "Opens enrollment, reviews requests (L2-013)")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+System_Ext(sms, "SMS and email providers", "Codes and acknowledgements")
+Rel(g, ph, "Applies through the enrollment link", "HTTPS")
+Rel(y, ph, "Applies through the enrollment link", "HTTPS")
+Rel(r, ph, "Refers through the enrollment link", "HTTPS")
+Rel(s, ph, "Opens enrollment, reviews requests", "HTTPS")
+Rel(ph, sms, "Sends codes and acknowledgements")
+@enduml

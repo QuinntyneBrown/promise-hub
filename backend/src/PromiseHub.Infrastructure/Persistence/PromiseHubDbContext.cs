@@ -431,6 +431,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.HasIndex(s => s.TokenHash).IsUnique();
             e.Property(s => s.CodeExpiresAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
             e.Property(s => s.LockedUntil).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.Property(s => s.CodesSince).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
             e.HasOne<Domain.Programs.Program>().WithMany().HasForeignKey(s => s.ProgramId);
         });
         modelBuilder.Entity<Domain.Enrollment.EnrollmentRequest>(e =>
@@ -439,6 +440,12 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(r => r.SubmittedBy).HasMaxLength(200);
             e.Property(r => r.ReviewedBy).HasMaxLength(200);
             e.Property(r => r.Note).HasMaxLength(500);
+            e.Property(r => r.AppliedAs).HasConversion<string>().HasMaxLength(20);
+            e.Property(r => r.ReferrerName).HasMaxLength(100);
+            e.Property(r => r.ReferrerRole).HasMaxLength(100);
+            e.Property(r => r.ReferrerOrganization).HasMaxLength(120);
+            e.Property(r => r.ReferrerContact).HasMaxLength(320);
+            e.Property(r => r.Reason).HasMaxLength(1000);
             e.Ignore(r => r.Open);
             e.HasOne<Domain.Programs.Program>().WithMany().HasForeignKey(r => r.ProgramId);
             e.HasOne<Child>().WithMany().HasForeignKey(r => r.ChildId);

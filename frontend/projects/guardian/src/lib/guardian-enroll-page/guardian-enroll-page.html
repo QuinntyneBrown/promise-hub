@@ -41,7 +41,17 @@
     @case ('contact') {
       <h1>{{ text.enrollHeading(p?.program ?? '') }}</h1>
       <p>{{ text.intro }}</p>
+      @if (tooMany()) {
+        <ph-alert tone="danger" [title]="text.tooManyTitle" [text]="text.tooManyText" />
+      }
       <form class="stack" novalidate (ngSubmit)="requestCode()">
+        <ph-radio-group
+          [legend]="text.whoLegend"
+          [options]="applicants()"
+          name="applyingAs"
+          [ngModel]="applyingAs()"
+          (ngModelChange)="applyingAs.set($event)"
+        />
         <ph-text-field
           inputId="contact"
           [label]="g().contactLabel"
@@ -80,15 +90,133 @@
       <h1>{{ g().verifyHeading }}</h1>
       <ph-alert tone="danger" [title]="g().locked" />
     }
+    @case ('referrer') {
+      <h1>{{ text.aboutYouHeading }}</h1>
+      <p>{{ text.referrerText }}</p>
+      <form class="stack" novalidate (ngSubmit)="toYoungPerson()">
+        <ph-card [title]="text.youCard">
+          <div class="stack">
+            <ph-text-field
+              inputId="referrerName"
+              [label]="text.referrerName"
+              name="referrerName"
+              autocomplete="name"
+              [error]="errors()['referrerName'] ?? null"
+              [(ngModel)]="referrer.name"
+            />
+            <ph-text-field
+              inputId="referrerRole"
+              [label]="text.referrerRole"
+              name="referrerRole"
+              autocomplete="organization-title"
+              [help]="text.referrerRoleHelp"
+              [error]="errors()['referrerRole'] ?? null"
+              [(ngModel)]="referrer.role"
+            />
+            <ph-text-field
+              inputId="referrerOrganization"
+              [label]="text.referrerOrganization"
+              name="referrerOrganization"
+              autocomplete="organization"
+              [optional]="true"
+              [error]="errors()['referrerOrganization'] ?? null"
+              [(ngModel)]="referrer.organization"
+            />
+            <ph-description-list
+              [facts]="[{ key: 'contact', term: text.referrerContact, value: verifiedContact() }]"
+            />
+          </div>
+        </ph-card>
+        <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
+          text.continue
+        }}</ph-button>
+      </form>
+    }
+    @case ('youth') {
+      @let referring = applyingAs() === 'Referrer';
+      <h1>{{ referring ? text.youngPersonHeading : text.aboutYouHeading }}</h1>
+      <form class="stack" novalidate (ngSubmit)="toGuardian()">
+        <ph-card [title]="referring ? text.referringCard : text.youCard">
+          <div class="stack">
+            <div class="two-col">
+              <ph-text-field
+                inputId="youth-first"
+                [label]="text.firstName"
+                name="youthFirst"
+                [autocomplete]="referring ? 'off' : 'given-name'"
+                [error]="errors()['children[0].name'] ?? null"
+                [(ngModel)]="children[0].firstName"
+              />
+              <ph-text-field
+                inputId="youth-last"
+                [label]="text.lastName"
+                name="youthLast"
+                [autocomplete]="referring ? 'off' : 'family-name'"
+                [(ngModel)]="children[0].lastName"
+              />
+            </div>
+            <ph-text-field
+              inputId="youth-dob"
+              [label]="text.dateOfBirth"
+              type="date"
+              name="youthDob"
+              [help]="referring ? null : text.ageHelp"
+              [error]="errors()['children[0].dateOfBirth'] ?? null"
+              [(ngModel)]="children[0].dateOfBirth"
+            />
+            <ph-text-field
+              inputId="youth-school"
+              [label]="text.school"
+              name="youthSchool"
+              [optional]="true"
+              [(ngModel)]="children[0].school"
+            />
+            <ph-textarea
+              inputId="youth-reason"
+              [label]="referring ? text.whyReferrer : text.whyYouth"
+              name="reason"
+              [rows]="3"
+              [help]="text.whyHelp"
+              [error]="errors()['reason'] ?? null"
+              [(ngModel)]="reason"
+            />
+          </div>
+        </ph-card>
+        <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
+          text.continue
+        }}</ph-button>
+        @if (referring) {
+          <ph-button variant="ghost" (click)="back()">{{ text.back }}</ph-button>
+        }
+      </form>
+    }
     @case ('household') {
-      <h1>{{ text.householdHeading }}</h1>
-      <p>{{ text.householdText }}</p>
-      <form class="stack" novalidate (ngSubmit)="toChildren()">
-        <ph-card>
+      @let guardianPath = applyingAs() === 'Guardian';
+      @let theirs = applyingAs() === 'Referrer';
+      <h1>
+        {{
+          guardianPath
+            ? text.householdHeading
+            : theirs
+              ? text.theirGuardianHeading
+              : text.yourGuardianHeading
+        }}
+      </h1>
+      <p>
+        {{
+          guardianPath
+            ? text.householdText
+            : theirs
+              ? text.theirGuardianText
+              : text.yourGuardianText
+        }}
+      </p>
+      <form class="stack" novalidate (ngSubmit)="fromHousehold()">
+        <ph-card [title]="guardianPath ? null : text.guardianCard">
           <div class="stack">
             <ph-text-field
               inputId="guardianName"
-              [label]="text.nameLabel"
+              [label]="guardianPath ? text.nameLabel : text.guardianNameLabel"
               name="guardianName"
               autocomplete="name"
               [error]="errors()['guardianName'] ?? null"
@@ -96,7 +224,7 @@
             />
             <ph-text-field
               inputId="mobile"
-              [label]="text.mobileLabel"
+              [label]="guardianPath ? text.mobileLabel : text.guardianMobileLabel"
               name="mobile"
               type="tel"
               autocomplete="tel"
@@ -105,7 +233,7 @@
             />
             <ph-text-field
               inputId="email"
-              [label]="text.emailLabel"
+              [label]="guardianPath ? text.emailLabel : text.guardianEmailLabel"
               name="email"
               type="email"
               autocomplete="email"
@@ -123,6 +251,9 @@
         <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
           text.continue
         }}</ph-button>
+        @if (!guardianPath) {
+          <ph-button variant="ghost" (click)="back()">{{ text.back }}</ph-button>
+        }
       </form>
     }
     @case ('children') {
@@ -199,24 +330,37 @@
     }
     @case ('review') {
       <h1>{{ text.reviewHeading }}</h1>
+      @if (duplicate(); as name) {
+        <ph-alert
+          tone="warning"
+          [title]="text.duplicateTitle(name, p?.program ?? '')"
+          [text]="text.duplicateText(p?.phone ?? '')"
+        />
+      }
       <form class="stack" novalidate (ngSubmit)="submit()">
-        <ph-card [title]="text.you">
-          <ph-description-list [facts]="you()" />
-        </ph-card>
-        <ph-card [title]="text.enrolling">
-          <ul class="stack">
-            @for (c of enrolled(); track $index) {
-              <li>
-                {{ c.firstName }} {{ c.lastName }}
-                @if (c.allergies) {
-                  · {{ c.allergies }}
-                }
-              </li>
-            }
-          </ul>
-        </ph-card>
+        @if (applyingAs() === 'Guardian') {
+          <ph-card [title]="text.you">
+            <ph-description-list [facts]="you()" />
+          </ph-card>
+          <ph-card [title]="text.enrolling">
+            <ul class="stack">
+              @for (c of enrolled(); track $index) {
+                <li>
+                  {{ c.firstName }} {{ c.lastName }}
+                  @if (c.allergies) {
+                    · {{ c.allergies }}
+                  }
+                </li>
+              }
+            </ul>
+          </ph-card>
+        } @else {
+          <ph-card [title]="applyingAs() === 'Referrer' ? text.referralCard : text.applicationCard">
+            <ph-description-list [facts]="application()" />
+          </ph-card>
+        }
         <ph-switch
-          [label]="text.consent"
+          [label]="agreement()"
           name="consent"
           [error]="errors()['consent'] ?? null"
           [(ngModel)]="consent"
@@ -224,7 +368,7 @@
         <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
           text.submit
         }}</ph-button>
-        <ph-button variant="ghost" (click)="step.set('children')">{{ text.back }}</ph-button>
+        <ph-button variant="ghost" (click)="back()">{{ text.back }}</ph-button>
       </form>
     }
     @case ('done') {
@@ -238,7 +382,13 @@
                 : text.waiting(names(), enrolled().length > 1)
             }}
           </p>
-          <p>{{ text.doneText }}</p>
+          @if (r.appliedAs === 'Youth' && !r.seasonConsent) {
+            <p>{{ text.askConsent(household.guardianName ?? '') }}</p>
+          }
+          @if (r.appliedAs === 'Referrer') {
+            <p>{{ text.contactFamily(household.guardianName ?? '') }}</p>
+          }
+          <p>{{ text.doneText }} {{ text.confirmationSent(verifiedContact()) }}</p>
         </div>
       }
     }

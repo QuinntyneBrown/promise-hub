@@ -592,6 +592,11 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("AppliedAs")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("ChildId")
                         .HasColumnType("TEXT");
 
@@ -611,12 +616,35 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("ProgramId")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Reason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReferrerContact")
+                        .HasMaxLength(320)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReferrerName")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReferrerOrganization")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReferrerRole")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTimeOffset?>("ReviewedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ReviewedBy")
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("SeasonConsent")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -654,6 +682,12 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.Property<string>("CodeHash")
                         .HasMaxLength(64)
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("CodesSent")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("CodesSince")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Contact")
                         .IsRequired()

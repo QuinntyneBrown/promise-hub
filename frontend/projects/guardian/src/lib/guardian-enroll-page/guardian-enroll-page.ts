@@ -11,9 +11,13 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
+  EnrollmentApplicant,
   EnrollmentChild,
   EnrollmentDraft,
   EnrollmentPage,
+  EnrollmentReferrer,
+  EnrollmentSavedDraft,
+  EnrollmentSubmitted,
   GUARDIAN_ENROLLMENT_API,
 } from '@promisehub/api';
 import {
@@ -23,9 +27,12 @@ import {
   PhDescriptionList,
   PhEmptyState,
   PhGuardianShell,
+  PhRadioGroup,
   PhSelect,
   PhSwitch,
   PhTextField,
+  PhTextarea,
+  RadioOption,
   SelectOption,
 } from '@promisehub/components';
 import { enrollText } from '../enroll-text';
@@ -39,14 +46,18 @@ type Step =
   | 'contact'
   | 'code'
   | 'locked'
+  | 'referrer'
+  | 'youth'
   | 'household'
   | 'children'
   | 'review'
   | 'done';
 
 /**
- * Guardian enrollment (mocks: enroll, enroll-household, enroll-child, enroll-review): verify a contact with a code, then the
- * household, the children with their medical details, and the review with the season consent (L2-013). One primary action per step.
+ * Enrollment through a program's link (mocks: enroll, enroll-youth, enroll-household, enroll-child, enroll-review): who is
+ * applying, verify a contact with a code, then for a guardian the household, the children with their medical details and the
+ * review with the season consent (L2-013); for a young person their details and reason, their guardian and the review with
+ * the agreement they can give (L2-071). One primary action per step.
  */
 @Component({
   selector: 'ph-guardian-enroll-page',
@@ -58,9 +69,11 @@ type Step =
     PhDescriptionList,
     PhEmptyState,
     PhGuardianShell,
+    PhRadioGroup,
     PhSelect,
     PhSwitch,
     PhTextField,
+    PhTextarea,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './guardian-enroll-page.html',
@@ -79,10 +92,16 @@ export class GuardianEnrollPage {
   protected readonly errors = signal<Record<string, string>>({});
   protected readonly busy = signal(false);
   protected readonly failed = signal(false);
-  protected readonly result = signal<{
-    status: 'WaitingReview' | 'Waitlisted';
-    position: number | null;
-  } | null>(null);
+  /** Three codes in 15 minutes: the next waits (L2-071 criterion 9). */
+  protected readonly tooMany = signal(false);
+  /** The young person who already has an open application in this program (L2-071 criterion 8). */
+  protected readonly duplicate = signal<string | null>(null);
+  protected readonly result = signal<EnrollmentSubmitted | null>(null);
+  protected readonly applyingAs = signal<EnrollmentApplicant>('Guardian');
+  protected reason = '';
+  protected referrer: EnrollmentReferrer = { name: '', role: '', organization: '' };
+  /** The contact verified with the code, shown on the referrer's step. */
+  protected readonly verifiedContact = signal('');
   protected contact = '';
   protected code = '';
   protected consent = false;
@@ -96,6 +115,14 @@ export class GuardianEnrollPage {
 
   protected readonly t = computed(() => enrollText(this.language()));
   protected readonly g = computed(() => guardianText(this.language()));
+  protected readonly applicants = computed<RadioOption[]>(() => {
+    const t = this.t();
+    return [
+      { value: 'Guardian', label: t.asGuardian, hint: t.asGuardianHint },
+      { value: 'Youth', label: t.asYouth, hint: t.asYouthHint },
+      { value: 'Referrer', label: t.asReferrer, hint: t.asReferrerHint },
+    ];
+  });
   protected readonly languages: SelectOption[] = [
     { value: 'English', label: 'English' },
     { value: 'Spanish', label: 'Español' },
@@ -125,9 +152,11 @@ export class GuardianEnrollPage {
   protected requestCode(): void {
     this.busy.set(true);
     this.errors.set({});
+    this.tooMany.set(false);
     this.api.requestCode(this.slug(), this.contact).subscribe((outcome) => {
       this.busy.set(false);
       if (outcome.status === 'saved') this.step.set('code');
+      else if (outcome.status === 'too-many') this.tooMany.set(true);
       else if (outcome.status === 'invalid') this.errors.set(outcome.errors);
       else this.failed.set(true);
     });
@@ -154,6 +183,35 @@ export class GuardianEnrollPage {
     });
   }
 
+  protected fromHousehold(): void {
+    if (this.applyingAs() === 'Guardian') this.toChildren();
+    else this.toReview();
+  }
+
+  /** The referrer's own step: name, role and organization, checked on the server before the young person's step. */
+  protected toYoungPerson(): void {
+    this.save((errors) => {
+      const own = Object.fromEntries(
+        Object.entries(errors).filter(([k]) => k.startsWith('referrer')),
+      );
+      if (Object.keys(own).length) return this.errors.set(own);
+      this.errors.set({});
+      this.step.set('youth');
+    });
+  }
+
+  /** The young person's step: their details and reason, checked on the server before their guardian's step. */
+  protected toGuardian(): void {
+    this.save((errors) => {
+      const own = Object.fromEntries(
+        Object.entries(errors).filter(([k]) => k.startsWith('children') || k === 'reason'),
+      );
+      if (Object.keys(own).length) return this.errors.set(own);
+      this.errors.set({});
+      this.step.set('household');
+    });
+  }
+
   protected toChildren(): void {
     this.save((errors) => {
       const own = Object.fromEntries(
@@ -174,6 +232,18 @@ export class GuardianEnrollPage {
     });
   }
 
+  protected back(): void {
+    if (this.step() === 'review') {
+      this.step.set(this.applyingAs() === 'Guardian' ? 'children' : 'household');
+    } else if (this.step() === 'household' && this.applyingAs() !== 'Guardian') {
+      this.step.set('youth');
+    } else if (this.step() === 'youth') {
+      this.step.set('referrer');
+    } else {
+      this.step.set('household');
+    }
+  }
+
   protected addChild(): void {
     this.children = [
       ...this.children,
@@ -192,6 +262,7 @@ export class GuardianEnrollPage {
 
   protected submit(): void {
     this.busy.set(true);
+    this.duplicate.set(null);
     this.errors.set({});
     this.api.submit(this.slug(), this.consent).subscribe((r) => {
       this.busy.set(false);
@@ -200,6 +271,8 @@ export class GuardianEnrollPage {
         this.step.set('done');
       } else if (r.status === 'invalid') {
         this.errors.set(r.errors);
+      } else if (r.status === 'duplicate') {
+        this.duplicate.set(r.name);
       } else {
         this.failed.set(true);
       }
@@ -218,7 +291,63 @@ export class GuardianEnrollPage {
   }
 
   protected firstName(): string {
-    return (this.household.guardianName ?? '').trim().split(' ')[0] ?? '';
+    const path = this.applyingAs();
+    const name =
+      path === 'Youth'
+        ? (this.children[0]?.firstName ?? '')
+        : path === 'Referrer'
+          ? this.referrer.name
+          : this.household.guardianName;
+    return (name ?? '').trim().split(' ')[0] ?? '';
+  }
+
+  /** The young person's full name, for the review and the submitted state. */
+  protected applicantName(): string {
+    const c = this.children[0];
+    return c ? `${c.firstName} ${c.lastName}`.trim() : '';
+  }
+
+  /** The review of a young person's application, or of a referral. */
+  protected application() {
+    const t = this.t();
+    const by = [this.referrer.role, this.referrer.organization].filter(Boolean).join(', ');
+    const lead =
+      this.applyingAs() === 'Referrer'
+        ? [
+            {
+              key: 'by',
+              term: t.factReferredBy,
+              value: [this.referrer.name, by].filter(Boolean).join(' · '),
+            },
+            { key: 'person', term: t.factYoungPerson, value: this.applicantName() },
+          ]
+        : [{ key: 'you', term: t.factYou, value: this.applicantName() }];
+    return [
+      ...lead,
+      { key: 'why', term: t.factWhy, value: this.reason },
+      { key: 'guardian', term: t.factGuardian, value: this.guardianLine() },
+    ];
+  }
+
+  /** Under 18 the young person agrees to the privacy notice; at 18 they give the season consent themselves. */
+  protected agreement(): string {
+    const t = this.t();
+    if (this.applyingAs() === 'Guardian') return t.consent;
+    if (this.applyingAs() === 'Referrer') return t.referrerAgree;
+    const born = this.children[0]?.dateOfBirth;
+    return born && this.age(born) >= 18 ? t.consent : t.youthAgree;
+  }
+
+  private guardianLine(): string {
+    const contact = [this.household.mobile, this.household.email].filter(Boolean).join(' · ');
+    return [this.household.guardianName, contact].filter(Boolean).join(' · ');
+  }
+
+  private age(dateOfBirth: string): number {
+    const [y, m, d] = dateOfBirth.split('-').map(Number) as [number, number, number];
+    const today = new Date();
+    const before = today.getMonth() + 1 < m || (today.getMonth() + 1 === m && today.getDate() < d);
+    return today.getFullYear() - y - (before ? 1 : 0);
   }
 
   protected you() {
@@ -232,21 +361,40 @@ export class GuardianEnrollPage {
     ];
   }
 
-  private useDraft(
-    draft: EnrollmentDraft & { returning: boolean; language: GuardianLanguage },
-  ): void {
+  private useDraft(draft: EnrollmentSavedDraft): void {
+    this.verifiedContact.set(draft.contact);
+    const saved = draft.applyingAs ?? 'Guardian';
+    if (saved !== 'Guardian') this.applyingAs.set(saved);
+    if (this.applyingAs() !== 'Guardian' && saved === 'Guardian') {
+      this.household = { guardianName: '', mobile: '', email: '', language: 'English' };
+      this.children = [];
+      this.addChild();
+      this.returning.set(false);
+      this.step.set(this.applyingAs() === 'Referrer' ? 'referrer' : 'youth');
+      return;
+    }
     this.household = { ...draft.household };
     this.children = draft.children.map((c) => ({ ...c }));
+    this.reason = draft.reason ?? '';
+    this.referrer = { name: '', role: '', organization: '', ...draft.referrer };
     this.returning.set(draft.returning);
     this.language.set(draft.language);
-    this.step.set('household');
+    this.step.set(
+      { Guardian: 'household', Youth: 'youth', Referrer: 'referrer' }[this.applyingAs()] as Step,
+    );
   }
 
   private save(then: (errors: Record<string, string>) => void): void {
     this.busy.set(true);
     this.failed.set(false);
     this.api
-      .save(this.slug(), { household: this.household, children: this.children })
+      .save(this.slug(), {
+        applyingAs: this.applyingAs(),
+        reason: this.applyingAs() === 'Guardian' ? null : this.reason,
+        referrer: this.applyingAs() === 'Referrer' ? this.referrer : null,
+        household: this.household,
+        children: this.children,
+      })
       .subscribe((outcome) => {
         this.busy.set(false);
         if (outcome.status === 'saved') then({});

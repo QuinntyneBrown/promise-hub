@@ -1301,6 +1301,9 @@
       ],
       "states": [
         "default",
+        "youth",
+        "referrer",
+        "too-many",
         "code",
         "invalid",
         "submitting",
@@ -1328,10 +1331,57 @@
         "loading",
         "invalid",
         "submitting",
-        "error"
+        "error",
+        "youth",
+        "referrer",
+        "guardian-invalid"
       ],
       "not_applicable": {
         "empty": "A guardian page is always about one household."
+      }
+    },
+    {
+      "id": "enroll-referrer",
+      "kind": "page",
+      "title": "Enroll: referrer",
+      "route": "/g/enroll/:program/referrer",
+      "requirements": [
+        "L2-071",
+        "L1-005",
+        "L1-019"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "submitting",
+        "error"
+      ],
+      "not_applicable": {
+        "empty": "A new form with the referrer’s contact filled in.",
+        "loading": "Shown at once after the code; nothing to fetch for a referral."
+      }
+    },
+    {
+      "id": "enroll-youth",
+      "kind": "page",
+      "title": "Enroll: the young person",
+      "route": "/g/enroll/:program/youth",
+      "requirements": [
+        "L2-071",
+        "L1-005",
+        "L1-019"
+      ],
+      "states": [
+        "default",
+        "referrer",
+        "invalid",
+        "too-young",
+        "submitting",
+        "error"
+      ],
+      "not_applicable": {
+        "empty": "A new form; the referrer state shows it for someone else.",
+        "loading": "Shown at once after the code; nothing to fetch."
       }
     },
     {
@@ -1371,6 +1421,12 @@
         "submitting",
         "error",
         "success",
+        "youth",
+        "referrer",
+        "referrer-invalid",
+        "duplicate",
+        "submitted-youth",
+        "submitted-referrer",
         "waitlisted"
       ],
       "not_applicable": {

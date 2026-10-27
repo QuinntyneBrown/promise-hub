@@ -15,6 +15,9 @@ public enum GuardianOutcome
 
     /// <summary>Three wrong codes: try again in 15 minutes (423).</summary>
     Locked,
+
+    /// <summary>Too many codes asked for in a short time: wait 15 minutes (429).</summary>
+    TooMany,
     NotFound,
     Conflict,
     Invalid,

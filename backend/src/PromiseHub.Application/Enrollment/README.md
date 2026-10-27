@@ -1,5 +1,3 @@
 # Enrollment
 
-Scaffold only. No product logic is implemented. Overwrite or delete this placeholder as implementation requires.
-
-Reserved for Enrollment application implementation.
+Handlers and DTOs for enrollment through a program's open link and its staff review (L1-005). `OpenEnrollmentHandler` opens and closes the link; `GuardianEnrollmentHandler` verifies the contact with a code (at most three codes in 15 minutes), keeps the draft and submits it as `EnrollmentRequest`s waiting review or waitlisted (L2-013, ADR 0018). The same link takes a young person's application and a referral (L2-071, ADR 0052): `EnrollmentDraftRules` validates each path, a young person or referral always gets a new household, a duplicate open request answers 409, and every submission is acknowledged to the verified contact. `ListEnrollmentRequestsHandler` and `ReviewEnrollmentHandler` are the staff review (ADR 0019).

@@ -20,8 +20,30 @@ export class GuardianEnrollPage extends BasePage {
     return this.page.locator('html').getAttribute('lang');
   }
 
-  text(content: string | RegExp): Locator {
-    return this.page.getByText(content);
+  text(content: string | RegExp, options?: { exact?: boolean }): Locator {
+    return this.page.getByText(content, options);
+  }
+
+  /** One option of "Who is applying?" (L2-071). */
+  applyingAs(label: string): Locator {
+    return this.page.getByRole('group', { name: 'Who is applying?' }).getByRole('radio', { name: label });
+  }
+
+  async applyAs(label: string): Promise<void> {
+    await this.applyingAs(label).check();
+  }
+
+  /** The young person's details: theirs when applying for themselves, or the one a referrer refers. */
+  async fillYoungPerson(values: { firstName: string; lastName: string; dateOfBirth: string; reason: string }): Promise<void> {
+    await this.page.getByLabel('First name', { exact: true }).fill(values.firstName);
+    await this.page.getByLabel('Last name', { exact: true }).fill(values.lastName);
+    await this.page.getByLabel('Date of birth', { exact: true }).fill(values.dateOfBirth);
+    await this.page.getByLabel(/^Why are you/).fill(values.reason);
+  }
+
+  /** The agreement on the review step, by its wording. */
+  async agree(name: RegExp): Promise<void> {
+    await this.page.getByRole('switch', { name }).check();
   }
 
   field(label: string): Locator {
@@ -41,6 +63,15 @@ export class GuardianEnrollPage extends BasePage {
     await this.page.getByRole('button', { name: 'Send me a code' }).click();
     await this.page.getByLabel('Six-digit code').fill(code);
     await this.page.getByRole('button', { name: 'Continue' }).click();
+  }
+
+  async sendCode(contact: string): Promise<void> {
+    await this.page.getByLabel('Your mobile number or email').fill(contact);
+    await this.page.getByRole('button', { name: 'Send me a code' }).click();
+  }
+
+  async useDifferentContact(): Promise<void> {
+    await this.page.getByRole('button', { name: 'Use a different number or email' }).click();
   }
 
   async next(name = 'Continue'): Promise<void> {

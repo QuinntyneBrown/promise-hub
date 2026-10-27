@@ -1,25 +1,18 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, map, of } from 'rxjs';
+import { Observable, catchError, map, of, throwError } from 'rxjs';
 import { API_BASE_URL } from '../api-base-url';
 import { toLoad, toWrite } from '../http-results';
 import { LoadResult } from '../load-result';
 import { WriteOutcome } from '../write-outcome';
 import { EnrollmentDraft } from './enrollment-draft';
 import { EnrollmentPage } from './enrollment-page';
+import { EnrollmentSavedDraft } from './enrollment-saved-draft';
+import { EnrollmentCodeOutcome } from './enrollment-code-outcome';
+import { EnrollmentSubmitOutcome } from './enrollment-submit-outcome';
+import { EnrollmentSubmitted } from './enrollment-submitted';
 import { GuardianEnrollmentApi } from './guardian-enrollment-api';
 import { GuardianVerifyOutcome } from './guardian-verify-outcome';
-
-type Draft = EnrollmentDraft & {
-  returning: boolean;
-  language: 'en' | 'es' | 'fr';
-  program: string;
-};
-type Submitted = {
-  status: 'WaitingReview' | 'Waitlisted';
-  position: number | null;
-  children: number;
-};
 
 @Injectable()
 export class HttpGuardianEnrollmentApi implements GuardianEnrollmentApi {
@@ -34,8 +27,15 @@ export class HttpGuardianEnrollmentApi implements GuardianEnrollmentApi {
     return toLoad(this.http.get<EnrollmentPage>(this.url(slug)));
   }
 
-  requestCode(slug: string, contact: string): Observable<WriteOutcome> {
-    return toWrite(this.http.post<null>(`${this.url(slug)}/code`, { contact }));
+  requestCode(slug: string, contact: string): Observable<EnrollmentCodeOutcome> {
+    return this.http.post<null>(`${this.url(slug)}/code`, { contact }).pipe(
+      map((): EnrollmentCodeOutcome => ({ status: 'saved' })),
+      catchError((error: HttpErrorResponse) =>
+        error.status === 429
+          ? of<EnrollmentCodeOutcome>({ status: 'too-many' })
+          : toWrite(throwError(() => error)),
+      ),
+    );
   }
 
   verify(slug: string, contact: string, code: string): Observable<GuardianVerifyOutcome> {
@@ -53,25 +53,24 @@ export class HttpGuardianEnrollmentApi implements GuardianEnrollmentApi {
     );
   }
 
-  draft(slug: string): Observable<LoadResult<Draft>> {
-    return toLoad(this.http.get<Draft>(`${this.url(slug)}/draft`));
+  draft(slug: string): Observable<LoadResult<EnrollmentSavedDraft>> {
+    return toLoad(this.http.get<EnrollmentSavedDraft>(`${this.url(slug)}/draft`));
   }
 
   save(slug: string, draft: EnrollmentDraft): Observable<WriteOutcome> {
     return toWrite(this.http.put<null>(`${this.url(slug)}/draft`, draft));
   }
 
-  submit(slug: string, consent: boolean) {
-    return this.http.post<Submitted>(`${this.url(slug)}/submit`, { consent }).pipe(
-      map((value) => ({ status: 'submitted' as const, value })),
+  submit(slug: string, consent: boolean): Observable<EnrollmentSubmitOutcome> {
+    return this.http.post<EnrollmentSubmitted>(`${this.url(slug)}/submit`, { consent }).pipe(
+      map((value): EnrollmentSubmitOutcome => ({ status: 'submitted', value })),
       catchError((error: HttpErrorResponse) =>
-        of(
+        of<EnrollmentSubmitOutcome>(
           error.status === 422
-            ? {
-                status: 'invalid' as const,
-                errors: (error.error?.errors ?? {}) as Record<string, string>,
-              }
-            : { status: 'error' as const },
+            ? { status: 'invalid', errors: (error.error?.errors ?? {}) as Record<string, string> }
+            : error.status === 409 && error.error?.code === 'duplicate'
+              ? { status: 'duplicate', name: String(error.error.name ?? '') }
+              : { status: 'error' },
         ),
       ),
     );

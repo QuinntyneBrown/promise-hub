@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Submit an application or referral
+Person(a, "Person applying", "Guardian, young person or referrer on a phone")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular 22", "guardian library, api client, components")
+  Container(api, "PromiseHub API", "ASP.NET Core, .NET 10", "Anonymous /g/enroll/{slug} group; the link chooses the tenant; Roster gate")
+  ContainerDb(db, "PromiseHub database", "SQLite via EF Core", "Tenant-filtered rows")
+}
+System_Ext(sms, "SMS and email providers", "ISmsSender, IEmailSender")
+Rel(a, web, "Uses", "HTTPS")
+Rel(web, api, "Calls", "JSON/HTTPS, enrollment device cookie")
+Rel(api, db, "Reads and writes", "EF Core")
+Rel(api, sms, "Codes and acknowledgement")
+@enduml
