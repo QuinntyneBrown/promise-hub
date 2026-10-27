@@ -37,6 +37,15 @@ export class LearnModulePage extends BasePage {
     await this.page.getByRole('region', { name: 'Quizzes' }).getByRole('link', { name: new RegExp(title) }).click();
   }
 
+  /** An assignment row in the Assignments card, by its title. */
+  assignment(title: string): Locator {
+    return this.page.getByRole('region', { name: 'Assignments' }).getByRole('listitem').filter({ hasText: title });
+  }
+
+  async openAssignment(title: string): Promise<void> {
+    await this.page.getByRole('region', { name: 'Assignments' }).getByRole('link', { name: new RegExp(title) }).click();
+  }
+
   get anchor(): Locator {
     return this.page.getByRole('blockquote');
   }

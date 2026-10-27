@@ -1,6 +1,13 @@
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { GatedResult, LEARNING_API, LessonItem, ModuleView, QuizItem } from '@promisehub/api';
+import {
+  AssignmentItem,
+  GatedResult,
+  LEARNING_API,
+  LessonItem,
+  ModuleView,
+  QuizItem,
+} from '@promisehub/api';
 import {
   PhAlert,
   PhBadge,
@@ -14,12 +21,13 @@ import {
   PhProgressBar,
   PhScriptureBlock,
   PhSkeleton,
+  formatDay,
 } from '@promisehub/components';
 import { Subject, startWith, switchMap } from 'rxjs';
 import { lessonLink } from '../lesson-link';
 import { STATUS_LABEL, STATUS_TONE } from '../status-label';
 
-/** A module of the youth's track (mock: learn-module, L2-068 criteria 3 and 4, L2-075 criterion 2): lessons in order and its quizzes; locked until its prerequisite is done. */
+/** A module of the youth's track (mock: learn-module, L2-068 criteria 3 and 4, L2-075 criterion 2): lessons in order, its quizzes and assignments (L2-077 criterion 1); locked until its prerequisite is done. */
 @Component({
   selector: 'ph-module-page',
   imports: [
@@ -90,6 +98,21 @@ export class ModulePage {
     else if (q.bestScore !== null) parts.push(`Best score ${q.bestScore}%`);
     if (q.required) parts.push('Required to finish the module');
     return parts.join(' · ');
+  }
+
+  protected assignmentMeta(a: AssignmentItem): string {
+    const parts = ['Assignment', `${a.totalPoints} points`];
+    if (a.status === 'locked') parts.push(`Unlocks after ${a.unlockAfter}`);
+    else if (a.dueDate) parts.push(`Due ${formatDay(a.dueDate)}`);
+    return parts.join(' · ');
+  }
+
+  /** The brief until she has submitted, then her submission; nothing while locked. */
+  protected assignmentLink(a: AssignmentItem): string | null {
+    if (a.status === 'locked') return null;
+    return a.submissionId
+      ? `/learning/submissions/${a.submissionId}`
+      : `/learning/assignments/${a.id}`;
   }
 
   /** A required quiz that is open and not passed, once every lesson is done. */

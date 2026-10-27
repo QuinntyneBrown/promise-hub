@@ -4,6 +4,8 @@ import type { FakeCurriculum, FakeLesson, FakeModule, FakeTrack } from './fake-c
 import type { FakeProgram } from './programs';
 import type { FakeQuiz } from './fake-assessments';
 import { FakeQuizTaking, type QuizPlace } from './fake-quiz-taking';
+import type { FakeAssignment } from './fake-assessments';
+import { FakeSubmissions, type AssignmentPlace } from './fake-submissions';
 
 interface LessonState {
   lesson: FakeLesson;
@@ -19,6 +21,12 @@ interface QuizState {
   passed: boolean;
 }
 
+interface AssignmentState {
+  assignment: FakeAssignment;
+  locked: boolean;
+  unlockAfter: string | null;
+}
+
 interface ModuleState {
   module: FakeModule;
   position: number;
@@ -26,6 +34,7 @@ interface ModuleState {
   locked: boolean;
   unlockAfter: string | null;
   quizzes: QuizState[];
+  assignments: AssignmentState[];
 }
 
 interface TrackState {
@@ -53,6 +62,9 @@ export class FakeLearning {
 
   /** Quiz attempts (L2-075, L2-076); tests seed attempts through it. */
   readonly quizzes: FakeQuizTaking;
+
+  /** Assignment submissions (L2-077, L2-078); tests seed and review submissions through it. */
+  readonly work = new FakeSubmissions();
 
   constructor(private readonly curriculum: FakeCurriculum) {
     this.quizzes = new FakeQuizTaking(curriculum.assessments);
@@ -120,6 +132,20 @@ export class FakeLearning {
           const quizLocked = locked || waitFor !== null;
           return { quiz, locked: quizLocked, unlockAfter: quizLocked ? (locked ? prereq!.title : waitFor) : null, passed: this.quizzes.passed(membershipId, quiz) };
         });
+        const assignments = this.curriculum.assessments.assignments
+          .filter((a) => a.moduleId === module.id && a.status === 'Published' && (a.lessonId === null || published_(module.id).includes(a.lessonId)))
+          .sort(
+            (a, b) =>
+              (a.lessonId === null ? 1 : 0) - (b.lessonId === null ? 1 : 0) ||
+              lessons.findIndex((l) => l.lesson.id === a.lessonId) - lessons.findIndex((l) => l.lesson.id === b.lessonId) ||
+              a.title.localeCompare(b.title),
+          )
+          .map((assignment): AssignmentState => {
+            const own = assignment.lessonId ? lessons.find((l) => l.lesson.id === assignment.lessonId)! : null;
+            const waitFor = own && !own.done ? own.lesson.title : null;
+            const aLocked = locked || waitFor !== null;
+            return { assignment, locked: aLocked, unlockAfter: aLocked ? (locked ? prereq!.title : waitFor) : null };
+          });
         return {
           module,
           position: i + 1,
@@ -127,6 +153,7 @@ export class FakeLearning {
           locked,
           unlockAfter: locked ? prereq!.title : null,
           quizzes,
+          assignments,
         };
       });
     return { track, program, modules };
@@ -256,8 +283,38 @@ export class FakeLearning {
           bestScore: this.quizzes.best(membershipId, q.quiz.id)?.score ?? null,
           unlockAfter: q.unlockAfter,
         })),
+        assignments: m.assignments.map((a) => ({
+          id: a.assignment.id,
+          title: a.assignment.title,
+          lessonId: a.assignment.lessonId,
+          totalPoints: a.assignment.rubric.reduce((n, r) => n + r.points, 0),
+          dueDate: a.assignment.dueDate,
+          status: this.work.state(membershipId, a.assignment.id, a.locked),
+          unlockAfter: a.unlockAfter,
+          submissionId: this.work.mine(membershipId, a.assignment.id)?.id ?? null,
+        })),
       },
     });
+  }
+
+  /** The assignment as the youth stands with it, or null when it is not visible to her. */
+  assignmentPlace(membershipId: string, programs: FakeProgram[], assignmentId: string): AssignmentPlace | null {
+    for (const track of this.tracks(membershipId, programs)) {
+      for (const m of track.modules) {
+        const a = m.assignments.find((x) => x.assignment.id === assignmentId);
+        if (a)
+          return {
+            assignment: a.assignment,
+            moduleId: m.module.id,
+            moduleTitle: m.module.title,
+            lessonTitle: m.lessons.find((l) => l.lesson.id === a.assignment.lessonId)?.lesson.title ?? null,
+            trackId: track.track.id,
+            locked: a.locked,
+            unlockAfter: a.unlockAfter,
+          };
+      }
+    }
+    return null;
   }
 
   /** The quiz as the youth stands with it, or null when it is not visible to her. */

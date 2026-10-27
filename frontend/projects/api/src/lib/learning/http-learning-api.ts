@@ -33,6 +33,7 @@ import { QuizAnswer } from './quiz-answer';
 import { AnswersOutcome } from './answers-outcome';
 import { toAnswersOutcome } from './to-answers-outcome';
 import { QuizResult } from './quiz-result';
+import { AssignmentBrief } from './assignment-brief';
 
 @Injectable()
 export class HttpLearningApi implements LearningApi {
@@ -197,6 +198,14 @@ export class HttpLearningApi implements LearningApi {
   attempt(id: string): Observable<GatedResult<QuizResult>> {
     return toGated(
       this.http.get<QuizResult>(`${this.baseUrl}/learning/attempts/${encodeURIComponent(id)}`),
+    );
+  }
+
+  assignment(id: string): Observable<GatedResult<AssignmentBrief>> {
+    return toGated(
+      this.http.get<AssignmentBrief>(
+        `${this.baseUrl}/learning/assignments/${encodeURIComponent(id)}`,
+      ),
     );
   }
 

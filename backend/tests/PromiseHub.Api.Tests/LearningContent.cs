@@ -74,6 +74,38 @@ public sealed class LearningContent(PromiseHubApiFactory factory)
         return id;
     }
 
+    /// <summary>
+    /// The published Serve someone this week (L2-074): attached to a lesson or the whole module, a text reflection and a photo unless
+    /// given, a 25-point rubric of three criteria, due Thu 19 Nov 2026 with a 2-day grace period and late work allowed unless given.
+    /// </summary>
+    public async Task<Guid> AssignmentAsync(Guid moduleId, Guid? lessonId = null, string title = "Serve someone this week", string[]? types = null,
+        string? dueDate = "2026-11-19", int graceDays = 2, bool allowLate = true, bool publish = true)
+    {
+        var id = await Created("/curriculum/assignments", new { moduleId, lessonId, title });
+        await Ok(await Put($"/curriculum/assignments/{id}", new
+        {
+            title,
+            lessonId,
+            brief = "Choose one person to serve without being asked. Tell us what you did, how it felt and what you noticed.",
+            submissionTypes = types ?? ["Text", "Photo"],
+            rubric = new[]
+            {
+                new { description = "Chose someone and served without being asked", points = 10 },
+                new { description = "Described what they did and how it felt", points = 10 },
+                new { description = "Named one thing they noticed", points = 5 },
+            },
+            dueDate,
+            graceDays,
+            allowLate,
+            requireApproval = false,
+        }));
+        if (publish)
+        {
+            await Ok(await Put($"/curriculum/assignments/{id}/status", new { status = "Published" }));
+        }
+        return id;
+    }
+
     private async Task<Guid> Lesson(Guid moduleId, string title, int minutes, string? body, bool publish)
     {
         var id = await Created("/curriculum/lessons", new { moduleId, title });

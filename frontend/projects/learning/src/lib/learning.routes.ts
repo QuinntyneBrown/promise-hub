@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { AssignmentPage } from './assignment-page/assignment-page';
 import { CodingPage } from './coding-page/coding-page';
 import { LearningPage } from './learning-page/learning-page';
 import { LessonPage } from './lesson-page/lesson-page';
@@ -19,4 +20,5 @@ export const routes: Routes = [
   { path: 'quizzes/:id', component: QuizIntroPage, title: 'Quiz · PromiseHub' },
   { path: 'quizzes/:id/take', component: QuizPage, title: 'Taking a quiz · PromiseHub' },
   { path: 'attempts/:id', component: QuizResultPage, title: 'Quiz result · PromiseHub' },
+  { path: 'assignments/:id', component: AssignmentPage, title: 'Assignment · PromiseHub' },
 ];
