@@ -1,0 +1,184 @@
+@let r = result();
+<ph-breadcrumb
+  [items]="
+    r?.status === 'loaded'
+      ? [
+          { label: 'Learning', link: '/learning' },
+          { label: r.value.brief.moduleTitle, link: '/learning/modules/' + r.value.brief.moduleId },
+          { label: 'Submit' },
+        ]
+      : [{ label: 'Learning', link: '/learning' }, { label: 'Submit' }]
+  "
+/>
+@if (r === null) {
+  <ph-page-header title="Submit" />
+  <div class="stack form" aria-busy="true" aria-label="Loading the form">
+    <ph-skeleton shape="card" />
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (r.status === 'loaded') {
+  @let v = r.value;
+  @if (alreadySent(v)) {
+    <ph-page-header [title]="v.brief.title" />
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="lock"
+        title="You’ve already submitted this"
+        [text]="
+          'Your work is with ' + mentor(v) + '. You can change it only if they ask for a revision.'
+        "
+      >
+        <ph-button variant="primary" [link]="'/learning/submissions/' + v.brief.submission!.id"
+          >See your submission</ph-button
+        >
+      </ph-empty-state>
+    </ph-card>
+  } @else if (closed(v)) {
+    <ph-page-header [title]="v.brief.title" />
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="clock"
+        title="Submissions are closed"
+        [text]="
+          'The due date and grace period have passed. Talk to ' +
+          mentor(v) +
+          ' if you need more time.'
+        "
+      >
+        <ph-button variant="primary" [link]="'/learning/assignments/' + v.brief.id"
+          >Back to the assignment</ph-button
+        >
+      </ph-empty-state>
+    </ph-card>
+  } @else {
+    <ph-page-header [title]="v.brief.title" [subtitle]="subtitle(v)" />
+    <div class="stack form">
+      @if (summary().length) {
+        <ph-error-summary title="Fix these to continue" [items]="summary()" />
+      }
+      @if (refused(); as name) {
+        <ph-alert
+          tone="danger"
+          title="That file can’t be used"
+          [text]="'“' + name + '” was not attached. ' + errors()['file']"
+        />
+      }
+      @if (v.revising; as s) {
+        <ph-alert
+          tone="warning"
+          [title]="'Note from ' + (s.reviewerName ?? 'your mentor')"
+          [text]="s.feedback ? '“' + s.feedback + '”' : ''"
+        />
+      }
+      <ph-card title="Your work">
+        <div class="stack">
+          @if (takes(v, 'Text')) {
+            <ph-textarea
+              inputId="reflection"
+              label="Your reflection"
+              [rows]="6"
+              help="3 to 5 sentences is plenty. Be honest: this is between you and your mentor."
+              [count]="text().length.toLocaleString('en-US') + ' / 5,000'"
+              [error]="errors()['text'] ?? null"
+              [ngModel]="text()"
+              (ngModelChange)="text.set($event)"
+            />
+          }
+          @if (takes(v, 'Link')) {
+            <ph-text-field
+              inputId="link"
+              label="Your link"
+              type="url"
+              help="A full web address, starting with https://."
+              [error]="errors()['link'] ?? null"
+              [ngModel]="link()"
+              (ngModelChange)="link.set($event)"
+            />
+          }
+          @if (takesFiles(v)) {
+            @if (chosen(v); as c) {
+              <div>
+                <span class="label">{{ takes(v, 'File') ? 'Your file' : 'Your photo' }}</span>
+                <ph-list label="Your file">
+                  <ph-list-item [title]="c.name" [meta]="c.meta">
+                    <ph-button
+                      variant="ghost"
+                      size="sm"
+                      [label]="'Remove ' + c.name"
+                      (click)="removeFile()"
+                      >Remove</ph-button
+                    >
+                  </ph-list-item>
+                </ph-list>
+              </div>
+            } @else {
+              <ph-file-upload
+                inputId="file"
+                [title]="fileTitle(v)"
+                [text]="fileText(v)"
+                [accept]="accept(v)"
+                [buttonLabel]="
+                  takes(v, 'Photo') && !takes(v, 'File') ? 'Choose photo' : 'Choose file'
+                "
+                [error]="errors()['file'] ?? null"
+                (fileSelected)="choose(v, $event)"
+              />
+            }
+          }
+        </div>
+      </ph-card>
+      <ph-card title="Before you send it">
+        <ph-checkbox
+          inputId="attest"
+          label="This is my own work and it reflects something I really did."
+          [error]="errors()['attest'] ?? null"
+          [ngModel]="attest()"
+          (ngModelChange)="attest.set($event)"
+        />
+      </ph-card>
+      <p class="text-muted">
+        Once you submit, {{ mentor(v) }} reviews it. You can’t change it while it’s being reviewed,
+        but they can ask for a revision.
+      </p>
+      <div class="actions">
+        <ph-button variant="primary" icon="send" (click)="submit(v)">{{
+          v.revising ? 'Resubmit' : 'Submit'
+        }}</ph-button>
+      </div>
+    </div>
+  }
+} @else if (r.status === 'locked') {
+  <ph-page-header title="Submit" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      [title]="'Finish ' + r.unlockAfter + ' first'"
+      [text]="'This assignment unlocks when ' + r.unlockAfter + ' is done.'"
+    >
+      <ph-button link="/learning">Back to Learning</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else if (r.status === 'not-found') {
+  <ph-page-header title="Submit" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="search"
+      title="We can’t find that assignment"
+      text="It may not be published yet, or your program doesn’t follow it."
+    >
+      <ph-button link="/learning">Back to Learning</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-page-header title="Submit" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load this assignment"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}

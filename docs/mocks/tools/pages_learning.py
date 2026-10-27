@@ -716,7 +716,7 @@ def learn_submission(S):
         return extra + f'<div class="split"><div class="stack">{what_you_sent(sent, late)}{act}</div><div class="stack">{history(rows)}</div></div>'
 
     S.add("default", "Just submitted: Submitted, a copy of what she sent and what happens next.", **YKW,
-          main=hdr("Submitted", "info") + layout([SENT], extra=alert("success", "It’s in, Sofía", "Daniel Osei reviews it next. You’ll see his feedback here."), act=f'<div class="form-actions">{back}</div>'),
+          main=hdr("Submitted", "info") + layout([SENT], extra=alert("success", "It’s in", "Daniel Osei reviews it next. You’ll see the feedback here."), act=f'<div class="form-actions">{back}</div>'),
           toast_html=toast_region(toast("success", "Submitted", ASSIGN)),
           notes=note("Read only: she can’t change it while it’s with Daniel. The status changes when he reviews it (prompt 63).", "top: 5rem; right: 1rem;"))
     S.add("in-review", "Daniel has started reviewing: In review, still read only.", **YKW,

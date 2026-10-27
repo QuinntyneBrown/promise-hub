@@ -9,6 +9,17 @@
   background: var(--color-bg-surface);
   text-align: center;
 }
+.dropzone--invalid {
+  border-color: var(--color-danger-solid);
+}
+.error {
+  margin-top: var(--space-2);
+  font: var(--text-body-sm);
+  color: var(--color-danger-fg);
+}
+.error::before {
+  content: '⚠ ';
+}
 .dropzone--over {
   border-color: var(--color-accent);
   background: var(--color-accent-subtle);

@@ -620,6 +620,10 @@ export class FakeApi {
     ['POST', /^\/api\/learning\/attempts\/(?<id>[^/]+)\/submit$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.quizzes.submit(route, m.id, p['id']!, (q) => this.learningState.quizPlace(m.id, programs, q)))],
     ['GET', /^\/api\/learning\/attempts\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.quizzes.result(route, m.id, p['id']!, (q) => this.learningState.quizPlace(m.id, programs, q)))],
     ['GET', /^\/api\/learning\/assignments\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.assignmentBrief(route, m, programs, p['id']!))],
+    ['POST', /^\/api\/learning\/assignments\/(?<id>[^/]+)\/submission$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.work.submit(route, m.id, m.personName, this.learningState.assignmentPlace(m.id, programs, p['id']!)))],
+    ['GET', /^\/api\/learning\/submissions\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.work.view(route, m.id, p['id']!, (a) => this.learningState.assignmentPlace(m.id, programs, a), (t) => this.youthMentorName(m, t)))],
+    ['GET', /^\/api\/learning\/submissions\/(?<id>[^/]+)\/file$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.work.file(route, m.id, p['id']!, (a) => this.learningState.assignmentPlace(m.id, programs, a)))],
+    ['POST', /^\/api\/learning\/submissions\/(?<id>[^/]+)\/resubmit$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.work.resubmit(route, m.id, m.personName, p['id']!, (a) => this.learningState.assignmentPlace(m.id, programs, a)))],
     ['POST', /^\/api\/learning\/lessons\/(?<id>[^/]+)\/complete$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.completeLesson(route, m.id, programs, p['id']!))],
     ['POST', /^\/api\/learning\/consent-request$/, (route) => this.askGuardian(route)],
     ['GET', /^\/api\/learning\/onboarding$/, (route) => this.onboarding(route)],
@@ -954,7 +958,7 @@ export class FakeApi {
   /** GET /learning/assignments/{id}: the brief with her mentor's name. */
   private assignmentBrief(route: Route, m: Membership, programs: FakeProgram[], id: string): Promise<void> {
     const place = this.learningState.assignmentPlace(m.id, programs, id);
-    return this.learningState.work.brief(route, place, place ? this.youthMentorName(m, place.trackId) : null);
+    return this.learningState.work.brief(route, m.id, place, place ? this.youthMentorName(m, place.trackId) : null);
   }
 
   /** The youth's mentor (ADR 0056): her own, else the lead mentor of a program of hers that follows the track. */

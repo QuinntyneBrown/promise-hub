@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using PromiseHub.Api.Authorization;
 using PromiseHub.Api.Modules;
 using PromiseHub.Application.Identity;
@@ -44,6 +45,24 @@ public static class LearningEndpoints
             return submitted.Status == Application.ResultStatus.Done ? Results.Ok(new { id = submitted.Value }) : submitted.ToHttp();
         });
         learning.MapGet("/assignments/{id:guid}", async (Guid id, AssignmentBriefHandler handler, CancellationToken ct) => (await handler.HandleAsync(id, ct)).ToHttp());
+        learning.MapPost("/assignments/{id:guid}/submission", async (Guid id, HttpRequest request, SubmissionCommand handler, CancellationToken ct) =>
+        {
+            if (await SubmissionForm.ReadAsync(request, ct) is not { } form)
+            {
+                return SubmissionForm.Refused();
+            }
+            await using var file = form.File?.Content;
+            var submitted = await handler.SubmitAsync(id, form, ct);
+            return submitted.Status == Application.ResultStatus.Done
+                ? Results.Created($"/learning/submissions/{submitted.Value}", new { id = submitted.Value })
+                : submitted.ToHttp();
+        }).DisableAntiforgery().WithMetadata(new RequestSizeLimitAttribute(SubmissionForm.MaximumBody));
+        learning.MapGet("/submissions/{id:guid}", async (Guid id, SubmissionViewHandler handler, CancellationToken ct) => (await handler.HandleAsync(id, ct)).ToHttp());
+        learning.MapGet("/submissions/{id:guid}/file", async (Guid id, SubmissionViewHandler handler, CancellationToken ct) =>
+        {
+            var file = await handler.FileAsync(id, ct);
+            return file.Value is { } f ? Results.File(f.Content, f.ContentType, f.FileName) : file.ToHttp();
+        });
         // Streamed under the youth's session cookie with range requests, so the player can seek (ADR 0051).
         learning.MapGet("/lessons/{id:guid}/video", async (Guid id, LessonVideoStream handler, CancellationToken ct) =>
         {

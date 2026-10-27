@@ -51,3 +51,28 @@ export const SUBMISSION_TONE: Record<SubmissionRef['status'], 'info' | 'warning'
   NeedsRevision: 'warning',
   Accepted: 'success',
 };
+
+/** "16 bytes", "240 KB" or "1.2 MB". */
+export function fileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} byte${bytes === 1 ? '' : 's'}`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+/** What to tell a youth whose file is refused, as the server words it. */
+export function fileRefusal(types: SubmissionType[]): string {
+  return types.includes('File')
+    ? 'Choose a PDF, JPG or PNG file of up to 10 MB.'
+    : 'Choose a JPG or PNG photo of up to 10 MB.';
+}
+
+const IMAGE = /\.(png|jpe?g)$/i;
+
+/** Photo or File when the assignment takes this file, else null (ADR 0056); the server checks its first bytes too. */
+export function fileKind(file: File, types: SubmissionType[]): 'Photo' | 'File' | null {
+  if (file.size < 1 || file.size > 10 * 1024 * 1024) return null;
+  const image = IMAGE.test(file.name) && /^image\/(png|jpeg)$/.test(file.type);
+  const pdf = /\.pdf$/i.test(file.name) && file.type === 'application/pdf';
+  if (image && types.includes('Photo')) return 'Photo';
+  return (image || pdf) && types.includes('File') ? 'File' : null;
+}

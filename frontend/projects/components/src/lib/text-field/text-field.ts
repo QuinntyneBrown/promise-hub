@@ -20,7 +20,16 @@ export class PhTextField implements ControlValueAccessor {
   readonly inputId = input.required<string>();
   readonly label = input.required<string>();
   readonly type = input<
-    'text' | 'email' | 'password' | 'search' | 'tel' | 'date' | 'datetime-local' | 'number' | 'time'
+    | 'text'
+    | 'email'
+    | 'password'
+    | 'search'
+    | 'tel'
+    | 'url'
+    | 'date'
+    | 'datetime-local'
+    | 'number'
+    | 'time'
   >('text');
   readonly optional = input(false);
   readonly labelHidden = input(false);

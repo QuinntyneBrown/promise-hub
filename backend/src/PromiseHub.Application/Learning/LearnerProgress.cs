@@ -91,6 +91,10 @@ public sealed class LearnerProgress(IPromiseHubDb db, ITenantContext tenant)
         var assignments = (await db.Assignments.AsNoTracking()
             .Where(a => moduleIds.Contains(a.ModuleId) && a.Status == ContentStatus.Published).ToListAsync(cancellationToken))
             .Where(a => a.LessonId is null || lessonIds.Contains(a.LessonId.Value)).ToList();
+        var assignmentIds = assignments.Select(a => a.Id).ToList();
+        var submissions = (await db.AssignmentSubmissions.AsNoTracking()
+            .Where(x => x.MembershipId == tenant.MembershipId && assignmentIds.Contains(x.AssignmentId))
+            .Select(x => new { x.Id, x.AssignmentId, x.Status }).ToListAsync(cancellationToken)).ToDictionary(x => x.AssignmentId);
 
         int? Best(Guid quizId) => attempts[quizId].Where(a => a.Status == AttemptStatus.Scored).Max(a => a.Score);
 
@@ -135,7 +139,8 @@ public sealed class LearnerProgress(IPromiseHubDb db, ITenantContext tenant)
                 // A lesson assignment waits for its lesson; a whole-module assignment only for the module (ADR 0056).
                 var waitFor = assignment.LessonId is { } lid && !done.Contains(lid) ? lessons.First(l => l.Id == lid).Title : null;
                 var assignmentLocked = locked || waitFor is not null;
-                assignmentStatuses.Add(new AssignmentStatus(assignment, assignmentLocked, assignmentLocked ? (locked ? unlock : waitFor) : null, null, null));
+                var sent = submissions.GetValueOrDefault(assignment.Id);
+                assignmentStatuses.Add(new AssignmentStatus(assignment, assignmentLocked, assignmentLocked ? (locked ? unlock : waitFor) : null, sent?.Id, sent?.Status.ToString()));
             }
             result.Add(new ModuleStatus(module, position, items, locked, unlock, quizStatuses, assignmentStatuses));
         }

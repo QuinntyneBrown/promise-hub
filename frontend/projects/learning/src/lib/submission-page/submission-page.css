@@ -1,0 +1,10 @@
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+.reading {
+  margin: 0;
+  white-space: pre-line;
+}

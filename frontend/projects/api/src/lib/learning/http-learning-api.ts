@@ -34,6 +34,10 @@ import { AnswersOutcome } from './answers-outcome';
 import { toAnswersOutcome } from './to-answers-outcome';
 import { QuizResult } from './quiz-result';
 import { AssignmentBrief } from './assignment-brief';
+import { AssignmentSubmissionView } from './assignment-submission-view';
+import { SubmissionWork } from './submission-work';
+import { SubmitOutcome } from './submit-outcome';
+import { toSubmitOutcome } from './to-submit-outcome';
 
 @Injectable()
 export class HttpLearningApi implements LearningApi {
@@ -199,6 +203,46 @@ export class HttpLearningApi implements LearningApi {
     return toGated(
       this.http.get<QuizResult>(`${this.baseUrl}/learning/attempts/${encodeURIComponent(id)}`),
     );
+  }
+
+  submitAssignment(assignmentId: string, work: SubmissionWork): Observable<SubmitOutcome> {
+    return toSubmitOutcome(
+      this.http.post<{ id: string }>(
+        `${this.baseUrl}/learning/assignments/${encodeURIComponent(assignmentId)}/submission`,
+        this.form(work),
+      ),
+    );
+  }
+
+  submission(id: string): Observable<GatedResult<AssignmentSubmissionView>> {
+    return toGated(
+      this.http.get<AssignmentSubmissionView>(
+        `${this.baseUrl}/learning/submissions/${encodeURIComponent(id)}`,
+      ),
+    );
+  }
+
+  resubmit(submissionId: string, work: SubmissionWork): Observable<SubmitOutcome> {
+    return toSubmitOutcome(
+      this.http.post<{ id: string }>(
+        `${this.baseUrl}/learning/submissions/${encodeURIComponent(submissionId)}/resubmit`,
+        this.form(work),
+      ),
+    );
+  }
+
+  submissionFileUrl(id: string): string {
+    return `${this.baseUrl}/learning/submissions/${encodeURIComponent(id)}/file`;
+  }
+
+  private form(work: SubmissionWork): FormData {
+    const form = new FormData();
+    if (work.text) form.append('text', work.text);
+    if (work.link) form.append('link', work.link);
+    form.append('attest', work.attest ? 'true' : 'false');
+    if (work.removeFile) form.append('removeFile', 'true');
+    if (work.file) form.append('file', work.file, work.file.name);
+    return form;
   }
 
   assignment(id: string): Observable<GatedResult<AssignmentBrief>> {

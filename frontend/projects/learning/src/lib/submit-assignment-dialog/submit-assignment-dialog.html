@@ -1,0 +1,31 @@
+<ph-dialog [title]="heading()" [description]="data.title + ' · ' + data.summary" icon="send">
+  <div class="stack">
+    @if (failed()) {
+      <ph-alert
+        tone="danger"
+        title="That didn’t go through"
+        text="Your work was not sent. Everything is still on the page; try again."
+      />
+    }
+    @if (data.submissionId) {
+      <ph-alert
+        [title]="'It goes back to ' + mentor() + ' for review'"
+        text="You can’t change it again unless they ask for another revision."
+      />
+    } @else {
+      <ph-alert
+        title="You can’t change it while it’s being reviewed"
+        [text]="
+          mentor() +
+          ' reviews your work. If something needs another look, they can ask for a revision.'
+        "
+      />
+    }
+  </div>
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close()">Keep editing</ph-button>
+    <ph-button variant="primary" icon="send" [busy]="busy()" (click)="send()">{{
+      data.submissionId ? 'Resubmit' : 'Submit for review'
+    }}</ph-button>
+  </ng-container>
+</ph-dialog>

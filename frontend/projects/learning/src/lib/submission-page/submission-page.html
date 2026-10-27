@@ -1,0 +1,97 @@
+@let r = result();
+<ph-breadcrumb
+  [items]="
+    r?.status === 'loaded'
+      ? [
+          { label: 'Learning', link: '/learning' },
+          { label: r.value.moduleTitle, link: '/learning/modules/' + r.value.moduleId },
+          { label: 'Your submission' },
+        ]
+      : [{ label: 'Learning', link: '/learning' }, { label: 'Your submission' }]
+  "
+/>
+@if (r === null) {
+  <ph-page-header title="Your submission" />
+  <div class="split" aria-busy="true" aria-label="Loading your submission">
+    <ph-skeleton shape="card" />
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (r.status === 'loaded') {
+  @let s = r.value;
+  <ph-page-header [title]="s.assignmentTitle" [subtitle]="subtitle(s)">
+    <ph-badge [tone]="tone[s.status]" data-testid="submission-status">{{
+      label[s.status]
+    }}</ph-badge>
+  </ph-page-header>
+  @if (s.status === 'Submitted') {
+    <ph-alert
+      tone="success"
+      [title]="s.round > 1 ? 'Sent again' : 'It’s in'"
+      [text]="
+        (s.reviewerName ?? s.mentorName ?? 'Your mentor') +
+        ' reviews it next. You’ll see the feedback here.'
+      "
+    />
+  }
+  <div class="split">
+    <div class="stack">
+      <ph-card title="What you sent">
+        <div class="stack">
+          @if (s.late) {
+            <div><ph-badge tone="warning">Late</ph-badge></div>
+          }
+          @if (s.text) {
+            <p class="reading">{{ s.text }}</p>
+          }
+          @if (s.link) {
+            <p class="reading">
+              <a [href]="s.link" rel="noopener noreferrer" target="_blank">{{ s.link }}</a>
+            </p>
+          }
+          @if (s.file; as f) {
+            <ph-list label="Attached">
+              <ph-list-item [title]="f.name" [meta]="fileMeta(s)">
+                <ph-button variant="ghost" size="sm" [href]="fileUrl(s)" [label]="'Open ' + f.name"
+                  >Open</ph-button
+                >
+              </ph-list-item>
+            </ph-list>
+          }
+        </div>
+      </ph-card>
+      <div class="actions">
+        <ph-button variant="ghost" [link]="'/learning/modules/' + s.moduleId"
+          >Back to the module</ph-button
+        >
+      </div>
+    </div>
+    <div class="stack">
+      <ph-card title="What happened">
+        <ph-timeline label="What happened" [entries]="entries(s)" />
+      </ph-card>
+    </div>
+  </div>
+} @else if (r.status === 'not-found') {
+  <ph-page-header title="Your submission" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="search"
+      title="We can’t find that submission"
+      text="It may not be yours, or it was never sent."
+    >
+      <ph-button link="/learning">Back to Learning</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-page-header title="Your submission" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load your submission"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}
