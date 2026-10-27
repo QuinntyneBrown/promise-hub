@@ -473,6 +473,16 @@ export class FakeApi {
     return id;
   }
 
+  /** The youth invitation waiting for a child, if any (L2-051). */
+  youthInvitationFor(childId: string) {
+    return this.invitations.find((i) => i.childId === childId && !i.withdrawn);
+  }
+
+  /** The application with this id, as the server holds it. */
+  applicationById(id: string) {
+    return this.enrollmentRequests.find((r) => r.id === id)!;
+  }
+
   /** A staff note already on an application. */
   noteApplication(id: string, author: string, text: string, createdAt = '2026-11-05T19:15:00Z'): void {
     const r = this.enrollmentRequests.find((x) => x.id === id)!;
@@ -728,6 +738,7 @@ export class FakeApi {
     ['GET', /^\/api\/applications$/, (route) => this.listApplications(route)],
     ['GET', /^\/api\/applications\/(?<id>[^/]+)$/, (route, p) => this.getApplication(route, p['id']!)],
     ['POST', /^\/api\/applications\/(?<id>[^/]+)\/notes$/, (route, p) => this.addApplicationNote(route, p['id']!)],
+    ['POST', /^\/api\/applications\/(?<id>[^/]+)\/place$/, (route, p) => this.placeApplication(route, p['id']!)],
     ['POST', /^\/api\/enrollments\/review$/, (route) => this.reviewEnrollments(route, null)],
     ['POST', /^\/api\/enrollments\/(?<id>[^/]+)\/review$/, (route, p) => this.reviewEnrollments(route, p['id']!)],
     ['POST', /^\/api\/programs\/(?<id>[^/]+)\/enrollment\/open$/, (route, p) => this.openEnrollmentRoute(route, p['id']!)],
@@ -3226,6 +3237,32 @@ export class FakeApi {
     const note = { id: `note-${this.nextId++}`, author: m.personName, text, createdAt: new Date(NOW.getTime() + this.nextId * 1000).toISOString() };
     (r.notes ??= []).push(note);
     return route.fulfill({ status: 201, json: { id: note.id } });
+  }
+
+  /** Places an open application into a cohort: it moves there, leaving its old waitlist, and is accepted (L2-072 criterion 4). */
+  private async placeApplication(route: Route, id: string): Promise<void> {
+    const m = await this.reviewCaller(route);
+    if (!m) return;
+    const r = this.ownApplication(m, id);
+    if (!r) return route.fulfill({ status: 404 });
+    if (r.status === 'Accepted' || r.status === 'Declined') return route.fulfill({ status: 409, json: { code: 'conflict' } });
+    const b = route.request().postDataJSON() as { programId?: string | null; note?: string | null };
+    const program = b.programId ? this.ownProgram(m, b.programId) : undefined;
+    if (!program || program.status === 'Archived') return route.fulfill({ status: 422, json: { errors: { programId: 'Choose a cohort.' } } });
+    if (program.roster.length + 1 > program.capacity) {
+      return route.fulfill({ status: 422, json: { errors: { decision: `${program.name} is full (${program.roster.length} of ${program.capacity}). Waitlist instead.` } } });
+    }
+    if (r.status === 'Waitlisted' && r.position !== null) {
+      for (const behind of this.enrollmentRequests.filter((x) => x.programId === r.programId && x.status === 'Waitlisted' && (x.position ?? 0) > r.position!)) behind.position = behind.position! - 1;
+    }
+    r.programId = program.id;
+    r.position = null;
+    r.status = 'Accepted';
+    r.note = b.note?.trim() || null;
+    r.reviewedBy = m.personName;
+    r.reviewedAt = NOW.toISOString();
+    if (!program.roster.includes(r.childId!)) program.roster.push(r.childId!);
+    return route.fulfill({ status: 204 });
   }
 
   private applicationSummary(m: Membership, r: (typeof this.enrollmentRequests)[number], enrolledAnywhere: Set<string>) {

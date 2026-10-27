@@ -15,7 +15,26 @@
           <ph-breadcrumb
             [items]="[{ label: 'Applications', link: '/applications' }, { label: a.child }]"
           />
-          <ph-page-header [title]="a.child" [subtitle]="subtitle(a)" />
+          <ph-page-header [title]="a.child" [subtitle]="subtitle(a)">
+            @if (open(a)) {
+              <ph-button
+                variant="primary"
+                icon="check"
+                hasPopup="dialog"
+                [label]="'Place ' + a.firstName"
+                (click)="place(a)"
+                >Place</ph-button
+              >
+            }
+          </ph-page-header>
+          @if (outcome(a); as o) {
+            <ph-alert
+              data-testid="application-outcome"
+              [tone]="o.tone"
+              [title]="o.title"
+              [text]="o.text"
+            />
+          }
           <div class="split">
             <div class="stack">
               <ph-card title="Young person">

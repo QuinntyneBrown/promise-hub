@@ -18,6 +18,9 @@ public sealed partial class ApplicationReviewTests : IAsyncLifetime
     private static readonly Guid Jaylen = DatabaseSeeder.MembershipId(DatabaseSeeder.Harbourview, "jaylen@harbourview.example");
     private static readonly Guid Grace = DatabaseSeeder.MembershipId(DatabaseSeeder.Northgate, "grace@northgate.example");
     private static readonly Guid WinterCamp = DatabaseSeeder.ProgramId(DatabaseSeeder.Harbourview, "Winter Camp 2026");
+    private static readonly Guid Sports = DatabaseSeeder.ProgramId(DatabaseSeeder.Harbourview, "Saturday Sports");
+    private static readonly Guid SummerCamp = DatabaseSeeder.ProgramId(DatabaseSeeder.Harbourview, "Summer Camp 2026");
+    private static readonly Guid KidsClub = DatabaseSeeder.ProgramId(DatabaseSeeder.Northgate, "Kids Club");
 
     private readonly PromiseHubApiFactory _factory = new();
 
@@ -162,6 +165,79 @@ public sealed partial class ApplicationReviewTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, (await _factory.ClientFor(Jaylen).GetAsync($"/applications/{id}")).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await _factory.ClientFor(Tom).GetAsync($"/applications/{Guid.NewGuid()}")).StatusCode);
     }
+
+    [Fact]
+    public async Task Placing_moves_the_application_to_the_chosen_cohort_enrolls_the_young_person_texts_the_family_and_is_audited()
+    {
+        await Refer("rachel.ellis@bennetto.example.ca");
+        var id = Id((await List("WaitingReview")).GetProperty("applications").EnumerateArray().Single());
+        var before = (await Program(Sports)).GetProperty("enrolled").GetInt32();
+
+        var placed = await Place(id, Sports, "Welcome! Saturdays at 10 am.");
+        await RunJob();
+
+        Assert.Equal(HttpStatusCode.NoContent, placed.StatusCode);
+        Assert.Equal(before + 1, (await Program(Sports)).GetProperty("enrolled").GetInt32());
+        var app = await _factory.ClientFor(Tom).GetFromJsonAsync<JsonElement>($"/applications/{id}");
+        Assert.Equal("Accepted", app.GetProperty("status").GetString());
+        Assert.Equal("Saturday Sports", app.GetProperty("program").GetString());
+        Assert.Equal("Tom Nguyen", app.GetProperty("reviewedBy").GetString());
+        Assert.Contains(Sms.Sent, m => m.To == "905-555-0320" && m.Text.Contains("Zoe is enrolled in Saturday Sports. Welcome! Saturdays at 10 am.", StringComparison.Ordinal));
+        Assert.Single(Query("SELECT Id FROM AuditEntries WHERE RecordType = 'EnrollmentRequest' AND Summary = 'Zoe Campbell · Saturday Sports · placed'"));
+        Assert.Equal(HttpStatusCode.Conflict, (await Place(id, Sports, null)).StatusCode);
+    }
+
+    [Fact]
+    public async Task Placing_a_waitlisted_application_elsewhere_moves_the_rest_of_its_waitlist_up()
+    {
+        await ApplyAsYouth("905-555-0311");
+        await Refer("rachel.ellis@bennetto.example.ca");
+        var waiting = (await List("WaitingReview")).GetProperty("applications").EnumerateArray().ToList();
+        await _factory.ClientFor(Tom).PostAsJsonAsync($"/enrollments/{Id(waiting[1])}/review", new { decision = "Waitlist" });
+        await _factory.ClientFor(Tom).PostAsJsonAsync($"/enrollments/{Id(waiting[0])}/review", new { decision = "Waitlist" });
+
+        Assert.Equal(HttpStatusCode.NoContent, (await Place(Id(waiting[1]), Sports, null)).StatusCode);
+
+        var left = (await List("Waitlisted")).GetProperty("applications").EnumerateArray().Single();
+        Assert.Equal("Zoe Campbell", left.GetProperty("child").GetString());
+        Assert.Equal(1, left.GetProperty("position").GetInt32());
+    }
+
+    [Fact]
+    public async Task A_full_cohort_or_one_that_is_archived_missing_or_another_organizations_is_refused()
+    {
+        await Refer("rachel.ellis@bennetto.example.ca");
+        var id = Id((await List("WaitingReview")).GetProperty("applications").EnumerateArray().Single());
+        var enrolled = (await Program(Sports)).GetProperty("enrolled").GetInt32();
+        await _factory.ClientFor(Tom).PutAsJsonAsync($"/programs/{Sports}", new { name = "Saturday Sports", startsOn = "2026-09-12", endsOn = "2027-05-29", schedule = "Sat, 10 am–12 pm", capacity = enrolled, ages = "7–14", enrollmentOpen = true, seasonConsent = true });
+
+        var full = await Place(id, Sports, null);
+        var archived = await Place(id, SummerCamp, null);
+        var foreign = await Place(id, KidsClub, null);
+        var none = await _factory.ClientFor(Tom).PostAsJsonAsync($"/applications/{id}/place", new { note = "Hi" });
+
+        Assert.Equal($"Saturday Sports is full ({enrolled} of {enrolled}). Waitlist instead.", (await Errors(full)).GetProperty("decision").GetString());
+        Assert.Equal("Choose a cohort.", (await Errors(archived)).GetProperty("programId").GetString());
+        Assert.Equal("Choose a cohort.", (await Errors(foreign)).GetProperty("programId").GetString());
+        Assert.Equal("Choose a cohort.", (await Errors(none)).GetProperty("programId").GetString());
+        Assert.Equal("WaitingReview", (await _factory.ClientFor(Tom).GetFromJsonAsync<JsonElement>($"/applications/{id}")).GetProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task Another_organization_cannot_place_an_application_and_site_leads_cannot_place_one()
+    {
+        await Refer("rachel.ellis@bennetto.example.ca");
+        var id = Id((await List("WaitingReview")).GetProperty("applications").EnumerateArray().Single());
+
+        Assert.Equal(HttpStatusCode.NotFound, (await _factory.ClientFor(Grace).PostAsJsonAsync($"/applications/{id}/place", new { programId = KidsClub })).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await _factory.ClientFor(Jaylen).PostAsJsonAsync($"/applications/{id}/place", new { programId = Sports })).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await Place(Guid.NewGuid(), Sports, null)).StatusCode);
+    }
+
+    private Task<HttpResponseMessage> Place(Guid id, Guid programId, string? note) =>
+        _factory.ClientFor(Tom).PostAsJsonAsync($"/applications/{id}/place", new { programId, note });
+
+    private async Task<JsonElement> Program(Guid id) => await _factory.ClientFor(Tom).GetFromJsonAsync<JsonElement>($"/programs/{id}");
 
     private async Task<JsonElement> List(string status) =>
         await _factory.ClientFor(Tom).GetFromJsonAsync<JsonElement>($"/applications?status={status}");

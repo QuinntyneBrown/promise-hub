@@ -17,6 +17,8 @@ public static class ApplicationEndpoints
             await handler.GetAsync(id, ct) is { } application ? Results.Ok(application) : Results.NotFound());
         applications.MapPost("/{id:guid}/notes", async (Guid id, AddApplicationNoteCommand command, ApplicationsHandler handler, CancellationToken ct) =>
             (await handler.AddNoteAsync(id, command, ct)).ToHttp($"/applications/{id}/notes"));
+        applications.MapPost("/{id:guid}/place", async (Guid id, PlaceApplicantCommand command, ReviewEnrollmentHandler handler, CancellationToken ct) =>
+            (await handler.PlaceAsync(id, command, ct)).ToHttp());
         return app;
     }
 }

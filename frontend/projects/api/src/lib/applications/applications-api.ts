@@ -10,4 +10,6 @@ export interface ApplicationsApi {
   list(status: ApplicationStatus): Observable<LoadResult<ApplicationList>>;
   get(id: string): Observable<LoadResult<Application>>;
   addNote(id: string, text: string): Observable<WriteOutcome>;
+  /** Places an open application into a cohort (a program) and texts the family. */
+  place(id: string, programId: string | null, note: string | null): Observable<WriteOutcome>;
 }

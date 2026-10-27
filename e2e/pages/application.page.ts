@@ -40,6 +40,30 @@ export class ApplicationPage extends BasePage {
     return this.page.getByRole('main').getByRole('button', { name: new RegExp(`^${name}`) });
   }
 
+  cohort(name: string): Locator {
+    return this.dialog.getByRole('radio', { name: new RegExp(`^${name}`) });
+  }
+
+  get inviteSwitch(): Locator {
+    return this.dialog.getByRole('switch', { name: /^Invite .* as a youth$/ }).or(this.dialog.getByRole('checkbox', { name: /^Invite .* as a youth$/ }));
+  }
+
+  async openPlace(): Promise<void> {
+    await this.action('Place').click();
+    await expect(this.dialog).toBeVisible();
+  }
+
+  async place(options: { cohort?: string; invite?: string | false; note?: string } = {}): Promise<void> {
+    if (options.cohort) await this.cohort(options.cohort).check();
+    if (options.invite === false) await this.inviteSwitch.uncheck();
+    else if (options.invite !== undefined) {
+      await this.inviteSwitch.check();
+      await this.dialog.getByRole('textbox', { name: /’s email$/ }).fill(options.invite);
+    }
+    if (options.note !== undefined) await this.dialog.getByLabel(/^Note to the family/).fill(options.note);
+    await this.dialog.getByRole('button', { name: /^Place and text / }).click();
+  }
+
   async addNote(text: string): Promise<void> {
     await this.page.getByRole('button', { name: 'Add note' }).click();
     await expect(this.dialog).toBeVisible();

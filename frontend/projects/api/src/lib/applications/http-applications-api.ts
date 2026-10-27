@@ -30,4 +30,10 @@ export class HttpApplicationsApi implements ApplicationsApi {
       this.http.post<{ id: string }>(`${this.baseUrl}/applications/${id}/notes`, { text }),
     );
   }
+
+  place(id: string, programId: string | null, note: string | null): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(`${this.baseUrl}/applications/${id}/place`, { programId, note }),
+    );
+  }
 }

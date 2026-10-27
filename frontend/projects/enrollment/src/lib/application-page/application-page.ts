@@ -11,6 +11,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { APPLICATIONS_API, Application, LoadResult, SESSION_API, can } from '@promisehub/api';
 import {
   Fact,
+  PhAlert,
   PhBreadcrumb,
   PhButton,
   PhCard,
@@ -28,6 +29,11 @@ import {
 } from '@promisehub/components';
 import { EMPTY, catchError } from 'rxjs';
 import { AddNoteData, AddNoteDialog } from '../add-note-dialog/add-note-dialog';
+import {
+  PlaceApplicantData,
+  PlaceApplicantDialog,
+  PlaceApplicantResult,
+} from '../place-applicant-dialog/place-applicant-dialog';
 
 const STATUS: Record<Application['status'], string> = {
   WaitingReview: 'Waiting review',
@@ -43,6 +49,7 @@ const STATUS: Record<Application['status'], string> = {
 @Component({
   selector: 'ph-application-page',
   imports: [
+    PhAlert,
     PhBreadcrumb,
     PhButton,
     PhCard,
@@ -77,6 +84,57 @@ export class ApplicationPage {
     effect(() => {
       if (this.allowed()) this.load(this.id());
     });
+  }
+
+  protected open(a: Application): boolean {
+    return a.status === 'WaitingReview' || a.status === 'Waitlisted';
+  }
+
+  /** Who decided, when and what the family read, once accepted or declined (L2-072 criterion 7). */
+  protected outcome(
+    a: Application,
+  ): { tone: 'success' | 'info'; title: string; text: string } | null {
+    const when = a.reviewedAt ? ` on ${formatDate(a.reviewedAt)}` : '';
+    const who = a.reviewedBy ?? 'Staff';
+    const family = a.guardian?.name ?? 'The family';
+    if (a.status === 'Accepted')
+      return {
+        tone: 'success',
+        title: `Placed in ${a.program}`,
+        text: `${who} placed ${a.firstName}${when}. ${family} was texted${a.note ? `: “${a.note}”` : '.'}`,
+      };
+    if (a.status === 'Declined')
+      return {
+        tone: 'info',
+        title: 'Declined',
+        text: `${who} declined${when}. ${family} read: “${a.note ?? ''}”`,
+      };
+    return null;
+  }
+
+  protected place(a: Application): void {
+    const me = this.me();
+    const canInvite =
+      !!me &&
+      can(me.role, 'manageStaff') &&
+      me.modules.includes('Learning') &&
+      a.age !== null &&
+      a.age >= 12 &&
+      a.age <= 18;
+    this.dialogs
+      .open<PlaceApplicantResult, PlaceApplicantData, PlaceApplicantDialog>(PlaceApplicantDialog, {
+        application: a,
+        canInvite,
+      })
+      .closed.subscribe((done) => {
+        if (!done) return;
+        this.toasts.show({
+          tone: 'success',
+          title: `${a.child} placed`,
+          text: `${a.guardian?.name ?? 'The family'} is texted.${done.invited ? ' The youth invitation is sent.' : ''}`,
+        });
+        this.load(a.id);
+      });
   }
 
   protected load(id: string): void {

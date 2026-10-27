@@ -76,6 +76,13 @@ public sealed class EnrollmentRequest : ITenantOwned
 
     public void Decline(string reviewer, DateTimeOffset now, string reason) => Decide(EnrollmentRequestStatus.Declined, null, reviewer, now, reason);
 
+    /// <summary>Moves the request to the cohort chosen at placement (L2-072); it leaves any place it held on the old waitlist.</summary>
+    public void MoveTo(Guid programId)
+    {
+        ProgramId = programId;
+        Position = null;
+    }
+
     /// <summary>Moves up one place when a child ahead leaves the waitlist.</summary>
     public void MoveUp() => Position = Position - 1;
 

@@ -1,0 +1,72 @@
+@if (inviteRefused(); as reason) {
+  <ph-dialog [title]="first + ' is placed'">
+    <ph-alert
+      tone="warning"
+      [title]="first + ' is in ' + placedIn() + ', but the invitation wasn’t sent'"
+      [text]="reason"
+    />
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button variant="primary" (click)="done()">Done</ph-button>
+    </ng-container>
+  </ph-dialog>
+} @else {
+  <form novalidate (ngSubmit)="submit()">
+    <ph-dialog
+      [title]="'Place ' + data.application.child"
+      [description]="
+        'Choose the cohort. ' + (data.application.guardian?.name ?? 'The family') + ' is texted.'
+      "
+    >
+      @if (errors()['decision']; as message) {
+        <ph-alert tone="danger" [title]="message" />
+      }
+      @if (failed() || loadFailed()) {
+        <ph-alert
+          tone="danger"
+          title="That didn’t go through"
+          text="Nothing was changed. Try again."
+        />
+      }
+      <ph-radio-group
+        legend="Cohort"
+        name="cohort"
+        [options]="cohorts()"
+        [error]="errors()['programId'] ?? null"
+        [ngModel]="programId()"
+        (ngModelChange)="programId.set($event)"
+      />
+      @if (data.canInvite) {
+        <ph-switch
+          [label]="'Invite ' + first + ' to PromiseHub as a youth'"
+          description="They set a password and start Learning once a guardian consents."
+          name="invite"
+          [ngModel]="invite()"
+          (ngModelChange)="invite.set($event)"
+        />
+        @if (invite()) {
+          <ph-text-field
+            inputId="invite-email"
+            [label]="first + '’s email'"
+            type="email"
+            name="email"
+            [error]="errors()['email'] ?? null"
+            [ngModel]="email()"
+            (ngModelChange)="email.set($event)"
+          />
+        }
+      }
+      <ph-textarea
+        inputId="place-note"
+        label="Note to the family"
+        name="note"
+        [rows]="2"
+        [optional]="true"
+        [(ngModel)]="note"
+      />
+      <ng-container ngProjectAs="[phDialogFooter]">
+        <ph-button (click)="ref.close()">Cancel</ph-button>
+        <ph-button variant="primary" type="submit" [busy]="busy()">{{ primary() }}</ph-button>
+      </ng-container>
+    </ph-dialog>
+  </form>
+}
