@@ -1,0 +1,12 @@
+<div class="group" [class.group--block]="block()" role="group" [attr.aria-label]="label()">
+  @for (o of options(); track o.value) {
+    <button
+      class="item"
+      type="button"
+      [attr.aria-pressed]="o.value === value()"
+      (click)="choose.emit(o.value)"
+    >
+      {{ o.label }}
+    </button>
+  }
+</div>

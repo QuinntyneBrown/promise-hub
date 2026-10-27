@@ -47,6 +47,9 @@ public sealed class Lesson : ITenantOwned
     public string? LeaderNotes { get; private set; }
     public int Position { get; private set; }
     public ContentStatus Status { get; private set; }
+
+    /// <summary>Reading, Scripture, Coding or Project (ADR 0051); authoring the kind is deferred, so new lessons are Reading.</summary>
+    public LessonKind Kind { get; private set; }
     public DateTimeOffset? DeletedAt { get; private set; }
 
     /// <summary>The lesson video's file name as uploaded; shown only, never used as a path.</summary>
@@ -71,6 +74,8 @@ public sealed class Lesson : ITenantOwned
     }
 
     public void MoveTo(int position) => Position = position;
+
+    public void SetKind(LessonKind kind) => Kind = kind;
 
     public void SetStatus(ContentStatus status) => Status = status;
 

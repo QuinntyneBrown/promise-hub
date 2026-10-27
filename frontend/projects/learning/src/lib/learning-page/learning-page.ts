@@ -3,28 +3,46 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import {
   ConsentRequestOutcome,
   LEARNING_API,
-  LessonsResult,
+  LearningHome,
+  LearningHomeResult,
   OnboardingResult,
+  TrackSummary,
 } from '@promisehub/api';
 import {
   PhAlert,
+  PhBadge,
   PhButton,
   PhCard,
   PhEmptyState,
+  PhList,
+  PhListItem,
   PhPageHeader,
+  PhProgressBar,
   PhSkeleton,
 } from '@promisehub/components';
 import { Router } from '@angular/router';
 import { Subject, startWith, switchMap } from 'rxjs';
+import { lessonLink } from '../lesson-link';
 
 /**
- * Learning, the youth’s lessons (mock: learning). Until a track is published it explains what will appear. A youth under the
- * consent age without consent sees the consent-required state (mock: consent-required) because the server refuses the
- * lessons, and can ask a guardian (L2-056).
+ * Learning home (mock: learn-home, L2-068 criterion 1): where the youth left off, their progress and their tracks. A youth under
+ * the consent age without consent sees the consent-required state because the server refuses (L2-056) and can ask a guardian; a
+ * youth in no program sees the waiting state (L2-060); an unfinished setup offers to resume (L2-059).
  */
 @Component({
   selector: 'ph-learning-page',
-  imports: [PhAlert, PhButton, PhCard, PhEmptyState, PhPageHeader, PhSkeleton],
+  imports: [
+    PhAlert,
+    PhBadge,
+    PhButton,
+    PhCard,
+    PhEmptyState,
+    PhList,
+    PhListItem,
+    PhPageHeader,
+    PhProgressBar,
+    PhSkeleton,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './learning-page.html',
   styleUrl: './learning-page.css',
@@ -33,12 +51,13 @@ export class LearningPage {
   private readonly api = inject(LEARNING_API);
   private readonly router = inject(Router);
   private readonly refresh$ = new Subject<void>();
+  protected readonly lessonLink = lessonLink;
 
   /** Null while loading. */
   protected readonly result = toSignal(
     this.refresh$.pipe(
       startWith(undefined),
-      switchMap(() => this.api.lessons().pipe(startWith<LessonsResult | null>(null))),
+      switchMap(() => this.api.home().pipe(startWith<LearningHomeResult | null>(null))),
     ),
     { initialValue: null },
   );
@@ -69,6 +88,25 @@ export class LearningPage {
   protected resumeStep(): number | null {
     const s = this.setup();
     return s?.status === 'loaded' && s.value.status === 'in-progress' ? s.value.step : null;
+  }
+
+  protected subtitle(home: LearningHome): string {
+    const hello = this.name() ? `Hi, ${this.name()}. ` : '';
+    if (!home.tracks.length) return 'Your lessons, quizzes, assignments and badges.';
+    if (!home.next) return `${hello}You finished every lesson that’s out so far.`;
+    return `${hello}You’re ${home.completedLessons} of ${home.totalLessons} lessons in.`;
+  }
+
+  protected trackMeta(t: TrackSummary): string {
+    return `${t.completedLessons} of ${t.totalLessons} lessons · ${t.program}`;
+  }
+
+  protected trackStatus(t: TrackSummary): string {
+    return t.totalLessons > 0 && t.completedLessons === t.totalLessons
+      ? 'Done'
+      : t.completedLessons > 0
+        ? 'In progress'
+        : 'Not started';
   }
 
   protected reload(): void {

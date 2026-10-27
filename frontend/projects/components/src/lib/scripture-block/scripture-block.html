@@ -1,0 +1,10 @@
+<blockquote
+  class="scripture"
+  [class.scripture--lg]="size() === 'lg'"
+  [class.scripture--xl]="size() === 'xl'"
+>
+  <p class="text">{{ text() }}</p>
+  @if (reference()) {
+    <cite class="reference">{{ reference() }}</cite>
+  }
+</blockquote>

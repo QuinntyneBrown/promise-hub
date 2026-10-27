@@ -1,11 +1,15 @@
-<ph-page-header title="Learning" subtitle="Your lessons, quizzes, assignments and badges." />
 @let r = result();
+@if (r?.status !== 'loaded') {
+  <ph-page-header title="Learning" subtitle="Your lessons, quizzes, assignments and badges." />
+}
 @let a = asked();
 @if (r === null) {
   <div aria-busy="true" aria-label="Loading your lessons">
     <ph-skeleton shape="card" />
   </div>
 } @else if (r.status === 'loaded') {
+  @let h = r.value;
+  <ph-page-header title="Learning" [subtitle]="subtitle(h)" />
   <div class="stack">
     @if (resumeStep(); as step) {
       <ph-alert
@@ -17,15 +21,90 @@
         <ph-button variant="primary" link="/learning/welcome">Pick up where I left off</ph-button>
       </ph-alert>
     }
-    <ph-card [flush]="true">
-      <ph-empty-state
-        icon="learning"
-        title="No lessons yet"
-        text="When your program publishes a track, its lessons appear here."
-      >
-        <ph-button link="/">Back to Today</ph-button>
-      </ph-empty-state>
-    </ph-card>
+    @if (!h.tracks.length) {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="learning"
+          title="No lessons yet"
+          text="When your program publishes a track, its lessons appear here."
+        >
+          <ph-button link="/">Back to Today</ph-button>
+        </ph-empty-state>
+      </ph-card>
+    } @else {
+      <div class="split">
+        <div class="stack">
+          @if (h.next; as n) {
+            <ph-card title="Continue where you left off">
+              <div class="stack">
+                <div>
+                  <p class="lesson">{{ n.title }}</p>
+                  <p class="hint">
+                    {{ n.moduleTitle }}{{ n.reading ? ' · ' + n.reading : ''
+                    }}{{ n.minutes ? ' · ' + n.minutes + ' min' : '' }}
+                  </p>
+                </div>
+                <ph-progress-bar
+                  [value]="n.moduleCompleted"
+                  [max]="n.moduleTotal"
+                  [label]="n.moduleTitle"
+                  [caption]="n.moduleCompleted + ' of ' + n.moduleTotal + ' lessons'"
+                />
+                <div>
+                  <ph-button
+                    variant="primary"
+                    icon="arrow-right"
+                    [link]="lessonLink(n.kind, n.lessonId)"
+                    >Continue lesson</ph-button
+                  >
+                </div>
+              </div>
+            </ph-card>
+          } @else {
+            <ph-card [flush]="true">
+              <ph-empty-state
+                icon="check-circle"
+                title="You’re all caught up"
+                text="New lessons appear here the moment your program publishes them."
+              />
+            </ph-card>
+          }
+          <ph-card title="Your progress">
+            <ph-progress-bar
+              [value]="h.completedLessons"
+              [max]="h.totalLessons"
+              label="Your lessons"
+              [caption]="h.completedLessons + ' of ' + h.totalLessons + ' lessons'"
+              [tone]="h.next ? 'accent' : 'success'"
+            />
+          </ph-card>
+        </div>
+        <div class="stack">
+          <ph-card title="Your tracks" [flush]="true">
+            <ph-list label="Your tracks">
+              @for (t of h.tracks; track t.id) {
+                <ph-list-item
+                  [title]="t.name"
+                  [meta]="trackMeta(t)"
+                  [link]="['/learning/tracks', t.id]"
+                >
+                  <ph-badge
+                    [tone]="
+                      trackStatus(t) === 'Done'
+                        ? 'success'
+                        : trackStatus(t) === 'In progress'
+                          ? 'info'
+                          : 'neutral'
+                    "
+                    >{{ trackStatus(t) }}</ph-badge
+                  >
+                </ph-list-item>
+              }
+            </ph-list>
+          </ph-card>
+        </div>
+      </div>
+    }
   </div>
 } @else if (r.status === 'no-cohort') {
   <div class="stack">

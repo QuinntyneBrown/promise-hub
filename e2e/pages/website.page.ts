@@ -1,5 +1,5 @@
-import type { Locator } from '@playwright/test';
-import { BasePage } from './base.page';
+import type { Locator } from "@playwright/test";
+import { BasePage } from "./base.page";
 
 /** An organization's public website at /site/{slug} (mock: website). Anonymous. */
 export class WebsitePage extends BasePage {
@@ -8,10 +8,12 @@ export class WebsitePage extends BasePage {
   }
 
   get heading(): Locator {
-    return this.page.getByRole('heading', { level: 1 });
+    return this.page.getByRole("heading", { level: 1 });
   }
 
   get placeholder(): Locator {
-    return this.page.getByRole('heading', { name: 'Our pages are being written' });
+    return this.page.getByRole("heading", {
+      name: "Our pages are being written",
+    });
   }
 }

@@ -1,23 +1,27 @@
-import { expect, type Locator } from '@playwright/test';
-import { BasePage } from './base.page';
+import { expect, type Locator } from "@playwright/test";
+import { BasePage } from "./base.page";
 
 /** Settings › Notifications (mock: settings-notifications). */
 export class SettingsNotificationsPage extends BasePage {
   async open(): Promise<void> {
-    await super.open('/settings/notifications');
-    await expect(this.page.getByRole('heading', { level: 1, name: 'Notifications' })).toBeVisible();
+    await super.open("/settings/notifications");
+    await expect(
+      this.page.getByRole("heading", { level: 1, name: "Notifications" }),
+    ).toBeVisible();
   }
 
   get delay(): Locator {
-    return this.page.getByLabel('Minutes after start');
+    return this.page.getByLabel("Minutes after start");
   }
 
   get supervisorEmails(): Locator {
-    return this.page.getByRole('switch', { name: 'Email supervisors on new incidents' });
+    return this.page.getByRole("switch", {
+      name: "Email supervisors on new incidents",
+    });
   }
 
   get cap(): Locator {
-    return this.page.getByLabel('Monthly SMS cap (segments)');
+    return this.page.getByLabel("Monthly SMS cap (segments)");
   }
 
   get used(): Locator {
@@ -25,22 +29,26 @@ export class SettingsNotificationsPage extends BasePage {
   }
 
   get toast(): Locator {
-    return this.page.getByTestId('toast');
+    return this.page.getByTestId("toast");
   }
 
   get errorSummary(): Locator {
-    return this.page.getByRole('alert');
+    return this.page.getByRole("alert");
   }
 
   get forbidden(): Locator {
-    return this.page.getByRole('heading', { name: 'Admins configure notifications' });
+    return this.page.getByRole("heading", {
+      name: "Admins configure notifications",
+    });
   }
 
   get loadError(): Locator {
-    return this.page.getByRole('heading', { name: 'We couldn’t load notification settings' });
+    return this.page.getByRole("heading", {
+      name: "We couldn’t load notification settings",
+    });
   }
 
   async save(): Promise<void> {
-    await this.page.getByRole('button', { name: 'Save changes' }).click();
+    await this.page.getByRole("button", { name: "Save changes" }).click();
   }
 }

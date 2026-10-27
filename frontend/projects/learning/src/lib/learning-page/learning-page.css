@@ -1,5 +1,11 @@
 .hint {
   margin: 0;
+  overflow-wrap: anywhere;
   font: var(--text-caption);
   color: var(--color-fg-muted);
+}
+.lesson {
+  margin: 0;
+  font: var(--text-h4);
+  color: var(--color-fg-default);
 }

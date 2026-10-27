@@ -90,7 +90,7 @@ public sealed class NoCohortTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.NotFound, (await Lessons(Nadia)).StatusCode);
     }
 
-    private Task<HttpResponseMessage> Lessons(Guid membership) => _factory.ClientFor(membership).GetAsync("/learning/lessons");
+    private Task<HttpResponseMessage> Lessons(Guid membership) => _factory.ClientFor(membership).GetAsync("/learning/home");
 
     private async Task<string?> Code(Guid membership) =>
         (await (await Lessons(membership)).Content.ReadFromJsonAsync<JsonElement>()).GetProperty("code").GetString();

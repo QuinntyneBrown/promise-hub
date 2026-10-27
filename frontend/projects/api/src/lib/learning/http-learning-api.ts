@@ -6,8 +6,12 @@ import { toLoad } from '../http-results';
 import { LoadResult } from '../load-result';
 import { LearningApi } from './learning-api';
 import { Learner } from './learner';
-import { Lessons } from './lessons';
-import { LessonsResult } from './lessons-result';
+import { LearningHome } from './learning-home';
+import { LearningHomeResult } from './learning-home-result';
+import { GatedResult } from './gated-result';
+import { toGated } from './to-gated';
+import { TrackView } from './track-view';
+import { ModuleView } from './module-view';
 import { ConsentRequestOutcome } from '../consent/consent-request-outcome';
 import { toConsentRequest } from '../consent/to-consent-request';
 import { toWrite } from '../http-results';
@@ -25,11 +29,11 @@ export class HttpLearningApi implements LearningApi {
     return toLoad(this.http.get<Learner>(`${this.baseUrl}/learning/me`));
   }
 
-  lessons(): Observable<LessonsResult> {
-    return this.http.get<Lessons>(`${this.baseUrl}/learning/lessons`).pipe(
-      map((value): LessonsResult => ({ status: 'loaded', value })),
+  home(): Observable<LearningHomeResult> {
+    return this.http.get<LearningHome>(`${this.baseUrl}/learning/home`).pipe(
+      map((value): LearningHomeResult => ({ status: 'loaded', value })),
       catchError((error: HttpErrorResponse) =>
-        of<LessonsResult>(
+        of<LearningHomeResult>(
           error.status === 403 && error.error?.code === 'consent-required'
             ? { status: 'consent-required', consentAge: error.error?.consentAge ?? 18 }
             : error.status === 403 && error.error?.code === 'no-cohort'
@@ -41,6 +45,18 @@ export class HttpLearningApi implements LearningApi {
                   : { status: 'error' },
         ),
       ),
+    );
+  }
+
+  track(id: string): Observable<GatedResult<TrackView>> {
+    return toGated(
+      this.http.get<TrackView>(`${this.baseUrl}/learning/tracks/${encodeURIComponent(id)}`),
+    );
+  }
+
+  module(id: string): Observable<GatedResult<ModuleView>> {
+    return toGated(
+      this.http.get<ModuleView>(`${this.baseUrl}/learning/modules/${encodeURIComponent(id)}`),
     );
   }
 

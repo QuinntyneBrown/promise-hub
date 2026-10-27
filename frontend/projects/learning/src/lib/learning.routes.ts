@@ -1,8 +1,12 @@
 import { Routes } from '@angular/router';
 import { LearningPage } from './learning-page/learning-page';
+import { ModulePage } from './module-page/module-page';
+import { TrackPage } from './track-page/track-page';
 import { YouthWelcomePage } from './youth-welcome/youth-welcome-page';
 
 export const routes: Routes = [
   { path: '', component: LearningPage, title: 'Learning · PromiseHub' },
   { path: 'welcome', component: YouthWelcomePage, title: 'Welcome · PromiseHub' },
+  { path: 'tracks/:id', component: TrackPage, title: 'Track · PromiseHub' },
+  { path: 'modules/:id', component: ModulePage, title: 'Module · PromiseHub' },
 ];

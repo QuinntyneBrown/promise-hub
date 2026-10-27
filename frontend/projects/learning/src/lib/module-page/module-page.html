@@ -1,0 +1,99 @@
+@let r = result();
+<ph-breadcrumb
+  [items]="
+    r?.status === 'loaded'
+      ? [
+          { label: 'Learning', link: '/learning' },
+          { label: r.value.trackName, link: '/learning/tracks/' + r.value.trackId },
+          { label: r.value.title },
+        ]
+      : [{ label: 'Learning', link: '/learning' }, { label: 'Module' }]
+  "
+/>
+@if (r === null) {
+  <ph-page-header title="Module" />
+  <div class="split" aria-busy="true" aria-label="Loading the module">
+    <ph-skeleton shape="card" />
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (r.status === 'loaded') {
+  @let m = r.value;
+  <ph-page-header [title]="m.title" [subtitle]="subtitle(m)" />
+  @if (m.status === 'done') {
+    <ph-alert tone="success" title="Module complete" text="Every lesson of this module is done." />
+  }
+  <div class="split">
+    <div class="stack">
+      <ph-card title="Module progress">
+        <div class="stack">
+          <ph-progress-bar
+            [value]="m.completedLessons"
+            [max]="m.lessons.length"
+            [label]="m.title"
+            [caption]="m.completedLessons + ' of ' + m.lessons.length + ' lessons'"
+            [tone]="m.status === 'done' ? 'success' : 'accent'"
+          />
+          @if (m.anchor) {
+            <ph-scripture-block [text]="m.anchor" />
+          }
+          @if (next(m); as n) {
+            <div>
+              <ph-button variant="primary" icon="arrow-right" [link]="lessonLink(n.kind, n.id)">{{
+                'Continue: ' + n.title
+              }}</ph-button>
+            </div>
+          }
+        </div>
+      </ph-card>
+    </div>
+    <div class="stack">
+      <ph-card title="Lessons" [flush]="true">
+        <ph-list label="Lessons, in order">
+          @for (l of m.lessons; track l.id; let i = $index) {
+            <ph-list-item
+              [title]="i + 1 + '. ' + l.title"
+              [meta]="meta(l)"
+              [link]="l.status === 'locked' ? null : lessonLink(l.kind, l.id)"
+            >
+              <ph-badge [tone]="tone[l.status]">{{ label[l.status] }}</ph-badge>
+            </ph-list-item>
+          }
+        </ph-list>
+      </ph-card>
+    </div>
+  </div>
+} @else if (r.status === 'locked') {
+  <ph-page-header title="Module" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      [title]="'Finish ' + r.unlockAfter + ' first'"
+      [text]="'This module unlocks when every lesson of ' + r.unlockAfter + ' is done.'"
+    >
+      <ph-button link="/learning">Back to Learning</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else if (r.status === 'not-found') {
+  <ph-page-header title="Module" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="search"
+      title="We can’t find that module"
+      text="It may not be published yet, or your program doesn’t follow it."
+    >
+      <ph-button link="/learning">Back to Learning</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-page-header title="Module" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load this module"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}

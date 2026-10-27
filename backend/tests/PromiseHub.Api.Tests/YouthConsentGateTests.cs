@@ -33,7 +33,7 @@ public sealed partial class YouthConsentGateTests : IAsyncLifetime
         Assert.Equal("consent-required", gate.GetProperty("code").GetString());
         Assert.Equal(18, gate.GetProperty("consentAge").GetInt32());
         Assert.Equal(HttpStatusCode.OK, nadia.StatusCode);
-        Assert.Empty((await nadia.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("lessons").EnumerateArray());
+        Assert.Empty((await nadia.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("tracks").EnumerateArray());
         Assert.Equal(HttpStatusCode.OK, (await _factory.ClientFor(Sofia).GetAsync("/learning/me")).StatusCode);
     }
 
@@ -103,7 +103,7 @@ public sealed partial class YouthConsentGateTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.NotFound, (await Ask(Sofia)).StatusCode);
     }
 
-    private Task<HttpResponseMessage> Lessons(Guid membership) => _factory.ClientFor(membership).GetAsync("/learning/lessons");
+    private Task<HttpResponseMessage> Lessons(Guid membership) => _factory.ClientFor(membership).GetAsync("/learning/home");
 
     private Task<HttpResponseMessage> Ask(Guid membership) => _factory.ClientFor(membership).PostAsync("/learning/consent-request", null);
 

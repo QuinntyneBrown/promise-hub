@@ -67,6 +67,7 @@ public interface IPromiseHubDb
     DbSet<Domain.Curriculum.Track> Tracks { get; }
     DbSet<Domain.Curriculum.CurriculumModule> CurriculumModules { get; }
     DbSet<Domain.Curriculum.Lesson> Lessons { get; }
+    DbSet<Domain.Learning.LessonProgress> LessonProgress { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

@@ -25,12 +25,12 @@ public sealed partial class ConsentWithdrawalTests : IAsyncLifetime
     public async Task Withdrawing_gates_Sofia_on_her_next_request_keeps_the_record_and_is_audited()
     {
         var token = await Consented();
-        Assert.Equal(HttpStatusCode.OK, (await _sofia.GetAsync("/learning/lessons")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await _sofia.GetAsync("/learning/home")).StatusCode);
 
         var withdrawn = await Withdraw(token);
 
         Assert.Equal(HttpStatusCode.NoContent, withdrawn.StatusCode);
-        Assert.Equal(HttpStatusCode.Forbidden, (await _sofia.GetAsync("/learning/lessons")).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await _sofia.GetAsync("/learning/home")).StatusCode);
         var row = Assert.Single(Query("SELECT SignedBy, WithdrawnBy, WithdrawnAt IS NOT NULL FROM GuardianConsents")).Split('|');
         Assert.Equal(("Carmen Rivera", "Carmen Rivera", "1"), (row[0], row[1], row[2]));
         Assert.Single(Query("SELECT Id FROM AuditEntries WHERE RecordType = 'GuardianConsent' AND Action = 'Withdrawn'"));
@@ -59,7 +59,7 @@ public sealed partial class ConsentWithdrawalTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.NoContent, (await Sign(token)).StatusCode);
 
         Assert.Equal(2, Query("SELECT Id FROM GuardianConsents").Count);
-        Assert.Equal(HttpStatusCode.OK, (await _sofia.GetAsync("/learning/lessons")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await _sofia.GetAsync("/learning/home")).StatusCode);
     }
 
     [Fact]

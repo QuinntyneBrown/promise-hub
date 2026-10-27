@@ -1,36 +1,40 @@
-import { expect, type Locator } from '@playwright/test';
-import { BasePage } from './base.page';
+import { expect, type Locator } from "@playwright/test";
+import { BasePage } from "./base.page";
 
 /** New message (mock: new-message): audience, body, channel, the live recipient count and the SMS preview. */
 export class NewMessagePage extends BasePage {
   async open(): Promise<void> {
-    await super.open('/messages/new');
-    await expect(this.page.getByRole('heading', { level: 1, name: 'New message' })).toBeVisible();
+    await super.open("/messages/new");
+    await expect(
+      this.page.getByRole("heading", { level: 1, name: "New message" }),
+    ).toBeVisible();
   }
 
   get recipientCount(): Locator {
-    return this.page.getByTestId('recipient-count');
+    return this.page.getByTestId("recipient-count");
   }
 
   /** The line under the count: nobody matches, or the SMS cap warning. */
   get countWarning(): Locator {
-    return this.page.locator('ph-recipient-count .warning');
+    return this.page.locator("ph-recipient-count .warning");
   }
 
   get smsPreview(): Locator {
-    return this.page.getByTestId('sms-text');
+    return this.page.getByTestId("sms-text");
   }
 
   get bodyError(): Locator {
-    return this.page.getByTestId('body-error');
+    return this.page.getByTestId("body-error");
   }
 
   get sendButton(): Locator {
-    return this.page.getByRole('button', { name: /^Send to / });
+    return this.page.getByRole("button", { name: /^Send to / });
   }
 
   channel(label: RegExp | string): Locator {
-    return this.page.getByRole('group', { name: 'Send by' }).getByRole('radio', { name: label });
+    return this.page
+      .getByRole("group", { name: "Send by" })
+      .getByRole("radio", { name: label });
   }
 
   alert(title: string): Locator {
@@ -38,15 +42,15 @@ export class NewMessagePage extends BasePage {
   }
 
   async audience(label: string): Promise<void> {
-    await this.page.getByLabel('Send to').selectOption({ label });
+    await this.page.getByLabel("Send to").selectOption({ label });
   }
 
   async language(label: string): Promise<void> {
-    await this.page.getByLabel('Language').selectOption({ label });
+    await this.page.getByLabel("Language").selectOption({ label });
   }
 
   async write(text: string): Promise<void> {
-    await this.page.getByLabel('Message', { exact: true }).fill(text);
+    await this.page.getByLabel("Message", { exact: true }).fill(text);
   }
 
   async sendBy(label: RegExp | string): Promise<void> {
