@@ -80,7 +80,7 @@ def steps(cur: int, total: int = 3) -> str:
 
 def welcome_card(cur: int, title: str, lead: str, body: str, *, primary: str, back: bool = True, alert_html: str = "") -> str:
     footer = (f'<div class="cluster cluster--between">{btn("Back", "ghost", icon_name="arrow-left") if back else "<span></span>"}'
-              f'<div class="cluster">{btn("Finish later", "ghost", href=page("learning", "resume"))}{primary}</div></div>')
+              f'<div class="cluster">{btn("Finish later", "ghost")}{primary}</div></div>')
     return (page_header("Welcome, Sofía", "A few quick steps and you’re ready to learn.")
             + f'<form class="card stack" style="max-width: var(--layout-breakpoint-sm);" action="#" method="post" novalidate aria-labelledby="step-title">{steps(cur)}{alert_html}'
               f'<div><h2 class="card__title" id="step-title">{title}</h2><p class="text-muted">{lead}</p></div>{body}{footer}</form>')
@@ -100,7 +100,7 @@ def prefs_step(busy: bool = False) -> str:
     body = ('<div class="stack">'
             + switch("lessons", "Lesson reminders", checked=True, desc="A nudge when a lesson is waiting for you.")
             + switch("mentor", "Mentor messages", checked=True, desc="When your mentor writes to you.")
-            + switch("news", "Announcements", checked=False, desc="News from Harbourview Youth Collective.")
+            + switch("news", "Announcements", checked=False, desc="News from your organization.")
             + "</div>")
     return welcome_card(2, "What should we tell you about?", "You can change these any time in your account.", body,
                         primary=btn("Continue", "primary", type_="submit", icon_name="arrow-right", busy=busy))
@@ -111,7 +111,7 @@ def track_step(placed: bool = True, busy: bool = False, alert_html: str = "") ->
         body = (card(facts([("When", "Mon–Thu, 4–6 pm"), ("Runs", "8 Sep 2026 – 24 Jun 2027")]),
                      title="After‑School Tutoring", tid="program")
                 + '<p class="hint">Your program team placed you here. Lessons appear on Learning as soon as they publish a track.</p>')
-        lead = "This is where you learn with Harbourview Youth Collective."
+        lead = "This is where you learn with your program team."
     else:
         body = alert("info", "You’re not in a program yet", "Program staff add you to one. Learning opens fully the moment they do; it’s usually quick.")
         lead = "Your program team chooses your program; you don’t pick one."
@@ -124,7 +124,7 @@ def track_step(placed: bool = True, busy: bool = False, alert_html: str = "") ->
             "forbidden": "Only a youth reaches it; Learning answers 403 to other roles and the shell never links it for them."})
 def youth_welcome(S):
     S.add("default", "Sofía signs in for the first time after her guardian consented: step 1, the name she goes by and her pronouns, prefilled from her record.", **YKW,
-          main=you_step(), notes=note("Each Continue saves the step on the server; leaving and coming back resumes at the step she stopped on.", "top: 5rem; right: 1rem;"))
+          main=you_step(), notes=note("Each Continue saves the step on the server; Finish later saves what is on screen at this step and opens Learning, which offers to resume here (learning/resume).", "top: 5rem; right: 1rem;"))
     S.add("loading", "Loading where Sofía left off.", **YKW,
           main=page_header("Welcome, Sofía", "A few quick steps and you’re ready to learn.") + '<div class="card stack" aria-busy="true" aria-label="Loading your setup">'
           + '<span class="skeleton skeleton--title" aria-hidden="true"></span>' + '<span class="skeleton skeleton--text" aria-hidden="true"></span>' * 4 + "</div>")

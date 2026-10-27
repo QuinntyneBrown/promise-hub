@@ -16,7 +16,7 @@ Ported from Waypoint `authentication/onboard-youth`, with tenancy, the Learning 
 
 Frontend (`frontend/projects/learning/`, `frontend/projects/api/`):
 
-- **`YouthWelcomePage`** at `/learning/welcome` — loads the setup, shows one step at a time with `ph-stepper`, saves each step with **Continue**, returns with **Back**, leaves with **Finish later** and completes with **Finish**; states `default`, `loading`, `invalid` (error beside the field and in `ph-error-summary`), `busy`, `error` (answers kept), `preferences`, `track`, `waiting` and `finishing`, then Learning with the toast "You’re all set".
+- **`YouthWelcomePage`** at `/learning/welcome` — loads the setup, shows one step at a time with `ph-stepper`, saves each step with **Continue**, returns with **Back**, leaves with **Finish later** (which saves what is on screen at the current step, then opens Learning) and completes with **Finish**; states `default`, `loading`, `invalid` (error beside the field and in `ph-error-summary`), `busy`, `error` (answers kept), `preferences`, `track`, `waiting` and `finishing`, then Learning with the toast "You’re all set".
 - **`LearningPage`** — reads the setup after the lessons: status `not-started` opens `/learning/welcome` once; `in-progress` shows the `learning/resume` alert with the saved step and **Pick up where I left off**; `completed` shows nothing extra.
 - **`LearningApi.onboarding`**, **`saveOnboarding`**, **`completeOnboarding`** — `GET`, `PUT /learning/onboarding` and `POST /learning/onboarding/complete`; contracts `YouthOnboarding`, `OnboardingProgram`, `OnboardingAnswers`, `OnboardingSaveResult`.
 - **`PhSwitch`** (components) — gains the `description` input the design system's switch page already defines.
