@@ -1,6 +1,5 @@
 using PromiseHub.Api.Authorization;
 using PromiseHub.Api.Modules;
-using PromiseHub.Application.Curriculum;
 using PromiseHub.Application.Guardian;
 using PromiseHub.Application.Identity;
 using PromiseHub.Application.Learning;
@@ -9,7 +8,7 @@ using PromiseHub.Domain.Organizations;
 
 namespace PromiseHub.Api.Endpoints;
 
-/// <summary>The first endpoint of each of the Learning and Public website modules (ADR 0043); Mentoring has MentoringEndpoints: each names its permission and its module, never the fallback.</summary>
+/// <summary>The first endpoint of each of the Learning and Public website modules (ADR 0043); Mentoring has MentoringEndpoints and curriculum authoring CurriculumEndpoints: each names its permission and its module, never the fallback.</summary>
 public static class ParticipantModuleEndpoints
 {
     public static IEndpointRouteBuilder MapParticipantModuleEndpoints(this IEndpointRouteBuilder app)
@@ -33,8 +32,6 @@ public static class ParticipantModuleEndpoints
         app.MapPost("/learning/onboarding/complete", async (OnboardingHandler handler, CancellationToken ct) =>
             (await handler.CompleteAsync(ct)).ToHttp())
             .RequireModule(ModuleId.Learning).RequirePermission(Permission.Learn).RequireGuardianConsent();
-        app.MapGet("/curriculum", (CurriculumHandler handler, CancellationToken ct) => handler.HandleAsync(ct))
-            .RequireModule(ModuleId.Learning).RequirePermission(Permission.AuthorCurriculum);
         // Anonymous: the slug chooses the organization, and the handler checks its module (L2-005 criterion 7).
         app.MapGet("/website/{slug}", async (string slug, PublicWebsiteHandler handler, CancellationToken ct) =>
             await handler.HandleAsync(slug, ct) is { } site ? Results.Ok(site) : Results.NotFound()).AllowAnonymous();

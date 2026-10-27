@@ -59,6 +59,8 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Learning.YouthOnboarding> YouthOnboardings => Set<Domain.Learning.YouthOnboarding>();
     public DbSet<Domain.Mentoring.YouthMentor> YouthMentors => Set<Domain.Mentoring.YouthMentor>();
     public DbSet<Domain.Mentoring.CohortMentor> CohortMentors => Set<Domain.Mentoring.CohortMentor>();
+    public DbSet<Domain.Curriculum.Track> Tracks => Set<Domain.Curriculum.Track>();
+    public DbSet<Domain.Curriculum.CurriculumModule> CurriculumModules => Set<Domain.Curriculum.CurriculumModule>();
     public DbSet<DataRequest> DataRequests => Set<DataRequest>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
     public DbSet<Domain.Incidents.IncidentFollowUp> IncidentFollowUps => Set<Domain.Incidents.IncidentFollowUp>();
@@ -116,6 +118,24 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.HasIndex(t => new { t.ProgramId, t.MentorMembershipId }).IsUnique();
             e.HasOne<Domain.Programs.Program>().WithMany().HasForeignKey(t => t.ProgramId);
             e.HasOne<Membership>().WithMany().HasForeignKey(t => t.MentorMembershipId);
+        });
+        modelBuilder.Entity<Domain.Curriculum.Track>(e =>
+        {
+            e.HasIndex(t => new { t.OrganizationId, t.Key }).IsUnique();
+            e.Property(t => t.Name).HasMaxLength(Domain.Curriculum.Track.MaximumName);
+            e.Property(t => t.Key).HasMaxLength(Domain.Curriculum.Track.MaximumKey);
+            e.Property(t => t.Description).HasMaxLength(Domain.Curriculum.Track.MaximumDescription);
+            e.Property(t => t.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(t => t.CreatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+        });
+        modelBuilder.Entity<Domain.Curriculum.CurriculumModule>(e =>
+        {
+            e.Property(m => m.Title).HasMaxLength(Domain.Curriculum.CurriculumModule.MaximumTitle);
+            e.Property(m => m.Description).HasMaxLength(Domain.Curriculum.CurriculumModule.MaximumDescription);
+            e.Property(m => m.Anchor).HasMaxLength(Domain.Curriculum.CurriculumModule.MaximumAnchor);
+            e.Property(m => m.Status).HasConversion<string>().HasMaxLength(20);
+            e.HasOne<Domain.Curriculum.Track>().WithMany().HasForeignKey(m => m.TrackId);
+            e.HasOne<Domain.Curriculum.CurriculumModule>().WithMany().HasForeignKey(m => m.PrerequisiteModuleId);
         });
         modelBuilder.Entity<DataRequest>(e =>
         {
