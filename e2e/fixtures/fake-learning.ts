@@ -300,4 +300,72 @@ export class FakeLearning {
       headers: { 'accept-ranges': 'bytes', 'content-range': `bytes ${start}-${end}/${bytes.length}` },
     });
   }
+
+  /** Each youth's saved code and ticks, by membership and lesson. */
+  private readonly workspaces = new Map<string, { code: string; checked: string[] }>();
+
+  /** Answers every coding save with 500, to show the failed state. */
+  failSaves = false;
+
+  /** GET /learning/coding/{id}: coding lessons and projects only. */
+  coding(route: Route, membershipId: string, programs: FakeProgram[], id: string): Promise<void> {
+    const found = this.findLesson(this.tracks(membershipId, programs), id);
+    if (!found || (found.lesson.lesson.kind !== 'Coding' && found.lesson.lesson.kind !== 'Project')) return route.fulfill({ status: 404 });
+    const { module: m, lesson: l } = found;
+    if (l.locked) return route.fulfill({ status: 403, json: { code: 'locked', unlockAfter: l.unlockAfter } });
+    const saved = this.workspaces.get(`${membershipId}:${id}`);
+    const index = m.lessons.indexOf(l);
+    const next = m.lessons[index + 1]?.lesson ?? null;
+    return route.fulfill({
+      json: {
+        id: l.lesson.id,
+        kind: l.lesson.kind,
+        title: l.lesson.title,
+        body: l.lesson.body,
+        minutes: l.lesson.minutes,
+        moduleId: m.module.id,
+        moduleTitle: m.module.title,
+        position: index + 1,
+        lessonCount: m.lessons.length,
+        steps: l.lesson.steps,
+        code: saved?.code ?? l.lesson.starterCode ?? '',
+        checkedStepIds: saved?.checked ?? [],
+        done: l.done,
+        next: next ? { id: next.id, title: next.title, kind: next.kind } : null,
+      },
+    });
+  }
+
+  /** PUT /learning/coding/{id}/progress: saves code and ticks; ticking every step completes a coding lesson. */
+  saveCoding(route: Route, membershipId: string, programs: FakeProgram[], id: string): Promise<void> {
+    if (this.failSaves) return route.fulfill({ status: 500 });
+    const found = this.findLesson(this.tracks(membershipId, programs), id);
+    if (!found || (found.lesson.lesson.kind !== 'Coding' && found.lesson.lesson.kind !== 'Project')) return route.fulfill({ status: 404 });
+    const { module: m, lesson: l } = found;
+    if (l.locked) return route.fulfill({ status: 403, json: { code: 'locked', unlockAfter: l.unlockAfter } });
+    const body = route.request().postDataJSON() as { code?: string; checkedStepIds?: string[] };
+    const code = body.code ?? '';
+    const ticks = [...new Set(body.checkedStepIds ?? [])];
+    const stepIds = l.lesson.steps.map((x) => x.id);
+    const errors: Record<string, string> = {};
+    if (code.length > 50000) errors['code'] = 'Keep your code under 50,000 characters.';
+    if (ticks.some((t) => !stepIds.includes(t))) errors['checkedStepIds'] = 'Tick only items of this checklist.';
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    this.workspaces.set(`${membershipId}:${id}`, { code, checked: stepIds.filter((x) => ticks.includes(x)) });
+    const completes = l.lesson.kind === 'Coding' && stepIds.length > 0 && ticks.length === stepIds.length;
+    if (completes) this.complete(membershipId, id);
+    const done = completes || l.done;
+    const after = done ? this.after(m, id) : null;
+    return route.fulfill({
+      json: {
+        checked: ticks.length,
+        total: stepIds.length,
+        done,
+        nextLessonId: after?.nextLessonId ?? null,
+        nextLessonTitle: after?.nextLessonTitle ?? null,
+        nextLessonKind: after?.nextLessonKind ?? null,
+        moduleCompleted: after?.moduleCompleted ?? false,
+      },
+    });
+  }
 }

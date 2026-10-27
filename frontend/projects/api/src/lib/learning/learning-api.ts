@@ -7,6 +7,9 @@ import type { TrackView } from './track-view';
 import type { ModuleView } from './module-view';
 import type { LessonView } from './lesson-view';
 import type { LessonCompletion } from './lesson-completion';
+import type { CodingView } from './coding-view';
+import type { CodingAnswers } from './coding-answers';
+import type { CodingSaveResult } from './coding-save-result';
 import type { ConsentRequestOutcome } from '../consent/consent-request-outcome';
 import type { WriteOutcome } from '../write-outcome';
 import type { OnboardingAnswers } from './onboarding-answers';
@@ -27,6 +30,10 @@ export interface LearningApi {
   completeLesson(id: string): Observable<GatedResult<LessonCompletion>>;
   /** Where a lesson's video streams from, for the video player (ADR 0051). */
   lessonVideoUrl(id: string): string;
+  /** A coding lesson or project with the youth's saved code and ticks (L2-070). */
+  coding(id: string): Observable<GatedResult<CodingView>>;
+  /** Saves code and ticks; ticking every step completes a coding lesson. */
+  saveCoding(id: string, answers: CodingAnswers): Observable<CodingSaveResult>;
   /** Asks the guardians of the youth's household for consent. */
   askGuardian(): Observable<ConsentRequestOutcome>;
   /** The youth's first-run setup with its defaults and their program (L2-059). */

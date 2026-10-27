@@ -14,6 +14,10 @@ import { TrackView } from './track-view';
 import { ModuleView } from './module-view';
 import { LessonView } from './lesson-view';
 import { LessonCompletion } from './lesson-completion';
+import { CodingView } from './coding-view';
+import { CodingAnswers } from './coding-answers';
+import { CodingSaved } from './coding-saved';
+import { CodingSaveResult } from './coding-save-result';
 import { ConsentRequestOutcome } from '../consent/consent-request-outcome';
 import { toConsentRequest } from '../consent/to-consent-request';
 import { toWrite } from '../http-results';
@@ -79,6 +83,39 @@ export class HttpLearningApi implements LearningApi {
 
   lessonVideoUrl(id: string): string {
     return `${this.baseUrl}/learning/lessons/${encodeURIComponent(id)}/video`;
+  }
+
+  coding(id: string): Observable<GatedResult<CodingView>> {
+    return toGated(
+      this.http.get<CodingView>(`${this.baseUrl}/learning/coding/${encodeURIComponent(id)}`),
+    );
+  }
+
+  saveCoding(id: string, answers: CodingAnswers): Observable<CodingSaveResult> {
+    return this.http
+      .put<CodingSaved>(
+        `${this.baseUrl}/learning/coding/${encodeURIComponent(id)}/progress`,
+        answers,
+      )
+      .pipe(
+        map((value): CodingSaveResult => ({ status: 'loaded', value })),
+        catchError((error: HttpErrorResponse) =>
+          of<CodingSaveResult>(
+            error.status === 422
+              ? { status: 'invalid', errors: error.error?.errors ?? {} }
+              : error.status === 403 && error.error?.code === 'locked'
+                ? { status: 'locked', unlockAfter: error.error?.unlockAfter ?? null }
+                : {
+                    status:
+                      error.status === 404
+                        ? 'not-found'
+                        : error.status === 403
+                          ? 'forbidden'
+                          : 'error',
+                  },
+          ),
+        ),
+      );
   }
 
   askGuardian(): Observable<ConsentRequestOutcome> {

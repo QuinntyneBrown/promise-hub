@@ -485,6 +485,8 @@ export class FakeApi {
     ['GET', /^\/api\/learning\/modules\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.module(route, m.id, programs, p['id']!))],
     ['GET', /^\/api\/learning\/lessons\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.lesson(route, m.id, programs, p['id']!))],
     ['GET', /^\/api\/learning\/lessons\/(?<id>[^/]+)\/video$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.video(route, m.id, programs, p['id']!))],
+    ['GET', /^\/api\/learning\/coding\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.coding(route, m.id, programs, p['id']!))],
+    ['PUT', /^\/api\/learning\/coding\/(?<id>[^/]+)\/progress$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.saveCoding(route, m.id, programs, p['id']!))],
     ['POST', /^\/api\/learning\/lessons\/(?<id>[^/]+)\/complete$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.completeLesson(route, m.id, programs, p['id']!))],
     ['POST', /^\/api\/learning\/consent-request$/, (route) => this.askGuardian(route)],
     ['GET', /^\/api\/learning\/onboarding$/, (route) => this.onboarding(route)],

@@ -1,0 +1,29 @@
+<div class="playground">
+  <label class="label" [for]="id">{{ label() }}</label>
+  <div class="panes">
+    <textarea
+      class="editor"
+      [id]="id"
+      rows="8"
+      spellcheck="false"
+      autocapitalize="off"
+      [attr.aria-describedby]="id + '-help'"
+      [value]="code()"
+      [readOnly]="readonly()"
+      (input)="edit($event)"
+    ></textarea>
+    <div class="preview" role="region" aria-label="Preview">
+      @if (preview() !== null) {
+        <iframe title="Preview of your page" sandbox="" [attr.srcdoc]="preview()"></iframe>
+      } @else {
+        <p class="empty">Your preview appears here when you run your code.</p>
+      }
+    </div>
+  </div>
+  <p class="help" [id]="id + '-help'">
+    Runs only in this preview; nothing leaves the page until you save.
+  </p>
+  <div>
+    <ph-button icon="play" (click)="run()">Run</ph-button>
+  </div>
+</div>

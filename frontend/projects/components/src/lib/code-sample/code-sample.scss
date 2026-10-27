@@ -1,0 +1,18 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+.code {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  border: var(--border-width-hairline) solid var(--color-border-default);
+  background: var(--color-bg-surface-sunken);
+  color: var(--color-fg-default);
+  font: var(--text-code);
+  white-space: pre;
+  overflow-x: auto;
+}
+code {
+  font: inherit;
+}

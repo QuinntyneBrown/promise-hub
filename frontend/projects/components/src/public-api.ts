@@ -44,6 +44,8 @@ export * from './lib/checkbox/checkbox';
 export * from './lib/button-group/button-group';
 export * from './lib/button-group/button-group-option';
 export * from './lib/checkbox-group/checkbox-group';
+export * from './lib/code-playground/code-playground';
+export * from './lib/code-sample/code-sample';
 export * from './lib/checkbox-group/checkbox-option';
 export * from './lib/error-summary/error-summary';
 export * from './lib/file-upload/file-upload';
