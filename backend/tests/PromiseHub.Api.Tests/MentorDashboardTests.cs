@@ -166,6 +166,20 @@ public sealed class MentorDashboardTests : IAsyncLifetime
         Assert.Empty(dashboard.GetProperty("recentActivity").EnumerateArray());
     }
 
+    // ---- L2-065 criterion 4: a removed mentor reads nothing
+
+    [Fact]
+    public async Task A_removed_mentor_gets_401_from_every_Mentoring_read()
+    {
+        await AssignDaniel();
+        Assert.Equal(HttpStatusCode.NoContent, (await _factory.ClientFor(Tom).DeleteAsync($"/staff/{Daniel}")).StatusCode);
+
+        foreach (var path in new[] { "/mentoring/dashboard", "/mentoring/youth", $"/mentoring/youth/{Mateo}", $"/mentoring/cohorts/{Sports}" })
+        {
+            Assert.Equal(HttpStatusCode.Unauthorized, (await _factory.ClientFor(Daniel).GetAsync(path)).StatusCode);
+        }
+    }
+
     private async Task AssignDaniel()
     {
         Assert.Equal(HttpStatusCode.NoContent, (await _factory.ClientFor(Marisol).PutAsJsonAsync($"/programs/{Tutoring}/youth/{Mateo}/mentor", new { mentorId = Daniel })).StatusCode);
