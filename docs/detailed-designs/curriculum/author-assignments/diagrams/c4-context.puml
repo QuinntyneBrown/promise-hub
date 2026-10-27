@@ -1,0 +1,12 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Author assignments
+Person(p0, "Program director or admin", "Defines assignments")
+Person(p1, "Youth", "Submits published assignments (prompt 62)")
+Person(p2, "Mentor", "Grades against the rubric (prompt 63)")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(p0, ph, "Defines task, rubric and due rules", "HTTPS")
+Rel(p1, ph, "Sees it once published", "HTTPS")
+Rel(p2, ph, "Grades submissions", "HTTPS")
+@enduml

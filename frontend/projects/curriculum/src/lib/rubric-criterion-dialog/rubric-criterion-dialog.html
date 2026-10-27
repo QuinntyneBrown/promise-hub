@@ -1,0 +1,33 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    [title]="data.criterion ? 'Edit criterion ' + data.number : 'Add criterion'"
+    description="Mentors award up to these points for it. Saved with the assignment."
+    icon="curriculum"
+  >
+    <div class="stack">
+      <ph-text-field
+        inputId="criterion"
+        label="Criterion"
+        name="criterion"
+        [error]="errors()['criterion'] ?? null"
+        [(ngModel)]="description"
+      />
+      <ph-text-field
+        inputId="points"
+        label="Points"
+        type="number"
+        inputmode="numeric"
+        name="points"
+        help="1 to 100."
+        [error]="errors()['points'] ?? null"
+        [(ngModel)]="points"
+      />
+    </div>
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit">{{
+        data.criterion ? 'Save criterion' : 'Add criterion'
+      }}</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

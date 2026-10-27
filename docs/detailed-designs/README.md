@@ -74,10 +74,12 @@ One folder per subsystem, one folder per vertically sliced feature, each with a 
 | learning | stream-lesson-video | L2-069 |
 | learning | complete-coding-lessons | L2-070, L2-068 |
 | learning | submit-coding-projects | L2-070, L2-068 |
-| curriculum | open-curriculum (journeys 60, 64 add more; see [curriculum](curriculum/README.md)) | L2-005, L2-007 |
+| curriculum | open-curriculum (journey 64 adds more; see [curriculum](curriculum/README.md)) | L2-005, L2-007 |
 | curriculum | author-tracks-and-modules | L2-066, L2-012, L2-007 |
 | curriculum | author-lessons | L2-067 |
 | curriculum | upload-lesson-video | L2-067, L2-031 |
+| curriculum | author-quizzes | L2-073 |
+| curriculum | author-assignments | L2-074 |
 | mentoring | list-assigned-youth (journeys 55, 63, 67, 68, 69 add more; see [mentoring](mentoring/README.md)) | L2-005, L2-007 |
 | mentoring | assign-mentors | L2-062, L2-007 |
 | mentoring | manage-mentor-roster | L2-063, L2-065, L2-062 |

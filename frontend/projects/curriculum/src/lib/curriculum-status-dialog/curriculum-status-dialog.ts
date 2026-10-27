@@ -15,7 +15,7 @@ import { Observable } from 'rxjs';
 import { statusLabel } from '../status-label';
 import { CurriculumStatusDialogData } from './curriculum-status-dialog-data';
 
-/** Change the status of a track, module or lesson (dialog: curriculum-status, L2-066 criterion 6, L2-067 criterion 4). */
+/** Change the status of a track, module, lesson, quiz or assignment (dialog: curriculum-status, L2-066 criterion 6, L2-067 criterion 4, L2-073 criterion 6, L2-074 criterion 5). */
 @Component({
   selector: 'ph-curriculum-status-dialog',
   imports: [FormsModule, PhAlert, PhButton, PhDescriptionList, PhDialog, PhRadioGroup],
@@ -40,7 +40,9 @@ export class CurriculumStatusDialog {
       hint:
         this.data.kind === 'track'
           ? 'Published modules reach the cohorts that follow it'
-          : 'Youth in the cohorts that follow the track see it',
+          : this.data.kind === 'assignment'
+            ? 'Youth in the cohorts that follow the track are assigned it'
+            : 'Youth in the cohorts that follow the track see it',
     },
   ];
   protected readonly errors = signal<Record<string, string>>({});
@@ -69,10 +71,17 @@ export class CurriculumStatusDialog {
 
   private call(): Observable<WriteOutcome> {
     const { kind, id } = this.data;
-    return kind === 'track'
-      ? this.api.setTrackStatus(id, this.status)
-      : kind === 'module'
-        ? this.api.setModuleStatus(id, this.status)
-        : this.api.setLessonStatus(id, this.status);
+    switch (kind) {
+      case 'track':
+        return this.api.setTrackStatus(id, this.status);
+      case 'module':
+        return this.api.setModuleStatus(id, this.status);
+      case 'quiz':
+        return this.api.setQuizStatus(id, this.status);
+      case 'assignment':
+        return this.api.setAssignmentStatus(id, this.status);
+      default:
+        return this.api.setLessonStatus(id, this.status);
+    }
   }
 }

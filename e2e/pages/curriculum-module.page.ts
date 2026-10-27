@@ -120,4 +120,29 @@ export class CurriculumModulePage extends BasePage {
   get visibility(): Locator {
     return this.page.getByRole('region', { name: 'Visibility' });
   }
+
+  get assessments(): Locator {
+    return this.page.getByRole('region', { name: 'Quizzes and assignments' });
+  }
+
+  async newQuiz(title: string, attachTo?: string): Promise<void> {
+    await this.page.getByRole('button', { name: 'New quiz' }).click();
+    await this.fillAssessment(title, attachTo);
+  }
+
+  async newAssignment(title: string, attachTo?: string): Promise<void> {
+    await this.page.getByRole('button', { name: 'New assignment' }).click();
+    await this.fillAssessment(title, attachTo);
+  }
+
+  private async fillAssessment(title: string, attachTo?: string): Promise<void> {
+    await expect(this.dialog).toBeVisible();
+    await this.dialog.getByRole('textbox').first().fill(title);
+    if (attachTo) await this.dialog.getByLabel('Attached to').selectOption({ label: attachTo });
+    await this.dialog.getByRole('button', { name: 'Create and build' }).click();
+  }
+
+  dialogError(id: string): Locator {
+    return this.dialog.getByTestId(`${id}-error`);
+  }
 }

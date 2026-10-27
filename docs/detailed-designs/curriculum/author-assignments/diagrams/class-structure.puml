@@ -1,0 +1,50 @@
+@startuml
+title Class structure — Author assignments
+skinparam classAttributeIconSize 0
+class Assignment <<entity>> {
+  Id : Guid
+  OrganizationId : Guid
+  ModuleId : Guid
+  LessonId : Guid?
+  Title : string
+  Brief : string?
+  SubmissionTypes : SubmissionTypes
+  DueDate : DateOnly?
+  GraceDays : int
+  AllowLate : bool
+  RequireApproval : bool
+  TotalPoints : int
+  Status : ContentStatus
+}
+class RubricCriterion <<entity>> {
+  Id : Guid
+  OrganizationId : Guid
+  AssignmentId : Guid
+  Position : int
+  Description : string
+  Points : int
+}
+enum SubmissionTypes <<flags>> {
+  Text
+  Photo
+  Link
+  File
+}
+class CurriculumModule <<entity>>
+class Lesson <<entity>>
+class AssignmentCommands {
+  CreateAsync(command) : Result
+  UpdateAsync(id, fields) : Result
+  SetStatusAsync(id, status) : Result
+}
+class AssignmentHandler {
+  HandleAsync(id) : AssignmentDetailDto?
+}
+CurriculumModule "1" *-- "many" Assignment
+Assignment "1" *-- "0..10" RubricCriterion : ordered by Position
+Assignment --> "0..1" Lesson : attached to
+Assignment --> SubmissionTypes
+AssignmentCommands --> Assignment
+AssignmentCommands --> RubricCriterion
+AssignmentHandler --> Assignment
+@enduml

@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Author quizzes
+Person(p0, "Program director or admin", "Builds quizzes")
+Person(p1, "Youth", "Takes published quizzes (prompt 61)")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(p0, ph, "Builds questions, rules and publishes", "HTTPS")
+Rel(p1, ph, "Never sees drafts or correct answers", "HTTPS")
+@enduml

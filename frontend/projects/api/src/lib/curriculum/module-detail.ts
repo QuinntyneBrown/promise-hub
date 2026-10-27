@@ -1,6 +1,8 @@
+import type { AssignmentSummary } from './assignment-summary';
 import type { ContentStatus } from './content-status';
 import type { LessonSummary } from './lesson-summary';
 import type { ModuleRef } from './module-ref';
+import type { QuizSummary } from './quiz-summary';
 
 /** One module for the module editor. */
 export interface ModuleDetail {
@@ -18,4 +20,8 @@ export interface ModuleDetail {
   lessons: LessonSummary[];
   /** The names of the active programs that follow the module's track. */
   programs: string[];
+  /** The module's quizzes, by title. */
+  quizzes: QuizSummary[];
+  /** The module's assignments, by title. */
+  assignments: AssignmentSummary[];
 }

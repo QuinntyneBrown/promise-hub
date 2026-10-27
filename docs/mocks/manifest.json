@@ -1721,6 +1721,8 @@
       "requirements": [
         "L2-066",
         "L2-067",
+        "L2-073",
+        "L2-074",
         "L1-023"
       ],
       "states": [
@@ -1764,6 +1766,54 @@
       "not_applicable": {
         "empty": "A lesson always has a title; empty fields read as empty in place."
       }
+    },
+    {
+      "id": "curriculum-quiz",
+      "kind": "page",
+      "title": "Quiz builder",
+      "route": "/curriculum/quizzes/:id",
+      "requirements": [
+        "L2-073",
+        "L2-066",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "empty",
+        "invalid",
+        "busy",
+        "saved",
+        "published",
+        "failed",
+        "loading",
+        "error",
+        "not-found",
+        "forbidden"
+      ]
+    },
+    {
+      "id": "curriculum-assignment",
+      "kind": "page",
+      "title": "Assignment builder",
+      "route": "/curriculum/assignments/:id",
+      "requirements": [
+        "L2-074",
+        "L2-066",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "empty",
+        "invalid",
+        "busy",
+        "saved",
+        "published",
+        "failed",
+        "loading",
+        "error",
+        "not-found",
+        "forbidden"
+      ]
     },
     {
       "id": "learn-home",
@@ -2983,6 +3033,8 @@
       "requirements": [
         "L2-066",
         "L2-067",
+        "L2-073",
+        "L2-074",
         "L1-023"
       ],
       "states": [
@@ -2991,6 +3043,9 @@
         "invalid",
         "failed",
         "lesson",
+        "quiz",
+        "quiz-invalid",
+        "assignment",
         "track"
       ]
     },
@@ -3010,6 +3065,81 @@
       ],
       "not_applicable": {
         "invalid": "The dialog has no inputs to validate."
+      }
+    },
+    {
+      "id": "new-assessment",
+      "kind": "dialog",
+      "title": "New quiz",
+      "opens_from": "curriculum-module",
+      "requirements": [
+        "L2-073",
+        "L2-074",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed",
+        "assignment"
+      ]
+    },
+    {
+      "id": "quiz-question",
+      "kind": "dialog",
+      "title": "Add question",
+      "opens_from": "curriculum-quiz",
+      "requirements": [
+        "L2-073",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed",
+        "true-false",
+        "multiple-answer",
+        "short-answer",
+        "edit"
+      ]
+    },
+    {
+      "id": "delete-question",
+      "kind": "dialog",
+      "title": "Delete question 1?",
+      "opens_from": "curriculum-quiz",
+      "requirements": [
+        "L2-073",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "invalid": "The dialog has no inputs to validate."
+      }
+    },
+    {
+      "id": "rubric-criterion",
+      "kind": "dialog",
+      "title": "Add criterion",
+      "opens_from": "curriculum-assignment",
+      "requirements": [
+        "L2-074",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "edit"
+      ],
+      "not_applicable": {
+        "busy": "Nothing is sent until the assignment is saved.",
+        "failed": "Nothing is sent until the assignment is saved."
       }
     },
     {

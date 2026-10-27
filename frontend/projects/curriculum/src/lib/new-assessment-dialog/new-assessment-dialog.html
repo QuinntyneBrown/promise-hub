@@ -1,0 +1,41 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    [title]="data.kind === 'quiz' ? 'New quiz' : 'New assignment'"
+    [description]="
+      data.kind === 'quiz'
+        ? 'Added to ' + data.moduleTitle + ' as a draft; you build it next.'
+        : 'Added to ' + data.moduleTitle + ' as a draft; you write the task and rubric next.'
+    "
+    icon="curriculum"
+  >
+    <div class="stack">
+      @if (failed()) {
+        <ph-alert
+          tone="danger"
+          title="That didn’t go through"
+          [text]="'The ' + data.kind + ' was not created. Try again.'"
+        />
+      }
+      <ph-text-field
+        inputId="title"
+        [label]="data.kind === 'quiz' ? 'Quiz title' : 'Assignment title'"
+        name="title"
+        [error]="errors()['title'] ?? null"
+        [(ngModel)]="title"
+      />
+      <ph-select
+        inputId="attach"
+        label="Attached to"
+        name="attach"
+        help="The whole module, or one of its lessons."
+        [options]="attachOptions"
+        [error]="errors()['lessonId'] ?? null"
+        [(ngModel)]="lessonId"
+      />
+    </div>
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Create and build</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

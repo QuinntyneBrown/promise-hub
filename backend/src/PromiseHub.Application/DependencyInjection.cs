@@ -162,6 +162,11 @@ public static class DependencyInjection
         services.AddScoped<Curriculum.ModuleHandler>();
         services.AddScoped<Curriculum.LessonCommands>();
         services.AddScoped<Curriculum.LessonHandler>();
+        services.AddScoped<Curriculum.QuizCommands>();
+        services.AddScoped<Curriculum.QuestionCommands>();
+        services.AddScoped<Curriculum.QuizHandler>();
+        services.AddScoped<Curriculum.AssignmentCommands>();
+        services.AddScoped<Curriculum.AssignmentHandler>();
         services.AddScoped<Curriculum.LessonVideoHandler>();
         services.AddScoped<Mentoring.MentoringHandler>();
         services.AddScoped<Mentoring.MentorScope>();

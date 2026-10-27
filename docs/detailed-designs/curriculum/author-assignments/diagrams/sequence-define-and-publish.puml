@@ -1,0 +1,46 @@
+@startuml
+title UML sequence behaviour — Defining and publishing an assignment
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Program director (Marisol)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "AssignmentBuilderPage" as page
+  participant "RubricCriterionDialog" as dlg
+  participant "CurriculumApi" as capi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "CurriculumEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "AssignmentCommands" as cmd
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : Add criterion
+page -> dlg : open
+dlg --> page : description and points (kept on the page — L2-074 c4)
+actor -> page : Save assignment
+page -> capi : updateAssignment(id, fields with rubric)
+capi -> ep : PUT /curriculum/assignments/{id} (Learning on, AuthorCurriculum — c6)
+ep -> cmd : UpdateAsync
+cmd -> db : assignment of the caller's organization only (c7)
+alt missing task, no way to submit, bad criterion
+  cmd --> ep : 422 one message per field (c3)
+else
+  cmd -> db : replace rubric, store total + audit Updated (c2, c4)
+  ep --> capi : 204
+end
+actor -> page : Status, Published
+page -> capi : setAssignmentStatus(id, Published)
+capi -> ep : PUT /curriculum/assignments/{id}/status
+ep -> cmd : SetStatusAsync
+alt no task or no criterion
+  cmd --> ep : 422 (c5)
+else
+  cmd -> db : Status = Published + audit (c5)
+end
+@enduml

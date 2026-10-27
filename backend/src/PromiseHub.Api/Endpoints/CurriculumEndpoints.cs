@@ -8,7 +8,7 @@ using PromiseHub.Domain.Organizations;
 
 namespace PromiseHub.Api.Endpoints;
 
-/// <summary>Curriculum authoring (L2-066, L2-067, ADR 0050): the Learning module and AuthorCurriculum (admins and program directors) on every endpoint.</summary>
+/// <summary>Curriculum authoring (L2-066, L2-067, L2-073, L2-074, ADR 0050, ADR 0054): the Learning module and AuthorCurriculum (admins and program directors) on every endpoint.</summary>
 public static class CurriculumEndpoints
 {
     /// <summary>Room for the multipart boundaries and headers around one file.</summary>
@@ -46,6 +46,30 @@ public static class CurriculumEndpoints
             (await handler.SetStatusAsync(id, command.Status, ct)).ToHttp());
         curriculum.MapDelete("/lessons/{id:guid}", async (Guid id, LessonCommands handler, CancellationToken ct) =>
             (await handler.DeleteAsync(id, ct)).ToHttp());
+        curriculum.MapPost("/quizzes", async (CreateQuizCommand command, QuizCommands handler, CancellationToken ct) =>
+            (await handler.CreateAsync(command, ct)).ToHttp("/curriculum/quizzes"));
+        curriculum.MapGet("/quizzes/{id:guid}", async (Guid id, QuizHandler handler, CancellationToken ct) =>
+            await handler.HandleAsync(id, ct) is { } quiz ? Results.Ok(quiz) : Results.NotFound());
+        curriculum.MapPut("/quizzes/{id:guid}", async (Guid id, SaveQuizCommand command, QuizCommands handler, CancellationToken ct) =>
+            (await handler.UpdateAsync(id, command, ct)).ToHttp());
+        curriculum.MapPut("/quizzes/{id:guid}/question-order", async (Guid id, QuestionOrderCommand command, QuizCommands handler, CancellationToken ct) =>
+            (await handler.ReorderAsync(id, command.QuestionIds, ct)).ToHttp());
+        curriculum.MapPut("/quizzes/{id:guid}/status", async (Guid id, StatusCommand command, QuizCommands handler, CancellationToken ct) =>
+            (await handler.SetStatusAsync(id, command.Status, ct)).ToHttp());
+        curriculum.MapPost("/quizzes/{id:guid}/questions", async (Guid id, QuestionCommand command, QuestionCommands handler, CancellationToken ct) =>
+            (await handler.AddAsync(id, command, ct)).ToHttp("/curriculum/quiz-questions"));
+        curriculum.MapPut("/quiz-questions/{id:guid}", async (Guid id, QuestionCommand command, QuestionCommands handler, CancellationToken ct) =>
+            (await handler.UpdateAsync(id, command, ct)).ToHttp());
+        curriculum.MapDelete("/quiz-questions/{id:guid}", async (Guid id, QuestionCommands handler, CancellationToken ct) =>
+            (await handler.DeleteAsync(id, ct)).ToHttp());
+        curriculum.MapPost("/assignments", async (CreateAssignmentCommand command, AssignmentCommands handler, CancellationToken ct) =>
+            (await handler.CreateAsync(command, ct)).ToHttp("/curriculum/assignments"));
+        curriculum.MapGet("/assignments/{id:guid}", async (Guid id, AssignmentHandler handler, CancellationToken ct) =>
+            await handler.HandleAsync(id, ct) is { } assignment ? Results.Ok(assignment) : Results.NotFound());
+        curriculum.MapPut("/assignments/{id:guid}", async (Guid id, SaveAssignmentCommand command, AssignmentCommands handler, CancellationToken ct) =>
+            (await handler.UpdateAsync(id, command, ct)).ToHttp());
+        curriculum.MapPut("/assignments/{id:guid}/status", async (Guid id, StatusCommand command, AssignmentCommands handler, CancellationToken ct) =>
+            (await handler.SetStatusAsync(id, command.Status, ct)).ToHttp());
         curriculum.MapPost("/lessons/{id:guid}/video", async (Guid id, HttpRequest request, LessonVideoHandler handler, LessonVideoOptions options, CancellationToken ct) =>
         {
             if (!request.HasFormContentType || request.ContentLength > options.MaxBytes + FormOverhead)

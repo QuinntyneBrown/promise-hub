@@ -1,0 +1,18 @@
+<ph-dialog
+  [title]="'Delete question ' + data.number + '?'"
+  [description]="'“' + data.text + '” is removed and the questions after it move up.'"
+  icon="trash"
+  tone="danger"
+>
+  @if (failed()) {
+    <ph-alert
+      tone="danger"
+      title="That didn’t go through"
+      text="The question was not deleted. Try again."
+    />
+  }
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close()">Cancel</ph-button>
+    <ph-button variant="danger" [busy]="busy()" (click)="confirm()">Delete question</ph-button>
+  </ng-container>
+</ph-dialog>

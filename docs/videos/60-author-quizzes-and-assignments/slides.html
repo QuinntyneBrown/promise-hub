@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 60 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="60" data-video-title="Author quizzes and assignments" data-parts="Introduction|Quiz|Questions|Rules|Assignment|Phone|States|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 60</div>
+  <h1>Author quizzes and assignments</h1>
+  <p class="lead">Questions of four types, the rules a quiz is taken under, a rubric with its total, and publishing</p>
+</section>
+
+<section id="quiz" data-part="1" data-cue="Marisol Delgado is the program director at Harbourview." data-clip="clips/quiz-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Building a quiz</h3><p>New quiz, four questions, the rules saved and published.</p></div>
+</section>
+
+<section id="questions" data-part="2" data-cue="Each question is listed with its type and its correct answers">
+  <h2>Four kinds of question</h2>
+  <table class="facts">
+    <tr><th>Type</th><th>Options</th><th>Correct</th></tr>
+    <tr><td>Multiple choice</td><td>2 to 6</td><td>Exactly one</td></tr>
+    <tr><td>True / false</td><td>True and False</td><td>One</td></tr>
+    <tr><td>Multiple answer</td><td>2 to 6</td><td>At least one</td></tr>
+    <tr><td>Short answer</td><td>—</td><td>1 to 10 accepted answers</td></tr>
+  </table>
+  <p class="muted small"><code>QuestionRules</code> · up to 50 questions · audited on <code>QuizQuestion</code></p>
+</section>
+
+<section id="questions-shots" data-part="3" data-cue="Marisol moves the true or false question to the top">
+  <h2>One dialog, every type</h2>
+  <div class="cols">
+    <img class="shot" alt="Add question: multiple choice with option A marked correct" src="shots/desktop-question-dialog.png">
+    <img class="shot" alt="Four questions listed with their types and correct answers" src="shots/desktop-quiz-questions.png">
+  </div>
+</section>
+
+<section id="rules" data-part="3" data-cue="On the right are the settings.">
+  <h2>The rules</h2>
+  <div class="cols">
+    <table class="facts">
+      <tr><th>Rule</th><th>Range</th></tr>
+      <tr><td>Pass mark</td><td>1 to 100%, default 70%</td></tr>
+      <tr><td>Attempts</td><td>1 to 10 or unlimited, default 2</td></tr>
+      <tr><td>Feedback</td><td>After each attempt, score only, after the last</td></tr>
+      <tr><td>Shuffle, required</td><td>On or off</td></tr>
+    </table>
+    <img class="shot" alt="Quiz saved with 80% and three attempts" src="shots/desktop-quiz-saved.png">
+  </div>
+</section>
+
+<section id="assignment" data-part="4" data-cue="Next, New assignment." data-clip="clips/assignment-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>An assignment</h3><p>The task, ways to submit, a rubric of three criteria and due rules.</p></div>
+</section>
+
+<section id="assignment-shots" data-part="4" data-cue="Back on the module, both are listed">
+  <h2>A 25-point rubric</h2>
+  <div class="cols">
+    <img class="shot" alt="Assignment saved: Serve someone this week, 25 points" src="shots/desktop-assignment-saved.png">
+    <img class="shot" alt="Leading by Serving lists the quiz and the assignment" src="shots/desktop-module-assessments.png">
+  </div>
+</section>
+
+<section id="phone" data-part="5" data-cue="On a phone the builder stacks" data-clip="clips/phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>The quiz builder</h3><p>Questions, then settings; the dialog scrolls on its own.</p></div>
+</section>
+
+<section id="states" data-part="6" data-cue="Publishing a quiz with no questions is refused" data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Refused, empty and off</h3><p>No questions, no task, not found, Try again, forbidden, Learning off.</p></div>
+</section>
+
+<section id="gates" data-part="6" data-cue="Site leads, youth workers, youth and mentors are refused">
+  <h2>Who gets what</h2>
+  <div class="cols">
+    <table class="facts">
+      <tr><th>Caller</th><th>Answer</th></tr>
+      <tr><td>Admin, program director</td><td>Their organization's quizzes and assignments</td></tr>
+      <tr><td>Site lead, youth worker, youth, mentor</td><td>403</td></tr>
+      <tr><td>Another organization's id</td><td>404</td></tr>
+      <tr><td>Learning off</td><td>404, routes go to Today</td></tr>
+    </table>
+    <img class="shot" alt="Describe the task, and choose at least one way to submit" src="shots/desktop-assignment-invalid.png">
+  </div>
+</section>
+
+<section id="testing" data-part="7" data-cue="The API tests cover each question type">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>CurriculumQuizzesTests</code>: types, refusals, edit, delete, order, rules, status, roles, tenancy, Learning off</li>
+    <li><code>CurriculumAssignmentsTests</code>: fields, rubric and total, publishing, the lesson fallback, roles, tenancy</li>
+    <li><code>curriculum-quizzes.spec.ts</code> and <code>curriculum-assignments.spec.ts</code> on phone and laptop, with axe</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="8" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Quizzes and assignments belong to a module, attached to it or a lesson</li><li>Four question types; the server checks the correct answers</li><li>The rubric is saved with the assignment; the server stores the total</li></ul>
+  <p class="muted">Next: youth take quizzes</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

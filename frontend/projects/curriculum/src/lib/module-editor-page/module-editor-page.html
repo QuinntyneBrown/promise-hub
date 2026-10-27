@@ -122,6 +122,54 @@
               >
             </ng-container>
           </ph-card>
+          <ph-card title="Quizzes and assignments" [flush]="true">
+            @if (m.quizzes.length || m.assignments.length) {
+              <ph-list label="Quizzes and assignments" [inset]="true">
+                @for (q of m.quizzes; track q.id) {
+                  <ph-list-item
+                    [title]="q.title"
+                    [meta]="quizMeta(q)"
+                    [link]="['/curriculum/quizzes', q.id]"
+                  >
+                    <ph-badge [tone]="statusTone(q.status)">{{ statusLabel(q.status) }}</ph-badge>
+                  </ph-list-item>
+                }
+                @for (a of m.assignments; track a.id) {
+                  <ph-list-item
+                    [title]="a.title"
+                    [meta]="assignmentMeta(a)"
+                    [link]="['/curriculum/assignments', a.id]"
+                  >
+                    <ph-badge [tone]="statusTone(a.status)">{{ statusLabel(a.status) }}</ph-badge>
+                  </ph-list-item>
+                }
+              </ph-list>
+            } @else {
+              <ph-empty-state
+                icon="curriculum"
+                title="No quizzes or assignments yet"
+                text="Check what youth learned with a quiz, or set them a task to do and submit."
+              />
+            }
+            <ng-container ngProjectAs="[phCardFooter]">
+              <ph-button
+                variant="ghost"
+                size="sm"
+                icon="plus"
+                hasPopup="dialog"
+                (click)="newAssessment(m, 'quiz')"
+                >New quiz</ph-button
+              >
+              <ph-button
+                variant="ghost"
+                size="sm"
+                icon="plus"
+                hasPopup="dialog"
+                (click)="newAssessment(m, 'assignment')"
+                >New assignment</ph-button
+              >
+            </ng-container>
+          </ph-card>
           <ph-card title="Visibility">
             <ph-description-list
               [facts]="[

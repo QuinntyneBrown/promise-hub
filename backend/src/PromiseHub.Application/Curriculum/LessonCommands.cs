@@ -6,7 +6,7 @@ using PromiseHub.Domain.Curriculum;
 
 namespace PromiseHub.Application.Curriculum;
 
-/// <summary>Creates, saves, publishes and deletes lessons (L2-067 criteria 1, 2, 4 and 6). Every write is audited.</summary>
+/// <summary>Creates, saves, publishes and deletes lessons (L2-067 criteria 1, 2, 4 and 6); a deleted lesson's quizzes and assignments move to the whole module (L2-073, L2-074). Every write is audited.</summary>
 public sealed class LessonCommands(IPromiseHubDb db, ITenantContext tenant, IAuditWriter audit, TimeProvider clock)
 {
     public async Task<Result> CreateAsync(CreateLessonCommand command, CancellationToken cancellationToken = default)
@@ -108,6 +108,15 @@ public sealed class LessonCommands(IPromiseHubDb db, ITenantContext tenant, IAud
         for (var i = 0; i < rest.Count; i++)
         {
             rest[i].MoveTo(i + 1);
+        }
+        // Its quizzes and assignments now belong to the whole module (ADR 0054).
+        foreach (var quiz in await db.Quizzes.Where(q => q.LessonId == id).ToListAsync(cancellationToken))
+        {
+            quiz.Detach();
+        }
+        foreach (var assignment in await db.Assignments.Where(a => a.LessonId == id).ToListAsync(cancellationToken))
+        {
+            assignment.Detach();
         }
         audit.Record(new AuditEvent(AuditAction.Deleted, "Lesson", id, lesson.Title, new { lesson.Title, Status = lesson.Status.ToString() }));
         await db.SaveChangesAsync(cancellationToken);

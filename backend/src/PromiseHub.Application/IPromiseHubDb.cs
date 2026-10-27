@@ -68,6 +68,10 @@ public interface IPromiseHubDb
     DbSet<Domain.Curriculum.Track> Tracks { get; }
     DbSet<Domain.Curriculum.CurriculumModule> CurriculumModules { get; }
     DbSet<Domain.Curriculum.Lesson> Lessons { get; }
+    DbSet<Domain.Curriculum.Quiz> Quizzes { get; }
+    DbSet<Domain.Curriculum.QuizQuestion> QuizQuestions { get; }
+    DbSet<Domain.Curriculum.Assignment> Assignments { get; }
+    DbSet<Domain.Curriculum.RubricCriterion> RubricCriteria { get; }
     DbSet<Domain.Learning.LessonProgress> LessonProgress { get; }
     DbSet<Domain.Curriculum.CodingStep> CodingSteps { get; }
     DbSet<Domain.Learning.CodingWorkspace> CodingWorkspaces { get; }

@@ -1,0 +1,96 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    [title]="data.question ? 'Edit question ' + data.number : 'Add question'"
+    description="Write the question, pick its type and mark the correct answer."
+    icon="curriculum"
+  >
+    <div class="stack">
+      @if (failed()) {
+        <ph-alert
+          tone="danger"
+          title="That didn’t go through"
+          text="The question was not saved. Try again."
+        />
+      }
+      <ph-textarea
+        inputId="text"
+        label="Question"
+        name="text"
+        [error]="errors()['text'] ?? null"
+        [(ngModel)]="text"
+      />
+      <ph-select
+        inputId="type"
+        label="Question type"
+        name="type"
+        [options]="typeOptions"
+        [error]="errors()['type'] ?? null"
+        [ngModel]="type()"
+        (ngModelChange)="changeType($event)"
+      />
+      @switch (type()) {
+        @case ('ShortAnswer') {
+          <ph-textarea
+            inputId="answers"
+            label="Accepted answers"
+            name="answers"
+            [rows]="3"
+            help="One per line, up to 10. Matched ignoring capitals and spaces at either end."
+            [error]="errors()['answers'] ?? null"
+            [(ngModel)]="answers"
+          />
+        }
+        @case ('TrueFalse') {
+          <ph-radio-group
+            legend="Correct answer"
+            name="correctTrueFalse"
+            [options]="trueFalse"
+            [error]="errors()['correct'] ?? null"
+            [(ngModel)]="correctOne"
+          />
+        }
+        @default {
+          @for (option of options; track $index; let i = $index) {
+            <ph-text-field
+              [inputId]="'option-' + letter(i).toLowerCase()"
+              [label]="'Option ' + letter(i)"
+              [name]="'option' + i"
+              [error]="i === 0 ? (errors()['options'] ?? null) : null"
+              [(ngModel)]="options[i]"
+            />
+          }
+          @if (options.length < 6) {
+            <div>
+              <ph-button variant="ghost" size="sm" icon="plus" (click)="addOption()"
+                >Add option</ph-button
+              >
+            </div>
+          }
+          @if (type() === 'MultipleAnswer') {
+            <ph-checkbox-group
+              legend="Correct answers"
+              name="correctMany"
+              [options]="choices()"
+              [error]="errors()['correct'] ?? null"
+              [(ngModel)]="correctMany"
+            />
+          } @else {
+            <ph-radio-group
+              legend="Correct answer"
+              name="correctOne"
+              [options]="choices()"
+              [error]="errors()['correct'] ?? null"
+              [(ngModel)]="correctOne"
+            />
+          }
+        }
+      }
+    </div>
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">{{
+        data.question ? 'Save question' : 'Add question'
+      }}</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

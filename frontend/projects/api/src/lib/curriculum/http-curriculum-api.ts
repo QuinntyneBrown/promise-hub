@@ -5,6 +5,8 @@ import { API_BASE_URL } from '../api-base-url';
 import { toLoad, toWrite } from '../http-results';
 import { LoadResult } from '../load-result';
 import { WriteOutcome } from '../write-outcome';
+import { AssignmentDetail } from './assignment-detail';
+import { AssignmentFields } from './assignment-fields';
 import { CurriculumApi } from './curriculum-api';
 import { ContentStatus } from './content-status';
 import { Curriculum } from './curriculum';
@@ -13,6 +15,9 @@ import { LessonFields } from './lesson-fields';
 import { ModuleDetail } from './module-detail';
 import { ModuleFields } from './module-fields';
 import { NewTrack } from './new-track';
+import { QuestionFields } from './question-fields';
+import { QuizDetail } from './quiz-detail';
+import { QuizSettings } from './quiz-settings';
 
 @Injectable()
 export class HttpCurriculumApi implements CurriculumApi {
@@ -112,6 +117,83 @@ export class HttpCurriculumApi implements CurriculumApi {
   setTrackCohorts(trackId: string, programIds: string[]): Observable<WriteOutcome> {
     return toWrite(
       this.http.put<null>(`${this.baseUrl}/curriculum/tracks/${trackId}/cohorts`, { programIds }),
+    );
+  }
+
+  createQuiz(moduleId: string, lessonId: string | null, title: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<{ id: string }>(`${this.baseUrl}/curriculum/quizzes`, {
+        moduleId,
+        lessonId,
+        title,
+      }),
+    );
+  }
+
+  quiz(id: string): Observable<LoadResult<QuizDetail>> {
+    return toLoad(this.http.get<QuizDetail>(`${this.baseUrl}/curriculum/quizzes/${id}`));
+  }
+
+  addQuestion(quizId: string, fields: QuestionFields): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<{ id: string }>(
+        `${this.baseUrl}/curriculum/quizzes/${quizId}/questions`,
+        fields,
+      ),
+    );
+  }
+
+  updateQuestion(id: string, fields: QuestionFields): Observable<WriteOutcome> {
+    return toWrite(this.http.put<null>(`${this.baseUrl}/curriculum/quiz-questions/${id}`, fields));
+  }
+
+  deleteQuestion(id: string): Observable<WriteOutcome> {
+    return toWrite(this.http.delete<null>(`${this.baseUrl}/curriculum/quiz-questions/${id}`));
+  }
+
+  updateQuiz(id: string, settings: QuizSettings): Observable<WriteOutcome> {
+    return toWrite(this.http.put<null>(`${this.baseUrl}/curriculum/quizzes/${id}`, settings));
+  }
+
+  reorderQuestions(quizId: string, questionIds: string[]): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.put<null>(`${this.baseUrl}/curriculum/quizzes/${quizId}/question-order`, {
+        questionIds,
+      }),
+    );
+  }
+
+  setQuizStatus(id: string, status: ContentStatus): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.put<null>(`${this.baseUrl}/curriculum/quizzes/${id}/status`, { status }),
+    );
+  }
+
+  createAssignment(
+    moduleId: string,
+    lessonId: string | null,
+    title: string,
+  ): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<{ id: string }>(`${this.baseUrl}/curriculum/assignments`, {
+        moduleId,
+        lessonId,
+        title,
+      }),
+    );
+  }
+
+  assignment(id: string): Observable<LoadResult<AssignmentDetail>> {
+    return toLoad(this.http.get<AssignmentDetail>(`${this.baseUrl}/curriculum/assignments/${id}`));
+  }
+
+  updateAssignment(id: string, fields: AssignmentFields): Observable<WriteOutcome> {
+    return toWrite(this.http.put<null>(`${this.baseUrl}/curriculum/assignments/${id}`, fields));
+  }
+
+  setAssignmentStatus(id: string, status: ContentStatus): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.put<null>(`${this.baseUrl}/curriculum/assignments/${id}/status`, { status }),
     );
   }
 }
