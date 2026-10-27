@@ -65,6 +65,7 @@ One folder per subsystem, one folder per vertically sliced feature, each with a 
 | platform | observe-and-alert | L2-041 |
 | platform | migrate-and-seed | L2-042 |
 | platform | merge-waypoint-foundation | L2-004, L2-007, L2-042, L2-045 |
+| platform | protect-concurrent-updates | L2-083 |
 | learning | read-own-record (journeys 57, 61, 62, 65, 66 add more; see [learning](learning/README.md)) | L2-005, L2-007, L2-045 |
 | learning | obtain-required-consent | L2-056 |
 | learning | onboard-youth | L2-059 |
@@ -89,6 +90,9 @@ One folder per subsystem, one folder per vertically sliced feature, each with a 
 | mentoring | assign-mentors | L2-062, L2-007 |
 | mentoring | manage-mentor-roster | L2-063, L2-065, L2-062 |
 | mentoring | view-youth-record | L2-064, L2-065, L2-007, L2-019, L2-011 |
+| mentoring | grade-submissions | L2-080, L2-083, L2-065 |
+| mentoring | approve-quiz-assessments | L2-081, L2-065 |
+| mentoring | assess-competencies | L2-082, L2-065 |
 | identity | scope-data-by-role | L2-065, L2-007 |
 | website | serve-public-site (journey 81 adds more; see [website](website/README.md)) | L2-005 |
 

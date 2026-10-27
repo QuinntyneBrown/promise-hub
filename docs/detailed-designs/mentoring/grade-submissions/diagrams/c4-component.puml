@@ -1,0 +1,32 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Grade submissions
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(rp, "ReviewsPage", "Angular page", "mentor-reviews")
+  Component(gp, "GradePage", "Angular page", "mentor-grade")
+  Component(dl, "RequestRevisionDialog / ApproveSubmissionDialog", "CDK Dialog", "")
+  Component(mapi, "MentoringApi", "Contract + HTTP client", "MENTORING_API")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "MentoringEndpoints", "Minimal API", "reviews, submissions/{id}, grade")
+  Component(sc, "MentorYouthMemberships", "Service", "youth memberships of the mentor")
+  Component(q, "ReviewQueueHandler", "Handler", "queue")
+  Component(r, "SubmissionReviewHandler", "Handler", "review view, start review, file")
+  Component(g, "GradeSubmissionHandler", "Handler", "draft, approve, revise")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "AssignmentSubmissions, SubmissionEvents, Notifications, AuditEntries")
+}
+Rel(rp, mapi, "reviews")
+Rel(gp, mapi, "submissionReview, grade")
+Rel(gp, dl, "opens")
+Rel(mapi, ep, "HTTPS")
+Rel(ep, q, "GET")
+Rel(ep, r, "GET")
+Rel(ep, g, "POST")
+Rel(q, sc, "scope")
+Rel(r, sc, "scope")
+Rel(g, sc, "scope")
+Rel(q, db, "reads")
+Rel(r, db, "reads, starts review")
+Rel(g, db, "writes")
+@enduml

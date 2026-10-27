@@ -6,6 +6,14 @@ import type { CohortMentoring } from './cohort-mentoring';
 import type { MentorCohort } from './mentor-cohort';
 import type { MentorDashboard } from './mentor-dashboard';
 import type { MentorYouthRecord } from './mentor-youth-record';
+import type { GradeOutcome } from './grade-outcome';
+import type { GradeRequest } from './grade-request';
+import type { ApproveAllOutcome } from './approve-all-outcome';
+import type { CompetencyChange } from './competency-change';
+import type { CompetencySheet } from './competency-sheet';
+import type { QuizApprovals } from './quiz-approvals';
+import type { ReviewQueue } from './review-queue';
+import type { SubmissionReview } from './submission-review';
 
 /** Mentoring (ADR 0043, ADR 0048): the calling mentor’s youth, and a cohort’s mentors set by program directors. */
 export interface MentoringApi {
@@ -16,6 +24,22 @@ export interface MentoringApi {
   youthRecord(childId: string): Observable<LoadResult<MentorYouthRecord>>;
   /** A cohort the caller leads or supports; forbidden otherwise. */
   mentorCohort(programId: string): Observable<LoadResult<MentorCohort>>;
+  /** Work from the caller's youth waiting for them, oldest first; not found while Learning is off. */
+  reviews(): Observable<LoadResult<ReviewQueue>>;
+  /** One of the caller's youth's submissions to grade; the first open starts the review. */
+  submissionReview(id: string): Observable<LoadResult<SubmissionReview>>;
+  /** Where the submission's file downloads from, under the caller's session. */
+  submissionFileUrl(id: string): string;
+  grade(id: string, request: GradeRequest): Observable<GradeOutcome>;
+  /** Quiz results of the caller's youth waiting for approval. */
+  quizApprovals(): Observable<LoadResult<QuizApprovals>>;
+  /** Approves the auto-score, or the override (0 to 100) when given; invalid carries { override }. */
+  approveQuiz(attemptId: string, override: number | null): Observable<WriteOutcome>;
+  approveAllQuizzes(): Observable<ApproveAllOutcome>;
+  /** One of the caller's youth's competencies; forbidden when the youth is not theirs. */
+  competencies(childId: string): Observable<LoadResult<CompetencySheet>>;
+  /** Saves every competency's level and note; only changed ones become new assessments. */
+  saveCompetencies(childId: string, items: CompetencyChange[]): Observable<WriteOutcome>;
   /** A cohort's team, each roster child's mentor and the active mentors; only while Mentoring is on. */
   cohort(programId: string): Observable<LoadResult<CohortMentoring>>;
   assignYouth(

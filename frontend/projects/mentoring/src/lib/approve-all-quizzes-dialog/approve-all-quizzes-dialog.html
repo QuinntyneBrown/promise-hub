@@ -1,0 +1,27 @@
+<ph-dialog
+  [title]="'Approve all ' + items.length + ' quiz scores?'"
+  description="Each is approved at its auto-score."
+  icon="check"
+>
+  <div class="stack">
+    @if (failed()) {
+      <ph-alert
+        tone="danger"
+        title="That didn’t go through"
+        text="Nothing was approved. Try again."
+      />
+    }
+    <ph-list label="Quiz scores to approve">
+      @for (i of items; track i.id) {
+        <ph-list-item [title]="i.youthName" [meta]="i.quizTitle + ' · ' + i.score + '%'" />
+      }
+    </ph-list>
+    <p class="text-muted">To change a score, approve it on its own instead.</p>
+  </div>
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close()">Cancel</ph-button>
+    <ph-button variant="primary" icon="check" [busy]="busy()" (click)="approve()"
+      >Approve all</ph-button
+    >
+  </ng-container>
+</ph-dialog>

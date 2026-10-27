@@ -1,0 +1,48 @@
+@startuml
+title UML sequence behaviour — Grading a submission
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Mentor (Daniel)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "ReviewsPage" as rp
+  participant "GradePage" as gp
+  participant "MentoringApi" as mapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "MentoringEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "SubmissionReviewHandler" as r
+  participant "GradeSubmissionHandler" as g
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> rp : opens Reviews
+rp -> mapi : reviews()
+mapi -> ep : GET /mentoring/reviews (Mentoring + Learning on, MentorYouth)
+ep --> rp : his youth's waiting work, oldest first (L2-080 c1)
+actor -> gp : Review Sofía's submission
+gp -> mapi : submissionReview(id)
+mapi -> ep : GET /mentoring/submissions/{id}
+ep -> r : HandleAsync (404 unless one of his youth, c7)
+r -> db : Submitted -> InReview, ReviewStarted step, audit Updated, Version+1 (c2)
+r --> gp : work, rubric, saved scores, history, version
+actor -> gp : scores 10, 10, 5, comment, Approve, confirm
+gp -> mapi : grade(id, approve, scores, comment, version)
+mapi -> ep : POST /mentoring/submissions/{id}/grade
+ep -> g : HandleAsync
+alt version differs
+  g --> gp : 409 stale (L2-083 c1)
+else Accepted or NeedsRevision
+  g --> gp : 409 not-reviewable (c6)
+else a score out of range or missing
+  g --> gp : 422 errors (c3, c4)
+else
+  g -> db : Accepted, Points 25, Accepted step, Notification, audit Updated, Version+1 in one save (c4, L2-083 c3)
+  g --> gp : 200 status, points, version
+end
+@enduml

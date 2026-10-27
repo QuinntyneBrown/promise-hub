@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Assess competencies
+Person(m, "Mentor", "Assesses their youth")
+Person(d, "Program director", "Authors competencies (prompt 64)")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(m, ph, "Sets levels and notes", "HTTPS")
+Rel(d, ph, "Defines the framework", "HTTPS")
+@enduml

@@ -1,13 +1,13 @@
 # Estimates
 
-- Overall effort: 328 days
-- Complete: 75%
+- Overall effort: 341 days
+- Complete: 76%
 
 | Subsystem | Effort | Complete |
 |---|---|---|
 | [identity](identity.md) | 27 days | 86% |
 | [organizations](organizations.md) | 35 days | 71% |
-| [platform](platform.md) | 28 days | 45% |
+| [platform](platform.md) | 29 days | 47% |
 | [shell](shell.md) | 9 days | 51% |
 | [households](households.md) | 6 days | 80% |
 | [programs](programs.md) | 8 days | 81% |
@@ -27,7 +27,7 @@
 | [search](search.md) | 4 days | 70% |
 | [learning](learning.md) | 34 days | 100% |
 | [curriculum](curriculum.md) | 17 days | 95% |
-| [mentoring](mentoring.md) | 11 days | 100% |
+| [mentoring](mentoring.md) | 23 days | 100% |
 | [website](website.md) | 1 day | 100% |
 
 ## Roadmap

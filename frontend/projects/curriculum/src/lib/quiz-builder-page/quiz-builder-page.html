@@ -154,6 +154,12 @@
                 description="Youth must pass it before the module counts as done."
                 [(ngModel)]="form.requiredToComplete"
               />
+              <ph-switch
+                label="Mentor approves each score"
+                name="requireApproval"
+                description="A youth’s score counts once their mentor approves it or sets another."
+                [(ngModel)]="form.requireApproval"
+              />
             </div>
           </ph-card>
           <div class="form-actions">

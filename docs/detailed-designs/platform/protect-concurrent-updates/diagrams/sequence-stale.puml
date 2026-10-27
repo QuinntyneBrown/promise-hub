@@ -1,0 +1,33 @@
+@startuml
+title UML sequence behaviour — A stale grade
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Mentor (Daniel)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "GradePage" as gp
+  participant "MentoringApi" as mapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "MentoringEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "GradeSubmissionHandler" as g
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> gp : opened at version 3
+note over db : Hana saves a draft grade: version 4
+actor -> gp : Approve
+gp -> mapi : grade(id, approve, …, version 3)
+mapi -> ep : POST /mentoring/submissions/{id}/grade
+ep -> g : HandleAsync
+g -> db : read: version 4
+g --> gp : 409 stale (L2-083 c1)
+gp -> actor : conflict alert, entries kept, Load the latest
+actor -> gp : Load the latest
+gp -> mapi : submissionReview(id) -> version 4
+@enduml

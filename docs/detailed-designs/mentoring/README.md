@@ -10,7 +10,10 @@ Prompt 49 built the foundation only ([list-assigned-youth](list-assigned-youth/R
 | [`manage-mentor-roster`](manage-mentor-roster/README.md) | 55 Use the mentor dashboard | `mentoring` L2-MENTOR-001 |
 | [`view-youth-record`](view-youth-record/README.md) | 55 Use the mentor dashboard | `mentoring` L2-MENTOR-002 |
 | [`scope-data-by-role`](../identity/scope-data-by-role/README.md) | 55 Use the mentor dashboard | `authentication` L2-AUTH-010 |
-| `grade-and-assess` | 63 Grade and assess | L1-MENTOR-003 to 005 |
+| [`grade-submissions`](grade-submissions/README.md) | 63 Grade and assess | `mentoring` L2-MENTOR-003 |
+| [`approve-quiz-assessments`](approve-quiz-assessments/README.md) | 63 Grade and assess | `mentoring` L2-MENTOR-004 |
+| [`assess-competencies`](assess-competencies/README.md) | 63 Grade and assess | `mentoring` L2-MENTOR-005 |
+| [`protect-concurrent-updates`](../platform/protect-concurrent-updates/README.md) | 63 Grade and assess | `non-functional` L2-NFR-006 |
 | `record-mentor-check-ins` | 67 Record mentor check-ins | L1-MENTOR-006 |
 | `flag-at-risk-youth` | 68 Flag at-risk youth | L1-MENTOR-007 |
 | `assign-work` | 69 Assign work | L1-MENTOR-008 |

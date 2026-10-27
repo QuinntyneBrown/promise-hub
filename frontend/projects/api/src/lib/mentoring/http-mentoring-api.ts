@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, catchError, map, of } from 'rxjs';
 import { API_BASE_URL } from '../api-base-url';
 import { toLoad, toWrite } from '../http-results';
 import { LoadResult } from '../load-result';
@@ -11,6 +11,15 @@ import { MentorCohort } from './mentor-cohort';
 import { MentorDashboard } from './mentor-dashboard';
 import { MentorYouthRecord } from './mentor-youth-record';
 import { MentoringApi } from './mentoring-api';
+import { GradeOutcome } from './grade-outcome';
+import { GradeRequest } from './grade-request';
+import { ApproveAllOutcome } from './approve-all-outcome';
+import { CompetencyChange } from './competency-change';
+import { CompetencySheet } from './competency-sheet';
+import { QuizApprovals } from './quiz-approvals';
+import { ReviewQueue } from './review-queue';
+import { SubmissionReview } from './submission-review';
+import { toGradeOutcome } from './to-grade-outcome';
 
 @Injectable()
 export class HttpMentoringApi implements MentoringApi {
@@ -31,6 +40,72 @@ export class HttpMentoringApi implements MentoringApi {
 
   mentorCohort(programId: string): Observable<LoadResult<MentorCohort>> {
     return toLoad(this.http.get<MentorCohort>(`${this.baseUrl}/mentoring/cohorts/${programId}`));
+  }
+
+  reviews(): Observable<LoadResult<ReviewQueue>> {
+    return toLoad(this.http.get<ReviewQueue>(`${this.baseUrl}/mentoring/reviews`));
+  }
+
+  submissionReview(id: string): Observable<LoadResult<SubmissionReview>> {
+    return toLoad(
+      this.http.get<SubmissionReview>(
+        `${this.baseUrl}/mentoring/submissions/${encodeURIComponent(id)}`,
+      ),
+    );
+  }
+
+  submissionFileUrl(id: string): string {
+    return `${this.baseUrl}/mentoring/submissions/${encodeURIComponent(id)}/file`;
+  }
+
+  grade(id: string, request: GradeRequest): Observable<GradeOutcome> {
+    return toGradeOutcome(
+      this.http.post<{ status: string; points: number | null; version: number }>(
+        `${this.baseUrl}/mentoring/submissions/${encodeURIComponent(id)}/grade`,
+        request,
+      ),
+    );
+  }
+
+  quizApprovals(): Observable<LoadResult<QuizApprovals>> {
+    return toLoad(this.http.get<QuizApprovals>(`${this.baseUrl}/mentoring/quiz-approvals`));
+  }
+
+  approveQuiz(attemptId: string, override: number | null): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(
+        `${this.baseUrl}/mentoring/quiz-attempts/${encodeURIComponent(attemptId)}/approve`,
+        { override },
+      ),
+    );
+  }
+
+  approveAllQuizzes(): Observable<ApproveAllOutcome> {
+    return this.http
+      .post<{ approved: number }>(`${this.baseUrl}/mentoring/quiz-approvals/approve-all`, null)
+      .pipe(
+        map((body): ApproveAllOutcome => ({ status: 'saved', approved: body.approved })),
+        catchError(() => of<ApproveAllOutcome>({ status: 'error' })),
+      );
+  }
+
+  competencies(childId: string): Observable<LoadResult<CompetencySheet>> {
+    return toLoad(
+      this.http.get<CompetencySheet>(
+        `${this.baseUrl}/mentoring/youth/${encodeURIComponent(childId)}/competencies`,
+      ),
+    );
+  }
+
+  saveCompetencies(childId: string, items: CompetencyChange[]): Observable<WriteOutcome> {
+    return toWrite(
+      this.http
+        .put<CompetencySheet>(
+          `${this.baseUrl}/mentoring/youth/${encodeURIComponent(childId)}/competencies`,
+          { items },
+        )
+        .pipe(map(() => null)),
+    );
   }
 
   cohort(programId: string): Observable<LoadResult<CohortMentoring>> {

@@ -270,3 +270,24 @@ test.describe('Quizzes for other roles and organizations', () => {
     });
   });
 });
+
+test.describe('A quiz whose scores a mentor approves', () => {
+  test.use({ signedInAs: 'm-marisol' });
+
+  // Acceptance test. Traces to: L2-081 criterion 1 (the quiz's approval rule is set in the builder).
+  test('Given the quiz builder, when Marisol turns on Mentor approves each score and saves, then the quiz keeps it', async ({ page, api }) => {
+    api.setModules('org-harbourview', ON);
+    const quiz = new CurriculumQuizPage(page);
+    await quiz.open('qz-serving');
+    await quiz.expectOpen('Leading by Serving quiz');
+    await expect(quiz.requireApproval).not.toBeChecked();
+
+    await quiz.requireApproval.check();
+    await quiz.saveSettings();
+
+    await expect.poll(() => api.curriculumState.assessments.quizzes.find((q) => q.id === 'qz-serving')!.requireApproval).toBe(true);
+    await quiz.open('qz-serving');
+    await expect(quiz.requireApproval).toBeChecked();
+    await quiz.expectAccessible();
+  });
+});

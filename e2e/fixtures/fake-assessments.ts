@@ -16,7 +16,7 @@ export interface FakeQuiz {
   shuffle: boolean;
   requiredToComplete: boolean;
   status: ContentStatus;
-  /** A mentor approves each attempt's score before it counts (ADR 0055); switched on by prompt 63. */
+  /** A mentor approves each attempt's score before it counts (ADR 0055, L2-081); set in the quiz builder. */
   requireApproval?: boolean;
 }
 
@@ -259,6 +259,7 @@ export class FakeAssessments {
         feedback: q.feedback,
         shuffle: q.shuffle,
         requiredToComplete: q.requiredToComplete,
+        requireApproval: !!q.requireApproval,
         questions: this.questionsOf(q.id).map(({ id: qid, position, text, type, options, correct, answers }) => ({ id: qid, position, text, type, options, correct, answers })),
         lessons: this.curriculum.lessonsOf(m.id).map((l) => ({ id: l.id, position: l.position, title: l.title })),
         programs: this.curriculum.followingNames(org, t.id),
@@ -338,6 +339,7 @@ export class FakeAssessments {
       feedback?: string;
       shuffle?: boolean;
       requiredToComplete?: boolean;
+      requireApproval?: boolean;
     };
     const errors: Record<string, string> = {};
     const title = clean(b.title);
@@ -359,6 +361,7 @@ export class FakeAssessments {
       feedback: b.feedback as FeedbackMode,
       shuffle: !!b.shuffle,
       requiredToComplete: !!b.requiredToComplete,
+      requireApproval: !!b.requireApproval,
     });
     return route.fulfill({ status: 204 });
   }

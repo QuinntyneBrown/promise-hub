@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Protect concurrent updates
+Person(m, "Mentor", "Grades")
+Person(h, "Second mentor", "Grades the same work")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(m, ph, "Saves with a version", "HTTPS")
+Rel(h, ph, "Saves with a version", "HTTPS")
+@enduml

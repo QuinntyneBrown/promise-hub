@@ -117,7 +117,29 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
         Enroll(Northgate, kidsClub, "Mateo Rivera");
         Session(Northgate, kidsClub, "Kids Club night", At(2026, 11, 11, 18), At(2026, 11, 11, 19), "Northgate fellowship hall", slip: false);
 
+        // Each organization's competency framework until program directors author it (ADR 0057, prompt 64).
+        Competencies(Harbourview,
+            ("Serves others", "Notices what needs doing and helps without being asked."),
+            ("Speaks up", "Shares ideas in the group and says when something is wrong."),
+            ("Leads a small group", "Guides a discussion and keeps a small group on track."),
+            ("Follows through", "Finishes what they start and keeps their promises."),
+            ("Works with others", "Listens, takes turns and helps the group decide."));
+        Competencies(Northgate,
+            ("Shows kindness", "Includes others and helps when someone is left out."),
+            ("Tries new things", "Has a go at something new, even when it feels hard."),
+            ("Works with others", "Listens, takes turns and helps the group decide."));
+
         return await db.SaveChangesAsync(cancellationToken);
+    }
+
+    public static Guid CompetencyId(Guid organizationId, string name) => SeedIds.Of($"competency:{organizationId}:{name}");
+
+    private void Competencies(Guid organizationId, params (string Name, string Description)[] items)
+    {
+        for (var i = 0; i < items.Length; i++)
+        {
+            Add(new Domain.Mentoring.Competency(CompetencyId(organizationId, items[i].Name), organizationId, i + 1, items[i].Name, items[i].Description));
+        }
     }
 
     public static Guid MembershipId(Guid organizationId, string email) => SeedIds.Of($"membership:{organizationId}:{email}");

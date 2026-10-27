@@ -19,7 +19,7 @@ public sealed class QuizHandler(IPromiseHubDb db, CurriculumPrograms programs)
                 QuestionRules.SplitIndexes(q.Correct), CurriculumRules.SplitLines(q.Answers)))
             .ToList();
         return new QuizDetailDto(quiz.Id, module.Id, module.Title, track.Id, track.Name, quiz.Title, quiz.LessonId, quiz.Status.ToString(),
-            quiz.PassMark, quiz.AttemptsAllowed, quiz.Feedback.ToString(), quiz.Shuffle, quiz.RequiredToComplete, questions,
+            quiz.PassMark, quiz.AttemptsAllowed, quiz.Feedback.ToString(), quiz.Shuffle, quiz.RequiredToComplete, quiz.RequireApproval, questions,
             await LessonsAsync(db, module.Id, cancellationToken), await programs.FollowingAsync(track.Id, cancellationToken));
     }
 

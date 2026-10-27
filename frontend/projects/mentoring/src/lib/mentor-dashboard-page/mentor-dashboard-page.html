@@ -13,6 +13,11 @@
 } @else {
   <ph-page-header title="Mentoring" [subtitle]="subtitle()">
     @if (r?.status === 'loaded') {
+      @if (reviewsWaiting(); as waiting) {
+        <ph-button icon="check" link="/mentoring/reviews">Reviews · {{ waiting }}</ph-button>
+      } @else if (reviewsWaiting() === 0) {
+        <ph-button icon="check" link="/mentoring/reviews">Reviews</ph-button>
+      }
       <ph-button icon="families" link="/mentoring/youth">My youth</ph-button>
     }
   </ph-page-header>

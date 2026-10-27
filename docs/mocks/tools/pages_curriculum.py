@@ -272,7 +272,8 @@ def curriculum_quiz(S):
                            + choice("feedback", "Show the score only")
                            + choice("feedback", "Show correct answers after the last attempt"))
                 + switch("shuffle", "Shuffle question order", desc="Each attempt shows the questions in a new order.")
-                + switch("required", "Required to complete the module", checked=True, desc="Youth must pass it before the module counts as done."))
+                + switch("required", "Required to complete the module", checked=True, desc="Youth must pass it before the module counts as done.")
+                + switch("requireApproval", "Mentor approves each score", desc="A youth’s score counts once their mentor approves it or sets another."))
         actions = f'<div class="form-actions">{btn("Cancel", "ghost", href=page("curriculum-module"))}{btn("Save settings", "primary", type_="submit", busy=busy)}</div>'
         return f'<form class="stack" action="#" method="post" novalidate>{card(f"<div class=\"stack\">{body}</div>", title="Settings", tid="settings")}{actions}</form>'
 

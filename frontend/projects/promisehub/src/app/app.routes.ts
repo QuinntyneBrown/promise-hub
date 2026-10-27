@@ -140,6 +140,9 @@ export const routes: Routes = [
       ...moduleRoute('curriculum', 'Learning', () =>
         import('@promisehub/curriculum').then((m) => m.routes),
       ),
+      ...moduleRoute('mentoring/reviews', ['Mentoring', 'Learning'], () =>
+        import('@promisehub/mentoring').then((m) => m.reviewRoutes),
+      ),
       ...moduleRoute('mentoring', 'Mentoring', () =>
         import('@promisehub/mentoring').then((m) => m.routes),
       ),

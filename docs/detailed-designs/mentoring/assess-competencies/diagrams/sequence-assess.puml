@@ -1,0 +1,37 @@
+@startuml
+title UML sequence behaviour — Saving competency levels
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Mentor (Daniel)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "CompetenciesPage" as cp
+  participant "MentoringApi" as mapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "MentoringEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "CompetenciesHandler" as h
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> cp : opens Sofía's competencies
+cp -> mapi : competencies(childId)
+mapi -> ep : GET /mentoring/youth/{childId}/competencies (Mentoring on)
+ep -> h : GetAsync (404 other org, 403 not his youth, L2-082 c5)
+h --> cp : five competencies with latest level and note (c1)
+actor -> cp : Speaks up -> Proficient, Save changes
+cp -> mapi : saveCompetencies(childId, items)
+mapi -> ep : PUT /mentoring/youth/{childId}/competencies
+ep -> h : SaveAsync
+alt unknown competency or level, note too long
+  h --> cp : 422 errors (c3)
+else
+  h -> db : append one assessment per changed item, audit Created (c2)
+  h --> cp : updated sheet, 4 of 5 proficient or mastered
+end
+@enduml

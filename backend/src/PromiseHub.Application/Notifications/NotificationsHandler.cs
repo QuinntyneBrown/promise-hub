@@ -14,6 +14,7 @@ public sealed class NotificationsHandler(IPromiseHubDb db, ITenantContext tenant
     private static readonly Dictionary<string, ModuleId> KindModule = new()
     {
         ["incidents"] = ModuleId.Incidents,
+        ["learning"] = ModuleId.Learning,
         ["requests"] = ModuleId.Roster,
         ["staff"] = ModuleId.Roster,
     };

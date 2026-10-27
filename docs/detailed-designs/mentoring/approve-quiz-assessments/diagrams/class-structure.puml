@@ -1,0 +1,15 @@
+@startuml
+title Class structure — Approve quiz assessments
+skinparam classAttributeIconSize 0
+class QuizAttempt {
+  Status, Score?, Passed?, AutoScore?
+  ApprovedByName?, ApprovedAt?
+  Approve(override?, passMark, by, at)
+}
+enum AttemptStatus { InProgress, Scored, AwaitingApproval }
+class QuizApprovalHandler { ListAsync(); ApproveAsync(id, override?); ApproveAllAsync() }
+class QuizApprovalItemDto { Id, YouthName, Quiz, Module, Number, Score, Correct, Total, PassMark, SubmittedAt }
+QuizAttempt --> AttemptStatus
+QuizApprovalHandler ..> QuizAttempt
+QuizApprovalHandler ..> QuizApprovalItemDto
+@enduml

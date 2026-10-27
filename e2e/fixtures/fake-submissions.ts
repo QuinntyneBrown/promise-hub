@@ -52,6 +52,11 @@ export interface FakeSubmission {
   reviewerName: string | null;
   points: number | null;
   history: FakeSubmissionEvent[];
+  /** The mentor's saved scores by criterion id and comment, never shown to the youth (ADR 0057). */
+  scores?: Record<string, number>;
+  reviewComment?: string | null;
+  /** Advanced by every change; a grade names the version it was read at (L2-083). */
+  version?: number;
 }
 
 interface FormPart {
@@ -280,6 +285,7 @@ export class FakeSubmissions {
     if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
     const at = `${TODAY}T23:05:00Z`;
     Object.assign(sub, {
+      version: (sub.version ?? 1) + 1,
       text,
       link,
       file: file && kind ? { name: file.fileName!, kind, type: file.type!, bytes: Buffer.from(file.bytes) } : removeFile ? null : sub.file,

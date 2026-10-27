@@ -1577,6 +1577,7 @@
         "empty",
         "error",
         "rollcall-off",
+        "learning-off",
         "forbidden"
       ]
     },
@@ -1642,6 +1643,102 @@
         "error",
         "forbidden",
         "not-found"
+      ]
+    },
+    {
+      "id": "mentor-reviews",
+      "kind": "page",
+      "title": "Reviews",
+      "route": "/mentoring/reviews",
+      "requirements": [
+        "L2-080",
+        "L2-081",
+        "L2-065",
+        "L1-024"
+      ],
+      "states": [
+        "default",
+        "assignments",
+        "quizzes",
+        "loading",
+        "empty",
+        "error",
+        "forbidden"
+      ]
+    },
+    {
+      "id": "mentor-grade",
+      "kind": "page",
+      "title": "Grade a submission",
+      "route": "/mentoring/reviews/submissions/:id",
+      "requirements": [
+        "L2-080",
+        "L2-083",
+        "L2-065",
+        "L2-007",
+        "L2-032",
+        "L1-024"
+      ],
+      "states": [
+        "default",
+        "draft-saved",
+        "invalid",
+        "busy",
+        "failed",
+        "conflict",
+        "approved",
+        "revision-sent",
+        "late",
+        "loading",
+        "error",
+        "not-found"
+      ],
+      "not_applicable": {
+        "empty": "A submission always carries the work it was sent with and its assignment’s rubric."
+      }
+    },
+    {
+      "id": "mentor-quiz-approvals",
+      "kind": "page",
+      "title": "Quiz approvals",
+      "route": "/mentoring/reviews/quizzes",
+      "requirements": [
+        "L2-081",
+        "L2-065",
+        "L2-007",
+        "L2-032",
+        "L1-024"
+      ],
+      "states": [
+        "default",
+        "approved",
+        "loading",
+        "empty",
+        "error"
+      ]
+    },
+    {
+      "id": "mentor-competency",
+      "kind": "page",
+      "title": "Competencies",
+      "route": "/mentoring/youth/:childId/competencies",
+      "requirements": [
+        "L2-082",
+        "L2-065",
+        "L2-007",
+        "L2-032",
+        "L1-024"
+      ],
+      "states": [
+        "default",
+        "saved",
+        "invalid",
+        "busy",
+        "failed",
+        "loading",
+        "empty",
+        "error",
+        "forbidden"
       ]
     },
     {
@@ -3381,6 +3478,96 @@
         "busy": "Saving a draft on the device is instant; there is no server call to wait for.",
         "invalid": "The dialog has no inputs to validate.",
         "failed": "Saving a draft on the device does not call the server."
+      }
+    },
+    {
+      "id": "request-revision",
+      "kind": "dialog",
+      "title": "Request a revision",
+      "opens_from": "mentor-grade",
+      "requirements": [
+        "L2-080",
+        "L2-065",
+        "L1-024"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ]
+    },
+    {
+      "id": "approve-submission",
+      "kind": "dialog",
+      "title": "Approve Sofía’s submission?",
+      "opens_from": "mentor-grade",
+      "requirements": [
+        "L2-080",
+        "L2-065",
+        "L1-024"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "invalid": "The dialog has no inputs to validate."
+      }
+    },
+    {
+      "id": "approve-quiz",
+      "kind": "dialog",
+      "title": "Approve this quiz score?",
+      "opens_from": "mentor-quiz-approvals",
+      "requirements": [
+        "L2-081",
+        "L2-065",
+        "L1-024"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ]
+    },
+    {
+      "id": "approve-all-quizzes",
+      "kind": "dialog",
+      "title": "Approve all 2 quiz scores?",
+      "opens_from": "mentor-quiz-approvals",
+      "requirements": [
+        "L2-081",
+        "L2-065",
+        "L1-024"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "invalid": "The dialog has no inputs to validate."
+      }
+    },
+    {
+      "id": "leave-grade",
+      "kind": "dialog",
+      "title": "Leave without saving your grade?",
+      "opens_from": "mentor-grade",
+      "requirements": [
+        "L2-080",
+        "L1-024"
+      ],
+      "states": [
+        "default"
+      ],
+      "not_applicable": {
+        "busy": "Leaving or staying is instant; Save draft and leave shows the page's own busy Save draft.",
+        "invalid": "The dialog has no inputs to validate.",
+        "failed": "A failed draft save keeps the page open with its own failed alert."
       }
     },
     {

@@ -21,7 +21,7 @@ import {
   TimelineEntry,
   formatDateTime,
 } from '@promisehub/components';
-import { EMPTY, Subject, catchError, startWith, switchMap } from 'rxjs';
+import { EMPTY, Subject, catchError, filter, map, of, startWith, switchMap } from 'rxjs';
 
 const SHOWN = 5;
 const VERBS: Record<MentorActivity['kind'], string> = {
@@ -65,6 +65,19 @@ export class MentorDashboardPage {
       ? `Welcome back, ${first}. Here’s how your youth are doing.`
       : 'Here’s how your youth are doing.';
   });
+
+  /** How many reviews wait, or null while Learning is off or before it loads (L2-080 criterion 1). */
+  protected readonly reviewsWaiting = toSignal(
+    inject(SESSION_API)
+      .current()
+      .pipe(
+        filter((session) => session.modules.includes('Learning')),
+        switchMap(() => this.api.reviews()),
+        map((r) => (r.status === 'loaded' ? r.value.items.length : null)),
+        catchError(() => of(null)),
+      ),
+    { initialValue: null },
+  );
 
   /** Null while loading. */
   protected readonly result = toSignal(

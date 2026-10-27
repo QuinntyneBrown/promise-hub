@@ -20,6 +20,7 @@ export interface QuizDetail {
   feedback: FeedbackMode;
   shuffle: boolean;
   requiredToComplete: boolean;
+  requireApproval: boolean;
   questions: QuizQuestion[];
   lessons: LessonOption[];
   /** The names of the active programs that follow the track. */

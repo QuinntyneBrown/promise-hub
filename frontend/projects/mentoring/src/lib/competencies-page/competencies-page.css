@@ -1,0 +1,27 @@
+.who {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.name {
+  margin: 0;
+  font: var(--text-h4);
+}
+.description {
+  margin: var(--space-1) 0 0;
+  color: var(--color-fg-muted);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}

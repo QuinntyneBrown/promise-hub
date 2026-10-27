@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Approve quiz assessments
+Person(m, "Mentor", "Approves quiz results")
+Person(y, "Youth", "Takes quizzes, reads the approved score")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(m, ph, "Approves or overrides", "HTTPS")
+Rel(y, ph, "Submits quizzes", "HTTPS")
+@enduml

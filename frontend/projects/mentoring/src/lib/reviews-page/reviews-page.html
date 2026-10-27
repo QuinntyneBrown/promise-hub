@@ -1,0 +1,66 @@
+@let r = result();
+<ph-breadcrumb [items]="[{ label: 'Mentoring', link: '/mentoring' }, { label: 'Reviews' }]" />
+@if (r?.status === 'forbidden') {
+  <ph-page-header title="Reviews" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      title="Reviews are for mentors"
+      text="A youth’s mentor grades their work."
+    >
+      <ph-button link="/">Back to Today</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-page-header title="Reviews" subtitle="Work from your youth waiting for you, oldest first.">
+    @if (r?.status === 'loaded') {
+      <ph-button icon="check" link="/mentoring/reviews/quizzes">Quiz approvals</ph-button>
+    }
+  </ph-page-header>
+  @if (r === null) {
+    <div class="stack" aria-busy="true" aria-label="Loading reviews">
+      <ph-skeleton shape="card" />
+    </div>
+  } @else if (r.status === 'loaded' && r.value.items.length === 0) {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="check"
+        title="You’re all caught up"
+        text="New assignments and quiz results from your youth show up here."
+      >
+        <ph-button link="/mentoring">Back to Mentoring</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  } @else if (r.status === 'loaded') {
+    <ph-tabs
+      label="Filter reviews"
+      [items]="tabs()"
+      [selected]="filter()"
+      (selectedChange)="select($event)"
+    />
+    <div role="tabpanel" [attr.aria-labelledby]="'tab-' + filter()">
+      <ph-table caption="Waiting for your review" [columns]="columns" [rows]="rows(shown())">
+        <ng-template #rowActions let-i>
+          @let item = shown()[i];
+          <ph-button
+            size="sm"
+            [link]="link(item)"
+            [label]="'Review ' + item.youthName + '’s ' + item.title"
+            >Review</ph-button
+          >
+        </ng-template>
+      </ph-table>
+    </div>
+  } @else {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load your reviews"
+        text="Check your connection and try again."
+      >
+        <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+}

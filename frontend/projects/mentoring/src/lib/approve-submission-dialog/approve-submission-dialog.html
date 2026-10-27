@@ -1,0 +1,24 @@
+<ph-dialog
+  [title]="'Approve ' + data.youthFirstName + '’s submission?'"
+  [description]="data.assignmentTitle + ' · ' + data.total + ' of ' + data.totalPoints + ' points'"
+  icon="check-circle"
+>
+  <div class="stack">
+    @if (failed()) {
+      <ph-alert
+        tone="danger"
+        title="That didn’t go through"
+        text="It wasn’t approved. Your scores and comment are still on the page; try again."
+      />
+    }
+    <p>
+      {{ data.youthFirstName }} sees the points and your comment, and the assignment counts as done.
+    </p>
+  </div>
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close()">Cancel</ph-button>
+    <ph-button variant="primary" icon="check-circle" [busy]="busy()" (click)="approve()"
+      >Approve</ph-button
+    >
+  </ng-container>
+</ph-dialog>

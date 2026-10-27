@@ -1,0 +1,131 @@
+@let r = result();
+<ph-breadcrumb
+  [items]="[
+    { label: 'Mentoring', link: '/mentoring' },
+    { label: 'My youth', link: '/mentoring/youth' },
+    r?.status === 'loaded'
+      ? { label: r.value.name, link: '/mentoring/youth/' + childId() }
+      : { label: 'Youth record', link: '/mentoring/youth/' + childId() },
+    { label: 'Competencies' },
+  ]"
+/>
+@if (r === null) {
+  <ph-page-header title="Competencies" />
+  <div class="stack" aria-busy="true" aria-label="Loading competencies">
+    <ph-skeleton shape="card" />
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (r.status === 'loaded') {
+  @let sheet = r.value;
+  <ph-page-header
+    title="Competencies"
+    [subtitle]="sheet.name + ' · set each level and add a note.'"
+  />
+  @if (sheet.items.length === 0) {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="sparkle"
+        title="No competencies yet"
+        text="Your organization hasn’t set up its competency framework. A program director adds it in Curriculum."
+      />
+    </ph-card>
+  } @else {
+    <div class="stack form">
+      @if (summary().length) {
+        <ph-error-summary title="Fix these to continue" [items]="summary()" />
+      }
+      @if (failed()) {
+        <ph-alert
+          tone="danger"
+          title="That didn’t save"
+          text="Your changes are still here. Try again."
+        />
+      }
+      <ph-card title="Summary">
+        <div class="stack">
+          <div class="who">
+            <ph-avatar [name]="sheet.name" tint="peach" />
+            <div>
+              <strong>{{ sheet.name }}</strong>
+              <div class="text-muted" data-testid="competency-count">{{ count(sheet) }}</div>
+            </div>
+          </div>
+          <p class="text-muted">
+            Rate each competency as you see it: Not started, Developing, Proficient, Mastered.
+          </p>
+        </div>
+      </ph-card>
+      @for (item of sheet.items; track item.id; let i = $index) {
+        <ph-card>
+          <article class="stack" [attr.aria-labelledby]="'comp-' + (i + 1)">
+            <div class="head">
+              <div>
+                <h3 class="name" [id]="'comp-' + (i + 1)">{{ item.name }}</h3>
+                <p class="description">{{ item.description }}</p>
+              </div>
+              <ph-badge [tone]="tone(level(item))">{{ label[level(item)] }}</ph-badge>
+            </div>
+            <ph-button-group
+              [label]="item.name + ' level'"
+              [options]="options"
+              [value]="level(item)"
+              (choose)="setLevel(item, $event)"
+            />
+            <ph-textarea
+              [inputId]="'notes-' + (i + 1)"
+              [label]="'Notes on ' + item.name"
+              [optional]="true"
+              [rows]="2"
+              [error]="errors()['items.' + i + '.notes'] ?? null"
+              [ngModel]="notes()[item.id] ?? ''"
+              (ngModelChange)="setNotes(item, $event)"
+            />
+          </article>
+        </ph-card>
+      }
+      <div class="actions">
+        @if (lastSaved(sheet); as saved) {
+          <span class="text-muted" data-testid="last-saved">{{ saved }}</span>
+        }
+        <ph-button variant="ghost" [link]="'/mentoring/youth/' + childId()">Cancel</ph-button>
+        <ph-button variant="primary" icon="check" [busy]="busy()" (click)="save(sheet)"
+          >Save changes</ph-button
+        >
+      </div>
+    </div>
+  }
+} @else if (r.status === 'forbidden') {
+  <ph-page-header title="Competencies" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      title="This youth isn’t assigned to you"
+      text="You can assess the youth you mentor."
+    >
+      <ph-button link="/mentoring/youth">Back to My youth</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else if (r.status === 'not-found') {
+  <ph-page-header title="Competencies" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="search"
+      title="We can’t find that youth"
+      text="They may belong to another organization."
+    >
+      <ph-button link="/mentoring/youth">Back to My youth</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-page-header title="Competencies" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load competencies"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}
