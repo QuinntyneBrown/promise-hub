@@ -1,0 +1,79 @@
+@let r = result();
+<ph-breadcrumb [items]="[{ label: 'Mentoring', link: '/mentoring' }, { label: 'My youth' }]" />
+@if (r?.status === 'forbidden') {
+  <ph-page-header title="My youth" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      title="Mentoring is for mentors"
+      text="Staff open children from Families."
+    >
+      <ph-button link="/">Back to Today</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else if (r === null) {
+  <ph-page-header title="My youth" />
+  <div aria-busy="true" aria-label="Loading your youth">
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (r.status === 'loaded' && r.value.youth.length === 0) {
+  <ph-page-header
+    title="My youth"
+    subtitle="Youth assigned to you, directly or through a cohort you’re on."
+  />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="mentoring"
+      title="No youth assigned yet"
+      text="A program director assigns youth to you. They appear here."
+    />
+  </ph-card>
+} @else if (r.status === 'loaded') {
+  <ph-page-header title="My youth" [subtitle]="subtitle(r.value.youth.length)" />
+  <form role="search" class="stack" (submit)="$event.preventDefault()">
+    <ph-text-field
+      inputId="mentor-youth-q"
+      type="search"
+      label="Search your youth"
+      autocomplete="off"
+      name="q"
+      [ngModel]="query()"
+      (ngModelChange)="query.set($event)"
+    />
+  </form>
+  @if (matches().length) {
+    <ph-list label="Your youth">
+      @for (y of matches(); track y.id) {
+        <ph-list-item
+          [title]="y.name"
+          [meta]="meta(y)"
+          [avatar]="y.name"
+          avatarTint="peach"
+          [link]="['/mentoring/youth', y.id]"
+        />
+      }
+    </ph-list>
+  } @else {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="search"
+        [title]="'No youth match “' + query().trim() + '”'"
+        text="Try another name, or clear the search to see everyone."
+      >
+        <ph-button (click)="query.set('')">Clear search</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+} @else {
+  <ph-page-header title="My youth" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load your youth"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}

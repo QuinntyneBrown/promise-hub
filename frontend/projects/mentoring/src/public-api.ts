@@ -1,2 +1,3 @@
 export { routes } from './lib/mentoring.routes';
-export { MentoringPage } from './lib/mentoring-page/mentoring-page';
+export { MentorDashboardPage } from './lib/mentor-dashboard-page/mentor-dashboard-page';
+export { MentorYouthPage } from './lib/mentor-youth-page/mentor-youth-page';

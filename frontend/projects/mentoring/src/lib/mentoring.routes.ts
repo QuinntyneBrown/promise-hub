@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
-import { MentoringPage } from './mentoring-page/mentoring-page';
+import { MentorDashboardPage } from './mentor-dashboard-page/mentor-dashboard-page';
+import { MentorYouthPage } from './mentor-youth-page/mentor-youth-page';
 
 export const routes: Routes = [
-  { path: '', component: MentoringPage, title: 'Mentoring · PromiseHub' },
+  { path: '', component: MentorDashboardPage, title: 'Mentoring · PromiseHub' },
+  { path: 'youth', component: MentorYouthPage, title: 'My youth · PromiseHub' },
 ];

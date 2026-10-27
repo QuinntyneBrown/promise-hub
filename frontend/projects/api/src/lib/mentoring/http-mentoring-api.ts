@@ -7,6 +7,7 @@ import { LoadResult } from '../load-result';
 import { WriteOutcome } from '../write-outcome';
 import { AssignedYouth } from './assigned-youth';
 import { CohortMentoring } from './cohort-mentoring';
+import { MentorDashboard } from './mentor-dashboard';
 import { MentoringApi } from './mentoring-api';
 
 @Injectable()
@@ -16,6 +17,10 @@ export class HttpMentoringApi implements MentoringApi {
 
   youth(): Observable<LoadResult<AssignedYouth>> {
     return toLoad(this.http.get<AssignedYouth>(`${this.baseUrl}/mentoring/youth`));
+  }
+
+  dashboard(): Observable<LoadResult<MentorDashboard>> {
+    return toLoad(this.http.get<MentorDashboard>(`${this.baseUrl}/mentoring/dashboard`));
   }
 
   cohort(programId: string): Observable<LoadResult<CohortMentoring>> {

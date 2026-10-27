@@ -1,5 +1,5 @@
 import type { Page, Route } from '@playwright/test';
-import { type FakeGuardian, type FakeHousehold, ageOf, hasMedicalFlag, medicalFlag, reachable, seedHouseholds } from './households';
+import { type FakeChild, type FakeGuardian, type FakeHousehold, ageOf, hasMedicalFlag, medicalFlag, reachable, seedHouseholds } from './households';
 import { type FakeEvent, type FakeProgram, NOW, seedEvents, seedPrograms } from './programs';
 import { type Membership, type ModuleId, moduleCatalog, memberships, organizations, seededMfaCode, seededPassword } from './seed';
 
@@ -479,6 +479,7 @@ export class FakeApi {
     ['POST', /^\/api\/learning\/onboarding\/complete$/, (route) => this.completeOnboarding(route)],
     ['GET', /^\/api\/curriculum$/, (route) => this.curriculum(route)],
     ['GET', /^\/api\/mentoring\/youth$/, (route) => this.mentoredYouth(route)],
+    ['GET', /^\/api\/mentoring\/dashboard$/, (route) => this.mentorDashboard(route)],
     ['GET', /^\/api\/programs\/(?<id>[^/]+)\/mentoring$/, (route, p) => this.cohortMentoring(route, p['id']!)],
     ['PUT', /^\/api\/programs\/(?<id>[^/]+)\/mentors$/, (route, p) => this.setCohortMentors(route, p['id']!)],
     ['PUT', /^\/api\/programs\/(?<id>[^/]+)\/youth\/(?<child>[^/]+)\/mentor$/, (route, p) => this.assignYouthMentorRoute(route, p['id']!, p['child']!)],
@@ -857,22 +858,77 @@ export class FakeApi {
     return route.fulfill({ json: { tracks: [] } });
   }
 
-  /** GET /mentoring/youth: youth assigned to the mentor directly plus the active rosters of cohorts on their team (L2-062 criterion 5). */
-  private async mentoredYouth(route: Route): Promise<void> {
-    const m = await this.participantModuleCaller(route, 'Mentoring', can.mentorYouth);
-    if (!m) return;
+  /** The mentor's scope (L2-065, ADR 0049): cohorts on their team that are not archived, and their youth, direct or through those cohorts. */
+  private mentorScope(m: Membership): { cohorts: { program: FakeProgram; isLead: boolean }[]; youth: FakeChild[] } {
+    const cohorts = this.programs
+      .filter((p) => p.organizationId === m.organizationId && p.status === 'Active')
+      .map((program) => ({ program, team: this.cohortMentors.get(program.id) }))
+      .filter((x) => x.team && (x.team.lead === m.id || x.team.supporting.includes(m.id)))
+      .map((x) => ({ program: x.program, isLead: x.team!.lead === m.id }));
     const ids = new Set([...this.youthMentors].filter(([, mentor]) => mentor === m.id).map(([child]) => child));
-    for (const program of this.programs.filter((p) => p.organizationId === m.organizationId && p.status === 'Active')) {
-      const team = this.cohortMentors.get(program.id);
-      if (team && (team.lead === m.id || team.supporting.includes(m.id))) program.roster.forEach((id) => ids.add(id));
-    }
+    cohorts.forEach((c) => c.program.roster.forEach((id) => ids.add(id)));
     const youth = this.households
       .filter((h) => h.organizationId === m.organizationId)
       .flatMap((h) => h.children)
       .filter((c) => ids.has(c.id))
-      .map((c) => ({ id: c.id, name: `${c.firstName} ${c.lastName}` }))
+      .sort((a, b) => `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`));
+    return { cohorts, youth };
+  }
+
+  private mentoredYouthRow(c: FakeChild): { id: string; name: string; age: number | null; programs: string[] } {
+    const programs = this.programs.filter((p) => p.status === 'Active' && p.roster.includes(c.id)).map((p) => p.name).sort();
+    return { id: c.id, name: `${c.firstName} ${c.lastName}`, age: ageOf(c.dateOfBirth), programs };
+  }
+
+  /** GET /mentoring/youth: every youth in the mentor's scope with age and programs (L2-062 criterion 5, L2-063 criterion 4). */
+  private async mentoredYouth(route: Route): Promise<void> {
+    const m = await this.participantModuleCaller(route, 'Mentoring', can.mentorYouth);
+    if (!m) return;
+    return route.fulfill({ json: { youth: this.mentorScope(m).youth.map((c) => this.mentoredYouthRow(c)) } });
+  }
+
+  /** GET /mentoring/dashboard (L2-063): youth, cohorts and, while Roll Call is on, attendance of the last 7 and 14 days. */
+  private async mentorDashboard(route: Route): Promise<void> {
+    const m = await this.participantModuleCaller(route, 'Mentoring', can.mentorYouth);
+    if (!m) return;
+    const scope = this.mentorScope(m);
+    const youth = scope.youth.map((c) => this.mentoredYouthRow(c));
+    const cohorts = scope.cohorts
+      .map(({ program, isLead }) => ({ programId: program.id, name: program.name, term: program.term, role: isLead ? 'Lead' : 'Supporting', youthCount: program.roster.length }))
       .sort((a, b) => a.name.localeCompare(b.name));
-    return route.fulfill({ json: { youth } });
+    if (!this.modules.get(m.organizationId)!.includes('RollCall')) {
+      return route.fulfill({ json: { youth, cohorts, checkedInThisWeek: null, recentActivity: null } });
+    }
+    const now = NOW.getTime();
+    const changes = this.mentorAttendance(m, scope.youth.map((c) => c.id)).filter((a) => now - Date.parse(a.startsAt) <= 14 * 86400000);
+    const week = new Set(changes.filter((a) => a.kind !== 'Absent' && now - Date.parse(a.startsAt) <= 7 * 86400000).map((a) => a.childId));
+    const recentActivity = changes
+      .map(({ childId, youthName, kind, session, at }) => ({ childId, youthName, kind, session, at }))
+      .sort((a, b) => b.at.localeCompare(a.at))
+      .slice(0, 5);
+    return route.fulfill({ json: { youth, cohorts, checkedInThisWeek: week.size, recentActivity } });
+  }
+
+  /** Attendance of these children at sessions of the mentor's organization that have started, as activity rows. */
+  private mentorAttendance(m: Membership, childIds: string[]): { childId: string; youthName: string; kind: string; session: string; at: string; startsAt: string; status: string }[] {
+    const children = this.households.flatMap((h) => h.children);
+    return this.events
+      .filter((e) => e.organizationId === m.organizationId && Date.parse(e.startsAt) <= NOW.getTime())
+      .flatMap((e) =>
+        [...this.sessionRecords(e.id)]
+          .filter(([id, r]) => childIds.includes(id) && r.status !== 'NotYet')
+          .map(([id, r]) => {
+            const c = children.find((x) => x.id === id)!;
+            const kind = r.status === 'SignedOut' ? 'SignedOut' : r.status === 'Absent' ? 'Absent' : 'CheckedIn';
+            const at = kind === 'SignedOut' ? (r.signedOutAt ?? e.startsAt) : kind === 'Absent' ? e.startsAt : (r.checkedInAt ?? e.startsAt);
+            return { childId: id, youthName: `${c.firstName} ${c.lastName}`, kind, session: e.name, at, startsAt: e.startsAt, status: r.status };
+          }),
+      );
+  }
+
+  /** Records a child's attendance at a session, as Roll Call would. */
+  recordAttendance(eventId: string, childId: string, status: 'Present' | 'Absent' | 'SignedOut', at: string | null): void {
+    this.sessionRecords(eventId).set(childId, { status, checkedInAt: status === 'Absent' ? null : at, signedOutAt: status === 'SignedOut' ? at : null });
   }
 
   /** Each child's one mentor (L2-062): child id to mentor membership id. */
