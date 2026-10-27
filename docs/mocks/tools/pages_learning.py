@@ -603,17 +603,17 @@ def learn_assignment(S):
     S.add("default", "Sofía opens Serve someone this week: the task, when it’s due, how to submit, the rubric with its points and who reviews it.", **YKW, main=body(),
           notes=note("The brief, due rules, ways to submit and rubric come from the server. Mentor-only notes are never sent.", "top: 5rem; right: 1rem;"))
     S.add("draft", "She started earlier and left: a draft saved on this device waits, and Continue your draft opens it.", **YKW,
-          main=body(extra=alert("info", "You have a draft", "Saved on this device on Thu 5 Nov at 3:40 pm."),
+          main=body(extra=alert("info", "You have a draft", "Saved on this device on Thu 5 Nov, 3:40 pm."),
                     act=f'<div class="form-actions">{btn("Back to the module", "ghost", href=page("learn-module", "assignment"))}{btn("Continue your draft", "primary", icon_name="arrow-right", href=page("learn-submit", "restored"))}</div>'))
     S.add("submitted", "Already submitted: the status shows and See your submission replaces Start.", **YKW,
           main=body("In review", "info", act=f'<div class="form-actions">{btn("Back to the module", "ghost", href=page("learn-module", "assignment"))}{btn("See your submission", "primary", icon_name="arrow-right", href=page("learn-submission", "in-review"))}</div>'))
     S.add("needs-revision", "Daniel asked for a revision: the page says so and Revise your submission opens it.", **YKW,
-          main=body("Needs revision", "warning", extra=alert("warning", "Daniel asked for a revision", "Read his note, then update your work and send it again."),
-                    act=f'<div class="form-actions">{btn("See his note", "", href=page("learn-submission", "needs-revision"))}{btn("Revise your submission", "primary", icon_name="edit", href=page("learn-submit", "revise"))}</div>'))
+          main=body("Needs revision", "warning", extra=alert("warning", "Daniel Osei asked for a revision", "Read the note, then update your work and send it again."),
+                    act=f'<div class="form-actions">{btn("See the note", "ghost", href=page("learn-submission", "needs-revision"))}{btn("Revise your submission", "primary", icon_name="edit", href=page("learn-submit", "revise"))}</div>'))
     S.add("late", "Past the due date but inside what late work allows: she can still submit and it is marked late for Daniel.", **YKW,
-          main=body(due="Thu 19 Nov · 1 day late", extra=alert("warning", "This is past its due date", "You can still submit. Daniel will see it was late.")))
+          main=body(due="Thu 19 Nov · 1 day late", extra=alert("warning", "This is past its due date", "You can still submit. Daniel Osei will see it was late.")))
     S.add("closed", "Past the due date and the grace period, and late work isn’t accepted: Start is gone and the server refuses a submission (409).", **YKW,
-          main=body("Closed", "", due="Thu 19 Nov · closed", extra=alert("info", "Submissions are closed", "The due date and grace period have passed. Talk to Daniel if you need more time."),
+          main=body("Closed", "", due="Thu 19 Nov · closed", extra=alert("info", "Submissions are closed", "The due date and grace period have passed. Talk to Daniel Osei if you need more time."),
                     act=f'<div class="form-actions">{btn("Back to the module", "primary", href=page("learn-module", "assignment"))}</div>'))
     S.add("locked", "Opened before Pick Up the Towel is done: 403, and what unlocks it.", **YKW,
           main=assign_crumbs() + page_header(ASSIGN) + locked_card("Finish Pick Up the Towel first", "This assignment unlocks when Pick Up the Towel is done.", "Back to Learning", page("learn-home")))
@@ -635,14 +635,14 @@ def photo_zone(err: str = "", busy: bool = False) -> str:
 def photo_chosen(name: str = "stacked-chairs.jpg", size: str = "1.2 MB", kept: bool = False) -> str:
     row = list_item(name, f"Photo · {size}{' · from your last submission' if kept else ''}", lead=f'<span class="icon-tile" aria-hidden="true">{icon("file")}</span>',
                     end=btn("Remove", "ghost", size="sm", aria_label=f"Remove the photo {name}"))
-    return f'<div class="field"><span class="field__label">Your photo</span>{ul_list([row], card=False, label="Your photo")}</div>'
+    return f'<div class="field"><span class="field__label">Your photo</span>{ul_list([row], card=False, label="Your file")}</div>'
 
 
 def submit_form(*, text: str = REFLECTION, photo: str = "", err=None, attest: bool = True, busy: bool = False, primary: str = "Submit") -> str:
     err = err or {}
     summary = form_summary(list(err.items())) if err else ""
     reflection = textarea("reflection", "Your reflection", value=text, rows=6, error=err.get("reflection", ""), count=f"{len(text):,} / 5,000",
-                          help_="3 to 5 sentences is plenty. Be honest: this is between you and Daniel.")
+                          help_="3 to 5 sentences is plenty. Be honest: this is between you and your mentor.")
     att = choice("attest", "This is my own work and it reflects something I really did.", type_="checkbox", checked=attest and "attest" not in err, invalid="attest" in err)
     att_e = f'<div class="field__error" id="attest-error">{esc(err["attest"])}</div>' if "attest" in err else ""
     actions = (f'<div class="form-actions">{btn("Save draft", "ghost", icon_name="check")}'
@@ -650,7 +650,7 @@ def submit_form(*, text: str = REFLECTION, photo: str = "", err=None, attest: bo
     return (f'<form class="stack" action="#" method="post" novalidate>{summary}'
             + card(f'<div class="stack">{reflection}{photo or photo_chosen()}</div>', title="Your work", tid="work")
             + card(f'<div class="stack" id="attest">{att}{att_e}</div>', title="Before you send it", tid="before")
-            + f'<p class="text-muted">Once you submit, Daniel reviews it. You can’t change it while it’s with him, but he can ask for a revision.</p>{actions}</form>')
+            + f'<p class="text-muted">Once you submit, Daniel Osei reviews it. You can’t change it while it’s being reviewed, but they can ask for a revision.</p>{actions}</form>')
 
 
 @screen("learn-submit", "page", "Submit an assignment", route="/learning/assignments/:id/submit", reqs=R_SUBMIT,
@@ -660,7 +660,7 @@ def learn_submit(S):
     S.add("default", "Sofía writes her reflection, adds a photo and ticks that it is her own work, ready to submit.", **YKW, main=hdr() + submit_form(),
           notes=note("Leaving with unsaved changes asks first (unsaved-changes). Save draft keeps the text on this device; the photo is chosen again.", "top: 5rem; right: 1rem;"))
     S.add("restored", "She comes back: her draft text is restored, and the photo is chosen again.", **YKW,
-          main=hdr() + alert("info", "We restored your draft", "Saved on this device on Thu 5 Nov at 3:40 pm. Add your photo again before you submit.", actions=btn("Start over", "ghost", size="sm"))
+          main=hdr() + alert("info", "We restored your draft", "Saved on this device on Thu 5 Nov, 3:40 pm. Add your photo again before you submit.", actions=btn("Start over", "ghost", size="sm"))
           + submit_form(photo=photo_zone()))
     S.add("draft-saved", "Save draft: a toast confirms the draft is on this device.", **YKW, main=hdr() + submit_form(),
           toast_html=toast_region(toast("success", "Draft saved", "On this device. Your photo isn’t saved in a draft.")))
@@ -677,10 +677,10 @@ def learn_submit(S):
           + alert("warning", "Note from Daniel Osei", NOTE_REVISE)
           + submit_form(text=REVISED, photo=photo_chosen(kept=True), primary="Resubmit"))
     S.add("already-submitted", "Submitting again from another tab: 409; her work is already with Daniel.", **YKW,
-          main=assign_crumbs("Submit") + page_header(ASSIGN) + card(empty("You’ve already submitted this", "Your work is with Daniel. You can change it only if he asks for a revision.",
+          main=assign_crumbs("Submit") + page_header(ASSIGN) + card(empty("You’ve already submitted this", "Your work is with Daniel Osei. You can change it only if they ask for a revision.",
                                                                           action=btn("See your submission", "primary", href=page("learn-submission", "in-review")), icon_name="lock"), cls="card--flush"))
     S.add("closed", "Submissions closed while she was writing: 409, and nothing was sent.", **YKW,
-          main=assign_crumbs("Submit") + page_header(ASSIGN) + card(empty("Submissions are closed", "The due date and grace period have passed. Talk to Daniel if you need more time.",
+          main=assign_crumbs("Submit") + page_header(ASSIGN) + card(empty("Submissions are closed", "The due date and grace period have passed. Talk to Daniel Osei if you need more time.",
                                                                           action=btn("Back to the assignment", "primary", href=page("learn-assignment", "closed")), icon_name="clock"), cls="card--flush"))
     S.add("loading", "The form loading.", **YKW, main=assign_crumbs("Submit") + page_header("Submit") + skeleton_list(4, "Loading the form"))
     S.add("error", "The form failed to load.", **YKW, main=assign_crumbs("Submit") + page_header("Submit") + failed("We couldn’t load this assignment"))
@@ -720,7 +720,7 @@ def learn_submission(S):
           toast_html=toast_region(toast("success", "Submitted", ASSIGN)),
           notes=note("Read only: she can’t change it while it’s with Daniel. The status changes when he reviews it (prompt 63).", "top: 5rem; right: 1rem;"))
     S.add("in-review", "Daniel has started reviewing: In review, still read only.", **YKW,
-          main=hdr("In review", "info") + layout([SENT, REVIEWING], extra=alert("info", "Daniel is reviewing your work", "He usually replies within a day or two."), act=f'<div class="form-actions">{back}</div>'))
+          main=hdr("In review", "info") + layout([SENT, REVIEWING], extra=alert("info", "Daniel Osei is reviewing your work", "Mentors usually reply within a day or two."), act=f'<div class="form-actions">{back}</div>'))
     S.add("needs-revision", "Daniel asked for a revision: his note, what she sent and Revise your submission.", **YKW,
           main=hdr("Needs revision", "warning") + layout([SENT, REVIEWING, ASKED], extra=alert("warning", "Note from Daniel Osei", NOTE_REVISE),
                                                         act=f'<div class="form-actions">{back}{btn("Revise your submission", "primary", icon_name="edit", href=page("learn-submit", "revise"))}</div>'))

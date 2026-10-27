@@ -3375,13 +3375,12 @@
         "L1-014"
       ],
       "states": [
-        "default",
-        "discard"
+        "default"
       ],
       "not_applicable": {
         "busy": "Saving a draft on the device is instant; there is no server call to wait for.",
-        "failed": "Saving a draft on the device does not call the server.",
-        "invalid": "The dialog has no inputs to validate."
+        "invalid": "The dialog has no inputs to validate.",
+        "failed": "Saving a draft on the device does not call the server."
       }
     },
     {

@@ -141,7 +141,6 @@ Edit tokens and shared component CSS first. Edit catalogue metadata and generato
 | Existing tokens.css | Copied organization comment referenced a different product’s ADR and implied an implemented server feature | Replaced the comment with the scoped pair contract; no existing token value changed. Organization branding remains unimplemented. |
 | Quick Card phone facts | The .quick-card-specific two-column rule overrode the narrower generic phone rule | Matched specificity in the phone rule so labels stack above values below 640px, as documented; no information is removed. |
 | Core catalogue | Tooltip, spinner and complete sidebar/pagination specimens were not all present in mocks | Documented core compositions using inherited roles and tokens; source sections identify core additions explicitly. |
-| Submit assignments (prompt 62) | learn-assignment, learn-submit, learn-submission, the Assignments card on learn-module, submit-assignment and unsaved-changes | Composed only from existing components: Waypoint’s photo drop zone is `file-upload` (`.dropzone`), its status steps are `timeline` (`.feed`, who did what and when), the rubric preview is `table`, the due facts are `stat`, the mentor’s note is an `alert`, the attestation a `checkbox`. No token, component or icon added. |
 | Inherited component CSS | Includes historical selectors unused by PromiseHub | Retained for compatibility; catalogue scope is the PromiseHub evidence plus the core set. Do not interpret unused inherited selectors as implemented product features. |
 
 ## Verification

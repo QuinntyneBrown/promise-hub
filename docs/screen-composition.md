@@ -127,7 +127,7 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Submit project | `submit-project` (default, busy, invalid, failed) | `ph-dialog` via `PhDialogs`, `ph-textarea` (note to the mentor, with error), `ph-alert`, `ph-button` |
 | Submit quiz | `submit-quiz` (default, busy, failed, unanswered) | `ph-dialog` via `PhDialogs`, `ph-alert` (warning: answers lock; unanswered names the blank questions), `ph-button` (Keep reviewing / Go back, Submit answers / Submit anyway) |
 | Submit assignment | `submit-assignment` (default, busy, failed, resubmit) | `ph-dialog` via `PhDialogs`, `ph-alert` (info: it can’t change while the mentor reviews it), `ph-button` (Keep editing, Submit for review / Resubmit) |
-| Unsaved changes | `unsaved-changes` (default, discard) | `ph-dialog` via `PhDialogs`, `ph-button` (Keep editing, Leave without saving as ghost, Save draft and leave) |
+| Unsaved changes | `unsaved-changes` (default) | `ph-dialog` via `PhDialogs`, `ph-button` (Keep editing, Leave without saving as ghost, Save draft and leave) |
 | Cohorts following a track | `track-cohorts` (default, busy, failed) | `ph-dialog`, `ph-checkbox-group` (active programs with a hint each), `ph-alert`, `ph-button` |
 | Curriculum status | `curriculum-status` (default, busy, invalid, failed, lesson, quiz, quiz-invalid, assignment, track) | `ph-dialog`, `ph-radio-group` (Draft, In review for modules, Published; error on invalid), `ph-description-list` (who will see it), `ph-alert`, `ph-button` |
 | Delete a lesson | `delete-lesson` (default, busy, failed) | `ph-dialog` (danger), `ph-alert`, `ph-button` (danger) |

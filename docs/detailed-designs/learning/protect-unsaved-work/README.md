@@ -17,14 +17,14 @@ Ported from Waypoint `non-functional/protect-unsaved-work` (`L2-NFR-007`). Draft
 - **`DraftStore`** (`frontend/projects/api/`) — contract and `DRAFT_STORE` token with `load`, `save` and `clear` of a `SubmissionDraft` (text, link, saved at); `LocalDraftStore` keeps it in `localStorage` as `promisehub.draft.{membership}.{assignment}` and treats storage errors as no draft.
 - **`SubmitPage`** — tracks whether the form changed, offers Save draft (toast "Draft saved"), restores a draft on load ("We restored your draft", Start over), clears it after a successful submit, and adds a `beforeunload` listener while changed.
 - **`unsavedChangesGuard`** (`frontend/projects/learning/`) — a `CanDeactivate` guard for pages that implement `canLeave()`.
-- **`UnsavedChangesDialog`** (`unsaved-changes`) — CDK Dialog with Keep editing (focused first), Save draft and leave, and Leave without saving; Escape keeps editing.
+- **`UnsavedChangesDialog`** (`unsaved-changes`) — CDK Dialog with Leave without saving (ghost), Keep editing and Save draft and leave; Escape or Close keeps editing.
 - **`AssignmentPage`** — offers Continue your draft when a draft exists for the assignment.
 
 No backend change: drafts never leave the device.
 
 ## Built so far
 
-<TO SUPPLY>
+Prompt 62 delivered everything above for the assignment submit page; `GET /me` now names the active membership (`membershipId`) so drafts are kept under it. Acceptance tests: `e2e/tests/learning/submissions.spec.ts` (leave, draft, restore, reload) and `backend/tests/PromiseHub.Api.Tests/LearningAssignmentBriefTests.cs` (the session's membership).
 
 ## Requirements
 

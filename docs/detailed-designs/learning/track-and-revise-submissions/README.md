@@ -32,7 +32,7 @@ Backend:
 
 ## Built so far
 
-<TO SUPPLY>
+Prompt 62 delivered everything above; the mentor's review endpoints that move a submission past Submitted are prompt 63, and the tests apply the review through the domain as those endpoints will. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/LearningSubmissionStatusTests.cs` and `e2e/tests/learning/submissions.spec.ts`.
 
 ## Requirements
 

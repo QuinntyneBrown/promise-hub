@@ -37,7 +37,7 @@ Security (L2-031): the file is never trusted by name or type alone, is stored un
 
 ## Built so far
 
-<TO SUPPLY>
+Prompt 62 delivered everything above. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/LearningAssignmentBriefTests.cs`, `LearningAssignmentSubmitTests.cs` and `e2e/tests/learning/submissions.spec.ts`.
 
 ## Requirements
 

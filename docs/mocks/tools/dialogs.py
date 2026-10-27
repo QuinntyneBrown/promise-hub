@@ -600,21 +600,20 @@ simple("submit-quiz", "Submit your answers?", "learn-quiz", ["L2-075", "L1-023"]
 # ------------------------------------------------------------------ Submit assignments (prompt 62)
 simple("submit-assignment", "Send it to Daniel?", "learn-submit", ["L2-077", "L2-078", "L1-023"],
        "Serve someone this week · your reflection and 1 photo",
-       lambda e: alert("info", "You can’t change it while he reviews it", "Daniel Osei reviews your work. If something needs another look, he can ask for a revision."),
+       lambda e: alert("info", "You can’t change it while it’s being reviewed", "Daniel Osei reviews your work. If something needs another look, they can ask for a revision."),
        "Submit for review", icon_name="send", form=False, cancel="Keep editing",
        failed_text="Your work was not sent. Everything is still on the page; try again.",
        extra_states={"resubmit": ("Resubmitting after a revision: the same check, sending the revised work.",
                                   dialog_box("Send it to Daniel again?", "Serve someone this week · your revised reflection and 1 photo",
-                                             alert("info", "It goes back to Daniel for review", "You can’t change it again unless he asks for another revision."),
+                                             alert("info", "It goes back to Daniel Osei for review", "You can’t change it again unless they ask for another revision."),
                                              footer("Resubmit", cancel="Keep editing"), icon_name="send"))})
 
-simple("unsaved-changes", "Leave without submitting?", "learn-submit", ["L2-079", "L1-014"],
-       "Your reflection hasn’t been sent or saved.",
-       lambda e: '<p>Save a draft on this device to pick up where you left off, or leave and lose what you wrote. Your photo isn’t kept in a draft.</p>',
-       "Save draft and leave", icon_name="alert-triangle", form=False, cancel="Keep editing",
-       na={"busy": "Saving a draft on the device is instant; there is no server call to wait for.",
-           "failed": "Saving a draft on the device does not call the server."},
-       extra_states={"discard": ("Leave without saving is the third choice, styled as a quiet danger action, never the default.",
-                                 dialog_box("Leave without submitting?", "Your reflection hasn’t been sent or saved.",
-                                            '<p>Save a draft on this device to pick up where you left off, or leave and lose what you wrote. Your photo isn’t kept in a draft.</p>',
-                                            btn("Leave without saving", "ghost") + footer("Save draft and leave", cancel="Keep editing"), icon_name="alert-triangle"))})
+@screen("unsaved-changes", "dialog", "Leave without submitting?", opens_from="learn-submit", reqs=["L2-079", "L1-014"],
+        na={"busy": "Saving a draft on the device is instant; there is no server call to wait for.",
+            "invalid": "The dialog has no inputs to validate.",
+            "failed": "Saving a draft on the device does not call the server."})
+def unsaved_changes(S):
+    body = '<p>Save a draft on this device to pick up where you left off, or leave and lose what you wrote. Your photo isn’t kept in a draft.</p>'
+    S.add("default", "Leaving learn-submit with unsent changes: Keep editing, Save draft and leave, or the quiet Leave without saving. Escape keeps editing.",
+          **over("learn-submit", "default", overlays=dialog_box("Leave without submitting?", "Your reflection hasn’t been sent or saved.", body,
+                                                              btn("Leave without saving", "ghost") + footer("Save draft and leave", cancel="Keep editing"), icon_name="alert-triangle")))
