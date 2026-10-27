@@ -1,0 +1,30 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Submit an assignment
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(brief, "AssignmentPage", "Angular page", "learn-assignment")
+  Component(form, "SubmitPage + SubmitAssignmentDialog", "Angular page, CDK Dialog", "learn-submit, submit-assignment")
+  Component(lapi, "LearningApi", "Contract + HTTP client", "LEARNING_API")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "LearningEndpoints", "Minimal API", "assignments/{id}, submission (multipart)")
+  Component(bh, "AssignmentBriefHandler", "Handler", "brief, rubric, due state, mentor, her submission")
+  Component(cmd, "SubmissionCommand", "Handler", "submit, resubmit + audit")
+  Component(pol, "SubmissionFilePolicy", "Service", "kind, size, extension, type, first bytes")
+  Component(prog, "LearnerProgress", "Service", "visibility, locks, assignment status")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Assignments, AssignmentSubmissions, SubmissionEvents")
+  Component(fs, "IFileStore", "Port", "submission files")
+}
+Rel(brief, lapi, "assignment")
+Rel(form, lapi, "submitAssignment")
+Rel(lapi, ep, "HTTPS")
+Rel(ep, bh, "GET")
+Rel(ep, cmd, "POST")
+Rel(bh, prog, "status")
+Rel(cmd, prog, "status")
+Rel(cmd, pol, "accept file?")
+Rel(cmd, fs, "save")
+Rel(cmd, db, "writes + audit")
+Rel(prog, db, "reads")
+@enduml

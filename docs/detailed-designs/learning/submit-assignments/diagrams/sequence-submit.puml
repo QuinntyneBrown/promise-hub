@@ -1,0 +1,47 @@
+@startuml
+title UML sequence behaviour — Submitting an assignment
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Youth (Sofía)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "SubmitPage" as page
+  participant "SubmitAssignmentDialog" as dlg
+  participant "LearningApi" as lapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "LearningEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "SubmissionCommand" as h
+  participant "LearnerProgress" as prog
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  participant "IFileStore" as fs
+  database "PromiseHub database" as db
+end box
+actor -> page : writes, adds a photo, ticks own work, Submit
+page -> page : client checks (L2-077 c3)
+page -> dlg : open submit-assignment
+actor -> dlg : Submit for review
+dlg -> lapi : submitAssignment(id, text, link, file, attest)
+lapi -> ep : POST /learning/assignments/{id}/submission (multipart)
+ep -> h : SubmitAsync
+h -> prog : visible and unlocked? (c2, c6)
+alt not visible / locked
+  h --> ep : 404 / 403 locked
+else already submitted / closed
+  h --> ep : 409 submitted / closed (c5)
+else invalid work or file
+  h --> ep : 422 errors (c3, c4)
+else
+  h -> fs : save submissions/{org}/{id}/{generated}.jpg (c4)
+  h -> db : AssignmentSubmission Submitted (Late?) + SubmissionEvent + audit Submitted (c5)
+  h --> ep : 201 { id }
+end
+ep --> lapi : result
+lapi --> page : created
+page -> page : clear draft, open /learning/submissions/{id}
+@enduml

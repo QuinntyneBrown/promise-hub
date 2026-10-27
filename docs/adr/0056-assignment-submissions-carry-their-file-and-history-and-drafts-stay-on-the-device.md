@@ -1,0 +1,25 @@
+# 0056: An assignment submission is one row per youth and assignment, carries its file and its history, and is revised in place; drafts stay on the device
+
+- Status: accepted
+- Date: 2026-10-27
+
+## Context
+
+Prompt 62 ports Waypoint's assignment submission (`L2-LEARN-006`, `L2-LEARN-007`) and unsaved-changes protection (`L2-NFR-007`) as `L2-077` to `L2-079`. In Waypoint a youth first uploads a photo or PDF into a private `StoredSubmissionFile` (bytes in the database), then submits a `Submission` naming the upload; a resubmission overwrites the text in place, guarded by a concurrency stamp, and a `SubmissionTimelineEvent` table keeps the youth-visible history. Photos also need a media consent that PromiseHub does not have. Assignments in PromiseHub belong to a module and carry their ways to submit, rubric and due rules (ADR 0054); file storage is `IFileStore` (ADR 0050); youth reads and writes are gated per membership by `LearnerProgress` (ADR 0051). The mentor's review is prompt 63.
+
+## Decision
+
+- **Submission.** `AssignmentSubmission` (`PromiseHub.Domain/Learning/`) belongs to the organization, one youth membership and one assignment; there is at most one per membership and assignment. It holds the reflection (up to 5,000 characters), a link (http or https, up to 500), at most one file (name, kind Photo or File, content type, size, storage key), whether it was late, the status, the round (1, then 2 after the first resubmission…), the mentor's feedback and who gave it, and the points awarded.
+- **Status.** The shared `SubmissionStatus` gains `InReview`, `NeedsRevision` and `Accepted` after `Submitted`. Only `NeedsRevision` can be resubmitted; resubmitting replaces the work in place, keeps the earlier file unless it is removed or replaced, increments the round and returns to `Submitted`. Any other resubmit answers 409 `not-revisable`; a second first submission 409 `submitted`. The domain exposes `StartReview`, `RequestRevision(note, by)` and `Accept(points, note, by)` for prompt 63's review endpoints; until then only tests and the fake API move a submission past Submitted.
+- **History.** `SubmissionEvent` rows (`Submitted`, `ReviewStarted`, `RevisionRequested`, `Resubmitted`, `Accepted`) with who and when, written by the same domain methods, are what the youth's history shows. They are not the audit log: submit is audited as `Submitted` and resubmit as `Updated` on `AssignmentSubmission`, without the reflection text.
+- **One request.** The work and its file travel together as one multipart request (`POST /learning/assignments/{id}/submission`, `POST /learning/submissions/{id}/resubmit`), so no orphaned uploads exist. A Photo is a JPG or PNG; a File is a PDF, JPG or PNG; 1 byte to 10 MB; extension, content type and first bytes must agree. Files are stored through `IFileStore` under `submissions/{organization}/{submission}/{generated}{ext}` and served back only to their owner, as an attachment with `nosniff`. A replaced file is deleted from storage after the save.
+- **Due rules.** Today (the organization's UTC date) after `DueDate + GraceDays` is late; late with `AllowLate` is accepted and marked Late, without it the assignment is closed and a submission answers 409 `closed`. A resubmission after a revision request is never closed.
+- **Lock.** An assignment attached to a lesson is locked until that lesson is done; one attached to the whole module is open once the module is unlocked. A draft assignment, or one of an unpublished lesson, is not visible (404). Assignments do not yet count toward a module being done (prompt 65 decides how progress counts them).
+- **Mentor name.** The youth's own mentor (`YouthMentor`), else the lead mentor of the program through which she follows the track, else none ("your mentor").
+- **Drafts.** Unsaved-changes protection keeps drafts on the device, not on the server: the reflection and link in `localStorage` under the signed-in membership and assignment, through a `DraftStore` contract and token in the `api` library; a file is never kept in a draft. A `CanDeactivate` guard opens the `unsaved-changes` dialog (CDK Dialog) and `beforeunload` covers closing the tab. A successful submit clears the draft; signing out does not, but drafts are keyed by membership, so another person never sees one.
+- **Not ported.** Waypoint's media-consent check on photos (PromiseHub's guardian consent covers participation, not media), the concurrency stamp (only the owner can resubmit and only from NeedsRevision, which the mentor cannot change concurrently until prompt 63), notifications to the mentor on submit and to the youth on a status change (prompts 63 and 75) and badges on acceptance (prompt 64).
+
+## Consequences
+
+- Prompt 63 adds the mentor's review queue and the endpoints that call `StartReview`, `RequestRevision` and `Accept` with rubric scores, and notifies the youth.
+- Drafts do not follow a youth from her phone to a laptop; the unsaved-changes dialog says the draft is on this device.

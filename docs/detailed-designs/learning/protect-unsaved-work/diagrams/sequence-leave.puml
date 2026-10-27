@@ -1,0 +1,41 @@
+@startuml
+title UML sequence behaviour — Leaving with unsaved work
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Youth (Sofía)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "Router" as r
+  participant "unsavedChangesGuard" as g
+  participant "SubmitPage" as page
+  participant "UnsavedChangesDialog" as dlg
+  participant "DraftStore" as ds
+end box
+box "Browser" #FFF4E5
+  database "localStorage" as ls
+end box
+actor -> r : taps Today
+r -> g : canDeactivate(SubmitPage)
+g -> page : canLeave()
+alt nothing changed
+  page --> g : true
+else changed since load or last save (L2-079 c1)
+  page -> dlg : open unsaved-changes
+  alt Keep editing / Escape
+    dlg --> page : keep
+    page --> g : false (stay, nothing lost, c4)
+  else Save draft and leave
+    page -> ds : save(membership+assignment, text, link) (c2)
+    ds -> ls : setItem
+    page --> g : true
+  else Leave without saving
+    page --> g : true
+  end
+end
+actor -> page : returns later
+page -> ds : load(...)
+ds --> page : draft
+page -> page : "We restored your draft" (c2)
+@enduml

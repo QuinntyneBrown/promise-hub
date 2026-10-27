@@ -1864,6 +1864,8 @@
       ],
       "states": [
         "default",
+        "assignment",
+        "assignment-revision",
         "quiz",
         "quiz-passed",
         "completed",
@@ -2048,6 +2050,91 @@
       ],
       "not_applicable": {
         "empty": "A result exists only for a submitted attempt."
+      }
+    },
+    {
+      "id": "learn-assignment",
+      "kind": "page",
+      "title": "Assignment",
+      "route": "/learning/assignments/:id",
+      "requirements": [
+        "L2-077",
+        "L2-078",
+        "L2-079",
+        "L2-068",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "draft",
+        "submitted",
+        "needs-revision",
+        "late",
+        "closed",
+        "locked",
+        "loading",
+        "error",
+        "not-found"
+      ],
+      "not_applicable": {
+        "empty": "An assignment is published only with a task and a rubric criterion (L2-074 criterion 5), so youth never meet an empty one."
+      }
+    },
+    {
+      "id": "learn-submit",
+      "kind": "page",
+      "title": "Submit an assignment",
+      "route": "/learning/assignments/:id/submit",
+      "requirements": [
+        "L2-077",
+        "L2-078",
+        "L2-079",
+        "L2-068",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "restored",
+        "draft-saved",
+        "invalid",
+        "file-invalid",
+        "busy",
+        "failed",
+        "revise",
+        "already-submitted",
+        "closed",
+        "loading",
+        "error"
+      ],
+      "not_applicable": {
+        "empty": "The form always shows the ways this assignment accepts; a blank form is the invalid state when sent."
+      }
+    },
+    {
+      "id": "learn-submission",
+      "kind": "page",
+      "title": "Your submission",
+      "route": "/learning/submissions/:id",
+      "requirements": [
+        "L2-077",
+        "L2-078",
+        "L2-079",
+        "L2-068",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "in-review",
+        "needs-revision",
+        "resubmitted",
+        "accepted",
+        "late",
+        "loading",
+        "error",
+        "not-found"
+      ],
+      "not_applicable": {
+        "empty": "A submission page exists only once she has submitted."
       }
     },
     {
@@ -3255,6 +3342,45 @@
         "unanswered"
       ],
       "not_applicable": {
+        "invalid": "The dialog has no inputs to validate."
+      }
+    },
+    {
+      "id": "submit-assignment",
+      "kind": "dialog",
+      "title": "Send it to Daniel?",
+      "opens_from": "learn-submit",
+      "requirements": [
+        "L2-077",
+        "L2-078",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed",
+        "resubmit"
+      ],
+      "not_applicable": {
+        "invalid": "The dialog has no inputs to validate."
+      }
+    },
+    {
+      "id": "unsaved-changes",
+      "kind": "dialog",
+      "title": "Leave without submitting?",
+      "opens_from": "learn-submit",
+      "requirements": [
+        "L2-079",
+        "L1-014"
+      ],
+      "states": [
+        "default",
+        "discard"
+      ],
+      "not_applicable": {
+        "busy": "Saving a draft on the device is instant; there is no server call to wait for.",
+        "failed": "Saving a draft on the device does not call the server.",
         "invalid": "The dialog has no inputs to validate."
       }
     },

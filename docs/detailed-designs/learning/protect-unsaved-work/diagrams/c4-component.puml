@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Protect unsaved work
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "SubmitPage", "Angular page", "tracks whether the form changed; beforeunload")
+  Component(guard, "unsavedChangesGuard", "CanDeactivate guard", "asks before leaving")
+  Component(dlg, "UnsavedChangesDialog", "CDK Dialog", "Keep editing, Save draft and leave, Leave without saving")
+  Component(ds, "DraftStore", "Contract + token (api)", "DRAFT_STORE, LocalDraftStore")
+}
+ContainerDb(ls, "localStorage", "Browser", "promisehub.draft.{membership}.{assignment}")
+Rel(guard, page, "canLeave()")
+Rel(guard, dlg, "opens")
+Rel(page, ds, "save, load, clear")
+Rel(ds, ls, "reads and writes")
+@enduml

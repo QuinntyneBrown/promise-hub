@@ -1,0 +1,17 @@
+@startuml
+title Class structure — Protect unsaved work
+skinparam classAttributeIconSize 0
+interface DraftStore { load(key): SubmissionDraft?; save(key, draft); clear(key) }
+class LocalDraftStore
+class SubmissionDraft { text, link, savedAt }
+interface CanLeave { canLeave(): Observable<boolean> }
+class SubmitPage { dirty(); saveDraft(); canLeave() }
+class UnsavedChangesDialog { result: keep | save | discard }
+class unsavedChangesGuard <<CanDeactivateFn>>
+LocalDraftStore ..|> DraftStore
+DraftStore ..> SubmissionDraft
+SubmitPage ..|> CanLeave
+SubmitPage ..> DraftStore
+SubmitPage ..> UnsavedChangesDialog
+unsavedChangesGuard ..> CanLeave
+@enduml

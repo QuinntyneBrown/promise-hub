@@ -160,10 +160,24 @@ def learn_module(S):
             item = list_item("Leading by Serving quiz", "Quiz · 4 questions · 70% to pass", href=page("learn-quiz-intro"), end=badge("Up next", "info"))
         return card(ul_list([item], card=False, label="Quizzes"), title="Quizzes", tid="quizzes", cls="card--flush")
 
+    def assignments(st="Not started") -> str:
+        kinds = {"Not started": "info", "Locked": "", "Submitted": "info", "Needs revision": "warning", "Accepted": "success"}
+        meta = "Assignment · 25 points · Due Thu 19 Nov"
+        if st == "Locked":
+            item = list_item("Serve someone this week", "Assignment · 25 points · Unlocks after Pick Up the Towel", end=badge(st))
+        else:
+            target = {"Not started": page("learn-assignment"), "Needs revision": page("learn-submission", "needs-revision")}.get(st, page("learn-submission", "accepted" if st == "Accepted" else "default"))
+            item = list_item("Serve someone this week", meta, href=target, end=badge("Up next" if st == "Not started" else st, kinds[st]))
+        return card(ul_list([item], card=False, label="Assignments"), title="Assignments", tid="assignments", cls="card--flush")
+
     prog = card(f'<div class="stack">{progress(1, 3, "Leading by Serving", show="1 of 3 lessons")}{anchor}'
                 f'<div>{btn("Continue: Last in Line", "primary", icon_name="arrow-right", href=page("learn-lesson-scripture"))}</div></div>', title="Module progress", tid="module-progress")
     S.add("default", "Sofía opens Leading by Serving: one lesson done, the next ready, the last locked until the one before it is done; the module’s quiz unlocks after the last lesson.", **YKW,
-          main=hdr + f'<div class="split"><div class="stack">{prog}</div><div class="stack">{lessons()}{quizzes()}</div></div>')
+          main=hdr + f'<div class="split"><div class="stack">{prog}</div><div class="stack">{lessons()}{quizzes()}{assignments()}</div></div>')
+    S.add("assignment", "Pick Up the Towel is done, so its assignment is open: Serve someone this week, due Thu 19 Nov, with its status.", **YKW,
+          main=hdr + f'<div class="split"><div class="stack">{prog}</div><div class="stack">{lessons()}{assignments()}</div></div>')
+    S.add("assignment-revision", "Daniel asked for a revision: the assignment says Needs revision and opens her submission.", **YKW,
+          main=hdr + f'<div class="split"><div class="stack">{prog}</div><div class="stack">{lessons()}{assignments("Needs revision")}</div></div>')
     done_rows = [(t, m, "Done", tg or "learn-lesson") for t, m, _s, tg in LESSONS]
     S.add("quiz", "Every lesson done and the quiz required to complete the module: the quiz is open and the module waits for a pass.", **YKW,
           main=hdr + f'<div class="split"><div class="stack">{card(progress(3, 3, "Leading by Serving", kind="complete", show="3 of 3 lessons") + "<p class=\"text-muted\">Pass the quiz to finish this module.</p><div>" + btn("Start: Leading by Serving quiz", "primary", icon_name="arrow-right", href=page("learn-quiz-intro")) + "</div>", title="Module progress", tid="module-progress")}</div>'
@@ -539,3 +553,189 @@ def learn_quiz_result(S):
     S.add("not-found", "Another youth’s attempt, one still in progress, or another organization’s: not found.", **YKW,
           main=quiz_crumbs("Result") + page_header("Quiz result") + card(empty("We can’t find that result", "It may still be in progress, or it isn’t yours.",
                                                                            action=btn("Back to Learning", "", href=page("learn-home")), icon_name="search"), cls="card--flush"))
+
+
+# ================================================================ Submit assignments (prompt 62, L2-077 to L2-079)
+# Ported from Waypoint's assignment, submit work and submission status mocks. The assignment is the one Marisol built in prompt 60:
+# Serve someone this week, after Pick Up the Towel, a text reflection and a photo, a 25-point rubric, due Thu 19 Nov with a 2-day
+# grace period and late work allowed. Daniel Osei is Sofía’s mentor and reviews it; his review itself is prompt 63.
+R_SUBMIT = ["L2-077", "L2-078", "L2-079", "L2-068", R_LEARN]
+ASSIGN = "Serve someone this week"
+A_BRIEF = ("This week, put Pick Up the Towel into practice. Choose one person to serve without being asked, at home, at school or in your cohort. "
+           "Afterwards, tell us what you did, how it felt and what you noticed. A photo or a short note is enough.")
+A_RUBRIC = [("Chose someone and served without being asked", 10), ("Described what they did and how it felt", 10), ("Named one thing they noticed", 5)]
+REFLECTION = ("On Tuesday I stayed after tutoring to stack the chairs and wipe the tables so Jaylen could lock up on time. Nobody asked me. "
+              "It felt small, but he noticed and said thanks.")
+REVISED = REFLECTION + " What I noticed: the room is always tidy because someone stays behind, and I never saw who it was before."
+NOTE_REVISE = "“Great story, Sofía! Can you add a line about one thing you noticed? Then this is a full pass.”"
+NOTE_ACCEPT = "“This is exactly it, Sofía. Serving is noticing what needs doing. Proud of you.”"
+DANIEL = STAFF["daniel"]
+
+
+def assign_crumbs(cur: str = ASSIGN) -> str:
+    return breadcrumb([("Learning", page("learn-home")), ("Leading by Serving", page("learn-module", "assignment"))], cur)
+
+
+def rubric_preview() -> str:
+    rows = [[esc(d), f"{p} points"] for d, p in A_RUBRIC]
+    return card(table("How it’s graded", ["Criterion", "Points"], rows) + '<p class="text-muted">Total possible: <strong>25 points</strong></p>',
+                title="How it’s graded", tid="rubric")
+
+
+def due_facts(due: str = "Thu 19 Nov · 14 days left", types: str = "Text + photo") -> str:
+    return kpis([("Due", due.split(" · ")[0], due.split(" · ")[1] if " · " in due else ""), ("Submit", types, "A reflection and a JPG or PNG photo"),
+                 ("Points", "25", "Reviewed by Daniel Osei")])
+
+
+# ---------------------------------------------------------------- learn-assignment
+@screen("learn-assignment", "page", "Assignment", route="/learning/assignments/:id", reqs=R_SUBMIT,
+        na={"empty": "An assignment is published only with a task and a rubric criterion (L2-074 criterion 5), so youth never meet an empty one."})
+def learn_assignment(S):
+    hdr = lambda st="Not started", kind="": assign_crumbs() + page_header(f'{ASSIGN} {badge(st, kind)}', "Leading by Serving · Assignment · after Pick Up the Towel")
+    task = card(f'<p>{esc(A_BRIEF)}</p>', title="The task", tid="task")
+    mentor = card(f'<div class="cluster">{avatar(DANIEL, "md")}<div><strong>Daniel Osei</strong><div class="text-muted">Your mentor reviews what you send and may ask for a revision.</div></div></div>',
+                  title="Who reviews it", tid="mentor")
+
+    def body(st="Not started", kind="", extra="", act=None, due="Thu 19 Nov · 14 days left") -> str:
+        a = act if act is not None else f'<div class="form-actions">{btn("Back to the module", "ghost", href=page("learn-module", "assignment"))}{btn("Start submission", "primary", icon_name="arrow-right", href=page("learn-submit"))}</div>'
+        return hdr(st, kind) + extra + f'<div class="split"><div class="stack">{due_facts(due)}{task}{a}</div><div class="stack">{rubric_preview()}{mentor}</div></div>'
+
+    S.add("default", "Sofía opens Serve someone this week: the task, when it’s due, how to submit, the rubric with its points and who reviews it.", **YKW, main=body(),
+          notes=note("The brief, due rules, ways to submit and rubric come from the server. Mentor-only notes are never sent.", "top: 5rem; right: 1rem;"))
+    S.add("draft", "She started earlier and left: a draft saved on this device waits, and Continue your draft opens it.", **YKW,
+          main=body(extra=alert("info", "You have a draft", "Saved on this device on Thu 5 Nov at 3:40 pm."),
+                    act=f'<div class="form-actions">{btn("Back to the module", "ghost", href=page("learn-module", "assignment"))}{btn("Continue your draft", "primary", icon_name="arrow-right", href=page("learn-submit", "restored"))}</div>'))
+    S.add("submitted", "Already submitted: the status shows and See your submission replaces Start.", **YKW,
+          main=body("In review", "info", act=f'<div class="form-actions">{btn("Back to the module", "ghost", href=page("learn-module", "assignment"))}{btn("See your submission", "primary", icon_name="arrow-right", href=page("learn-submission", "in-review"))}</div>'))
+    S.add("needs-revision", "Daniel asked for a revision: the page says so and Revise your submission opens it.", **YKW,
+          main=body("Needs revision", "warning", extra=alert("warning", "Daniel asked for a revision", "Read his note, then update your work and send it again."),
+                    act=f'<div class="form-actions">{btn("See his note", "", href=page("learn-submission", "needs-revision"))}{btn("Revise your submission", "primary", icon_name="edit", href=page("learn-submit", "revise"))}</div>'))
+    S.add("late", "Past the due date but inside what late work allows: she can still submit and it is marked late for Daniel.", **YKW,
+          main=body(due="Thu 19 Nov · 1 day late", extra=alert("warning", "This is past its due date", "You can still submit. Daniel will see it was late.")))
+    S.add("closed", "Past the due date and the grace period, and late work isn’t accepted: Start is gone and the server refuses a submission (409).", **YKW,
+          main=body("Closed", "", due="Thu 19 Nov · closed", extra=alert("info", "Submissions are closed", "The due date and grace period have passed. Talk to Daniel if you need more time."),
+                    act=f'<div class="form-actions">{btn("Back to the module", "primary", href=page("learn-module", "assignment"))}</div>'))
+    S.add("locked", "Opened before Pick Up the Towel is done: 403, and what unlocks it.", **YKW,
+          main=assign_crumbs() + page_header(ASSIGN) + locked_card("Finish Pick Up the Towel first", "This assignment unlocks when Pick Up the Towel is done.", "Back to Learning", page("learn-home")))
+    S.add("loading", "The assignment loading.", **YKW, main=assign_crumbs("Assignment") + page_header("Assignment") + skeleton_kpis(3) + f'<div class="split">{skeleton_list(3, "Loading the task")}{skeleton_list(3, "Loading the rubric")}</div>')
+    S.add("error", "The assignment failed to load.", **YKW, main=assign_crumbs("Assignment") + page_header("Assignment") + failed("We couldn’t load this assignment"))
+    S.add("not-found", "A draft assignment, one of a track she doesn’t follow, or another organization’s.", **YKW, main=assign_crumbs("Assignment") + page_header("Assignment") + not_found("assignment"))
+
+
+# ---------------------------------------------------------------- learn-submit
+def photo_zone(err: str = "", busy: bool = False) -> str:
+    inv = ' aria-invalid="true" aria-describedby="photo-error"' if err else ""
+    zone = (f'<div class="dropzone" role="group" aria-labelledby="dz-title"{inv}{" aria-busy=\"true\"" if busy else ""}><span class="icon-tile" aria-hidden="true">{icon("upload")}</span>'
+            f'<h3 class="dropzone__title" id="dz-title">Add your photo</h3><p class="dropzone__text">JPG or PNG · up to 10 MB. No faces needed: the moment or the result is perfect.</p>'
+            f'<label class="btn btn--primary" for="photo">{icon("file")}Choose photo<input class="visually-hidden" id="photo" type="file" accept="image/jpeg,image/png"></label></div>')
+    e = f'<div class="field__error" id="photo-error">{esc(err)}</div>' if err else ""
+    return f'<div class="field"><span class="field__label">Your photo</span>{zone}{e}</div>'
+
+
+def photo_chosen(name: str = "stacked-chairs.jpg", size: str = "1.2 MB", kept: bool = False) -> str:
+    row = list_item(name, f"Photo · {size}{' · from your last submission' if kept else ''}", lead=f'<span class="icon-tile" aria-hidden="true">{icon("file")}</span>',
+                    end=btn("Remove", "ghost", size="sm", aria_label=f"Remove the photo {name}"))
+    return f'<div class="field"><span class="field__label">Your photo</span>{ul_list([row], card=False, label="Your photo")}</div>'
+
+
+def submit_form(*, text: str = REFLECTION, photo: str = "", err=None, attest: bool = True, busy: bool = False, primary: str = "Submit") -> str:
+    err = err or {}
+    summary = form_summary(list(err.items())) if err else ""
+    reflection = textarea("reflection", "Your reflection", value=text, rows=6, error=err.get("reflection", ""), count=f"{len(text):,} / 5,000",
+                          help_="3 to 5 sentences is plenty. Be honest: this is between you and Daniel.")
+    att = choice("attest", "This is my own work and it reflects something I really did.", type_="checkbox", checked=attest and "attest" not in err, invalid="attest" in err)
+    att_e = f'<div class="field__error" id="attest-error">{esc(err["attest"])}</div>' if "attest" in err else ""
+    actions = (f'<div class="form-actions">{btn("Save draft", "ghost", icon_name="check")}'
+               f'{btn(primary, "primary", icon_name="send", busy=busy, attrs=" aria-haspopup=\"dialog\"", data_href=dialog("submit-assignment"))}</div>')
+    return (f'<form class="stack" action="#" method="post" novalidate>{summary}'
+            + card(f'<div class="stack">{reflection}{photo or photo_chosen()}</div>', title="Your work", tid="work")
+            + card(f'<div class="stack" id="attest">{att}{att_e}</div>', title="Before you send it", tid="before")
+            + f'<p class="text-muted">Once you submit, Daniel reviews it. You can’t change it while it’s with him, but he can ask for a revision.</p>{actions}</form>')
+
+
+@screen("learn-submit", "page", "Submit an assignment", route="/learning/assignments/:id/submit", reqs=R_SUBMIT,
+        na={"empty": "The form always shows the ways this assignment accepts; a blank form is the invalid state when sent."})
+def learn_submit(S):
+    hdr = lambda sub="Add your reflection and photo, then send it to Daniel Osei.": assign_crumbs("Submit") + page_header(ASSIGN, sub)
+    S.add("default", "Sofía writes her reflection, adds a photo and ticks that it is her own work, ready to submit.", **YKW, main=hdr() + submit_form(),
+          notes=note("Leaving with unsaved changes asks first (unsaved-changes). Save draft keeps the text on this device; the photo is chosen again.", "top: 5rem; right: 1rem;"))
+    S.add("restored", "She comes back: her draft text is restored, and the photo is chosen again.", **YKW,
+          main=hdr() + alert("info", "We restored your draft", "Saved on this device on Thu 5 Nov at 3:40 pm. Add your photo again before you submit.", actions=btn("Start over", "ghost", size="sm"))
+          + submit_form(photo=photo_zone()))
+    S.add("draft-saved", "Save draft: a toast confirms the draft is on this device.", **YKW, main=hdr() + submit_form(),
+          toast_html=toast_region(toast("success", "Draft saved", "On this device. Your photo isn’t saved in a draft.")))
+    S.add("invalid", "Submit with no reflection and the box unticked: errors beside the fields and in a summary, focus on the summary.", **YKW,
+          main=hdr() + submit_form(text="", photo=photo_zone(), err={"reflection": "Write your reflection.", "attest": "Confirm this is your own work."}))
+    S.add("file-invalid", "She chose a PDF where a photo is asked for: it isn’t attached and the field says what fits.", **YKW,
+          main=hdr() + alert("danger", "That file can’t be used", "“weekly-schedule.pdf” was not attached. Choose a JPG or PNG photo of up to 10 MB.")
+          + submit_form(photo=photo_zone("Choose a JPG or PNG photo of up to 10 MB.")))
+    S.add("busy", "Submitting: the photo uploads with her work and the button cannot be pressed twice.", **YKW, main=hdr() + submit_form(busy=True))
+    S.add("failed", "The submit failed: her work stays on screen to try again.", **YKW,
+          main=hdr() + alert("danger", "We couldn’t send your work", "Everything is still here. Check your connection and try again.") + submit_form())
+    S.add("revise", "Revising after Daniel’s note: his note above the form, her last reflection to edit and her photo kept unless she replaces it.", **YKW,
+          main=hdr("Update your work and send it to Daniel Osei again.")
+          + alert("warning", "Note from Daniel Osei", NOTE_REVISE)
+          + submit_form(text=REVISED, photo=photo_chosen(kept=True), primary="Resubmit"))
+    S.add("already-submitted", "Submitting again from another tab: 409; her work is already with Daniel.", **YKW,
+          main=assign_crumbs("Submit") + page_header(ASSIGN) + card(empty("You’ve already submitted this", "Your work is with Daniel. You can change it only if he asks for a revision.",
+                                                                          action=btn("See your submission", "primary", href=page("learn-submission", "in-review")), icon_name="lock"), cls="card--flush"))
+    S.add("closed", "Submissions closed while she was writing: 409, and nothing was sent.", **YKW,
+          main=assign_crumbs("Submit") + page_header(ASSIGN) + card(empty("Submissions are closed", "The due date and grace period have passed. Talk to Daniel if you need more time.",
+                                                                          action=btn("Back to the assignment", "primary", href=page("learn-assignment", "closed")), icon_name="clock"), cls="card--flush"))
+    S.add("loading", "The form loading.", **YKW, main=assign_crumbs("Submit") + page_header("Submit") + skeleton_list(4, "Loading the form"))
+    S.add("error", "The form failed to load.", **YKW, main=assign_crumbs("Submit") + page_header("Submit") + failed("We couldn’t load this assignment"))
+
+
+# ---------------------------------------------------------------- learn-submission
+def history(rows) -> str:
+    items = "".join(f'<li>{avatar(who)}<div class="feed__body"><strong>{esc(who["name"])}</strong> {esc(text)}<div class="feed__meta">{esc(when)}</div></div></li>' for who, text, when in rows)
+    return card(f'<ul class="feed" aria-label="What happened">{items}</ul>', title="What happened", tid="history")
+
+
+def what_you_sent(text: str = REFLECTION, late: bool = False) -> str:
+    photo = list_item("stacked-chairs.jpg", "Photo · 1.2 MB", lead=f'<span class="icon-tile" aria-hidden="true">{icon("file")}</span>',
+                      end=btn("Open", "ghost", size="sm", aria_label="Open the photo stacked-chairs.jpg"))
+    lt = badge("Late", "warning") if late else ""
+    return card(f'<div class="stack">{lt}<div class="reading">{esc(text)}</div>{ul_list([photo], card=False, label="Attached")}</div>', title="What you sent", tid="sent")
+
+
+SENT = (SOFIA, "submitted it", "Tue 3 Nov, 4:12 pm")
+REVIEWING = (DANIEL, "started reviewing", "Wed 4 Nov, 9:30 am")
+ASKED = (DANIEL, "asked for a revision", "Wed 4 Nov, 9:45 am")
+RESENT = (SOFIA, "resubmitted it", "Wed 4 Nov, 6:05 pm")
+ACCEPTED = (DANIEL, "accepted it · 25 of 25 points", "Thu 5 Nov, 10:20 am")
+
+
+@screen("learn-submission", "page", "Your submission", route="/learning/submissions/:id", reqs=R_SUBMIT,
+        na={"empty": "A submission page exists only once she has submitted."})
+def learn_submission(S):
+    hdr = lambda st, kind="", sub="Submitted Tue 3 Nov, 4:12 pm": assign_crumbs("Your submission") + page_header(f'{ASSIGN} {badge(st, kind)}', sub)
+    back = btn("Back to the module", "ghost", href=page("learn-module", "assignment"))
+
+    def layout(rows, sent=REFLECTION, extra="", act="", late=False) -> str:
+        return extra + f'<div class="split"><div class="stack">{what_you_sent(sent, late)}{act}</div><div class="stack">{history(rows)}</div></div>'
+
+    S.add("default", "Just submitted: Submitted, a copy of what she sent and what happens next.", **YKW,
+          main=hdr("Submitted", "info") + layout([SENT], extra=alert("success", "It’s in, Sofía", "Daniel Osei reviews it next. You’ll see his feedback here."), act=f'<div class="form-actions">{back}</div>'),
+          toast_html=toast_region(toast("success", "Submitted", ASSIGN)),
+          notes=note("Read only: she can’t change it while it’s with Daniel. The status changes when he reviews it (prompt 63).", "top: 5rem; right: 1rem;"))
+    S.add("in-review", "Daniel has started reviewing: In review, still read only.", **YKW,
+          main=hdr("In review", "info") + layout([SENT, REVIEWING], extra=alert("info", "Daniel is reviewing your work", "He usually replies within a day or two."), act=f'<div class="form-actions">{back}</div>'))
+    S.add("needs-revision", "Daniel asked for a revision: his note, what she sent and Revise your submission.", **YKW,
+          main=hdr("Needs revision", "warning") + layout([SENT, REVIEWING, ASKED], extra=alert("warning", "Note from Daniel Osei", NOTE_REVISE),
+                                                        act=f'<div class="form-actions">{back}{btn("Revise your submission", "primary", icon_name="edit", href=page("learn-submit", "revise"))}</div>'))
+    S.add("resubmitted", "Resubmitted: back to Submitted with her revised work, and the history keeps every step.", **YKW,
+          main=hdr("Submitted", "info", "Resubmitted Wed 4 Nov, 6:05 pm") + layout([SENT, REVIEWING, ASKED, RESENT], sent=REVISED,
+                                                                                    extra=alert("success", "Sent again", "Daniel reviews your revised work next."), act=f'<div class="form-actions">{back}</div>'),
+          toast_html=toast_region(toast("success", "Resubmitted", ASSIGN)))
+    S.add("accepted", "Accepted: the points awarded, Daniel’s comment and the full history.", **YKW,
+          main=hdr("Accepted", "success", "Resubmitted Wed 4 Nov, 6:05 pm") + layout([SENT, REVIEWING, ASKED, RESENT, ACCEPTED], sent=REVISED,
+                                                                                      extra=alert("success", "Accepted by Daniel Osei", NOTE_ACCEPT) + kpis([("Points", "25 / 25", "Every criterion met")]),
+                                                                                      act=f'<div class="form-actions">{btn("Back to the module", "primary", href=page("learn-module", "assignment"))}</div>'))
+    S.add("late", "Submitted after the due date: marked Late, as Daniel sees it.", **YKW,
+          main=hdr("Submitted", "info", "Submitted Fri 20 Nov, 8:15 pm · 1 day late") + layout([(SOFIA, "submitted it late", "Fri 20 Nov, 8:15 pm")], late=True, act=f'<div class="form-actions">{back}</div>'))
+    S.add("loading", "The submission loading.", **YKW, main=assign_crumbs("Your submission") + page_header("Your submission") + f'<div class="split">{skeleton_list(3, "Loading what you sent")}{skeleton_list(3, "Loading the history")}</div>')
+    S.add("error", "The submission failed to load.", **YKW, main=assign_crumbs("Your submission") + page_header("Your submission") + failed("We couldn’t load your submission"))
+    S.add("not-found", "Another youth’s submission or another organization’s: not found.", **YKW,
+          main=assign_crumbs("Your submission") + page_header("Your submission") + card(empty("We can’t find that submission", "It may not be yours, or it was never sent.",
+                                                                                         action=btn("Back to Learning", "", href=page("learn-home")), icon_name="search"), cls="card--flush"))

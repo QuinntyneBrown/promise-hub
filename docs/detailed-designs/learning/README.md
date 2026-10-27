@@ -16,6 +16,8 @@ Prompt 49 built the foundation only ([read-own-record](read-own-record/README.md
 | [`submit-coding-projects`](submit-coding-projects/README.md) | 57 Complete lessons | `learning-experience` L2-LEARN-008 |
 | [`take-quizzes`](take-quizzes/README.md) | 61 Take quizzes | `learning-experience` L2-LEARN-004 |
 | [`review-quiz-results`](review-quiz-results/README.md) | 61 Take quizzes | `learning-experience` L2-LEARN-005 |
-| `submit-assignments` | 62 Submit assignments | L1-LEARN-005 |
+| [`submit-assignments`](submit-assignments/README.md) | 62 Submit assignments | `learning-experience` L2-LEARN-006 |
+| [`track-and-revise-submissions`](track-and-revise-submissions/README.md) | 62 Submit assignments | `learning-experience` L2-LEARN-007 |
+| [`protect-unsaved-work`](protect-unsaved-work/README.md) | 62 Submit assignments | `non-functional` L2-NFR-007 |
 | `view-journey-and-progress` | 65 View journey and progress | L1-LEARN-007, 008 |
 | `write-reflections` | 66 Write reflections | L1-LEARN-006 |

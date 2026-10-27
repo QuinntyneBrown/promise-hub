@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Protect unsaved work
+Person(y, "Youth", "Phone or shared laptop")
+System(ph, "PromiseHub web app", "Asks before unsent work is lost; keeps drafts on the device")
+System_Ext(br, "Browser", "Navigation, beforeunload, localStorage")
+Rel(y, ph, "Writes a submission, leaves the page", "HTTPS")
+Rel(ph, br, "Asks before closing; stores the draft")
+@enduml

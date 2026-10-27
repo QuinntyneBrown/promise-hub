@@ -1,0 +1,31 @@
+@startuml
+title Class structure — Submit an assignment
+skinparam classAttributeIconSize 0
+class Assignment {
+  Id, OrganizationId, ModuleId, LessonId?
+  Title, Brief, SubmissionTypes
+  TotalPoints, DueDate?, GraceDays, AllowLate
+}
+class RubricCriterion { Position, Description, Points }
+class AssignmentSubmission {
+  Id, OrganizationId, MembershipId, AssignmentId
+  Text?, Link?, FileName?, FileKind?, FileType?, FileBytes?, FileKey?
+  Status, Late, Round, SubmittedAt
+  Submit(...) / Resubmit(...)
+}
+class SubmissionEvent { Kind, ActorName, At }
+enum SubmissionStatus { Submitted, InReview, NeedsRevision, Accepted }
+class AssignmentBriefHandler { HandleAsync(id): Gated<AssignmentBriefDto> }
+class SubmissionCommand { SubmitAsync(id, work); ResubmitAsync(id, work) }
+class SubmissionFilePolicy { Accept(name, type, length, head, types): ext? }
+class LearnerProgress { AssignmentAsync(id) }
+class AssignmentStatus { Assignment, Locked, UnlockAfter, Submission? }
+Assignment "1" *-- "1..10" RubricCriterion
+Assignment "1" o-- "0..*" AssignmentSubmission
+AssignmentSubmission "1" *-- "1..*" SubmissionEvent
+AssignmentSubmission --> SubmissionStatus
+AssignmentBriefHandler ..> LearnerProgress
+SubmissionCommand ..> LearnerProgress
+SubmissionCommand ..> SubmissionFilePolicy
+LearnerProgress ..> AssignmentStatus
+@enduml
