@@ -31,7 +31,7 @@ Open questions: a mentor awarding by hand (Waypoint allows it) is deferred; push
 
 ## Built so far
 
-Not yet built.
+Prompt 64 delivered everything above: automatic awards on lesson completion, quiz scoring, quiz approval (one and all) and accepted submissions (slice 2), and the award by hand with its dialog (slice 3). The fake API evaluates the same rules after the same events. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/BadgeAwardingTests.cs`, `backend/tests/PromiseHub.Api.Tests/BadgeManualAwardTests.cs`, `e2e/tests/curriculum/badge-awards.spec.ts`, `e2e/tests/curriculum/curriculum-badges.spec.ts`.
 
 ## Requirements
 

@@ -404,7 +404,7 @@ def curriculum_badge(S):
         for name, ic, _desc, kind, rule, comp, n in items:
             meta = f'{esc(rule)}{" · " + esc(comp) if comp else ""} · earned by {n} youth'
             out.append(list_item(esc(name), meta, href=page("curriculum-badge", "edit" if kind == "By hand" else "automatic"),
-                                 lead=f'<span class="icon-tile" aria-hidden="true">{icon(ic)}</span>', end=badge(kind, "info" if kind == "Automatic" else "")))
+                                 lead=f'<span class="achievement-badge achievement-badge--sm" aria-hidden="true"><span class="achievement-badge__medal">{icon(ic)}</span></span>', end=badge(kind, "info" if kind == "Automatic" else "")))
         return ul_list(out, card=False, label="Badges")
 
     listing = card(rows(), title="All badges", tid="all-badges", cls="card--flush")
@@ -517,7 +517,7 @@ def curriculum_progression(S):
     def how(stages):
         steps = "".join(f"<li>{esc(n)}</li>" for n, _, _ in stages)
         return card(f'<p>A youth reaches a stage once their mentor marks every competency in it, and in the stages before it, Proficient or Mastered.</p>'
-                    f'<ol class="stack stack--snug">{steps}</ol><p class="text-caption">Mentors assess these competencies on each youth’s record. Badges can count toward one, such as Servant Heart toward Serves others.</p>',
+                    f'<ol class="stack stack--snug">{steps}</ol><p class="text-caption">Mentors assess these competencies on each youth’s record. A badge can count toward one.</p>',
                     title="How youth advance", tid="how")
 
     def layout(stages=STAGES):

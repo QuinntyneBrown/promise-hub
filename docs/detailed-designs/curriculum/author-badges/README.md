@@ -35,7 +35,7 @@ Open questions: an attendance-streak rule waits for cohort session attendance (p
 
 ## Built so far
 
-Not yet built.
+Prompt 64 delivered everything above: the Badges list, the builder with its preview, refusals, delete and the gates (slice 1), and Earned by with Award badge for a badge by hand (slice 3). The builder opens at `/curriculum/badges/new` and, once saved, at its own address. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/CurriculumBadgesTests.cs`, `e2e/tests/curriculum/curriculum-badges.spec.ts`.
 
 ## Requirements
 

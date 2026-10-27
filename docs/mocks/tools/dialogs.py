@@ -668,13 +668,13 @@ def leave_grade(S):
 simple("award-badge", "Award Speaks Up", "curriculum-badge", ["L2-085", "L2-032", R_CURRIC],
        "Youth get it at once and see it on their journey. It is recorded with your name.",
        lambda e: select("youth", "Youth", ["Choose a youth", "Nadia Haddad"], selected="Choose a youth" if e else "Nadia Haddad", error=(e or {}).get("youth", ""),
-                        help_="Youth of Harbourview who don’t have it yet. Sofía Rivera already has it."),
-       "Award badge", icon_name="award", base_state="edit", invalid_err={"youth": "Choose who earns it."},
+                        help_="Youth of your organization who don’t have it yet."),
+       "Award badge", icon_name="award", base_state="edit", invalid_err={"youth": "Choose a youth of your organization."},
        failed_text="The badge was not awarded. Try again.",
        extra_states={"already": ("Someone awarded it to Nadia a moment ago: the dialog says so and nothing is added twice.",
                                  dialog_box("Award Speaks Up", "Youth get it at once and see it on their journey. It is recorded with your name.",
                                             select("youth", "Youth", ["Nadia Haddad"], selected="Nadia Haddad", error="Nadia Haddad already has this badge.",
-                                                   help_="Youth of Harbourview who don’t have it yet."),
+                                                   help_="Youth of your organization who don’t have it yet."),
                                             footer("Award badge"), icon_name="award", form=True))})
 
 simple("delete-badge", "Delete Speaks Up?", "curriculum-badge", ["L2-084", "L2-032", R_CURRIC],

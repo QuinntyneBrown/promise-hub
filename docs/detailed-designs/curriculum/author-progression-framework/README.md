@@ -32,7 +32,7 @@ Open questions: deleting a stage, moving a competency between stages and renamin
 
 ## Built so far
 
-Not yet built.
+Prompt 64 delivered everything above (slice 4): the seeded stages, adding, editing and reordering stages, adding and removing competencies, the mentor's sheet leaving removed competencies out, and the migration that puts earlier competencies into a first stage. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/CurriculumProgressionTests.cs`, `e2e/tests/curriculum/curriculum-progression.spec.ts`.
 
 ## Requirements
 
