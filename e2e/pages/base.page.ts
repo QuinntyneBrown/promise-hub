@@ -25,8 +25,24 @@ export abstract class BasePage {
 
   /** WCAG 2.2 AA via axe on whatever the screen currently shows. */
   async expectAccessible(): Promise<void> {
-    // Let layout settle (focus moves, scrolls, toasts) so axe checks the page as it rests, not mid-frame.
-    await this.page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+    // Let layout settle (focus moves, smooth scrolls, toasts) so axe checks the page as it rests, not mid-frame: wait until the
+    // scroll position has held still for a few frames, since a smooth scroll on a slow runner can leave a target half under the top bar.
+    await this.page.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          let last = -1;
+          let still = 0;
+          const started = performance.now();
+          const tick = () => {
+            const y = window.scrollY;
+            still = y === last ? still + 1 : 0;
+            last = y;
+            if (still >= 3 || performance.now() - started > 3000) resolve();
+            else requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        }),
+    );
     const results = await new AxeBuilder({ page: this.page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
     expect(results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(', ')}`)).toEqual([]);
   }
