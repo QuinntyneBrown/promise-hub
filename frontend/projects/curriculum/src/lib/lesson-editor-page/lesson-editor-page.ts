@@ -10,7 +10,7 @@ import {
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CURRICULUM_API, LessonDetail, LoadResult } from '@promisehub/api';
+import { CURRICULUM_API, LessonDetail, LessonVideo, LoadResult } from '@promisehub/api';
 import {
   ErrorSummaryItem,
   PhAlert,
@@ -22,11 +22,15 @@ import {
   PhDialogs,
   PhEmptyState,
   PhErrorSummary,
+  PhFileUpload,
+  PhList,
+  PhListItem,
   PhPageHeader,
   PhSkeleton,
   PhTextField,
   PhTextarea,
   ToastService,
+  formatDate,
 } from '@promisehub/components';
 import { Subject, startWith, switchMap } from 'rxjs';
 import { CurriculumStatusDialog } from '../curriculum-status-dialog/curriculum-status-dialog';
@@ -35,7 +39,7 @@ import { DeleteLessonDialog } from '../delete-lesson-dialog/delete-lesson-dialog
 import { DeleteLessonDialogData } from '../delete-lesson-dialog/delete-lesson-dialog-data';
 import { statusLabel, statusTone } from '../status-label';
 
-/** The lesson editor (mock: curriculum-lesson, L2-067): content, leader notes, status and delete. */
+/** The lesson editor (mock: curriculum-lesson, L2-067): content, leader notes, status, delete and the lesson video. */
 @Component({
   selector: 'ph-lesson-editor-page',
   imports: [
@@ -48,6 +52,9 @@ import { statusLabel, statusTone } from '../status-label';
     PhDescriptionList,
     PhEmptyState,
     PhErrorSummary,
+    PhFileUpload,
+    PhList,
+    PhListItem,
     PhPageHeader,
     PhSkeleton,
     PhTextField,
@@ -94,6 +101,11 @@ export class LessonEditorPage {
   );
   protected readonly failed = signal(false);
   protected readonly busy = signal(false);
+  /** The video on its way up, or why the last one did not attach. */
+  protected readonly upload = signal<{
+    state: 'uploading' | 'refused' | 'failed';
+    file: File;
+  } | null>(null);
   protected readonly statusLabel = statusLabel;
   protected readonly statusTone = statusTone;
 
@@ -178,5 +190,44 @@ export class LessonEditorPage {
         this.toasts.show({ tone: 'success', title: 'Lesson deleted', text: l.title });
         void this.router.navigate(['/curriculum/modules', l.moduleId]);
       });
+  }
+
+  protected size(bytes: number): string {
+    if (bytes < 1024) return `${bytes} bytes`;
+    if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+    if (bytes < 1024 * 1024 * 1024) return `${Math.round(bytes / (1024 * 1024))} MB`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+  }
+
+  protected videoMeta(v: LessonVideo): string {
+    return `Video · ${this.size(v.bytes)} · uploaded ${formatDate(v.uploadedAt)} by ${v.uploadedBy}`;
+  }
+
+  protected attach(l: LessonDetail, file: File): void {
+    this.upload.set({ state: 'uploading', file });
+    this.api.uploadVideo(l.id, file).subscribe((outcome) => {
+      if (outcome.status === 'saved') {
+        this.upload.set(null);
+        this.toasts.show({ tone: 'success', title: 'Video attached', text: file.name });
+        this.reload();
+      } else {
+        this.upload.set({ state: outcome.status === 'invalid' ? 'refused' : 'failed', file });
+      }
+    });
+  }
+
+  protected removeVideo(l: LessonDetail, v: LessonVideo): void {
+    this.api.removeVideo(l.id).subscribe((outcome) => {
+      if (outcome.status === 'saved') {
+        this.toasts.show({ tone: 'success', title: 'Video removed', text: v.fileName });
+        this.reload();
+      } else {
+        this.toasts.show({
+          tone: 'danger',
+          title: 'The video was not removed',
+          text: 'Try again.',
+        });
+      }
+    });
   }
 }

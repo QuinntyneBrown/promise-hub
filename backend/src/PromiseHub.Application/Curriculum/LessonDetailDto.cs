@@ -16,4 +16,5 @@ public sealed record LessonDetailDto(
     string? LeaderNotes,
     string Status,
     int Position,
-    int LessonCount);
+    int LessonCount,
+    LessonVideoDto? Video);

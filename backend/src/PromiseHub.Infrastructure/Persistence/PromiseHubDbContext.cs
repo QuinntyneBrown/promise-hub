@@ -146,6 +146,11 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(l => l.LeaderNotes).HasMaxLength(Domain.Curriculum.Lesson.MaximumNotes);
             e.Property(l => l.Status).HasConversion<string>().HasMaxLength(20);
             e.Property(l => l.DeletedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.Property(l => l.VideoFileName).HasMaxLength(260);
+            e.Property(l => l.VideoKey).HasMaxLength(200);
+            e.Property(l => l.VideoContentType).HasMaxLength(100);
+            e.Property(l => l.VideoUploadedBy).HasMaxLength(200);
+            e.Property(l => l.VideoUploadedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
             e.HasOne<Domain.Curriculum.CurriculumModule>().WithMany().HasForeignKey(l => l.ModuleId);
         });
         modelBuilder.Entity<DataRequest>(e =>

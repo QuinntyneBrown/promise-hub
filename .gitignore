@@ -27,3 +27,6 @@ e2e/playwright-report/
 
 # Python bytecode
 __pycache__/
+
+# Files PromiseHub stores locally (lesson videos, ADR 0050)
+App_Data/

@@ -207,6 +207,7 @@ export * from './lib/curriculum/module-fields';
 export * from './lib/curriculum/lesson-summary';
 export * from './lib/curriculum/lesson-fields';
 export * from './lib/curriculum/lesson-detail';
+export * from './lib/curriculum/lesson-video';
 export * from './lib/curriculum/curriculum-api';
 export * from './lib/curriculum/curriculum-api.token';
 export * from './lib/mentoring/assigned-youth';

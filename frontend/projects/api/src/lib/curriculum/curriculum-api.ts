@@ -25,4 +25,6 @@ export interface CurriculumApi {
   updateLesson(id: string, fields: LessonFields): Observable<WriteOutcome>;
   setLessonStatus(id: string, status: ContentStatus): Observable<WriteOutcome>;
   deleteLesson(id: string): Observable<WriteOutcome>;
+  uploadVideo(lessonId: string, file: File): Observable<WriteOutcome>;
+  removeVideo(lessonId: string): Observable<WriteOutcome>;
 }

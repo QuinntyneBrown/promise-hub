@@ -96,4 +96,16 @@ export class HttpCurriculumApi implements CurriculumApi {
   deleteLesson(id: string): Observable<WriteOutcome> {
     return toWrite(this.http.delete<null>(`${this.baseUrl}/curriculum/lessons/${id}`));
   }
+
+  uploadVideo(lessonId: string, file: File): Observable<WriteOutcome> {
+    const form = new FormData();
+    form.append('file', file, file.name);
+    return toWrite(
+      this.http.post<null>(`${this.baseUrl}/curriculum/lessons/${lessonId}/video`, form),
+    );
+  }
+
+  removeVideo(lessonId: string): Observable<WriteOutcome> {
+    return toWrite(this.http.delete<null>(`${this.baseUrl}/curriculum/lessons/${lessonId}/video`));
+  }
 }

@@ -95,4 +95,36 @@ export class CurriculumLessonPage extends BasePage {
   async apiStatus(path: string): Promise<number> {
     return this.page.evaluate(async (p) => (await fetch(p)).status, path);
   }
+
+  get videoCard(): Locator {
+    return this.page.getByRole('region', { name: 'Video' });
+  }
+
+  get attachedVideo(): Locator {
+    return this.videoCard.getByRole('list', { name: 'Lesson video' });
+  }
+
+  get chooseVideo(): Locator {
+    return this.videoCard.getByLabel('Choose video');
+  }
+
+  get uploading(): Locator {
+    return this.videoCard.getByText(/^Uploading/);
+  }
+
+  get videoRefused(): Locator {
+    return this.videoCard.getByRole('alert').filter({ hasText: 'That file isn’t a video we can use' });
+  }
+
+  get uploadFailed(): Locator {
+    return this.videoCard.getByRole('alert').filter({ hasText: 'The upload didn’t finish' });
+  }
+
+  async attach(name: string, mimeType: string, buffer: Buffer): Promise<void> {
+    await this.chooseVideo.setInputFiles({ name, mimeType, buffer });
+  }
+
+  async removeVideo(name: string): Promise<void> {
+    await this.videoCard.getByRole('button', { name: `Remove the video ${name}` }).click();
+  }
 }

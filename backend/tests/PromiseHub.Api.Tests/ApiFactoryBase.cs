@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Time.Testing;
+using PromiseHub.Application;
 using PromiseHub.Application.Messaging;
 using PromiseHub.Cli;
 using PromiseHub.Infrastructure.Persistence.Seed;
@@ -60,6 +61,8 @@ public abstract class ApiFactoryBase : WebApplicationFactory<Program>
             services.AddSingleton<ISmsSender>(sp => sp.GetRequiredService<FakeSmsSender>());
             services.AddSingleton<FakeEmailSender>();
             services.AddSingleton<IEmailSender>(sp => sp.GetRequiredService<FakeEmailSender>());
+            services.AddSingleton<FakeFileStore>();
+            services.AddSingleton<IFileStore>(sp => sp.GetRequiredService<FakeFileStore>());
             if (!_testAuth)
             {
                 return;

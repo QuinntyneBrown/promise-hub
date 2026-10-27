@@ -17,6 +17,7 @@ public sealed class LessonHandler(IPromiseHubDb db)
         var count = await db.Lessons.CountAsync(l => l.ModuleId == module.Id && l.DeletedAt == null, cancellationToken);
         return new LessonDetailDto(lesson.Id, module.Id, module.Title, track.Id, track.Name, lesson.Title, lesson.Reading, lesson.Minutes,
             CurriculumRules.SplitLines(lesson.Objectives), lesson.Body, CurriculumRules.SplitLines(lesson.Prompts), lesson.LeaderNotes,
-            lesson.Status.ToString(), lesson.Position, count);
+            lesson.Status.ToString(), lesson.Position, count,
+            lesson.VideoKey is null ? null : new LessonVideoDto(lesson.VideoFileName!, lesson.VideoBytes ?? 0, lesson.VideoUploadedAt!.Value, lesson.VideoUploadedBy!));
     }
 }

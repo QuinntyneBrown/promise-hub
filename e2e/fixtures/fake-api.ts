@@ -495,6 +495,8 @@ export class FakeApi {
     ['PUT', /^\/api\/curriculum\/lessons\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.curriculumState.updateLesson(route, org, p['id']!))],
     ['PUT', /^\/api\/curriculum\/lessons\/(?<id>[^/]+)\/status$/, (route, p) => this.author(route, (org) => this.curriculumState.setLessonStatus(route, org, p['id']!))],
     ['DELETE', /^\/api\/curriculum\/lessons\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.curriculumState.deleteLesson(route, org, p['id']!))],
+    ['POST', /^\/api\/curriculum\/lessons\/(?<id>[^/]+)\/video$/, (route, p) => this.author(route, (org) => this.curriculumState.uploadVideo(route, org, p['id']!, memberships.find((x) => x.id === this.membershipId)!.personName))],
+    ['DELETE', /^\/api\/curriculum\/lessons\/(?<id>[^/]+)\/video$/, (route, p) => this.author(route, (org) => this.curriculumState.removeVideo(route, org, p['id']!))],
     ['GET', /^\/api\/mentoring\/youth$/, (route) => this.mentoredYouth(route)],
     ['GET', /^\/api\/mentoring\/dashboard$/, (route) => this.mentorDashboard(route)],
     ['GET', /^\/api\/mentoring\/youth\/(?<id>[^/]+)$/, (route, p) => this.mentorYouthRecord(route, p['id']!)],

@@ -106,6 +106,53 @@
           </div>
         </form>
         <div class="stack">
+          <ph-card title="Video" [flush]="!!l.video || upload()?.state === 'uploading'">
+            @let u = upload();
+            @if (u?.state === 'uploading') {
+              <ph-list label="Lesson video" [inset]="true" aria-busy="true">
+                <ph-list-item [title]="u!.file.name" [meta]="'Uploading · ' + size(u!.file.size)" />
+              </ph-list>
+            } @else if (l.video; as v) {
+              <ph-list label="Lesson video" [inset]="true">
+                <ph-list-item [title]="v.fileName" [meta]="videoMeta(v)">
+                  <ph-button
+                    variant="ghost"
+                    size="sm"
+                    [label]="'Remove the video ' + v.fileName"
+                    (click)="removeVideo(l, v)"
+                    >Remove</ph-button
+                  >
+                </ph-list-item>
+              </ph-list>
+            } @else {
+              <div class="stack">
+                @if (u?.state === 'refused') {
+                  <ph-alert
+                    tone="danger"
+                    title="That file isn’t a video we can use"
+                    [text]="
+                      '“' +
+                      u!.file.name +
+                      '” was not attached. Choose an MP4, MOV or WebM video of up to 1 GB.'
+                    "
+                  />
+                } @else if (u?.state === 'failed') {
+                  <ph-alert
+                    tone="danger"
+                    title="The upload didn’t finish"
+                    text="Nothing was attached. Check your connection and choose the video again."
+                  />
+                }
+                <ph-file-upload
+                  title="Attach a lesson video"
+                  text="MP4, MOV or WebM, up to 1 GB. Youth can watch it once the lesson is published."
+                  accept="video/mp4,video/quicktime,video/webm"
+                  buttonLabel="Choose video"
+                  (fileSelected)="attach(l, $event)"
+                />
+              </div>
+            }
+          </ph-card>
           <ph-card title="Belongs to">
             <ph-description-list
               [facts]="[

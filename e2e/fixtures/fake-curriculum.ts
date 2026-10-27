@@ -37,6 +37,7 @@ export interface FakeLesson {
   position: number;
   status: ContentStatus;
   deleted: boolean;
+  video: { fileName: string; bytes: number; uploadedAt: string; uploadedBy: string } | null;
 }
 
 const lesson = (id: string, moduleId: string, title: string, position: number, status: ContentStatus, minutes: number | null, body: string | null = null): FakeLesson => ({
@@ -53,6 +54,7 @@ const lesson = (id: string, moduleId: string, title: string, position: number, s
   position,
   status,
   deleted: false,
+  video: null,
 });
 
 const clean = (v: string | null | undefined): string | null => (v && v.trim() ? v.trim() : null);
@@ -162,6 +164,7 @@ export class FakeCurriculum {
       objectives: ['Notice what needs doing', 'Serve without being asked'],
       prompts: ['Who picked up the towel for you this week?'],
       leaderNotes: 'Watch for youth who find it hard to accept help.',
+      video: { fileName: 'pick-up-the-towel.mp4', bytes: 192_937_984, uploadedAt: '2026-11-05T15:20:00Z', uploadedBy: 'Marisol Delgado' },
     },
     lesson('l-line', 'cm-serving', 'Last in Line', 2, 'Draft', 15),
     lesson('l-coach', 'cm-serving', 'Leading Like a Coach', 3, 'Draft', 18),
@@ -402,6 +405,7 @@ export class FakeCurriculum {
         status: l.status,
         position: l.position,
         lessonCount: this.liveLessons(m.id).length,
+        video: l.video,
       },
     });
   }
@@ -456,6 +460,46 @@ export class FakeCurriculum {
     if (!l) return route.fulfill({ status: 404 });
     l.deleted = true;
     this.liveLessons(l.moduleId).forEach((x, i) => (x.position = i + 1));
+    return route.fulfill({ status: 204 });
+  }
+
+  private held: Promise<void> | null = null;
+
+  /** Holds every video upload until the returned function is called, to show the uploading state. */
+  holdUploads(): () => void {
+    let release!: () => void;
+    this.held = new Promise<void>((resolve) => (release = resolve));
+    return () => {
+      this.held = null;
+      release();
+    };
+  }
+
+  /** POST /curriculum/lessons/{id}/video: one multipart file, checked by extension, content type and first bytes (L2-067 criteria 7 and 8). */
+  async uploadVideo(route: Route, org: string, id: string, by: string): Promise<void> {
+    const l = this.lesson(org, id);
+    if (!l) return route.fulfill({ status: 404 });
+    if (this.held) await this.held;
+    const body = route.request().postDataBuffer() ?? Buffer.alloc(0);
+    const text = body.toString('latin1');
+    const fileName = /filename="([^"]*)"/.exec(text)?.[1] ?? '';
+    const contentType = /Content-Type: ([^\r\n]+)/i.exec(text.slice(text.indexOf('filename=')))?.[1]?.trim() ?? '';
+    const start = text.indexOf('\r\n\r\n', text.indexOf('filename=')) + 4;
+    const end = text.indexOf('\r\n--', start);
+    const bytes = body.subarray(start, end);
+    const ext = fileName.slice(fileName.lastIndexOf('.')).toLowerCase();
+    const types: Record<string, string[]> = { '.mp4': ['video/mp4'], '.mov': ['video/quicktime', 'video/mp4'], '.webm': ['video/webm'] };
+    const signed = ext === '.webm' ? bytes.subarray(0, 4).equals(Buffer.from([0x1a, 0x45, 0xdf, 0xa3])) : bytes.subarray(4, 8).toString('latin1') === 'ftyp';
+    if (!types[ext]?.includes(contentType) || bytes.length < 1 || !signed) return invalid(route, 'file', 'Choose an MP4, MOV or WebM video of up to 1 GB.');
+    l.video = { fileName, bytes: bytes.length, uploadedAt: '2026-11-05T21:12:00Z', uploadedBy: by };
+    return route.fulfill({ status: 201, json: l.video });
+  }
+
+  /** DELETE /curriculum/lessons/{id}/video. */
+  removeVideo(route: Route, org: string, id: string): Promise<void> {
+    const l = this.lesson(org, id);
+    if (!l?.video) return route.fulfill({ status: 404 });
+    l.video = null;
     return route.fulfill({ status: 204 });
   }
 }

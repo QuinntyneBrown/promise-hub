@@ -1,4 +1,5 @@
 import type { ContentStatus } from './content-status';
+import type { LessonVideo } from './lesson-video';
 
 /** One lesson for the lesson editor, leader notes included (authors only). */
 export interface LessonDetail {
@@ -17,4 +18,5 @@ export interface LessonDetail {
   status: ContentStatus;
   position: number;
   lessonCount: number;
+  video: LessonVideo | null;
 }

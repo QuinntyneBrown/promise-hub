@@ -458,6 +458,28 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .HasMaxLength(120)
                         .HasColumnType("TEXT");
 
+                    b.Property<long?>("VideoBytes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("VideoContentType")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("VideoFileName")
+                        .HasMaxLength(260)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("VideoKey")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("VideoUploadedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("VideoUploadedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ModuleId");

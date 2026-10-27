@@ -49,6 +49,16 @@ public sealed class Lesson : ITenantOwned
     public ContentStatus Status { get; private set; }
     public DateTimeOffset? DeletedAt { get; private set; }
 
+    /// <summary>The lesson video's file name as uploaded; shown only, never used as a path.</summary>
+    public string? VideoFileName { get; private set; }
+
+    /// <summary>Where file storage keeps the video: lessons/{organization}/{lesson}/{guid}{extension}.</summary>
+    public string? VideoKey { get; private set; }
+    public string? VideoContentType { get; private set; }
+    public long? VideoBytes { get; private set; }
+    public DateTimeOffset? VideoUploadedAt { get; private set; }
+    public string? VideoUploadedBy { get; private set; }
+
     public void Update(string title, string? reading, int? minutes, string? objectives, string? body, string? prompts, string? leaderNotes)
     {
         Title = title;
@@ -65,4 +75,24 @@ public sealed class Lesson : ITenantOwned
     public void SetStatus(ContentStatus status) => Status = status;
 
     public void Delete(DateTimeOffset now) => DeletedAt = now;
+
+    public void AttachVideo(string fileName, string key, string contentType, long bytes, DateTimeOffset at, string by)
+    {
+        VideoFileName = fileName;
+        VideoKey = key;
+        VideoContentType = contentType;
+        VideoBytes = bytes;
+        VideoUploadedAt = at;
+        VideoUploadedBy = by;
+    }
+
+    public void RemoveVideo()
+    {
+        VideoFileName = null;
+        VideoKey = null;
+        VideoContentType = null;
+        VideoBytes = null;
+        VideoUploadedAt = null;
+        VideoUploadedBy = null;
+    }
 }

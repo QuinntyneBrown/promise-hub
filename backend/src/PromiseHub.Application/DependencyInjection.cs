@@ -150,6 +150,7 @@ public static class DependencyInjection
         services.AddScoped<Curriculum.ModuleHandler>();
         services.AddScoped<Curriculum.LessonCommands>();
         services.AddScoped<Curriculum.LessonHandler>();
+        services.AddScoped<Curriculum.LessonVideoHandler>();
         services.AddScoped<Mentoring.MentoringHandler>();
         services.AddScoped<Mentoring.MentorScope>();
         services.AddScoped<Mentoring.MentoredYouthReader>();
