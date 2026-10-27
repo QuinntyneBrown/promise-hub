@@ -123,6 +123,42 @@ simple("review-enrollment", "Accept Nikolai Petrov?", "roster", [R_ENROLL, R_NOT
        "Accept and text Elena", icon_name="check", na={"invalid": "Decision has a default; the note is optional."},
        extra_states={"decline": ("Declining with a required reason.", dialog_box("Decline Nikolai Petrov?", "Elena Petrova reads the reason.", fieldset("Decision", choice("dec", "Decline", checked=True)) + textarea("why", "Reason the guardian will read", rows=3, error="Write a reason.", value=""), footer("Decline and text Elena", danger=True, autofocus_cancel=True), icon_name="x-circle", danger=True, form=True))})
 
+# Review and place applicants (prompt 59, L2-072): over the application page.
+_COHORTS = [("After‑School Tutoring", "48 of 50 places · applied for", False), ("Saturday Sports", "62 of 80 places", False), ("One-to-one Mentoring", "19 of 25 places", False), ("Winter Camp 2026", "60 of 60 places · full, waitlist instead", True)]
+
+
+def _place_body(e=None, *, invite=True, learning=True, picked="After‑School Tutoring"):
+    e = e or {}
+    radios = "".join(choice("cohort", n, small=m, checked=(n == picked and not e.get("cohort")), attrs=" disabled" if full else "", invalid=bool(e.get("cohort"))) for n, m, full in _COHORTS)
+    out = fieldset("Cohort", radios, error=e.get("cohort", ""), fid="cohort", hint="Zoe joins its roster now. A full cohort can’t take her; waitlist instead.")
+    if learning:
+        out += switch("invite", "Invite Zoe to PromiseHub as a youth", checked=invite, desc="She sets a password and starts Learning once Tanya consents.")
+        if invite:
+            out += field("invite-email", "Zoe’s email", type_="email", value="" if e.get("email") else "zoe.campbell@example.ca", error=e.get("email", ""), autocomplete="off")
+    out += textarea("place-note", "Note to the family", rows=2, optional=True, placeholder="Welcome! Tutoring is Monday to Thursday, 4 to 6 pm.")
+    return out
+
+
+simple("place-applicant", "Place Zoe Campbell", "application", ["L2-072", R_ENROLL, R_NOTIFY], "Choose her cohort. Tanya Campbell is texted.",
+       lambda e: _place_body(e), "Place and text Tanya", icon_name="check",
+       invalid_err={"cohort": "Choose a cohort.", "email": "Enter an email like name@example.org."},
+       extra_states={
+           "no-invite": ("Placing without a youth invitation: the email field goes away.", dialog_box("Place Zoe Campbell", "Choose her cohort. Tanya Campbell is texted.", _place_body(invite=False), footer("Place and text Tanya"), icon_name="check", form=True)),
+           "full": ("The cohort filled while the dialog was open: the server answers 422 and nothing changes.", dialog_box("Place Zoe Campbell", "Choose her cohort. Tanya Campbell is texted.", _place_body(), footer("Place and text Tanya"), icon_name="check", form=True, alert_html=alert("danger", "After‑School Tutoring is full (50 of 50). Waitlist instead."))),
+           "learning-off": ("Learning is off, or a program director is placing: no youth invitation is offered.", dialog_box("Place Zoe Campbell", "Choose her cohort. Tanya Campbell is texted.", _place_body(learning=False), footer("Place and text Tanya"), icon_name="check", form=True)),
+           "invite-failed": ("Placed, but the invitation was refused (Zoe already has access): the placement stands and the dialog says so.", dialog_box("Zoe is placed", "", alert("warning", "Zoe is in After‑School Tutoring, but the invitation wasn’t sent", "zoe.campbell@example.ca already has access. Invite her from her record.") , btn("Done", "primary", attrs=" autofocus"), icon_name="check-circle")),
+       })
+
+simple("decide-application", "Waitlist Zoe Campbell?", "application", ["L2-072", R_ENROLL, R_NOTIFY], "Next place on the After‑School Tutoring waitlist · Tanya Campbell is texted.",
+       lambda e: fieldset("Decision", choice("dec", "Waitlist", small="Next place on the waitlist", checked=True) + choice("dec", "Decline", small="Say why below"))
+                 + textarea("why", "Note to the family", rows=2, optional=True, placeholder="We’ll text you as soon as a place opens."),
+       "Waitlist and text Tanya", icon_name="clock", na={"invalid": "Waitlist has a default and its note is optional; see decline for the required reason."},
+       extra_states={"decline": ("Declining with the reason the family reads; without one the server answers 422.", dialog_box("Decline Zoe Campbell?", "Tanya Campbell reads the reason.", fieldset("Decision", choice("dec", "Waitlist", small="Next place on the waitlist") + choice("dec", "Decline", small="Say why below", checked=True)) + textarea("why", "Reason the family will read", rows=3, error="Write a reason the guardian will read.", value=""), footer("Decline and text Tanya", danger=True, autofocus_cancel=True), icon_name="x-circle", danger=True, form=True))})
+
+simple("add-application-note", "Add a note", "application", ["L2-072", R_ENROLL], "Only staff see notes. Tanya and Rachel never do.",
+       lambda e: textarea("app-note", "Note", rows=4, value="" if e else "Called Tanya: she knows about the referral and is happy for Zoe to start.", error=(e or {}).get("note", ""), count="76 / 2,000"),
+       "Add note", icon_name="edit", invalid_err={"note": "Write a note of up to 2,000 characters."})
+
 simple("move-in", "Move Sofía Rivera in?", "roster", [R_ENROLL, R_NOTIFY], "Number 1 on the waitlist · 48 of 50 places taken.",
        lambda e: textarea("why", "Note to the guardian", rows=2, optional=True, placeholder="A place opened. Camp starts at 8 am."),
        "Move in and text Carmen", icon_name="check", na={"invalid": "The note is optional."})
@@ -316,7 +352,7 @@ simple("sign-out-all", "Sign out everywhere?", "account", [R_SEC], "Every other 
 @screen("main-menu", "dialog", "Main menu", opens_from="today", reqs=["L1-014"], na={"busy": "A menu has no submit.", "invalid": "A menu has no inputs."})
 def main_menu(S):
     staff_links = [("today", "Today", "home"), ("check-in", "Check-in", "clipboard"), ("quick-card", "Quick Cards", "heart-pulse"), ("families", "Families", "users"), ("events", "Events", "calendar"), ("slips", "Slips", "clipboard"), ("programs", "Programs", "list"), ("messages", "Messages", "message"), ("reports", "Reports", "chart"), ("incidents", "Incidents", "flag"), ("attendance", "Attendance", "table"), ("settings", "Settings", "settings"), ("notifications", "Notifications", "bell"), ("account", "Your account", "user")]
-    director_links = staff_links[:10] + [("curriculum-tracks", "Curriculum", "star")] + staff_links[10:]
+    director_links = staff_links[:10] + [("applications", "Applications", "inbox"), ("curriculum-tracks", "Curriculum", "star")] + staff_links[10:]
     tail = [("notifications", "Notifications", "bell"), ("account", "Your account", "user")]
 
     def drawer(user=STAFF["jaylen"], current="today", links=staff_links):
@@ -326,7 +362,7 @@ def main_menu(S):
                 f'<div class="nav-drawer__nav">{items}<div class="menu__divider" aria-hidden="true"></div><a class="nav-drawer__link" href="{page("signed-out")}">{icon("log-out")}Sign out</a></div>'
                 f'<div style="padding: var(--space-3) var(--space-4); border-top: var(--border-width-hairline) solid var(--color-border-default);" class="cluster cluster--snug">{avatar(user)}<div><div style="font: var(--text-label);">{esc(user["name"])}</div><div class="text-caption">{esc(user["role"])} · {ORG_SHORT}</div></div></div></nav>')
     S.add("default", "The More menu on a phone: every section, current one marked, sign out at the end.", **over("today", overlays=drawer()))
-    S.add("director", "The same menu for the program director, from Programs; Curriculum shows while Learning is on.", **over("programs", overlays=drawer(STAFF["marisol"], "programs", director_links)))
+    S.add("director", "The same menu for the program director, from Programs; Applications shows while Roster is on and Curriculum while Learning is on.", **over("programs", overlays=drawer(STAFF["marisol"], "programs", director_links)))
     S.add("youth", "A youth’s menu: Today, Learning, notifications and account only; no staff sections, no Settings.",
           **over("today", "youth", overlays=drawer(YOUTH["sofia"], "today", [("today", "Today", "home"), ("learn-home", "Learning", "star")] + tail)))
     S.add("mentor", "A mentor’s menu: Today, Mentoring, notifications and account.",

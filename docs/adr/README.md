@@ -56,3 +56,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0050](0050-curriculum-tracks-modules-lessons-and-lesson-video.md) | Curriculum is tracks of ordered modules and lessons; a program follows one track; lesson video goes through a file-storage port without transcoding |
 | [0051](0051-youth-progress-gating-video-streaming-and-coding.md) | Youth progress is per membership and gated on the server; lesson video streams under the session; coding lessons are lesson kinds with steps |
 | [0052](0052-applications-and-referrals-through-the-enrollment-link.md) | Applications and referrals go through the enrollment link, as enrollment requests, with a new household per applicant |
+| [0053](0053-application-pipeline-and-placement.md) | The application pipeline is the organization’s enrollment requests; placing accepts a request into the chosen program; notes are staff-only rows |

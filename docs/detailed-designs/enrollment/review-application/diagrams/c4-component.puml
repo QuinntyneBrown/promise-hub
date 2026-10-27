@@ -1,0 +1,24 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Review an application
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(list, "ApplicationsPage", "Angular page", "applications: status tabs, rows")
+  Component(page, "ApplicationPage", "Angular page", "application: facts, notes, decisions")
+  Component(dlg, "AddNoteDialog", "CDK dialog", "add-application-note")
+  Component(aapi, "ApplicationsApi", "Contract + HTTP client", "APPLICATIONS_API")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "ApplicationEndpoints", "Minimal API", "GET /applications, GET /applications/{id}, POST notes")
+  Component(h, "ApplicationsHandler", "Handler", "list with counts, detail, notes")
+  Component(audit, "IAuditWriter", "Service", "Created on EnrollmentNote")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "EnrollmentRequests, EnrollmentNotes, Children, Households, Guardians, Programs")
+}
+Rel(list, aapi, "list(status)")
+Rel(page, aapi, "get(id)")
+Rel(dlg, aapi, "addNote(id, text)")
+Rel(aapi, ep, "JSON/HTTPS")
+Rel(ep, h, "calls")
+Rel(h, db, "reads, writes")
+Rel(h, audit, "records")
+@enduml

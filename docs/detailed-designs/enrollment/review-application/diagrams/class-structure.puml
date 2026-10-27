@@ -1,0 +1,44 @@
+@startuml
+title Class structure — Review an application
+skinparam classAttributeIconSize 0
+class EnrollmentRequest <<entity>> {
+  OrganizationId : Guid
+  ProgramId : Guid
+  ChildId : Guid
+  HouseholdId : Guid
+  Status : EnrollmentRequestStatus
+  AppliedAs : EnrollmentApplicant
+  ReferrerName : string?
+  Reason : string?
+  SeasonConsent : bool
+  ReviewedBy : string?
+  Note : string?
+}
+class EnrollmentNote <<entity>> {
+  OrganizationId : Guid
+  EnrollmentRequestId : Guid
+  Author : string
+  Text : string
+  CreatedAt : DateTimeOffset
+}
+class ApplicationsHandler {
+  ListAsync(status) : ApplicationListDto
+  GetAsync(id) : ApplicationDto?
+  AddNoteAsync(id, command) : Result
+}
+class ApplicationSummaryDto <<record>> {
+  Id, Child, Age, AppliedAs, AppliedBy, Program, Status, Position, SeasonConsent, SubmittedAt
+}
+class ApplicationDto <<record>> {
+  Child, DateOfBirth, Guardian, Referrer, Reason, Program, Status, ReviewedBy, Note, Notes
+}
+class ApplicationNoteDto <<record>> {
+  Id, Author, Text, CreatedAt
+}
+EnrollmentRequest "1" *-- "0..*" EnrollmentNote
+ApplicationsHandler ..> EnrollmentRequest : reads
+ApplicationsHandler ..> EnrollmentNote : creates
+ApplicationsHandler ..> ApplicationSummaryDto
+ApplicationsHandler ..> ApplicationDto
+ApplicationDto *-- ApplicationNoteDto
+@enduml

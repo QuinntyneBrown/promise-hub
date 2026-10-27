@@ -1,0 +1,14 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Review an application
+Person(s, "Admin / program director", "Laptop or phone")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular 22", "enrollment library, api client, components")
+  Container(api, "PromiseHub API", "ASP.NET Core, .NET 10", "/applications group; Roster gate; ReviewEnrollments")
+  ContainerDb(db, "PromiseHub database", "SQLite via EF Core", "Tenant-filtered rows")
+}
+Rel(s, web, "Uses", "HTTPS")
+Rel(web, api, "Calls", "JSON/HTTPS, session cookie")
+Rel(api, db, "Reads and writes", "EF Core")
+@enduml

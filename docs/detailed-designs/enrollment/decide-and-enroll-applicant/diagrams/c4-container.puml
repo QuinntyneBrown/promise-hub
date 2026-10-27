@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Decide and enroll an applicant
+Person(s, "Admin / program director", "Laptop or phone")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular 22", "enrollment library, api client, components")
+  Container(api, "PromiseHub API", "ASP.NET Core, .NET 10", "/applications/{id}/place, /enrollments/{id}/review, /children/{id}/youth-invitation")
+  ContainerDb(db, "PromiseHub database", "SQLite via EF Core", "Tenant-filtered rows")
+}
+System_Ext(sms, "SMS and email providers", "ISmsSender, IEmailSender")
+Rel(s, web, "Uses", "HTTPS")
+Rel(web, api, "Calls", "JSON/HTTPS")
+Rel(api, db, "Reads and writes", "EF Core")
+Rel(api, sms, "Family text, invitation")
+@enduml

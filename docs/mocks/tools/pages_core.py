@@ -58,7 +58,7 @@ def today(S):
                    '</ul>', title="Recent activity", tid="act", cls="card--flush")
         tasks = card(ul_list([
             list_item("1 incident to review", "Reported by Aisha Bello · today", lead=f'<span class="icon-tile" aria-hidden="true">{icon("alert-triangle")}</span>', href=page("incidents")),
-            list_item("3 enrollments to review", "After-School Tutoring", lead=f'<span class="icon-tile" aria-hidden="true">{icon("users")}</span>', href=page("programs")),
+            list_item("3 enrollments to review", "Applications, referrals and enrollments", lead=f'<span class="icon-tile" aria-hidden="true">{icon("users")}</span>', href=page("applications")),
         ], card=False), title="Waiting for you", tid="tasks", cls="card--flush")
         return greeting + kpis([("Active children", "184", "+6 this month"), ("Households", "112", "3 waiting review"), ("Slips unsigned", "30", "across 2 events"), ("Sessions this week", "9", "7 attendance recorded")]) + \
             f'<div class="split"><div class="stack">{tasks}{sess}{up}</div><div class="stack">{slips}{act}</div></div>'

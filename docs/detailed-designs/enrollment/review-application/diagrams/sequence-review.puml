@@ -1,0 +1,54 @@
+@startuml
+title UML sequence behaviour — Tom reviews Zoe's referral and adds a note
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Tom (Admin)" as tom
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "ApplicationsPage / ApplicationPage" as page
+  participant "ApplicationsApi" as aapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "ApplicationEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "ApplicationsHandler" as h
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+tom -> page : open Applications
+page -> aapi : list('WaitingReview')
+aapi -> ep : GET /applications?status=WaitingReview
+alt Roster off
+  ep --> aapi : 404 (c8)
+else not admin or program director
+  ep --> aapi : 403 (c8)
+else
+  ep -> h : ListAsync
+  h -> db : tenant's requests, counts (c1, c9)
+  ep --> aapi : counts + applications
+end
+tom -> page : open Zoe Campbell
+page -> aapi : get(id)
+aapi -> ep : GET /applications/{id}
+ep -> h : GetAsync
+h -> db : request, child, household, guardians, notes
+alt another organization's
+  ep --> aapi : 404 (c9)
+else
+  ep --> aapi : referral, reason, family, notes (c2)
+end
+tom -> page : Add note
+page -> aapi : addNote(id, text)
+aapi -> ep : POST /applications/{id}/notes
+ep -> h : AddNoteAsync
+alt empty or over 2,000 characters
+  h --> ep : 422 (c3)
+else
+  h -> db : EnrollmentNote + audit Created (c3)
+  ep --> aapi : 201
+end
+@enduml

@@ -1,0 +1,39 @@
+@startuml
+title Class structure — Decide and enroll an applicant
+skinparam classAttributeIconSize 0
+class PlaceApplicantCommand <<record>> {
+  ProgramId : Guid?
+  Note : string?
+}
+class EnrollmentRequest <<entity>> {
+  ProgramId : Guid
+  Status : EnrollmentRequestStatus
+  Position : int?
+  Open : bool
+  MoveTo(programId)
+  Accept(reviewer, now, note)
+  Waitlist(position, reviewer, now, note)
+  Decline(reviewer, now, reason)
+}
+class ReviewEnrollmentHandler {
+  PlaceAsync(id, command) : Result
+  ReviewAsync(id, command) : Result
+  BulkAsync(command) : Result
+}
+class Program <<entity>> {
+  Capacity : int
+  Status : ProgramStatus
+}
+class Enrollment <<entity>> {
+  ProgramId : Guid
+  ChildId : Guid
+}
+class YouthInvitationHandler {
+  InviteAsync(childId, command) : Result
+}
+ReviewEnrollmentHandler ..> PlaceApplicantCommand
+ReviewEnrollmentHandler --> EnrollmentRequest : moves, accepts
+ReviewEnrollmentHandler ..> Program : capacity
+ReviewEnrollmentHandler ..> Enrollment : creates
+EnrollmentRequest --> Program
+@enduml

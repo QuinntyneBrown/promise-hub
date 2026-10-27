@@ -1920,6 +1920,49 @@
       }
     },
     {
+      "id": "applications",
+      "kind": "page",
+      "title": "Applications",
+      "route": "/applications",
+      "requirements": [
+        "L2-072",
+        "L2-013",
+        "L1-005"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "waitlisted",
+        "accepted",
+        "declined",
+        "forbidden"
+      ]
+    },
+    {
+      "id": "application",
+      "kind": "page",
+      "title": "Application",
+      "route": "/applications/:id",
+      "requirements": [
+        "L2-072",
+        "L2-013",
+        "L1-005"
+      ],
+      "states": [
+        "default",
+        "youth",
+        "loading",
+        "empty",
+        "error",
+        "not-found",
+        "placed",
+        "declined",
+        "forbidden"
+      ]
+    },
+    {
       "id": "check-in-sheet",
       "kind": "dialog",
       "title": "Check in Kevin Tran",
@@ -2073,6 +2116,63 @@
       "not_applicable": {
         "invalid": "Decision has a default; the note is optional."
       }
+    },
+    {
+      "id": "place-applicant",
+      "kind": "dialog",
+      "title": "Place Zoe Campbell",
+      "opens_from": "application",
+      "requirements": [
+        "L2-072",
+        "L1-005",
+        "L1-010"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed",
+        "no-invite",
+        "full",
+        "learning-off",
+        "invite-failed"
+      ]
+    },
+    {
+      "id": "decide-application",
+      "kind": "dialog",
+      "title": "Waitlist Zoe Campbell?",
+      "opens_from": "application",
+      "requirements": [
+        "L2-072",
+        "L1-005",
+        "L1-010"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed",
+        "decline"
+      ],
+      "not_applicable": {
+        "invalid": "Waitlist has a default and its note is optional; see decline for the required reason."
+      }
+    },
+    {
+      "id": "add-application-note",
+      "kind": "dialog",
+      "title": "Add a note",
+      "opens_from": "application",
+      "requirements": [
+        "L2-072",
+        "L1-005"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ]
     },
     {
       "id": "move-in",
