@@ -42,6 +42,8 @@ import {
 } from '@promisehub/components';
 import { Subject, startWith, switchMap } from 'rxjs';
 import { attachOptions } from '../attach-options';
+import { CurriculumStatusDialog } from '../curriculum-status-dialog/curriculum-status-dialog';
+import { CurriculumStatusDialogData } from '../curriculum-status-dialog/curriculum-status-dialog-data';
 import { RubricCriterionDialog } from '../rubric-criterion-dialog/rubric-criterion-dialog';
 import { RubricCriterionDialogData } from '../rubric-criterion-dialog/rubric-criterion-dialog-data';
 import { statusLabel, statusTone } from '../status-label';
@@ -167,6 +169,20 @@ export class AssignmentBuilderPage {
   protected graceOptions(a: AssignmentDetail): SelectOption[] {
     const days = [...new Set([0, 1, 2, 7, a.graceDays])].sort((x, y) => x - y);
     return days.map((d) => ({ value: `${d}`, label: GRACE[d] ?? `${d} days` }));
+  }
+
+  protected changeStatus(a: AssignmentDetail): void {
+    this.dialogs
+      .open<boolean, CurriculumStatusDialogData, CurriculumStatusDialog>(CurriculumStatusDialog, {
+        kind: 'assignment',
+        id: a.id,
+        name: a.title,
+        status: a.status,
+        audience: a.programs.length
+          ? `${a.programs.join(' and ')}, once ${a.moduleTitle} and ${a.trackName} are published`
+          : `No cohort follows ${a.trackName} yet`,
+      })
+      .closed.subscribe((saved) => saved && this.reload());
   }
 
   protected addCriterion(): void {

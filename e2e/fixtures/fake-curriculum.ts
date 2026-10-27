@@ -596,6 +596,7 @@ export class FakeCurriculum implements CurriculumSource {
     const l = this.lesson(org, id);
     if (!l) return route.fulfill({ status: 404 });
     l.deleted = true;
+    this.assessments.detachLesson(l.id);
     this.liveLessons(l.moduleId).forEach((x, i) => (x.position = i + 1));
     return route.fulfill({ status: 204 });
   }

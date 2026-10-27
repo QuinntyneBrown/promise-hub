@@ -434,4 +434,21 @@ export class FakeAssessments {
     });
     return route.fulfill({ status: 204 });
   }
+
+  /** PUT /curriculum/assignments/{id}/status. */
+  setAssignmentStatus(route: Route, org: string, id: string): Promise<void> {
+    const a = this.assignment(org, id);
+    if (!a) return route.fulfill({ status: 404 });
+    const { status } = route.request().postDataJSON() as { status: ContentStatus };
+    if (status !== 'Draft' && status !== 'Published') return unprocessable(route, { status: 'Choose Draft or Published.' });
+    if (status === 'Published' && !a.brief) return unprocessable(route, { status: 'Describe the task before publishing.' });
+    if (status === 'Published' && !a.rubric.length) return unprocessable(route, { status: 'Add a rubric criterion before publishing.' });
+    a.status = status;
+    return route.fulfill({ status: 204 });
+  }
+
+  /** A deleted lesson's quizzes and assignments move to the whole module. */
+  detachLesson(lessonId: string): void {
+    for (const x of [...this.quizzes, ...this.assignments]) if (x.lessonId === lessonId) x.lessonId = null;
+  }
 }

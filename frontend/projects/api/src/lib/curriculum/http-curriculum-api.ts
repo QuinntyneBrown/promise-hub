@@ -190,4 +190,10 @@ export class HttpCurriculumApi implements CurriculumApi {
   updateAssignment(id: string, fields: AssignmentFields): Observable<WriteOutcome> {
     return toWrite(this.http.put<null>(`${this.baseUrl}/curriculum/assignments/${id}`, fields));
   }
+
+  setAssignmentStatus(id: string, status: ContentStatus): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.put<null>(`${this.baseUrl}/curriculum/assignments/${id}/status`, { status }),
+    );
+  }
 }

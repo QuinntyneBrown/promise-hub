@@ -1,9 +1,10 @@
 import { test, expect } from '../../fixtures/test';
 import type { ModuleId } from '../../fixtures/seed';
 import { CurriculumAssignmentPage } from '../../pages/curriculum-assignment.page';
+import { CurriculumLessonPage } from '../../pages/curriculum-lesson.page';
 import { CurriculumModulePage } from '../../pages/curriculum-module.page';
 
-// Acceptance test. Traces to: L2-074 criteria 1 to 4 and 6 to 8 (an assignment: task, ways to submit, rubric and total, due rules).
+// Acceptance test. Traces to: L2-074 criteria 1 to 8 (an assignment: task, ways to submit, rubric and total, due rules, status), L2-073 criterion 6 (a deleted lesson's quizzes).
 const ON: ModuleId[] = ['Roster', 'Slips', 'RollCall', 'QuickCards', 'Pickup', 'Messages', 'Incidents', 'Reports', 'Learning'];
 
 test.describe('Authoring assignments', () => {
@@ -116,6 +117,39 @@ test.describe('Authoring assignments', () => {
 
     await expect(assignment.failedAlert).toBeVisible();
     await expect(assignment.brief).toHaveValue('Serve someone.');
+  });
+
+  test('Given an assignment with no task or rubric, when Marisol publishes it, then the dialog refuses; once saved with both it publishes', async ({ page }) => {
+    const assignment = new CurriculumAssignmentPage(page);
+    await assignment.open('as-serve');
+    await assignment.expectOpen('Serve someone this week');
+
+    await assignment.changeStatus('Published');
+    await expect(assignment.statusError).toHaveText('Describe the task before publishing.');
+    await assignment.expectAccessible();
+    await page.keyboard.press('Escape');
+
+    await assignment.brief.fill('Serve someone this week without being asked.');
+    await assignment.addCriterion('Served someone', '10');
+    await assignment.save();
+    await expect(assignment.toast).toContainText('Assignment saved');
+    await assignment.changeStatus('Published');
+
+    await expect(assignment.dialog).toBeHidden();
+    await expect(assignment.status).toHaveText('Published');
+  });
+
+  test('Given an assignment after Pick Up the Towel, when the lesson is deleted, then the assignment belongs to the whole module', async ({ page }) => {
+    const lesson = new CurriculumLessonPage(page);
+    const module = new CurriculumModulePage(page);
+    await lesson.open('l-towel');
+    await lesson.expectOpen('Pick Up the Towel');
+
+    await lesson.delete();
+    await lesson.confirmDelete();
+
+    await module.expectOpen('Leading by Serving');
+    await expect(module.assessments).toContainText('Assignment · The whole module · 0 points');
   });
 
   test('Given an unknown assignment, when it is opened, then the page says it can’t be found', async ({ page }) => {

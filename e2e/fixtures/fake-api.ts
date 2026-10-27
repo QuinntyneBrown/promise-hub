@@ -640,6 +640,7 @@ export class FakeApi {
     ['POST', /^\/api\/curriculum\/assignments$/, (route) => this.author(route, (org) => this.curriculumState.assessments.createAssignment(route, org))],
     ['GET', /^\/api\/curriculum\/assignments\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.curriculumState.assessments.getAssignment(route, org, p['id']!))],
     ['PUT', /^\/api\/curriculum\/assignments\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.curriculumState.assessments.updateAssignment(route, org, p['id']!))],
+    ['PUT', /^\/api\/curriculum\/assignments\/(?<id>[^/]+)\/status$/, (route, p) => this.author(route, (org) => this.curriculumState.assessments.setAssignmentStatus(route, org, p['id']!))],
     ['POST', /^\/api\/curriculum\/lessons\/(?<id>[^/]+)\/video$/, (route, p) => this.author(route, (org) => this.curriculumState.uploadVideo(route, org, p['id']!, memberships.find((x) => x.id === this.membershipId)!.personName))],
     ['DELETE', /^\/api\/curriculum\/lessons\/(?<id>[^/]+)\/video$/, (route, p) => this.author(route, (org) => this.curriculumState.removeVideo(route, org, p['id']!))],
     ['GET', /^\/api\/mentoring\/youth$/, (route) => this.mentoredYouth(route)],

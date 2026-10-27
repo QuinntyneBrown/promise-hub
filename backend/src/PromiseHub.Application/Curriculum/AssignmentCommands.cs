@@ -6,7 +6,7 @@ using PromiseHub.Domain.Curriculum;
 
 namespace PromiseHub.Application.Curriculum;
 
-/// <summary>Creates assignments and saves them with their whole rubric and its total (L2-074 criteria 1 to 4). Every write is audited.</summary>
+/// <summary>Creates assignments, saves them with their whole rubric and its total, and publishes them (L2-074 criteria 1 to 5). Every write is audited.</summary>
 public sealed class AssignmentCommands(IPromiseHubDb db, ITenantContext tenant, IAuditWriter audit)
 {
     private static readonly Dictionary<string, SubmissionTypes> Types = new()
@@ -119,6 +119,32 @@ public sealed class AssignmentCommands(IPromiseHubDb db, ITenantContext tenant, 
             command.RequireApproval,
         };
         audit.Record(new AuditEvent(AuditAction.Updated, "Assignment", id, title!, before, after));
+        await db.SaveChangesAsync(cancellationToken);
+        return Result.Done;
+    }
+
+    public async Task<Result> SetStatusAsync(Guid id, string? status, CancellationToken cancellationToken = default)
+    {
+        var assignment = await db.Assignments.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+        if (assignment is null)
+        {
+            return Result.NotFound;
+        }
+        if (CurriculumRules.ParseStatus(status, allowReview: false) is not { } next)
+        {
+            return CurriculumRules.Invalid("status", "Choose Draft or Published.");
+        }
+        if (next == ContentStatus.Published && assignment.Brief is null)
+        {
+            return CurriculumRules.Invalid("status", "Describe the task before publishing.");
+        }
+        if (next == ContentStatus.Published && !await db.RubricCriteria.AnyAsync(c => c.AssignmentId == id, cancellationToken))
+        {
+            return CurriculumRules.Invalid("status", "Add a rubric criterion before publishing.");
+        }
+        var before = assignment.Status.ToString();
+        assignment.SetStatus(next);
+        audit.Record(new AuditEvent(AuditAction.Updated, "Assignment", id, $"{assignment.Title} · {next}", new { Status = before }, new { Status = next.ToString() }));
         await db.SaveChangesAsync(cancellationToken);
         return Result.Done;
     }

@@ -6,7 +6,7 @@ using PromiseHub.Infrastructure.Persistence.Seed;
 
 namespace PromiseHub.Api.Tests;
 
-// Acceptance test. Traces to: L2-074 criteria 1 to 4, 6 and 7 (an assignment: task, ways to submit, rubric and total, due rules).
+// Acceptance test. Traces to: L2-074 criteria 1 to 7 (an assignment: task, ways to submit, rubric and total, due rules, status), L2-073 criterion 6 (a deleted lesson's quizzes).
 public sealed class CurriculumAssignmentsTests : IAsyncLifetime
 {
     private static readonly Guid Marisol = DatabaseSeeder.MembershipId(DatabaseSeeder.Harbourview, "marisol@harbourview.example");
@@ -130,6 +130,50 @@ public sealed class CurriculumAssignmentsTests : IAsyncLifetime
         await Put(Tom, "/settings/modules", new { on = on.Where(m => m != "Learning").ToArray() });
         Assert.Equal(HttpStatusCode.NotFound, (await _factory.ClientFor(Marisol).GetAsync($"/curriculum/assignments/{assignment}")).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await Put(Marisol, $"/curriculum/assignments/{assignment}", Fields())).StatusCode);
+    }
+
+    [Fact]
+    public async Task An_assignment_publishes_only_with_a_task_and_a_criterion_and_goes_back_to_draft_audited()
+    {
+        var assignment = await Assignment();
+
+        Assert.Equal("Describe the task before publishing.", await Error(await Put(Marisol, $"/curriculum/assignments/{assignment}/status", new { status = "Published" }), "status"));
+        await Put(Marisol, $"/curriculum/assignments/{assignment}", Fields(rubric: []));
+        Assert.Equal("Add a rubric criterion before publishing.", await Error(await Put(Marisol, $"/curriculum/assignments/{assignment}/status", new { status = "Published" }), "status"));
+        await Put(Marisol, $"/curriculum/assignments/{assignment}", Fields());
+
+        Assert.Equal(HttpStatusCode.NoContent, (await Put(Marisol, $"/curriculum/assignments/{assignment}/status", new { status = "Published" })).StatusCode);
+        Assert.Equal("Published", (await Get(Marisol, $"/curriculum/assignments/{assignment}")).GetProperty("status").GetString());
+        Assert.Contains(Query("SELECT AfterJson FROM AuditEntries WHERE Action = 'Updated' AND RecordType = 'Assignment'"), a => a.Contains("\"Published\""));
+        Assert.Equal(HttpStatusCode.NoContent, (await Put(Marisol, $"/curriculum/assignments/{assignment}/status", new { status = "Draft" })).StatusCode);
+        Assert.Equal("Choose Draft or Published.", await Error(await Put(Marisol, $"/curriculum/assignments/{assignment}/status", new { status = "InReview" }), "status"));
+
+        foreach (var who in new[] { Jaylen, Sofia, Daniel })
+        {
+            Assert.Equal(HttpStatusCode.Forbidden, (await Put(who, $"/curriculum/assignments/{assignment}/status", new { status = "Published" })).StatusCode);
+        }
+        var northgate = await ModulesOn(Grace);
+        await Put(Grace, "/settings/modules", new { on = northgate.Append("Learning").ToArray() });
+        Assert.Equal(HttpStatusCode.NotFound, (await Put(Grace, $"/curriculum/assignments/{assignment}/status", new { status = "Published" })).StatusCode);
+        var on = await ModulesOn(Tom);
+        await Put(Tom, "/settings/modules", new { on = on.Where(m => m != "Learning").ToArray() });
+        Assert.Equal(HttpStatusCode.NotFound, (await Put(Marisol, $"/curriculum/assignments/{assignment}/status", new { status = "Published" })).StatusCode);
+    }
+
+    [Fact]
+    public async Task Deleting_a_lesson_moves_its_quizzes_and_assignments_to_the_whole_module()
+    {
+        var (module, lesson, _) = await Module();
+        var assignment = await Created(await Post(Marisol, "/curriculum/assignments", new { moduleId = module, lessonId = lesson, title = "Serve someone this week" }));
+        var quiz = await Created(await Post(Marisol, "/curriculum/quizzes", new { moduleId = module, lessonId = lesson, title = "Towel check" }));
+
+        Assert.Equal(HttpStatusCode.NoContent, (await _factory.ClientFor(Marisol).DeleteAsync($"/curriculum/lessons/{lesson}")).StatusCode);
+
+        Assert.Equal(JsonValueKind.Null, (await Get(Marisol, $"/curriculum/assignments/{assignment}")).GetProperty("lessonId").ValueKind);
+        Assert.Equal(JsonValueKind.Null, (await Get(Marisol, $"/curriculum/quizzes/{quiz}")).GetProperty("lessonId").ValueKind);
+        var detail = await Get(Marisol, $"/curriculum/modules/{module}");
+        Assert.Equal(JsonValueKind.Null, detail.GetProperty("assignments")[0].GetProperty("lessonTitle").ValueKind);
+        Assert.Equal(JsonValueKind.Null, detail.GetProperty("quizzes")[0].GetProperty("lessonTitle").ValueKind);
     }
 
     private static object Fields(string title = "Serve someone this week", Guid? lessonId = null, string brief = Brief, string[]? types = null,

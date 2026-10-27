@@ -48,4 +48,5 @@ export interface CurriculumApi {
   ): Observable<WriteOutcome>;
   assignment(id: string): Observable<LoadResult<AssignmentDetail>>;
   updateAssignment(id: string, fields: AssignmentFields): Observable<WriteOutcome>;
+  setAssignmentStatus(id: string, status: ContentStatus): Observable<WriteOutcome>;
 }

@@ -6,7 +6,9 @@
         ? 'Nothing in a draft track reaches youth, whatever its modules say.'
         : data.kind === 'quiz'
           ? 'Publishing makes it visible to youth in the cohorts that follow the track, once the track and module are published.'
-          : 'Publishing makes it visible to youth in the cohorts that follow the track, once the track is published.'
+          : data.kind === 'assignment'
+            ? 'Publishing assigns it to youth in the cohorts that follow the track, once the track and module are published.'
+            : 'Publishing makes it visible to youth in the cohorts that follow the track, once the track is published.'
     "
     icon="eye"
   >

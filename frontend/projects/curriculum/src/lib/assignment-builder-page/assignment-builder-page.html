@@ -14,6 +14,9 @@
         <ph-badge [tone]="statusTone(a.status)" data-testid="assignment-status">{{
           statusLabel(a.status)
         }}</ph-badge>
+        <ph-button hasPopup="dialog" [label]="'Status of ' + a.title" (click)="changeStatus(a)"
+          >Status</ph-button
+        >
       </ph-page-header>
       <div class="split">
         <form class="stack" novalidate (ngSubmit)="save(a)">
