@@ -1,0 +1,50 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    title="New track"
+    description="A track is a pathway youth follow, such as Leadership Foundations."
+    icon="curriculum"
+  >
+    <div class="stack">
+      @if (failed()) {
+        <ph-alert
+          tone="danger"
+          title="That didn’t go through"
+          text="The track was not created. Try again."
+        />
+      }
+      <ph-text-field
+        inputId="name"
+        label="Track name"
+        name="name"
+        [error]="errors()['name'] ?? null"
+        [(ngModel)]="track.name"
+      />
+      <ph-text-field
+        inputId="key"
+        label="Track key (optional)"
+        name="key"
+        help="Lowercase letters, numbers and hyphens, used in reports. Left blank, it is made from the name."
+        [error]="errors()['key'] ?? null"
+        [(ngModel)]="track.key"
+      />
+      <ph-textarea
+        inputId="description"
+        label="Short description"
+        name="description"
+        [optional]="true"
+        [error]="errors()['description'] ?? null"
+        [(ngModel)]="track.description"
+      />
+      <ph-switch
+        label="Publish now"
+        name="publish"
+        description="Off keeps it a draft. Youth never see a draft."
+        [(ngModel)]="track.publish"
+      />
+    </div>
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Create track</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

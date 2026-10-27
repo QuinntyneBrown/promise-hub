@@ -1,0 +1,39 @@
+@startuml
+title UML sequence behaviour — Uploading a lesson video
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Program director (Marisol)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "LessonEditorPage" as page
+  participant "CurriculumApi" as capi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "CurriculumEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "LessonVideoHandler" as h
+  participant "LessonVideoPolicy" as policy
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  participant "LocalFileStore (IFileStore)" as store
+  database "PromiseHub database" as db
+end box
+actor -> page : chooses pick-up-the-towel.mp4
+page -> capi : uploadVideo(id, file)
+capi -> ep : POST /curriculum/lessons/{id}/video (Learning on, AuthorCurriculum — L2-067 c9)
+ep -> h : UploadAsync(stream)
+h -> db : lesson of the caller's organization, not deleted (c9)
+h -> policy : extension, content type, first bytes, size <= 1 GB (c8, L2-031)
+alt not a video or too large
+  h --> ep : 422 "Choose an MP4, MOV or WebM video of up to 1 GB." (c8)
+else
+  h -> store : SaveAsync(lessons/{org}/{lesson}/{guid}.mp4)
+  h -> db : AttachVideo + audit Created on LessonVideo (c7)
+  h -> store : DeleteAsync(previous key) after the save (c7)
+  ep --> capi : 201 { fileName, bytes, uploadedAt, uploadedBy }
+end
+capi --> page : saved; the page reloads the lesson and shows the video
+@enduml

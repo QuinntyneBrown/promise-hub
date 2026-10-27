@@ -1,0 +1,30 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    title="Add a lesson"
+    [description]="
+      'Added at the end of ' + data.moduleTitle + ' as a draft; you write its content next.'
+    "
+    icon="plus"
+  >
+    <div class="stack">
+      @if (failed()) {
+        <ph-alert
+          tone="danger"
+          title="That didn’t go through"
+          text="The lesson was not created. Try again."
+        />
+      }
+      <ph-text-field
+        inputId="title"
+        label="Lesson title"
+        name="title"
+        [error]="errors()['title'] ?? null"
+        [(ngModel)]="title"
+      />
+    </div>
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Create and edit</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

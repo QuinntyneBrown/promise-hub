@@ -44,7 +44,7 @@ The feature is a vertical slice from the staff UI to the database.
   - `ProgramValidator` — rules: name required, start before end, capacity a whole number greater than 0.
   - `ProgramPermissions` — program directors and admins may create, edit, archive or restore; site leads may read (`L2-007`).
 - **`PromiseHub.Domain/Programs/`**
-  - `Program` — entity with `Id`, `OrganizationId`, `Name`, `Schedule`, `Capacity`, `AgeRange`, `EnrollmentState`, `RequiresSeasonConsent`, `Status`, `ArchivedAt` and `ArchivedBy`. `Archive(actor, now)` and `Restore(actor, now)` enforce the transitions.
+  - `Program` — entity with `Id`, `OrganizationId`, `Name`, `Schedule`, `Capacity`, `AgeRange`, `EnrollmentState`, `RequiresSeasonConsent`, `Status`, `ArchivedAt` and `ArchivedBy`. `Archive(actor, now)` and `Restore(actor, now)` enforce the transitions. `TrackId` (prompt 56, ADR 0050) names the curriculum track the program follows, or none; it is set only from Curriculum (`PUT /curriculum/tracks/{id}/cohorts`, L2-066 criterion 7), an archived program keeps the track it had, and the programs pages neither show nor change it.
   - `ProgramSchedule` — value object with `StartsOn`, `EndsOn`, `Days`, `StartTime` and `EndTime`.
   - `ProgramStatus` — `Active`, `Archived`. `EnrollmentState` — `Open`, `Closed`.
 - **`PromiseHub.Infrastructure`** — `PromiseHubDbContext` maps `Programs` with a global query filter on `OrganizationId`. `AuditLog` records archive and restore. Picker and navigation queries exclude `Archived` programs; report queries include them.

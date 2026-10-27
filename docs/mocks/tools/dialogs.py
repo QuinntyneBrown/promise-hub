@@ -316,7 +316,7 @@ simple("sign-out-all", "Sign out everywhere?", "account", [R_SEC], "Every other 
 @screen("main-menu", "dialog", "Main menu", opens_from="today", reqs=["L1-014"], na={"busy": "A menu has no submit.", "invalid": "A menu has no inputs."})
 def main_menu(S):
     staff_links = [("today", "Today", "home"), ("check-in", "Check-in", "clipboard"), ("quick-card", "Quick Cards", "heart-pulse"), ("families", "Families", "users"), ("events", "Events", "calendar"), ("slips", "Slips", "clipboard"), ("programs", "Programs", "list"), ("messages", "Messages", "message"), ("reports", "Reports", "chart"), ("incidents", "Incidents", "flag"), ("attendance", "Attendance", "table"), ("settings", "Settings", "settings"), ("notifications", "Notifications", "bell"), ("account", "Your account", "user")]
-    director_links = staff_links[:10] + [("curriculum", "Curriculum", "star")] + staff_links[10:]
+    director_links = staff_links[:10] + [("curriculum-tracks", "Curriculum", "star")] + staff_links[10:]
     tail = [("notifications", "Notifications", "bell"), ("account", "Your account", "user")]
 
     def drawer(user=STAFF["jaylen"], current="today", links=staff_links):
@@ -388,3 +388,61 @@ simple("withdraw-consent", "Withdraw consent for Sofía?", "guardian-consent", [
        lambda e: "<p>Your consent record stays; the withdrawal is added to it with the time.</p>",
        "Withdraw consent", icon_name="x-circle", danger=True, base_state="given",
        opens_kw={})
+
+
+# ------------------------------------------------------------------ Curriculum authoring (prompt 56, L2-066, L2-067)
+R_CURRIC = "L1-023"
+simple("new-track", "New track", "curriculum-tracks", ["L2-066", R_CURRIC], "A track is a pathway youth follow, such as Leadership Foundations.",
+       lambda e: field("name", "Track name", value="" if e else "Digital Skills", required=True, autofocus=True, error=(e or {}).get("name", ""))
+                 + field("key", "Track key", value="leadership" if e else "digital", optional=True, error=(e or {}).get("key", ""),
+                         help_="Lowercase letters, numbers and hyphens, used in reports. Left blank, it is made from the name.")
+                 + textarea("description", "Short description", value="Using technology safely and creatively.", rows=2, optional=True)
+                 + switch("publish", "Publish now", desc="Off keeps it a draft. Youth never see a draft."),
+       "Create track", icon_name="list", invalid_err={"name": "Give the track a name.", "key": "Another track already uses this key."},
+       failed_text="The track was not created. Try again.")
+
+simple("new-module", "New module", "curriculum-tracks", ["L2-066", R_CURRIC], "Added at the end of Leadership Foundations as a draft.",
+       lambda e: field("title", "Module name", value="" if e else "Speaking Up", required=True, autofocus=True, error=(e or {}).get("title", ""))
+                 + textarea("description", "Description", value="Finding your voice and using it for others.", rows=2, optional=True, help_="Shown to youth on the module cover."),
+       "Create and edit", icon_name="list", invalid_err={"title": "Give the module a name."},
+       failed_text="The module was not created. Try again.")
+
+simple("new-lesson", "Add a lesson", "curriculum-module", ["L2-067", R_CURRIC], "Added at the end of Leading by Serving as a draft; you write its content next.",
+       lambda e: field("title", "Lesson title", value="" if e else "Leading Like a Coach", required=True, autofocus=True, error=(e or {}).get("title", "")),
+       "Create and edit", icon_name="plus", invalid_err={"title": "Give the lesson a title."},
+       failed_text="The lesson was not created. Try again.")
+
+COHORT_OPTIONS = (choice("cohort", "After‑School Tutoring", small="2026–27 · Mon–Thu, 4–6 pm", type_="checkbox", checked=True)
+                  + choice("cohort", "Saturday Sports", small="2026–27 · Sat, 10 am–12 pm", type_="checkbox", checked=True)
+                  + choice("cohort", "Winter Camp 2026", small="Follows Digital Skills", type_="checkbox")
+                  + choice("cohort", "One-to-one Mentoring", small="No track", type_="checkbox"))
+simple("track-cohorts", "Cohorts following Leadership Foundations", "curriculum-tracks", ["L2-066", "L2-012", R_CURRIC],
+       "A cohort follows one track. Choosing one that follows another track moves it here.",
+       lambda e: fieldset("Cohorts", COHORT_OPTIONS, hint="Active programs of Harbourview only. Archived programs keep the track they had."),
+       "Save cohorts", icon_name="users", na={"invalid": "Choosing no cohort is allowed: the track is then followed by none."},
+       failed_text="The cohorts were not changed. Try again.")
+
+STATUS_MODULE = fieldset("Status", choice("status", "Draft", small="Only authors see it") + choice("status", "In review", small="Ready for another author to check", checked=False)
+                         + choice("status", "Published", small="Youth in the cohorts below see it", checked=True))
+STATUS_COHORTS = facts([("Visible to", "After‑School Tutoring and Saturday Sports, once its track is published")])
+simple("curriculum-status", "Status of Leading by Serving", "curriculum-module", ["L2-066", "L2-067", R_CURRIC],
+       "Publishing makes the module visible to youth in the cohorts that follow Leadership Foundations.",
+       lambda e: (fieldset("Status", choice("status", "Draft", small="Only authors see it") + choice("status", "In review", small="Ready for another author to check")
+                           + choice("status", "Published", small="Youth in the cohorts below see it", checked=True, invalid=True),
+                           fid="status", error=e["status"]) if e else STATUS_MODULE) + STATUS_COHORTS,
+       "Save status", icon_name="eye", invalid_err={"status": "Add a lesson before publishing the module."},
+       failed_text="The status was not changed. Try again.",
+       extra_states={
+           "lesson": ("The same dialog for a lesson: Draft or Published.",
+                      dialog_box("Status of Pick Up the Towel", "Publishing makes the lesson live for youth in the cohorts that follow Leadership Foundations, once its module is published.",
+                                 fieldset("Status", choice("status", "Draft", small="Only authors see it", checked=True) + choice("status", "Published", small="Youth in the cohorts below see it"))
+                                 + STATUS_COHORTS, footer("Save status"), icon_name="eye", form=True)),
+           "track": ("The same dialog for a track: Draft or Published; nothing in a draft track reaches youth.",
+                     dialog_box("Status of Digital Skills", "Nothing in a draft track reaches youth, whatever its modules say.",
+                                fieldset("Status", choice("status", "Draft", small="Only authors see it", checked=True) + choice("status", "Published", small="Published modules reach the cohorts that follow it"))
+                                + facts([("Followed by", "No cohort yet")]), footer("Save status"), icon_name="eye", form=True)),
+       })
+
+simple("delete-lesson", "Delete Pick Up the Towel?", "curriculum-lesson", ["L2-067", R_CURRIC],
+       "Youth stop seeing it at once. Their progress is kept in the archive, and the lesson can be restored by support.",
+       lambda e: "", "Delete lesson", icon_name="trash", danger=True, failed_text="The lesson was not deleted. Try again.")

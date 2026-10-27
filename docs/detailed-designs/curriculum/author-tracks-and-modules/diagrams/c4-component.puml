@@ -1,0 +1,27 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Author tracks and modules
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(tracks, "CurriculumTracksPage", "Angular page", "curriculum-tracks")
+  Component(module, "ModuleEditorPage", "Angular page", "curriculum-module")
+  Component(dlg, "NewTrackDialog / NewModuleDialog / TrackCohortsDialog / CurriculumStatusDialog", "CDK dialogs", "create, link cohorts, change status")
+  Component(capi, "CurriculumApi", "Contract + HTTP client", "CURRICULUM_API")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "CurriculumEndpoints", "Minimal API", "Learning gate, AuthorCurriculum")
+  Component(read, "CurriculumHandler / ModuleHandler", "Handlers", "tracks, modules, programs")
+  Component(tc, "TrackCommands / ModuleCommands", "Handlers", "create, update, reorder, status, cohorts")
+  Component(audit, "IAuditWriter", "Port", "audit entry in the same unit of work")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Tracks, CurriculumModules, Lessons, Programs.TrackId")
+}
+Rel(tracks, capi, "curriculum, createTrack, reorderModules, setTrackCohorts")
+Rel(module, capi, "module, updateModule, setModuleStatus")
+Rel(dlg, capi, "writes")
+Rel(capi, ep, "JSON/HTTPS")
+Rel(ep, read, "GET")
+Rel(ep, tc, "POST / PUT")
+Rel(tc, audit, "records")
+Rel(read, db, "reads")
+Rel(tc, db, "writes")
+@enduml

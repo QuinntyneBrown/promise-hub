@@ -10,8 +10,9 @@ const SUITE: ModuleId[] = ['Roster', 'Slips', 'RollCall', 'QuickCards', 'Pickup'
 test.describe('Curriculum', () => {
   test.use({ signedInAs: 'm-marisol' });
 
-  test('Given Learning is on, when Marisol opens Curriculum from More, then it says no tracks are written yet', async ({ page, api }) => {
+  test('Given Learning is on and no track is written, when Marisol opens Curriculum from More, then it says no tracks are written yet', async ({ page, api }) => {
     api.setModules('org-harbourview', [...SUITE, 'Learning']);
+    api.curriculumState.clear('org-harbourview');
     const curriculum = new CurriculumPage(page);
     const shell = new ShellPage(page);
     await new TodayPage(page).open();
@@ -36,11 +37,14 @@ test.describe('Curriculum', () => {
 });
 
 test.describe('Curriculum for a site lead', () => {
-  test('Given Learning is on, when a site lead opens /curriculum, then the API refuses them', async ({ page, api }) => {
+  test('Given Learning is on, when a site lead opens /curriculum, then the API refuses them and the page says who writes the curriculum', async ({ page, api }) => {
     api.setModules('org-harbourview', [...SUITE, 'Learning']);
     const curriculum = new CurriculumPage(page);
     await new TodayPage(page).open();
 
     expect(await curriculum.apiStatus()).toBe(403);
+    await curriculum.open();
+    await expect(curriculum.forbiddenState).toBeVisible();
+    await curriculum.expectAccessible();
   });
 });

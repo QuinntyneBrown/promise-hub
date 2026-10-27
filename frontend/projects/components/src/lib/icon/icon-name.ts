@@ -32,6 +32,8 @@ export const ICONS = {
   sparkle: '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2 2M16 16l2 2M6 18l2-2M16 8l2-2"/>',
   'arrow-right': '<path d="M5 12h14m0 0-6-6m6 6-6 6"/>',
   'arrow-left': '<path d="M19 12H5m0 0 6-6m-6 6 6 6"/>',
+  'arrow-up': '<path d="M12 19V5m0 0-6 6m6-6 6 6"/>',
+  'arrow-down': '<path d="M12 5v14m0 0-6-6m6 6 6-6"/>',
   refresh: '<path d="M20 11a8 8 0 1 0 2 5.3M20 4v7h-7"/>',
   upload: '<path d="M12 15V3m0 0-4 4m4-4 4 4M4 17v3h16v-3"/>',
   download: '<path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v3h16v-3"/>',
@@ -54,6 +56,7 @@ export const ICONS = {
     '<path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A17 17 0 0 1 3 5a2 2 0 0 1 2-2z"/>',
   shield: '<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/>',
   edit: '<path d="M4 20h4l11-11-4-4L4 16zM13 7l4 4"/>',
+  trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>',
 } as const;
 
 export type IconName = keyof typeof ICONS;

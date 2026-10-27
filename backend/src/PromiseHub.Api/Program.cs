@@ -16,6 +16,11 @@ builder.Services.AddInfrastructure(connectionString);
 builder.Services.AddHostedService<PromiseHub.Api.Hosting.MessageDispatchHostedService>();
 builder.Services.AddHostedService<PromiseHub.Api.Hosting.RetentionHostedService>();
 builder.Services.AddHostedService<PromiseHub.Api.Hosting.OpsAlertHostedService>();
+// Lesson videos (ADR 0050): stored on disk under Storage:RootPath, up to Lessons:MaxVideoBytes each.
+builder.Services.AddSingleton<IFileStore>(new PromiseHub.Infrastructure.Storage.LocalFileStore(
+    builder.Configuration["Storage:RootPath"] ?? Path.Combine(builder.Environment.ContentRootPath, "App_Data", "files")));
+builder.Services.AddSingleton(new PromiseHub.Application.Curriculum.LessonVideoOptions(
+    builder.Configuration.GetValue<long?>("Lessons:MaxVideoBytes") ?? PromiseHub.Application.Curriculum.LessonVideoOptions.DefaultMaxBytes));
 builder.Services.AddSingleton(new PromiseHub.Application.Guardian.GuardianLinkOptions(builder.Configuration["Guardian:LinkBaseUrl"] ?? "http://localhost:4317"));
 // Enums travel as their names, as the DTOs already do.
 builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
@@ -71,6 +76,7 @@ app.MapStaffEndpoints();
 app.MapInvitationEndpoints();
 app.MapSettingsEndpoints();
 app.MapParticipantModuleEndpoints();
+app.MapCurriculumEndpoints();
 app.MapMentoringEndpoints();
 app.MapMentorAssignmentEndpoints();
 

@@ -1,0 +1,42 @@
+@startuml
+title UML sequence behaviour — Writing and publishing a lesson
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Program director (Marisol)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "LessonEditorPage" as page
+  participant "CurriculumApi" as capi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "CurriculumEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "LessonCommands" as cmd
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : edits content, Save lesson
+page -> capi : updateLesson(id, fields)
+capi -> ep : PUT /curriculum/lessons/{id} (Learning on, AuthorCurriculum — L2-067 c9)
+ep -> cmd : UpdateAsync
+cmd -> db : lesson not deleted, caller's organization only (c6, c9)
+alt invalid title, minutes or lengths
+  cmd --> ep : 422 with one message per field (c2)
+else
+  cmd -> db : save + audit Updated with before and after (c2)
+  ep --> capi : 204
+end
+actor -> page : Status, Published
+page -> capi : setLessonStatus(id, Published)
+capi -> ep : PUT /curriculum/lessons/{id}/status
+ep -> cmd : SetStatusAsync
+alt no teaching content
+  cmd --> ep : 422 "Add teaching content before publishing." (c4)
+else
+  cmd -> db : Status = Published + audit (c4)
+end
+@enduml

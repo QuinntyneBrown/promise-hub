@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 56 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="56" data-video-title="Author curriculum" data-parts="Introduction|Tracks|Module|Lesson|Publish|Video|Cohorts|States|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 56</div>
+  <h1>Author curriculum</h1>
+  <p class="lead">Tracks, modules and lessons, draft to published, a lesson video, and the cohorts that follow</p>
+</section>
+
+<section id="tracks" data-part="1" data-cue="Marisol Delgado is the program director at Harbourview." data-clip="clips/tracks-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Curriculum</h3><p><code>GET /curriculum</code>, <code>POST /curriculum/tracks</code>, <code>PUT …/module-order</code>.</p></div>
+</section>
+
+<section id="tracks-shots" data-part="1" data-cue="Then she moves Speaking Up above Leading by Serving">
+  <h2>A new track, and a new order</h2>
+  <div class="cols">
+    <img class="shot" alt="Art Club created as a draft, keyed art-club" src="shots/desktop-track-created.png">
+    <img class="shot" alt="Leadership Foundations with Speaking Up moved to second" src="shots/desktop-reordered.png">
+  </div>
+</section>
+
+<section id="module" data-part="2" data-cue="Opening Leading by Serving shows the module editor.">
+  <h2>The module editor</h2>
+  <img class="shot" alt="Leading by Serving: details, lessons in order and Visibility" src="shots/desktop-module.png">
+</section>
+
+<section id="lesson" data-part="3" data-cue="Add lesson asks only for a title" data-clip="clips/lesson-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Writing a lesson</h3><p><code>POST /curriculum/lessons</code>, <code>PUT /curriculum/lessons/{id}</code>, audited before and after.</p></div>
+</section>
+
+<section id="publish" data-part="4" data-cue="The Status button opens one dialog">
+  <h2>One status dialog</h2>
+  <table class="facts">
+    <tr><th>Item</th><th>Statuses</th><th>To publish</th></tr>
+    <tr><td>Track</td><td>Draft, Published</td><td>—</td></tr>
+    <tr><td>Module</td><td>Draft, In review, Published</td><td>At least one lesson</td></tr>
+    <tr><td>Lesson</td><td>Draft, Published</td><td>Teaching content</td></tr>
+  </table>
+  <p class="muted small">Youth see a lesson only while lesson, module and track are published and their program follows the track · ADR 0050</p>
+</section>
+
+<section id="publish-shots" data-part="4" data-cue="so an empty module is refused with the reason">
+  <h2>Published, and refused</h2>
+  <div class="cols">
+    <img class="shot" alt="Status dialog with Published chosen" src="shots/desktop-status-dialog.png">
+    <img class="shot" alt="Add a lesson before publishing the module" src="shots/desktop-module-invalid.png">
+  </div>
+</section>
+
+<section id="video" data-part="5" data-cue="Each lesson can carry one video." data-clip="clips/video-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>A lesson video</h3><p><code>POST /curriculum/lessons/{id}/video</code>: refused, uploading, attached.</p></div>
+</section>
+
+<section id="video-server" data-part="5" data-cue="On the server the file is checked three ways">
+  <h2>Checked, then stored</h2>
+  <div class="cols">
+    <table class="facts">
+      <tr><th>Check</th><th>Accepted</th></tr>
+      <tr><td>Extension</td><td><code>.mp4</code>, <code>.mov</code>, <code>.webm</code></td></tr>
+      <tr><td>Content type</td><td><code>video/mp4</code>, <code>video/quicktime</code>, <code>video/webm</code></td></tr>
+      <tr><td>First bytes</td><td><code>ftyp</code> or the WebM signature</td></tr>
+      <tr><td>Size</td><td>Up to 1 GB (<code>Lessons:MaxVideoBytes</code>)</td></tr>
+    </table>
+    <img class="shot" alt="That file isn’t a video we can use" src="shots/desktop-video-refused.png">
+  </div>
+  <p class="muted small"><code>IFileStore</code> · <code>lessons/{organization}/{lesson}/{guid}.mp4</code> · <code>LocalFileStore</code> under <code>Storage:RootPath</code></p>
+</section>
+
+<section id="cohorts" data-part="6" data-cue="In PromiseHub a cohort is a program." data-clip="clips/cohorts-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Cohorts that follow a track</h3><p><code>PUT /curriculum/tracks/{id}/cohorts</code>: a program follows one track.</p></div>
+</section>
+
+<section id="cohorts-shots" data-part="6" data-cue="A program follows one track, so choosing one">
+  <h2>One track per cohort</h2>
+  <div class="cols">
+    <img class="shot" alt="Digital Skills followed by Winter Camp 2026" src="shots/phone-cohorts-saved.png">
+    <img class="shot" alt="Pick Up the Towel on a phone" src="shots/phone-lesson.png">
+  </div>
+</section>
+
+<section id="states" data-part="7" data-cue="With no tracks, Curriculum says so" data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Empty, failed, off</h3><p>No tracks yet, Try again, and Learning off going to Today.</p></div>
+</section>
+
+<section id="gates" data-part="7" data-cue="Northgate never sees a Harbourview track">
+  <h2>Who gets what</h2>
+  <div class="cols">
+    <table class="facts">
+      <tr><th>Caller</th><th>Answer</th></tr>
+      <tr><td>Admin, program director</td><td>Their organization's curriculum</td></tr>
+      <tr><td>Site lead, youth worker, youth, mentor</td><td>403</td></tr>
+      <tr><td>Another organization's id</td><td>404</td></tr>
+      <tr><td>Learning off</td><td>404, routes go to Today</td></tr>
+    </table>
+    <img class="shot" alt="No tracks yet, with New track" src="shots/desktop-empty.png">
+  </div>
+</section>
+
+<section id="testing" data-part="8" data-cue="The API tests cover tracks and keys">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>CurriculumTracksTests</code>, <code>CurriculumLessonsTests</code>, <code>CurriculumCohortsTests</code>: rules, order, status, soft delete, roles, tenancy, Learning off</li>
+    <li><code>LessonVideoTests</code> and <code>LocalFileStoreTests</code>: types, signatures, size, replace, remove</li>
+    <li>Five <code>e2e/tests/curriculum</code> specs on phone and laptop, with axe and no sideways scroll</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="9" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Tracks hold modules in order; modules hold lessons in order</li><li>One status dialog; nothing unpublished reaches youth</li><li>Lesson videos go through file storage, checked by type, content and size</li></ul>
+  <p class="muted">Next: youth complete lessons</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

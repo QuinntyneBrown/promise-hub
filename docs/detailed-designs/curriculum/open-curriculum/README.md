@@ -6,10 +6,10 @@ The first slice of curriculum authoring in the **Learning** module (`L1-023`). A
 
 ## Description
 
-- **`CurriculumHandler`** (`PromiseHub.Application/Curriculum/`) returns `CurriculumDto(tracks)`, an empty list until prompt 56 adds tracks.
+- **`CurriculumHandler`** (`PromiseHub.Application/Curriculum/`) returns `CurriculumDto(tracks)`; prompt 56 filled it ([author-tracks-and-modules](../author-tracks-and-modules/README.md)).
 - **`GET /curriculum`** (`CurriculumEndpoints`) requires `Permission.AuthorCurriculum` (Admin, Program director) and `RequireModule(ModuleId.Learning)`.
 - **`CURRICULUM_API`** with `HttpCurriculumApi.tracks()`.
-- **`CurriculumPage`** (`frontend/projects/curriculum/`) composes `ph-page-header`, `ph-card` and `ph-empty-state` (`curriculum`), loaded by `moduleRoute('curriculum', 'Learning', …)` and listed in More for authors.
+- **`CurriculumPage`** (`frontend/projects/curriculum/`) was the placeholder; prompt 56 replaced it with `CurriculumTracksPage` (`curriculum-tracks`), loaded by `moduleRoute('curriculum', 'Learning', …)` and listed in More for authors.
 
 ## Requirements
 

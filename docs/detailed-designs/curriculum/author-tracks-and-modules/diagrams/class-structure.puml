@@ -1,0 +1,66 @@
+@startuml
+title Class structure — Author tracks and modules
+skinparam classAttributeIconSize 0
+class Track <<entity>> {
+  Id : Guid
+  OrganizationId : Guid
+  Name : string
+  Key : string
+  Description : string?
+  Status : ContentStatus
+  CreatedAt : DateTimeOffset
+}
+class CurriculumModule <<entity>> {
+  Id : Guid
+  OrganizationId : Guid
+  TrackId : Guid
+  Title : string
+  Description : string?
+  PrerequisiteModuleId : Guid?
+  Anchor : string?
+  Position : int
+  Status : ContentStatus
+}
+enum ContentStatus {
+  Draft
+  InReview
+  Published
+}
+class Program <<entity>> {
+  TrackId : Guid?
+  FollowTrack(trackId)
+}
+class TrackCommands {
+  CreateAsync(command) : Result
+  SetStatusAsync(id, status) : Result
+  ReorderModulesAsync(id, moduleIds) : Result
+  SetCohortsAsync(id, programIds) : Result
+}
+class ModuleCommands {
+  CreateAsync(trackId, title, description) : Result
+  UpdateAsync(id, fields) : Result
+  SetStatusAsync(id, status) : Result
+}
+class CurriculumHandler {
+  HandleAsync() : CurriculumDto
+}
+class ModuleHandler {
+  HandleAsync(id) : ModuleDetailDto?
+}
+class CurriculumRules {
+  KeyFrom(name) : string
+  CheckTrack(...) : errors
+  CheckModule(...) : errors
+}
+Track "1" *-- "many" CurriculumModule : ordered by Position
+Program "many" --> "0..1" Track : follows
+Track --> ContentStatus
+CurriculumModule --> ContentStatus
+TrackCommands ..> CurriculumRules
+ModuleCommands ..> CurriculumRules
+TrackCommands --> Track
+TrackCommands --> Program
+ModuleCommands --> CurriculumModule
+CurriculumHandler --> Track
+ModuleHandler --> CurriculumModule
+@enduml

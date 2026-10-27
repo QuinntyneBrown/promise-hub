@@ -1,0 +1,150 @@
+<ph-page-header title="Curriculum" subtitle="Tracks, modules and lessons your youth work through.">
+  @if (result()?.status === 'loaded') {
+    <ph-button variant="primary" icon="plus" hasPopup="dialog" (click)="newTrack()"
+      >New track</ph-button
+    >
+  }
+</ph-page-header>
+@let r = result();
+@if (r === null) {
+  <div aria-busy="true" aria-label="Loading tracks" class="stack">
+    <ph-skeleton shape="card" />
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (r.status === 'loaded') {
+  @if (r.value.tracks.length === 0) {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="curriculum"
+        title="No tracks yet"
+        text="A track is a pathway youth follow, such as Leadership Foundations. Create one, add modules and lessons, then link it to a cohort."
+      >
+        <ph-button variant="primary" icon="plus" hasPopup="dialog" (click)="newTrack()"
+          >New track</ph-button
+        >
+      </ph-empty-state>
+    </ph-card>
+  } @else {
+    @if (counts(); as c) {
+      <div class="kpis">
+        <ph-stat
+          label="Tracks"
+          [value]="'' + c.tracks"
+          [caption]="c.tracksPublished + ' published'"
+          data-testid="kpi-tracks"
+        />
+        <ph-stat
+          label="Modules"
+          [value]="'' + c.modules"
+          [caption]="c.modulesPublished + ' published'"
+          data-testid="kpi-modules"
+        />
+        <ph-stat label="Lessons" [value]="'' + c.lessons" data-testid="kpi-lessons" />
+      </div>
+    }
+    <div class="stack">
+      @for (track of r.value.tracks; track track.id) {
+        <ph-card [title]="track.name">
+          <div class="stack">
+            <div class="cluster cluster--between">
+              <div class="stack">
+                <div>
+                  <ph-badge [tone]="statusTone(track.status)" data-testid="track-status">{{
+                    statusLabel(track.status)
+                  }}</ph-badge>
+                </div>
+                @if (track.description) {
+                  <p class="text-muted">{{ track.description }}</p>
+                }
+                <p class="text-caption" data-testid="track-details">{{ details(track) }}</p>
+                <p class="text-caption" data-testid="track-cohorts">{{ followedBy(track) }}</p>
+              </div>
+              <div class="cluster cluster--tight">
+                <ph-button
+                  size="sm"
+                  icon="families"
+                  hasPopup="dialog"
+                  [label]="'Cohorts following ' + track.name"
+                  (click)="cohorts(track, r.value)"
+                  >Cohorts</ph-button
+                >
+                <ph-button
+                  size="sm"
+                  hasPopup="dialog"
+                  [label]="(track.status === 'Draft' ? 'Publish ' : 'Status of ') + track.name"
+                  (click)="changeStatus(track)"
+                  >{{ track.status === 'Draft' ? 'Publish' : 'Status' }}</ph-button
+                >
+              </div>
+            </div>
+            @if (track.modules.length) {
+              <ph-list label="Modules, in order" [inset]="true">
+                @for (m of track.modules; track m.id; let i = $index, last = $last) {
+                  <ph-list-item
+                    [title]="i + 1 + '. ' + m.title"
+                    [meta]="moduleMeta(m.lessonCount)"
+                    [link]="['/curriculum/modules', m.id]"
+                  >
+                    <div class="cluster cluster--tight">
+                      <ph-badge [tone]="statusTone(m.status)">{{ statusLabel(m.status) }}</ph-badge>
+                      <ph-button
+                        variant="ghost"
+                        icon="arrow-up"
+                        [iconOnly]="true"
+                        [label]="'Move ' + m.title + ' up'"
+                        [disabled]="i === 0"
+                        (click)="move(track, i, -1)"
+                      />
+                      <ph-button
+                        variant="ghost"
+                        icon="arrow-down"
+                        [iconOnly]="true"
+                        [label]="'Move ' + m.title + ' down'"
+                        [disabled]="last"
+                        (click)="move(track, i, 1)"
+                      />
+                    </div>
+                  </ph-list-item>
+                }
+              </ph-list>
+            } @else {
+              <p class="text-muted">No modules yet.</p>
+            }
+          </div>
+          <ng-container ngProjectAs="[phCardFooter]">
+            <ph-button
+              variant="ghost"
+              size="sm"
+              icon="plus"
+              hasPopup="dialog"
+              [label]="'New module in ' + track.name"
+              (click)="newModule(track)"
+              >New module</ph-button
+            >
+          </ng-container>
+        </ph-card>
+      }
+    </div>
+  }
+} @else if (r.status === 'forbidden') {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      title="Program directors write the curriculum"
+      text="Ask an admin or a program director of your organization."
+    >
+      <ph-button link="/">Back to Today</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load the curriculum"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" icon="refresh" (click)="reload()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}

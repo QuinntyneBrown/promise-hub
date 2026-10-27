@@ -1,0 +1,18 @@
+<ph-dialog
+  [title]="'Delete ' + data.title + '?'"
+  description="Youth stop seeing it at once. Their progress is kept in the archive."
+  icon="trash"
+  tone="danger"
+>
+  @if (failed()) {
+    <ph-alert
+      tone="danger"
+      title="That didn’t go through"
+      text="The lesson was not deleted. Try again."
+    />
+  }
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close()">Cancel</ph-button>
+    <ph-button variant="danger" [busy]="busy()" (click)="confirm()">Delete lesson</ph-button>
+  </ng-container>
+</ph-dialog>

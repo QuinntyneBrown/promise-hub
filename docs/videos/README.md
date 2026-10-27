@@ -63,6 +63,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 53 | [Complete first-run onboarding](53-complete-first-run-onboarding/README.md) | ~4 min | A youth goes through three setup steps saved on the server (name and pronouns, preferences, their program), can finish later and resume at that step, and a youth in no program sees a waiting state while lessons stay locked on the server |
 | 54 | [Manage cohorts and assign mentors](54-manage-cohorts/README.md) | ~5 min | A program director gives a cohort (a program) its term, places youth on its roster, sets its lead and supporting mentors and assigns a mentor to a youth; the mentor sees their youth, and with Mentoring off nothing about mentors is shown or served |
 | 55 | [Use the mentor dashboard](55-use-the-mentor-dashboard/README.md) | ~4 min | A mentor opens Mentoring on a dashboard of their own youth and cohorts with recent attendance, searches My youth, opens a youth’s record with guardians to call and nothing medical, and opens a cohort they are on; anything outside their scope is refused on the server and audited |
+| 56 | [Author curriculum](56-author-curriculum/README.md) | ~5 min | A program director builds tracks of ordered modules and lessons, writes a lesson with leader notes, moves tracks, modules and lessons through draft, review and publish, attaches a lesson video checked by type, content and size through file storage, and chooses the cohorts that follow each track; nothing unpublished reaches youth |
 
 ## Making or updating a video
 

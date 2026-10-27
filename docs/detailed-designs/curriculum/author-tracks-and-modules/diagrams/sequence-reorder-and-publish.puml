@@ -1,0 +1,44 @@
+@startuml
+title UML sequence behaviour — Reordering and publishing a module
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Program director (Marisol)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "CurriculumTracksPage" as page
+  participant "CurriculumStatusDialog" as dlg
+  participant "CurriculumApi" as capi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "CurriculumEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "TrackCommands / ModuleCommands" as cmd
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : Move Speaking Up up
+page -> capi : reorderModules(trackId, ids)
+capi -> ep : PUT /curriculum/tracks/{id}/module-order (Learning on — L2-066 c8; AuthorCurriculum — c8)
+ep -> cmd : ReorderModulesAsync
+cmd -> db : the track's modules, caller's organization only (c9)
+alt not every module exactly once
+  cmd --> ep : Invalid "Send every module of the track once." (c5)
+else
+  cmd -> db : save Position 1..n + audit Updated (c5)
+  ep --> capi : 204
+end
+actor -> dlg : Published, Save status
+dlg -> capi : setModuleStatus(id, Published)
+capi -> ep : PUT /curriculum/modules/{id}/status
+ep -> cmd : SetStatusAsync
+alt module has no lessons
+  cmd --> ep : 422 "Add a lesson before publishing the module." (c6)
+else
+  cmd -> db : Status = Published + audit Updated (c6)
+  ep --> capi : 204
+end
+@enduml

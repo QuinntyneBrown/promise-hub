@@ -1,5 +1,6 @@
 import type { Page, Route } from '@playwright/test';
 import { type FakeChild, type FakeGuardian, type FakeHousehold, ageOf, hasMedicalFlag, medicalFlag, reachable, seedHouseholds } from './households';
+import { FakeCurriculum } from './fake-curriculum';
 import { type FakeEvent, type FakeProgram, NOW, seedEvents, seedPrograms } from './programs';
 import { type Membership, type ModuleId, moduleCatalog, memberships, organizations, seededMfaCode, seededPassword } from './seed';
 
@@ -32,7 +33,7 @@ const can = {
  * What a participant role (Youth, Mentor, Volunteer) may call: mirrors the API's fallback policy, which closes every staff
  * endpoint to them unless it opts in (ADR 0043). Volunteers also open their assigned sessions.
  */
-const PARTICIPANT_PATHS = [/^\/api\/me(\/|$)/, /^\/api\/notifications(\/|$)/, /^\/api\/auth\//, /^\/api\/learning\//, /^\/api\/mentoring\//, /^\/api\/curriculum$/];
+const PARTICIPANT_PATHS = [/^\/api\/me(\/|$)/, /^\/api\/notifications(\/|$)/, /^\/api\/auth\//, /^\/api\/learning\//, /^\/api\/mentoring\//, /^\/api\/curriculum(\/|$)/];
 const VOLUNTEER_PATHS = [/^\/api\/sessions\/today$/, /^\/api\/sessions\/[^/]+\/roster$/];
 
 type ImportField = 'ChildName' | 'DateOfBirth' | 'School' | 'GuardianName' | 'GuardianPhone' | 'GuardianEmail' | 'Allergies' | 'Language' | 'Notes' | 'Skip';
@@ -445,6 +446,9 @@ export class FakeApi {
     this.events.push({ ...base, id: `e-${this.nextId++}`, name, startsAt: '2026-11-05T23:00:00Z', endsAt: '2026-11-06T00:00:00Z', place: 'Room 3' });
   }
 
+  /** Curriculum authoring state (tracks, modules, lessons); tests call its helpers, such as clear. */
+  readonly curriculumState = new FakeCurriculum(() => this.programs);
+
   /** Sets the modules on for an organization, as Settings › Modules would. */
   setModules(organizationId: string, on: ModuleId[]): void {
     this.modules.set(organizationId, on);
@@ -477,7 +481,23 @@ export class FakeApi {
     ['GET', /^\/api\/learning\/onboarding$/, (route) => this.onboarding(route)],
     ['PUT', /^\/api\/learning\/onboarding$/, (route) => this.saveOnboardingStep(route)],
     ['POST', /^\/api\/learning\/onboarding\/complete$/, (route) => this.completeOnboarding(route)],
-    ['GET', /^\/api\/curriculum$/, (route) => this.curriculum(route)],
+    ['GET', /^\/api\/curriculum$/, (route) => this.author(route, (org) => this.curriculumState.list(route, org))],
+    ['POST', /^\/api\/curriculum\/tracks$/, (route) => this.author(route, (org) => this.curriculumState.createTrack(route, org))],
+    ['PUT', /^\/api\/curriculum\/tracks\/(?<id>[^/]+)\/module-order$/, (route, p) => this.author(route, (org) => this.curriculumState.reorderModules(route, org, p['id']!))],
+    ['POST', /^\/api\/curriculum\/modules$/, (route) => this.author(route, (org) => this.curriculumState.createModule(route, org))],
+    ['GET', /^\/api\/curriculum\/modules\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.curriculumState.getModule(route, org, p['id']!))],
+    ['PUT', /^\/api\/curriculum\/modules\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.curriculumState.updateModule(route, org, p['id']!))],
+    ['PUT', /^\/api\/curriculum\/tracks\/(?<id>[^/]+)\/cohorts$/, (route, p) => this.author(route, (org) => this.curriculumState.setCohorts(route, org, p['id']!))],
+    ['PUT', /^\/api\/curriculum\/tracks\/(?<id>[^/]+)\/status$/, (route, p) => this.author(route, (org) => this.curriculumState.setTrackStatus(route, org, p['id']!))],
+    ['PUT', /^\/api\/curriculum\/modules\/(?<id>[^/]+)\/status$/, (route, p) => this.author(route, (org) => this.curriculumState.setModuleStatus(route, org, p['id']!))],
+    ['PUT', /^\/api\/curriculum\/modules\/(?<id>[^/]+)\/lesson-order$/, (route, p) => this.author(route, (org) => this.curriculumState.reorderLessons(route, org, p['id']!))],
+    ['POST', /^\/api\/curriculum\/lessons$/, (route) => this.author(route, (org) => this.curriculumState.createLesson(route, org))],
+    ['GET', /^\/api\/curriculum\/lessons\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.curriculumState.getLesson(route, org, p['id']!))],
+    ['PUT', /^\/api\/curriculum\/lessons\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.curriculumState.updateLesson(route, org, p['id']!))],
+    ['PUT', /^\/api\/curriculum\/lessons\/(?<id>[^/]+)\/status$/, (route, p) => this.author(route, (org) => this.curriculumState.setLessonStatus(route, org, p['id']!))],
+    ['DELETE', /^\/api\/curriculum\/lessons\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.curriculumState.deleteLesson(route, org, p['id']!))],
+    ['POST', /^\/api\/curriculum\/lessons\/(?<id>[^/]+)\/video$/, (route, p) => this.author(route, (org) => this.curriculumState.uploadVideo(route, org, p['id']!, memberships.find((x) => x.id === this.membershipId)!.personName))],
+    ['DELETE', /^\/api\/curriculum\/lessons\/(?<id>[^/]+)\/video$/, (route, p) => this.author(route, (org) => this.curriculumState.removeVideo(route, org, p['id']!))],
     ['GET', /^\/api\/mentoring\/youth$/, (route) => this.mentoredYouth(route)],
     ['GET', /^\/api\/mentoring\/dashboard$/, (route) => this.mentorDashboard(route)],
     ['GET', /^\/api\/mentoring\/youth\/(?<id>[^/]+)$/, (route, p) => this.mentorYouthRecord(route, p['id']!)],
@@ -855,9 +875,11 @@ export class FakeApi {
     return this.deliverConsentLink(route, m.organizationId, household, childId);
   }
 
-  private async curriculum(route: Route): Promise<void> {
-    if (!(await this.participantModuleCaller(route, 'Learning', can.authorCurriculum))) return;
-    return route.fulfill({ json: { tracks: [] } });
+  /** Every /curriculum call (L2-066, L2-067): Learning on and AuthorCurriculum, then the caller's organization only. */
+  private async author(route: Route, handle: (organizationId: string) => Promise<void>): Promise<void> {
+    const m = await this.participantModuleCaller(route, 'Learning', can.authorCurriculum);
+    if (!m) return;
+    return handle(m.organizationId);
   }
 
   /** The mentor's scope (L2-065, ADR 0049): cohorts on their team that are not archived, and their youth, direct or through those cohorts. */

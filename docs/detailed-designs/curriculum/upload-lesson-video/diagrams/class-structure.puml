@@ -1,0 +1,38 @@
+@startuml
+title Class structure — Upload a lesson video
+skinparam classAttributeIconSize 0
+interface IFileStore {
+  SaveAsync(key, stream) : Task
+  DeleteAsync(key) : Task
+  ExistsAsync(key) : Task<bool>
+}
+class LocalFileStore {
+  RootPath : string
+}
+class LessonVideoPolicy {
+  MaxBytes : long
+  IsVideo(fileName, contentType, firstBytes) : bool
+}
+class LessonVideoHandler {
+  UploadAsync(lessonId, fileName, contentType, length, stream) : (Result, LessonVideoDto?)
+  RemoveAsync(lessonId) : Result
+}
+class Lesson <<entity>> {
+  VideoFileName : string?
+  VideoKey : string?
+  VideoContentType : string?
+  VideoBytes : long?
+  VideoUploadedAt : DateTimeOffset?
+  VideoUploadedBy : string?
+  AttachVideo(...)
+  RemoveVideo()
+}
+class LessonVideoDto <<record>> {
+  FileName, Bytes, UploadedAt, UploadedBy
+}
+IFileStore <|.. LocalFileStore
+LessonVideoHandler --> IFileStore
+LessonVideoHandler ..> LessonVideoPolicy
+LessonVideoHandler --> Lesson
+LessonVideoHandler ..> LessonVideoDto
+@enduml

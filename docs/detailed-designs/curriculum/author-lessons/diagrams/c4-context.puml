@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Author lessons
+Person(p0, "Program director or admin", "Authors the curriculum")
+Person(p1, "Youth", "Reads published lessons (prompt 57)")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(p0, ph, "Authors tracks, modules and lessons", "HTTPS")
+Rel(p1, ph, "Never sees drafts", "HTTPS")
+@enduml

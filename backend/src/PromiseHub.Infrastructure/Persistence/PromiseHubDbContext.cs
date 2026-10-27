@@ -59,6 +59,9 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Learning.YouthOnboarding> YouthOnboardings => Set<Domain.Learning.YouthOnboarding>();
     public DbSet<Domain.Mentoring.YouthMentor> YouthMentors => Set<Domain.Mentoring.YouthMentor>();
     public DbSet<Domain.Mentoring.CohortMentor> CohortMentors => Set<Domain.Mentoring.CohortMentor>();
+    public DbSet<Domain.Curriculum.Track> Tracks => Set<Domain.Curriculum.Track>();
+    public DbSet<Domain.Curriculum.CurriculumModule> CurriculumModules => Set<Domain.Curriculum.CurriculumModule>();
+    public DbSet<Domain.Curriculum.Lesson> Lessons => Set<Domain.Curriculum.Lesson>();
     public DbSet<DataRequest> DataRequests => Set<DataRequest>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
     public DbSet<Domain.Incidents.IncidentFollowUp> IncidentFollowUps => Set<Domain.Incidents.IncidentFollowUp>();
@@ -116,6 +119,40 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.HasIndex(t => new { t.ProgramId, t.MentorMembershipId }).IsUnique();
             e.HasOne<Domain.Programs.Program>().WithMany().HasForeignKey(t => t.ProgramId);
             e.HasOne<Membership>().WithMany().HasForeignKey(t => t.MentorMembershipId);
+        });
+        modelBuilder.Entity<Domain.Curriculum.Track>(e =>
+        {
+            e.HasIndex(t => new { t.OrganizationId, t.Key }).IsUnique();
+            e.Property(t => t.Name).HasMaxLength(Domain.Curriculum.Track.MaximumName);
+            e.Property(t => t.Key).HasMaxLength(Domain.Curriculum.Track.MaximumKey);
+            e.Property(t => t.Description).HasMaxLength(Domain.Curriculum.Track.MaximumDescription);
+            e.Property(t => t.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(t => t.CreatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+        });
+        modelBuilder.Entity<Domain.Programs.Program>().HasOne<Domain.Curriculum.Track>().WithMany().HasForeignKey(p => p.TrackId);
+        modelBuilder.Entity<Domain.Curriculum.CurriculumModule>(e =>
+        {
+            e.Property(m => m.Title).HasMaxLength(Domain.Curriculum.CurriculumModule.MaximumTitle);
+            e.Property(m => m.Description).HasMaxLength(Domain.Curriculum.CurriculumModule.MaximumDescription);
+            e.Property(m => m.Anchor).HasMaxLength(Domain.Curriculum.CurriculumModule.MaximumAnchor);
+            e.Property(m => m.Status).HasConversion<string>().HasMaxLength(20);
+            e.HasOne<Domain.Curriculum.Track>().WithMany().HasForeignKey(m => m.TrackId);
+            e.HasOne<Domain.Curriculum.CurriculumModule>().WithMany().HasForeignKey(m => m.PrerequisiteModuleId);
+        });
+        modelBuilder.Entity<Domain.Curriculum.Lesson>(e =>
+        {
+            e.Property(l => l.Title).HasMaxLength(Domain.Curriculum.Lesson.MaximumTitle);
+            e.Property(l => l.Reading).HasMaxLength(Domain.Curriculum.Lesson.MaximumReading);
+            e.Property(l => l.Body).HasMaxLength(Domain.Curriculum.Lesson.MaximumBody);
+            e.Property(l => l.LeaderNotes).HasMaxLength(Domain.Curriculum.Lesson.MaximumNotes);
+            e.Property(l => l.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(l => l.DeletedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.Property(l => l.VideoFileName).HasMaxLength(260);
+            e.Property(l => l.VideoKey).HasMaxLength(200);
+            e.Property(l => l.VideoContentType).HasMaxLength(100);
+            e.Property(l => l.VideoUploadedBy).HasMaxLength(200);
+            e.Property(l => l.VideoUploadedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.HasOne<Domain.Curriculum.CurriculumModule>().WithMany().HasForeignKey(l => l.ModuleId);
         });
         modelBuilder.Entity<DataRequest>(e =>
         {
