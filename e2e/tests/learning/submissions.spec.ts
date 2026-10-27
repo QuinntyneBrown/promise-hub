@@ -234,6 +234,98 @@ test.describe('Submit assignments', () => {
     await submission.expectNoHorizontalScroll();
   });
 
+  test('Given Daniel has started reviewing it, when Sofía opens her submission, then it is In review and still read only', async ({ page, api }) => {
+    api.learningState.complete('m-sofia', ...TOWEL);
+    const sub = api.learningState.work.seed({ membershipId: 'm-sofia', assignmentId: 'as-serve', text: REFLECTION });
+    api.learningState.work.startReview(sub.id);
+    const submission = new LearnSubmissionPage(page);
+
+    await submission.open(sub.id);
+
+    await expect(submission.status).toHaveText('In review');
+    await expect(submission.alert('Daniel Osei is reviewing your work')).toBeVisible();
+    await expect(submission.history).toHaveCount(2);
+    await expect(submission.history.nth(1)).toContainText('Daniel Osei started reviewing');
+    await expect(submission.reviseButton).toHaveCount(0);
+    await submission.expectAccessible();
+  });
+
+  test('Given Daniel asked for a revision, then her submission, the assignment and the module say Needs revision with his note and a way to revise', async ({
+    page,
+    api,
+  }) => {
+    api.learningState.complete('m-sofia', ...TOWEL);
+    const sub = api.learningState.work.seed({ membershipId: 'm-sofia', assignmentId: 'as-serve', text: REFLECTION });
+    api.learningState.work.startReview(sub.id);
+    api.learningState.work.requestRevision(sub.id, 'Great story, Sofía! Can you add a line about one thing you noticed? Then this is a full pass.');
+    const submission = new LearnSubmissionPage(page);
+    const assignment = new LearnAssignmentPage(page);
+    const module = new LearnModulePage(page);
+
+    await submission.open(sub.id);
+    await expect(submission.status).toHaveText('Needs revision');
+    await expect(submission.alert('Note from Daniel Osei')).toContainText('Can you add a line about one thing you noticed?');
+    await expect(submission.history.nth(2)).toContainText('Daniel Osei asked for a revision');
+    await expect(submission.reviseButton).toBeVisible();
+    await submission.expectAccessible();
+
+    await assignment.open('as-serve');
+    await expect(assignment.status).toHaveText('Needs revision');
+    await expect(assignment.notice).toContainText('Daniel Osei asked for a revision');
+    await expect(assignment.reviseButton).toBeVisible();
+    await module.open('cm-serving');
+    await expect(module.assignment(ASSIGNMENT)).toContainText('Needs revision');
+  });
+
+  test('Given Daniel accepted it, then her submission shows Accepted, the points awarded of 25 and his comment, and the module says Accepted', async ({
+    page,
+    api,
+  }) => {
+    api.learningState.complete('m-sofia', ...TOWEL);
+    const sub = api.learningState.work.seed({ membershipId: 'm-sofia', assignmentId: 'as-serve', text: REFLECTION });
+    api.learningState.work.startReview(sub.id);
+    api.learningState.work.accept(sub.id, 25, 'This is exactly it, Sofía. Serving is noticing what needs doing. Proud of you.');
+    const submission = new LearnSubmissionPage(page);
+
+    await submission.open(sub.id);
+
+    await expect(submission.status).toHaveText('Accepted');
+    await expect(submission.alert('Accepted by Daniel Osei')).toContainText('Proud of you.');
+    await expect(submission.points()).toContainText('25 / 25');
+    await expect(submission.history.last()).toContainText('Daniel Osei accepted it · 25 of 25 points');
+    await submission.expectNoHorizontalScroll();
+    await submission.expectAccessible();
+    await new LearnModulePage(page).open('cm-serving');
+    await expect(new LearnModulePage(page).assignment(ASSIGNMENT)).toContainText('Accepted');
+  });
+
+  test('Given she submitted after the due date, then her submission is marked Late', async ({ page, api }) => {
+    api.learningState.complete('m-sofia', ...TOWEL);
+    const sub = api.learningState.work.seed({ membershipId: 'm-sofia', assignmentId: 'as-serve', text: REFLECTION, late: true });
+    const submission = new LearnSubmissionPage(page);
+
+    await submission.open(sub.id);
+
+    await expect(submission.late).toBeVisible();
+    await expect(submission.history.first()).toContainText('submitted it late');
+  });
+
+  test('Given another youth’s or an unknown submission, or one that fails to load, then the page says so', async ({ page, api }) => {
+    api.learningState.complete('m-sofia', ...TOWEL);
+    const other = api.learningState.work.seed({ membershipId: 'm-nadia', assignmentId: 'as-serve', text: REFLECTION });
+    const submission = new LearnSubmissionPage(page);
+
+    await submission.open(other.id);
+    await expect(submission.notFound).toBeVisible();
+    expect(await submission.apiStatus(other.id)).toBe(404);
+    await submission.expectAccessible();
+
+    const mine = api.learningState.work.seed({ membershipId: 'm-sofia', assignmentId: 'as-serve', text: REFLECTION });
+    api.learningState.work.failReads = true;
+    await submission.open(mine.id);
+    await expect(submission.loadError).toBeVisible();
+  });
+
   test('Given an unknown assignment or one that fails to load, then the page says so', async ({
     page,
     api,

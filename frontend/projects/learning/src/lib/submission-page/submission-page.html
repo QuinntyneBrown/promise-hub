@@ -23,15 +23,50 @@
       label[s.status]
     }}</ph-badge>
   </ph-page-header>
-  @if (s.status === 'Submitted') {
-    <ph-alert
-      tone="success"
-      [title]="s.round > 1 ? 'Sent again' : 'It’s in'"
-      [text]="
-        (s.reviewerName ?? s.mentorName ?? 'Your mentor') +
-        ' reviews it next. You’ll see the feedback here.'
-      "
-    />
+  @switch (s.status) {
+    @case ('Submitted') {
+      <ph-alert
+        tone="success"
+        [title]="s.round > 1 ? 'Sent again' : 'It’s in'"
+        [text]="
+          (s.reviewerName ?? s.mentorName ?? 'Your mentor') +
+          ' reviews it next. You’ll see the feedback here.'
+        "
+      />
+    }
+    @case ('InReview') {
+      <ph-alert
+        [title]="(s.reviewerName ?? 'Your mentor') + ' is reviewing your work'"
+        text="Mentors usually reply within a day or two."
+      />
+    }
+    @case ('NeedsRevision') {
+      <ph-alert
+        tone="warning"
+        [title]="'Note from ' + (s.reviewerName ?? 'your mentor')"
+        [text]="s.feedback ? '“' + s.feedback + '”' : 'Update your work and send it again.'"
+      />
+    }
+    @case ('Accepted') {
+      <ph-alert
+        tone="success"
+        [title]="'Accepted by ' + (s.reviewerName ?? 'your mentor')"
+        [text]="s.feedback ? '“' + s.feedback + '”' : ''"
+      />
+      @if (s.points !== null) {
+        <div class="kpis" role="group" aria-label="Your points">
+          <ph-stat
+            label="Points"
+            [value]="s.points + ' / ' + s.totalPoints"
+            [caption]="
+              s.points === s.totalPoints
+                ? 'Every criterion met'
+                : 'Of ' + s.totalPoints + ' possible'
+            "
+          />
+        </div>
+      }
+    }
   }
   <div class="split">
     <div class="stack">
@@ -60,9 +95,21 @@
         </div>
       </ph-card>
       <div class="actions">
-        <ph-button variant="ghost" [link]="'/learning/modules/' + s.moduleId"
+        <ph-button
+          [variant]="
+            s.status === 'NeedsRevision' ? 'ghost' : s.status === 'Accepted' ? 'primary' : 'ghost'
+          "
+          [link]="'/learning/modules/' + s.moduleId"
           >Back to the module</ph-button
         >
+        @if (s.status === 'NeedsRevision') {
+          <ph-button
+            variant="primary"
+            icon="edit"
+            [link]="'/learning/assignments/' + s.assignmentId + '/submit'"
+            >Revise your submission</ph-button
+          >
+        }
       </div>
     </div>
     <div class="stack">
