@@ -54,3 +54,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0048](0048-cohort-terms-and-mentor-assignments.md) | A cohort's term is a label on its program; mentors are assigned per youth and per cohort under the Mentoring module |
 | [0049](0049-mentor-scope-and-mentor-safe-records.md) | One mentor scope serves every Mentoring read; mentors read a mentor-safe youth record, refusals are audited |
 | [0050](0050-curriculum-tracks-modules-lessons-and-lesson-video.md) | Curriculum is tracks of ordered modules and lessons; a program follows one track; lesson video goes through a file-storage port without transcoding |
+| [0051](0051-youth-progress-gating-video-streaming-and-coding.md) | Youth progress is per membership and gated on the server; lesson video streams under the session; coding lessons are lesson kinds with steps |

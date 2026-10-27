@@ -1,0 +1,23 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Submit a coding project
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(cp, "CodingPage", "Angular page", "learn-coding-project")
+  Component(dlg, "SubmitProjectDialog", "CDK dialog", "submit-project")
+  Component(lapi, "LearningApi", "Contract + HTTP client", "LEARNING_API")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "LearningEndpoints", "Minimal API", "coding/{id}/submission")
+  Component(ps, "ProjectSubmissionCommand", "Handler", "Submitted + audit")
+  Component(prog, "LearnerProgress", "Service", "visible tracks, module and lesson status, locks")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Tracks, CurriculumModules, Lessons, LessonProgress")
+}
+Rel(cp, dlg, "opens")
+Rel(dlg, lapi, "submitProject")
+Rel(lapi, ep, "JSON/HTTPS")
+Rel(ep, ps, "POST")
+Rel(ps, prog, "status")
+Rel(prog, db, "reads")
+Rel(ps, db, "writes + audit")
+@enduml

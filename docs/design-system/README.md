@@ -38,7 +38,7 @@ Edit tokens and shared component CSS first. Edit catalogue metadata and generato
 | Page | Purpose |
 |---|---|
 | [Button](components/button.html) | Trigger a single explicit action, such as checking a child in or sending a slip. |
-| [Button group](components/button-group.html) | Group related day or filter choices without creating several primary actions. |
+| [Button group](components/button-group.html) | Group related choices, such as a youth's tracks, so exactly one is pressed without creating several primary actions. |
 | [Link](components/link.html) | Navigate to a household, event or record with a named destination. |
 | [Menu](components/menu.html) | Offer secondary account actions without obscuring the current task. |
 | [Text field](components/text-field.html) | Collect one labelled value with persistent guidance and a specific error. |
@@ -111,6 +111,10 @@ Edit tokens and shared component CSS first. Edit catalogue metadata and generato
 | [Authentication card](components/authentication-card.html) | Group account access fields and recovery links in a readable, bounded surface. |
 | [Error summary](components/error-summary.html) | List invalid fields with links so users can correct a failed submission without searching. |
 | [Invitation row](components/invite-row.html) | Pair a staff email address with the role being granted before an invitation is sent. |
+| [Scripture block](components/scripture-block.html) | Set a quoted passage apart from the teaching with its reference, read at the lesson's text size. |
+| [Video player](components/video-player.html) | Play a lesson video with native, keyboard-operable controls and a failure state that keeps the lesson readable. |
+| [Code sample](components/code-sample.html) | Show a read-only, scrollable example of code with an accessible name. |
+| [Code playground](components/code-playground.html) | Edit a small page of code, run it in a sandboxed preview and keep the lesson's checklist nearby. |
 
 ## Patterns
 
@@ -144,6 +148,7 @@ Edit tokens and shared component CSS first. Edit catalogue metadata and generato
 | Manage cohorts (prompt 54) | program (term, mentor on each roster row, Mentors card; no-mentors, mentor-assigned, mentoring-off), program-form term field, assign-mentor and cohort-mentors dialogs, mentoring assigned | Composed from existing components (page header, card, list, avatar, button, empty state, select, text field, dialog, alert, toast). The Waypoint cohort pages map to the program page (ADR 0043). The supporting-mentors choice uses the checkbox page’s existing “group” variant (legend over several boxes), which the library gains as `ph-checkbox-group`. No token added. |
 | Use the mentor dashboard (prompt 55) | mentor-dashboard (default, rollcall-off, empty, error, forbidden), mentor-youth (searched, no-results), mentor-youth-detail (onboarded, rollcall-off, forbidden), mentor-group | Composed only from existing components (page header, stat, card, list, avatar, icon tile, timeline for recent activity, description list, table with status, alert, text field of type search, empty state, skeleton, button). Waypoint’s progress rings, review queue, check-in and at-risk widgets belong to later prompts and are not ported. No token or component added. |
 | Author curriculum (prompt 56) | curriculum-tracks (created, forbidden), curriculum-module (empty, invalid, busy, saved, failed, not-found), curriculum-lesson (no-video, video-uploading, video-invalid, video-failed), new-track, new-module, new-lesson, track-cohorts, curriculum-status (module, lesson, track), delete-lesson | Composed only from existing components (page header, stat, card, list, badge, icon-only button, breadcrumb, text field, textarea, select, switch, checkbox group, radio group, file upload, alert, error summary, description list, dialog, empty state, skeleton, toast). Waypoint’s drag-to-reorder becomes Move up and Move down icon buttons, for which the icon set gains `arrow-up` and `arrow-down` (iconography). Waypoint’s chunked-upload and transcoding states are not ported (ADR 0050). No token added. |
+| Complete lessons (prompt 57) | learn-home (completed, resume), learn-track (coding, not-found), learn-module (locked, completed, coding), learn-lesson (video-failed, busy, completed, locked), learn-lesson-scripture (large-text), learn-coding-lesson (ran, saved, completed, failed), learn-coding-project (saved, submitted), submit-project | Four components join the system and the library, using the names ADR 0043 gives them: `button-group` (`.button-group`, the track switch; the page now documents the built segmented form with `aria-pressed`, replacing the unbuilt `.day-chips` evidence), `scripture-block` (`.scripture`, the Waypoint scripture component), `video-player` (`.video-player`, native controls plus the failed state with Retry) and, for coding lessons, `code-sample` (the inherited `.code-block`) and `code-playground` (`.code-playground`, editor, Run and a sandboxed preview). The reading text size steps use `.reading--lg` and `.reading--xl` on existing font-size tokens, and the icon set gains `book`, `code` and `play`. No token added. |
 | Inherited component CSS | Includes historical selectors unused by PromiseHub | Retained for compatibility; catalogue scope is the PromiseHub evidence plus the core set. Do not interpret unused inherited selectors as implemented product features. |
 
 ## Verification

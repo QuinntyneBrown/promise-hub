@@ -1,0 +1,26 @@
+@startuml
+title Class structure — Submit a coding project
+skinparam classAttributeIconSize 0
+class ProjectSubmission <<entity>> {
+  Id : Guid
+  OrganizationId : Guid
+  MembershipId : Guid
+  LessonId : Guid
+  Code : string
+  Note : string?
+  Status : SubmissionStatus
+  SubmittedAt : DateTimeOffset
+}
+enum SubmissionStatus {
+  Submitted
+}
+class ProjectSubmissionCommand {
+  SubmitAsync(id, code, note) : Outcome
+}
+class SubmitProjectDialog <<component>>
+class LessonProgress <<entity>>
+ProjectSubmission --> SubmissionStatus
+ProjectSubmissionCommand --> ProjectSubmission
+ProjectSubmissionCommand --> LessonProgress
+SubmitProjectDialog ..> ProjectSubmissionCommand : via LearningApi
+@enduml

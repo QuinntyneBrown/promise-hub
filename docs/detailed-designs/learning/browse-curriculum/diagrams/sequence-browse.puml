@@ -1,0 +1,48 @@
+@startuml
+title UML sequence behaviour — Browsing a track and opening a module
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Youth (Sofía)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "TrackPage / ModulePage" as page
+  participant "LearningApi" as lapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "LearningEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "ModuleViewHandler" as h
+  participant "LearnerProgress" as prog
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+
+end box
+actor -> page : opens Leadership Foundations
+page -> lapi : track(id)
+lapi -> ep : GET /learning/tracks/{id} (Learning on, Learn, consent, placement — L2-068 c6)
+ep -> h : TrackViewHandler
+h -> prog : TrackAsync(id)
+prog -> db : programs of her child's active enrollments in her organization (c5, c7)
+alt not visible
+  ep --> lapi : 404 (c5)
+else
+  prog -> db : published modules and lessons, her LessonProgress
+  prog --> h : statuses, locks, unlock-after (c2, c3)
+  ep --> lapi : 200 TrackViewDto
+end
+actor -> page : opens Speaking Up
+page -> lapi : module(id)
+lapi -> ep : GET /learning/modules/{id}
+ep -> h : ModuleViewHandler
+h -> prog : ModuleOfAsync(id)
+alt prerequisite not done
+  ep --> lapi : 403 { code: locked, unlockAfter: "Leading by Serving" } (c3)
+  page --> actor : "Finish Leading by Serving first"
+else
+  ep --> lapi : 200 lessons in order, done / next / locked (c4)
+end
+@enduml

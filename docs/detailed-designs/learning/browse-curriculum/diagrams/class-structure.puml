@@ -1,0 +1,48 @@
+@startuml
+title Class structure — Browse curriculum
+skinparam classAttributeIconSize 0
+class LearnerProgress {
+  TracksAsync() : VisibleTrack[]
+  TrackAsync(trackId) : TrackStatus?
+  ModuleOfAsync(moduleId) : (TrackStatus, ModuleStatus)?
+}
+class ModuleStatus <<record>> {
+  Module : CurriculumModule
+  Lessons : LessonStatus[]
+  Done : int
+  State : done | in-progress | not-started | locked
+  UnlockAfter : string?
+}
+class LessonStatus <<record>> {
+  Lesson : Lesson
+  Done : bool
+  Locked : bool
+  UnlockAfter : string?
+}
+class LessonProgress <<entity>> {
+  Id : Guid
+  OrganizationId : Guid
+  MembershipId : Guid
+  LessonId : Guid
+  CompletedAt : DateTimeOffset
+}
+class Track <<entity>>
+class CurriculumModule <<entity>> {
+  PrerequisiteModuleId : Guid?
+}
+class Lesson <<entity>> {
+  Kind : LessonKind
+}
+class TrackViewHandler
+class ModuleViewHandler
+class LearningHomeHandler
+LearnerProgress --> Track
+LearnerProgress --> CurriculumModule
+LearnerProgress --> Lesson
+LearnerProgress --> LessonProgress
+LearnerProgress ..> ModuleStatus
+ModuleStatus *-- LessonStatus
+TrackViewHandler --> LearnerProgress
+ModuleViewHandler --> LearnerProgress
+LearningHomeHandler --> LearnerProgress
+@enduml

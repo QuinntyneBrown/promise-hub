@@ -1,0 +1,32 @@
+@startuml
+title Class structure — Stream a lesson video
+skinparam classAttributeIconSize 0
+interface IFileStore {
+  SaveAsync(key, content)
+  DeleteAsync(key)
+  ExistsAsync(key) : bool
+  OpenReadAsync(key) : Stream?
+}
+class LocalFileStore
+class LessonVideoStream {
+  OpenAsync(lessonId) : Outcome<VideoStream>
+}
+class VideoStream <<record>> {
+  Content : Stream
+  ContentType : string
+}
+class Lesson <<entity>> {
+  VideoKey : string?
+  VideoContentType : string?
+}
+class PhVideoPlayer <<component>> {
+  src : string
+  label : string
+  failed : signal<bool>
+  retry()
+}
+IFileStore <|.. LocalFileStore
+LessonVideoStream --> IFileStore
+LessonVideoStream --> Lesson
+LessonVideoStream ..> VideoStream
+@enduml

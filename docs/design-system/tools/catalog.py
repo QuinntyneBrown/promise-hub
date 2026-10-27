@@ -3,7 +3,7 @@
 # slug | title | evidence selector | semantics | purpose
 ROWS = '''
 button|Button|.btn|button|Trigger a single explicit action, such as checking a child in or sending a slip.
-button-group|Button group|.day-chips|button|Group related day or filter choices without creating several primary actions.
+button-group|Button group|.button-group|button|Group related choices, such as a youth's tracks, so exactly one is pressed without creating several primary actions.
 link|Link|a.list-link|link|Navigate to a household, event or record with a named destination.
 menu|Menu|.menu|menu|Offer secondary account actions without obscuring the current task.
 text-field|Text field|.input|input|Collect one labelled value with persistent guidance and a specific error.
@@ -76,6 +76,10 @@ qr-code|QR code|.qr-code|display|Present a high-contrast machine-readable plate 
 authentication-card|Authentication card|.auth-card|form|Group account access fields and recovery links in a readable, bounded surface.
 error-summary|Error summary|.form-summary|feedback|List invalid fields with links so users can correct a failed submission without searching.
 invite-row|Invitation row|.invite-row|form|Pair a staff email address with the role being granted before an invitation is sent.
+scripture-block|Scripture block|.scripture|display|Set a quoted passage apart from the teaching with its reference, read at the lesson's text size.
+video-player|Video player|.video-player|display|Play a lesson video with native, keyboard-operable controls and a failure state that keeps the lesson readable.
+code-sample|Code sample|.code-block|display|Show a read-only, scrollable example of code with an accessible name.
+code-playground|Code playground|.code-playground|form|Edit a small page of code, run it in a sandboxed preview and keep the lesson's checklist nearby.
 '''
 
 COMPONENTS = []

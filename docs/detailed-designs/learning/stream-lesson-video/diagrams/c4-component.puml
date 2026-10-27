@@ -1,0 +1,23 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Stream a lesson video
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(lp, "LessonPage", "Angular page", "learn-lesson")
+  Component(vp, "PhVideoPlayer", "components library", "native video, failed state, Retry")
+  Component(lapi, "LearningApi", "Contract + HTTP client", "LEARNING_API")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "LearningEndpoints", "Minimal API", "lessons/{id}/video")
+  Component(vs, "LessonVideoStream", "Handler", "lesson access, stored key")
+  Component(fs, "IFileStore / LocalFileStore", "Port + adapter", "OpenReadAsync")
+  Component(prog, "LearnerProgress", "Service", "visible tracks, module and lesson status, locks")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Tracks, CurriculumModules, Lessons, LessonProgress")
+}
+Rel(lp, vp, "src = /api/learning/lessons/{id}/video")
+Rel(vp, ep, "GET with Range, session cookie")
+Rel(ep, vs, "GET")
+Rel(vs, prog, "status")
+Rel(prog, db, "reads")
+Rel(vs, fs, "OpenReadAsync(key)")
+@enduml

@@ -1,0 +1,47 @@
+@startuml
+title UML sequence behaviour — Reading and completing a lesson
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Youth (Sofía)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "LessonPage" as page
+  participant "LearningApi" as lapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "LearningEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "LessonCompletion" as h
+  participant "LearnerProgress" as prog
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+
+end box
+actor -> page : opens Last in Line
+page -> lapi : lesson(id)
+lapi -> ep : GET /learning/lessons/{id}
+ep -> prog : status of the lesson (L2-068 c3, c4)
+alt locked
+  ep --> lapi : 403 locked, unlockAfter
+else
+  ep --> lapi : 200 LessonViewDto without leader notes (L2-069 c1, c2)
+end
+actor -> page : A+ (text size), reads, Mark complete
+page -> lapi : completeLesson(id)
+lapi -> ep : POST /learning/lessons/{id}/complete
+ep -> h : CompleteAsync
+h -> prog : still unlocked? kind Reading or Scripture? (c4, c5)
+alt coding kind
+  h --> ep : 409 (c5)
+else already done
+  h --> ep : 200 next lesson, no new row or audit (c4)
+else
+  h -> db : LessonProgress + audit Completed (c4)
+  h --> ep : 200 next lesson, module done?
+  page --> actor : "Lesson complete" with Next
+end
+@enduml

@@ -69,6 +69,11 @@ One folder per subsystem, one folder per vertically sliced feature, each with a 
 | learning | obtain-required-consent | L2-056 |
 | learning | onboard-youth | L2-059 |
 | learning | await-cohort-placement | L2-060 |
+| learning | browse-curriculum | L2-068, L2-060, L2-056 |
+| learning | complete-lessons | L2-069, L2-068 |
+| learning | stream-lesson-video | L2-069 |
+| learning | complete-coding-lessons | L2-070, L2-068 |
+| learning | submit-coding-projects | L2-070, L2-068 |
 | curriculum | open-curriculum (journeys 60, 64 add more; see [curriculum](curriculum/README.md)) | L2-005, L2-007 |
 | curriculum | author-tracks-and-modules | L2-066, L2-012, L2-007 |
 | curriculum | author-lessons | L2-067 |

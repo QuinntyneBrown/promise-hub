@@ -1,0 +1,44 @@
+@startuml
+title UML sequence behaviour — Running code and saving progress
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Youth (Sofía)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "CodingPage" as page
+  participant "LearningApi" as lapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "LearningEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "CodingProgressCommand" as h
+  participant "LearnerProgress" as prog
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+
+end box
+actor -> page : opens Your First Webpage
+page -> lapi : coding(id)
+lapi -> ep : GET /learning/coding/{id}
+ep --> lapi : steps, saved code or starter, ticks (L2-070 c1)
+actor -> page : edits, Run
+page -> page : render in iframe srcdoc, sandbox="" (no scripts, nothing sent — c2)
+actor -> page : ticks two items, Save progress
+page -> lapi : saveCoding(id, code, ticks)
+lapi -> ep : PUT /learning/coding/{id}/progress
+ep -> h : SaveAsync
+h -> prog : unlocked coding lesson? (c5)
+alt code > 50,000 or foreign step
+  h --> ep : 422 (c3)
+else
+  h -> db : workspace code + ticks
+  alt every step ticked
+    h -> db : LessonProgress + audit Completed (c3)
+  end
+  ep --> lapi : 200 checked of total, done, next
+end
+@enduml

@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Complete a lesson
+Person(y, "Youth", "Phone or shared laptop")
+Person(a, "Program director", "Publishes the curriculum (L2-066, L2-067)")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(a, ph, "Publishes tracks, modules and lessons", "HTTPS")
+Rel(y, ph, "Reads and completes lessons", "HTTPS")
+@enduml

@@ -1444,25 +1444,6 @@
       }
     },
     {
-      "id": "learning",
-      "kind": "page",
-      "title": "Learning",
-      "route": "/learning",
-      "requirements": [
-        "L1-023",
-        "L1-002"
-      ],
-      "states": [
-        "default",
-        "loading",
-        "error",
-        "resume"
-      ],
-      "not_applicable": {
-        "empty": "Until the journeys add content, the default state is the empty state."
-      }
-    },
-    {
       "id": "website",
       "kind": "page",
       "title": "Public website",
@@ -1726,6 +1707,160 @@
       ],
       "not_applicable": {
         "empty": "A lesson always has a title; empty fields read as empty in place."
+      }
+    },
+    {
+      "id": "learn-home",
+      "kind": "page",
+      "title": "Learning",
+      "route": "/learning",
+      "requirements": [
+        "L2-068",
+        "L2-069",
+        "L1-023",
+        "L1-002"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "completed",
+        "resume"
+      ]
+    },
+    {
+      "id": "learn-track",
+      "kind": "page",
+      "title": "Track",
+      "route": "/learning/tracks/:id",
+      "requirements": [
+        "L2-068",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "coding",
+        "loading",
+        "empty",
+        "error",
+        "not-found"
+      ]
+    },
+    {
+      "id": "learn-module",
+      "kind": "page",
+      "title": "Module",
+      "route": "/learning/modules/:id",
+      "requirements": [
+        "L2-068",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "completed",
+        "coding",
+        "locked",
+        "loading",
+        "error",
+        "not-found"
+      ],
+      "not_applicable": {
+        "empty": "A module is published only with a lesson (L2-066 criterion 6), so youth never meet an empty one."
+      }
+    },
+    {
+      "id": "learn-lesson",
+      "kind": "page",
+      "title": "Lesson",
+      "route": "/learning/lessons/:id",
+      "requirements": [
+        "L2-069",
+        "L2-068",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "video-failed",
+        "busy",
+        "completed",
+        "locked",
+        "loading",
+        "error",
+        "not-found"
+      ],
+      "not_applicable": {
+        "empty": "A lesson is published only with teaching content (L2-067 criterion 4)."
+      }
+    },
+    {
+      "id": "learn-lesson-scripture",
+      "kind": "page",
+      "title": "Scripture lesson",
+      "route": "/learning/lessons/:id",
+      "requirements": [
+        "L2-069",
+        "L2-068",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "large-text",
+        "busy",
+        "completed",
+        "locked",
+        "loading",
+        "error"
+      ],
+      "not_applicable": {
+        "empty": "A lesson is published only with teaching content (L2-067 criterion 4)."
+      }
+    },
+    {
+      "id": "learn-coding-lesson",
+      "kind": "page",
+      "title": "Coding lesson",
+      "route": "/learning/coding/:id",
+      "requirements": [
+        "L2-070",
+        "L2-068",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "ran",
+        "busy",
+        "saved",
+        "completed",
+        "failed",
+        "locked",
+        "loading",
+        "error"
+      ],
+      "not_applicable": {
+        "empty": "A coding lesson is published with its steps; a lesson without steps shows its teaching content only."
+      }
+    },
+    {
+      "id": "learn-coding-project",
+      "kind": "page",
+      "title": "Coding project",
+      "route": "/learning/coding/:id",
+      "requirements": [
+        "L2-070",
+        "L2-068",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "saved",
+        "submitted",
+        "locked",
+        "loading",
+        "error"
+      ],
+      "not_applicable": {
+        "empty": "A project always starts from its starter code."
       }
     },
     {
@@ -2719,6 +2854,22 @@
       "not_applicable": {
         "invalid": "The dialog has no inputs to validate."
       }
+    },
+    {
+      "id": "submit-project",
+      "kind": "dialog",
+      "title": "Submit “Build Your Event Page”?",
+      "opens_from": "learn-coding-project",
+      "requirements": [
+        "L2-070",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ]
     },
     {
       "id": "toast",
