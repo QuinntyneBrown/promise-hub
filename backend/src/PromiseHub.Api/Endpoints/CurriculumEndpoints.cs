@@ -23,6 +23,22 @@ public static class CurriculumEndpoints
             await handler.HandleAsync(id, ct) is { } module ? Results.Ok(module) : Results.NotFound());
         curriculum.MapPut("/modules/{id:guid}", async (Guid id, SaveModuleCommand command, ModuleCommands handler, CancellationToken ct) =>
             (await handler.UpdateAsync(id, command, ct)).ToHttp());
+        curriculum.MapPut("/tracks/{id:guid}/status", async (Guid id, StatusCommand command, TrackCommands handler, CancellationToken ct) =>
+            (await handler.SetStatusAsync(id, command.Status, ct)).ToHttp());
+        curriculum.MapPut("/modules/{id:guid}/status", async (Guid id, StatusCommand command, ModuleCommands handler, CancellationToken ct) =>
+            (await handler.SetStatusAsync(id, command.Status, ct)).ToHttp());
+        curriculum.MapPut("/modules/{id:guid}/lesson-order", async (Guid id, LessonOrderCommand command, ModuleCommands handler, CancellationToken ct) =>
+            (await handler.ReorderLessonsAsync(id, command.LessonIds, ct)).ToHttp());
+        curriculum.MapPost("/lessons", async (CreateLessonCommand command, LessonCommands handler, CancellationToken ct) =>
+            (await handler.CreateAsync(command, ct)).ToHttp("/curriculum/lessons"));
+        curriculum.MapGet("/lessons/{id:guid}", async (Guid id, LessonHandler handler, CancellationToken ct) =>
+            await handler.HandleAsync(id, ct) is { } lesson ? Results.Ok(lesson) : Results.NotFound());
+        curriculum.MapPut("/lessons/{id:guid}", async (Guid id, SaveLessonCommand command, LessonCommands handler, CancellationToken ct) =>
+            (await handler.UpdateAsync(id, command, ct)).ToHttp());
+        curriculum.MapPut("/lessons/{id:guid}/status", async (Guid id, StatusCommand command, LessonCommands handler, CancellationToken ct) =>
+            (await handler.SetStatusAsync(id, command.Status, ct)).ToHttp());
+        curriculum.MapDelete("/lessons/{id:guid}", async (Guid id, LessonCommands handler, CancellationToken ct) =>
+            (await handler.DeleteAsync(id, ct)).ToHttp());
         return app;
     }
 }

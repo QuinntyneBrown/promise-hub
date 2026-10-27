@@ -9,7 +9,14 @@ import {
 } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { CURRICULUM_API, LoadResult, ModuleDetail, ModuleFields } from '@promisehub/api';
+import {
+  CURRICULUM_API,
+  LessonSummary,
+  LoadResult,
+  ModuleDetail,
+  ModuleFields,
+} from '@promisehub/api';
+import { Router } from '@angular/router';
 import {
   ErrorSummaryItem,
   PhAlert,
@@ -18,8 +25,11 @@ import {
   PhButton,
   PhCard,
   PhDescriptionList,
+  PhDialogs,
   PhEmptyState,
   PhErrorSummary,
+  PhList,
+  PhListItem,
   PhPageHeader,
   PhSelect,
   PhSkeleton,
@@ -29,9 +39,13 @@ import {
   ToastService,
 } from '@promisehub/components';
 import { Subject, startWith, switchMap } from 'rxjs';
+import { CurriculumStatusDialog } from '../curriculum-status-dialog/curriculum-status-dialog';
+import { CurriculumStatusDialogData } from '../curriculum-status-dialog/curriculum-status-dialog-data';
+import { NewLessonDialog } from '../new-lesson-dialog/new-lesson-dialog';
+import { NewLessonDialogData } from '../new-lesson-dialog/new-lesson-dialog-data';
 import { statusLabel, statusTone } from '../status-label';
 
-/** The module editor (mock: curriculum-module, L2-066 criterion 4): details, prerequisite and anchor passage. */
+/** The module editor (mock: curriculum-module, L2-066 criteria 4 and 6, L2-067 criteria 1 and 3): details, lessons in order and status. */
 @Component({
   selector: 'ph-module-editor-page',
   imports: [
@@ -44,6 +58,8 @@ import { statusLabel, statusTone } from '../status-label';
     PhDescriptionList,
     PhEmptyState,
     PhErrorSummary,
+    PhList,
+    PhListItem,
     PhPageHeader,
     PhSelect,
     PhSkeleton,
@@ -56,6 +72,8 @@ import { statusLabel, statusTone } from '../status-label';
 export class ModuleEditorPage {
   private readonly api = inject(CURRICULUM_API);
   private readonly toasts = inject(ToastService);
+  private readonly dialogs = inject(PhDialogs);
+  private readonly router = inject(Router);
   private readonly refresh$ = new Subject<void>();
 
   /** Route parameter. */
@@ -137,6 +155,46 @@ export class ModuleEditorPage {
         this.errors.set(outcome.errors);
       } else {
         this.failed.set(true);
+      }
+    });
+  }
+
+  protected lessonMeta(l: LessonSummary): string {
+    return [l.minutes ? `${l.minutes} min` : null, statusLabel(l.status)]
+      .filter(Boolean)
+      .join(' · ');
+  }
+
+  protected addLesson(m: ModuleDetail): void {
+    this.dialogs
+      .open<string, NewLessonDialogData, NewLessonDialog>(NewLessonDialog, {
+        moduleId: m.id,
+        moduleTitle: m.title,
+      })
+      .closed.subscribe((id) => id && void this.router.navigate(['/curriculum/lessons', id]));
+  }
+
+  protected changeStatus(m: ModuleDetail): void {
+    this.dialogs
+      .open<boolean, CurriculumStatusDialogData, CurriculumStatusDialog>(CurriculumStatusDialog, {
+        kind: 'module',
+        id: m.id,
+        name: m.title,
+        status: m.status,
+        audience: `The cohorts that follow ${m.trackName}, once the track is published`,
+      })
+      .closed.subscribe((saved) => saved && this.reload());
+  }
+
+  protected moveLesson(m: ModuleDetail, index: number, by: -1 | 1): void {
+    const ids = m.lessons.map((l) => l.id);
+    const [moved] = ids.splice(index, 1);
+    ids.splice(index + by, 0, moved!);
+    this.api.reorderLessons(m.id, ids).subscribe((outcome) => {
+      if (outcome.status === 'saved') {
+        this.reload();
+      } else {
+        this.toasts.show({ tone: 'danger', title: 'The order was not saved', text: 'Try again.' });
       }
     });
   }

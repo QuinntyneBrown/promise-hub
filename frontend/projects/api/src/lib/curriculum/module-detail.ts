@@ -1,4 +1,5 @@
 import type { ContentStatus } from './content-status';
+import type { LessonSummary } from './lesson-summary';
 import type { ModuleRef } from './module-ref';
 
 /** One module for the module editor. */
@@ -14,4 +15,5 @@ export interface ModuleDetail {
   position: number;
   moduleCount: number;
   earlierModules: ModuleRef[];
+  lessons: LessonSummary[];
 }

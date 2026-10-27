@@ -6,7 +6,7 @@ using PromiseHub.Domain.Curriculum;
 
 namespace PromiseHub.Application.Curriculum;
 
-/// <summary>Creates tracks and orders their modules (L2-066 criteria 2 and 5). Every write is audited.</summary>
+/// <summary>Creates tracks, sets their status and orders their modules (L2-066 criteria 2, 5 and 6). Every write is audited.</summary>
 public sealed class TrackCommands(IPromiseHubDb db, ITenantContext tenant, IAuditWriter audit, TimeProvider clock)
 {
     public async Task<Result> CreateAsync(CreateTrackCommand command, CancellationToken cancellationToken = default)
@@ -40,6 +40,24 @@ public sealed class TrackCommands(IPromiseHubDb db, ITenantContext tenant, IAudi
         audit.Record(new AuditEvent(AuditAction.Created, "Track", track.Id, name, After: new { name, key, description, Status = track.Status.ToString() }));
         await db.SaveChangesAsync(cancellationToken);
         return Result.Created(track.Id);
+    }
+
+    public async Task<Result> SetStatusAsync(Guid id, string? status, CancellationToken cancellationToken = default)
+    {
+        var track = await db.Tracks.FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+        if (track is null)
+        {
+            return Result.NotFound;
+        }
+        if (CurriculumRules.ParseStatus(status, allowReview: false) is not { } next)
+        {
+            return CurriculumRules.Invalid("status", "Choose Draft or Published.");
+        }
+        var before = track.Status.ToString();
+        track.SetStatus(next);
+        audit.Record(new AuditEvent(AuditAction.Updated, "Track", id, $"{track.Name} · {next}", new { Status = before }, new { Status = next.ToString() }));
+        await db.SaveChangesAsync(cancellationToken);
+        return Result.Done;
     }
 
     public async Task<Result> ReorderModulesAsync(Guid trackId, IReadOnlyList<Guid>? moduleIds, CancellationToken cancellationToken = default)

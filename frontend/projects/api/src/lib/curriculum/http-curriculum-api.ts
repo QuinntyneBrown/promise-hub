@@ -6,7 +6,10 @@ import { toLoad, toWrite } from '../http-results';
 import { LoadResult } from '../load-result';
 import { WriteOutcome } from '../write-outcome';
 import { CurriculumApi } from './curriculum-api';
+import { ContentStatus } from './content-status';
 import { Curriculum } from './curriculum';
+import { LessonDetail } from './lesson-detail';
+import { LessonFields } from './lesson-fields';
 import { ModuleDetail } from './module-detail';
 import { ModuleFields } from './module-fields';
 import { NewTrack } from './new-track';
@@ -48,5 +51,49 @@ export class HttpCurriculumApi implements CurriculumApi {
 
   updateModule(id: string, fields: ModuleFields): Observable<WriteOutcome> {
     return toWrite(this.http.put<null>(`${this.baseUrl}/curriculum/modules/${id}`, fields));
+  }
+
+  setTrackStatus(id: string, status: ContentStatus): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.put<null>(`${this.baseUrl}/curriculum/tracks/${id}/status`, { status }),
+    );
+  }
+
+  setModuleStatus(id: string, status: ContentStatus): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.put<null>(`${this.baseUrl}/curriculum/modules/${id}/status`, { status }),
+    );
+  }
+
+  reorderLessons(moduleId: string, lessonIds: string[]): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.put<null>(`${this.baseUrl}/curriculum/modules/${moduleId}/lesson-order`, {
+        lessonIds,
+      }),
+    );
+  }
+
+  createLesson(moduleId: string, title: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<{ id: string }>(`${this.baseUrl}/curriculum/lessons`, { moduleId, title }),
+    );
+  }
+
+  lesson(id: string): Observable<LoadResult<LessonDetail>> {
+    return toLoad(this.http.get<LessonDetail>(`${this.baseUrl}/curriculum/lessons/${id}`));
+  }
+
+  updateLesson(id: string, fields: LessonFields): Observable<WriteOutcome> {
+    return toWrite(this.http.put<null>(`${this.baseUrl}/curriculum/lessons/${id}`, fields));
+  }
+
+  setLessonStatus(id: string, status: ContentStatus): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.put<null>(`${this.baseUrl}/curriculum/lessons/${id}/status`, { status }),
+    );
+  }
+
+  deleteLesson(id: string): Observable<WriteOutcome> {
+    return toWrite(this.http.delete<null>(`${this.baseUrl}/curriculum/lessons/${id}`));
   }
 }

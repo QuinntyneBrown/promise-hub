@@ -24,6 +24,8 @@ import {
   ToastService,
 } from '@promisehub/components';
 import { Subject, startWith, switchMap } from 'rxjs';
+import { CurriculumStatusDialog } from '../curriculum-status-dialog/curriculum-status-dialog';
+import { CurriculumStatusDialogData } from '../curriculum-status-dialog/curriculum-status-dialog-data';
 import { NewModuleDialog } from '../new-module-dialog/new-module-dialog';
 import { NewModuleDialogData } from '../new-module-dialog/new-module-dialog-data';
 import { NewTrackDialog } from '../new-track-dialog/new-track-dialog';
@@ -123,6 +125,18 @@ export class CurriculumTracksPage {
         trackName: track.name,
       })
       .closed.subscribe((id) => id && void this.router.navigate(['/curriculum/modules', id]));
+  }
+
+  protected changeStatus(track: CurriculumTrack): void {
+    this.dialogs
+      .open<boolean, CurriculumStatusDialogData, CurriculumStatusDialog>(CurriculumStatusDialog, {
+        kind: 'track',
+        id: track.id,
+        name: track.name,
+        status: track.status,
+        audience: 'The cohorts that follow this track',
+      })
+      .closed.subscribe((saved) => saved && this.reload());
   }
 
   protected move(track: CurriculumTrack, index: number, by: -1 | 1): void {

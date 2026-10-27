@@ -1,0 +1,166 @@
+@let r = result();
+@switch (r?.status) {
+  @case ('loaded') {
+    @if (r?.status === 'loaded') {
+      @let l = r.value;
+      <ph-breadcrumb
+        [items]="[
+          { label: 'Curriculum', link: '/curriculum' },
+          { label: l.moduleTitle, link: '/curriculum/modules/' + l.moduleId },
+          { label: l.title },
+        ]"
+      />
+      <ph-page-header [title]="l.title" [subtitle]="subtitle(l)">
+        <ph-badge [tone]="statusTone(l.status)" data-testid="lesson-status">{{
+          statusLabel(l.status)
+        }}</ph-badge>
+        <ph-button hasPopup="dialog" (click)="changeStatus(l)">Status</ph-button>
+        <ph-button variant="ghost" icon="trash" hasPopup="dialog" (click)="delete(l)"
+          >Delete</ph-button
+        >
+      </ph-page-header>
+      <div class="split">
+        <form class="stack" novalidate (ngSubmit)="save(l)">
+          @if (summary().length) {
+            <ph-error-summary title="Fix these to continue" [items]="summary()" />
+          }
+          @if (failed()) {
+            <ph-alert
+              tone="danger"
+              title="We couldn’t save the lesson"
+              text="Your changes are still here. Try again."
+            />
+          }
+          <ph-card title="Content">
+            <div class="stack">
+              <ph-text-field
+                inputId="title"
+                label="Lesson title"
+                name="title"
+                [error]="errors()['title'] ?? null"
+                [(ngModel)]="form.title"
+              />
+              <div class="two-col">
+                <ph-text-field
+                  inputId="reading"
+                  label="Reading (optional)"
+                  name="reading"
+                  help="The story or passage the lesson is built on."
+                  [error]="errors()['reading'] ?? null"
+                  [(ngModel)]="form.reading"
+                />
+                <ph-text-field
+                  inputId="minutes"
+                  label="Estimated minutes"
+                  type="number"
+                  inputmode="numeric"
+                  name="minutes"
+                  [error]="errors()['minutes'] ?? null"
+                  [(ngModel)]="form.minutes"
+                />
+              </div>
+              <ph-textarea
+                inputId="objectives"
+                label="Learning objectives"
+                name="objectives"
+                [optional]="true"
+                help="One per line."
+                [error]="errors()['objectives'] ?? null"
+                [(ngModel)]="form.objectives"
+              />
+              <ph-textarea
+                inputId="body"
+                label="Teaching content"
+                name="body"
+                [rows]="8"
+                help="Plain text. Youth read this as the main lesson."
+                [error]="errors()['body'] ?? null"
+                [(ngModel)]="form.body"
+              />
+              <ph-textarea
+                inputId="prompts"
+                label="Reflection prompts"
+                name="prompts"
+                [optional]="true"
+                help="One per line."
+                [error]="errors()['prompts'] ?? null"
+                [(ngModel)]="form.prompts"
+              />
+              <ph-textarea
+                inputId="leaderNotes"
+                label="Leader guide notes"
+                name="leaderNotes"
+                [rows]="3"
+                [optional]="true"
+                help="For staff and mentors only. Never shown to youth."
+                [error]="errors()['leaderNotes'] ?? null"
+                [(ngModel)]="form.leaderNotes"
+              />
+            </div>
+          </ph-card>
+          <div class="form-actions">
+            <ph-button variant="ghost" [link]="['/curriculum/modules', l.moduleId]"
+              >Cancel</ph-button
+            >
+            <ph-button variant="primary" type="submit" [busy]="busy()">Save lesson</ph-button>
+          </div>
+        </form>
+        <div class="stack">
+          <ph-card title="Belongs to">
+            <ph-description-list
+              [facts]="[
+                { key: 'module', term: 'Module', value: l.moduleTitle },
+                { key: 'track', term: 'Track', value: l.trackName },
+              ]"
+            />
+          </ph-card>
+        </div>
+      </div>
+    }
+  }
+  @case ('not-found') {
+    <ph-breadcrumb [items]="[{ label: 'Curriculum', link: '/curriculum' }, { label: 'Lesson' }]" />
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="search"
+        title="We can’t find that lesson"
+        text="It may have been deleted, or belong to another organization."
+        [headingLevel]="1"
+      >
+        <ph-button link="/curriculum">Back to Curriculum</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('forbidden') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="lock"
+        title="Program directors write the curriculum"
+        text="Ask an admin or a program director of your organization."
+        [headingLevel]="1"
+      >
+        <ph-button link="/">Back to Today</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case (undefined) {
+    <ph-page-header title="Lesson" />
+    <div aria-busy="true" aria-label="Loading the lesson" class="split">
+      <ph-skeleton shape="card" />
+      <ph-skeleton shape="card" />
+    </div>
+  }
+  @default {
+    <ph-page-header title="Lesson" />
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load this lesson"
+        text="Check your connection and try again."
+      >
+        <ph-button variant="primary" icon="refresh" (click)="reload()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+}

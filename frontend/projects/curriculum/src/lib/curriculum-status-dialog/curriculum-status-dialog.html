@@ -1,0 +1,35 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    [title]="'Status of ' + data.name"
+    [description]="
+      data.kind === 'track'
+        ? 'Nothing in a draft track reaches youth, whatever its modules say.'
+        : 'Publishing makes it visible to youth in the cohorts that follow the track, once the track is published.'
+    "
+    icon="eye"
+  >
+    <div class="stack">
+      @if (failed()) {
+        <ph-alert
+          tone="danger"
+          title="That didn’t go through"
+          text="The status was not changed. Try again."
+        />
+      }
+      <ph-radio-group
+        legend="Status"
+        name="status"
+        [options]="options"
+        [error]="errors()['status'] ?? null"
+        [(ngModel)]="status"
+      />
+      <ph-description-list
+        [facts]="[{ key: 'audience', term: 'Visible to', value: data.audience }]"
+      />
+    </div>
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Save status</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

@@ -61,6 +61,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Mentoring.CohortMentor> CohortMentors => Set<Domain.Mentoring.CohortMentor>();
     public DbSet<Domain.Curriculum.Track> Tracks => Set<Domain.Curriculum.Track>();
     public DbSet<Domain.Curriculum.CurriculumModule> CurriculumModules => Set<Domain.Curriculum.CurriculumModule>();
+    public DbSet<Domain.Curriculum.Lesson> Lessons => Set<Domain.Curriculum.Lesson>();
     public DbSet<DataRequest> DataRequests => Set<DataRequest>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
     public DbSet<Domain.Incidents.IncidentFollowUp> IncidentFollowUps => Set<Domain.Incidents.IncidentFollowUp>();
@@ -136,6 +137,16 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(m => m.Status).HasConversion<string>().HasMaxLength(20);
             e.HasOne<Domain.Curriculum.Track>().WithMany().HasForeignKey(m => m.TrackId);
             e.HasOne<Domain.Curriculum.CurriculumModule>().WithMany().HasForeignKey(m => m.PrerequisiteModuleId);
+        });
+        modelBuilder.Entity<Domain.Curriculum.Lesson>(e =>
+        {
+            e.Property(l => l.Title).HasMaxLength(Domain.Curriculum.Lesson.MaximumTitle);
+            e.Property(l => l.Reading).HasMaxLength(Domain.Curriculum.Lesson.MaximumReading);
+            e.Property(l => l.Body).HasMaxLength(Domain.Curriculum.Lesson.MaximumBody);
+            e.Property(l => l.LeaderNotes).HasMaxLength(Domain.Curriculum.Lesson.MaximumNotes);
+            e.Property(l => l.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(l => l.DeletedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.HasOne<Domain.Curriculum.CurriculumModule>().WithMany().HasForeignKey(l => l.ModuleId);
         });
         modelBuilder.Entity<DataRequest>(e =>
         {

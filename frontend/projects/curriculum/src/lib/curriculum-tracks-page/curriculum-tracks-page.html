@@ -58,6 +58,15 @@
                 }
                 <p class="text-caption" data-testid="track-details">{{ details(track) }}</p>
               </div>
+              <div class="cluster cluster--tight">
+                <ph-button
+                  size="sm"
+                  hasPopup="dialog"
+                  [label]="(track.status === 'Draft' ? 'Publish ' : 'Status of ') + track.name"
+                  (click)="changeStatus(track)"
+                  >{{ track.status === 'Draft' ? 'Publish' : 'Status' }}</ph-button
+                >
+              </div>
             </div>
             @if (track.modules.length) {
               <ph-list label="Modules, in order" [inset]="true">

@@ -34,6 +34,25 @@ public static partial class CurriculumRules
     public static bool IsSameSet(IReadOnlyList<Guid>? sent, IReadOnlyCollection<Guid> current) =>
         sent is not null && sent.Count == current.Count && sent.Distinct().Count() == sent.Count && sent.All(current.Contains);
 
+    /// <summary>The status a track or lesson may take (Draft or Published), or a module (also InReview); null otherwise.</summary>
+    public static ContentStatus? ParseStatus(string? status, bool allowReview) =>
+        status switch
+        {
+            "Draft" => ContentStatus.Draft,
+            "Published" => ContentStatus.Published,
+            "InReview" when allowReview => ContentStatus.InReview,
+            _ => null,
+        };
+
+    /// <summary>Lines with their blanks removed, joined for storage; null when none.</summary>
+    public static string? JoinLines(IReadOnlyList<string>? lines)
+    {
+        var kept = (lines ?? []).Select(l => l.Trim()).Where(l => l.Length > 0).ToList();
+        return kept.Count == 0 ? null : string.Join('\n', kept);
+    }
+
+    public static IReadOnlyList<string> SplitLines(string? stored) => stored is null ? [] : stored.Split('\n');
+
     public static Result Invalid(string field, string message) => Result.Invalid(new Dictionary<string, string> { [field] = message });
 
     [GeneratedRegex("^[a-z0-9]+(-[a-z0-9]+)*$")]

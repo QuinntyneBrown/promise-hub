@@ -409,6 +409,64 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.ToTable("CurriculumModules");
                 });
 
+            modelBuilder.Entity("PromiseHub.Domain.Curriculum.Lesson", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Body")
+                        .HasMaxLength(20000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("DeletedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("LeaderNotes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Minutes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("ModuleId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Objectives")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Prompts")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reading")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ModuleId");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.ToTable("Lessons");
+                });
+
             modelBuilder.Entity("PromiseHub.Domain.Curriculum.Track", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2416,6 +2474,21 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.HasOne("PromiseHub.Domain.Curriculum.Track", null)
                         .WithMany()
                         .HasForeignKey("TrackId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Curriculum.Lesson", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Curriculum.CurriculumModule", null)
+                        .WithMany()
+                        .HasForeignKey("ModuleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

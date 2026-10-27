@@ -12,4 +12,5 @@ public sealed record ModuleDetailDto(
     string Status,
     int Position,
     int ModuleCount,
-    IReadOnlyList<ModuleRefDto> EarlierModules);
+    IReadOnlyList<ModuleRefDto> EarlierModules,
+    IReadOnlyList<LessonSummaryDto> Lessons);

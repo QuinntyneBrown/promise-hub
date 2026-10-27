@@ -3,3 +3,7 @@ export { CurriculumTracksPage } from './lib/curriculum-tracks-page/curriculum-tr
 export { ModuleEditorPage } from './lib/module-editor-page/module-editor-page';
 export { NewTrackDialog } from './lib/new-track-dialog/new-track-dialog';
 export { NewModuleDialog } from './lib/new-module-dialog/new-module-dialog';
+export { LessonEditorPage } from './lib/lesson-editor-page/lesson-editor-page';
+export { NewLessonDialog } from './lib/new-lesson-dialog/new-lesson-dialog';
+export { CurriculumStatusDialog } from './lib/curriculum-status-dialog/curriculum-status-dialog';
+export { DeleteLessonDialog } from './lib/delete-lesson-dialog/delete-lesson-dialog';

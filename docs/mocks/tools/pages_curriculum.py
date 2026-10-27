@@ -58,7 +58,7 @@ def track_card(name: str, key: str, desc: str, st: str, rows, cohorts: str) -> s
     head = (f'<div class="cluster cluster--between"><div><h2 class="card__title" id="t-{key}">{esc(name)} {badge(st, STATUS_KIND[st])}</h2>'
             f'<p class="text-muted">{esc(desc)}</p><p class="text-caption">Key: {key} · Followed by {cohorts}</p></div>'
             f'<div class="cluster cluster--snug">{btn("Cohorts", "", size="sm", icon_name="users", attrs=" aria-haspopup=\"dialog\"", aria_label=f"Cohorts following {name}", data_href=dialog("track-cohorts"))}'
-            f'{btn("Publish" if st == "Draft" else "Status", "", size="sm", attrs=" aria-haspopup=\"dialog\"", aria_label=f"Change the status of {name}", data_href=dialog("curriculum-status", "track"))}</div></div>')
+            f'{btn("Publish" if st == "Draft" else "Status", "", size="sm", attrs=" aria-haspopup=\"dialog\"", aria_label=("Publish " if st == "Draft" else "Status of ") + name, data_href=dialog("curriculum-status", "track"))}</div></div>')
     body = module_rows(rows) if rows else '<p class="text-muted">No modules yet.</p>'
     foot = btn("New module", "ghost", size="sm", icon_name="plus", attrs=' aria-haspopup="dialog"', aria_label=f"New module in {name}", data_href=dialog("new-module"))
     return f'<section class="card stack" aria-labelledby="t-{key}">{head}{body}<p class="card__footer">{foot}</p></section>'
