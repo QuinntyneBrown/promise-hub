@@ -158,6 +158,13 @@
               [facts]="[
                 { key: 'module', term: 'Module', value: l.moduleTitle },
                 { key: 'track', term: 'Track', value: l.trackName },
+                {
+                  key: 'cohorts',
+                  term: 'Cohorts',
+                  value: l.programs.length
+                    ? l.programs.join(', ')
+                    : 'No cohort follows this track yet',
+                },
               ]"
             />
           </ph-card>

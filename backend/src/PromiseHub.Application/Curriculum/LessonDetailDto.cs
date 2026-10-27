@@ -17,4 +17,5 @@ public sealed record LessonDetailDto(
     string Status,
     int Position,
     int LessonCount,
-    LessonVideoDto? Video);
+    LessonVideoDto? Video,
+    IReadOnlyList<string> Programs);

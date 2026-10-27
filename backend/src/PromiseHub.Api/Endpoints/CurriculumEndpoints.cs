@@ -28,6 +28,8 @@ public static class CurriculumEndpoints
             await handler.HandleAsync(id, ct) is { } module ? Results.Ok(module) : Results.NotFound());
         curriculum.MapPut("/modules/{id:guid}", async (Guid id, SaveModuleCommand command, ModuleCommands handler, CancellationToken ct) =>
             (await handler.UpdateAsync(id, command, ct)).ToHttp());
+        curriculum.MapPut("/tracks/{id:guid}/cohorts", async (Guid id, CohortsCommand command, TrackCommands handler, CancellationToken ct) =>
+            (await handler.SetCohortsAsync(id, command.ProgramIds, ct)).ToHttp());
         curriculum.MapPut("/tracks/{id:guid}/status", async (Guid id, StatusCommand command, TrackCommands handler, CancellationToken ct) =>
             (await handler.SetStatusAsync(id, command.Status, ct)).ToHttp());
         curriculum.MapPut("/modules/{id:guid}/status", async (Guid id, StatusCommand command, ModuleCommands handler, CancellationToken ct) =>

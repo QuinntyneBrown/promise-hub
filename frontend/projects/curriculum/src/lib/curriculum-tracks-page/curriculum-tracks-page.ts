@@ -30,6 +30,8 @@ import { NewModuleDialog } from '../new-module-dialog/new-module-dialog';
 import { NewModuleDialogData } from '../new-module-dialog/new-module-dialog-data';
 import { NewTrackDialog } from '../new-track-dialog/new-track-dialog';
 import { statusLabel, statusTone } from '../status-label';
+import { TrackCohortsDialog } from '../track-cohorts-dialog/track-cohorts-dialog';
+import { TrackCohortsDialogData } from '../track-cohorts-dialog/track-cohorts-dialog-data';
 
 /** Curriculum (mock: curriculum-tracks, L2-066): each track with its modules in the order youth see, reordered with Move up and Move down. */
 @Component({
@@ -106,6 +108,24 @@ export class CurriculumTracksPage {
 
   protected details(track: CurriculumTrack): string {
     return `Key: ${track.key}`;
+  }
+
+  /** "Followed by After-School Tutoring and Saturday Sports", or "Followed by no cohort yet". */
+  protected followedBy(track: CurriculumTrack): string {
+    const names = track.followedBy.map((p) => p.name);
+    if (names.length === 0) return 'Followed by no cohort yet';
+    const list =
+      names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} and ${names.at(-1)}`;
+    return `Followed by ${list}`;
+  }
+
+  protected cohorts(track: CurriculumTrack, curriculum: Curriculum): void {
+    this.dialogs
+      .open<boolean, TrackCohortsDialogData, TrackCohortsDialog>(TrackCohortsDialog, {
+        track,
+        curriculum,
+      })
+      .closed.subscribe((saved) => saved && this.reload());
   }
 
   protected moduleMeta(lessons: number): string {

@@ -14,6 +14,7 @@ export interface CurriculumApi {
   tracks(): Observable<LoadResult<Curriculum>>;
   createTrack(track: NewTrack): Observable<WriteOutcome>;
   reorderModules(trackId: string, moduleIds: string[]): Observable<WriteOutcome>;
+  setTrackCohorts(trackId: string, programIds: string[]): Observable<WriteOutcome>;
   createModule(trackId: string, title: string, description: string): Observable<WriteOutcome>;
   module(id: string): Observable<LoadResult<ModuleDetail>>;
   updateModule(id: string, fields: ModuleFields): Observable<WriteOutcome>;

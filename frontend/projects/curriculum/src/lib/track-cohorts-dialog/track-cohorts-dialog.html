@@ -1,0 +1,29 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    [title]="'Cohorts following ' + data.track.name"
+    description="A cohort follows one track. Choosing one that follows another track moves it here."
+    icon="families"
+  >
+    <div class="stack">
+      @if (failed()) {
+        <ph-alert
+          tone="danger"
+          title="That didn’t go through"
+          text="The cohorts were not changed. Try again."
+        />
+      }
+      <ph-checkbox-group
+        legend="Cohorts"
+        hint="Active programs of your organization only. Archived programs keep the track they had."
+        name="cohorts"
+        [options]="options"
+        [error]="errors()['programIds'] ?? null"
+        [(ngModel)]="chosen"
+      />
+    </div>
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Save cohorts</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

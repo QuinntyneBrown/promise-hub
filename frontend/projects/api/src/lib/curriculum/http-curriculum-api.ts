@@ -108,4 +108,10 @@ export class HttpCurriculumApi implements CurriculumApi {
   removeVideo(lessonId: string): Observable<WriteOutcome> {
     return toWrite(this.http.delete<null>(`${this.baseUrl}/curriculum/lessons/${lessonId}/video`));
   }
+
+  setTrackCohorts(trackId: string, programIds: string[]): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.put<null>(`${this.baseUrl}/curriculum/tracks/${trackId}/cohorts`, { programIds }),
+    );
+  }
 }

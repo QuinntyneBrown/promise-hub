@@ -1,4 +1,5 @@
 import type { Route } from '@playwright/test';
+import type { FakeProgram } from './programs';
 
 export type ContentStatus = 'Draft' | 'InReview' | 'Published';
 
@@ -81,6 +82,25 @@ function sameSet(sent: string[] | undefined, current: string[]): boolean {
  */
 export class FakeCurriculum {
   private nextId = 1;
+
+  /** The organization's programs come from FakeApi; a program follows at most one track (ADR 0050). */
+  constructor(private readonly programs: () => FakeProgram[]) {}
+
+  /** Which track each program follows, as seeded: Tutoring and Sports follow Leadership Foundations. */
+  readonly programTracks = new Map<string, string>([
+    ['p-tutoring', 't-leadership'],
+    ['p-sports', 't-leadership'],
+  ]);
+
+  private activePrograms(org: string): FakeProgram[] {
+    return this.programs()
+      .filter((p) => p.organizationId === org && p.status === 'Active')
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  private following(org: string, trackId: string): FakeProgram[] {
+    return this.activePrograms(org).filter((p) => this.programTracks.get(p.id) === trackId);
+  }
   tracks: FakeTrack[] = [
     {
       id: 't-leadership',
@@ -204,8 +224,10 @@ export class FakeCurriculum {
           status: m.status,
           lessonCount: this.liveLessons(m.id).length,
         })),
+        followedBy: this.following(org, t.id).map((p) => ({ id: p.id, name: p.name })),
       }));
-    return route.fulfill({ json: { tracks } });
+    const programs = this.activePrograms(org).map((p) => ({ id: p.id, name: p.name, term: p.term, schedule: p.schedule, trackId: this.programTracks.get(p.id) ?? null }));
+    return route.fulfill({ json: { tracks, programs } });
   }
 
   /** POST /curriculum/tracks. */
@@ -301,6 +323,7 @@ export class FakeCurriculum {
         moduleCount: siblings.length,
         earlierModules: siblings.filter((s) => s.position < m.position).map((s) => ({ id: s.id, title: s.title })),
         lessons: this.liveLessons(m.id).map((l) => ({ id: l.id, title: l.title, minutes: l.minutes, status: l.status })),
+        programs: this.following(org, track.id).map((p) => p.name),
       },
     });
   }
@@ -406,6 +429,7 @@ export class FakeCurriculum {
         position: l.position,
         lessonCount: this.liveLessons(m.id).length,
         video: l.video,
+        programs: this.following(org, t.id).map((p) => p.name),
       },
     });
   }
@@ -500,6 +524,21 @@ export class FakeCurriculum {
     const l = this.lesson(org, id);
     if (!l?.video) return route.fulfill({ status: 404 });
     l.video = null;
+    return route.fulfill({ status: 204 });
+  }
+
+  /** PUT /curriculum/tracks/{id}/cohorts: chosen active programs follow the track, the rest that did follow none. */
+  setCohorts(route: Route, org: string, id: string): Promise<void> {
+    if (!this.tracks.some((t) => t.id === id && t.organizationId === org)) return route.fulfill({ status: 404 });
+    const { programIds } = route.request().postDataJSON() as { programIds: string[] };
+    const active = this.activePrograms(org).map((p) => p.id);
+    if (new Set(programIds).size !== programIds.length || !programIds.every((p) => active.includes(p))) {
+      return invalid(route, 'programIds', 'Choose active programs of your organization.');
+    }
+    active.forEach((p) => {
+      if (programIds.includes(p)) this.programTracks.set(p, id);
+      else if (this.programTracks.get(p) === id) this.programTracks.delete(p);
+    });
     return route.fulfill({ status: 204 });
   }
 }

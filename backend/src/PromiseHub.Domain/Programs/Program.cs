@@ -39,6 +39,8 @@ public sealed class Program : ITenantOwned
 
     /// <summary>The term a cohort runs in, such as "2026–27" (L2-061, ADR 0048); the program's dates bound it.</summary>
     public string? Term { get; private set; }
+    /// <summary>The curriculum track the cohort follows, or none (L2-066 criterion 7, ADR 0050); set only from Curriculum.</summary>
+    public Guid? TrackId { get; private set; }
     public ProgramStatus Status { get; private set; }
     public DateTimeOffset? ArchivedAt { get; private set; }
     public string? ArchivedBy { get; private set; }
@@ -63,6 +65,8 @@ public sealed class Program : ITenantOwned
     }
 
     public void CloseEnrollment() => EnrollmentOpen = false;
+
+    public void FollowTrack(Guid? trackId) => TrackId = trackId;
 
     public void Archive(string actor, DateTimeOffset now)
     {

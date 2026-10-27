@@ -116,4 +116,8 @@ export class CurriculumModulePage extends BasePage {
   get statusError(): Locator {
     return this.dialog.getByRole('group', { name: 'Status' }).locator('.error');
   }
+
+  get visibility(): Locator {
+    return this.page.getByRole('region', { name: 'Visibility' });
+  }
 }

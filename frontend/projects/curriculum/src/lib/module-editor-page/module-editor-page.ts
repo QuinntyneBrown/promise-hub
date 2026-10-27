@@ -159,6 +159,10 @@ export class ModuleEditorPage {
     });
   }
 
+  protected cohorts(programs: string[]): string {
+    return programs.length ? programs.join(', ') : 'No cohort follows this track yet';
+  }
+
   protected lessonMeta(l: LessonSummary): string {
     return [l.minutes ? `${l.minutes} min` : null, statusLabel(l.status)]
       .filter(Boolean)

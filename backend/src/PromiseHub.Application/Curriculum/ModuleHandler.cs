@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 namespace PromiseHub.Application.Curriculum;
 
 /// <summary>One module of the caller's organization for the module editor, or null (L2-066 criteria 4 and 9).</summary>
-public sealed class ModuleHandler(IPromiseHubDb db)
+public sealed class ModuleHandler(IPromiseHubDb db, CurriculumPrograms programs)
 {
     public async Task<ModuleDetailDto?> HandleAsync(Guid id, CancellationToken cancellationToken = default)
     {
@@ -18,6 +18,7 @@ public sealed class ModuleHandler(IPromiseHubDb db)
             .Select(l => new LessonSummaryDto(l.Id, l.Title, l.Minutes, l.Status.ToString())).ToListAsync(cancellationToken);
         return new ModuleDetailDto(module.Id, track.Id, track.Name, module.Title, module.Description, module.PrerequisiteModuleId, module.Anchor,
             module.Status.ToString(), module.Position, siblings.Count,
-            siblings.Where(m => m.Position < module.Position).Select(m => new ModuleRefDto(m.Id, m.Title)).ToList(), lessons);
+            siblings.Where(m => m.Position < module.Position).Select(m => new ModuleRefDto(m.Id, m.Title)).ToList(), lessons,
+            await programs.FollowingAsync(track.Id, cancellationToken));
     }
 }

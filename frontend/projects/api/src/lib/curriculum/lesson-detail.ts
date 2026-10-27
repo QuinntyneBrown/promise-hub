@@ -19,4 +19,6 @@ export interface LessonDetail {
   position: number;
   lessonCount: number;
   video: LessonVideo | null;
+  /** The names of the active programs that follow the lesson's track. */
+  programs: string[];
 }

@@ -60,6 +60,31 @@ public sealed class TrackCommands(IPromiseHubDb db, ITenantContext tenant, IAudi
         return Result.Done;
     }
 
+    /// <summary>The whole list of active programs that follow the track: chosen ones move here, the rest follow none (ADR 0050).</summary>
+    public async Task<Result> SetCohortsAsync(Guid id, IReadOnlyList<Guid>? programIds, CancellationToken cancellationToken = default)
+    {
+        var track = await db.Tracks.AsNoTracking().FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+        if (track is null)
+        {
+            return Result.NotFound;
+        }
+        var chosen = programIds ?? [];
+        var programs = await db.Programs.Where(p => p.Status == Domain.Programs.ProgramStatus.Active && (chosen.Contains(p.Id) || p.TrackId == id)).ToListAsync(cancellationToken);
+        if (chosen.Distinct().Count() != chosen.Count || !chosen.All(c => programs.Any(p => p.Id == c)))
+        {
+            return CurriculumRules.Invalid("programIds", "Choose active programs of your organization.");
+        }
+        var before = programs.Where(p => p.TrackId == id).Select(p => p.Name).OrderBy(n => n).ToList();
+        foreach (var program in programs)
+        {
+            program.FollowTrack(chosen.Contains(program.Id) ? id : null);
+        }
+        var after = programs.Where(p => chosen.Contains(p.Id)).Select(p => p.Name).OrderBy(n => n).ToList();
+        audit.Record(new AuditEvent(AuditAction.Updated, "Track", id, $"Cohorts · {track.Name}", new { Cohorts = before }, new { Cohorts = after }));
+        await db.SaveChangesAsync(cancellationToken);
+        return Result.Done;
+    }
+
     public async Task<Result> ReorderModulesAsync(Guid trackId, IReadOnlyList<Guid>? moduleIds, CancellationToken cancellationToken = default)
     {
         var track = await db.Tracks.AsNoTracking().FirstOrDefaultAsync(t => t.Id == trackId, cancellationToken);

@@ -447,7 +447,7 @@ export class FakeApi {
   }
 
   /** Curriculum authoring state (tracks, modules, lessons); tests call its helpers, such as clear. */
-  readonly curriculumState = new FakeCurriculum();
+  readonly curriculumState = new FakeCurriculum(() => this.programs);
 
   /** Sets the modules on for an organization, as Settings › Modules would. */
   setModules(organizationId: string, on: ModuleId[]): void {
@@ -487,6 +487,7 @@ export class FakeApi {
     ['POST', /^\/api\/curriculum\/modules$/, (route) => this.author(route, (org) => this.curriculumState.createModule(route, org))],
     ['GET', /^\/api\/curriculum\/modules\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.curriculumState.getModule(route, org, p['id']!))],
     ['PUT', /^\/api\/curriculum\/modules\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.curriculumState.updateModule(route, org, p['id']!))],
+    ['PUT', /^\/api\/curriculum\/tracks\/(?<id>[^/]+)\/cohorts$/, (route, p) => this.author(route, (org) => this.curriculumState.setCohorts(route, org, p['id']!))],
     ['PUT', /^\/api\/curriculum\/tracks\/(?<id>[^/]+)\/status$/, (route, p) => this.author(route, (org) => this.curriculumState.setTrackStatus(route, org, p['id']!))],
     ['PUT', /^\/api\/curriculum\/modules\/(?<id>[^/]+)\/status$/, (route, p) => this.author(route, (org) => this.curriculumState.setModuleStatus(route, org, p['id']!))],
     ['PUT', /^\/api\/curriculum\/modules\/(?<id>[^/]+)\/lesson-order$/, (route, p) => this.author(route, (org) => this.curriculumState.reorderLessons(route, org, p['id']!))],

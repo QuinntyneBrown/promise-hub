@@ -57,8 +57,17 @@
                   <p class="text-muted">{{ track.description }}</p>
                 }
                 <p class="text-caption" data-testid="track-details">{{ details(track) }}</p>
+                <p class="text-caption" data-testid="track-cohorts">{{ followedBy(track) }}</p>
               </div>
               <div class="cluster cluster--tight">
+                <ph-button
+                  size="sm"
+                  icon="families"
+                  hasPopup="dialog"
+                  [label]="'Cohorts following ' + track.name"
+                  (click)="cohorts(track, r.value)"
+                  >Cohorts</ph-button
+                >
                 <ph-button
                   size="sm"
                   hasPopup="dialog"

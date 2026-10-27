@@ -129,6 +129,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(t => t.Status).HasConversion<string>().HasMaxLength(20);
             e.Property(t => t.CreatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
         });
+        modelBuilder.Entity<Domain.Programs.Program>().HasOne<Domain.Curriculum.Track>().WithMany().HasForeignKey(p => p.TrackId);
         modelBuilder.Entity<Domain.Curriculum.CurriculumModule>(e =>
         {
             e.Property(m => m.Title).HasMaxLength(Domain.Curriculum.CurriculumModule.MaximumTitle);

@@ -16,4 +16,6 @@ export interface ModuleDetail {
   moduleCount: number;
   earlierModules: ModuleRef[];
   lessons: LessonSummary[];
+  /** The names of the active programs that follow the module's track. */
+  programs: string[];
 }

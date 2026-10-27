@@ -7,3 +7,4 @@ export { LessonEditorPage } from './lib/lesson-editor-page/lesson-editor-page';
 export { NewLessonDialog } from './lib/new-lesson-dialog/new-lesson-dialog';
 export { CurriculumStatusDialog } from './lib/curriculum-status-dialog/curriculum-status-dialog';
 export { DeleteLessonDialog } from './lib/delete-lesson-dialog/delete-lesson-dialog';
+export { TrackCohortsDialog } from './lib/track-cohorts-dialog/track-cohorts-dialog';

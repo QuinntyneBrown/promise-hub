@@ -117,4 +117,17 @@ export class CurriculumPage extends BasePage {
     await this.dialog.getByRole('radio', { name: new RegExp(`^${status}`) }).check();
     await this.dialog.getByRole('button', { name: 'Save status' }).click();
   }
+
+  trackCohorts(name: string): Locator {
+    return this.track(name).getByTestId('track-cohorts');
+  }
+
+  async openCohorts(track: string): Promise<void> {
+    await this.page.getByRole('button', { name: `Cohorts following ${track}` }).click();
+    await expect(this.dialog).toBeVisible();
+  }
+
+  cohortChoice(program: string): Locator {
+    return this.dialog.getByRole('checkbox', { name: new RegExp(`^${program}`) });
+  }
 }

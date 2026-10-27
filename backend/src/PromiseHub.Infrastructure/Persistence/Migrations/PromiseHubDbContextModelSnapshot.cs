@@ -2051,9 +2051,14 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .HasMaxLength(40)
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("TrackId")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.HasIndex("OrganizationId");
+
+                    b.HasIndex("TrackId");
 
                     b.ToTable("Programs");
                 });
@@ -2921,6 +2926,10 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Curriculum.Track", null)
+                        .WithMany()
+                        .HasForeignKey("TrackId");
                 });
 
             modelBuilder.Entity("PromiseHub.Domain.Reports.ReportExport", b =>
