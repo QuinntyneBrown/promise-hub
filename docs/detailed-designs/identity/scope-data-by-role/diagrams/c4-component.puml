@@ -1,0 +1,22 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Scope data by role
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(group, "MentorGroupPage", "Angular page", "mentor-group")
+  Component(mapi, "MentoringApi", "Contract + HTTP client", "cohort(programId)")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(perm, "RequirePermission(MentorYouth)", "Endpoint filter", "Mentor role only")
+  Component(mod, "RequireModule(Mentoring)", "Endpoint filter", "404 when off")
+  Component(h, "MentorCohortHandler", "Handler", "one cohort on the caller's team")
+  Component(scope, "MentorScope", "Application service", "youth and cohorts of the caller")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "tenant query filter")
+}
+Rel(group, mapi, "cohort")
+Rel(mapi, mod, "GET /mentoring/cohorts/{id}")
+Rel(mod, perm, "then")
+Rel(perm, h, "then")
+Rel(h, scope, "is the caller on this cohort?")
+Rel(scope, db, "reads")
+@enduml

@@ -1,0 +1,23 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Mentor dashboard and roster
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(dash, "MentorDashboardPage", "Angular page", "mentor-dashboard")
+  Component(roster, "MentorYouthPage", "Angular page", "mentor-youth, search by name")
+  Component(mapi, "MentoringApi", "Contract + HTTP client", "dashboard, youth")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "MentoringEndpoints", "Minimal API", "Mentoring gate, MentorYouth permission")
+  Component(scope, "MentorScope", "Application service", "the caller's youth and cohorts")
+  Component(h, "MentorDashboardHandler / MentoringHandler", "Handlers", "counts, lists, recent activity")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "YouthMentors, CohortMentors, Enrollments, AttendanceRecords")
+}
+Rel(dash, mapi, "dashboard")
+Rel(roster, mapi, "youth")
+Rel(mapi, ep, "JSON/HTTPS")
+Rel(ep, h, "dispatches")
+Rel(h, scope, "asks for the caller's youth")
+Rel(scope, db, "reads")
+Rel(h, db, "reads attendance while Roll Call is on")
+@enduml

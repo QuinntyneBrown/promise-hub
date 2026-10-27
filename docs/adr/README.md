@@ -52,3 +52,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0046](0046-guardian-consent-for-youth.md) | Guardian consent is a verified-link guardian page, the consent age and wording are a privacy setting, and the gate is an endpoint filter on youth work |
 | [0047](0047-youth-onboarding-and-program-placement.md) | Youth onboarding is a server-saved Learning setup behind the consent gate; placement is an active program enrollment checked by an endpoint filter |
 | [0048](0048-cohort-terms-and-mentor-assignments.md) | A cohort's term is a label on its program; mentors are assigned per youth and per cohort under the Mentoring module |
+| [0049](0049-mentor-scope-and-mentor-safe-records.md) | One mentor scope serves every Mentoring read; mentors read a mentor-safe youth record, refusals are audited |

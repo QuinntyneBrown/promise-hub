@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Scope data by role
+Person(p0, "Mentor", "Reads only assigned youth and cohorts")
+Person(p1, "Staff, youth, volunteer", "Refused by Mentoring endpoints")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(p0, ph, "Uses", "HTTPS")
+Rel(p1, ph, "Uses", "HTTPS")
+@enduml

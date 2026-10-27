@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Mentor dashboard and roster
+Person(p0, "Mentor", "Sees their youth and cohorts")
+Person(p1, "Program director", "Assigns mentors (assign-mentors)")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(p0, ph, "Uses", "HTTPS")
+Rel(p1, ph, "Uses", "HTTPS")
+@enduml

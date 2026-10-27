@@ -1,0 +1,45 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Class structure — Scope data by role
+class ITenantContext <<abstraction>> {
+  +OrganizationId: Guid
+  +MembershipId: Guid
+}
+class MentorScope <<application service>> {
+  +YouthIdsAsync(): IReadOnlyList<Guid>
+  +CohortsAsync(): IReadOnlyList<MentorCohortRef>
+  +CanSeeYouthAsync(childId): bool
+}
+class MentorCohortRef <<value>> {
+  +ProgramId: Guid
+  +IsLead: bool
+}
+class MentorCohortHandler <<handler>> {
+  +HandleAsync(programId): CohortResult
+}
+class MentorCohortDto <<contract>> {
+  +ProgramId: Guid
+  +Name: string
+  +Term: string?
+  +Schedule: string?
+  +Role: string
+  +Lead: string?
+  +Supporting: string[]
+  +Members: MentorCohortMemberDto[]
+}
+class MentorCohortMemberDto <<contract>> {
+  +Id: Guid
+  +Name: string
+  +Age: int?
+  +Mentor: string?
+}
+MentorScope --> ITenantContext
+MentorScope --> MentorCohortRef
+MentorCohortHandler --> MentorScope
+MentorCohortHandler --> MentorCohortDto
+MentorCohortDto *-- MentorCohortMemberDto
+@enduml

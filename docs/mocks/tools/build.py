@@ -19,7 +19,7 @@ sys.path.insert(0, str(HERE))
 
 from reg import SCREENS, Builder  # noqa: E402
 
-MODULES = ["pages_core", "pages_ops", "pages_admin", "pages_onboarding", "pages_tenancy", "pages_guardian", "pages_participants", "pages_consent", "dialogs", "notifications"]
+MODULES = ["pages_core", "pages_ops", "pages_admin", "pages_onboarding", "pages_tenancy", "pages_guardian", "pages_participants", "pages_mentoring", "pages_consent", "dialogs", "notifications"]
 FOLDER = {"page": "pages", "dialog": "dialogs", "notification": "notifications"}
 
 

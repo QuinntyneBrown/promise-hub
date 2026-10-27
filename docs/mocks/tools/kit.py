@@ -508,7 +508,7 @@ TABBAR = [("today", "Today", "home"), ("check-in", "Check-in", "clipboard"), ("f
 # Participant roles (ADR 0043): their own sections only, each shown while its module is on. No search, no Settings.
 NAV_ROLE = {
     "youth": [("today", "Today", "home", "today"), ("learning", "Learning", "star", "learning")],
-    "mentor": [("today", "Today", "home", "today"), ("mentoring", "Mentoring", "users", "mentoring")],
+    "mentor": [("today", "Today", "home", "today"), ("mentor-dashboard", "Mentoring", "users", "mentor-dashboard")],
     "volunteer": [("today", "Today", "home", "today"), ("check-in", "Check-in", "clipboard", "check-in")],
 }
 

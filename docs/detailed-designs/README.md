@@ -72,6 +72,9 @@ One folder per subsystem, one folder per vertically sliced feature, each with a 
 | curriculum | open-curriculum (journeys 56, 60, 64 add more; see [curriculum](curriculum/README.md)) | L2-005, L2-007 |
 | mentoring | list-assigned-youth (journeys 55, 63, 67, 68, 69 add more; see [mentoring](mentoring/README.md)) | L2-005, L2-007 |
 | mentoring | assign-mentors | L2-062, L2-007 |
+| mentoring | manage-mentor-roster | L2-063, L2-065, L2-062 |
+| mentoring | view-youth-record | L2-064, L2-065, L2-007, L2-019, L2-011 |
+| identity | scope-data-by-role | L2-065, L2-007 |
 | website | serve-public-site (journey 81 adds more; see [website](website/README.md)) | L2-005 |
 
 Render all diagrams with:

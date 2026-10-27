@@ -1481,25 +1481,6 @@
       }
     },
     {
-      "id": "mentoring",
-      "kind": "page",
-      "title": "Mentoring",
-      "route": "/mentoring",
-      "requirements": [
-        "L1-024",
-        "L1-002"
-      ],
-      "states": [
-        "default",
-        "assigned",
-        "loading",
-        "error"
-      ],
-      "not_applicable": {
-        "empty": "Until the journeys add content, the default state is the empty state."
-      }
-    },
-    {
       "id": "website",
       "kind": "page",
       "title": "Public website",
@@ -1560,6 +1541,87 @@
         "empty": "The state itself is the empty Learning page for a youth with no program.",
         "forbidden": "Only a youth reaches Learning; other roles get 403 from the server."
       }
+    },
+    {
+      "id": "mentor-dashboard",
+      "kind": "page",
+      "title": "Mentoring",
+      "route": "/mentoring",
+      "requirements": [
+        "L2-063",
+        "L2-065",
+        "L1-024"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "rollcall-off",
+        "forbidden"
+      ]
+    },
+    {
+      "id": "mentor-youth",
+      "kind": "page",
+      "title": "My youth",
+      "route": "/mentoring/youth",
+      "requirements": [
+        "L2-063",
+        "L2-065",
+        "L1-024"
+      ],
+      "states": [
+        "default",
+        "searched",
+        "no-results",
+        "loading",
+        "empty",
+        "error",
+        "forbidden"
+      ]
+    },
+    {
+      "id": "mentor-youth-detail",
+      "kind": "page",
+      "title": "Youth record",
+      "route": "/mentoring/youth/:childId",
+      "requirements": [
+        "L2-064",
+        "L2-065",
+        "L2-007",
+        "L2-019",
+        "L1-024"
+      ],
+      "states": [
+        "default",
+        "onboarded",
+        "rollcall-off",
+        "loading",
+        "error",
+        "forbidden"
+      ],
+      "not_applicable": {
+        "empty": "A youth record always has a name and a program; empty sections say so in place."
+      }
+    },
+    {
+      "id": "mentor-group",
+      "kind": "page",
+      "title": "My cohort",
+      "route": "/mentoring/cohorts/:programId",
+      "requirements": [
+        "L2-065",
+        "L2-063",
+        "L1-024"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "forbidden"
+      ]
     },
     {
       "id": "guardian-consent",

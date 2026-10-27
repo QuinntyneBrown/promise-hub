@@ -1,0 +1,43 @@
+@startuml
+title UML sequence behaviour — Opening a youth's record
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Mentor (Daniel)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "MentorYouthDetailPage" as page
+  participant "MentoringApi" as mapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "MentoringEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "MentorYouthRecordHandler" as h
+  participant "MentorScope" as scope
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : opens Mateo from My youth
+page -> mapi : youthRecord(childId)
+mapi -> ep : GET /mentoring/youth/{childId} (Mentoring on, MentorYouth — L2-064 c6, c7)
+ep -> h : HandleAsync(childId)
+h -> db : child in caller's organization?
+alt unknown or another organization
+  ep --> page : 404 (c6)
+else not in the mentor scope
+  h -> scope : CanSeeYouthAsync → false
+  h -> db : audit AccessDenied on Child (c5)
+  ep --> page : 403
+  page --> actor : "This youth isn’t assigned to you"
+else assigned
+  h -> db : programs, mentor, guardians, onboarding name and pronouns (c1, c2)
+  opt Roll Call is on
+    h -> db : ten latest attendance records (c4)
+  end
+  h -> db : audit Viewed on Child (c1)
+  ep --> page : 200 mentor-safe record, no medical fields or date of birth (c3)
+end
+@enduml
