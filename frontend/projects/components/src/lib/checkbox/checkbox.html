@@ -1,10 +1,18 @@
 <label class="checkbox">
   <input
     type="checkbox"
+    [attr.id]="inputId()"
     [checked]="checked()"
     [disabled]="disabled()"
+    [attr.aria-invalid]="error() ? 'true' : null"
+    [attr.aria-describedby]="error() && inputId() ? inputId() + '-error' : null"
     (change)="toggle($any($event.target).checked)"
     (blur)="onTouched()"
   />
   <span class="text" [class.visually-hidden]="labelHidden()">{{ label() }}</span>
 </label>
+@if (error()) {
+  <div class="error" [id]="inputId() + '-error'" [attr.data-testid]="inputId() + '-error'">
+    {{ error() }}
+  </div>
+}

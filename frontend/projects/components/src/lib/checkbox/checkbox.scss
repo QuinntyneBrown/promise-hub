@@ -27,3 +27,13 @@ input:focus-visible {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+.error {
+  font: var(--text-body-sm);
+  color: var(--color-danger-fg);
+}
+.error::before {
+  content: '⚠ ';
+}
+:host:has(.error) {
+  display: block;
+}

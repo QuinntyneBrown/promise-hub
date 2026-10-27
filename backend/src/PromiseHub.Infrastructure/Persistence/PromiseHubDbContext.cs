@@ -54,6 +54,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Surveys.Survey> Surveys => Set<Domain.Surveys.Survey>();
     public DbSet<Domain.Surveys.SurveyResponse> SurveyResponses => Set<Domain.Surveys.SurveyResponse>();
     public DbSet<PrivacySettings> PrivacySettings => Set<PrivacySettings>();
+    public DbSet<ConsentPolicy> ConsentPolicies => Set<ConsentPolicy>();
     public DbSet<DataRequest> DataRequests => Set<DataRequest>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
     public DbSet<Domain.Incidents.IncidentFollowUp> IncidentFollowUps => Set<Domain.Incidents.IncidentFollowUp>();
@@ -85,6 +86,11 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
         });
         modelBuilder.Entity<Domain.Notifications.NotificationSettings>(e => e.HasIndex(s => s.OrganizationId).IsUnique());
         modelBuilder.Entity<PrivacySettings>(e => e.HasIndex(s => s.OrganizationId).IsUnique());
+        modelBuilder.Entity<ConsentPolicy>(e =>
+        {
+            e.HasIndex(s => s.OrganizationId).IsUnique();
+            e.Property(s => s.Wording).HasMaxLength(ConsentPolicy.MaximumWording);
+        });
         modelBuilder.Entity<DataRequest>(e =>
         {
             e.Property(r => r.Kind).HasConversion<string>().HasMaxLength(20);

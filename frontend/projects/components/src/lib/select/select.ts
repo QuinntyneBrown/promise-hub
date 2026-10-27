@@ -22,6 +22,8 @@ export class PhSelect implements ControlValueAccessor {
   readonly label = input.required<string>();
   readonly options = input.required<(string | SelectOption)[]>();
   readonly error = input<string | null>(null);
+  /** Guidance under the select, such as when a change takes effect. */
+  readonly help = input<string | null>(null);
   /** Read by screen readers only, when the row around the select already says what it is for. */
   readonly labelHidden = input(false);
 

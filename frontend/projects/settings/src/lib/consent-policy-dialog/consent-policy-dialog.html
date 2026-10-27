@@ -1,0 +1,36 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    title="Edit consent policy"
+    description="Youth under this age need a guardian’s consent before they use Learning. Saving is logged."
+  >
+    @if (failed()) {
+      <ph-alert
+        tone="danger"
+        title="That didn’t go through"
+        text="Nothing was changed. Try again."
+      />
+    }
+    <ph-select
+      inputId="consent-age"
+      label="Consent needed under"
+      name="age"
+      [options]="ages"
+      help="Changing it applies from each youth’s next request; consents already given stay valid."
+      [error]="errors()['consentAge'] ?? null"
+      [(ngModel)]="age"
+    />
+    <ph-textarea
+      inputId="consent-wording"
+      label="Wording guardians sign"
+      name="wording"
+      [rows]="4"
+      help="20 to 2,000 characters. Each consent keeps the wording the guardian read."
+      [error]="errors()['wording'] ?? null"
+      [(ngModel)]="wording"
+    />
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Save policy</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

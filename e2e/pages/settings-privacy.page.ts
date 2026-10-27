@@ -39,4 +39,36 @@ export class SettingsPrivacyPage extends BasePage {
   get loadError(): Locator {
     return this.page.getByRole('heading', { name: 'We couldn’t load privacy settings' });
   }
+
+  get consentCard(): Locator {
+    return this.page.getByRole('region', { name: 'Guardian consent' });
+  }
+
+  get consentAge(): Locator {
+    return this.page.getByTestId('fact-consent-age');
+  }
+
+  get consentWording(): Locator {
+    return this.page.getByTestId('fact-consent-wording');
+  }
+
+  get consentPolicyDialog(): Locator {
+    return this.page.getByRole('dialog', { name: 'Edit consent policy' });
+  }
+
+  async editConsentPolicy(): Promise<void> {
+    await this.page.getByRole('button', { name: 'Edit consent policy' }).click();
+    await expect(this.consentPolicyDialog).toBeVisible();
+  }
+
+  async saveConsentPolicy(age: string, wording: string): Promise<void> {
+    await this.consentPolicyDialog.getByLabel('Consent needed under').selectOption({ label: age });
+    await this.consentPolicyDialog.getByLabel('Wording guardians sign').fill(wording);
+    await this.consentPolicyDialog.getByRole('button', { name: 'Save policy' }).click();
+  }
+
+  /** What the API answers this signed-in person for the consent policy. */
+  async consentApiStatus(): Promise<number> {
+    return this.page.evaluate(async () => (await fetch('/api/settings/consent')).status);
+  }
 }

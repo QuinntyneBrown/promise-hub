@@ -280,6 +280,8 @@ export class FakeApi {
   ];
   /** Consent retention per organization, when saved (null: until deleted by request); otherwise 7 years. */
   private retention = new Map<string, number | null>();
+  /** Consent policies saved per organization (L2-056); otherwise 18 and the default wording. */
+  private consentPolicies = new Map<string, { consentAge: number; wording: string }>();
   /** Guardian data requests: household, kind, email and who fulfilled it. */
   private dataRequests: { id: string; organizationId: string; householdId: string; household: string; kind: 'Export' | 'Delete'; email: string; fulfilledBy: string | null }[] = [];
   /** Plans changed in billing, and organizations whose last payment failed (with when). */
@@ -457,6 +459,8 @@ export class FakeApi {
     ['POST', /^\/api\/settings\/data-requests\/(?<id>[^/]+)\/fulfil$/, (route, p) => this.fulfilDataRequest(route, p['id']!)],
     ['POST', /^\/api\/g\/home\/(?<token>[^/]+)\/data-requests$/, (route, p) => this.askForData(route, p['token']!)],
     ['PUT', /^\/api\/settings\/privacy$/, (route) => this.savePrivacy(route)],
+    ['GET', /^\/api\/settings\/consent$/, (route) => this.getConsentPolicy(route)],
+    ['PUT', /^\/api\/settings\/consent$/, (route) => this.saveConsentPolicy(route)],
     ['GET', /^\/api\/settings\/notifications$/, (route) => this.getNotificationSettings(route)],
     ['PUT', /^\/api\/settings\/notifications$/, (route) => this.saveNotificationSettings(route)],
     ['GET', /^\/api\/settings\/modules$/, (route) => this.getModules(route)],
@@ -1115,6 +1119,33 @@ export class FakeApi {
       return route.fulfill({ status: 422, json: { errors: { consentRetentionYears: 'Choose 7 years, 3 years or until deleted by request.' } } });
     }
     this.retention.set(organizationId, b.consentRetentionYears);
+    return route.fulfill({ status: 204 });
+  }
+
+  /** The consent policy of an organization: as saved, or 18 with the default wording (L2-056). */
+  consentPolicyOf(organizationId: string): { consentAge: number; wording: string } {
+    const name = organizations.find((o) => o.id === organizationId)!.name;
+    return this.consentPolicies.get(organizationId) ?? { consentAge: 18, wording: `I consent to my child taking part in lessons, mentoring and program activities at ${name}, and to staff contacting them about their program.` };
+  }
+
+  private async getConsentPolicy(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    if (!this.modules.get(organizationId)!.includes('Roster')) return route.fulfill({ status: 404 });
+    return route.fulfill({ json: this.consentPolicyOf(organizationId) });
+  }
+
+  private async saveConsentPolicy(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    if (!this.modules.get(organizationId)!.includes('Roster')) return route.fulfill({ status: 404 });
+    const b = route.request().postDataJSON() as { consentAge: number; wording: string };
+    const wording = (b.wording ?? '').trim();
+    const errors: Record<string, string> = {};
+    if (!(b.consentAge >= 13 && b.consentAge <= 19)) errors['consentAge'] = 'Choose an age from 13 to 19.';
+    if (wording.length < 20 || wording.length > 2000) errors['wording'] = 'Write the wording guardians sign, 20 to 2,000 characters.';
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    this.consentPolicies.set(organizationId, { consentAge: b.consentAge, wording });
     return route.fulfill({ status: 204 });
   }
 
