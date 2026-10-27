@@ -13,7 +13,7 @@ public sealed class ListProgramsHandler(IPromiseHubDb db)
         var wanted = status == "archived" ? ProgramStatus.Archived : ProgramStatus.Active;
         var rows = programs
             .Where(p => p.Status == wanted)
-            .Select(p => new ProgramSummaryDto(p.Id, p.Name, p.Schedule, p.StartsOn, p.EndsOn, enrolled.GetValueOrDefault(p.Id), p.Capacity, p.EnrollmentOpen, p.Status.ToString()))
+            .Select(p => new ProgramSummaryDto(p.Id, p.Name, p.Schedule, p.StartsOn, p.EndsOn, enrolled.GetValueOrDefault(p.Id), p.Capacity, p.EnrollmentOpen, p.Status.ToString(), p.Term))
             .ToList();
         var active = programs.Where(p => p.Status == ProgramStatus.Active).ToList();
         return new ProgramListDto(rows, active.Count, programs.Count - active.Count, active.Sum(p => enrolled.GetValueOrDefault(p.Id)));

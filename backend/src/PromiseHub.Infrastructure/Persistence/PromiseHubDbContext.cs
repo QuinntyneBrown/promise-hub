@@ -222,6 +222,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(p => p.Name).HasMaxLength(120);
             e.Property(p => p.Schedule).HasMaxLength(200);
             e.Property(p => p.Ages).HasMaxLength(40);
+            e.Property(p => p.Term).HasMaxLength(40);
             e.Property(p => p.ArchivedBy).HasMaxLength(200);
             e.Property(p => p.Status).HasConversion<string>().HasMaxLength(20);
             e.Property(p => p.ArchivedAt).HasConversion(v => v.HasValue ? v.Value.UtcTicks : (long?)null, v => v.HasValue ? new DateTimeOffset(v.Value, TimeSpan.Zero) : null);

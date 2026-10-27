@@ -5,7 +5,7 @@ namespace PromiseHub.Domain.Programs;
 /// <summary>A program children enroll in. Archiving hides it from pickers and navigation; nothing is deleted.</summary>
 public sealed class Program : ITenantOwned
 {
-    public Program(Guid id, Guid organizationId, string name, DateOnly startsOn, DateOnly endsOn, string? schedule, int capacity, string? ages, bool enrollmentOpen, bool seasonConsent)
+    public Program(Guid id, Guid organizationId, string name, DateOnly startsOn, DateOnly endsOn, string? schedule, int capacity, string? ages, bool enrollmentOpen, bool seasonConsent, string? term = null)
     {
         Id = id;
         OrganizationId = organizationId;
@@ -17,6 +17,7 @@ public sealed class Program : ITenantOwned
         Ages = ages;
         EnrollmentOpen = enrollmentOpen;
         SeasonConsent = seasonConsent;
+        Term = term;
     }
 
     public Guid Id { get; private set; }
@@ -35,11 +36,14 @@ public sealed class Program : ITenantOwned
     /// <summary>The public part of the enrollment link; kept when enrollment closes so the link stays the same.</summary>
     public string? EnrollmentSlug { get; private set; }
     public bool SeasonConsent { get; private set; }
+
+    /// <summary>The term a cohort runs in, such as "2026–27" (L2-061, ADR 0048); the program's dates bound it.</summary>
+    public string? Term { get; private set; }
     public ProgramStatus Status { get; private set; }
     public DateTimeOffset? ArchivedAt { get; private set; }
     public string? ArchivedBy { get; private set; }
 
-    public void Update(string name, DateOnly startsOn, DateOnly endsOn, string? schedule, int capacity, string? ages, bool enrollmentOpen, bool seasonConsent)
+    public void Update(string name, DateOnly startsOn, DateOnly endsOn, string? schedule, int capacity, string? ages, bool enrollmentOpen, bool seasonConsent, string? term)
     {
         Name = name;
         StartsOn = startsOn;
@@ -49,6 +53,7 @@ public sealed class Program : ITenantOwned
         Ages = ages;
         EnrollmentOpen = enrollmentOpen;
         SeasonConsent = seasonConsent;
+        Term = term;
     }
 
     public void OpenEnrollment(string slug)

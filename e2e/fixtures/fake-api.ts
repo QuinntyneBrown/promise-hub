@@ -1669,7 +1669,7 @@ export class FakeApi {
       json: {
         programs: own
           .filter((p) => p.status === status)
-          .map((p) => ({ id: p.id, name: p.name, schedule: p.schedule, startsOn: p.startsOn, endsOn: p.endsOn, enrolled: p.roster.length, capacity: p.capacity, enrollmentOpen: p.enrollmentOpen, status: p.status })),
+          .map((p) => ({ id: p.id, name: p.name, schedule: p.schedule, startsOn: p.startsOn, endsOn: p.endsOn, enrolled: p.roster.length, capacity: p.capacity, enrollmentOpen: p.enrollmentOpen, status: p.status, term: p.term })),
         active: active.length,
         archived: own.length - active.length,
         enrolled: active.reduce((n, p) => n + p.roster.length, 0),
@@ -1712,13 +1712,14 @@ export class FakeApi {
     if (!can.managePrograms(m)) return this.forbidden(route);
     const existing = id ? this.ownProgram(m, id) : undefined;
     if (id && !existing) return route.fulfill({ status: 404 });
-    const b = route.request().postDataJSON() as { name: string; startsOn: string | null; endsOn: string | null; schedule: string; capacity: number; ages: string; enrollmentOpen: boolean; seasonConsent: boolean };
+    const b = route.request().postDataJSON() as { name: string; startsOn: string | null; endsOn: string | null; schedule: string; capacity: number; ages: string; enrollmentOpen: boolean; seasonConsent: boolean; term?: string | null };
     const errors: Record<string, string> = {};
     if (!b.name?.trim()) errors['name'] = 'Enter the program name.';
     if (!b.startsOn) errors['startsOn'] = 'Enter the start date.';
     if (!b.endsOn) errors['endsOn'] = 'Enter the end date.';
     else if (b.startsOn && b.endsOn < b.startsOn) errors['endsOn'] = 'End after it starts.';
     if (!(b.capacity >= 1)) errors['capacity'] = 'Enter a capacity of 1 or more.';
+    if ((b.term?.trim().length ?? 0) > 40) errors['term'] = 'Keep the term under 40 characters.';
     if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
     const values = {
       name: b.name.trim(),
@@ -1729,6 +1730,7 @@ export class FakeApi {
       ages: b.ages?.trim() || null,
       enrollmentOpen: b.enrollmentOpen,
       seasonConsent: b.seasonConsent,
+      term: b.term?.trim() || null,
     };
     if (existing) {
       Object.assign(existing, values);

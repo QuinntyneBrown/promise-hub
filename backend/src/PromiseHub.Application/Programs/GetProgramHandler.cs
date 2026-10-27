@@ -28,6 +28,7 @@ public sealed class GetProgramHandler(IPromiseHubDb db, TimeProvider clock, Guar
             program.ArchivedAt, program.ArchivedBy,
             program.EnrollmentSlug is null ? null : $"{links.BaseUrl.TrimEnd('/')}/g/enroll/{program.EnrollmentSlug}",
             await db.EnrollmentRequests.CountAsync(r => r.ProgramId == program.Id && r.Status == Domain.Enrollment.EnrollmentRequestStatus.WaitingReview, cancellationToken),
-            await db.EnrollmentRequests.CountAsync(r => r.ProgramId == program.Id && r.Status == Domain.Enrollment.EnrollmentRequestStatus.Waitlisted, cancellationToken));
+            await db.EnrollmentRequests.CountAsync(r => r.ProgramId == program.Id && r.Status == Domain.Enrollment.EnrollmentRequestStatus.Waitlisted, cancellationToken),
+            program.Term);
     }
 }

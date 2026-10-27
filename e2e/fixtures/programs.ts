@@ -13,6 +13,8 @@ export interface FakeProgram {
   ages: string | null;
   enrollmentOpen: boolean;
   seasonConsent: boolean;
+  /** The cohort's term (L2-061); null when none. */
+  term: string | null;
   status: 'Active' | 'Archived';
   archivedAt: string | null;
   archivedBy: string | null;
@@ -64,6 +66,7 @@ const program = (
   ages,
   enrollmentOpen: !archived,
   seasonConsent: true,
+  term: null,
   status: archived ? 'Archived' : 'Active',
   archivedAt: archived ? '2026-09-01T12:00:00Z' : null,
   archivedBy: archived ? 'Marisol Delgado' : null,

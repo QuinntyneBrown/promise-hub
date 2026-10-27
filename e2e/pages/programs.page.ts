@@ -10,6 +10,25 @@ export class ProgramsPage extends BasePage {
     await expect(this.list.getByRole('listitem').first().or(this.page.getByRole('heading', { level: 2 }).first())).toBeVisible();
   }
 
+  /** Goes to Programs without waiting for it, for redirects. */
+  async visitList(): Promise<void> {
+    await super.open('/programs');
+  }
+
+  get subtitle(): Locator {
+    return this.page.getByTestId('page-subtitle');
+  }
+
+  get term(): Locator {
+    return this.page.getByLabel('Term');
+  }
+
+  async edit(): Promise<void> {
+    await this.page.getByRole('link', { name: 'Edit', exact: true }).click();
+    await expect(this.heading).toHaveText('Edit program');
+    await expect(this.page.getByLabel('Program name')).not.toHaveValue('');
+  }
+
   get heading(): Locator {
     return this.page.getByRole('heading', { level: 1 });
   }

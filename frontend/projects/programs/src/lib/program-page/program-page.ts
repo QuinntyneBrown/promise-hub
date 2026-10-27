@@ -81,6 +81,7 @@ export class ProgramPage {
   protected subtitle(p: Program): string {
     return [
       p.schedule,
+      p.term ? `${p.term} term` : null,
       formatSeason(p.startsOn, p.endsOn),
       p.enrollmentOpen ? 'Enrollment open' : 'Enrollment closed',
     ]

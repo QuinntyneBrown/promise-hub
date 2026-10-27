@@ -49,6 +49,7 @@ export class ProgramFormPage {
     ages: '',
     enrollmentOpen: false,
     seasonConsent: true,
+    term: '',
   };
   protected enrollment = 'closed';
   protected readonly enrollmentOptions: RadioOption[] = [
@@ -79,6 +80,7 @@ export class ProgramFormPage {
             ages: p.ages ?? '',
             enrollmentOpen: p.enrollmentOpen,
             seasonConsent: p.seasonConsent,
+            term: p.term ?? '',
           };
           this.enrollment = p.enrollmentOpen ? 'open' : 'closed';
         }

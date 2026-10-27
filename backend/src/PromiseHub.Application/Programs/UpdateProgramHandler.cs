@@ -18,9 +18,9 @@ public sealed class UpdateProgramHandler(IPromiseHubDb db, IAuditWriter audit)
         {
             return Result.Invalid(errors);
         }
-        var before = new { program.Name, program.StartsOn, program.EndsOn, program.Schedule, program.Capacity, program.Ages, program.EnrollmentOpen, program.SeasonConsent };
+        var before = new { program.Name, program.StartsOn, program.EndsOn, program.Schedule, program.Capacity, program.Ages, program.EnrollmentOpen, program.SeasonConsent, program.Term };
         program.Update(command.Name.Trim(), command.StartsOn!.Value, command.EndsOn!.Value, ProgramRules.Clean(command.Schedule), command.Capacity,
-            ProgramRules.Clean(command.Ages), command.EnrollmentOpen, command.SeasonConsent);
+            ProgramRules.Clean(command.Ages), command.EnrollmentOpen, command.SeasonConsent, ProgramRules.Clean(command.Term));
         audit.Record(new AuditEvent(AuditAction.Updated, "Program", program.Id, program.Name, before, command));
         await db.SaveChangesAsync(cancellationToken);
         return Result.Done;

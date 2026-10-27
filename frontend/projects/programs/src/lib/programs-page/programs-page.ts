@@ -52,7 +52,9 @@ export class ProgramsPage {
   }
 
   protected meta(p: ProgramSummary): string {
-    return [p.schedule, `${p.enrolled} of ${p.capacity} enrolled`].filter(Boolean).join(' · ');
+    return [p.schedule, p.term, `${p.enrolled} of ${p.capacity} enrolled`]
+      .filter(Boolean)
+      .join(' · ');
   }
 
   protected subtitle(list: ProgramList): string {

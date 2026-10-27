@@ -3,6 +3,7 @@ namespace PromiseHub.Application.Programs;
 public static class ProgramRules
 {
     public const int NameLength = 120;
+    public const int TermLength = 40;
 
     public static Dictionary<string, string> Check(SaveProgramCommand c)
     {
@@ -26,6 +27,10 @@ public static class ProgramRules
         else if (c.StartsOn is { } start && c.EndsOn < start)
         {
             errors["endsOn"] = "End after it starts.";
+        }
+        if (Clean(c.Term) is { Length: > TermLength })
+        {
+            errors["term"] = $"Keep the term under {TermLength} characters.";
         }
         if (c.Capacity < 1)
         {
