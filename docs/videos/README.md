@@ -71,6 +71,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 61 | [Take quizzes](61-take-quizzes/README.md) | ~5 min | A youth reads a quiz's rules, answers one question at a time with every answer saved, submits an attempt that is then scored on the server and locked, and sees her score and a review as the quiz allows, within the attempt limit with her best score counting |
 | 62 | [Submit assignments](62-submit-assignments/README.md) | ~5 min | A youth reads an assignment's brief and rubric, sends a reflection and a photo with a promise that it is her own work, follows it through review, revises and resubmits when her mentor asks, and keeps unsent work as a draft on her device |
 | 63 | [Grade and assess](63-grade-and-assess/README.md) | ~5 min | A mentor works a review queue of their youth's work, grades a submission against its rubric and approves it, sends it back or keeps a draft, approves or overrides quiz results, and records competency levels; a stale grade is refused, never silently applied |
+| 64 | [Author badges and progression](64-author-badges-and-progression/README.md) | ~5 min | A program director defines badges earned by one rule or by hand, the server awards automatic badges once after each learning event, she awards a badge by hand with her name recorded, and she authors the progression framework of stages and the competencies mentors assess |
 
 ## Making or updating a video
 

@@ -30,7 +30,7 @@
 | Program director | Manage cohorts and assign mentors | Run cohorts as programs and assign mentors to youth. | [8 days](detailed-designs/mentoring/assign-mentors/README.md) | 100% · [video](videos/54-manage-cohorts/README.md) |
 | Program director | Author curriculum | Build tracks, modules and lessons through draft, review and publish. | [9 days](detailed-designs/curriculum/author-tracks-and-modules/README.md) | 100% · [video](videos/56-author-curriculum/README.md) |
 | Program director | Author quizzes and assignments | Create quizzes, assignments, rubrics and attempt rules. | [7 days](detailed-designs/curriculum/author-quizzes/README.md) | 100% · [video](videos/60-author-quizzes-and-assignments/README.md) |
-| Program director | Author badges and progression | Define badges, award rules and the progression framework. | [10 days](detailed-designs/curriculum/author-badges/README.md) | 0% |
+| Program director | Author badges and progression | Define badges, award rules and the progression framework. | [10 days](detailed-designs/curriculum/author-badges/README.md) | 100% · [video](videos/64-author-badges-and-progression/README.md) |
 | Program director | Schedule sessions and RSVP | Schedule cohort sessions as events and collect RSVPs. | [11 days](prompts/70-schedule-sessions-and-rsvp.md) | 0% |
 | Program director | Announce and message | Send announcements and direct messages. | [11 days](prompts/74-announce-and-message.md) | 0% |
 | Program director | Report, export and import learning data | Run learning reports and move learning data in and out. | [31 days](prompts/80-report-export-and-import.md) | 0% |

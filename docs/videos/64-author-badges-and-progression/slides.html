@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 64 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="64" data-video-title="Author badges and progression" data-parts="Introduction|Badges|Automatic|By hand|Progression|Phone|States|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 64</div>
+  <h1>Author badges and progression</h1>
+  <p class="lead">Badges earned by a rule or by hand, and the stages youth grow through</p>
+</section>
+
+<section id="badges" data-part="1" data-cue="Marisol Delgado is the program director at Harbourview." data-clip="clips/badges-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Badges</h3><p>The list and its counts, then a new automatic badge for a module.</p></div>
+</section>
+
+<section id="badge-shots" data-part="1" data-cue="Save badge creates it and opens it at its own address">
+  <h2>The builder</h2>
+  <div class="cols">
+    <img class="shot" alt="Badges: six badges with how each is earned" src="shots/desktop-badges.png">
+    <img class="shot" alt="Knows Themselves saved, with its preview" src="shots/desktop-badge-saved.png">
+  </div>
+</section>
+
+<section id="rules" data-part="2" data-cue="An automatic badge names one rule">
+  <h2>Earned automatically</h2>
+  <table class="facts">
+    <tr><th>Rule</th><th>Checked after</th></tr>
+    <tr><td>Completes a lesson</td><td>The lesson is done</td></tr>
+    <tr><td>Completes a module</td><td>Every published lesson done, every required quiz passed</td></tr>
+    <tr><td>Passes a quiz</td><td>An attempt scored and passed, after approval when needed</td></tr>
+    <tr><td>Has an assignment accepted</td><td>The mentor accepts the submission</td></tr>
+  </table>
+  <p class="muted small"><code>BadgeAwarder</code> · once per badge and youth · notified and audited</p>
+</section>
+
+<section id="automatic" data-part="2" data-cue="Servant Heart shows Sofía Rivera as earning it automatically">
+  <h2>Automatically, once</h2>
+  <img class="shot" alt="Servant Heart earned by Sofía Rivera automatically" src="shots/desktop-automatic.png">
+</section>
+
+<section id="award" data-part="3" data-cue="Some milestones no rule can see" data-clip="clips/award-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Awarded by hand</h3><p>Speaks Up awarded to Nadia Haddad, with Marisol's name.</p></div>
+</section>
+
+<section id="award-shots" data-part="3" data-cue="If someone else awarded it a moment before">
+  <h2>Once, and recorded</h2>
+  <div class="cols">
+    <img class="shot" alt="Award Speaks Up dialog with Nadia Haddad chosen" src="shots/desktop-award-dialog.png">
+    <img class="shot" alt="Nadia Haddad already has this badge" src="shots/desktop-already.png">
+  </div>
+</section>
+
+<section id="progression" data-part="4" data-cue="Next, Progression." data-clip="clips/progression-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>The progression framework</h3><p>Three stages, a new one, a competency added and one removed.</p></div>
+</section>
+
+<section id="progression-shots" data-part="4" data-cue="Removing Works with others asks first">
+  <h2>Stages of competencies</h2>
+  <div class="cols">
+    <img class="shot" alt="Explorer, Contributor and Leader with their competencies" src="shots/desktop-progression.png">
+    <img class="shot" alt="Remove Works with others? Assessments are kept" src="shots/desktop-remove-dialog.png">
+  </div>
+</section>
+
+<section id="phone" data-part="5" data-cue="On a phone the list, the builder and the framework stack" data-clip="clips/phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>One column</h3><p>Badges, a badge and the framework.</p></div>
+</section>
+
+<section id="states" data-part="6" data-cue="Saving an automatic badge with no name and no module" data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Refused, empty and off</h3><p>Invalid, already awarded, failed, no badges, forbidden, Learning off.</p></div>
+</section>
+
+<section id="gates" data-part="6" data-cue="Site leads, youth workers, mentors and youth are refused">
+  <h2>Who gets what</h2>
+  <div class="cols">
+    <table class="facts">
+      <tr><th>Caller</th><th>Answer</th></tr>
+      <tr><td>Admin, program director</td><td>Their organization's badges and framework</td></tr>
+      <tr><td>Site lead, youth worker, mentor, youth</td><td>403</td></tr>
+      <tr><td>Another organization's id</td><td>404</td></tr>
+      <tr><td>Learning off</td><td>404, routes go to Today</td></tr>
+    </table>
+    <img class="shot" alt="Give the badge a name, and choose the module that earns it" src="shots/desktop-invalid.png">
+  </div>
+</section>
+
+<section id="testing" data-part="7" data-cue="The API tests cover the badge fields">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>CurriculumBadgesTests</code>, <code>BadgeAwardingTests</code>, <code>BadgeManualAwardTests</code></li>
+    <li><code>CurriculumProgressionTests</code>: stages, order, competencies, the mentor's sheet</li>
+    <li><code>curriculum-badges.spec.ts</code>, <code>badge-awards.spec.ts</code>, <code>curriculum-progression.spec.ts</code> on phone and laptop, with axe</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="8" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>A badge is earned by one rule, or awarded by hand</li><li>The server checks the rules after every learning event, once per youth</li><li>Stages group the competencies mentors assess; removing one keeps its assessments</li></ul>
+  <p class="muted">Next: youth see their journey</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
