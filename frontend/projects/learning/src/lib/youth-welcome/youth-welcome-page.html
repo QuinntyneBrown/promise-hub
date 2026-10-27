@@ -1,0 +1,142 @@
+@let r = result();
+<ph-page-header
+  [title]="greeting() ? 'Welcome, ' + greeting() : 'Welcome'"
+  subtitle="A few quick steps and you’re ready to learn."
+/>
+@if (r === null) {
+  <div class="welcome" aria-busy="true" aria-label="Loading your setup">
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (r.status === 'loaded') {
+  <ph-card class="welcome">
+    <form
+      class="stack"
+      novalidate
+      aria-labelledby="step-title"
+      (ngSubmit)="step() < 3 ? continue() : finish()"
+    >
+      <ph-stepper [current]="step()" [total]="3" />
+      @if (summary().length) {
+        <ph-error-summary title="Fix these to continue" [items]="summary()" />
+      }
+      @if (failed()) {
+        <ph-alert
+          tone="danger"
+          title="We couldn’t save that"
+          text="Your answers are kept. Try again."
+        />
+      }
+      <div>
+        <h2 class="title" id="step-title">{{ title() }}</h2>
+        <p class="lead">
+          @switch (step()) {
+            @case (1) {
+              This is how you show up across Learning.
+            }
+            @case (2) {
+              You can change these any time in your account.
+            }
+            @default {
+              @if (program()) {
+                This is where you learn with your program team.
+              } @else {
+                Your program team chooses your program; you don’t pick one.
+              }
+            }
+          }
+        </p>
+      </div>
+      @switch (step()) {
+        @case (1) {
+          <ph-text-field
+            inputId="welcome-name"
+            label="What should we call you?"
+            name="preferredName"
+            autocomplete="nickname"
+            [maxlength]="60"
+            help="Mentors and staff see this name. Your record keeps your legal name."
+            [error]="errors()['preferredName'] ?? null"
+            [(ngModel)]="preferredName"
+          />
+          <ph-select
+            inputId="welcome-pronouns"
+            label="Pronouns (optional)"
+            name="pronouns"
+            [options]="pronounOptions"
+            [error]="errors()['pronouns'] ?? null"
+            [(ngModel)]="pronouns"
+          />
+        }
+        @case (2) {
+          <div class="stack">
+            <ph-switch
+              label="Lesson reminders"
+              name="lessonReminders"
+              description="A nudge when a lesson is waiting for you."
+              [(ngModel)]="lessonReminders"
+            />
+            <ph-switch
+              label="Mentor messages"
+              name="mentorMessages"
+              description="When your mentor writes to you."
+              [(ngModel)]="mentorMessages"
+            />
+            <ph-switch
+              label="Announcements"
+              name="announcements"
+              description="News from your organization."
+              [(ngModel)]="announcements"
+            />
+          </div>
+        }
+        @default {
+          @if (program(); as p) {
+            <ph-card [title]="p.name" data-testid="welcome-program">
+              <ph-description-list [facts]="programFacts()" />
+            </ph-card>
+            <p class="hint">
+              Your program team placed you here. Lessons appear on Learning as soon as they publish
+              a track.
+            </p>
+          } @else {
+            <ph-alert
+              tone="info"
+              title="You’re not in a program yet"
+              text="Program staff add you to one. Learning opens fully the moment they do; it’s usually quick."
+            />
+          }
+        }
+      }
+      <div class="actions">
+        @if (step() > 1) {
+          <ph-button variant="ghost" icon="arrow-left" (click)="back()">Back</ph-button>
+        } @else {
+          <span></span>
+        }
+        <div class="actions__end">
+          <ph-button variant="ghost" link="/learning">Finish later</ph-button>
+          @if (step() < 3) {
+            <ph-button variant="primary" type="submit" icon="arrow-right" [busy]="busy()"
+              >Continue</ph-button
+            >
+          } @else {
+            <ph-button variant="primary" type="submit" icon="check-circle" [busy]="busy()"
+              >Finish</ph-button
+            >
+          }
+        </div>
+      </div>
+    </form>
+  </ph-card>
+} @else {
+  <ph-card [flush]="true" class="welcome">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load your setup"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" (click)="load()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}

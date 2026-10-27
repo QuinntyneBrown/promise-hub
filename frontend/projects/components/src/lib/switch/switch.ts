@@ -16,8 +16,18 @@ export class PhSwitch implements ControlValueAccessor {
   /** Read by screen readers only, when the row around the switch already says what it controls. */
   readonly labelHidden = input(false);
   readonly error = input<string | null>(null);
+  /** A line under the label saying what the switch changes (design system: switch, description variant). */
+  readonly description = input<string | null>(null);
 
   protected readonly id = `ph-switch-${nextId++}`;
+
+  protected describedBy(): string | null {
+    const ids = [
+      this.description() ? `${this.id}-description` : null,
+      this.error() ? `${this.id}-error` : null,
+    ].filter(Boolean);
+    return ids.length ? ids.join(' ') : null;
+  }
 
   protected readonly checked = signal(false);
   protected readonly disabled = signal(false);

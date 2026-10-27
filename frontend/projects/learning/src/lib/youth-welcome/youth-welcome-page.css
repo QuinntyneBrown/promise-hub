@@ -1,0 +1,32 @@
+:host {
+  display: block;
+}
+.welcome {
+  display: block;
+  max-width: var(--layout-breakpoint-sm);
+}
+.title {
+  margin: 0;
+  font: var(--text-h3);
+}
+.lead {
+  margin: var(--space-1) 0 0;
+  color: var(--color-fg-muted);
+}
+.hint {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--color-fg-muted);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.actions__end {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-left: auto;
+}

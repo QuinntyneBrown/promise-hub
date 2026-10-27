@@ -24,6 +24,15 @@ public static class ParticipantModuleEndpoints
         app.MapPost("/learning/consent-request", async (ConsentRequestHandler handler, CancellationToken ct) =>
             ConsentRequestHttp.ToHttp(await handler.RequestAsync(ct)))
             .RequireModule(ModuleId.Learning).RequirePermission(Permission.Learn);
+        // First-run setup (L2-059, ADR 0047): the caller's own setup only, after a guardian consents when one must.
+        app.MapGet("/learning/onboarding", (OnboardingHandler handler, CancellationToken ct) => handler.GetAsync(ct))
+            .RequireModule(ModuleId.Learning).RequirePermission(Permission.Learn).RequireGuardianConsent();
+        app.MapPut("/learning/onboarding", async (SaveOnboardingRequest request, OnboardingHandler handler, CancellationToken ct) =>
+            (await handler.SaveAsync(request, ct)).ToHttp())
+            .RequireModule(ModuleId.Learning).RequirePermission(Permission.Learn).RequireGuardianConsent();
+        app.MapPost("/learning/onboarding/complete", async (OnboardingHandler handler, CancellationToken ct) =>
+            (await handler.CompleteAsync(ct)).ToHttp())
+            .RequireModule(ModuleId.Learning).RequirePermission(Permission.Learn).RequireGuardianConsent();
         app.MapGet("/curriculum", (CurriculumHandler handler, CancellationToken ct) => handler.HandleAsync(ct))
             .RequireModule(ModuleId.Learning).RequirePermission(Permission.AuthorCurriculum);
         app.MapGet("/mentoring/youth", (MentoringHandler handler, CancellationToken ct) => handler.HandleAsync(ct))

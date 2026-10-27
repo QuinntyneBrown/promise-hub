@@ -56,6 +56,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Surveys.SurveyResponse> SurveyResponses => Set<Domain.Surveys.SurveyResponse>();
     public DbSet<PrivacySettings> PrivacySettings => Set<PrivacySettings>();
     public DbSet<ConsentPolicy> ConsentPolicies => Set<ConsentPolicy>();
+    public DbSet<Domain.Learning.YouthOnboarding> YouthOnboardings => Set<Domain.Learning.YouthOnboarding>();
     public DbSet<DataRequest> DataRequests => Set<DataRequest>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
     public DbSet<Domain.Incidents.IncidentFollowUp> IncidentFollowUps => Set<Domain.Incidents.IncidentFollowUp>();
@@ -91,6 +92,15 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
         {
             e.HasIndex(s => s.OrganizationId).IsUnique();
             e.Property(s => s.Wording).HasMaxLength(ConsentPolicy.MaximumWording);
+        });
+        modelBuilder.Entity<Domain.Learning.YouthOnboarding>(e =>
+        {
+            e.HasIndex(o => new { o.OrganizationId, o.MembershipId }).IsUnique();
+            e.Property(o => o.PreferredName).HasMaxLength(Domain.Learning.YouthOnboarding.MaximumPreferredName);
+            e.Property(o => o.Pronouns).HasMaxLength(20);
+            e.Property(o => o.StartedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(o => o.CompletedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.HasOne<Membership>().WithMany().HasForeignKey(o => o.MembershipId);
         });
         modelBuilder.Entity<DataRequest>(e =>
         {

@@ -3,7 +3,7 @@
     type="checkbox"
     role="switch"
     [attr.aria-invalid]="error() ? 'true' : null"
-    [attr.aria-describedby]="error() ? id + '-error' : null"
+    [attr.aria-describedby]="describedBy()"
     [checked]="checked()"
     [disabled]="disabled()"
     (change)="toggle($any($event.target).checked)"
@@ -11,6 +11,9 @@
   />
   <span class="text" [class.visually-hidden]="labelHidden()">{{ label() }}</span>
 </label>
+@if (description(); as text) {
+  <p class="description" [id]="id + '-description'">{{ text }}</p>
+}
 @if (error()) {
   <div class="error" [id]="id + '-error'">{{ error() }}</div>
 }

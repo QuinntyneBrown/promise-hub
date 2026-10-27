@@ -31,6 +31,8 @@ export const ICONS = {
   maintenance: '<path d="M14.7 6.3a4 4 0 0 0 5 5L9 22l-3-3L16.7 8.3a4 4 0 0 1-2-2z"/>',
   sparkle: '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2 2M16 16l2 2M6 18l2-2M16 8l2-2"/>',
   'arrow-right': '<path d="M5 12h14m0 0-6-6m6 6-6 6"/>',
+  'arrow-left': '<path d="M19 12H5m0 0 6-6m-6 6 6 6"/>',
+  refresh: '<path d="M20 11a8 8 0 1 0 2 5.3M20 4v7h-7"/>',
   upload: '<path d="M12 15V3m0 0-4 4m4-4 4 4M4 17v3h16v-3"/>',
   download: '<path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v3h16v-3"/>',
   key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M15 5l3 3M18 5l1 1"/>',
