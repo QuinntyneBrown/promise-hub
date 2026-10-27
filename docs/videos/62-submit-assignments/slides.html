@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 62 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="62" data-video-title="Submit assignments" data-parts="Introduction|Brief|Send|Checks|Status|Revise|Drafts|Phone|States|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 62</div>
+  <h1>Submit assignments</h1>
+  <p class="lead">The brief, sending a reflection and a photo, following it through review, and revising when asked</p>
+</section>
+
+<section id="brief" data-part="1" data-cue="Sofía Rivera is in After-School Tutoring at Harbourview, and she has done Pick Up the Towel.">
+  <h2>The brief</h2>
+  <div class="cols">
+    <img class="shot" alt="Serve someone this week: due Thu 19 Nov, text and photo, 25 points, the rubric and Daniel Osei" src="shots/desktop-brief.png">
+    <ul class="small">
+      <li><code>GET /learning/assignments/{id}</code>: task, ways to submit, rubric and total</li>
+      <li>Due date, grace days, open, late or closed, days left</li>
+      <li><code>POST /learning/assignments/{id}/submission</code> sends work and file in one request</li>
+      <li>Her mentor, and her submission once sent</li>
+      <li>A lesson assignment is locked until its lesson is done: 403 <code>locked</code></li>
+    </ul>
+  </div>
+</section>
+
+<section id="send" data-part="2" data-cue="Start submission opens the form." data-clip="clips/submit-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Sending her work</h3><p>From the module, the brief, a reflection, a photo, the promise, the dialog and Submitted.</p></div>
+</section>
+
+
+<section id="checks" data-part="3" data-cue="A photo must be a JPG or a PNG">
+  <h2>What the server checks</h2>
+  <div class="cols">
+    <table class="facts">
+      <tr><th>Check</th><th>Refused with</th></tr>
+      <tr><td>Photo: JPG or PNG; file: PDF, JPG or PNG; up to 10 MB; name, type and first bytes agree</td><td>422 <code>file</code></td></tr>
+      <tr><td>Reflection up to 5,000; a full http or https link</td><td>422</td></tr>
+      <tr><td>The promise and some work</td><td>422 <code>attest</code>, <code>text</code></td></tr>
+      <tr><td>A second submission</td><td>409 <code>submitted</code></td></tr>
+      <tr><td>Resubmitting work not sent back</td><td>409 <code>not-revisable</code></td></tr>
+      <tr><td>Past due and grace, no late work</td><td>409 <code>closed</code></td></tr>
+    </table>
+    <img class="shot" alt="That file can’t be used" src="shots/desktop-file-refused.png">
+  </div>
+</section>
+
+<section id="status" data-part="4" data-cue="Her submission page shows what she sent and what happened">
+  <h2>Following it</h2>
+  <div class="cols">
+    <img class="shot" alt="Daniel Osei is reviewing your work" src="shots/desktop-in-review.png">
+    <img class="shot" alt="Note from Daniel Osei: Needs revision" src="shots/desktop-needs-revision.png">
+  </div>
+</section>
+
+<section id="accepted" data-part="4" data-cue="When he accepts it, she sees his comment and the points awarded">
+  <h2>Accepted</h2>
+  <img class="shot" alt="Accepted by Daniel Osei, 25 of 25 points" src="shots/desktop-accepted.png">
+</section>
+
+<section id="revise" data-part="5" data-cue="Revise your submission opens the same form" data-clip="clips/revise-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Revising</h3><p>His note, her last reflection, the photo kept, Resubmit, and later Accepted.</p></div>
+</section>
+
+
+<section id="drafts" data-part="6" data-cue="If she leaves the form with changes she has not sent" data-clip="clips/draft-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Protecting unsent work</h3><p>Leave without submitting?, Save draft and leave, Continue your draft, restored.</p></div>
+</section>
+
+<section id="draft-store" data-part="6" data-cue="A photo is never kept in a draft, and sending the work clears it.">
+  <h2>Drafts stay on the device</h2>
+  <div class="cols">
+    <img class="shot" alt="We restored your draft" src="shots/desktop-restored.png">
+    <ul class="small">
+      <li><code>unsavedChangesGuard</code> opens <code>unsaved-changes</code></li>
+      <li><code>beforeunload</code> while there are unsent changes</li>
+      <li><code>DRAFT_STORE</code>: <code>promisehub.draft.{membership}.{assignment}</code></li>
+      <li>Kept under her membership, never a file; cleared once sent</li>
+    </ul>
+  </div>
+</section>
+
+<section id="phone" data-part="7" data-cue="On a phone the brief, the form and her submission stack in one column" data-clip="clips/phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>The same assignment</h3><p>The brief, the form and Submitted in one column.</p></div>
+</section>
+
+<section id="states" data-part="8" data-cue="The form shows every error at once." data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>The other states</h3><p>Invalid, a refused file, in review, late, closed, locked, not found, Try again, Learning off.</p></div>
+</section>
+
+<section id="testing" data-part="9" data-cue="The API tests cover the brief, the locks and the due rules">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>LearningAssignmentBriefTests</code>: the brief, locks, due rules, roles, tenancy, Learning off</li>
+    <li><code>LearningAssignmentSubmitTests</code>: submitting with a file and every refusal</li>
+    <li><code>LearningSubmissionStatusTests</code>: review states, revising and resubmitting</li>
+    <li><code>e2e/tests/learning/submissions.spec.ts</code> on phone and laptop, drafts included, with axe</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="10" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>The work and its file travel together and are checked on the server</li><li>Sent work is read only until a revision is asked for</li><li>Unsent work is protected with a draft on her device</li></ul>
+  <p class="muted">Next: mentors grade and assess</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

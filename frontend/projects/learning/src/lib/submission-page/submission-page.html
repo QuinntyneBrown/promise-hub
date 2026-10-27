@@ -53,7 +53,11 @@
         [title]="'Accepted by ' + (s.reviewerName ?? 'your mentor')"
         [text]="s.feedback ? '“' + s.feedback + '”' : ''"
       />
-      @if (s.points !== null) {
+    }
+  }
+  <div class="split">
+    <div class="stack">
+      @if (s.status === 'Accepted' && s.points !== null) {
         <div class="kpis" role="group" aria-label="Your points">
           <ph-stat
             label="Points"
@@ -66,10 +70,6 @@
           />
         </div>
       }
-    }
-  }
-  <div class="split">
-    <div class="stack">
       <ph-card title="What you sent">
         <div class="stack">
           @if (s.late) {

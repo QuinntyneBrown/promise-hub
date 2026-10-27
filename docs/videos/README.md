@@ -69,6 +69,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 59 | [Review and place applicants](59-review-and-place-applicants/README.md) | ~4.5 min | Admins and program directors work every application from one pipeline by status, read who applied, why and the referrer, keep staff-only notes, place a young person into a cohort with an optional youth invitation, or waitlist or decline with a message the family reads |
 | 60 | [Author quizzes and assignments](60-author-quizzes-and-assignments/README.md) | ~5 min | A program director builds a module's quiz with questions of four types and their correct answers, its pass mark, attempts and feedback, and an assignment with its task, ways to submit, a rubric with its total and due rules, and publishes them only when they are complete |
 | 61 | [Take quizzes](61-take-quizzes/README.md) | ~5 min | A youth reads a quiz's rules, answers one question at a time with every answer saved, submits an attempt that is then scored on the server and locked, and sees her score and a review as the quiz allows, within the attempt limit with her best score counting |
+| 62 | [Submit assignments](62-submit-assignments/README.md) | ~5 min | A youth reads an assignment's brief and rubric, sends a reflection and a photo with a promise that it is her own work, follows it through review, revises and resubmits when her mentor asks, and keeps unsent work as a draft on her device |
 
 ## Making or updating a video
 
