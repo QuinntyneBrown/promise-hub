@@ -117,6 +117,8 @@ ICONS = {
     "clock": '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
     "edit": '<path d="M4 20h4l11-11-4-4L4 16zM13 7l4 4"/>',
     "trash": '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>',
+    "arrow-up": '<path d="M12 19V5m0 0-6 6m6-6 6 6"/>',
+    "arrow-down": '<path d="M12 5v14m0 0-6-6m6 6 6-6"/>',
     "arrow-left": '<path d="M19 12H5m0 0 6-6m-6 6 6 6"/>',
     "arrow-right": '<path d="M5 12h14m0 0-6-6m6 6-6 6"/>',
     "chevron-right": '<path d="m9 6 6 6-6 6"/>',

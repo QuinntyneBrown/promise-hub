@@ -1,5 +1,5 @@
-"""Learning, Curriculum and the public website (ADR 0043): the first page of each new library, shown while its module is on.
-Learning (youth) and Curriculum (authors) follow Learning and the public website
+"""Learning and the public website (ADR 0043): the first page of each new library, shown while its module is on.
+Learning (youth) follows Learning; Curriculum moved to pages_curriculum.py (prompt 56), and the public website
 follows Public website. The journeys of prompts 50 to 81 fill these pages; until then each is its own empty state."""
 from kit import *  # noqa: F401,F403
 from reg import screen
@@ -29,18 +29,6 @@ def learning(S):
           main=hdr + alert("info", "Finish setting up", "You stopped at step 2 of 3.", actions=btn("Pick up where I left off", "primary", href=page("youth-welcome", "preferences")))
           + card(empty("No lessons yet", "When your program publishes a track, its lessons appear here.",
                        action=btn("Back to Today", "", href=page("today", "youth")), icon_name="star"), cls="card--flush"))
-
-
-@screen("curriculum", "page", "Curriculum", route="/curriculum", reqs=[R_LEARN], na={"empty": NA_PLACEHOLDER})
-def curriculum(S):
-    hdr = page_header("Curriculum", "Tracks, modules and lessons your youth work through.")
-    kw = dict(nav="curriculum", user=MARISOL)
-    S.add("default", "Marisol (Program director) opens Curriculum from More while Learning is on: no tracks written yet.", **kw,
-          main=hdr + card(empty("No tracks yet", "Tracks you write appear here, ready to publish to a program.", icon_name="list"), cls="card--flush"))
-    S.add("loading", "Curriculum loading.", **kw, main=hdr + skeleton_list(3, "Loading tracks"))
-    S.add("error", "Curriculum failed to load.", **kw, main=hdr + failed("We couldn’t load the curriculum"))
-    S.add("forbidden", "A site lead opening Curriculum: only admins and program directors author.", nav="curriculum", user=STAFF["jaylen"],
-          main=hdr + card(empty("Program directors write the curriculum", "Ask Marisol Delgado or Tom Nguyen.", action=btn("Back to Today", "", href=page("today")), icon_name="lock"), cls="card--flush"))
 
 
 @screen("website", "page", "Public website", route="/site/harbourview", reqs=[R_SITE], shell="guardian", na={"empty": NA_PLACEHOLDER})

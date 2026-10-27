@@ -1,0 +1,25 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Author lessons
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(module, "ModuleEditorPage", "Angular page", "lessons in order, Add lesson")
+  Component(lesson, "LessonEditorPage", "Angular page", "curriculum-lesson")
+  Component(dlg, "NewLessonDialog / CurriculumStatusDialog / DeleteLessonDialog", "CDK dialogs", "create, publish, delete")
+  Component(capi, "CurriculumApi", "Contract + HTTP client", "CURRICULUM_API")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "CurriculumEndpoints", "Minimal API", "Learning gate, AuthorCurriculum")
+  Component(read, "LessonHandler", "Handler", "one lesson with leader notes, authors only")
+  Component(cmd, "LessonCommands / ModuleCommands", "Handlers", "create, update, reorder, status, soft delete")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Lessons")
+}
+Rel(module, capi, "createLesson, reorderLessons")
+Rel(lesson, capi, "lesson, updateLesson")
+Rel(dlg, capi, "setLessonStatus, deleteLesson")
+Rel(capi, ep, "JSON/HTTPS")
+Rel(ep, read, "GET")
+Rel(ep, cmd, "POST / PUT / DELETE")
+Rel(read, db, "reads")
+Rel(cmd, db, "writes + audit")
+@enduml

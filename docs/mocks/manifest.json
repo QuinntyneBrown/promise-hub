@@ -1463,24 +1463,6 @@
       }
     },
     {
-      "id": "curriculum",
-      "kind": "page",
-      "title": "Curriculum",
-      "route": "/curriculum",
-      "requirements": [
-        "L1-023"
-      ],
-      "states": [
-        "default",
-        "loading",
-        "error",
-        "forbidden"
-      ],
-      "not_applicable": {
-        "empty": "Until the journeys add content, the default state is the empty state."
-      }
-    },
-    {
       "id": "website",
       "kind": "page",
       "title": "Public website",
@@ -1673,6 +1655,77 @@
       ],
       "not_applicable": {
         "empty": "The state itself is the empty Learning page for a youth without consent."
+      }
+    },
+    {
+      "id": "curriculum-tracks",
+      "kind": "page",
+      "title": "Curriculum",
+      "route": "/curriculum",
+      "requirements": [
+        "L2-066",
+        "L2-007",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "created",
+        "loading",
+        "empty",
+        "error",
+        "forbidden"
+      ]
+    },
+    {
+      "id": "curriculum-module",
+      "kind": "page",
+      "title": "Module editor",
+      "route": "/curriculum/modules/:id",
+      "requirements": [
+        "L2-066",
+        "L2-067",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "empty",
+        "invalid",
+        "busy",
+        "saved",
+        "failed",
+        "loading",
+        "error",
+        "not-found",
+        "forbidden"
+      ]
+    },
+    {
+      "id": "curriculum-lesson",
+      "kind": "page",
+      "title": "Lesson editor",
+      "route": "/curriculum/lessons/:id",
+      "requirements": [
+        "L2-067",
+        "L2-031",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "no-video",
+        "video-uploading",
+        "video-invalid",
+        "video-failed",
+        "invalid",
+        "busy",
+        "saved",
+        "failed",
+        "loading",
+        "error",
+        "not-found",
+        "forbidden"
+      ],
+      "not_applicable": {
+        "empty": "A lesson always has a title; empty fields read as empty in place."
       }
     },
     {
@@ -2553,6 +2606,110 @@
         "L1-013",
         "L1-023",
         "L1-017"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "invalid": "The dialog has no inputs to validate."
+      }
+    },
+    {
+      "id": "new-track",
+      "kind": "dialog",
+      "title": "New track",
+      "opens_from": "curriculum-tracks",
+      "requirements": [
+        "L2-066",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ]
+    },
+    {
+      "id": "new-module",
+      "kind": "dialog",
+      "title": "New module",
+      "opens_from": "curriculum-tracks",
+      "requirements": [
+        "L2-066",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ]
+    },
+    {
+      "id": "new-lesson",
+      "kind": "dialog",
+      "title": "Add a lesson",
+      "opens_from": "curriculum-module",
+      "requirements": [
+        "L2-067",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ]
+    },
+    {
+      "id": "track-cohorts",
+      "kind": "dialog",
+      "title": "Cohorts following Leadership Foundations",
+      "opens_from": "curriculum-tracks",
+      "requirements": [
+        "L2-066",
+        "L2-012",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "invalid": "Choosing no cohort is allowed: the track is then followed by none."
+      }
+    },
+    {
+      "id": "curriculum-status",
+      "kind": "dialog",
+      "title": "Status of Leading by Serving",
+      "opens_from": "curriculum-module",
+      "requirements": [
+        "L2-066",
+        "L2-067",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed",
+        "lesson",
+        "track"
+      ]
+    },
+    {
+      "id": "delete-lesson",
+      "kind": "dialog",
+      "title": "Delete Pick Up the Towel?",
+      "opens_from": "curriculum-lesson",
+      "requirements": [
+        "L2-067",
+        "L1-023"
       ],
       "states": [
         "default",

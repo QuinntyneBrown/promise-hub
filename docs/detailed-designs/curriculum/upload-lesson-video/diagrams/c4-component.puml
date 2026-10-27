@@ -1,0 +1,24 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Upload a lesson video
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(lesson, "LessonEditorPage", "Angular page", "ph-file-upload, ph-progress-bar")
+  Component(capi, "CurriculumApi", "Contract + HTTP client", "uploadVideo with progress, removeVideo")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "CurriculumEndpoints", "Minimal API", "multipart, 1 GB request limit")
+  Component(h, "LessonVideoHandler", "Handler", "validate, store, replace, remove, audit")
+  Component(policy, "LessonVideoPolicy", "Rules", "extension, content type, first bytes, size")
+  Component(store, "IFileStore", "Port", "Save, Delete by key")
+  Component(local, "LocalFileStore", "Infrastructure adapter", "files under Storage:RootPath")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Lessons.Video*")
+}
+Rel(lesson, capi, "uploadVideo(file)")
+Rel(capi, ep, "multipart/form-data")
+Rel(ep, h, "stream")
+Rel(h, policy, "checks")
+Rel(h, store, "saves, deletes")
+Rel(store, local, "implemented by")
+Rel(h, db, "records file name, size, key + audit")
+@enduml

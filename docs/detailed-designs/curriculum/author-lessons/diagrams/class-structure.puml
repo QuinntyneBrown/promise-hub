@@ -1,0 +1,41 @@
+@startuml
+title Class structure — Author lessons
+skinparam classAttributeIconSize 0
+class Lesson <<entity>> {
+  Id : Guid
+  OrganizationId : Guid
+  ModuleId : Guid
+  Title : string
+  Reading : string?
+  Minutes : int?
+  Objectives : string?
+  Body : string?
+  Prompts : string?
+  LeaderNotes : string?
+  Position : int
+  Status : ContentStatus
+  DeletedAt : DateTimeOffset?
+}
+class CurriculumModule <<entity>>
+class LessonCommands {
+  CreateAsync(moduleId, title) : Result
+  UpdateAsync(id, fields) : Result
+  SetStatusAsync(id, status) : Result
+  DeleteAsync(id) : Result
+}
+class ModuleCommands {
+  ReorderLessonsAsync(id, lessonIds) : Result
+}
+class LessonHandler {
+  HandleAsync(id) : LessonDetailDto?
+}
+class LessonFields <<record>> {
+  Title, Reading, Minutes
+  Objectives[], Body, Prompts[], LeaderNotes
+}
+CurriculumModule "1" *-- "many" Lesson : ordered by Position
+LessonCommands ..> LessonFields
+LessonCommands --> Lesson
+ModuleCommands --> Lesson
+LessonHandler --> Lesson
+@enduml
