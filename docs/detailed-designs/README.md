@@ -37,6 +37,8 @@ One folder per subsystem, one folder per vertically sliced feature, each with a 
 | guardian | view-consent-record | L2-058 |
 | guardian | manage-consent-settings | L2-058 |
 | programs | manage-programs | L2-012 |
+| programs | manage-cohorts | L2-061, L2-012 |
+| programs | manage-terms-and-tracks | L2-061 |
 | events | manage-events | L2-012 |
 | slips | write-and-send-slip | L2-014 |
 | slips | sign-slip | L2-015 |
@@ -69,6 +71,7 @@ One folder per subsystem, one folder per vertically sliced feature, each with a 
 | learning | await-cohort-placement | L2-060 |
 | curriculum | open-curriculum (journeys 56, 60, 64 add more; see [curriculum](curriculum/README.md)) | L2-005, L2-007 |
 | mentoring | list-assigned-youth (journeys 55, 63, 67, 68, 69 add more; see [mentoring](mentoring/README.md)) | L2-005, L2-007 |
+| mentoring | assign-mentors | L2-062, L2-007 |
 | website | serve-public-site (journey 81 adds more; see [website](website/README.md)) | L2-005 |
 
 Render all diagrams with:

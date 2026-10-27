@@ -1,7 +1,7 @@
 # Estimates
 
-- Overall effort: 256 days
-- Complete: 69%
+- Overall effort: 264 days
+- Complete: 67%
 
 | Subsystem | Effort | Complete |
 |---|---|---|
@@ -10,7 +10,7 @@
 | [platform](platform.md) | 28 days | 45% |
 | [shell](shell.md) | 9 days | 51% |
 | [households](households.md) | 6 days | 80% |
-| [programs](programs.md) | 5 days | 70% |
+| [programs](programs.md) | 8 days | 44% |
 | [staff](staff.md) | 8 days | 94% |
 | [enrollment](enrollment.md) | 5 days | 90% |
 | [events](events.md) | 5 days | 60% |
@@ -27,7 +27,7 @@
 | [search](search.md) | 4 days | 70% |
 | [learning](learning.md) | 5 days | 100% |
 | [curriculum](curriculum.md) | 1 day | 100% |
-| [mentoring](mentoring.md) | 1 day | 100% |
+| [mentoring](mentoring.md) | 6 days | 17% |
 | [website](website.md) | 1 day | 100% |
 
 ## Roadmap

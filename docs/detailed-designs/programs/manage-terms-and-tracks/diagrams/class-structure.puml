@@ -1,0 +1,27 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Class structure — Manage terms and tracks
+class SaveProgramCommand <<record>> {
+  +Name: string
+  +Term: string?
+  +Capacity: int
+}
+class ProgramRules {
+  +TermLength: int = 40
+  +Check(command): errors
+  +Clean(value): string?
+}
+class Program <<entity, tenant-owned>> {
+  +Term: string?
+  +Update(..., term)
+}
+class ProgramSummaryDto <<record>> {
+  +Term: string?
+}
+SaveProgramCommand ..> ProgramRules : validated by
+Program ..> ProgramSummaryDto : listed as
+@enduml

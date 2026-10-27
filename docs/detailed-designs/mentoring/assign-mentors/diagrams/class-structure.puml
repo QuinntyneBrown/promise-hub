@@ -1,0 +1,51 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Class structure — Assign mentors
+class YouthMentor <<entity, tenant-owned>> {
+  +ChildId: Guid
+  +MentorMembershipId: Guid
+  +AssignedAt: DateTimeOffset
+  +Reassign(mentorId, now)
+}
+class CohortMentor <<entity, tenant-owned>> {
+  +ProgramId: Guid
+  +MentorMembershipId: Guid
+  +IsLead: bool
+}
+class Membership <<entity, tenant-owned>> {
+  +Role: Role
+  +RemovedAt: DateTimeOffset?
+}
+class Program <<entity, tenant-owned>>
+class ActiveMentors {
+  +ListAsync(): MentorOptionDto[]
+  +AreActiveAsync(ids): bool
+}
+class AssignYouthMentorHandler {
+  +AssignAsync(programId, childId, mentorId): Result
+  +RemoveAsync(programId, childId): Result
+}
+class SetCohortMentorsHandler {
+  +HandleAsync(programId, lead, supporting): Result
+}
+class CohortMentoringHandler {
+  +HandleAsync(programId): CohortMentoringDto?
+}
+class MentoringHandler {
+  +HandleAsync(): AssignedYouthDto
+}
+Program "1" o-- "*" CohortMentor : team
+CohortMentor --> Membership : mentor
+YouthMentor --> Membership : mentor
+AssignYouthMentorHandler ..> ActiveMentors : checks
+SetCohortMentorsHandler ..> ActiveMentors : checks
+AssignYouthMentorHandler ..> YouthMentor : writes
+SetCohortMentorsHandler ..> CohortMentor : replaces
+CohortMentoringHandler ..> ActiveMentors : lists
+MentoringHandler ..> YouthMentor : reads
+MentoringHandler ..> CohortMentor : reads
+@enduml

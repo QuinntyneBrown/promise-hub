@@ -1,0 +1,35 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Class structure — Manage cohorts
+class Program <<entity, tenant-owned>> {
+  +Name: string
+  +Term: string?
+  +StartsOn: DateOnly
+  +EndsOn: DateOnly
+  +Capacity: int
+  +Status: ProgramStatus
+}
+class Enrollment <<entity, tenant-owned>> {
+  +ProgramId: Guid
+  +ChildId: Guid
+  +EndedAt: DateTimeOffset?
+}
+class EnrollChildHandler {
+  +HandleAsync(programId, childId): Result
+}
+class GetProgramHandler {
+  +HandleAsync(id): ProgramDto?
+}
+class ProgramDto <<record>> {
+  +Term: string?
+  +Roster: RosterChildDto[]
+}
+Program "1" o-- "*" Enrollment : roster
+EnrollChildHandler ..> Program : checks
+EnrollChildHandler ..> Enrollment : creates
+GetProgramHandler ..> ProgramDto : builds
+@enduml

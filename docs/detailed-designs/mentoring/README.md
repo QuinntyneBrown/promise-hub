@@ -6,6 +6,7 @@ Prompt 49 built the foundation only ([list-assigned-youth](list-assigned-youth/R
 
 | Design | Prompt | Waypoint source |
 |---|---|---|
+| [`assign-mentors`](assign-mentors/README.md) | 54 Manage cohorts | `program-administration` L2-ADMIN-005 |
 | `use-the-mentor-dashboard` | 55 Use the mentor dashboard | `mentoring` L1-MENTOR-001, 002 |
 | `grade-and-assess` | 63 Grade and assess | L1-MENTOR-003 to 005 |
 | `record-mentor-check-ins` | 67 Record mentor check-ins | L1-MENTOR-006 |

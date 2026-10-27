@@ -1,0 +1,23 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Manage cohorts
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "ProgramPage", "Angular page", "program")
+  Component(dlg, "EnrollDialog", "CDK dialog", "enroll-in-program")
+  Component(papi, "ProgramsApi", "Contract + HTTP client", "get, enroll")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "ProgramEndpoints", "Minimal API", "/programs/{id}, /enrollments")
+  Component(get, "GetProgramHandler", "Handler", "program, term, roster")
+  Component(enr, "EnrollChildHandler", "Handler", "capacity, archive, plan limit")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Programs, enrollments, audit")
+}
+Rel(page, papi, "get")
+Rel(dlg, papi, "enroll")
+Rel(papi, ep, "JSON/HTTPS")
+Rel(ep, get, "GET")
+Rel(ep, enr, "POST")
+Rel(get, db, "reads")
+Rel(enr, db, "writes")
+@enduml
