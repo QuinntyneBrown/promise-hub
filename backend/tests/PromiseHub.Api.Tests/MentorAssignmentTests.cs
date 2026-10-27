@@ -25,6 +25,7 @@ public sealed class MentorAssignmentTests : IAsyncLifetime
     private static readonly Guid KidsClub = DatabaseSeeder.ProgramId(DatabaseSeeder.Northgate, "Kids Club");
     private static readonly Guid Mateo = DatabaseSeeder.ChildId(DatabaseSeeder.Harbourview, "Mateo Rivera");
     private static readonly Guid Amara = DatabaseSeeder.ChildId(DatabaseSeeder.Harbourview, "Amara Okonkwo");
+    private static readonly string[] Suite = ["Roster", "Slips", "RollCall", "QuickCards", "Pickup", "Messages", "Incidents", "Reports", "Learning"];
 
     private readonly PromiseHubApiFactory _factory = new();
 
@@ -224,6 +225,27 @@ public sealed class MentorAssignmentTests : IAsyncLifetime
     }
 
     // ---- criterion 7: module gates
+
+    [Fact]
+    public async Task With_Mentoring_off_every_assignment_endpoint_answers_404_and_turning_it_on_again_restores_them()
+    {
+        await SetTeam(Marisol, Tutoring, Daniel, Hana);
+        await AssignYouth(Marisol, Tutoring, Mateo, Hana);
+        await _factory.ClientFor(Tom).PutAsJsonAsync("/settings/modules", new { on = Suite });
+
+        var client = _factory.ClientFor(Marisol);
+        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync($"/programs/{Tutoring}/mentoring")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await SetTeam(Marisol, Tutoring, Daniel)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await AssignYouth(Marisol, Tutoring, Mateo, Daniel)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await client.DeleteAsync($"/programs/{Tutoring}/youth/{Mateo}/mentor")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync($"/programs/{Tutoring}")).StatusCode);
+
+        await _factory.ClientFor(Tom).PutAsJsonAsync("/settings/modules", new { on = (string[])[.. Suite, "Mentoring"] });
+
+        var mentoring = await Get(Marisol, $"/programs/{Tutoring}/mentoring");
+        Assert.Equal("Daniel Osei", mentoring.GetProperty("lead").GetProperty("name").GetString());
+        Assert.Equal("Hana Kim", MentorOf(mentoring, Mateo));
+    }
 
     [Fact]
     public async Task With_Roster_off_the_assignment_endpoints_answer_404()

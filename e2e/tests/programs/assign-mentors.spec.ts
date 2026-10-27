@@ -140,6 +140,44 @@ test.describe('The lead mentor’s youth', () => {
   });
 });
 
+test.describe('Mentoring off and archived cohorts', () => {
+  test.use({ signedInAs: 'm-marisol' });
+
+  test('Given Mentoring is off, when the program opens, then nothing about mentors is requested or rendered and the API answers 404', async ({ page, api }) => {
+    api.setCohortTeam('p-tutoring', 'm-daniel');
+    api.setModules('org-harbourview', ['Roster', 'Slips', 'RollCall', 'QuickCards', 'Pickup', 'Messages', 'Incidents', 'Reports', 'Learning']);
+    const programs = new ProgramsPage(page);
+    const requested = programs.recordApiPaths();
+    await programs.open();
+    await programs.openProgram('After-School Tutoring');
+    await expect.poll(() => programs.names(programs.roster)).toContain('Mateo Rivera');
+
+    await expect(programs.row('Mateo Rivera', programs.roster)).not.toContainText('mentor');
+    await expect(page.getByRole('heading', { name: 'Mentors' })).toHaveCount(0);
+    await expect(programs.roster.getByRole('button', { name: /^Assign a mentor/ })).toHaveCount(0);
+    expect(requested.filter((path) => path.endsWith('/mentoring'))).toEqual([]);
+    expect(await programs.apiStatus('/api/programs/p-tutoring/mentoring')).toBe(404);
+    await programs.expectAccessible();
+
+    api.setModules('org-harbourview', ['Roster', 'Slips', 'RollCall', 'QuickCards', 'Pickup', 'Messages', 'Incidents', 'Reports', 'Learning', 'Mentoring']);
+    await page.reload();
+    await expect(programs.mentorsCard).toContainText('Daniel Osei');
+  });
+
+  test('Given an archived cohort with mentors, when it opens, then its mentors are read only', async ({ page, api }) => {
+    api.setCohortTeam('p-tutoring', 'm-daniel', ['m-hana']);
+    const programs = new ProgramsPage(page);
+    await programs.open();
+    await programs.openProgram('After-School Tutoring');
+    await programs.archive('After-School Tutoring');
+
+    await expect(programs.archivedNotice).toBeVisible();
+    await expect(programs.mentorsCard).toContainText('Hana Kim');
+    await expect(page.getByRole('button', { name: 'Edit mentors' })).toHaveCount(0);
+    await expect(programs.roster.getByRole('button', { name: /^Assign a mentor/ })).toHaveCount(0);
+  });
+});
+
 test.describe('Mentor assignment for a site lead', () => {
   test('Given a site lead, when the program opens, then mentors are shown without the Mentor action', async ({ page }) => {
     const programs = new ProgramsPage(page);

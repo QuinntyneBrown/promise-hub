@@ -148,6 +148,10 @@ export class ProgramsPage extends BasePage {
     await this.dialog.getByRole('button', { name: label }).click();
   }
 
+  async apiStatus(path: string): Promise<number> {
+    return this.page.evaluate(async (p) => (await fetch(p)).status, path);
+  }
+
   get mentorsCard(): Locator {
     return this.page.getByRole('list', { name: 'Mentors' });
   }
