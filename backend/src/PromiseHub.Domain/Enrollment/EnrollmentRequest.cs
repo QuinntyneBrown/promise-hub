@@ -40,7 +40,35 @@ public sealed class EnrollmentRequest : ITenantOwned
     /// <summary>The note or reason the guardian reads.</summary>
     public string? Note { get; private set; }
 
+    /// <summary>Who applied: a guardian, the young person, or a referrer (L2-071).</summary>
+    public EnrollmentApplicant AppliedAs { get; private set; }
+
+    public string? ReferrerName { get; private set; }
+    public string? ReferrerRole { get; private set; }
+    public string? ReferrerOrganization { get; private set; }
+
+    /// <summary>The phone digits or email the referrer verified.</summary>
+    public string? ReferrerContact { get; private set; }
+
+    /// <summary>Why the young person is interested, or why the referrer refers them.</summary>
+    public string? Reason { get; private set; }
+
+    /// <summary>Whether the season consent was given at submission; false for a young person under 18 and for a referral.</summary>
+    public bool SeasonConsent { get; private set; } = true;
+
     public bool Open => Status is EnrollmentRequestStatus.WaitingReview or EnrollmentRequestStatus.Waitlisted;
+
+    /// <summary>Records who applied and what they agreed to.</summary>
+    public void Applied(EnrollmentApplicant appliedAs, string? reason, bool seasonConsent, EnrollmentReferral? referral)
+    {
+        AppliedAs = appliedAs;
+        Reason = reason;
+        SeasonConsent = seasonConsent;
+        ReferrerName = referral?.Name;
+        ReferrerRole = referral?.Role;
+        ReferrerOrganization = referral?.Organization;
+        ReferrerContact = referral?.Contact;
+    }
 
     public void Accept(string reviewer, DateTimeOffset now, string? note) => Decide(EnrollmentRequestStatus.Accepted, null, reviewer, now, note);
 

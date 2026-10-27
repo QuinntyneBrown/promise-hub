@@ -117,7 +117,8 @@ public sealed class GuardianEnrollmentHandler(
         if (session!.Draft is { } saved)
         {
             var draft = JsonSerializer.Deserialize<EnrollmentDraft>(saved)!;
-            return GuardianResult.Of(GuardianOutcome.Ok, new EnrollmentDraftDto(session.HouseholdId is not null, GuardianLanguage.Code(draft.Household.Language ?? "English"), program!.Name, draft.Household, draft.Children));
+            return GuardianResult.Of(GuardianOutcome.Ok, new EnrollmentDraftDto(session.HouseholdId is not null, GuardianLanguage.Code(draft.Household.Language ?? "English"), program!.Name, draft.Household, draft.Children,
+                EnrollmentContact.Display(session.Contact), EnrollmentApplicants.Parse(draft.ApplyingAs)?.ToString() ?? "Guardian", draft.Referrer, draft.Reason));
         }
         if (session.HouseholdId is { } householdId)
         {
@@ -126,11 +127,12 @@ public sealed class GuardianEnrollmentHandler(
             var children = await db.Children.AsNoTracking().Where(c => c.HouseholdId == householdId).OrderBy(c => c.FirstName).ToListAsync(cancellationToken);
             return GuardianResult.Of(GuardianOutcome.Ok, new EnrollmentDraftDto(true, GuardianLanguage.Code(household.Language), program!.Name,
                 new EnrollmentHouseholdDraft(guardian.Name, guardian.Mobile, guardian.Email, household.Language),
-                [.. children.Select(c => new EnrollmentChildDraft(c.Id, c.FirstName, c.LastName, c.DateOfBirth, c.School, c.Allergies, c.Medication, true))]));
+                [.. children.Select(c => new EnrollmentChildDraft(c.Id, c.FirstName, c.LastName, c.DateOfBirth, c.School, c.Allergies, c.Medication, true))],
+                EnrollmentContact.Display(session.Contact)));
         }
         var phone = EnrollmentContact.IsPhone(session.Contact) ? EnrollmentContact.Display(session.Contact) : null;
         var mail = EnrollmentContact.IsPhone(session.Contact) ? null : session.Contact;
-        return GuardianResult.Of(GuardianOutcome.Ok, new EnrollmentDraftDto(false, "en", program!.Name, new EnrollmentHouseholdDraft(null, phone, mail, "English"), []));
+        return GuardianResult.Of(GuardianOutcome.Ok, new EnrollmentDraftDto(false, "en", program!.Name, new EnrollmentHouseholdDraft(null, phone, mail, "English"), [], EnrollmentContact.Display(session.Contact)));
     }
 
     public async Task<GuardianResult> SaveAsync(string slug, string? device, EnrollmentDraft draft, CancellationToken cancellationToken = default)
@@ -140,7 +142,7 @@ public sealed class GuardianEnrollmentHandler(
         {
             return problem;
         }
-        var errors = Validate(draft);
+        var errors = EnrollmentDraftRules.Validate(draft, DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime));
         if (errors.Count > 0)
         {
             return new GuardianResult(GuardianOutcome.Invalid, Errors: errors);
@@ -161,16 +163,29 @@ public sealed class GuardianEnrollmentHandler(
         {
             return GuardianResult.Of(GuardianOutcome.Conflict);
         }
-        if (!request.Consent)
-        {
-            return GuardianResult.Invalid("consent", "Agree to the season consent to submit.");
-        }
         var draft = JsonSerializer.Deserialize<EnrollmentDraft>(session.Draft)!;
         var now = clock.GetUtcNow();
+        var applying = EnrollmentApplicants.Parse(draft.ApplyingAs) ?? EnrollmentApplicant.Guardian;
+        var applicant = draft.Children.FirstOrDefault(c => c.Enroll);
+        var seasonConsent = applying switch
+        {
+            EnrollmentApplicant.Guardian => true,
+            EnrollmentApplicant.Youth => EnrollmentDraftRules.Age(applicant!.DateOfBirth!.Value, DateOnly.FromDateTime(now.UtcDateTime)) >= 18,
+            _ => false,
+        };
+        if (!request.Consent)
+        {
+            return GuardianResult.Invalid("consent", applying switch
+            {
+                EnrollmentApplicant.Referrer => "Confirm the family agrees to be contacted.",
+                EnrollmentApplicant.Youth when !seasonConsent => "Agree to the privacy notice to submit.",
+                _ => "Agree to the season consent to submit.",
+            });
+        }
         var language = HouseholdRules.Languages.Contains(draft.Household.Language ?? string.Empty) ? draft.Household.Language! : "English";
         var guardianName = draft.Household.GuardianName!.Trim();
         Household household;
-        if (session.HouseholdId is { } existing)
+        if (applying == EnrollmentApplicant.Guardian && session.HouseholdId is { } existing)
         {
             household = await db.Households.SingleAsync(h => h.Id == existing, cancellationToken);
         }
@@ -182,6 +197,16 @@ public sealed class GuardianEnrollmentHandler(
             db.Guardians.Add(new Domain.Households.Guardian(Guid.NewGuid(), tenant.OrganizationId, household.Id, guardianName, "Guardian",
                 Clean(draft.Household.Mobile), Clean(draft.Household.Email), language, isPrimary: true, canPickUp: true, canSign: true));
         }
+        var applicantName = $"{applicant?.FirstName?.Trim()} {applicant?.LastName?.Trim()}";
+        var referral = applying == EnrollmentApplicant.Referrer
+            ? new EnrollmentReferral(draft.Referrer!.Name!.Trim(), draft.Referrer.Role!.Trim(), Clean(draft.Referrer.Organization), session.Contact)
+            : null;
+        var submittedBy = applying switch
+        {
+            EnrollmentApplicant.Youth => applicantName,
+            EnrollmentApplicant.Referrer => referral!.Name,
+            _ => guardianName,
+        };
         var accepted = await db.Enrollments.CountAsync(e => e.ProgramId == program.Id && e.EndedAt == null, cancellationToken);
         var waitlisted = await db.EnrollmentRequests.CountAsync(r => r.ProgramId == program.Id && r.Status == EnrollmentRequestStatus.Waitlisted, cancellationToken);
         var existingChildren = await db.Children.Where(c => c.HouseholdId == household.Id).ToListAsync(cancellationToken);
@@ -206,50 +231,23 @@ public sealed class GuardianEnrollmentHandler(
             var full = accepted >= program.Capacity;
             int? position = full ? ++waitlisted : null;
             firstPosition ??= position;
-            db.EnrollmentRequests.Add(new EnrollmentRequest(Guid.NewGuid(), tenant.OrganizationId, program.Id, child.Id, household.Id,
-                full ? EnrollmentRequestStatus.Waitlisted : EnrollmentRequestStatus.WaitingReview, position, guardianName, now));
+            var enrollmentRequest = new EnrollmentRequest(Guid.NewGuid(), tenant.OrganizationId, program.Id, child.Id, household.Id,
+                full ? EnrollmentRequestStatus.Waitlisted : EnrollmentRequestStatus.WaitingReview, position, submittedBy, now);
+            enrollmentRequest.Applied(applying, Clean(draft.Reason), seasonConsent, referral);
+            db.EnrollmentRequests.Add(enrollmentRequest);
             count++;
         }
         session.Submitted(household.Id, now);
         var status = firstPosition is null ? "WaitingReview" : "Waitlisted";
-        audit.Record(new AuditEvent(AuditAction.Created, "Enrollment", session.Id, $"{program.Name} · {count} children from {guardianName} · {status}"));
+        var who = applying switch
+        {
+            EnrollmentApplicant.Youth => $"{applicantName} applying for themselves",
+            EnrollmentApplicant.Referrer => $"{applicantName} referred by {referral!.Name}",
+            _ => $"{count} children from {guardianName}",
+        };
+        audit.Record(new AuditEvent(AuditAction.Created, "Enrollment", session.Id, $"{program.Name} · {who} · {status}"));
         await db.SaveChangesAsync(cancellationToken);
-        return GuardianResult.Of(GuardianOutcome.Ok, new EnrollmentSubmitDto(status, firstPosition, count, program.Name));
-    }
-
-    private static Dictionary<string, string> Validate(EnrollmentDraft draft)
-    {
-        var errors = new Dictionary<string, string>();
-        if (string.IsNullOrWhiteSpace(draft.Household?.GuardianName))
-        {
-            errors["guardianName"] = "Enter your full name.";
-        }
-        if (string.IsNullOrWhiteSpace(draft.Household?.Mobile) && string.IsNullOrWhiteSpace(draft.Household?.Email))
-        {
-            errors["mobile"] = "Add a mobile number or an email.";
-        }
-        var children = draft.Children ?? [];
-        if (!children.Any(c => c.Enroll))
-        {
-            errors["children"] = "Add at least one child.";
-        }
-        for (var i = 0; i < children.Count; i++)
-        {
-            var c = children[i];
-            if (!c.Enroll)
-            {
-                continue;
-            }
-            if (string.IsNullOrWhiteSpace(c.FirstName) || string.IsNullOrWhiteSpace(c.LastName))
-            {
-                errors[$"children[{i}].name"] = "Enter the child’s first and last name.";
-            }
-            if (c.DateOfBirth is null)
-            {
-                errors[$"children[{i}].dateOfBirth"] = "Enter the child’s date of birth.";
-            }
-        }
-        return errors;
+        return GuardianResult.Of(GuardianOutcome.Ok, new EnrollmentSubmitDto(status, firstPosition, count, program.Name, applying.ToString(), seasonConsent));
     }
 
     private async Task<(GuardianResult? Problem, EnrollmentSession? Session, Domain.Programs.Program? Program)> SessionAsync(string slug, string? device, CancellationToken cancellationToken)

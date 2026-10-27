@@ -42,6 +42,13 @@
       <h1>{{ text.enrollHeading(p?.program ?? '') }}</h1>
       <p>{{ text.intro }}</p>
       <form class="stack" novalidate (ngSubmit)="requestCode()">
+        <ph-radio-group
+          [legend]="text.whoLegend"
+          [options]="applicants()"
+          name="applyingAs"
+          [ngModel]="applyingAs()"
+          (ngModelChange)="applyingAs.set($event)"
+        />
         <ph-text-field
           inputId="contact"
           [label]="g().contactLabel"
@@ -80,15 +87,70 @@
       <h1>{{ g().verifyHeading }}</h1>
       <ph-alert tone="danger" [title]="g().locked" />
     }
+    @case ('youth') {
+      <h1>{{ text.aboutYouHeading }}</h1>
+      <form class="stack" novalidate (ngSubmit)="toGuardian()">
+        <ph-card [title]="text.youCard">
+          <div class="stack">
+            <div class="two-col">
+              <ph-text-field
+                inputId="youth-first"
+                [label]="text.firstName"
+                name="youthFirst"
+                autocomplete="given-name"
+                [error]="errors()['children[0].name'] ?? null"
+                [(ngModel)]="children[0].firstName"
+              />
+              <ph-text-field
+                inputId="youth-last"
+                [label]="text.lastName"
+                name="youthLast"
+                autocomplete="family-name"
+                [(ngModel)]="children[0].lastName"
+              />
+            </div>
+            <ph-text-field
+              inputId="youth-dob"
+              [label]="text.dateOfBirth"
+              type="date"
+              name="youthDob"
+              [help]="text.ageHelp"
+              [error]="errors()['children[0].dateOfBirth'] ?? null"
+              [(ngModel)]="children[0].dateOfBirth"
+            />
+            <ph-text-field
+              inputId="youth-school"
+              [label]="text.school"
+              name="youthSchool"
+              [optional]="true"
+              [(ngModel)]="children[0].school"
+            />
+            <ph-textarea
+              inputId="youth-reason"
+              [label]="text.whyYouth"
+              name="reason"
+              [rows]="3"
+              [help]="text.whyHelp"
+              [error]="errors()['reason'] ?? null"
+              [(ngModel)]="reason"
+            />
+          </div>
+        </ph-card>
+        <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
+          text.continue
+        }}</ph-button>
+      </form>
+    }
     @case ('household') {
-      <h1>{{ text.householdHeading }}</h1>
-      <p>{{ text.householdText }}</p>
-      <form class="stack" novalidate (ngSubmit)="toChildren()">
-        <ph-card>
+      @let guardianPath = applyingAs() === 'Guardian';
+      <h1>{{ guardianPath ? text.householdHeading : text.yourGuardianHeading }}</h1>
+      <p>{{ guardianPath ? text.householdText : text.yourGuardianText }}</p>
+      <form class="stack" novalidate (ngSubmit)="fromHousehold()">
+        <ph-card [title]="guardianPath ? null : text.guardianCard">
           <div class="stack">
             <ph-text-field
               inputId="guardianName"
-              [label]="text.nameLabel"
+              [label]="guardianPath ? text.nameLabel : text.guardianNameLabel"
               name="guardianName"
               autocomplete="name"
               [error]="errors()['guardianName'] ?? null"
@@ -96,7 +158,7 @@
             />
             <ph-text-field
               inputId="mobile"
-              [label]="text.mobileLabel"
+              [label]="guardianPath ? text.mobileLabel : text.guardianMobileLabel"
               name="mobile"
               type="tel"
               autocomplete="tel"
@@ -105,7 +167,7 @@
             />
             <ph-text-field
               inputId="email"
-              [label]="text.emailLabel"
+              [label]="guardianPath ? text.emailLabel : text.guardianEmailLabel"
               name="email"
               type="email"
               autocomplete="email"
@@ -123,6 +185,9 @@
         <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
           text.continue
         }}</ph-button>
+        @if (!guardianPath) {
+          <ph-button variant="ghost" (click)="back()">{{ text.back }}</ph-button>
+        }
       </form>
     }
     @case ('children') {
@@ -200,23 +265,29 @@
     @case ('review') {
       <h1>{{ text.reviewHeading }}</h1>
       <form class="stack" novalidate (ngSubmit)="submit()">
-        <ph-card [title]="text.you">
-          <ph-description-list [facts]="you()" />
-        </ph-card>
-        <ph-card [title]="text.enrolling">
-          <ul class="stack">
-            @for (c of enrolled(); track $index) {
-              <li>
-                {{ c.firstName }} {{ c.lastName }}
-                @if (c.allergies) {
-                  · {{ c.allergies }}
-                }
-              </li>
-            }
-          </ul>
-        </ph-card>
+        @if (applyingAs() === 'Guardian') {
+          <ph-card [title]="text.you">
+            <ph-description-list [facts]="you()" />
+          </ph-card>
+          <ph-card [title]="text.enrolling">
+            <ul class="stack">
+              @for (c of enrolled(); track $index) {
+                <li>
+                  {{ c.firstName }} {{ c.lastName }}
+                  @if (c.allergies) {
+                    · {{ c.allergies }}
+                  }
+                </li>
+              }
+            </ul>
+          </ph-card>
+        } @else {
+          <ph-card [title]="text.applicationCard">
+            <ph-description-list [facts]="application()" />
+          </ph-card>
+        }
         <ph-switch
-          [label]="text.consent"
+          [label]="agreement()"
           name="consent"
           [error]="errors()['consent'] ?? null"
           [(ngModel)]="consent"
@@ -224,7 +295,7 @@
         <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
           text.submit
         }}</ph-button>
-        <ph-button variant="ghost" (click)="step.set('children')">{{ text.back }}</ph-button>
+        <ph-button variant="ghost" (click)="back()">{{ text.back }}</ph-button>
       </form>
     }
     @case ('done') {
@@ -238,6 +309,9 @@
                 : text.waiting(names(), enrolled().length > 1)
             }}
           </p>
+          @if (r.appliedAs === 'Youth' && !r.seasonConsent) {
+            <p>{{ text.askConsent(household.guardianName ?? '') }}</p>
+          }
           <p>{{ text.doneText }}</p>
         </div>
       }

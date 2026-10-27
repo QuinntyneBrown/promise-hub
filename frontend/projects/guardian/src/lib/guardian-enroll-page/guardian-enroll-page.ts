@@ -11,9 +11,12 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
+  EnrollmentApplicant,
   EnrollmentChild,
   EnrollmentDraft,
   EnrollmentPage,
+  EnrollmentSavedDraft,
+  EnrollmentSubmitted,
   GUARDIAN_ENROLLMENT_API,
 } from '@promisehub/api';
 import {
@@ -23,9 +26,12 @@ import {
   PhDescriptionList,
   PhEmptyState,
   PhGuardianShell,
+  PhRadioGroup,
   PhSelect,
   PhSwitch,
   PhTextField,
+  PhTextarea,
+  RadioOption,
   SelectOption,
 } from '@promisehub/components';
 import { enrollText } from '../enroll-text';
@@ -39,14 +45,17 @@ type Step =
   | 'contact'
   | 'code'
   | 'locked'
+  | 'youth'
   | 'household'
   | 'children'
   | 'review'
   | 'done';
 
 /**
- * Guardian enrollment (mocks: enroll, enroll-household, enroll-child, enroll-review): verify a contact with a code, then the
- * household, the children with their medical details, and the review with the season consent (L2-013). One primary action per step.
+ * Enrollment through a program's link (mocks: enroll, enroll-youth, enroll-household, enroll-child, enroll-review): who is
+ * applying, verify a contact with a code, then for a guardian the household, the children with their medical details and the
+ * review with the season consent (L2-013); for a young person their details and reason, their guardian and the review with
+ * the agreement they can give (L2-071). One primary action per step.
  */
 @Component({
   selector: 'ph-guardian-enroll-page',
@@ -58,9 +67,11 @@ type Step =
     PhDescriptionList,
     PhEmptyState,
     PhGuardianShell,
+    PhRadioGroup,
     PhSelect,
     PhSwitch,
     PhTextField,
+    PhTextarea,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './guardian-enroll-page.html',
@@ -79,10 +90,9 @@ export class GuardianEnrollPage {
   protected readonly errors = signal<Record<string, string>>({});
   protected readonly busy = signal(false);
   protected readonly failed = signal(false);
-  protected readonly result = signal<{
-    status: 'WaitingReview' | 'Waitlisted';
-    position: number | null;
-  } | null>(null);
+  protected readonly result = signal<EnrollmentSubmitted | null>(null);
+  protected readonly applyingAs = signal<EnrollmentApplicant>('Guardian');
+  protected reason = '';
   protected contact = '';
   protected code = '';
   protected consent = false;
@@ -96,6 +106,13 @@ export class GuardianEnrollPage {
 
   protected readonly t = computed(() => enrollText(this.language()));
   protected readonly g = computed(() => guardianText(this.language()));
+  protected readonly applicants = computed<RadioOption[]>(() => {
+    const t = this.t();
+    return [
+      { value: 'Guardian', label: t.asGuardian, hint: t.asGuardianHint },
+      { value: 'Youth', label: t.asYouth, hint: t.asYouthHint },
+    ];
+  });
   protected readonly languages: SelectOption[] = [
     { value: 'English', label: 'English' },
     { value: 'Spanish', label: 'Español' },
@@ -154,6 +171,23 @@ export class GuardianEnrollPage {
     });
   }
 
+  protected fromHousehold(): void {
+    if (this.applyingAs() === 'Guardian') this.toChildren();
+    else this.toReview();
+  }
+
+  /** The young person's step: their details and reason, checked on the server before their guardian's step. */
+  protected toGuardian(): void {
+    this.save((errors) => {
+      const own = Object.fromEntries(
+        Object.entries(errors).filter(([k]) => k.startsWith('children') || k === 'reason'),
+      );
+      if (Object.keys(own).length) return this.errors.set(own);
+      this.errors.set({});
+      this.step.set('household');
+    });
+  }
+
   protected toChildren(): void {
     this.save((errors) => {
       const own = Object.fromEntries(
@@ -172,6 +206,16 @@ export class GuardianEnrollPage {
       this.errors.set({});
       this.step.set('review');
     });
+  }
+
+  protected back(): void {
+    if (this.step() === 'review') {
+      this.step.set(this.applyingAs() === 'Guardian' ? 'children' : 'household');
+    } else if (this.step() === 'household' && this.applyingAs() !== 'Guardian') {
+      this.step.set('youth');
+    } else {
+      this.step.set('household');
+    }
   }
 
   protected addChild(): void {
@@ -218,7 +262,47 @@ export class GuardianEnrollPage {
   }
 
   protected firstName(): string {
-    return (this.household.guardianName ?? '').trim().split(' ')[0] ?? '';
+    const name =
+      this.applyingAs() === 'Youth'
+        ? (this.children[0]?.firstName ?? '')
+        : this.household.guardianName;
+    return (name ?? '').trim().split(' ')[0] ?? '';
+  }
+
+  /** The young person's full name, for the review and the submitted state. */
+  protected applicantName(): string {
+    const c = this.children[0];
+    return c ? `${c.firstName} ${c.lastName}`.trim() : '';
+  }
+
+  /** The review of a young person's application. */
+  protected application() {
+    const t = this.t();
+    return [
+      { key: 'you', term: t.factYou, value: this.applicantName() },
+      { key: 'why', term: t.factWhy, value: this.reason },
+      { key: 'guardian', term: t.factGuardian, value: this.guardianLine() },
+    ];
+  }
+
+  /** Under 18 the young person agrees to the privacy notice; at 18 they give the season consent themselves. */
+  protected agreement(): string {
+    const t = this.t();
+    if (this.applyingAs() === 'Guardian') return t.consent;
+    const born = this.children[0]?.dateOfBirth;
+    return born && this.age(born) >= 18 ? t.consent : t.youthAgree;
+  }
+
+  private guardianLine(): string {
+    const contact = [this.household.mobile, this.household.email].filter(Boolean).join(' · ');
+    return [this.household.guardianName, contact].filter(Boolean).join(' · ');
+  }
+
+  private age(dateOfBirth: string): number {
+    const [y, m, d] = dateOfBirth.split('-').map(Number) as [number, number, number];
+    const today = new Date();
+    const before = today.getMonth() + 1 < m || (today.getMonth() + 1 === m && today.getDate() < d);
+    return today.getFullYear() - y - (before ? 1 : 0);
   }
 
   protected you() {
@@ -232,21 +316,35 @@ export class GuardianEnrollPage {
     ];
   }
 
-  private useDraft(
-    draft: EnrollmentDraft & { returning: boolean; language: GuardianLanguage },
-  ): void {
+  private useDraft(draft: EnrollmentSavedDraft): void {
+    const saved = draft.applyingAs ?? 'Guardian';
+    if (saved !== 'Guardian') this.applyingAs.set(saved);
+    if (this.applyingAs() !== 'Guardian' && saved === 'Guardian') {
+      this.household = { guardianName: '', mobile: '', email: '', language: 'English' };
+      this.children = [];
+      this.addChild();
+      this.returning.set(false);
+      this.step.set('youth');
+      return;
+    }
     this.household = { ...draft.household };
     this.children = draft.children.map((c) => ({ ...c }));
+    this.reason = draft.reason ?? '';
     this.returning.set(draft.returning);
     this.language.set(draft.language);
-    this.step.set('household');
+    this.step.set(this.applyingAs() === 'Guardian' ? 'household' : 'youth');
   }
 
   private save(then: (errors: Record<string, string>) => void): void {
     this.busy.set(true);
     this.failed.set(false);
     this.api
-      .save(this.slug(), { household: this.household, children: this.children })
+      .save(this.slug(), {
+        applyingAs: this.applyingAs(),
+        reason: this.applyingAs() === 'Guardian' ? null : this.reason,
+        household: this.household,
+        children: this.children,
+      })
       .subscribe((outcome) => {
         this.busy.set(false);
         if (outcome.status === 'saved') then({});

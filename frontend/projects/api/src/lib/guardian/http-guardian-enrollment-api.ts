@@ -7,19 +7,10 @@ import { LoadResult } from '../load-result';
 import { WriteOutcome } from '../write-outcome';
 import { EnrollmentDraft } from './enrollment-draft';
 import { EnrollmentPage } from './enrollment-page';
+import { EnrollmentSavedDraft } from './enrollment-saved-draft';
+import { EnrollmentSubmitted } from './enrollment-submitted';
 import { GuardianEnrollmentApi } from './guardian-enrollment-api';
 import { GuardianVerifyOutcome } from './guardian-verify-outcome';
-
-type Draft = EnrollmentDraft & {
-  returning: boolean;
-  language: 'en' | 'es' | 'fr';
-  program: string;
-};
-type Submitted = {
-  status: 'WaitingReview' | 'Waitlisted';
-  position: number | null;
-  children: number;
-};
 
 @Injectable()
 export class HttpGuardianEnrollmentApi implements GuardianEnrollmentApi {
@@ -53,8 +44,8 @@ export class HttpGuardianEnrollmentApi implements GuardianEnrollmentApi {
     );
   }
 
-  draft(slug: string): Observable<LoadResult<Draft>> {
-    return toLoad(this.http.get<Draft>(`${this.url(slug)}/draft`));
+  draft(slug: string): Observable<LoadResult<EnrollmentSavedDraft>> {
+    return toLoad(this.http.get<EnrollmentSavedDraft>(`${this.url(slug)}/draft`));
   }
 
   save(slug: string, draft: EnrollmentDraft): Observable<WriteOutcome> {
@@ -62,7 +53,7 @@ export class HttpGuardianEnrollmentApi implements GuardianEnrollmentApi {
   }
 
   submit(slug: string, consent: boolean) {
-    return this.http.post<Submitted>(`${this.url(slug)}/submit`, { consent }).pipe(
+    return this.http.post<EnrollmentSubmitted>(`${this.url(slug)}/submit`, { consent }).pipe(
       map((value) => ({ status: 'submitted' as const, value })),
       catchError((error: HttpErrorResponse) =>
         of(

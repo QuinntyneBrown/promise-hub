@@ -76,6 +76,10 @@ interface FakeEnrollChild {
 interface FakeEnrollDraft {
   household: { guardianName: string | null; mobile: string | null; email: string | null; language: string | null };
   children: FakeEnrollChild[];
+  /** Guardian (or missing), Youth or Referrer (L2-071). */
+  applyingAs?: string | null;
+  referrer?: { name: string | null; role: string | null; organization: string | null } | null;
+  reason?: string | null;
 }
 
 interface FakeSlip {
@@ -224,6 +228,11 @@ export class FakeApi {
     childId?: string;
     submittedAt?: string;
     note?: string | null;
+    appliedAs?: 'Guardian' | 'Youth' | 'Referrer';
+    reason?: string | null;
+    seasonConsent?: boolean;
+    referrer?: { name: string; role: string; organization: string | null; contact: string } | null;
+    applicant?: { firstName: string; lastName: string; dateOfBirth: string | null };
   }[] = [];
   /** Incidents as reported: organization, reporter membership and the form's facts. */
   private incidents: {
@@ -402,6 +411,11 @@ export class FakeApi {
   /** Closes a program's enrollment; its link stays the same. */
   closeEnrollment(programId: string): void {
     this.programs.find((x) => x.id === programId)!.enrollmentOpen = false;
+  }
+
+  /** The last enrollment request submitted through a link, as the server would store it (L2-071). */
+  lastEnrollmentRequest() {
+    return this.enrollmentRequests[this.enrollmentRequests.length - 1];
   }
 
   /** Fills a program to capacity with accepted enrollments. */
@@ -3170,7 +3184,7 @@ export class FakeApi {
     const { program, session } = found;
     const code = (language: string | null) => (language === 'Spanish' ? 'es' : language === 'French' ? 'fr' : 'en');
     if (session.draft) {
-      return route.fulfill({ json: { returning: !!session.householdId, language: code(session.draft.household.language), program: program.name, ...session.draft } });
+      return route.fulfill({ json: { returning: !!session.householdId, language: code(session.draft.household.language), program: program.name, contact: this.enrollDisplay(session.contact), applyingAs: 'Guardian', ...session.draft } });
     }
     const household = session.householdId ? this.households.find((h) => h.id === session.householdId) : undefined;
     if (household) {
@@ -3180,6 +3194,8 @@ export class FakeApi {
           returning: true,
           language: code(household.language),
           program: program.name,
+          contact: this.enrollDisplay(session.contact),
+          applyingAs: 'Guardian',
           household: { guardianName: g.name, mobile: g.mobile, email: g.email, language: household.language },
           children: [...household.children]
             .sort((a, z) => a.firstName.localeCompare(z.firstName))
@@ -3188,23 +3204,56 @@ export class FakeApi {
       });
     }
     const phone = session.contact.includes('@') ? null : `${session.contact.slice(0, 3)}-${session.contact.slice(3, 6)}-${session.contact.slice(6)}`;
-    return route.fulfill({ json: { returning: false, language: 'en', program: program.name, household: { guardianName: null, mobile: phone, email: phone ? null : session.contact, language: 'English' }, children: [] } });
+    return route.fulfill({ json: { returning: false, language: 'en', program: program.name, contact: this.enrollDisplay(session.contact), applyingAs: 'Guardian', household: { guardianName: null, mobile: phone, email: phone ? null : session.contact, language: 'English' }, children: [] } });
+  }
+
+  private enrollDisplay(contact: string): string {
+    return contact.includes('@') ? contact : `${contact.slice(0, 3)}-${contact.slice(3, 6)}-${contact.slice(6)}`;
+  }
+
+  /** Whole years from a date of birth to the fake's today. */
+  private enrollAge(dateOfBirth: string): number {
+    const [y, m, d] = dateOfBirth.split('-').map(Number) as [number, number, number];
+    const today = NOW;
+    let age = today.getUTCFullYear() - y;
+    if (today.getUTCMonth() + 1 < m || (today.getUTCMonth() + 1 === m && today.getUTCDate() < d)) age--;
+    return age;
+  }
+
+  /** The server's draft rules (L2-013 criterion 6, L2-071 criteria 2 to 4 and 11). */
+  private enrollErrors(draft: FakeEnrollDraft): Record<string, string> {
+    const errors: Record<string, string> = {};
+    const applying = draft.applyingAs ?? 'Guardian';
+    if (!['Guardian', 'Youth', 'Referrer'].includes(applying)) return { applyingAs: 'Choose who is applying.' };
+    const children = draft.children ?? [];
+    if (!draft.household?.mobile?.trim() && !draft.household?.email?.trim()) errors['mobile'] = 'Add a mobile number or an email.';
+    if (applying === 'Guardian') {
+      if (!draft.household?.guardianName?.trim()) errors['guardianName'] = 'Enter your full name.';
+      if (!children.some((c) => c.enroll)) errors['children'] = 'Add at least one child.';
+      children.forEach((c, i) => {
+        if (!c.enroll) return;
+        if (!c.firstName?.trim() || !c.lastName?.trim()) errors[`children[${i}].name`] = 'Enter the child’s first and last name.';
+        if (!c.dateOfBirth) errors[`children[${i}].dateOfBirth`] = 'Enter the child’s date of birth.';
+      });
+      return errors;
+    }
+    const youth = applying === 'Youth';
+    if (!draft.household?.guardianName?.trim()) errors['guardianName'] = youth ? 'Enter your parent or guardian’s name.' : 'Enter their parent or guardian’s name.';
+    if (children.filter((c) => c.enroll).length > 1) errors['children'] = 'Apply for one young person at a time.';
+    const person = children.find((c) => c.enroll);
+    if (!person?.firstName?.trim() || !person?.lastName?.trim()) errors['children[0].name'] = 'Enter the young person’s first and last name.';
+    if (!person?.dateOfBirth) errors['children[0].dateOfBirth'] = 'Enter the young person’s date of birth.';
+    else if (youth && (this.enrollAge(person.dateOfBirth) < 12 || this.enrollAge(person.dateOfBirth) > 18))
+      errors['children[0].dateOfBirth'] = 'Young people aged 12 to 18 can apply for themselves. Ask a parent or guardian to apply for you.';
+    if (!draft.reason?.trim()) errors['reason'] = youth ? 'Tell us why you’re interested.' : 'Tell us why you’re referring them.';
+    return errors;
   }
 
   private async enrollSave(route: Route, slug: string): Promise<void> {
     const found = await this.enrollSessionFor(route, slug);
     if (!found) return;
     const draft = route.request().postDataJSON() as FakeEnrollDraft;
-    const errors: Record<string, string> = {};
-    if (!draft.household?.guardianName?.trim()) errors['guardianName'] = 'Enter your full name.';
-    if (!draft.household?.mobile?.trim() && !draft.household?.email?.trim()) errors['mobile'] = 'Add a mobile number or an email.';
-    const children = draft.children ?? [];
-    if (!children.some((c) => c.enroll)) errors['children'] = 'Add at least one child.';
-    children.forEach((c, i) => {
-      if (!c.enroll) return;
-      if (!c.firstName?.trim() || !c.lastName?.trim()) errors[`children[${i}].name`] = 'Enter the child’s first and last name.';
-      if (!c.dateOfBirth) errors[`children[${i}].dateOfBirth`] = 'Enter the child’s date of birth.';
-    });
+    const errors = this.enrollErrors(draft);
     if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
     found.session.draft = draft;
     return route.fulfill({ status: 204 });
@@ -3215,18 +3264,36 @@ export class FakeApi {
     if (!found) return;
     const { program, session } = found;
     if (session.submitted || !program.enrollmentOpen || !session.draft) return route.fulfill({ status: 409, json: { code: 'conflict' } });
-    if (!(route.request().postDataJSON() as { consent: boolean }).consent) return route.fulfill({ status: 422, json: { errors: { consent: 'Agree to the season consent to submit.' } } });
+    const draft = session.draft;
+    const appliedAs = (draft.applyingAs ?? 'Guardian') as 'Guardian' | 'Youth' | 'Referrer';
+    const person = draft.children.find((c) => c.enroll)!;
+    const seasonConsent = appliedAs === 'Guardian' || (appliedAs === 'Youth' && this.enrollAge(person.dateOfBirth!) >= 18);
+    if (!(route.request().postDataJSON() as { consent: boolean }).consent) {
+      const consent = appliedAs === 'Referrer' ? 'Confirm the family agrees to be contacted.' : !seasonConsent ? 'Agree to the privacy notice to submit.' : 'Agree to the season consent to submit.';
+      return route.fulfill({ status: 422, json: { errors: { consent } } });
+    }
     let waitlisted = this.enrollmentRequests.filter((r) => r.programId === program.id && r.status === 'Waitlisted').length;
     let first: number | null = null;
-    const children = session.draft.children.filter((c) => c.enroll);
-    for (const _ of children) {
+    const children = draft.children.filter((c) => c.enroll);
+    const referrer =
+      appliedAs === 'Referrer' ? { name: draft.referrer!.name!.trim(), role: draft.referrer!.role!.trim(), organization: draft.referrer?.organization?.trim() || null, contact: session.contact } : null;
+    for (const c of children) {
       const full = program.roster.length >= program.capacity;
       const position = full ? ++waitlisted : null;
       first ??= position;
-      this.enrollmentRequests.push({ programId: program.id, status: full ? 'Waitlisted' : 'WaitingReview', position });
+      this.enrollmentRequests.push({
+        programId: program.id,
+        status: full ? 'Waitlisted' : 'WaitingReview',
+        position,
+        appliedAs,
+        reason: draft.reason?.trim() || null,
+        seasonConsent,
+        referrer,
+        applicant: { firstName: c.firstName.trim(), lastName: c.lastName.trim(), dateOfBirth: c.dateOfBirth },
+      });
     }
     session.submitted = true;
-    return route.fulfill({ json: { status: first === null ? 'WaitingReview' : 'Waitlisted', position: first, children: children.length, program: program.name } });
+    return route.fulfill({ json: { status: first === null ? 'WaitingReview' : 'Waitlisted', position: first, children: children.length, program: program.name, appliedAs, seasonConsent } });
   }
 
   /** Imports need the Roster module and household writing (admins and program directors). */
