@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 65 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="65" data-video-title="View journey and progress" data-parts="Introduction|Journey|Streak and stage|Badges|Progress|Phone|States|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 65</div>
+  <h1>View journey and progress</h1>
+  <p class="lead">A youth's roadmap, streak, stage, badges and progress, computed by the server</p>
+</section>
+
+<section id="journey" data-part="1" data-cue="Sofía Rivera is twelve and in After-School Tutoring at Harbourview." data-clip="clips/journey-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Your journey</h3><p>From Learning: her numbers, her roadmap, her stage and her badges.</p></div>
+</section>
+
+<section id="journey-shots" data-part="1" data-cue="Below, her roadmap">
+  <h2>The roadmap</h2>
+  <div class="cols">
+    <img class="shot" alt="Your journey: 44%, a 3-week streak, 2 of 6 badges, Contributor, and the roadmap" src="shots/desktop-journey.png">
+    <img class="shot" alt="Your stage and the Badges card on the journey" src="shots/desktop-journey-badges.png">
+  </div>
+</section>
+
+<section id="streak" data-part="2" data-cue="The streak counts weeks in a row, Monday to Sunday">
+  <h2>Streak and stage</h2>
+  <table class="facts">
+    <tr><th>Number</th><th>How the server counts it</th></tr>
+    <tr><td>Streak</td><td>Weeks in a row (Monday to Sunday, UTC) with a lesson completed, from this week or last week</td></tr>
+    <tr><td>Stage earned</td><td>Every competency in it at Proficient or Mastered, by her latest assessment</td></tr>
+    <tr><td>You're here</td><td>The first stage not earned; later stages are ahead</td></tr>
+    <tr><td>Overall progress</td><td>Lessons done of every published lesson of her followed tracks, as on Learning</td></tr>
+  </table>
+  <p class="muted small">Computed on read, nothing stored · ADR 0059</p>
+</section>
+
+<section id="badges" data-part="3" data-cue="The Badges card shows every badge she can earn" data-clip="clips/badges-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Badges</h3><p>Earned with when and who, still to unlock with how far, and her milestones.</p></div>
+</section>
+
+<section id="badges-shot" data-part="3" data-cue="She only sees badges she can earn">
+  <h2>Only badges she can earn</h2>
+  <img class="shot" alt="Badges: First Steps and Speaks Up earned, four still to unlock, and her milestones" src="shots/desktop-badges.png">
+</section>
+
+<section id="progress" data-part="4" data-cue="Your progress puts her own numbers in one place" data-clip="clips/progress-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Your progress</h3><p>Overview, then Quizzes and Attendance with the arrow keys.</p></div>
+</section>
+
+<section id="progress-shots" data-part="4" data-cue="The arrow keys move between tabs.">
+  <h2>Three tabs</h2>
+  <div class="cols">
+    <img class="shot" alt="Quizzes: best scores, Passed, and Waiting for her mentor" src="shots/desktop-quizzes.png">
+    <img class="shot" alt="Attendance: sessions newest first, Present or Absent" src="shots/desktop-attendance.png">
+  </div>
+</section>
+
+<section id="phone" data-part="5" data-cue="On a phone the journey, badges and progress stack" data-clip="clips/phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>One column</h3><p>The journey, badges and progress.</p></div>
+</section>
+
+<section id="states" data-part="6" data-cue="With no track published yet" data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Empty, refused and off</h3><p>No track, no badge, Roll Call off, a failed load, not open yet, Learning off.</p></div>
+</section>
+
+<section id="gates" data-part="6" data-cue="Before a guardian consents">
+  <h2>Who gets what</h2>
+  <div class="cols">
+    <table class="facts">
+      <tr><th>Caller</th><th>Answer</th></tr>
+      <tr><td>Youth, placed and consented</td><td>Her own journey, badges and progress</td></tr>
+      <tr><td>Youth without consent or a program</td><td>403, the page points to Learning</td></tr>
+      <tr><td>Staff and mentors</td><td>403</td></tr>
+      <tr><td>Roll Call off</td><td>No attendance in the answer</td></tr>
+      <tr><td>Learning off</td><td>404, routes go to Today</td></tr>
+    </table>
+    <img class="shot" alt="Your progress with Roll Call off: no Attendance tab" src="shots/desktop-roll-call-off.png">
+  </div>
+</section>
+
+<section id="testing" data-part="7" data-cue="The API tests cover the journey counts">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>LearningJourneyTests</code>: counts, roadmap, streak across weeks, stages</li>
+    <li><code>LearningBadgesTests</code>, <code>LearningProgressTests</code>: earned and locked, milestones, quizzes, attendance on and off</li>
+    <li><code>journey.spec.ts</code>, <code>badges.spec.ts</code>, <code>progress.spec.ts</code> on phone and laptop, with axe</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="8" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Journey, badges and progress are computed on read</li><li>The streak counts weeks with a lesson; the stage comes from the latest assessments</li><li>Attendance shows only while Roll Call is on</li></ul>
+  <p class="muted">Next: youth write reflections</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

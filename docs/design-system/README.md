@@ -116,7 +116,7 @@ Edit tokens and shared component CSS first. Edit catalogue metadata and generato
 | [Code sample](components/code-sample.html) | Show a read-only, scrollable example of code with an accessible name. |
 | [Code playground](components/code-playground.html) | Edit a small page of code, run it in a sandboxed preview and keep the lesson's checklist nearby. |
 | [Quiz option](components/quiz-option.html) | Offer one answer of a quiz question around a native radio or checkbox, and mark it correct, wrong or missed in words in the review. |
-| [Achievement badge](components/achievement-badge.html) | Show a badge youth earn as a medal with its name and how it is earned; a locked badge says so in words, not only in grey. |
+| [Achievement badge](components/achievement-badge.html) | Show a badge youth earn as a medal with its name and how it is earned; a locked badge says so in words, not only in grey. A collection (.achievement-badges) lists several as a labelled grid that wraps from one column on a phone. |
 
 ## Patterns
 
@@ -144,6 +144,7 @@ Edit tokens and shared component CSS first. Edit catalogue metadata and generato
 | Core catalogue | Tooltip, spinner and complete sidebar/pagination specimens were not all present in mocks | Documented core compositions using inherited roles and tokens; source sections identify core additions explicitly. |
 | Grade and assess mocks (prompt 63) | Rubric scores, quiz overrides and competency levels needed no new component | Rubric scores and the override use text-field (number), the review queue and quiz approvals use table with tabs, competency levels use button-group with aria-pressed; sources added to those pages. No token changed. |
 | Badges and progression mocks (prompt 64) | The badge builder needed a medal youth earn, and the inherited .achievement selectors are emoji-based and unused | Added achievement-badge (earned, locked, small) built from the icon set, accent and border tokens; added the award and heart icons. Stages and competencies reuse card, list and button. No token changed. |
+| Journey and progress mocks (prompt 65) | The youth journey and badges pages list several medals together, and no list wrapped achievement badges | Added the achievement-badge collection (.achievement-badges, a labelled list grid) and the --layout-medal-min token (8rem) for its column; streak, stage and progress reuse stat, list, tabs, table and progress-bar. |
 | Inherited component CSS | Includes historical selectors unused by PromiseHub | Retained for compatibility; catalogue scope is the PromiseHub evidence plus the core set. Do not interpret unused inherited selectors as implemented product features. |
 
 ## Verification

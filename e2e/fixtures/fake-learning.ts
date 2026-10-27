@@ -1,33 +1,33 @@
 import { readFileSync } from 'node:fs';
 import type { Route } from '@playwright/test';
 import type { FakeCurriculum, FakeLesson, FakeModule, FakeTrack } from './fake-curriculum';
-import type { FakeProgram } from './programs';
+import { NOW, type FakeProgram } from './programs';
 import type { FakeQuiz } from './fake-assessments';
 import { FakeQuizTaking, type QuizPlace } from './fake-quiz-taking';
 import type { FakeAssignment } from './fake-assessments';
 import { FakeSubmissions, type AssignmentPlace } from './fake-submissions';
 
-interface LessonState {
+export interface LessonState {
   lesson: FakeLesson;
   done: boolean;
   locked: boolean;
   unlockAfter: string | null;
 }
 
-interface QuizState {
+export interface QuizState {
   quiz: FakeQuiz;
   locked: boolean;
   unlockAfter: string | null;
   passed: boolean;
 }
 
-interface AssignmentState {
+export interface AssignmentState {
   assignment: FakeAssignment;
   locked: boolean;
   unlockAfter: string | null;
 }
 
-interface ModuleState {
+export interface ModuleState {
   module: FakeModule;
   position: number;
   lessons: LessonState[];
@@ -37,19 +37,19 @@ interface ModuleState {
   assignments: AssignmentState[];
 }
 
-interface TrackState {
+export interface TrackState {
   track: FakeTrack;
   program: string;
   modules: ModuleState[];
 }
 
 const lessonStatus = (l: LessonState) => (l.done ? 'done' : l.locked ? 'locked' : 'next');
-const moduleDone = (m: ModuleState) => m.lessons.filter((l) => l.done).length;
+export const moduleDone = (m: ModuleState) => m.lessons.filter((l) => l.done).length;
 const moduleComplete = (m: ModuleState) => m.lessons.every((l) => l.done) && m.quizzes.filter((q) => q.quiz.requiredToComplete).every((q) => q.passed);
-const moduleStatus = (m: ModuleState) =>
+export const moduleStatus = (m: ModuleState) =>
   m.locked ? 'locked' : m.lessons.length > 0 && moduleComplete(m) ? 'done' : moduleDone(m) > 0 ? 'in-progress' : 'not-started';
-const trackDone = (t: TrackState) => t.modules.reduce((n, m) => n + moduleDone(m), 0);
-const trackTotal = (t: TrackState) => t.modules.reduce((n, m) => n + m.lessons.length, 0);
+export const trackDone = (t: TrackState) => t.modules.reduce((n, m) => n + moduleDone(m), 0);
+export const trackTotal = (t: TrackState) => t.modules.reduce((n, m) => n + m.lessons.length, 0);
 
 /**
  * A youth's lessons as the API answers them (L2-068 to L2-070, ADR 0051): only Published content of Published tracks followed by
@@ -70,11 +70,27 @@ export class FakeLearning {
     this.quizzes = new FakeQuizTaking(curriculum.assessments);
   }
 
-  /** Marks lessons done for a youth, as if completed earlier. */
+  /** When each youth membership completed each lesson, keyed membership:lesson (the streak, L2-087 criterion 2). */
+  private readonly completedAt = new Map<string, string>();
+
+  /** Marks lessons done for a youth, as if completed now (or earlier, with completeOn). */
   complete(membershipId: string, ...lessonIds: string[]): void {
+    this.completeOn(membershipId, NOW.toISOString(), ...lessonIds);
+  }
+
+  /** Marks lessons done for a youth at a given time; a lesson already done keeps its first time. */
+  completeOn(membershipId: string, at: string, ...lessonIds: string[]): void {
     const set = this.done.get(membershipId) ?? new Set<string>();
-    lessonIds.forEach((id) => set.add(id));
+    lessonIds.forEach((id) => {
+      set.add(id);
+      if (!this.completedAt.has(`${membershipId}:${id}`)) this.completedAt.set(`${membershipId}:${id}`, at);
+    });
     this.done.set(membershipId, set);
+  }
+
+  /** The times a youth completed her lessons. */
+  completionTimes(membershipId: string): string[] {
+    return [...this.completedAt].filter(([k]) => k.startsWith(`${membershipId}:`)).map(([, at]) => at);
   }
 
   isDone(membershipId: string, lessonId: string): boolean {

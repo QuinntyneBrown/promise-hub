@@ -1,0 +1,12 @@
+<ul class="collection" [attr.aria-label]="label()">
+  @for (b of badges(); track b.key) {
+    <li>
+      <ph-achievement-badge
+        [icon]="icon(b.icon)"
+        [name]="b.name"
+        [caption]="b.caption"
+        [locked]="b.locked"
+      />
+    </li>
+  }
+</ul>

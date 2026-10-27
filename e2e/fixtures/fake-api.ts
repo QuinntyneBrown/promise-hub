@@ -3,6 +3,7 @@ import { type FakeChild, type FakeGuardian, type FakeHousehold, ageOf, hasMedica
 import { FakeBadges } from './fake-badges';
 import { FakeCurriculum } from './fake-curriculum';
 import { FakeProgression } from './fake-progression';
+import { FakeJourney } from './fake-journey';
 import { FakeLearning } from './fake-learning';
 import { FakeReviews, type YouthAccounts } from './fake-reviews';
 import { type FakeEvent, type FakeProgram, NOW, seedEvents, seedPrograms } from './programs';
@@ -610,6 +611,9 @@ export class FakeApi {
   private readonly routes: [string, RegExp, Handler][] = [
     ['GET', /^\/api\/me$/, (route) => this.me(route)],
     ['GET', /^\/api\/learning\/me$/, (route) => this.learner(route)],
+    ['GET', /^\/api\/learning\/progress$/, (route) => this.youthWork(route, (m, programs) => this.journey.progress(route, m, programs, this.youthLinks.get(m.id) ?? null, this.youthAttendance(m)))],
+    ['GET', /^\/api\/learning\/badges$/, (route) => this.youthWork(route, (m, programs) => this.journey.badges(route, m, programs))],
+    ['GET', /^\/api\/learning\/journey$/, (route) => this.youthWork(route, (m, programs) => this.journey.journey(route, m, programs, this.youthLinks.get(m.id) ?? null))],
     ['GET', /^\/api\/learning\/home$/, (route) => this.youthWork(route, (m, programs) => this.learningState.home(route, m.id, programs))],
     ['GET', /^\/api\/learning\/tracks\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.track(route, m.id, programs, p['id']!))],
     ['GET', /^\/api\/learning\/modules\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.module(route, m.id, programs, p['id']!))],
@@ -993,6 +997,19 @@ export class FakeApi {
     return this.learningState.work.brief(route, m.id, place, place ? this.youthMentorName(m, place.trackId) : null);
   }
 
+  /** Her child's marked attendance, or null while Roll Call is off (L2-088 criteria 3 and 4). */
+  private youthAttendance(m: Membership): { eventId: string; name: string; startsAt: string; status: string }[] | null {
+    if (!this.modules.get(m.organizationId)!.includes('RollCall')) return null;
+    const childId = this.youthLinks.get(m.id);
+    if (!childId) return [];
+    return this.events
+      .filter((e) => e.organizationId === m.organizationId)
+      .flatMap((e) => {
+        const r = this.attendance.get(e.id)?.get(childId);
+        return r && r.status !== 'NotYet' ? [{ eventId: e.id, name: e.name, startsAt: e.startsAt, status: r.status === 'Absent' ? 'Absent' : 'Present' }] : [];
+      });
+  }
+
   /** The youth's mentor (ADR 0056): her own, else the lead mentor of a program of hers that follows the track. */
   private youthMentorName(m: Membership, trackId: string): string | null {
     const childId = this.youthLinks.get(m.id);
@@ -1136,6 +1153,9 @@ export class FakeApi {
 
   /** The mentor's reviews (L2-080, L2-081, ADR 0057). */
   readonly reviews = new FakeReviews(this.curriculumState, this.learningState.work, this.learningState.quizzes);
+
+  /** A youth's journey, badges and progress (L2-087, L2-088), read from the other fakes. */
+  readonly journey = new FakeJourney(this.learningState, this.progression, this.reviews, this.badges);
 
   /** Every review endpoint: Mentoring and Learning on and MentorYouth, then his youth accounts. */
   /** After a youth's learning event: her automatic badges are checked (L2-085), as BadgeAwarder does. */

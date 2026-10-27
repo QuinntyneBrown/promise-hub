@@ -1,9 +1,12 @@
 export { routes } from './lib/learning.routes';
 export { AssignmentPage } from './lib/assignment-page/assignment-page';
+export { BadgesPage } from './lib/badges-page/badges-page';
 export { CodingPage } from './lib/coding-page/coding-page';
+export { JourneyPage } from './lib/journey-page/journey-page';
 export { LearningPage } from './lib/learning-page/learning-page';
 export { LessonPage } from './lib/lesson-page/lesson-page';
 export { ModulePage } from './lib/module-page/module-page';
+export { ProgressPage } from './lib/progress-page/progress-page';
 export { QuizIntroPage } from './lib/quiz-intro-page/quiz-intro-page';
 export { QuizPage } from './lib/quiz-page/quiz-page';
 export { QuizResultPage } from './lib/quiz-result-page/quiz-result-page';

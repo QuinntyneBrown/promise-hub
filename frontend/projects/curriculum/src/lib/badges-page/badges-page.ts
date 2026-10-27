@@ -3,6 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { BadgeList, BadgeSummary, CURRICULUM_API, LoadResult } from '@promisehub/api';
 import {
   PhAchievementBadge,
+  achievementIcon,
   PhBadge,
   PhBreadcrumb,
   PhButton,
@@ -15,7 +16,7 @@ import {
   PhStat,
 } from '@promisehub/components';
 import { Subject, startWith, switchMap } from 'rxjs';
-import { badgeIcon, earnedBy } from '../badge-labels';
+import { earnedBy } from '../badge-labels';
 
 /** Badges (mock: curriculum-badge, L2-084 criterion 1): each badge with how it is earned and how many youth hold it. */
 @Component({
@@ -62,7 +63,7 @@ export class BadgesPage {
       most: most && most.earnedCount > 0 ? most : null,
     };
   });
-  protected readonly badgeIcon = badgeIcon;
+  protected readonly badgeIcon = achievementIcon;
 
   protected meta(b: BadgeSummary): string {
     const parts = [earnedBy(b)];

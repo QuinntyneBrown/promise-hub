@@ -17,6 +17,9 @@ public static class LearningEndpoints
     {
         var learning = app.MapGroup("/learning").RequireModule(ModuleId.Learning).RequirePermission(Permission.Learn).RequireGuardianConsent().RequirePlacement();
         learning.MapGet("/home", (LearningHomeHandler handler, CancellationToken ct) => handler.HandleAsync(ct));
+        learning.MapGet("/journey", (JourneyHandler handler, CancellationToken ct) => handler.HandleAsync(ct));
+        learning.MapGet("/badges", (BadgesViewHandler handler, CancellationToken ct) => handler.HandleAsync(ct));
+        learning.MapGet("/progress", (ProgressViewHandler handler, CancellationToken ct) => handler.HandleAsync(ct));
         learning.MapGet("/tracks/{id:guid}", async (Guid id, TrackViewHandler handler, CancellationToken ct) => (await handler.HandleAsync(id, ct)).ToHttp());
         learning.MapGet("/modules/{id:guid}", async (Guid id, ModuleViewHandler handler, CancellationToken ct) => (await handler.HandleAsync(id, ct)).ToHttp());
         learning.MapGet("/lessons/{id:guid}", async (Guid id, LessonViewHandler handler, CancellationToken ct) => (await handler.HandleAsync(id, ct)).ToHttp());

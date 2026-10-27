@@ -1,0 +1,102 @@
+@let r = result();
+<ph-breadcrumb [items]="[{ label: 'Learning', link: '/learning' }, { label: 'Badges' }]" />
+@if (r === null) {
+  <ph-page-header title="Badges" />
+  <div class="stack" aria-busy="true" aria-label="Loading your badges">
+    <ph-skeleton shape="card" />
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (r.status === 'loaded') {
+  @let b = r.value;
+  @if (!total(b)) {
+    <ph-page-header title="Badges" subtitle="Badges you earn as you learn." />
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="award"
+        title="No badges to earn yet"
+        text="Your program team hasn’t made any badges. They’ll appear here when they do."
+      >
+        <ph-button link="/learning">Back to Learning</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  } @else if (!b.earned.length) {
+    <ph-page-header title="Badges" [subtitle]="subtitle(b)" />
+    <div class="stack">
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="learning"
+          title="No badges yet"
+          text="Finish a lesson, pass a quiz or have work accepted to earn your first badge."
+        >
+          <ph-button variant="primary" link="/learning">Start a lesson</ph-button>
+        </ph-empty-state>
+      </ph-card>
+      <ph-card title="Still to unlock">
+        <ph-achievement-badges label="Badges still to unlock" [badges]="locked(b)" />
+      </ph-card>
+    </div>
+  } @else {
+    <ph-page-header title="Badges" [subtitle]="subtitle(b)" />
+    <div class="split">
+      <div class="stack">
+        <ph-card title="Your collection">
+          <ph-progress-bar
+            [value]="b.earned.length"
+            [max]="total(b)"
+            label="Badges earned"
+            [caption]="b.earned.length + ' of ' + total(b) + ' earned'"
+          />
+        </ph-card>
+        <ph-card title="Earned">
+          <ph-achievement-badges label="Earned badges" [badges]="earned(b)" />
+        </ph-card>
+        @if (b.locked.length) {
+          <ph-card title="Still to unlock">
+            <ph-achievement-badges label="Badges still to unlock" [badges]="locked(b)" />
+          </ph-card>
+        }
+      </div>
+      <div class="stack">
+        <ph-card title="Your milestones" [flush]="true">
+          <ph-list label="Your milestones">
+            @for (m of b.milestones; track $index) {
+              <ph-list-item [title]="m.title" [meta]="milestoneMeta(m.text, m.at)">
+                <ph-achievement-badge
+                  phListLead
+                  size="sm"
+                  [icon]="m.kind === 'joined' ? 'flag' : 'award'"
+                />
+                @if (m.kind === 'next') {
+                  <ph-badge tone="info">Next</ph-badge>
+                }
+              </ph-list-item>
+            }
+          </ph-list>
+        </ph-card>
+      </div>
+    </div>
+  }
+} @else if (r.status === 'forbidden') {
+  <ph-page-header title="Badges" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      title="Learning isn’t open for you yet"
+      text="Your journey, badges and progress appear once Learning opens for you. Learning says what’s needed."
+    >
+      <ph-button variant="primary" link="/learning">Back to Learning</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-page-header title="Badges" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load your badges"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}

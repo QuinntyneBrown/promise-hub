@@ -1,0 +1,42 @@
+@startuml
+title UML sequence behaviour — Opening and switching tabs
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Youth (Sofía)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "ProgressPage" as page
+  participant "LearningApi" as lapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "LearningEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "ProgressViewHandler" as h
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : open from Learning
+page -> lapi : progress()
+lapi -> ep : GET /learning/progress
+alt Learning off
+  ep --> page : 404; the route redirects to Today
+else no Learn permission, no consent or not placed
+  ep --> page : 403; forbidden state (L2-088 c7)
+else
+  ep -> h : HandleAsync
+  h -> db : lessons done of lessons; streak (L2-088 c1)
+  h -> db : her submitted attempts of visible quizzes -> best score, pass or Waiting; average (c2)
+  h -> db : competencies with her child's latest assessment levels (c1)
+  alt Roll Call on
+    h -> db : her child's marked attendance records with their events, newest first (c3)
+  else Roll Call off
+    h -> h : attendance = null (c4)
+  end
+  h --> page : 200
+  page --> actor : default, or empty with one action
+end
+@enduml

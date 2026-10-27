@@ -1,0 +1,24 @@
+@startuml
+title Class structure — View the learning journey
+skinparam classAttributeIconSize 0
+class JourneyPage {
+  #result : LoadResult
+  #reload() : void
+}
+interface LearningApi {
+  +journey() : Observable<LoadResult>
+}
+class JourneyHandler {
+  +HandleAsync(ct) : Dto
+}
+class LearnerProgress
+class LearnerStreak
+class LearnerStanding
+class LearnerBadges
+JourneyPage ..> LearningApi : LEARNING_API
+LearningApi ..> JourneyHandler : GET /learning/journey
+JourneyHandler ..> LearnerProgress
+JourneyHandler ..> LearnerStreak
+JourneyHandler ..> LearnerStanding
+JourneyHandler ..> LearnerBadges
+@enduml

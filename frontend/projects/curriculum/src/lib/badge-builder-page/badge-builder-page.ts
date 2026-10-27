@@ -21,6 +21,7 @@ import {
 import {
   ErrorSummaryItem,
   PhAchievementBadge,
+  achievementIcon,
   PhAlert,
   PhBadge,
   PhBreadcrumb,
@@ -43,7 +44,7 @@ import {
   formatDay,
 } from '@promisehub/components';
 import { Observable, combineLatest, map, of, startWith, Subject, switchMap } from 'rxjs';
-import { BADGE_ICONS, RULE_LABELS, badgeIcon } from '../badge-labels';
+import { BADGE_ICONS, RULE_LABELS } from '../badge-labels';
 import { AwardBadgeDialog } from '../award-badge-dialog/award-badge-dialog';
 import { AwardBadgeDialogData } from '../award-badge-dialog/award-badge-dialog-data';
 import { DeleteBadgeDialog } from '../delete-badge-dialog/delete-badge-dialog';
@@ -144,7 +145,7 @@ export class BadgeBuilderPage {
   protected readonly rules: SelectOption[] = (Object.keys(RULE_LABELS) as BadgeRule[]).map(
     (value) => ({ value, label: RULE_LABELS[value] }),
   );
-  protected readonly badgeIcon = badgeIcon;
+  protected readonly badgeIcon = achievementIcon;
   protected readonly formatDay = formatDay;
 
   constructor() {

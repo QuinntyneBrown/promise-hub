@@ -81,7 +81,7 @@ video-player|Video player|.video-player|display|Play a lesson video with native,
 code-sample|Code sample|.code-block|display|Show a read-only, scrollable example of code with an accessible name.
 code-playground|Code playground|.code-playground|form|Edit a small page of code, run it in a sandboxed preview and keep the lesson's checklist nearby.
 quiz-option|Quiz option|.quiz-option|radio|Offer one answer of a quiz question around a native radio or checkbox, and mark it correct, wrong or missed in words in the review.
-achievement-badge|Achievement badge|.achievement-badge|display|Show a badge youth earn as a medal with its name and how it is earned; a locked badge says so in words, not only in grey.
+achievement-badge|Achievement badge|.achievement-badge|display|Show a badge youth earn as a medal with its name and how it is earned; a locked badge says so in words, not only in grey. A collection (.achievement-badges) lists several as a labelled grid that wraps from one column on a phone.
 '''
 
 COMPONENTS = []
@@ -120,7 +120,7 @@ EXTRA_VARIANTS = {
  'skeleton':['text','title','circle','rect','card'],
  'divider':['horizontal','vertical','label'],
  'quiz-option':['single','multiple','review'],
- 'achievement-badge':['earned','locked','small'],
+ 'achievement-badge':['earned','locked','small','collection'],
 }
 
 EXTRA_STATES = {

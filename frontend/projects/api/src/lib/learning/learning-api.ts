@@ -24,12 +24,21 @@ import type { AssignmentBrief } from './assignment-brief';
 import type { AssignmentSubmissionView } from './assignment-submission-view';
 import type { SubmissionWork } from './submission-work';
 import type { SubmitOutcome } from './submit-outcome';
+import type { Journey } from './journey';
+import type { LearnerBadges } from './learner-badges';
+import type { LearnerProgressView } from './learner-progress-view';
 
 /** The signed-in youth’s own learning record (Learning module, ADR 0043). */
 export interface LearningApi {
   learner(): Observable<LoadResult<Learner>>;
   /** The Learning home; refused as consent-required until a guardian consents (L2-056) and no-cohort until placed (L2-060). */
   home(): Observable<LearningHomeResult>;
+  /** Her journey: progress, streak, roadmap and stages (L2-087). */
+  journey(): Observable<LoadResult<Journey>>;
+  /** Her badges earned and still to unlock, and her milestones (L2-087 criteria 4 and 5). */
+  badges(): Observable<LoadResult<LearnerBadges>>;
+  /** Her own progress: lessons, quizzes, streak, competencies and, while Roll Call is on, attendance (L2-088). */
+  progress(): Observable<LoadResult<LearnerProgressView>>;
   /** One of the youth's tracks (L2-068). */
   track(id: string): Observable<GatedResult<TrackView>>;
   /** One module; locked until its prerequisite is done (L2-068 criterion 3). */

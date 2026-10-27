@@ -1,0 +1,138 @@
+@let r = result();
+<ph-breadcrumb [items]="[{ label: 'Learning', link: '/learning' }, { label: 'Your progress' }]" />
+@if (r === null) {
+  <ph-page-header title="Your progress" />
+  <div class="stack" aria-busy="true" aria-label="Loading your progress">
+    <ph-skeleton shape="card" />
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (r.status === 'loaded') {
+  @let p = r.value;
+  <ph-page-header title="Your progress" subtitle="The full picture of how you’re growing." />
+  <div class="stack">
+    <ph-tabs
+      label="Your progress"
+      [items]="tabs(p)"
+      [selected]="tab()"
+      (selectedChange)="tab.set($event)"
+    />
+    <div role="tabpanel" class="stack" [attr.aria-labelledby]="'tab-' + tab()">
+      @switch (tab()) {
+        @case ('quizzes') {
+          <div class="kpis">
+            <ph-stat label="Quiz average" [value]="average(p)" [caption]="averageCaption(p)" />
+          </div>
+          @if (p.quizzes.length) {
+            <ph-table caption="Quiz history" [columns]="quizColumns" [rows]="quizRows(p)" />
+          } @else {
+            <ph-card [flush]="true">
+              <ph-empty-state
+                icon="learning"
+                title="No quizzes yet"
+                text="Quizzes you take show here with your best score."
+              />
+            </ph-card>
+          }
+        }
+        @case ('attendance') {
+          @if (p.attendance; as a) {
+            <div class="kpis">
+              <ph-stat
+                label="Attendance"
+                [value]="a.marked ? percent(a.attended, a.marked) : '—'"
+                [caption]="a.attended + ' of ' + a.marked + ' sessions'"
+              />
+            </div>
+            @if (a.sessions.length) {
+              <ph-table
+                caption="Session attendance"
+                [columns]="sessionColumns"
+                [rows]="sessionRows(p)"
+              />
+            } @else {
+              <ph-card [flush]="true">
+                <ph-empty-state
+                  icon="events"
+                  title="No sessions yet"
+                  text="Sessions you’re marked at show here."
+                />
+              </ph-card>
+            }
+          }
+        }
+        @default {
+          <div class="kpis">
+            <ph-stat
+              label="Overall progress"
+              [value]="percent(p.completedLessons, p.totalLessons)"
+              [caption]="p.completedLessons + ' of ' + p.totalLessons + ' lessons'"
+            />
+            <ph-stat label="Quiz average" [value]="average(p)" [caption]="averageCaption(p)" />
+            <ph-stat
+              label="Streak"
+              [value]="weeks(p.streakWeeks)"
+              [caption]="
+                p.streakWeeks ? 'A lesson every week' : 'Do a lesson this week to start one'
+              "
+            />
+            @if (p.attendance; as a) {
+              <ph-stat
+                label="Attendance"
+                [value]="a.marked ? percent(a.attended, a.marked) : '—'"
+                [caption]="
+                  a.marked ? a.attended + ' of ' + a.marked + ' sessions' : 'No sessions yet'
+                "
+              />
+            }
+          </div>
+          @if (!p.completedLessons && !p.quizzes.length) {
+            <ph-card [flush]="true">
+              <ph-empty-state
+                icon="learning"
+                title="Your progress starts with your first lesson"
+                text="Finish a lesson and it shows here, with your quizzes and sessions."
+              >
+                <ph-button variant="primary" link="/learning">Start a lesson</ph-button>
+              </ph-empty-state>
+            </ph-card>
+          }
+          @if (p.competencies.length) {
+            <ph-card title="Your competencies" [flush]="true">
+              <ph-list label="Your competencies">
+                @for (c of p.competencies; track c.id) {
+                  <ph-list-item [title]="c.name" [meta]="c.stage ? c.stage + ' stage' : null">
+                    <ph-badge [tone]="levelTone[c.level]">{{ levelLabel[c.level] }}</ph-badge>
+                  </ph-list-item>
+                }
+              </ph-list>
+              <span phCardFooter>Levels come from your mentor’s assessments.</span>
+            </ph-card>
+          }
+        }
+      }
+    </div>
+  </div>
+} @else if (r.status === 'forbidden') {
+  <ph-page-header title="Your progress" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      title="Learning isn’t open for you yet"
+      text="Your journey, badges and progress appear once Learning opens for you. Learning says what’s needed."
+    >
+      <ph-button variant="primary" link="/learning">Back to Learning</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-page-header title="Your progress" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load your progress"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}
