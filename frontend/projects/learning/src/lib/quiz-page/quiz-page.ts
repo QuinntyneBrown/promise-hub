@@ -23,6 +23,7 @@ import {
   PhButton,
   PhCard,
   PhEmptyState,
+  PhDialogs,
   PhPageHeader,
   PhProgressBar,
   PhQuizOption,
@@ -30,7 +31,10 @@ import {
   PhSyncChip,
   PhTextField,
 } from '@promisehub/components';
+import { Router } from '@angular/router';
 import { fromEvent, switchMap } from 'rxjs';
+import { SubmitQuizDialog } from '../submit-quiz-dialog/submit-quiz-dialog';
+import { SubmitQuizDialogData } from '../submit-quiz-dialog/submit-quiz-dialog-data';
 
 const KEYS = 'ABCDEF';
 
@@ -62,6 +66,8 @@ export class QuizPage {
   private readonly api = inject(LEARNING_API);
   private readonly destroyRef = inject(DestroyRef);
   private readonly window = inject(DOCUMENT).defaultView;
+  private readonly dialogs = inject(PhDialogs);
+  private readonly router = inject(Router);
   protected readonly keys = KEYS;
 
   /** Route parameter: the quiz. */
@@ -166,6 +172,26 @@ export class QuizPage {
     return v.questions
       .map((q) => this.answers()[q.id])
       .filter((a): a is QuizAnswer => !!a && ((a.choices?.length ?? 0) > 0 || !!a.text?.trim()));
+  }
+
+  /** Opens submit-quiz with every answer so far; once submitted, the result opens. */
+  protected submit(v: QuizAttemptView): void {
+    const answered = new Set(this.list().map((a) => a.questionId));
+    this.dialogs
+      .open<boolean | 'submitted', SubmitQuizDialogData, SubmitQuizDialog>(SubmitQuizDialog, {
+        attemptId: v.attemptId,
+        title: v.title,
+        number: v.number,
+        attemptsAllowed: v.attemptsAllowed,
+        total: v.questions.length,
+        answers: this.list(),
+        position: this.index(),
+        blank: v.questions.map((q, i) => (answered.has(q.id) ? 0 : i + 1)).filter((n) => n > 0),
+      })
+      .closed.subscribe((done) => {
+        if (done === true) void this.router.navigate(['/learning/attempts', v.attemptId]);
+        else if (done === 'submitted') this.submittedElsewhere.set(true);
+      });
   }
 
   private queue(): void {

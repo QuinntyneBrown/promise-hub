@@ -37,6 +37,11 @@ public static class LearningEndpoints
             var saved = await handler.SaveAsync(id, request, ct);
             return saved.Status == Application.ResultStatus.Done ? Results.NoContent() : saved.ToHttp();
         });
+        learning.MapPost("/attempts/{id:guid}/submit", async (Guid id, SaveAnswersRequest request, QuizAttemptCommand handler, CancellationToken ct) =>
+        {
+            var submitted = await handler.SubmitAsync(id, request, ct);
+            return submitted.Status == Application.ResultStatus.Done ? Results.Ok(new { id = submitted.Value }) : submitted.ToHttp();
+        });
         // Streamed under the youth's session cookie with range requests, so the player can seek (ADR 0051).
         learning.MapGet("/lessons/{id:guid}/video", async (Guid id, LessonVideoStream handler, CancellationToken ct) =>
         {

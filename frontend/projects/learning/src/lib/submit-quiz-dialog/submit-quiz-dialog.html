@@ -1,0 +1,40 @@
+<ph-dialog title="Submit your answers?" [description]="description()" icon="check">
+  <div class="stack">
+    @if (failed()) {
+      <ph-alert
+        tone="danger"
+        title="That didn’t go through"
+        text="Your quiz was not submitted. Your answers are saved; try again."
+      />
+    }
+    @if (data.blank.length) {
+      <ph-alert
+        tone="warning"
+        [title]="
+          data.blank.length === 1
+            ? '1 question has no answer'
+            : data.blank.length + ' questions have no answer'
+        "
+        [text]="blankText()"
+      />
+    } @else {
+      <ph-alert
+        tone="warning"
+        title="You can’t change them after this"
+        [text]="
+          'You’ve answered all ' +
+          data.total +
+          ' questions. Once you submit, this attempt is scored and locked.'
+        "
+      />
+    }
+  </div>
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close()">{{
+      data.blank.length ? 'Go back' : 'Keep reviewing'
+    }}</ph-button>
+    <ph-button variant="primary" [busy]="busy()" (click)="submit()">{{
+      data.blank.length ? 'Submit anyway' : 'Submit answers'
+    }}</ph-button>
+  </ng-container>
+</ph-dialog>

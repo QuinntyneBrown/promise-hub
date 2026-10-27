@@ -5,7 +5,7 @@ import { LearnQuizIntroPage } from '../../pages/learn-quiz-intro.page';
 import { LearnQuizPage } from '../../pages/learn-quiz.page';
 import { TodayPage } from '../../pages/today.page';
 
-// Acceptance test. Traces to: L2-075 criteria 1 to 4, 8 and 9 (a quiz's rules, its lock, the module's quizzes, taking it with autosave, Learning off), L2-035.
+// Acceptance test. Traces to: L2-075 criteria 1 to 9 (a quiz's rules, its lock, the module's quizzes, taking it with autosave, Learning off), L2-035.
 const SUITE: ModuleId[] = ['Roster', 'Slips', 'RollCall', 'QuickCards', 'Pickup', 'Messages', 'Incidents', 'Reports'];
 const SERVING = ['l-strengths', 'l-values', 'l-towel', 'l-line', 'l-coach'];
 
@@ -142,6 +142,117 @@ test.describe('Take quizzes', () => {
     await quiz.goOnline();
     await expect(quiz.saveStatus).toHaveText(/Answers saved/);
     expect(api.learningState.quizzes.attempts[0]!.answers).toEqual([{ questionId: 'qq-captain', choices: [0], text: null }]);
+  });
+
+  test('Given every question answered, when Sofía submits on the last question and confirms, then the attempt is scored on the server, locked and its result opens', async ({
+    page,
+    api,
+  }) => {
+    api.learningState.complete('m-sofia', ...SERVING);
+    api.learningState.quizzes.inProgress(
+      'm-sofia',
+      'qz-serving',
+      [
+        { questionId: 'qq-captain', choices: [1], text: null },
+        { questionId: 'qq-title', choices: [1], text: null },
+        { questionId: 'qq-towel', choices: [0], text: null },
+      ],
+      3,
+    );
+    const quiz = new LearnQuizPage(page);
+    await quiz.open('qz-serving');
+    await quiz.write('others');
+
+    await quiz.submit();
+
+    await expect(quiz.dialog).toContainText('Leading by Serving quiz · Attempt 1 of 2');
+    await expect(quiz.dialog).toContainText('Once you submit, this attempt is scored and locked.');
+    await quiz.expectAccessible();
+    await quiz.confirmSubmit();
+
+    await expect(page).toHaveURL(/\/learning\/attempts\/qa-1$/);
+    const attempt = api.learningState.quizzes.attempts[0]!;
+    expect(attempt.status).toBe('Scored');
+    expect(attempt.score).toBe(75);
+    expect(attempt.answers.find((a) => a.questionId === 'qq-first')?.text).toBe('others');
+  });
+
+  test('Given two questions left blank, when she submits, then the dialog names them and she can go back to them', async ({ page, api }) => {
+    api.learningState.complete('m-sofia', ...SERVING);
+    api.learningState.quizzes.inProgress(
+      'm-sofia',
+      'qz-serving',
+      [
+        { questionId: 'qq-captain', choices: [1], text: null },
+        { questionId: 'qq-first', choices: null, text: 'others' },
+      ],
+      3,
+    );
+    const quiz = new LearnQuizPage(page);
+    await quiz.open('qz-serving');
+
+    await quiz.submit();
+
+    await expect(quiz.dialog).toContainText('2 questions have no answer');
+    await expect(quiz.dialog).toContainText('Questions 2 and 3 are blank and will count as wrong.');
+    await quiz.keepReviewing();
+    await expect(quiz.dialog).toHaveCount(0);
+    expect(api.learningState.quizzes.attempts[0]!.status).toBe('InProgress');
+  });
+
+  test('Given the submit fails, when she confirms, then her answers stay saved and she can try again', async ({ page, api }) => {
+    api.learningState.complete('m-sofia', ...SERVING);
+    api.learningState.quizzes.inProgress('m-sofia', 'qz-serving', [{ questionId: 'qq-first', choices: null, text: 'others' }], 3);
+    api.learningState.quizzes.failSubmits = true;
+    const quiz = new LearnQuizPage(page);
+    await quiz.open('qz-serving');
+
+    await quiz.submit();
+    await quiz.confirmSubmit();
+
+    await expect(quiz.dialog).toContainText('Your quiz was not submitted. Your answers are saved; try again.');
+    expect(api.learningState.quizzes.attempts[0]!.status).toBe('InProgress');
+  });
+
+  test('Given her attempt was submitted in another tab, when she changes an answer, then the page says it is already submitted', async ({ page, api }) => {
+    api.learningState.complete('m-sofia', ...SERVING);
+    const attempt = api.learningState.quizzes.inProgress('m-sofia', 'qz-serving', [], 0);
+    const quiz = new LearnQuizPage(page);
+    await quiz.open('qz-serving');
+    await expect(quiz.question('In Pick Up the Towel, what did the captain do before the big game?')).toBeVisible();
+    attempt.status = 'Scored';
+
+    await quiz.choose('Went home early');
+
+    await expect(quiz.alreadySubmitted).toBeVisible();
+  });
+
+  test('Given both attempts are used, when she opens the quiz, then Start is gone, her best attempt is offered and the server refuses another', async ({
+    page,
+    api,
+  }) => {
+    api.learningState.complete('m-sofia', ...SERVING);
+    api.learningState.quizzes.submitted('m-sofia', 'qz-serving', [
+      { questionId: 'qq-captain', choices: [1], text: null },
+      { questionId: 'qq-title', choices: [1], text: null },
+    ]);
+    api.learningState.quizzes.submitted('m-sofia', 'qz-serving', [
+      { questionId: 'qq-captain', choices: [1], text: null },
+      { questionId: 'qq-title', choices: [1], text: null },
+      { questionId: 'qq-first', choices: null, text: 'others' },
+    ]);
+    const intro = new LearnQuizIntroPage(page);
+    const quiz = new LearnQuizPage(page);
+
+    await intro.open('qz-serving');
+
+    await expect(intro.notice).toContainText('You’ve used both attempts. Your best score, 75%, is the one that counts.');
+    await expect(intro.startButton).toHaveCount(0);
+    await expect(intro.bestAttemptButton).toBeVisible();
+    await intro.expectAccessible();
+    await quiz.open('qz-serving');
+    await expect(quiz.noAttemptsLeft).toBeVisible();
+    expect(api.learningState.quizzes.attempts).toHaveLength(2);
   });
 
   test('Given a draft quiz, when she opens it, then it is not found', async ({ page, api }) => {

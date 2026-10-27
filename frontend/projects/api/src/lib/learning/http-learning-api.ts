@@ -180,6 +180,19 @@ export class HttpLearningApi implements LearningApi {
     );
   }
 
+  submitQuiz(
+    attemptId: string,
+    answers: QuizAnswer[],
+    position: number,
+  ): Observable<AnswersOutcome> {
+    return toAnswersOutcome(
+      this.http.post<{ id: string }>(
+        `${this.baseUrl}/learning/attempts/${encodeURIComponent(attemptId)}/submit`,
+        { answers, position },
+      ),
+    );
+  }
+
   askGuardian(): Observable<ConsentRequestOutcome> {
     return toConsentRequest(
       this.http.post<{ sentTo: string[] }>(`${this.baseUrl}/learning/consent-request`, null),

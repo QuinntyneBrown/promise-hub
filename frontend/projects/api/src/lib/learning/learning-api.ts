@@ -51,6 +51,12 @@ export interface LearningApi {
     answers: QuizAnswer[],
     position: number,
   ): Observable<AnswersOutcome>;
+  /** Saves her final answers, scores the attempt on the server and locks it (L2-075 criterion 5). */
+  submitQuiz(
+    attemptId: string,
+    answers: QuizAnswer[],
+    position: number,
+  ): Observable<AnswersOutcome>;
   /** Asks the guardians of the youth's household for consent. */
   askGuardian(): Observable<ConsentRequestOutcome>;
   /** The youth's first-run setup with its defaults and their program (L2-059). */

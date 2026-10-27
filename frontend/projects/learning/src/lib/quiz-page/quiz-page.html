@@ -105,6 +105,14 @@
       >
       @if (index() < v.questions.length - 1) {
         <ph-button variant="primary" icon="arrow-right" (click)="move(1)">Next</ph-button>
+      } @else {
+        <ph-button
+          variant="primary"
+          icon="check"
+          [disabled]="saveState() === 'offline'"
+          (click)="submit(v)"
+          >Submit answers</ph-button
+        >
       }
     </div>
   </div>

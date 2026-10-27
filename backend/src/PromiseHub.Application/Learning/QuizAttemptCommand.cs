@@ -67,6 +67,33 @@ public sealed class QuizAttemptCommand(IPromiseHubDb db, ITenantContext tenant, 
         return Gated<bool>.Found(true);
     }
 
+    /// <summary>
+    /// Saves her final answers, scores them against the quiz's current questions and locks the attempt (L2-075 criterion 5); a quiz
+    /// whose scores a mentor approves leaves it waiting (ADR 0055).
+    /// </summary>
+    public async Task<Gated<Guid>> SubmitAsync(Guid attemptId, SaveAnswersRequest request, CancellationToken cancellationToken = default)
+    {
+        var (attempt, error) = await OwnAsync(attemptId, cancellationToken);
+        if (attempt is null)
+        {
+            return new Gated<Guid>(error!.Status, UnlockAfter: error.UnlockAfter, Code: error.Code);
+        }
+        var questions = await Questions(attempt.QuizId, cancellationToken);
+        var answers = request.Answers ?? [];
+        if (Check(questions, answers) is { } errors)
+        {
+            return Gated<Guid>.Invalid(errors);
+        }
+        var quiz = await db.Quizzes.AsNoTracking().FirstAsync(q => q.Id == attempt.QuizId, cancellationToken);
+        var correct = questions.Count(q => QuizScoring.IsRight(q, answers.FirstOrDefault(a => a.QuestionId == q.Id)));
+        attempt.Save(QuizAnswers.Write(answers), Math.Clamp(request.Position, 0, Math.Max(0, questions.Count - 1)));
+        attempt.Submit(correct, questions.Count, quiz.PassMark, quiz.RequireApproval, clock.GetUtcNow());
+        audit.Record(new AuditEvent(AuditAction.Submitted, "QuizAttempt", attempt.Id,
+            $"{quiz.Title} attempt {attempt.Number} submitted by {tenant.ActorName}: {attempt.Score}%{(attempt.Passed == true ? ", passed" : "")}"));
+        await db.SaveChangesAsync(cancellationToken);
+        return Gated<Guid>.Found(attempt.Id);
+    }
+
     /// <summary>The caller's own attempt in progress while its quiz is visible and unlocked; otherwise why not.</summary>
     private async Task<(QuizAttempt? Attempt, Gated<bool>? Error)> OwnAsync(Guid attemptId, CancellationToken cancellationToken)
     {
