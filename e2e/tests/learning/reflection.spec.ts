@@ -46,6 +46,27 @@ test.describe('Write reflections', () => {
     await expect(reflection.action).toHaveValue('Pack my own lunch on Thursday.');
   });
 
+  test('Given sharing is off by default, when she turns on Share with my mentor and saves, then Daniel can read it, and saving with it off takes it back', async ({
+    page,
+    api,
+  }) => {
+    const reflection = new LearnReflectionPage(page);
+    await reflection.open('l-towel');
+    await expect(reflection.share).toHaveAccessibleName('Share with my mentor, Daniel Osei');
+    await reflection.write('Hopeful', WORDS);
+
+    await reflection.share.check();
+    await reflection.save();
+
+    await expect(reflection.saved('Reflection saved and shared')).toContainText('Daniel Osei can read it.');
+    expect(api.reflectionsState.of('m-sofia', 'l-towel')?.shared).toBe(true);
+    await reflection.expectAccessible();
+    await reflection.share.uncheck();
+    await reflection.save();
+    await expect(reflection.saved('Reflection saved')).toContainText('Only you can see it.');
+    expect(api.reflectionsState.of('m-sofia', 'l-towel')?.shared).toBe(false);
+  });
+
   test('Given an empty form, when she saves, then the mood and her words are asked for beside the fields and in a summary, and nothing is saved', async ({
     page,
     api,
