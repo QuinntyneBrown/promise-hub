@@ -1,0 +1,97 @@
+@if (!allowed()) {
+  <ph-error-page
+    icon="lock"
+    title="Only admins and program directors review applications"
+    text="Ask Tom Nguyen or Marisol Delgado."
+  >
+    <ph-button link="/">Back to Today</ph-button>
+  </ph-error-page>
+} @else {
+  @if (result(); as r) {
+    @switch (r.status) {
+      @case ('loaded') {
+        @if (r.status === 'loaded') {
+          @let a = r.value;
+          <ph-breadcrumb
+            [items]="[{ label: 'Applications', link: '/applications' }, { label: a.child }]"
+          />
+          <ph-page-header [title]="a.child" [subtitle]="subtitle(a)" />
+          <div class="split">
+            <div class="stack">
+              <ph-card title="Young person">
+                <ph-description-list [facts]="youngPerson(a)" />
+              </ph-card>
+              @if (a.referrer) {
+                <ph-card title="Referral">
+                  <ph-description-list [facts]="referral(a)" />
+                </ph-card>
+              } @else {
+                <ph-card title="Application">
+                  <ph-description-list [facts]="applicationFacts(a)" />
+                </ph-card>
+              }
+            </div>
+            <div class="stack">
+              <ph-card title="Family">
+                <ph-description-list [facts]="family(a)" />
+                <ph-button phCardFooter size="sm" [link]="['/families', a.householdId]"
+                  >Open household</ph-button
+                >
+              </ph-card>
+              <ph-card title="Notes">
+                @if (a.notes.length) {
+                  <ph-timeline label="Staff notes" [entries]="notes(a)" />
+                } @else {
+                  <ph-empty-state
+                    icon="edit"
+                    title="No notes yet"
+                    text="Notes are for staff only; the family never sees them."
+                  />
+                }
+                <ph-button phCardFooter size="sm" icon="plus" hasPopup="dialog" (click)="addNote(a)"
+                  >Add note</ph-button
+                >
+              </ph-card>
+            </div>
+          </div>
+        }
+      }
+      @case ('not-found') {
+        <ph-breadcrumb
+          [items]="[{ label: 'Applications', link: '/applications' }, { label: 'Application' }]"
+        />
+        <ph-card [flush]="true">
+          <ph-empty-state
+            icon="search"
+            title="We can’t find that application"
+            text="It may belong to another organization."
+            [headingLevel]="1"
+          >
+            <ph-button variant="primary" link="/applications">Applications</ph-button>
+          </ph-empty-state>
+        </ph-card>
+      }
+      @default {
+        <ph-breadcrumb
+          [items]="[{ label: 'Applications', link: '/applications' }, { label: 'Application' }]"
+        />
+        <ph-card [flush]="true">
+          <ph-empty-state
+            icon="warning"
+            tone="error"
+            title="Couldn’t load the application"
+            text="Check your connection and try again."
+            [headingLevel]="1"
+          >
+            <ph-button variant="primary" (click)="load(id())">Try again</ph-button>
+          </ph-empty-state>
+        </ph-card>
+      }
+    }
+  } @else {
+    <ph-page-header title="Application" />
+    <div aria-busy="true" aria-label="Loading the application">
+      <ph-skeleton shape="card" />
+    </div>
+  }
+}

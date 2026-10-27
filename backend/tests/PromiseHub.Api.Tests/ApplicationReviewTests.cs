@@ -90,6 +90,79 @@ public sealed partial class ApplicationReviewTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.NotFound, (await _factory.ClientFor(Tom).GetAsync("/applications")).StatusCode);
     }
 
+    [Fact]
+    public async Task An_application_shows_the_young_person_the_referral_and_the_family()
+    {
+        await Refer("rachel.ellis@bennetto.example.ca");
+        var id = Id((await List("WaitingReview")).GetProperty("applications").EnumerateArray().Single());
+
+        var app = await _factory.ClientFor(Tom).GetFromJsonAsync<JsonElement>($"/applications/{id}");
+
+        Assert.Equal("Zoe Campbell", app.GetProperty("child").GetString());
+        Assert.Equal("2013-01-20", app.GetProperty("dateOfBirth").GetString());
+        Assert.Equal("Winter Camp 2026", app.GetProperty("program").GetString());
+        Assert.Equal("WaitingReview", app.GetProperty("status").GetString());
+        Assert.Equal("Zoe is curious and kind.", app.GetProperty("reason").GetString());
+        var referrer = app.GetProperty("referrer");
+        Assert.Equal("Rachel Ellis", referrer.GetProperty("name").GetString());
+        Assert.Equal("Bennetto Elementary", referrer.GetProperty("organization").GetString());
+        Assert.Equal("rachel.ellis@bennetto.example.ca", referrer.GetProperty("contact").GetString());
+        var guardian = app.GetProperty("guardian");
+        Assert.Equal("Tanya Campbell", guardian.GetProperty("name").GetString());
+        Assert.Equal("905-555-0320", guardian.GetProperty("mobile").GetString());
+        Assert.Equal("Campbell", app.GetProperty("household").GetString());
+        Assert.False(app.GetProperty("returning").GetBoolean());
+        Assert.Empty(app.GetProperty("notes").EnumerateArray());
+    }
+
+    [Fact]
+    public async Task Staff_add_notes_newest_first_and_each_is_audited_without_its_text()
+    {
+        await Refer("rachel.ellis@bennetto.example.ca");
+        var id = Id((await List("WaitingReview")).GetProperty("applications").EnumerateArray().Single());
+
+        var first = await _factory.ClientFor(Marisol).PostAsJsonAsync($"/applications/{id}/notes", new { text = "Rachel says Zoe would do well with a mentor." });
+        _factory.Clock.Advance(TimeSpan.FromMinutes(5));
+        await _factory.ClientFor(Tom).PostAsJsonAsync($"/applications/{id}/notes", new { text = "  Called Tanya: happy for Zoe to start.  " });
+
+        Assert.Equal(HttpStatusCode.Created, first.StatusCode);
+        var notes = (await _factory.ClientFor(Tom).GetFromJsonAsync<JsonElement>($"/applications/{id}")).GetProperty("notes").EnumerateArray().ToList();
+        Assert.Equal(["Called Tanya: happy for Zoe to start.", "Rachel says Zoe would do well with a mentor."], notes.Select(n => n.GetProperty("text").GetString()));
+        Assert.Equal("Tom Nguyen", notes[0].GetProperty("author").GetString());
+        var audit = Query("SELECT Summary FROM AuditEntries WHERE RecordType = 'EnrollmentNote' AND Action = 'Created'");
+        Assert.Equal(2, audit.Count);
+        Assert.DoesNotContain(audit, a => a.Contains("Tanya", StringComparison.Ordinal));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData(null)]
+    public async Task An_empty_or_too_long_note_is_refused(string? text)
+    {
+        await Refer("rachel.ellis@bennetto.example.ca");
+        var id = Id((await List("WaitingReview")).GetProperty("applications").EnumerateArray().Single());
+
+        var empty = await _factory.ClientFor(Tom).PostAsJsonAsync($"/applications/{id}/notes", new { text });
+        var tooLong = await _factory.ClientFor(Tom).PostAsJsonAsync($"/applications/{id}/notes", new { text = new string('a', 2001) });
+
+        Assert.Equal("Write a note of up to 2,000 characters.", (await Errors(empty)).GetProperty("text").GetString());
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, tooLong.StatusCode);
+        Assert.Empty(Query("SELECT Id FROM EnrollmentNotes"));
+    }
+
+    [Fact]
+    public async Task Another_organization_cannot_read_or_note_an_application_and_site_leads_cannot_open_one()
+    {
+        await Refer("rachel.ellis@bennetto.example.ca");
+        var id = Id((await List("WaitingReview")).GetProperty("applications").EnumerateArray().Single());
+
+        Assert.Equal(HttpStatusCode.NotFound, (await _factory.ClientFor(Grace).GetAsync($"/applications/{id}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await _factory.ClientFor(Grace).PostAsJsonAsync($"/applications/{id}/notes", new { text = "Hello" })).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await _factory.ClientFor(Jaylen).GetAsync($"/applications/{id}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await _factory.ClientFor(Tom).GetAsync($"/applications/{Guid.NewGuid()}")).StatusCode);
+    }
+
     private async Task<JsonElement> List(string status) =>
         await _factory.ClientFor(Tom).GetFromJsonAsync<JsonElement>($"/applications?status={status}");
 

@@ -13,6 +13,10 @@ public static class ApplicationEndpoints
     {
         var applications = app.MapGroup("/applications").RequireModule(ModuleId.Roster).RequirePermission(Permission.ReviewEnrollments);
         applications.MapGet("", (string? status, ApplicationsHandler handler, CancellationToken ct) => handler.ListAsync(status, ct));
+        applications.MapGet("/{id:guid}", async (Guid id, ApplicationsHandler handler, CancellationToken ct) =>
+            await handler.GetAsync(id, ct) is { } application ? Results.Ok(application) : Results.NotFound());
+        applications.MapPost("/{id:guid}/notes", async (Guid id, AddApplicationNoteCommand command, ApplicationsHandler handler, CancellationToken ct) =>
+            (await handler.AddNoteAsync(id, command, ct)).ToHttp($"/applications/{id}/notes"));
         return app;
     }
 }

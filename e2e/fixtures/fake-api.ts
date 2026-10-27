@@ -237,6 +237,7 @@ export class FakeApi {
     householdId?: string;
     reviewedBy?: string | null;
     reviewedAt?: string | null;
+    notes?: { id: string; author: string; text: string; createdAt: string }[];
   }[] = [];
   /** Incidents as reported: organization, reporter membership and the form's facts. */
   private incidents: {
@@ -470,6 +471,12 @@ export class FakeApi {
       submittedBy: a.appliedAs === 'Referrer' ? a.referrer!.name : a.appliedAs === 'Youth' ? `${a.firstName} ${a.lastName}` : a.guardian.name,
     });
     return id;
+  }
+
+  /** A staff note already on an application. */
+  noteApplication(id: string, author: string, text: string, createdAt = '2026-11-05T19:15:00Z'): void {
+    const r = this.enrollmentRequests.find((x) => x.id === id)!;
+    (r.notes ??= []).push({ id: `note-${this.nextId++}`, author, text, createdAt });
   }
 
   /** Zoe Campbell, 13, referred by Rachel Ellis to a program (the cast of L2-071). */
@@ -719,6 +726,8 @@ export class FakeApi {
     ['DELETE', /^\/api\/g\/home\/(?<token>[^/]+)\/children\/(?<id>[^/]+)\/pickups\/(?<pickup>[^/]+)$/, (route, p) => this.guardianRemovePickup(route, p['token']!, p['id']!, p['pickup']!)],
     ['GET', /^\/api\/programs\/(?<id>[^/]+)\/enrollments$/, (route, p) => this.listEnrollmentRequests(route, p['id']!)],
     ['GET', /^\/api\/applications$/, (route) => this.listApplications(route)],
+    ['GET', /^\/api\/applications\/(?<id>[^/]+)$/, (route, p) => this.getApplication(route, p['id']!)],
+    ['POST', /^\/api\/applications\/(?<id>[^/]+)\/notes$/, (route, p) => this.addApplicationNote(route, p['id']!)],
     ['POST', /^\/api\/enrollments\/review$/, (route) => this.reviewEnrollments(route, null)],
     ['POST', /^\/api\/enrollments\/(?<id>[^/]+)\/review$/, (route, p) => this.reviewEnrollments(route, p['id']!)],
     ['POST', /^\/api\/programs\/(?<id>[^/]+)\/enrollment\/open$/, (route, p) => this.openEnrollmentRoute(route, p['id']!)],
@@ -3177,6 +3186,46 @@ export class FakeApi {
             : (z.reviewedAt ?? '').localeCompare(a.reviewedAt ?? ''),
       );
     return route.fulfill({ json: { counts: { waitingReview: count('WaitingReview'), waitlisted: count('Waitlisted'), accepted: count('Accepted'), declined: count('Declined') }, applications } });
+  }
+
+  private ownApplication(m: Membership, id: string) {
+    return this.enrollmentRequests.find((r) => r.id === id && r.childId && this.ownProgram(m, r.programId));
+  }
+
+  /** One application with the family and staff notes, newest first (L2-072). */
+  private async getApplication(route: Route, id: string): Promise<void> {
+    const m = await this.reviewCaller(route);
+    if (!m) return;
+    const r = this.ownApplication(m, id);
+    if (!r) return route.fulfill({ status: 404 });
+    const summary = this.applicationSummary(m, r, new Set(this.programs.flatMap((x) => x.roster)));
+    const { child, household } = this.childrenOf(m).find((x) => x.child.id === r.childId)!;
+    const g = this.sortedGuardians(household)[0];
+    return route.fulfill({
+      json: {
+        ...summary,
+        firstName: child.firstName,
+        dateOfBirth: child.dateOfBirth,
+        householdId: household.id,
+        household: household.name,
+        guardian: g ? { name: g.name, mobile: g.mobile, email: g.email, language: g.language } : null,
+        reason: r.reason ?? null,
+        referrer: r.appliedAs === 'Referrer' && r.referrer ? r.referrer : null,
+        notes: [...(r.notes ?? [])].sort((a, z) => z.createdAt.localeCompare(a.createdAt)),
+      },
+    });
+  }
+
+  private async addApplicationNote(route: Route, id: string): Promise<void> {
+    const m = await this.reviewCaller(route);
+    if (!m) return;
+    const r = this.ownApplication(m, id);
+    if (!r) return route.fulfill({ status: 404 });
+    const text = ((route.request().postDataJSON() as { text?: string | null }).text ?? '').trim();
+    if (!text || text.length > 2000) return route.fulfill({ status: 422, json: { errors: { text: 'Write a note of up to 2,000 characters.' } } });
+    const note = { id: `note-${this.nextId++}`, author: m.personName, text, createdAt: new Date(NOW.getTime() + this.nextId * 1000).toISOString() };
+    (r.notes ??= []).push(note);
+    return route.fulfill({ status: 201, json: { id: note.id } });
   }
 
   private applicationSummary(m: Membership, r: (typeof this.enrollmentRequests)[number], enrolledAnywhere: Set<string>) {
