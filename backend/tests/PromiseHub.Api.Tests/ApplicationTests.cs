@@ -99,6 +99,59 @@ public sealed partial class ApplicationTests : IAsyncLifetime
         Assert.Equal(before, Query(rivera).Count);
     }
 
+    [Fact]
+    public async Task A_referrer_refers_a_young_person_with_their_guardians_contact_and_is_kept_on_the_request()
+    {
+        var slug = await Open();
+        await Verify(slug, "Rachel.Ellis@bennetto.example.ca");
+
+        Assert.Equal(HttpStatusCode.NoContent, (await SaveReferral(slug)).StatusCode);
+        var unagreed = await _client.PostAsJsonAsync($"/g/enroll/{slug}/submit", new { consent = false });
+        Assert.Equal("Confirm the family agrees to be contacted.", (await Errors(unagreed)).GetProperty("consent").GetString());
+
+        var result = await (await _client.PostAsJsonAsync($"/g/enroll/{slug}/submit", new { consent = true })).Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Equal("Referrer", result.GetProperty("appliedAs").GetString());
+        Assert.False(result.GetProperty("seasonConsent").GetBoolean());
+        Assert.Equal("Referrer|Rachel Ellis|Guidance counsellor|Bennetto Elementary|rachel.ellis@bennetto.example.ca|Zoe is curious and kind.|0|Rachel Ellis",
+            Query("SELECT r.AppliedAs, r.ReferrerName, r.ReferrerRole, r.ReferrerOrganization, r.ReferrerContact, r.Reason, r.SeasonConsent, r.SubmittedBy FROM EnrollmentRequests r JOIN Children c ON c.Id = r.ChildId WHERE c.FirstName = 'Zoe'").Single());
+        Assert.Equal("Tanya Campbell", Query("SELECT g.Name FROM Guardians g JOIN Households h ON h.Id = g.HouseholdId WHERE h.Name = 'Campbell'").Single());
+        Assert.Contains("Zoe Campbell referred by Rachel Ellis", Query("SELECT Summary FROM AuditEntries WHERE RecordType = 'Enrollment' AND Action = 'Created'").Single());
+    }
+
+    [Fact]
+    public async Task A_referrers_missing_name_role_reason_and_guardian_are_each_named()
+    {
+        var slug = await Open();
+        await Verify(slug, "rachel.ellis@bennetto.example.ca");
+
+        var errors = await Errors(await SaveReferral(slug, name: "", role: " ", reason: "", guardianName: ""));
+
+        Assert.Equal("Enter your full name.", errors.GetProperty("referrerName").GetString());
+        Assert.Equal("Tell us how you know the young person.", errors.GetProperty("referrerRole").GetString());
+        Assert.Equal("Tell us why you’re referring them.", errors.GetProperty("reason").GetString());
+        Assert.Equal("Enter their parent or guardian’s name.", errors.GetProperty("guardianName").GetString());
+    }
+
+    [Fact]
+    public async Task Free_text_over_its_limit_is_refused_and_stored_text_stays_plain()
+    {
+        var slug = await Open();
+        await Verify(slug, "rachel.ellis@bennetto.example.ca");
+
+        var errors = await Errors(await SaveReferral(slug, name: new string('a', 101), role: new string('b', 101), organization: new string('c', 121), reason: new string('d', 1001), firstName: new string('e', 101)));
+
+        Assert.Equal("Keep your name under 100 characters.", errors.GetProperty("referrerName").GetString());
+        Assert.Equal("Keep your role under 100 characters.", errors.GetProperty("referrerRole").GetString());
+        Assert.Equal("Keep the organization under 120 characters.", errors.GetProperty("referrerOrganization").GetString());
+        Assert.Equal("Keep it under 1,000 characters.", errors.GetProperty("reason").GetString());
+        Assert.Equal("Keep each name under 100 characters.", errors.GetProperty("children[0].name").GetString());
+
+        await SaveReferral(slug, reason: "<script>alert(1)</script>");
+        await _client.PostAsJsonAsync($"/g/enroll/{slug}/submit", new { consent = true });
+        Assert.Equal("<script>alert(1)</script>", Query("SELECT Reason FROM EnrollmentRequests WHERE AppliedAs = 'Referrer'").Single());
+    }
+
     private async Task<string> Open()
     {
         var response = await _factory.ClientFor(Marisol).PostAsync($"/programs/{WinterCamp}/enrollment/open", null);
@@ -124,7 +177,22 @@ public sealed partial class ApplicationTests : IAsyncLifetime
             children = new[] { new { id = (Guid?)null, firstName, lastName = "Johnson", dateOfBirth, school = "Sir John A. Macdonald, Grade 9", allergies = "", medication = "", enroll = true } },
         });
 
-    private string LastCode() => CodePattern().Match(Sms.Sent.Last(s => s.Text.Contains("code is", StringComparison.Ordinal)).Text).Value;
+    private Task<HttpResponseMessage> SaveReferral(string slug, string name = "Rachel Ellis", string role = "Guidance counsellor", string organization = "Bennetto Elementary",
+        string reason = "Zoe is curious and kind.", string guardianName = "Tanya Campbell", string firstName = "Zoe") =>
+        _client.PutAsJsonAsync($"/g/enroll/{slug}/draft", new
+        {
+            applyingAs = "Referrer",
+            referrer = new { name, role, organization },
+            reason,
+            household = new { guardianName, mobile = "905-555-0320", email = "", language = "English" },
+            children = new[] { new { id = (Guid?)null, firstName, lastName = "Campbell", dateOfBirth = "2013-01-20", school = "Bennetto Elementary, Grade 8", allergies = "", medication = "", enroll = true } },
+        });
+
+    private string LastCode() => CodePattern().Match(Codes().Last()).Value;
+
+    private IEnumerable<string> Codes() =>
+        Sms.Sent.Select(s => s.Text).Concat(_factory.Services.GetRequiredService<FakeEmailSender>().Bodies.Select(b => b.Body))
+            .Where(t => t.Contains("code is", StringComparison.Ordinal));
 
     private FakeSmsSender Sms => _factory.Services.GetRequiredService<FakeSmsSender>();
 

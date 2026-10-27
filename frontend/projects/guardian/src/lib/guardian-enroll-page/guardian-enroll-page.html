@@ -87,17 +87,60 @@
       <h1>{{ g().verifyHeading }}</h1>
       <ph-alert tone="danger" [title]="g().locked" />
     }
-    @case ('youth') {
+    @case ('referrer') {
       <h1>{{ text.aboutYouHeading }}</h1>
-      <form class="stack" novalidate (ngSubmit)="toGuardian()">
+      <p>{{ text.referrerText }}</p>
+      <form class="stack" novalidate (ngSubmit)="toYoungPerson()">
         <ph-card [title]="text.youCard">
+          <div class="stack">
+            <ph-text-field
+              inputId="referrerName"
+              [label]="text.referrerName"
+              name="referrerName"
+              autocomplete="name"
+              [error]="errors()['referrerName'] ?? null"
+              [(ngModel)]="referrer.name"
+            />
+            <ph-text-field
+              inputId="referrerRole"
+              [label]="text.referrerRole"
+              name="referrerRole"
+              autocomplete="organization-title"
+              [help]="text.referrerRoleHelp"
+              [error]="errors()['referrerRole'] ?? null"
+              [(ngModel)]="referrer.role"
+            />
+            <ph-text-field
+              inputId="referrerOrganization"
+              [label]="text.referrerOrganization"
+              name="referrerOrganization"
+              autocomplete="organization"
+              [optional]="true"
+              [error]="errors()['referrerOrganization'] ?? null"
+              [(ngModel)]="referrer.organization"
+            />
+            <ph-description-list
+              [facts]="[{ key: 'contact', term: text.referrerContact, value: verifiedContact() }]"
+            />
+          </div>
+        </ph-card>
+        <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
+          text.continue
+        }}</ph-button>
+      </form>
+    }
+    @case ('youth') {
+      @let referring = applyingAs() === 'Referrer';
+      <h1>{{ referring ? text.youngPersonHeading : text.aboutYouHeading }}</h1>
+      <form class="stack" novalidate (ngSubmit)="toGuardian()">
+        <ph-card [title]="referring ? text.referringCard : text.youCard">
           <div class="stack">
             <div class="two-col">
               <ph-text-field
                 inputId="youth-first"
                 [label]="text.firstName"
                 name="youthFirst"
-                autocomplete="given-name"
+                [autocomplete]="referring ? 'off' : 'given-name'"
                 [error]="errors()['children[0].name'] ?? null"
                 [(ngModel)]="children[0].firstName"
               />
@@ -105,7 +148,7 @@
                 inputId="youth-last"
                 [label]="text.lastName"
                 name="youthLast"
-                autocomplete="family-name"
+                [autocomplete]="referring ? 'off' : 'family-name'"
                 [(ngModel)]="children[0].lastName"
               />
             </div>
@@ -114,7 +157,7 @@
               [label]="text.dateOfBirth"
               type="date"
               name="youthDob"
-              [help]="text.ageHelp"
+              [help]="referring ? null : text.ageHelp"
               [error]="errors()['children[0].dateOfBirth'] ?? null"
               [(ngModel)]="children[0].dateOfBirth"
             />
@@ -127,7 +170,7 @@
             />
             <ph-textarea
               inputId="youth-reason"
-              [label]="text.whyYouth"
+              [label]="referring ? text.whyReferrer : text.whyYouth"
               name="reason"
               [rows]="3"
               [help]="text.whyHelp"
@@ -139,12 +182,32 @@
         <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
           text.continue
         }}</ph-button>
+        @if (referring) {
+          <ph-button variant="ghost" (click)="back()">{{ text.back }}</ph-button>
+        }
       </form>
     }
     @case ('household') {
       @let guardianPath = applyingAs() === 'Guardian';
-      <h1>{{ guardianPath ? text.householdHeading : text.yourGuardianHeading }}</h1>
-      <p>{{ guardianPath ? text.householdText : text.yourGuardianText }}</p>
+      @let theirs = applyingAs() === 'Referrer';
+      <h1>
+        {{
+          guardianPath
+            ? text.householdHeading
+            : theirs
+              ? text.theirGuardianHeading
+              : text.yourGuardianHeading
+        }}
+      </h1>
+      <p>
+        {{
+          guardianPath
+            ? text.householdText
+            : theirs
+              ? text.theirGuardianText
+              : text.yourGuardianText
+        }}
+      </p>
       <form class="stack" novalidate (ngSubmit)="fromHousehold()">
         <ph-card [title]="guardianPath ? null : text.guardianCard">
           <div class="stack">
@@ -282,7 +345,7 @@
             </ul>
           </ph-card>
         } @else {
-          <ph-card [title]="text.applicationCard">
+          <ph-card [title]="applyingAs() === 'Referrer' ? text.referralCard : text.applicationCard">
             <ph-description-list [facts]="application()" />
           </ph-card>
         }
@@ -311,6 +374,9 @@
           </p>
           @if (r.appliedAs === 'Youth' && !r.seasonConsent) {
             <p>{{ text.askConsent(household.guardianName ?? '') }}</p>
+          }
+          @if (r.appliedAs === 'Referrer') {
+            <p>{{ text.contactFamily(household.guardianName ?? '') }}</p>
           }
           <p>{{ text.doneText }}</p>
         </div>

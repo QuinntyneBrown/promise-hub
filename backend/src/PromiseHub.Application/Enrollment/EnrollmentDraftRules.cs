@@ -11,6 +11,9 @@ public static class EnrollmentDraftRules
 {
     public const int MinimumYouthAge = 12;
     public const int MaximumYouthAge = 18;
+    public const int NameLength = 100;
+    public const int OrganizationLength = 120;
+    public const int ReasonLength = 1000;
 
     public static int Age(DateOnly dateOfBirth, DateOnly today)
     {
@@ -86,6 +89,10 @@ public static class EnrollmentDraftRules
         {
             errors["children[0].name"] = "Enter the young person’s first and last name.";
         }
+        else if (person.FirstName.Trim().Length > NameLength || person.LastName.Trim().Length > NameLength)
+        {
+            errors["children[0].name"] = "Keep each name under 100 characters.";
+        }
         if (person?.DateOfBirth is not { } dateOfBirth)
         {
             errors["children[0].dateOfBirth"] = "Enter the young person’s date of birth.";
@@ -97,6 +104,38 @@ public static class EnrollmentDraftRules
         if (string.IsNullOrWhiteSpace(draft.Reason))
         {
             errors["reason"] = youth ? "Tell us why you’re interested." : "Tell us why you’re referring them.";
+        }
+        else if (draft.Reason.Trim().Length > ReasonLength)
+        {
+            errors["reason"] = "Keep it under 1,000 characters.";
+        }
+        if (!youth)
+        {
+            Referrer(draft.Referrer, errors);
+        }
+    }
+
+    private static void Referrer(EnrollmentReferrerDraft? referrer, Dictionary<string, string> errors)
+    {
+        if (string.IsNullOrWhiteSpace(referrer?.Name))
+        {
+            errors["referrerName"] = "Enter your full name.";
+        }
+        else if (referrer.Name.Trim().Length > NameLength)
+        {
+            errors["referrerName"] = "Keep your name under 100 characters.";
+        }
+        if (string.IsNullOrWhiteSpace(referrer?.Role))
+        {
+            errors["referrerRole"] = "Tell us how you know the young person.";
+        }
+        else if (referrer.Role.Trim().Length > NameLength)
+        {
+            errors["referrerRole"] = "Keep your role under 100 characters.";
+        }
+        if (referrer?.Organization?.Trim().Length > OrganizationLength)
+        {
+            errors["referrerOrganization"] = "Keep the organization under 120 characters.";
         }
     }
 

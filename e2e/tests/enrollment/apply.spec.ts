@@ -62,3 +62,56 @@ test.describe('Apply as a young person', () => {
     await expect(enroll.heading).toHaveText('About you');
   });
 });
+
+test.describe('Refer a young person', () => {
+  test.use({ signedInAs: null });
+
+  test('Given Rachel, a guidance counsellor, when she refers Zoe with her guardian’s contact, then the referral waits for review and the family will be contacted', async ({ page, api }) => {
+    const slug = api.openEnrollment('p-winter');
+    const enroll = new GuardianEnrollPage(page);
+    await enroll.open(slug);
+
+    await enroll.applyAs('I’m referring a young person');
+    await enroll.verify('rachel.ellis@bennetto.example.ca', api.guardianCode);
+
+    await expect(enroll.heading).toHaveText('About you');
+    await expect(enroll.text('rachel.ellis@bennetto.example.ca')).toBeVisible();
+    await enroll.next();
+    await expect(enroll.fieldError('referrerName')).toHaveText('Enter your full name.');
+    await expect(enroll.fieldError('referrerRole')).toHaveText('Tell us how you know the young person.');
+    await enroll.field('Your full name').fill('Rachel Ellis');
+    await enroll.field('Your role').fill('Guidance counsellor');
+    await enroll.field('School or organization (optional)').fill('Bennetto Elementary');
+    await enroll.expectAccessible();
+    await enroll.next();
+
+    await expect(enroll.heading).toHaveText('The young person');
+    await enroll.fillYoungPerson({ firstName: 'Zoe', lastName: 'Campbell', dateOfBirth: '2013-01-20', reason: 'Zoe is curious and kind, and needs somewhere to belong after school.' });
+    await enroll.next();
+
+    await expect(enroll.heading).toHaveText('Their parent or guardian');
+    await enroll.field('Guardian’s full name').fill('Tanya Campbell');
+    await enroll.field('Guardian’s mobile number').fill('905-555-0320');
+    await enroll.next();
+
+    await expect(enroll.heading).toHaveText('Check and submit');
+    await expect(enroll.text('Rachel Ellis · Guidance counsellor, Bennetto Elementary')).toBeVisible();
+    await expect(enroll.text('Zoe Campbell', { exact: true })).toBeVisible();
+    await enroll.expectAccessible();
+    await enroll.next('Submit');
+    await expect(enroll.text('Confirm the family agrees to be contacted.')).toBeVisible();
+    await enroll.agree(/agrees to be contacted/);
+    await enroll.next('Submit');
+
+    await expect(enroll.heading).toHaveText('Thank you, Rachel');
+    await expect(enroll.text('Zoe is waiting for review.')).toBeVisible();
+    await expect(enroll.text('We’ll contact Tanya Campbell about next steps.')).toBeVisible();
+    expect(api.lastEnrollmentRequest()).toMatchObject({
+      appliedAs: 'Referrer',
+      seasonConsent: false,
+      referrer: { name: 'Rachel Ellis', role: 'Guidance counsellor', organization: 'Bennetto Elementary', contact: 'rachel.ellis@bennetto.example.ca' },
+    });
+    await enroll.expectAccessible();
+    await enroll.expectNoHorizontalScroll();
+  });
+});

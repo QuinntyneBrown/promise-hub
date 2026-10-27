@@ -15,6 +15,7 @@ import {
   EnrollmentChild,
   EnrollmentDraft,
   EnrollmentPage,
+  EnrollmentReferrer,
   EnrollmentSavedDraft,
   EnrollmentSubmitted,
   GUARDIAN_ENROLLMENT_API,
@@ -45,6 +46,7 @@ type Step =
   | 'contact'
   | 'code'
   | 'locked'
+  | 'referrer'
   | 'youth'
   | 'household'
   | 'children'
@@ -93,6 +95,9 @@ export class GuardianEnrollPage {
   protected readonly result = signal<EnrollmentSubmitted | null>(null);
   protected readonly applyingAs = signal<EnrollmentApplicant>('Guardian');
   protected reason = '';
+  protected referrer: EnrollmentReferrer = { name: '', role: '', organization: '' };
+  /** The contact verified with the code, shown on the referrer's step. */
+  protected readonly verifiedContact = signal('');
   protected contact = '';
   protected code = '';
   protected consent = false;
@@ -111,6 +116,7 @@ export class GuardianEnrollPage {
     return [
       { value: 'Guardian', label: t.asGuardian, hint: t.asGuardianHint },
       { value: 'Youth', label: t.asYouth, hint: t.asYouthHint },
+      { value: 'Referrer', label: t.asReferrer, hint: t.asReferrerHint },
     ];
   });
   protected readonly languages: SelectOption[] = [
@@ -176,6 +182,18 @@ export class GuardianEnrollPage {
     else this.toReview();
   }
 
+  /** The referrer's own step: name, role and organization, checked on the server before the young person's step. */
+  protected toYoungPerson(): void {
+    this.save((errors) => {
+      const own = Object.fromEntries(
+        Object.entries(errors).filter(([k]) => k.startsWith('referrer')),
+      );
+      if (Object.keys(own).length) return this.errors.set(own);
+      this.errors.set({});
+      this.step.set('youth');
+    });
+  }
+
   /** The young person's step: their details and reason, checked on the server before their guardian's step. */
   protected toGuardian(): void {
     this.save((errors) => {
@@ -213,6 +231,8 @@ export class GuardianEnrollPage {
       this.step.set(this.applyingAs() === 'Guardian' ? 'children' : 'household');
     } else if (this.step() === 'household' && this.applyingAs() !== 'Guardian') {
       this.step.set('youth');
+    } else if (this.step() === 'youth') {
+      this.step.set('referrer');
     } else {
       this.step.set('household');
     }
@@ -262,10 +282,13 @@ export class GuardianEnrollPage {
   }
 
   protected firstName(): string {
+    const path = this.applyingAs();
     const name =
-      this.applyingAs() === 'Youth'
+      path === 'Youth'
         ? (this.children[0]?.firstName ?? '')
-        : this.household.guardianName;
+        : path === 'Referrer'
+          ? this.referrer.name
+          : this.household.guardianName;
     return (name ?? '').trim().split(' ')[0] ?? '';
   }
 
@@ -275,11 +298,23 @@ export class GuardianEnrollPage {
     return c ? `${c.firstName} ${c.lastName}`.trim() : '';
   }
 
-  /** The review of a young person's application. */
+  /** The review of a young person's application, or of a referral. */
   protected application() {
     const t = this.t();
+    const by = [this.referrer.role, this.referrer.organization].filter(Boolean).join(', ');
+    const lead =
+      this.applyingAs() === 'Referrer'
+        ? [
+            {
+              key: 'by',
+              term: t.factReferredBy,
+              value: [this.referrer.name, by].filter(Boolean).join(' · '),
+            },
+            { key: 'person', term: t.factYoungPerson, value: this.applicantName() },
+          ]
+        : [{ key: 'you', term: t.factYou, value: this.applicantName() }];
     return [
-      { key: 'you', term: t.factYou, value: this.applicantName() },
+      ...lead,
       { key: 'why', term: t.factWhy, value: this.reason },
       { key: 'guardian', term: t.factGuardian, value: this.guardianLine() },
     ];
@@ -289,6 +324,7 @@ export class GuardianEnrollPage {
   protected agreement(): string {
     const t = this.t();
     if (this.applyingAs() === 'Guardian') return t.consent;
+    if (this.applyingAs() === 'Referrer') return t.referrerAgree;
     const born = this.children[0]?.dateOfBirth;
     return born && this.age(born) >= 18 ? t.consent : t.youthAgree;
   }
@@ -317,6 +353,7 @@ export class GuardianEnrollPage {
   }
 
   private useDraft(draft: EnrollmentSavedDraft): void {
+    this.verifiedContact.set(draft.contact);
     const saved = draft.applyingAs ?? 'Guardian';
     if (saved !== 'Guardian') this.applyingAs.set(saved);
     if (this.applyingAs() !== 'Guardian' && saved === 'Guardian') {
@@ -324,15 +361,18 @@ export class GuardianEnrollPage {
       this.children = [];
       this.addChild();
       this.returning.set(false);
-      this.step.set('youth');
+      this.step.set(this.applyingAs() === 'Referrer' ? 'referrer' : 'youth');
       return;
     }
     this.household = { ...draft.household };
     this.children = draft.children.map((c) => ({ ...c }));
     this.reason = draft.reason ?? '';
+    this.referrer = { name: '', role: '', organization: '', ...draft.referrer };
     this.returning.set(draft.returning);
     this.language.set(draft.language);
-    this.step.set(this.applyingAs() === 'Guardian' ? 'household' : 'youth');
+    this.step.set(
+      { Guardian: 'household', Youth: 'youth', Referrer: 'referrer' }[this.applyingAs()] as Step,
+    );
   }
 
   private save(then: (errors: Record<string, string>) => void): void {
@@ -342,6 +382,7 @@ export class GuardianEnrollPage {
       .save(this.slug(), {
         applyingAs: this.applyingAs(),
         reason: this.applyingAs() === 'Guardian' ? null : this.reason,
+        referrer: this.applyingAs() === 'Referrer' ? this.referrer : null,
         household: this.household,
         children: this.children,
       })

@@ -3242,10 +3242,20 @@ export class FakeApi {
     if (children.filter((c) => c.enroll).length > 1) errors['children'] = 'Apply for one young person at a time.';
     const person = children.find((c) => c.enroll);
     if (!person?.firstName?.trim() || !person?.lastName?.trim()) errors['children[0].name'] = 'Enter the young person’s first and last name.';
+    else if (person.firstName.trim().length > 100 || person.lastName.trim().length > 100) errors['children[0].name'] = 'Keep each name under 100 characters.';
     if (!person?.dateOfBirth) errors['children[0].dateOfBirth'] = 'Enter the young person’s date of birth.';
     else if (youth && (this.enrollAge(person.dateOfBirth) < 12 || this.enrollAge(person.dateOfBirth) > 18))
       errors['children[0].dateOfBirth'] = 'Young people aged 12 to 18 can apply for themselves. Ask a parent or guardian to apply for you.';
     if (!draft.reason?.trim()) errors['reason'] = youth ? 'Tell us why you’re interested.' : 'Tell us why you’re referring them.';
+    else if (draft.reason.trim().length > 1000) errors['reason'] = 'Keep it under 1,000 characters.';
+    if (!youth) {
+      const r = draft.referrer;
+      if (!r?.name?.trim()) errors['referrerName'] = 'Enter your full name.';
+      else if (r.name.trim().length > 100) errors['referrerName'] = 'Keep your name under 100 characters.';
+      if (!r?.role?.trim()) errors['referrerRole'] = 'Tell us how you know the young person.';
+      else if (r.role.trim().length > 100) errors['referrerRole'] = 'Keep your role under 100 characters.';
+      if ((r?.organization?.trim().length ?? 0) > 120) errors['referrerOrganization'] = 'Keep the organization under 120 characters.';
+    }
     return errors;
   }
 
