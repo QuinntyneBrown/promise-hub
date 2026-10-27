@@ -23,13 +23,13 @@ public sealed class ConsentGate(IPromiseHubDb db, ITenantContext tenant, TimePro
     }
 
     /// <summary>True when the membership is a youth whose linked child needs consent and has none in force.</summary>
-    public async Task<bool> GatedAsync(Guid membershipId, CancellationToken cancellationToken = default)
+    public async Task<bool> GatedAsync(Guid membershipId, CancellationToken cancellationToken = default) =>
+        (await ForMembershipAsync(membershipId, cancellationToken))?.Gated ?? false;
+
+    /// <summary>The consent status of a youth membership's linked child; null for any other membership.</summary>
+    public async Task<ConsentStatus?> ForMembershipAsync(Guid membershipId, CancellationToken cancellationToken = default)
     {
         var membership = await db.Memberships.AsNoTracking().Where(m => m.Id == membershipId).Select(m => new { m.Role, m.ChildId }).FirstOrDefaultAsync(cancellationToken);
-        if (membership is not { Role: Role.Youth, ChildId: { } childId })
-        {
-            return false;
-        }
-        return (await StatusAsync(childId, cancellationToken)).Gated;
+        return membership is { Role: Role.Youth, ChildId: { } childId } ? await StatusAsync(childId, cancellationToken) : null;
     }
 }

@@ -89,6 +89,8 @@ export * from './lib/guardian/guardian-consent';
 export * from './lib/guardian/consent-answers';
 export * from './lib/consent/child-consent';
 export * from './lib/consent/consent-request-outcome';
+export * from './lib/learning/lessons';
+export * from './lib/learning/lessons-result';
 export * from './lib/guardian/guardian-api';
 export * from './lib/guardian/guardian-api.token';
 export * from './lib/guardian/guardian-slip';

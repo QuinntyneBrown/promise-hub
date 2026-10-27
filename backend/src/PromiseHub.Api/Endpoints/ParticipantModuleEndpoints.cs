@@ -1,6 +1,7 @@
 using PromiseHub.Api.Authorization;
 using PromiseHub.Api.Modules;
 using PromiseHub.Application.Curriculum;
+using PromiseHub.Application.Guardian;
 using PromiseHub.Application.Identity;
 using PromiseHub.Application.Learning;
 using PromiseHub.Application.Mentoring;
@@ -15,6 +16,13 @@ public static class ParticipantModuleEndpoints
     public static IEndpointRouteBuilder MapParticipantModuleEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapGet("/learning/me", (LearnerHandler handler, CancellationToken ct) => handler.HandleAsync(ct))
+            .RequireModule(ModuleId.Learning).RequirePermission(Permission.Learn);
+        // Youth work: closed to a youth under the consent age until a guardian consents (L2-056, L2-057, ADR 0046). Empty until prompt 57.
+        app.MapGet("/learning/lessons", () => new LessonsDto([]))
+            .RequireModule(ModuleId.Learning).RequirePermission(Permission.Learn).RequireGuardianConsent();
+        // Open to a gated youth, so the gate can ask a guardian (L2-056 criterion 3).
+        app.MapPost("/learning/consent-request", async (ConsentRequestHandler handler, CancellationToken ct) =>
+            ConsentRequestHttp.ToHttp(await handler.RequestAsync(ct)))
             .RequireModule(ModuleId.Learning).RequirePermission(Permission.Learn);
         app.MapGet("/curriculum", (CurriculumHandler handler, CancellationToken ct) => handler.HandleAsync(ct))
             .RequireModule(ModuleId.Learning).RequirePermission(Permission.AuthorCurriculum);

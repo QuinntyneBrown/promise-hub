@@ -4,14 +4,15 @@ import { LearningPage } from '../../pages/learning.page';
 import { ShellPage } from '../../pages/shell.page';
 import { TodayPage } from '../../pages/today.page';
 
-// L2-005 criteria 6 and 8, L2-007 criterion 9: Learning opens only while its module is on, for youth.
+// L2-005 criteria 6 and 8, L2-007 criterion 9, L2-056 criterion 5: Learning opens only while its module is on, for youth.
 const SUITE: ModuleId[] = ['Roster', 'Slips', 'RollCall', 'QuickCards', 'Pickup', 'Messages', 'Incidents', 'Reports'];
 
 test.describe('Learning', () => {
   test.use({ signedInAs: 'm-sofia' });
 
-  test('Given Learning is on, when Sofía follows Learning from Today, then her lessons page says none are published yet', async ({ page, api }) => {
+  test('Given Learning is on and her guardian has consented, when Sofía follows Learning from Today, then her lessons page says none are published yet', async ({ page, api }) => {
     api.setModules('org-harbourview', [...SUITE, 'Learning']);
+    api.giveConsent('c-sofia');
     const learning = new LearningPage(page);
     await new TodayPage(page).open();
 

@@ -439,6 +439,8 @@ export class FakeApi {
   private readonly routes: [string, RegExp, Handler][] = [
     ['GET', /^\/api\/me$/, (route) => this.me(route)],
     ['GET', /^\/api\/learning\/me$/, (route) => this.learner(route)],
+    ['GET', /^\/api\/learning\/lessons$/, (route) => this.lessons(route)],
+    ['POST', /^\/api\/learning\/consent-request$/, (route) => this.askGuardian(route)],
     ['GET', /^\/api\/curriculum$/, (route) => this.curriculum(route)],
     ['GET', /^\/api\/mentoring\/youth$/, (route) => this.mentoredYouth(route)],
     ['GET', /^\/api\/website\/(?<slug>[^/]+)$/, (route, p) => this.website(route, p['slug']!)],
@@ -711,6 +713,27 @@ export class FakeApi {
     return route.fulfill({
       json: { personName: m.personName, child: found ? { id: found.id, firstName: found.firstName, lastName: found.lastName, age: ageOf(found.dateOfBirth) } : null },
     });
+  }
+
+  /** GET /learning/lessons: youth work, refused with 403 consent-required until a guardian consents (L2-056, L2-057). */
+  private async lessons(route: Route): Promise<void> {
+    const m = await this.participantModuleCaller(route, 'Learning', can.learn);
+    if (!m) return;
+    const childId = this.youthLinks.get(m.id);
+    if (childId && this.consentRequired(m.organizationId, childId) && this.consentStatusName(childId) !== 'Given') {
+      return route.fulfill({ status: 403, json: { code: 'consent-required', consentAge: this.consentPolicyOf(m.organizationId).consentAge } });
+    }
+    return route.fulfill({ json: { lessons: [] } });
+  }
+
+  /** POST /learning/consent-request: the youth asks the guardians of their own household (L2-056 criterion 3). */
+  private async askGuardian(route: Route): Promise<void> {
+    const m = await this.participantModuleCaller(route, 'Learning', can.learn);
+    if (!m) return;
+    const childId = this.youthLinks.get(m.id);
+    const household = childId ? this.households.find((h) => h.children.some((c) => c.id === childId)) : undefined;
+    if (!childId || !household) return route.fulfill({ status: 409, json: { code: 'not-needed' } });
+    return this.deliverConsentLink(route, m.organizationId, household, childId);
   }
 
   private async curriculum(route: Route): Promise<void> {
