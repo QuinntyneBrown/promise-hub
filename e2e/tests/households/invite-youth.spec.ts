@@ -24,6 +24,8 @@ test.describe('Invite a youth from the child record', () => {
     await expect(child.toast).toContainText('Invitation sent');
     await expect(child.youthAccount).toContainText('yusuf.haddad@example.com');
     await expect(child.youthAccount).toContainText('Invited');
+    await expect(child.youthAccount).toContainText('Expires 19 Nov 2026 · resend or withdraw it in Staff and roles');
+    await expect(child.youthAccount).not.toContainText('Expires Expires');
   });
 
   test('Given Nadia accepted her invitation, when her record opens, then the card names her active account and offers no invitation', async ({ page }) => {

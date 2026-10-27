@@ -93,9 +93,7 @@
                         <ph-list-item
                           [title]="a.email ?? ''"
                           [meta]="
-                            'Expires ' +
-                            expiry(a.expiresAt) +
-                            ' · resend or withdraw it in Staff and roles'
+                            expiry(a.expiresAt) + ' · resend or withdraw it in Staff and roles'
                           "
                         >
                           <ph-badge tone="info">Invited</ph-badge>
