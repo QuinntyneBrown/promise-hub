@@ -11,7 +11,7 @@
 | recover-locked-account | 1 day | 100% |
 | replace-expired-invitation | 1 day | 100% |
 | revoke-sessions | 1 day | 100% |
-| scope-data-by-role | 2 days | 0% |
+| scope-data-by-role | 2 days | 100% |
 | set-secure-password | 1 day | 100% |
 | sign-in | 6 days | 70% |
 | sign-in-as-youth-or-mentor | 1 day | 100% |

@@ -6,7 +6,7 @@ Container_Boundary(web, "PromiseHub web app (Angular)") {
   Component(page, "ProgramPage", "Angular page", "Mentors card, Mentor buttons")
   Component(am, "AssignMentorDialog", "CDK dialog", "assign-mentor")
   Component(cm, "CohortMentorsDialog", "CDK dialog", "cohort-mentors")
-  Component(mp, "MentoringPage", "Angular page", "mentoring")
+  Component(mp, "MentorDashboardPage", "Angular page", "mentor-dashboard")
   Component(mapi, "MentoringApi", "Contract + HTTP client", "cohort, assignYouth, setCohortMentors, youth")
 }
 Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {

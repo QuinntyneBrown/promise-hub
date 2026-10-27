@@ -19,7 +19,7 @@ Frontend:
 - **`ProgramPage`** (`programs` library) — reads the session once; while `Mentoring` is among its modules, loads the cohort's mentoring and renders the **Mentors** card (`program`, `program/no-mentors`) and, on each roster row, the youth's mentor or "No mentor" with a **Mentor** button for managers. With Mentoring off neither is rendered nor requested (`program/mentoring-off`).
 - **`AssignMentorDialog`** (`assign-mentor`) — a `ph-select` of active mentors with **Assign mentor** (busy while saving) and, when one is assigned, **Remove mentor**; a 422 shows beside the select, a failure as an alert with the choice kept. Success closes with the toast "Mentor assigned".
 - **`CohortMentorsDialog`** (`cohort-mentors`) — `ph-select` for the lead and `ph-checkbox-group` for supporting mentors; the same busy, invalid and failed states.
-- **`MentoringPage`** (`mentoring` library) — lists the caller's youth by name (`mentoring/assigned`) or the empty state.
+- **`MentoringPage`** (`mentoring` library) — listed the caller's youth by name; prompt 55 replaced it with the mentor dashboard ([manage-mentor-roster](../manage-mentor-roster/README.md)).
 
 API client (`frontend/projects/api/`): **`MentoringApi`** behind `MENTORING_API` gains `cohort(programId)`, `assignYouth(programId, childId, mentorId)`, `unassignYouth(programId, childId)` and `setCohortMentors(programId, leadMentorId, supportingMentorIds)`; contracts `CohortMentoring`, `MentorOption`, `YouthMentorRow`, `CohortTeam`.
 

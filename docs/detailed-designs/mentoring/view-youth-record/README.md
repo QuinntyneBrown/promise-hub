@@ -15,7 +15,7 @@ Ported from Waypoint `mentoring/view-youth-record` (`L2-MENTOR-002` criteria 1, 
 
 Frontend (`frontend/projects/mentoring/`):
 
-- **`MentorYouthDetailPage`** (`/mentoring/youth/:childId`, mock `mentor-youth-detail`) — `ph-page-header` with `ph-avatar`, an About `ph-description-list`, guardian contacts as `ph-list-item` rows with tel: and mailto: links, Recent attendance as a `ph-table` (only when the API sends it) and an info `ph-alert` saying medical details stay with staff. A 403 shows the forbidden state; any other failure the error state with Try again.
+- **`MentorYouthDetailPage`** (`/mentoring/youth/:childId`, mock `mentor-youth-detail`) — `ph-breadcrumb`, `ph-page-header`, an About `ph-description-list`, guardians in a `ph-call-list` (each mobile a tel: link, the email and "Primary contact" as its line; a guardian without a mobile as a `ph-list-item`), Recent attendance as a `ph-table` (only when the API sends it) and an info `ph-alert` saying medical details stay with staff. A 403 shows the forbidden state, a 404 the not-found state, any other failure the error state with Try again.
 
 API client: **`MentoringApi.youthRecord(childId)`** answering `LoadResult<MentorYouthRecord>`, with `forbidden` for a 403.
 
@@ -25,6 +25,10 @@ Backend:
 - **`MentorYouthRecordHandler`** (`PromiseHub.Application/Mentoring/`) — loads the child through the tenant filter (404 when absent), asks `MentorScope.CanSeeYouthAsync` (403 and an `AccessDenied` audit entry on `Child` when not), then builds `MentorYouthRecordDto` field by field so a restricted field can never leak by accident. Guardians come from the child's household, primary first; the preferred name and pronouns from the `YouthOnboarding` of a youth membership linked to the child, when setup was completed; attendance from `AttendanceRecords` joined to `Events` that have started, newest ten, while Roll Call is on. Each successful open is audited as `Viewed` on `Child`.
 
 Open questions: whether a mentor should see a guardian's preferred language is deferred to messaging (prompt 66).
+
+## Built so far
+
+Prompt 55 delivered everything above. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/MentorYouthRecordTests.cs`, `e2e/tests/mentoring/mentor-youth-record.spec.ts`.
 
 ## Requirements
 

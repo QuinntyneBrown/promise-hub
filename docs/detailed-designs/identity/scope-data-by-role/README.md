@@ -20,6 +20,10 @@ Ported from Waypoint `authentication/scope-data-by-role` (`L2-AUTH-010` criterio
 
 The changes to [authorize-request](../authorize-request/README.md) are one line: `MentorYouth` now also covers the dashboard, the youth record and the cohort page.
 
+## Built so far
+
+Prompt 55 delivered everything above. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/MentorCohortTests.cs` and the scope cases in `MentorDashboardTests.cs` and `MentorYouthRecordTests.cs`, `e2e/tests/mentoring/mentor-group.spec.ts`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

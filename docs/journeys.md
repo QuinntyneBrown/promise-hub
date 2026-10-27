@@ -62,7 +62,7 @@
 | Youth | View journey and progress | See badges, the journey roadmap and overall progress. | [10 days](prompts/65-view-journey-and-progress.md) | 0% |
 | Youth | Write reflections | Write private-by-default reflections after a lesson. | [4 days](prompts/66-write-reflections.md) | 0% |
 | Youth | Reset a password as a youth or mentor | Recover a youth or mentor account through an emailed link. | [4 days](prompts/77-reset-a-password.md) | 0% |
-| Mentor | Use the mentor dashboard | See the roster of assigned youth and each youth's record. | [7 days](prompts/55-use-the-mentor-dashboard.md) | 0% |
+| Mentor | Use the mentor dashboard | See the roster of assigned youth and each youth's record. | [7 days](detailed-designs/mentoring/manage-mentor-roster/README.md) | 100% · [video](videos/55-use-the-mentor-dashboard/README.md) |
 | Mentor | Grade and assess | Grade submissions, approve quiz results and assess competencies. | [13 days](prompts/63-grade-and-assess.md) | 0% |
 | Mentor | Record mentor check-ins | Log check-ins with assigned youth. | [5 days](prompts/67-record-mentor-check-ins.md) | 0% |
 | Mentor | Flag at-risk youth | Raise, act on and resolve at-risk concerns. | [5 days](prompts/68-flag-at-risk-youth.md) | 0% |

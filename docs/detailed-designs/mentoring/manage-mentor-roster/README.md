@@ -32,6 +32,10 @@ Rules: no youth outside the mentor scope is ever counted or listed; another orga
 
 Open questions: Waypoint's export of the roster and the on-track, at-risk and new filters are deferred to the flags prompt (68).
 
+## Built so far
+
+Prompt 55 delivered everything above. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/MentorDashboardTests.cs`, `e2e/tests/mentoring/mentor-dashboard.spec.ts`, `e2e/tests/mentoring/mentor-pages-responsive.spec.ts`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

@@ -1599,7 +1599,8 @@
         "rollcall-off",
         "loading",
         "error",
-        "forbidden"
+        "forbidden",
+        "not-found"
       ],
       "not_applicable": {
         "empty": "A youth record always has a name and a program; empty sections say so in place."
@@ -1620,7 +1621,8 @@
         "loading",
         "empty",
         "error",
-        "forbidden"
+        "forbidden",
+        "not-found"
       ]
     },
     {
