@@ -3,6 +3,7 @@ import type { LoadResult } from '../load-result';
 import type { WriteOutcome } from '../write-outcome';
 import type { AssignmentDetail } from './assignment-detail';
 import type { AssignmentFields } from './assignment-fields';
+import type { AwardOutcome } from './award-outcome';
 import type { BadgeDetail } from './badge-detail';
 import type { BadgeFields } from './badge-fields';
 import type { BadgeList } from './badge-list';
@@ -59,4 +60,5 @@ export interface CurriculumApi {
   createBadge(fields: BadgeFields): Observable<WriteOutcome>;
   updateBadge(id: string, fields: BadgeFields): Observable<WriteOutcome>;
   deleteBadge(id: string): Observable<WriteOutcome>;
+  awardBadge(id: string, membershipId: string | null): Observable<AwardOutcome>;
 }

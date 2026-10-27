@@ -154,6 +154,13 @@
               } @else {
                 <p class="text-muted">No youth has earned it yet.</p>
               }
+              @if (b.kind === 'Manual' && b.youth.length) {
+                <ng-container ngProjectAs="[phCardFooter]">
+                  <ph-button size="sm" icon="award" hasPopup="dialog" (click)="award(b)"
+                    >Award badge</ph-button
+                  >
+                </ng-container>
+              }
             </ph-card>
           }
         </div>

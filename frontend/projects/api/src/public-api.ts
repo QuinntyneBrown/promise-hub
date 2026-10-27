@@ -291,6 +291,7 @@ export * from './lib/curriculum/badge-fields';
 export * from './lib/curriculum/badge-target';
 export * from './lib/curriculum/badge-competency';
 export * from './lib/curriculum/badge-options';
+export * from './lib/curriculum/award-outcome';
 export * from './lib/curriculum/curriculum-api';
 export * from './lib/curriculum/curriculum-api.token';
 export * from './lib/mentoring/assigned-youth';

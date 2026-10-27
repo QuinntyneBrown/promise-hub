@@ -350,6 +350,20 @@ export class FakeBadges {
     return route.fulfill({ status: 204 });
   }
 
+  /** POST /curriculum/badges/{id}/awards: a badge by hand, to an active youth of the organization, once; answers the youth to notify. */
+  award(route: Route, org: string, id: string, by: string, at: string): Promise<{ membershipId: string; badge: string } | null> {
+    const b = this.live(org, id);
+    if (!b) return route.fulfill({ status: 404 }).then(() => null);
+    if (b.kind !== 'Manual') return route.fulfill({ status: 409, json: { code: 'automatic' } }).then(() => null);
+    const membershipId = (route.request().postDataJSON() as { membershipId: string | null }).membershipId;
+    const youth = this.memberships().find((m) => m.id === membershipId && m.organizationId === org && m.role === 'Youth');
+    if (!youth) return route.fulfill({ status: 422, json: { errors: { membershipId: 'Choose a youth of your organization.' } } }).then(() => null);
+    if (this.awards.some((a) => a.badgeId === id && a.membershipId === youth.id)) return route.fulfill({ status: 409, json: { code: 'already-awarded' } }).then(() => null);
+    const award = { id: `ba-new-${this.nextId++}`, organizationId: org, badgeId: id, membershipId: youth.id, awardedAt: at, awardedBy: by };
+    this.awards.push(award);
+    return route.fulfill({ status: 201, json: { id: award.id } }).then(() => ({ membershipId: youth.id, badge: b.name }));
+  }
+
   /**
    * Awards the youth every automatic badge she now meets and does not hold (L2-085, ADR 0058), as BadgeAwarder does after each learning
    * event; answers the names of the badges awarded so FakeApi can notify her.

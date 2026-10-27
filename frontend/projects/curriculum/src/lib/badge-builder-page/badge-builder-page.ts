@@ -44,6 +44,8 @@ import {
 } from '@promisehub/components';
 import { Observable, combineLatest, map, of, startWith, Subject, switchMap } from 'rxjs';
 import { BADGE_ICONS, RULE_LABELS, badgeIcon } from '../badge-labels';
+import { AwardBadgeDialog } from '../award-badge-dialog/award-badge-dialog';
+import { AwardBadgeDialogData } from '../award-badge-dialog/award-badge-dialog-data';
 import { DeleteBadgeDialog } from '../delete-badge-dialog/delete-badge-dialog';
 import { DeleteBadgeDialogData } from '../delete-badge-dialog/delete-badge-dialog-data';
 
@@ -269,6 +271,24 @@ export class BadgeBuilderPage {
           text: `Youth who earned ${badge.name} keep it.`,
         });
         void this.router.navigate(['/curriculum/badges']);
+      });
+  }
+
+  protected award(badge: BadgeDetail): void {
+    this.dialogs
+      .open<string, AwardBadgeDialogData, AwardBadgeDialog>(AwardBadgeDialog, {
+        id: badge.id,
+        name: badge.name,
+        youth: badge.youth,
+      })
+      .closed.subscribe((youth) => {
+        if (!youth) return;
+        this.toasts.show({
+          tone: 'success',
+          title: 'Badge awarded',
+          text: `${youth} earned ${badge.name}.`,
+        });
+        this.reload();
       });
   }
 }

@@ -7,6 +7,8 @@ import { LoadResult } from '../load-result';
 import { WriteOutcome } from '../write-outcome';
 import { AssignmentDetail } from './assignment-detail';
 import { AssignmentFields } from './assignment-fields';
+import { AwardOutcome } from './award-outcome';
+import { toAwardOutcome } from './to-award-outcome';
 import { BadgeDetail } from './badge-detail';
 import { BadgeFields } from './badge-fields';
 import { BadgeList } from './badge-list';
@@ -223,5 +225,13 @@ export class HttpCurriculumApi implements CurriculumApi {
 
   deleteBadge(id: string): Observable<WriteOutcome> {
     return toWrite(this.http.delete<null>(`${this.baseUrl}/curriculum/badges/${id}`));
+  }
+
+  awardBadge(id: string, membershipId: string | null): Observable<AwardOutcome> {
+    return toAwardOutcome(
+      this.http.post<{ id: string }>(`${this.baseUrl}/curriculum/badges/${id}/awards`, {
+        membershipId,
+      }),
+    );
   }
 }

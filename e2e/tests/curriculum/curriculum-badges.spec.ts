@@ -201,3 +201,62 @@ test.describe('Badges for other roles and organizations', () => {
     });
   });
 });
+
+test.describe('Awarding a badge by hand', () => {
+  test.use({ signedInAs: 'm-marisol' });
+
+  // Acceptance test. Traces to: L2-085 criteria 4 to 6 (award-badge: once, to a youth of the organization, with her name).
+  test('Given Speaks Up, when Marisol awards it to Nadia, then Nadia joins Earned by with Marisol’s name and a toast confirms', async ({ page, api }) => {
+    const badges = new CurriculumBadgePage(page);
+    await badges.openBadge('b-speaks');
+    await badges.expectOpen('Speaks Up');
+    await badges.awardButton.click();
+    await expect(badges.dialog).toBeVisible();
+    await badges.expectAccessible();
+    await page.keyboard.press('Escape');
+
+    await badges.award('Nadia Haddad');
+
+    await expect(badges.dialog).toBeHidden();
+    await expect(badges.toast).toContainText('Nadia Haddad earned Speaks Up.');
+    await expect(badges.earnedByTitle).toHaveText('Earned by (2)');
+    await expect(badges.earnedBy).toContainText('Nadia Haddad');
+    await expect(badges.earnedBy).toContainText('Awarded by Marisol Delgado · Thu 5 Nov');
+    expect(api.badges.holders('b-speaks').sort()).toEqual(['m-nadia', 'm-sofia']);
+  });
+
+  test('Given no youth is chosen, when Marisol awards, then the dialog says to choose a youth', async ({ page }) => {
+    const badges = new CurriculumBadgePage(page);
+    await badges.openBadge('b-speaks');
+    await badges.expectOpen('Speaks Up');
+
+    await badges.award('');
+
+    await expect(badges.dialogError('youth')).toHaveText('Choose a youth of your organization.');
+    await badges.expectAccessible();
+  });
+
+  test('Given someone awarded it to Nadia a moment ago, when Marisol awards it to her, then the dialog says she already has it', async ({ page, api }) => {
+    const badges = new CurriculumBadgePage(page);
+    await badges.openBadge('b-speaks');
+    await badges.expectOpen('Speaks Up');
+    api.badges.awards.push({ id: 'ba-race', organizationId: 'org-harbourview', badgeId: 'b-speaks', membershipId: 'm-nadia', awardedAt: '2026-11-05T15:19:00Z', awardedBy: 'Tom Nguyen' });
+
+    await badges.award('Nadia Haddad');
+
+    await expect(badges.dialogError('youth')).toHaveText('Nadia Haddad already has this badge.');
+    expect(api.badges.holders('b-speaks').filter((m) => m === 'm-nadia')).toHaveLength(1);
+  });
+
+  test('Given the award fails, when Marisol awards Speaks Up, then the dialog stays open with a retry', async ({ page, api }) => {
+    const badges = new CurriculumBadgePage(page);
+    await badges.openBadge('b-speaks');
+    await badges.expectOpen('Speaks Up');
+    api.failNext('/api/curriculum/badges/b-speaks/awards', 500);
+
+    await badges.award('Nadia Haddad');
+
+    await expect(badges.dialogAlert).toContainText('The badge was not awarded. Try again.');
+    await expect(badges.dialog).toBeVisible();
+  });
+});

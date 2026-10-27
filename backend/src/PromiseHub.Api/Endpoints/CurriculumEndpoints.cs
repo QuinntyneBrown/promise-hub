@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using PromiseHub.Api.Authorization;
 using PromiseHub.Api.Modules;
+using PromiseHub.Application;
 using PromiseHub.Application.Curriculum;
 using PromiseHub.Application.Identity;
 using PromiseHub.Domain.Organizations;
@@ -80,6 +81,11 @@ public static class CurriculumEndpoints
             (await handler.UpdateAsync(id, command, ct)).ToHttp());
         curriculum.MapDelete("/badges/{id:guid}", async (Guid id, BadgeCommands handler, CancellationToken ct) =>
             (await handler.DeleteAsync(id, ct)).ToHttp());
+        curriculum.MapPost("/badges/{id:guid}/awards", async (Guid id, AwardBadgeRequest request, BadgeAwardCommand handler, CancellationToken ct) =>
+        {
+            var award = await handler.AwardAsync(id, request, ct);
+            return award.Status == ResultStatus.Done ? Results.Created($"/curriculum/badges/{id}/awards/{award.Value}", new { id = award.Value }) : award.ToHttp();
+        });
         curriculum.MapPost("/lessons/{id:guid}/video", async (Guid id, HttpRequest request, LessonVideoHandler handler, LessonVideoOptions options, CancellationToken ct) =>
         {
             if (!request.HasFormContentType || request.ContentLength > options.MaxBytes + FormOverhead)

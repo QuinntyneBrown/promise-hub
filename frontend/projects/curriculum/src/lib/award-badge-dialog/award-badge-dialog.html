@@ -1,0 +1,30 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    [title]="'Award ' + data.name"
+    description="Youth get it at once and see it on their journey. It is recorded with your name."
+    icon="award"
+  >
+    <div class="stack">
+      @if (failed()) {
+        <ph-alert
+          tone="danger"
+          title="That didn’t go through"
+          text="The badge was not awarded. Try again."
+        />
+      }
+      <ph-select
+        inputId="youth"
+        label="Youth"
+        name="youth"
+        help="Youth of your organization who don’t have it yet."
+        [options]="options"
+        [error]="error()"
+        [(ngModel)]="membershipId"
+      />
+    </div>
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Award badge</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

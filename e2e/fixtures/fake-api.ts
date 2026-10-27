@@ -667,6 +667,7 @@ export class FakeApi {
     ['POST', /^\/api\/curriculum\/badges$/, (route) => this.author(route, (org) => this.badges.create(route, org))],
     ['PUT', /^\/api\/curriculum\/badges\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.badges.update(route, org, p['id']!))],
     ['DELETE', /^\/api\/curriculum\/badges\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.badges.remove(route, org, p['id']!))],
+    ['POST', /^\/api\/curriculum\/badges\/(?<id>[^/]+)\/awards$/, (route, p) => this.author(route, (org) => this.awardBadgeByHand(route, org, p['id']!))],
     ['POST', /^\/api\/curriculum\/lessons\/(?<id>[^/]+)\/video$/, (route, p) => this.author(route, (org) => this.curriculumState.uploadVideo(route, org, p['id']!, memberships.find((x) => x.id === this.membershipId)!.personName))],
     ['DELETE', /^\/api\/curriculum\/lessons\/(?<id>[^/]+)\/video$/, (route, p) => this.author(route, (org) => this.curriculumState.removeVideo(route, org, p['id']!))],
     ['GET', /^\/api\/mentoring\/youth$/, (route) => this.mentoredYouth(route)],
@@ -1137,6 +1138,23 @@ export class FakeApi {
   private async afterReview(youth: YouthAccounts, handled: Promise<void>): Promise<void> {
     await handled;
     for (const id of youth.keys()) this.awardBadges(memberships.find((x) => x.id === id)!.organizationId, id);
+  }
+
+  /** POST /curriculum/badges/{id}/awards (L2-085 criterion 4): the youth is told who awarded it. */
+  private async awardBadgeByHand(route: Route, org: string, id: string): Promise<void> {
+    const by = memberships.find((x) => x.id === this.membershipId)!.personName;
+    const awarded = await this.badges.award(route, org, id, by, NOW.toISOString());
+    if (!awarded) return;
+    this.notifications.push({
+      id: `n-${this.nextId++}`,
+      organizationId: org,
+      membershipId: awarded.membershipId,
+      kind: 'learning',
+      text: `${by} awarded you the ${awarded.badge} badge.`,
+      link: '/learning',
+      createdAt: new Date(NOW.getTime() + this.nextId * 1000).toISOString(),
+      readAt: null,
+    });
   }
 
   private awardBadges(org: string, membershipId: string): void {
