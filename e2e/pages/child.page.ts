@@ -65,4 +65,17 @@ export class ChildPage extends BasePage {
   get subtitle(): Locator {
     return this.page.getByTestId('page-subtitle');
   }
+
+  get consent(): Locator {
+    return this.page.getByRole('region', { name: 'Guardian consent' });
+  }
+
+  async sendConsentLink(): Promise<void> {
+    await this.consent.getByRole('button', { name: 'Send consent link' }).click();
+  }
+
+  /** What the API answers this signed-in person for a child's consent. */
+  async consentApiStatus(childId: string): Promise<number> {
+    return this.page.evaluate(async (id) => (await fetch(`/api/children/${id}/consent`)).status, childId);
+  }
 }

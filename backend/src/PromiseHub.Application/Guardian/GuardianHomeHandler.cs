@@ -19,7 +19,7 @@ public sealed class GuardianHomeHandler(IPromiseHubDb db, GuardianAccess access,
     public async Task<GuardianResult> GetAsync(GuardianRequest request, CancellationToken cancellationToken = default)
     {
         var scope = await access.ResolveAsync(request, cancellationToken);
-        if (scope is null || scope.Link.SlipId is not null || scope.Link.SurveyId is not null)
+        if (scope is null || scope.Link.SlipId is not null || scope.Link.SurveyId is not null || scope.Link.ForConsent)
         {
             return GuardianResult.Of(GuardianOutcome.Gone, GuardianAccess.GoneBody(scope?.Organization));
         }
@@ -77,7 +77,7 @@ public sealed class GuardianHomeHandler(IPromiseHubDb db, GuardianAccess access,
     public async Task<GuardianResult> AnswerNoShowAsync(GuardianRequest request, AnswerNoShowRequest body, CancellationToken cancellationToken = default)
     {
         var scope = await access.ResolveAsync(request, cancellationToken);
-        if (scope is null || scope.Link.SlipId is not null || scope.Link.SurveyId is not null)
+        if (scope is null || scope.Link.SlipId is not null || scope.Link.SurveyId is not null || scope.Link.ForConsent)
         {
             return GuardianResult.Of(GuardianOutcome.Gone, GuardianAccess.GoneBody(scope?.Organization));
         }
@@ -209,7 +209,7 @@ public sealed class GuardianHomeHandler(IPromiseHubDb db, GuardianAccess access,
     private async Task<(GuardianResult? Problem, GuardianScope? Scope)> TrustedScopeAsync(GuardianRequest request, CancellationToken cancellationToken)
     {
         var scope = await access.ResolveAsync(request, cancellationToken);
-        if (scope is null || scope.Link.SlipId is not null || scope.Link.SurveyId is not null)
+        if (scope is null || scope.Link.SlipId is not null || scope.Link.SurveyId is not null || scope.Link.ForConsent)
         {
             return (GuardianResult.Of(GuardianOutcome.Gone, GuardianAccess.GoneBody(scope?.Organization)), null);
         }
@@ -227,7 +227,7 @@ public sealed class GuardianHomeHandler(IPromiseHubDb db, GuardianAccess access,
     private async Task<(GuardianResult? Problem, GuardianScope? Scope)> PickupScopeAsync(GuardianRequest request, CancellationToken cancellationToken)
     {
         var scope = await access.ResolveAsync(request, cancellationToken);
-        if (scope is null || scope.Link.SlipId is not null || scope.Link.SurveyId is not null)
+        if (scope is null || scope.Link.SlipId is not null || scope.Link.SurveyId is not null || scope.Link.ForConsent)
         {
             return (GuardianResult.Of(GuardianOutcome.Gone, GuardianAccess.GoneBody(scope?.Organization)), null);
         }

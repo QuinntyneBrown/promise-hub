@@ -16,6 +16,9 @@ import { MedicalChanges } from './medical-changes';
 import { NewChild } from './new-child';
 import { NewFamily } from './new-family';
 import { NewGuardian } from './new-guardian';
+import { ChildConsent } from '../consent/child-consent';
+import { ConsentRequestOutcome } from '../consent/consent-request-outcome';
+import { toConsentRequest } from '../consent/to-consent-request';
 
 @Injectable()
 export class HttpHouseholdsApi implements HouseholdsApi {
@@ -74,6 +77,19 @@ export class HttpHouseholdsApi implements HouseholdsApi {
 
   updateMedical(id: string, changes: MedicalChanges): Observable<WriteOutcome> {
     return toWrite(this.http.put<null>(`${this.baseUrl}/children/${id}/medical`, changes));
+  }
+
+  consent(childId: string): Observable<LoadResult<ChildConsent>> {
+    return toLoad(this.http.get<ChildConsent>(`${this.baseUrl}/children/${childId}/consent`));
+  }
+
+  sendConsentLink(childId: string): Observable<ConsentRequestOutcome> {
+    return toConsentRequest(
+      this.http.post<{ sentTo: string[] }>(
+        `${this.baseUrl}/children/${childId}/consent-request`,
+        null,
+      ),
+    );
   }
 
   delete(id: string, reason: string, confirmName: string): Observable<WriteOutcome> {

@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import {
   Child,
+  ChildConsent,
   HOUSEHOLDS_API,
   LoadResult,
   SESSION_API,
@@ -63,6 +64,7 @@ export class ChildPage {
   private readonly refresh$ = new Subject<void>();
   private readonly staff = inject(STAFF_API);
   private readonly youthRefresh$ = new Subject<void>();
+  private readonly consentRefresh$ = new Subject<void>();
 
   /** Route parameters. */
   readonly householdId = input.required<string>();
@@ -113,6 +115,66 @@ export class ChildPage {
     ),
     { initialValue: null },
   );
+
+  /** Guardian consent (L2-058): read by every staff role while Roster is on; rendered only when the child needs consent. */
+  protected readonly consent = toSignal<LoadResult<ChildConsent> | null>(
+    toObservable(this.childId).pipe(
+      switchMap((id) =>
+        this.consentRefresh$.pipe(
+          startWith(undefined),
+          switchMap(() => this.api.consent(id)),
+        ),
+      ),
+    ),
+    { initialValue: null },
+  );
+  protected readonly sendingConsent = signal(false);
+
+  protected consentMeta(c: Child, consent: ChildConsent): string {
+    if (consent.status === 'Given')
+      return `Given by ${consent.signedBy} (${consent.relationship}) · ${this.when(consent.signedAt)} · ${consent.reference}`;
+    if (consent.status === 'Withdrawn')
+      return `Withdrawn by ${consent.withdrawnBy} · ${this.when(consent.withdrawnAt)}`;
+    return consent.linkSentAt
+      ? `Link sent · ${this.when(consent.linkSentAt)}`
+      : `Needed before ${c.firstName} can use Learning · under ${consent.consentAge}`;
+  }
+
+  private when(iso: string | null): string {
+    return iso
+      ? new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short' }).format(
+          new Date(iso),
+        )
+      : '';
+  }
+
+  /** Texts or emails the household a consent link (admins and program directors). */
+  protected sendConsentLink(c: Child): void {
+    this.sendingConsent.set(true);
+    this.api.sendConsentLink(c.id).subscribe((outcome) => {
+      this.sendingConsent.set(false);
+      if (outcome.status === 'sent') {
+        this.toasts.show({
+          tone: 'success',
+          title: 'Consent link sent',
+          text: `Sent to ${outcome.sentTo.join(', ')}.`,
+        });
+        this.consentRefresh$.next();
+      } else if (outcome.status === 'no-guardian') {
+        this.toasts.show({
+          tone: 'danger',
+          title: 'No guardian to reach',
+          text: `Add a mobile or email for a guardian of ${c.firstName} who may sign.`,
+        });
+      } else {
+        this.toasts.show({
+          tone: 'danger',
+          title: 'Consent link not sent',
+          text: 'Something went wrong. Try again.',
+        });
+      }
+    });
+  }
 
   protected inviteYouth(c: Child): void {
     this.dialogs

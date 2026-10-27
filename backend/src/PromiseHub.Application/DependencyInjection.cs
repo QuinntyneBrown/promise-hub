@@ -118,6 +118,10 @@ public static class DependencyInjection
         services.AddScoped<Guardian.VerifyGuardianCodeHandler>();
         services.AddScoped<Guardian.GuardianSlipHandler>();
         services.AddScoped<Guardian.GuardianHomeHandler>();
+        services.AddScoped<Guardian.ConsentGate>();
+        services.AddScoped<Guardian.ConsentRequestSender>();
+        services.AddScoped<Guardian.ChildConsentHandler>();
+        services.AddScoped<Guardian.GuardianConsentHandler>();
         services.AddScoped<Incidents.ReportIncidentHandler>();
         services.AddScoped<Incidents.IncidentQueries>();
         services.AddScoped<Incidents.IncidentReviewHandler>();

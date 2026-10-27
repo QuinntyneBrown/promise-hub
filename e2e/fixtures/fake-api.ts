@@ -249,6 +249,15 @@ export class FakeApi {
     ['tok-jordan', { householdId: 'hh-thompson', childId: 'c-jordan', eventId: 'e-rbg' }],
     ['tok-expired', { householdId: 'hh-rivera', childId: 'c-mateo', eventId: 'e-rbg', expired: true }],
   ]);
+  /** Consent links as texted or emailed (ADR 0046): token → household and child; an expired one is over 30 days old or replaced. */
+  private consentLinks = new Map<string, { householdId: string; childId: string; expired?: boolean }>([
+    ['tok-consent-sofia', { householdId: 'hh-rivera', childId: 'c-sofia' }],
+    ['tok-consent-expired', { householdId: 'hh-rivera', childId: 'c-sofia', expired: true }],
+  ]);
+  /** Guardian consents given in this test, newest last (L2-055, L2-058). */
+  private consents: { childId: string; signedBy: string; relationship: string; signedAt: string; reference: string; withdrawnAt: string | null; withdrawnBy: string | null }[] = [];
+  /** Children whose consent link was sent in this test, with when (L2-056, L2-058). */
+  consentLinksSent = new Map<string, string>();
   /** Households whose device has verified a code (the HttpOnly cookie, in the fake). */
   private trustedHouseholds = new Set<string>();
   /** Survey links as texted after an event: token → household, child and event; answers by token. */
@@ -573,6 +582,10 @@ export class FakeApi {
     ['GET', /^\/api\/messaging\/sms-cap$/, (route) => this.smsCap(route)],
     ['GET', /^\/api\/children\/(?<id>[^/]+)\/quick-card$/, (route, p) => this.quickCard(route, p['id']!)],
     ['GET', /^\/api\/children\/(?<id>[^/]+)\/youth-account$/, (route, p) => this.youthAccount(route, p['id']!)],
+    ['GET', /^\/api\/children\/(?<id>[^/]+)\/consent$/, (route, p) => this.childConsent(route, p['id']!)],
+    ['POST', /^\/api\/children\/(?<id>[^/]+)\/consent-request$/, (route, p) => this.sendConsentLink(route, p['id']!)],
+    ['GET', /^\/api\/g\/consent\/(?<token>[^/]+)$/, (route, p) => this.guardianConsent(route, p['token']!)],
+    ['POST', /^\/api\/g\/consent\/(?<token>[^/]+)\/sign$/, (route, p) => this.giveConsentRoute(route, p['token']!)],
     ['POST', /^\/api\/children\/(?<id>[^/]+)\/youth-invitation$/, (route, p) => this.inviteYouth(route, p['id']!)],
     ['GET', /^\/api\/children\/(?<id>[^/]+)$/, (route, p) => this.getChild(route, p['id']!)],
     ['PUT', /^\/api\/children\/(?<id>[^/]+)$/, (route, p) => this.updateChild(route, p['id']!)],
@@ -3046,7 +3059,7 @@ export class FakeApi {
   /** A slip link or a home link: either picks the household. */
   private linkOf(token: string): { householdId: string } | undefined {
     const home = this.homeLinks.get(token);
-    return home ? { householdId: home } : (this.guardianLinks.get(token) ?? this.surveyLinks.get(token));
+    return home ? { householdId: home } : (this.guardianLinks.get(token) ?? this.surveyLinks.get(token) ?? this.consentLinks.get(token));
   }
 
   private async guardianHome(route: Route, token: string): Promise<void> {
@@ -3133,6 +3146,136 @@ export class FakeApi {
     const child = household.children.find((c) => c.id === link.childId)!;
     const event = this.events.find((e) => e.id === link.eventId)!;
     return { link, household, org, slip, child, event };
+  }
+
+  /** A guardian consented for a child, as if signed from the consent link (L2-055). */
+  giveConsent(childId: string, by = 'Carmen Rivera', relationship = 'Parent'): void {
+    this.consents.push({ childId, signedBy: by, relationship, signedAt: NOW.toISOString(), reference: 'GC-4F7A2C', withdrawnAt: null, withdrawnBy: null });
+  }
+
+  /** The child's latest consent, if any. */
+  consentOf(childId: string) {
+    return this.consents.filter((c) => c.childId === childId).at(-1) ?? null;
+  }
+
+  /** Whether a child needs consent (ADR 0046): a youth account, and under the consent age or no date of birth. */
+  private consentRequired(organizationId: string, childId: string): boolean {
+    const child = this.households.flatMap((h) => h.children).find((c) => c.id === childId);
+    const youth = [...this.youthLinks].some(([membershipId, linked]) => linked === childId && memberships.some((m) => m.id === membershipId && m.organizationId === organizationId && !this.removedMembers.has(m.id)));
+    const age = child ? ageOf(child.dateOfBirth) : null;
+    return !!child && youth && (age === null || age < this.consentPolicyOf(organizationId).consentAge);
+  }
+
+  private consentStatusName(childId: string): 'Needed' | 'Given' | 'Withdrawn' {
+    const latest = this.consentOf(childId);
+    return !latest ? 'Needed' : latest.withdrawnAt ? 'Withdrawn' : 'Given';
+  }
+
+  /** GET /children/{id}/consent: any staff role of the child's organization (L2-058 criterion 3). */
+  private async childConsent(route: Route, id: string): Promise<void> {
+    const m = await this.rosterCaller(route);
+    if (!m) return;
+    if (!this.ownChild(m, id)) return route.fulfill({ status: 404 });
+    const latest = this.consentOf(id);
+    return route.fulfill({
+      json: {
+        required: this.consentRequired(m.organizationId, id),
+        consentAge: this.consentPolicyOf(m.organizationId).consentAge,
+        status: this.consentStatusName(id),
+        signedBy: latest?.signedBy ?? null,
+        relationship: latest?.relationship ?? null,
+        signedAt: latest?.signedAt ?? null,
+        reference: latest?.reference ?? null,
+        withdrawnAt: latest?.withdrawnAt ?? null,
+        withdrawnBy: latest?.withdrawnBy ?? null,
+        linkSentAt: this.consentLinksSent.get(id) ?? null,
+      },
+    });
+  }
+
+  /** POST /children/{id}/consent-request: admins and program directors (L2-058 criterion 4). */
+  private async sendConsentLink(route: Route, id: string): Promise<void> {
+    const m = await this.rosterCaller(route);
+    if (!m) return;
+    if (!can.writeHouseholds(m)) return this.forbidden(route);
+    const found = this.ownChild(m, id);
+    if (!found) return route.fulfill({ status: 404 });
+    return this.deliverConsentLink(route, m.organizationId, found.household, id);
+  }
+
+  /** Texts the household's signers, as the server does; 409 when not needed, 422 when nobody can be reached. */
+  private async deliverConsentLink(route: Route, organizationId: string, household: FakeHousehold, childId: string): Promise<void> {
+    if (!this.consentRequired(organizationId, childId) || this.consentStatusName(childId) === 'Given') return route.fulfill({ status: 409, json: { code: 'not-needed' } });
+    const signers = household.guardians.filter((g) => g.canSign && (g.mobile || (g.email && !g.emailBounced)));
+    if (!signers.length) return route.fulfill({ status: 422, json: { code: 'no-guardian' } });
+    this.consentLinksSent.set(childId, NOW.toISOString());
+    return route.fulfill({ status: 202, json: { sentTo: signers.map((g) => (g.mobile ? `•••-•••-${g.mobile.slice(-4)}` : `${g.email![0]}•••${g.email!.slice(g.email!.indexOf('@'))}`)) } });
+  }
+
+  private async consentScope(route: Route, token: string) {
+    const link = this.consentLinks.get(token);
+    const household = link ? this.households.find((h) => h.id === link.householdId) : undefined;
+    const org = household ? organizations.find((o) => o.id === household.organizationId)! : undefined;
+    if (!link || !household || !org || link.expired) {
+      await route.fulfill({ status: 410, json: { code: 'link-expired', organization: org?.name ?? null, phone: org ? '905-555-0100' : null } });
+      return null;
+    }
+    if (!this.modules.get(org.id)!.includes('Roster')) {
+      await route.fulfill({ status: 404 });
+      return null;
+    }
+    if (!this.trustedHouseholds.has(household.id)) {
+      const contacts = household.guardians.filter((g) => g.mobile).map((g) => `•••-•••-${g.mobile!.slice(-4)}`);
+      await route.fulfill({ status: 401, json: { code: 'verification-required', language: this.guardianLanguage(household.language), organization: org.name, phone: '905-555-0100', contacts } });
+      return null;
+    }
+    const child = household.children.find((c) => c.id === link.childId)!;
+    return { household, org, child };
+  }
+
+  /** GET /g/consent/{token}: the child, the wording and what is on record (L2-055, L2-058). */
+  private async guardianConsent(route: Route, token: string): Promise<void> {
+    const scope = await this.consentScope(route, token);
+    if (!scope) return;
+    const { household, org, child } = scope;
+    const latest = this.consentOf(child.id);
+    return route.fulfill({
+      json: {
+        language: this.guardianLanguage(household.language),
+        organization: org.name,
+        phone: '905-555-0100',
+        guardianName: this.sortedGuardians(household)[0]?.name.split(' ')[0] ?? '',
+        child: { name: `${child.firstName} ${child.lastName}`, firstName: child.firstName, age: ageOf(child.dateOfBirth) },
+        wording: this.consentPolicyOf(org.id).wording,
+        consentAge: this.consentPolicyOf(org.id).consentAge,
+        status: this.consentStatusName(child.id),
+        signedBy: latest?.signedBy ?? null,
+        relationship: latest?.relationship ?? null,
+        signedAt: latest?.signedAt ?? null,
+        reference: latest?.reference ?? null,
+        withdrawnAt: latest?.withdrawnAt ?? null,
+        withdrawnBy: latest?.withdrawnBy ?? null,
+      },
+    });
+  }
+
+  /** POST /g/consent/{token}/sign: relationship, ticked box and a typed name of a guardian who may sign (L2-055). */
+  private async giveConsentRoute(route: Route, token: string): Promise<void> {
+    const scope = await this.consentScope(route, token);
+    if (!scope) return;
+    const { household, child } = scope;
+    if (this.consentStatusName(child.id) === 'Given') return route.fulfill({ status: 409, json: { code: 'conflict' } });
+    const b = route.request().postDataJSON() as { name?: string; relationship?: string; agree?: boolean };
+    const typed = (b.name ?? '').trim().replace(/\s+/g, ' ');
+    const signer = household.guardians.find((g) => g.canSign && g.name.toLowerCase() === typed.toLowerCase());
+    const errors: Record<string, string> = {};
+    if (!b.relationship?.trim()) errors['relationship'] = `Choose how you’re related to ${child.firstName}.`;
+    if (!b.agree) errors['agree'] = 'Tick the box to give consent.';
+    if (!typed) errors['name'] = 'Type your full name to sign.';
+    else if (!signer) errors['name'] = `That name doesn’t match a guardian of ${child.firstName}.`;
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    this.giveConsent(child.id, signer!.name, b.relationship!.trim());
+    return route.fulfill({ status: 204 });
   }
 
   private async guardianCodeRoute(route: Route): Promise<void> {

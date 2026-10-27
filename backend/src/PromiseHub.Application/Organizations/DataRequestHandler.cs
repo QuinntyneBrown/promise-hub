@@ -22,7 +22,7 @@ public sealed class DataRequestHandler(IPromiseHubDb db, ITenantContext tenant, 
     public async Task<GuardianResult> AskAsync(GuardianRequest request, DataRequestBody body, CancellationToken cancellationToken = default)
     {
         var scope = await access.ResolveAsync(request, cancellationToken);
-        if (scope is null || scope.Link.SlipId is not null || scope.Link.SurveyId is not null)
+        if (scope is null || scope.Link.SlipId is not null || scope.Link.SurveyId is not null || scope.Link.ForConsent)
         {
             return GuardianResult.Of(GuardianOutcome.Gone, GuardianAccess.GoneBody(scope?.Organization));
         }

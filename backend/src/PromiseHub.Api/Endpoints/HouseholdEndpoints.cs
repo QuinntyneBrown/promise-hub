@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PromiseHub.Api.Authorization;
 using PromiseHub.Api.Modules;
+using PromiseHub.Application.Guardian;
 using PromiseHub.Application.Households;
 using PromiseHub.Application.Identity;
 using PromiseHub.Domain.Households;
@@ -42,6 +43,11 @@ public static class HouseholdEndpoints
         roster.MapPut("/children/{id:guid}/medical", async (Guid id, MedicalRequest request, UpdateMedicalHandler handler, CancellationToken ct) =>
             (await handler.HandleAsync(id, new MedicalDetails(request.Allergies, request.Medication, request.Conditions, request.Doctor, request.RedAlert, request.AlertInstruction), ct)).ToHttp())
             .RequirePermission(Permission.WriteMedical);
+        // Guardian consent on the child record (L2-058, ADR 0046): any staff role reads, admins and program directors send.
+        roster.MapGet("/children/{id:guid}/consent", async (Guid id, ChildConsentHandler handler, CancellationToken ct) =>
+            await handler.GetAsync(id, ct) is { } consent ? Results.Ok(consent) : Results.NotFound());
+        roster.MapPost("/children/{id:guid}/consent-request", async (Guid id, ChildConsentHandler handler, CancellationToken ct) =>
+            ConsentRequestHttp.ToHttp(await handler.SendAsync(id, ct))).RequirePermission(Permission.WriteHouseholds);
         return app;
     }
 }
