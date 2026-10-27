@@ -57,6 +57,15 @@ public static class LearningEndpoints
                 ? Results.Created($"/learning/submissions/{submitted.Value}", new { id = submitted.Value })
                 : submitted.ToHttp();
         }).DisableAntiforgery().WithMetadata(new RequestSizeLimitAttribute(SubmissionForm.MaximumBody));
+        learning.MapPost("/submissions/{id:guid}/resubmit", async (Guid id, HttpRequest request, SubmissionCommand handler, CancellationToken ct) =>
+        {
+            if (await SubmissionForm.ReadAsync(request, ct) is not { } form)
+            {
+                return SubmissionForm.Refused();
+            }
+            await using var file = form.File?.Content;
+            return (await handler.ResubmitAsync(id, form, ct)).ToHttp();
+        }).DisableAntiforgery().WithMetadata(new RequestSizeLimitAttribute(SubmissionForm.MaximumBody));
         learning.MapGet("/submissions/{id:guid}", async (Guid id, SubmissionViewHandler handler, CancellationToken ct) => (await handler.HandleAsync(id, ct)).ToHttp());
         learning.MapGet("/submissions/{id:guid}/file", async (Guid id, SubmissionViewHandler handler, CancellationToken ct) =>
         {

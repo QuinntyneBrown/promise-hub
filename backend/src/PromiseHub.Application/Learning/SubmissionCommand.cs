@@ -11,7 +11,7 @@ namespace PromiseHub.Application.Learning;
 /// <summary>
 /// Submits a youth's work for a visible, unlocked assignment (L2-077 criteria 3 to 5, ADR 0056): once, with the attestation and at least
 /// one allowed kind of work, a file checked by <see cref="SubmissionFilePolicy"/> and stored through file storage, marked late after the
-/// due date plus grace and refused once closed. Audited as Submitted without the text.
+/// due date plus grace and refused once closed. Audited as Submitted without the text. Resubmits work sent back for revision.
 /// </summary>
 public sealed class SubmissionCommand(IPromiseHubDb db, ITenantContext tenant, LearnerProgress progress, IFileStore files, IAuditWriter audit, TimeProvider clock)
 {
@@ -66,6 +66,63 @@ public sealed class SubmissionCommand(IPromiseHubDb db, ITenantContext tenant, L
         audit.Record(new AuditEvent(AuditAction.Submitted, "AssignmentSubmission", submission.Id, $"{assignment.Title} submitted by {tenant.ActorName}",
             After: new { submission.Late, File = submission.FileName }));
         await db.SaveChangesAsync(cancellationToken);
+        return Gated<Guid>.Found(submission.Id);
+    }
+
+    /// <summary>
+    /// Resends the work of the caller's submission that needs revision (L2-078 criteria 3 and 4): the same checks as a submit, the earlier
+    /// file kept unless removed or replaced, back to Submitted with a Resubmitted step, audited as Updated; anything else is not revisable.
+    /// </summary>
+    public async Task<Gated<Guid>> ResubmitAsync(Guid submissionId, SubmissionWork work, CancellationToken cancellationToken = default)
+    {
+        var submission = await db.AssignmentSubmissions.FirstOrDefaultAsync(s => s.Id == submissionId && s.MembershipId == tenant.MembershipId, cancellationToken);
+        if (submission is null || await progress.AssignmentAsync(submission.AssignmentId, cancellationToken) is not { } found)
+        {
+            return Gated<Guid>.NotFound();
+        }
+        if (submission.Status != SubmissionStatus.NeedsRevision)
+        {
+            return Gated<Guid>.Conflict("not-revisable");
+        }
+        var assignment = found.Assignment.Assignment;
+        var keeps = submission.FileKey is not null && !work.RemoveFile && work.File is null;
+        var (text, link, errors) = Check(assignment.SubmissionTypes, work, keepsFile: keeps);
+        var head = new byte[16];
+        var read = 0;
+        (SubmissionFileKind Kind, string ContentType, string Extension)? accepted = null;
+        if (work.File is { } file && !errors.ContainsKey("file"))
+        {
+            read = await file.Content.ReadAtLeastAsync(head, head.Length, throwOnEndOfStream: false, cancellationToken);
+            accepted = SubmissionFilePolicy.Accept(file.FileName, file.ContentType, file.Length, head.AsSpan(0, read), assignment.SubmissionTypes);
+            if (accepted is null)
+            {
+                errors["file"] = SubmissionFilePolicy.Refusal(assignment.SubmissionTypes);
+            }
+        }
+        if (errors.Count > 0)
+        {
+            return Gated<Guid>.Invalid(errors);
+        }
+        var before = new { submission.Round, File = submission.FileName };
+        var replaced = keeps ? null : submission.FileKey;
+        if (accepted is { } a)
+        {
+            var key = $"submissions/{tenant.OrganizationId}/{submission.Id}/{Guid.NewGuid():N}{a.Extension}";
+            await files.SaveAsync(key, new HeadStream(head.AsMemory(0, read), work.File!.Content), cancellationToken);
+            submission.AttachFile(Path.GetFileName(work.File.FileName), a.Kind, a.ContentType, work.File.Length, key);
+        }
+        else if (!keeps)
+        {
+            submission.RemoveFile();
+        }
+        db.SubmissionEvents.Add(submission.Resubmit(text, link, clock.GetUtcNow(), tenant.ActorName));
+        audit.Record(new AuditEvent(AuditAction.Updated, "AssignmentSubmission", submission.Id, $"{assignment.Title} resubmitted by {tenant.ActorName}",
+            before, new { submission.Round, File = submission.FileName }));
+        await db.SaveChangesAsync(cancellationToken);
+        if (replaced is not null)
+        {
+            await files.DeleteAsync(replaced, cancellationToken);
+        }
         return Gated<Guid>.Found(submission.Id);
     }
 

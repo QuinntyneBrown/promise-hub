@@ -326,6 +326,55 @@ test.describe('Submit assignments', () => {
     await expect(submission.loadError).toBeVisible();
   });
 
+  test('Given Daniel asked for a revision, when Sofía revises her reflection and resubmits, then it returns to Submitted with her photo kept and a Resubmitted step', async ({
+    page,
+    api,
+  }) => {
+    api.learningState.complete('m-sofia', ...TOWEL);
+    const sub = api.learningState.work.seed({
+      membershipId: 'm-sofia',
+      assignmentId: 'as-serve',
+      text: REFLECTION,
+      file: { name: 'stacked-chairs.png', kind: 'Photo', type: 'image/png', bytes: PNG },
+    });
+    api.learningState.work.startReview(sub.id);
+    api.learningState.work.requestRevision(sub.id, 'Great story, Sofía! Can you add a line about one thing you noticed? Then this is a full pass.');
+    const submission = new LearnSubmissionPage(page);
+    const submit = new LearnSubmitPage(page);
+    await submission.open(sub.id);
+
+    await submission.revise();
+
+    await expect(submit.alert('Note from Daniel Osei')).toContainText('one thing you noticed');
+    await expect(submit.reflection).toHaveValue(REFLECTION);
+    await expect(submit.chosenFile('stacked-chairs.png')).toContainText('from your last submission');
+    await submit.expectAccessible();
+    await submit.write(`${REFLECTION} What I noticed: the room is always tidy because someone stays behind.`);
+    await submit.attest();
+    await submit.submit();
+    await expect(submit.dialog).toHaveAccessibleName('Send it to Daniel again?');
+    await submit.confirm();
+
+    await expect(submission.status).toHaveText('Submitted');
+    await expect(submission.alert('Sent again')).toBeVisible();
+    await expect(submission.sent).toContainText('someone stays behind');
+    await expect(submission.sent).toContainText('stacked-chairs.png');
+    await expect(submission.history.last()).toContainText('Sofía Rivera resubmitted it');
+    await expect(submission.reviseButton).toHaveCount(0);
+  });
+
+  test('Given a submission that is not sent back, when a resubmit is sent anyway, then the API answers 409 and nothing changes', async ({ page, api }) => {
+    api.learningState.complete('m-sofia', ...TOWEL);
+    const sub = api.learningState.work.seed({ membershipId: 'm-sofia', assignmentId: 'as-serve', text: REFLECTION });
+    const submission = new LearnSubmissionPage(page);
+    await submission.open(sub.id);
+
+    expect(await submission.resubmitStatus(sub.id)).toBe(409);
+
+    await expect(submission.status).toHaveText('Submitted');
+    expect(api.learningState.work.all()[0]!.round).toBe(1);
+  });
+
   test('Given an unknown assignment or one that fails to load, then the page says so', async ({
     page,
     api,

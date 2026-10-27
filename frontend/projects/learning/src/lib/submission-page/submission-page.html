@@ -96,9 +96,7 @@
       </ph-card>
       <div class="actions">
         <ph-button
-          [variant]="
-            s.status === 'NeedsRevision' ? 'ghost' : s.status === 'Accepted' ? 'primary' : 'ghost'
-          "
+          [variant]="s.status === 'Accepted' ? 'primary' : 'ghost'"
           [link]="'/learning/modules/' + s.moduleId"
           >Back to the module</ph-button
         >

@@ -57,6 +57,16 @@ export class LearnSubmissionPage extends BasePage {
     return this.page.getByRole('heading', { name: 'We couldn’t load your submission' });
   }
 
+  /** Sends a resubmit straight to the API, as another tab would, and answers its status. */
+  async resubmitStatus(id: string): Promise<number> {
+    return this.page.evaluate(async (s) => {
+      const form = new FormData();
+      form.append('text', 'Changed');
+      form.append('attest', 'true');
+      return (await fetch(`/api/learning/submissions/${s}/resubmit`, { method: 'POST', body: form })).status;
+    }, id);
+  }
+
   async apiStatus(id: string): Promise<number> {
     return this.page.evaluate(async (s) => (await fetch(`/api/learning/submissions/${s}`)).status, id);
   }
