@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 61 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="61" data-video-title="Take quizzes" data-parts="Introduction|Rules|Questions|Submit|Result|Retake|Phone|States|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 61</div>
+  <h1>Take quizzes</h1>
+  <p class="lead">The rules, one question at a time with autosave, a submit that locks the attempt, and the result</p>
+</section>
+
+<section id="take" data-part="1" data-cue="Sofía Rivera is in After-School Tutoring at Harbourview" data-clip="clips/take-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Taking the quiz</h3><p>From the module, the rules, four questions saved as she goes, submit and the result.</p></div>
+</section>
+
+
+
+<section id="autosave" data-part="2" data-cue="As soon as she chooses, the answer and the question she is on are saved">
+  <h2>Saved as she goes</h2>
+  <div class="cols">
+  <img class="shot" alt="Question 3 of 4, multiple answer, Answers saved" src="shots/desktop-multiple-answer.png">
+  <ul class="small">
+    <li><code>POST /learning/quizzes/{id}/attempts</code> starts or resumes, audited as Created on <code>QuizAttempt</code></li>
+    <li><code>PUT /learning/attempts/{id}/answers</code> with every answer and her position</li>
+    <li>One option for multiple choice and true / false; short answers up to 200 characters</li>
+    <li>A shuffled quiz fixes its order for the attempt</li>
+    <li>Locked until its lessons are done: 403 <code>locked</code></li>
+  </ul>
+  </div>
+</section>
+
+<section id="submit" data-part="3" data-cue="On the last question, Submit answers opens a dialog.">
+  <h2>Submit locks the attempt</h2>
+  <div class="cols">
+    <img class="shot" alt="Submit your answers? You can’t change them after this" src="shots/desktop-submit-dialog.png">
+    <ul class="small">
+      <li><code>POST /learning/attempts/{id}/submit</code></li>
+      <li>Scored by <code>QuizScoring</code> on the server</li>
+      <li>Audited as Submitted</li>
+      <li>Then 409 <code>submitted</code> to any change</li>
+    </ul>
+  </div>
+</section>
+
+<section id="result" data-part="4" data-cue="Sofía got three of four, seventy five percent, so she passed.">
+  <h2>Her result</h2>
+  <div class="cols">
+    <img class="shot" alt="You passed, Sofía: 75%, 3 of 4 correct" src="shots/desktop-result-passed.png">
+    <img class="shot" alt="The review marks each answer correct, wrong or missed" src="shots/desktop-review.png">
+  </div>
+</section>
+
+<section id="complete" data-part="4" data-cue="The quiz is required to finish the module">
+  <h2>A required quiz completes the module</h2>
+  <img class="shot" alt="Module complete: every lesson is done and you passed the quiz" src="shots/desktop-module-complete.png">
+</section>
+
+<section id="retake" data-part="5" data-cue="Had she scored fifty percent" data-clip="clips/retake-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Trying again</h3><p>Not this time, the last attempt, and a reload that resumes it.</p></div>
+</section>
+
+
+<section id="phone" data-part="6" data-cue="On a phone the rules, the question and the result stack" data-clip="clips/phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>The same quiz</h3><p>The rules, a question and the result in one column.</p></div>
+</section>
+
+<section id="states" data-part="7" data-cue="A locked quiz names the lesson to finish first." data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Locked, offline and the rest</h3><p>Locked, offline, no attempts left, score only, waiting, not found, Try again, Learning off.</p></div>
+</section>
+
+<section id="feedback" data-part="7" data-cue="A quiz set to show the score only has no review.">
+  <h2>What she sees after</h2>
+  <div class="cols">
+    <table class="facts">
+      <tr><th>Feedback rule</th><th>Review</th></tr>
+      <tr><td>After each attempt</td><td>Every time</td></tr>
+      <tr><td>Score only</td><td>Never</td></tr>
+      <tr><td>After the last attempt</td><td>Once none is left</td></tr>
+      <tr><td>Mentor approves</td><td>No score until approved</td></tr>
+    </table>
+    <img class="shot" alt="Not saved, you’re offline" src="shots/desktop-offline.png">
+  </div>
+</section>
+
+<section id="testing" data-part="8" data-cue="The API tests cover the rules and the locks">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>LearningQuizIntroTests</code>, <code>LearningQuizAttemptTests</code>: rules, locks, start, resume, autosave, refusals</li>
+    <li><code>LearningQuizSubmitTests</code>, <code>LearningQuizResultTests</code>: scoring, locking, limits, feedback, approval, required</li>
+    <li><code>e2e/tests/learning/quizzes.spec.ts</code> on phone and laptop, offline included, with axe</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="9" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Every answer saves as she goes; an attempt resumes where she stopped</li><li>Scoring is on the server; a submitted attempt never changes</li><li>The limit is enforced and her best score counts</li></ul>
+  <p class="muted">Next: youth submit assignments</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
