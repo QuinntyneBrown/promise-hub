@@ -9,7 +9,7 @@ The first slice of the **Mentoring** module (`L1-024`). A mentor sees only the y
 - **`MentoringHandler`** (`PromiseHub.Application/Mentoring/`) returns `AssignedYouthDto(youth)` for the caller's membership: an empty list while no assignment exists.
 - **`GET /mentoring/youth`** (`MentoringEndpoints`) requires `Permission.MentorYouth` (Mentor) and `RequireModule(ModuleId.Mentoring)`.
 - **`MENTORING_API`** with `HttpMentoringApi.youth()`.
-- **`MentoringPage`** (`frontend/projects/mentoring/`) composes `ph-page-header`, `ph-card` and `ph-empty-state` (`mentoring`), loaded by `moduleRoute('mentoring', 'Mentoring', …)`.
+- **`MentoringPage`** (`frontend/projects/mentoring/`) composed `ph-page-header`, `ph-card` and `ph-empty-state` (`mentoring`), loaded by `moduleRoute('mentoring', 'Mentoring', …)`; prompt 55 replaced it with `MentorDashboardPage` (`mentor-dashboard`, [manage-mentor-roster](../manage-mentor-roster/README.md)).
 
 ## Requirements
 

@@ -330,7 +330,7 @@ def main_menu(S):
     S.add("youth", "A youth’s menu: Today, Learning, notifications and account only; no staff sections, no Settings.",
           **over("today", "youth", overlays=drawer(YOUTH["sofia"], "today", [("today", "Today", "home"), ("learning", "Learning", "star")] + tail)))
     S.add("mentor", "A mentor’s menu: Today, Mentoring, notifications and account.",
-          **over("today", "mentor", overlays=drawer(STAFF["daniel"], "today", [("today", "Today", "home"), ("mentoring", "Mentoring", "users")] + tail)))
+          **over("today", "mentor", overlays=drawer(STAFF["daniel"], "today", [("today", "Today", "home"), ("mentor-dashboard", "Mentoring", "users")] + tail)))
     S.add("volunteer", "A volunteer’s menu: Today, Check-in for their assigned sessions, notifications and account.",
           **over("today", "volunteer", overlays=drawer(STAFF["leo"], "today", [("today", "Today", "home"), ("check-in", "Check-in", "clipboard")] + tail)))
 

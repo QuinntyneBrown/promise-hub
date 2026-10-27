@@ -1,0 +1,53 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Class structure — View a youth's record
+class MentorYouthRecordHandler <<handler>> {
+  +HandleAsync(childId): RecordResult
+}
+class MentorYouthRecordDto <<contract>> {
+  +Id: Guid
+  +Name: string
+  +PreferredName: string?
+  +Pronouns: string?
+  +Age: int?
+  +School: string?
+  +Programs: string[]
+  +Mentor: string?
+  +Guardians: MentorGuardianContactDto[]
+  +RecentAttendance: MentorAttendanceDto[]?
+}
+class MentorGuardianContactDto <<contract>> {
+  +Name: string
+  +Relationship: string
+  +Mobile: string?
+  +Email: string?
+  +IsPrimary: bool
+}
+class MentorAttendanceDto <<contract>> {
+  +Session: string
+  +At: DateTimeOffset
+  +Status: string
+}
+class Child <<entity, tenant-owned>> {
+  +FirstName, LastName, School
+  -DateOfBirth (age only)
+  -Allergies, Medication, Conditions, Doctor
+  -HealthCard, Notes
+}
+class YouthOnboarding <<entity, tenant-owned>> {
+  +PreferredName
+  +Pronouns
+}
+class MentorScope <<application service>>
+MentorYouthRecordHandler --> MentorScope
+MentorYouthRecordHandler ..> Child
+MentorYouthRecordHandler ..> YouthOnboarding : via the youth membership linked to the child
+MentorYouthRecordHandler --> MentorYouthRecordDto
+MentorYouthRecordDto *-- MentorGuardianContactDto
+MentorYouthRecordDto *-- MentorAttendanceDto
+note right of Child : Fields marked - are never\ncopied into the mentor contract\n(L2-064 c3, L2-007, L2-019)
+@enduml

@@ -6,7 +6,7 @@ skinparam defaultFontName Arial
 skinparam ArrowColor #344054
 actor "Daniel (Mentor)" as actor
 box "Frontend — PromiseHub web app" #E0F2FE
-  participant "MentoringPage" as page
+  participant "MentoringPage (now MentorDashboardPage)" as page
 end box
 box "Backend — PromiseHub API" #D1FADF
   participant "MentoringEndpoints (MentorYouth, Mentoring)" as endpoint

@@ -1,0 +1,61 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Class structure — Mentor dashboard and roster
+class MentorScope <<application service>> {
+  +YouthIdsAsync(): IReadOnlyList<Guid>
+  +CohortsAsync(): IReadOnlyList<MentorCohortRef>
+  +CanSeeYouthAsync(childId): bool
+}
+class MentorDashboardHandler <<handler>> {
+  +HandleAsync(): MentorDashboardDto
+}
+class MentoringHandler <<handler>> {
+  +HandleAsync(): AssignedYouthDto
+}
+class MentorDashboardDto <<contract>> {
+  +Youth: MentoredYouthDto[]
+  +Cohorts: MentorCohortSummaryDto[]
+  +CheckedInThisWeek: int?
+  +RecentActivity: MentorActivityDto[]?
+}
+class MentoredYouthDto <<contract>> {
+  +Id: Guid
+  +Name: string
+  +Age: int?
+  +Programs: string[]
+}
+class MentorCohortSummaryDto <<contract>> {
+  +ProgramId: Guid
+  +Name: string
+  +Term: string?
+  +Role: string
+  +YouthCount: int
+}
+class MentorActivityDto <<contract>> {
+  +ChildId: Guid
+  +YouthName: string
+  +Kind: string
+  +Session: string
+  +At: DateTimeOffset
+}
+class YouthMentor <<entity, tenant-owned>>
+class CohortMentor <<entity, tenant-owned>>
+class AttendanceRecord <<entity, tenant-owned>>
+class IModuleGate <<abstraction>> {
+  +IsOnAsync(module): bool
+}
+MentorDashboardHandler --> MentorScope
+MentoringHandler --> MentorScope
+MentorDashboardHandler ..> IModuleGate : Roll Call on?
+MentorDashboardHandler ..> AttendanceRecord
+MentorScope ..> YouthMentor
+MentorScope ..> CohortMentor
+MentorDashboardHandler --> MentorDashboardDto
+MentorDashboardDto *-- MentoredYouthDto
+MentorDashboardDto *-- MentorCohortSummaryDto
+MentorDashboardDto *-- MentorActivityDto
+@enduml

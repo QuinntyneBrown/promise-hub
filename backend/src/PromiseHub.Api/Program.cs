@@ -71,6 +71,7 @@ app.MapStaffEndpoints();
 app.MapInvitationEndpoints();
 app.MapSettingsEndpoints();
 app.MapParticipantModuleEndpoints();
+app.MapMentoringEndpoints();
 app.MapMentorAssignmentEndpoints();
 
 app.Run();

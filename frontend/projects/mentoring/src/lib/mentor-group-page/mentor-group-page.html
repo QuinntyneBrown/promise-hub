@@ -1,0 +1,88 @@
+@let r = result();
+<ph-breadcrumb
+  [items]="[
+    { label: 'Mentoring', link: '/mentoring' },
+    { label: r?.status === 'loaded' ? r.value.name : 'Cohort' },
+  ]"
+/>
+@if (r === null) {
+  <ph-page-header title="Cohort" />
+  <div class="split" aria-busy="true" aria-label="Loading the cohort">
+    <ph-skeleton shape="card" />
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (r.status === 'loaded') {
+  @let c = r.value;
+  <ph-page-header [title]="c.name" [subtitle]="subtitle(c)" />
+  <div class="split">
+    <div class="stack">
+      <ph-card [title]="'Members · ' + c.members.length" [flush]="true">
+        @if (c.members.length) {
+          <ph-list label="Members">
+            @for (m of c.members; track m.id) {
+              <ph-list-item
+                [title]="m.name"
+                [meta]="memberMeta(m)"
+                [avatar]="m.name"
+                avatarTint="peach"
+                [link]="['/mentoring/youth', m.id]"
+              />
+            }
+          </ph-list>
+        } @else {
+          <ph-empty-state
+            icon="mentoring"
+            title="No youth in this cohort yet"
+            text="When a program director enrolls youth, they show up here."
+          />
+        }
+      </ph-card>
+    </div>
+    <div class="stack">
+      <ph-card title="Mentors" [flush]="true">
+        <ph-list label="Mentors">
+          @if (c.lead) {
+            <ph-list-item [title]="c.lead" meta="Lead mentor" [avatar]="c.lead" />
+          }
+          @for (s of c.supporting; track s) {
+            <ph-list-item [title]="s" meta="Supporting mentor" [avatar]="s" />
+          }
+        </ph-list>
+      </ph-card>
+    </div>
+  </div>
+} @else if (r.status === 'forbidden') {
+  <ph-page-header title="Cohort" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      title="You’re not a mentor on this cohort"
+      text="You can open the cohorts you lead or support."
+    >
+      <ph-button link="/mentoring">Back to Mentoring</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else if (r.status === 'not-found') {
+  <ph-page-header title="Cohort" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="search"
+      title="We can’t find that cohort"
+      text="It may belong to another organization."
+    >
+      <ph-button link="/mentoring">Back to Mentoring</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-page-header title="Cohort" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load this cohort"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}

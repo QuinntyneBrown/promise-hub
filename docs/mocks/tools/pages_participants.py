@@ -1,5 +1,5 @@
-"""Learning, Curriculum, Mentoring and the public website (ADR 0043): the first page of each new library, shown while its module is on.
-Learning (youth) and Curriculum (authors) follow Learning, Mentoring follows Mentoring, and the public website
+"""Learning, Curriculum and the public website (ADR 0043): the first page of each new library, shown while its module is on.
+Learning (youth) and Curriculum (authors) follow Learning and the public website
 follows Public website. The journeys of prompts 50 to 81 fill these pages; until then each is its own empty state."""
 from kit import *  # noqa: F401,F403
 from reg import screen
@@ -41,21 +41,6 @@ def curriculum(S):
     S.add("error", "Curriculum failed to load.", **kw, main=hdr + failed("We couldn’t load the curriculum"))
     S.add("forbidden", "A site lead opening Curriculum: only admins and program directors author.", nav="curriculum", user=STAFF["jaylen"],
           main=hdr + card(empty("Program directors write the curriculum", "Ask Marisol Delgado or Tom Nguyen.", action=btn("Back to Today", "", href=page("today")), icon_name="lock"), cls="card--flush"))
-
-
-@screen("mentoring", "page", "Mentoring", route="/mentoring", reqs=[R_MENTOR, "L1-002"], na={"empty": NA_PLACEHOLDER})
-def mentoring(S):
-    hdr = page_header("Mentoring", "The youth assigned to you.")
-    kw = dict(nav="mentoring", role="mentor", user=DANIEL, unread=0, modules=["today", "mentoring"])
-    S.add("default", "Daniel opens Mentoring before anyone is assigned to him: a mentor sees only assigned youth, so the list is empty.", **kw,
-          main=hdr + card(empty("No youth assigned yet", "A program director assigns youth to you. They appear here with their progress.", icon_name="users"), cls="card--flush"),
-          notes=note("The server lists only youth assigned to this mentor; with no assignments the answer is an empty list.", "top: 5rem; right: 1rem;"))
-    S.add("assigned", "Once Marisol assigns him to Sofía and makes him lead mentor of After‑School Tutoring: Daniel sees each youth he mentors, by name.", **kw,
-          main=hdr + ul_list([list_item("Jordan Thompson", "Youth you mentor", person=CHILD["jordan"]), list_item("Mateo Rivera", "Youth you mentor", person=CHILD["mateo"]),
-                              list_item("Sofía Rivera", "Youth you mentor", person=CHILD["sofia"]), list_item("Yusuf Haddad", "Youth you mentor", person=CHILD["yusuf"])], label="Youth you mentor"),
-          notes=note("Youth assigned to him directly and the youth of every cohort he leads or supports; the dashboard of prompt 55 adds progress.", "top: 5rem; right: 1rem;"))
-    S.add("loading", "Mentoring loading.", **kw, main=hdr + skeleton_list(4, "Loading your youth"))
-    S.add("error", "Mentoring failed to load.", **kw, main=hdr + failed("We couldn’t load your youth"))
 
 
 @screen("website", "page", "Public website", route="/site/harbourview", reqs=[R_SITE], shell="guardian", na={"empty": NA_PLACEHOLDER})

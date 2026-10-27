@@ -112,8 +112,8 @@ def today(S):
           user=YOUTH["sofia"], unread=0, modules=["today"], main=participant("Sofía", []),
           notes=note("Opening /learning while Learning is off redirects here to Today.", "top: 5rem; right: 1rem;"))
     S.add("mentor", "Daniel (Mentor) signs in: Today and Mentoring only; a mentor sees only the youth assigned to them.", nav="today", role="mentor",
-          user=STAFF["daniel"], unread=0, modules=["today", "mentoring"],
-          main=participant("Daniel", [list_item("Mentoring", "The youth assigned to you", href=page("mentoring"))]))
+          user=STAFF["daniel"], unread=0, modules=["today", "mentor-dashboard"],
+          main=participant("Daniel", [list_item("Mentoring", "The youth assigned to you", href=page("mentor-dashboard"))]))
     S.add("volunteer", "Leo (Volunteer) signs in: Today and Check-in for the sessions he is assigned to.", nav="today", role="volunteer",
           user=STAFF["leo"], unread=0, modules=["today", "check-in"],
           main=participant("Leo", [list_item("Tutoring night", "Today, 4:00–6:00 pm · Harbourview Community Centre, Room 2 · you are assigned", href=page("check-in"))]))

@@ -4,7 +4,7 @@
 
 PromiseHub is a multi-tenant, phone-first system of record for small youth-serving organizations. Since ADR 0043 a membership may hold a participant role: **Youth**, linked to the youth's own child record, or **Mentor**, who sees only the youth assigned to them. This feature lets those people sign in with the same email and password form as staff and land on the page that is home for their role.
 
-A youth lands on Learning (`learning`) and a mentor on Mentoring (`mentoring`). Everyone else, and a youth or mentor whose module is off for their organization, lands on Today. A deep link opened before signing in wins over the home. The home is presentation only: the server still decides what each role may read (`L2-007`), and a module that is off answers 404 (`L2-005`).
+A youth lands on Learning (`learning`) and a mentor on Mentoring (`mentor-dashboard`). Everyone else, and a youth or mentor whose module is off for their organization, lands on Today. A deep link opened before signing in wins over the home. The home is presentation only: the server still decides what each role may read (`L2-007`), and a module that is off answers 404 (`L2-005`).
 
 Terms used in this document:
 

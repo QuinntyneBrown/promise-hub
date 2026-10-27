@@ -1,0 +1,39 @@
+@startuml
+title UML sequence behaviour — Opening a cohort as a mentor
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Mentor (Daniel)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "MentorGroupPage" as page
+  participant "MentoringApi" as mapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "Module and permission filters" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "MentorCohortHandler" as h
+  participant "MentorScope" as scope
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : opens After-School Tutoring from My cohorts
+page -> mapi : cohort(programId)
+mapi -> ep : GET /mentoring/cohorts/{programId}
+ep --> page : 404 when Mentoring is off; 403 for any role but Mentor (L2-065 c5)
+ep -> h : HandleAsync(programId)
+h -> db : program in caller's organization? (404 otherwise — c2)
+h -> scope : CohortsAsync (non-archived, caller on the team)
+alt not on the team or archived
+  h -> db : audit AccessDenied on Program (c2)
+  ep --> page : 403
+  page --> actor : "You’re not a mentor on this cohort"
+else on the team
+  h -> db : team names, active roster with ages and each youth's mentor (c1)
+  ep --> page : 200
+  page --> actor : members (or "No youth in this cohort yet" — c3) and mentors
+end
+@enduml

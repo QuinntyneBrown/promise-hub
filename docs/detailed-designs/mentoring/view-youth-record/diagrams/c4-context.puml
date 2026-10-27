@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — View a youth's record
+Person(p0, "Mentor", "Opens the record of a youth they mentor")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(p0, ph, "Uses", "HTTPS")
+@enduml

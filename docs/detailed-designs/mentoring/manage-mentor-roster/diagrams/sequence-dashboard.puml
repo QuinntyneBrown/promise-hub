@@ -1,0 +1,37 @@
+@startuml
+title UML sequence behaviour — Opening the mentor dashboard
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Mentor (Daniel)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "MentorDashboardPage" as page
+  participant "MentoringApi" as mapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "MentoringEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "MentorDashboardHandler" as h
+  participant "MentorScope" as scope
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : opens Mentoring
+page -> mapi : dashboard()
+mapi -> ep : GET /mentoring/dashboard (Mentoring on — L2-063 c8; MentorYouth — c7)
+ep -> h : HandleAsync
+h -> scope : the caller's youth and cohorts
+scope -> db : direct YouthMentors + active rosters of non-archived cohorts on the team, caller's organization only (c1, c6, c9)
+h -> db : ages, active programs, roster counts
+alt Roll Call is on
+  h -> db : attendance of those youth: last 7 days counted, last 14 days listed (c2)
+else Roll Call is off
+  h --> h : checkedInThisWeek and recentActivity null (c3)
+end
+ep --> page : 200 dashboard
+page --> actor : numbers, My youth, My cohorts, Recent activity (or empty state — c5)
+@enduml
