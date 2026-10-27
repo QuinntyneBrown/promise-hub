@@ -1,0 +1,14 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Decide and enroll an applicant
+Person(s, "Admin / program director", "Places, waitlists or declines")
+Person(f, "Family", "Guardian of the young person")
+Person(y, "Young person", "Invited to a youth account, ages 12 to 18")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+System_Ext(sms, "SMS and email providers", "Family text, invitation email")
+Rel(s, ph, "Decides applications", "HTTPS")
+Rel(ph, sms, "Sends")
+Rel(sms, f, "Text: enrolled, waitlisted or declined")
+Rel(sms, y, "Youth invitation email")
+@enduml

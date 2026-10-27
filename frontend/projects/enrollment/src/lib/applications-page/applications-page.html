@@ -1,0 +1,74 @@
+@if (!allowed()) {
+  <ph-error-page
+    icon="lock"
+    title="Only admins and program directors review applications"
+    text="Ask Tom Nguyen or Marisol Delgado."
+  >
+    <ph-button link="/">Back to Today</ph-button>
+  </ph-error-page>
+} @else {
+  <ph-page-header title="Applications" [subtitle]="subtitle()" />
+  <ph-tabs
+    label="Application status"
+    [items]="tabs()"
+    [selected]="status()"
+    (selectedChange)="choose($event)"
+  />
+  <div role="tabpanel" [attr.aria-labelledby]="'tab-' + status()">
+    @switch (result()?.status) {
+      @case ('loaded') {
+        @if (result(); as r) {
+          @if (r.status === 'loaded' && r.value.applications.length) {
+            <ph-list label="Applications">
+              @for (a of r.value.applications; track a.id) {
+                <ph-list-item
+                  [title]="title(a)"
+                  [meta]="meta(a)"
+                  [link]="['/applications', a.id]"
+                  [avatar]="a.child"
+                  avatarTint="peach"
+                >
+                  @if (open(a) && a.appliedAs === 'Referrer') {
+                    <ph-badge tone="info">Referral</ph-badge>
+                  }
+                  @if (open(a) && !a.seasonConsent) {
+                    <ph-badge tone="warning">Consent needed</ph-badge>
+                  }
+                </ph-list-item>
+              }
+            </ph-list>
+          } @else if (status() === 'WaitingReview') {
+            <ph-card [flush]="true">
+              <ph-empty-state
+                icon="inbox"
+                title="You’re all caught up"
+                text="New applications, referrals and enrollments appear here for review. Open enrollment on a program to share its link."
+              />
+            </ph-card>
+          } @else {
+            <ph-card [flush]="true">
+              <ph-empty-state icon="inbox" title="Nothing here yet" text="Try another status." />
+            </ph-card>
+          }
+        }
+      }
+      @case (undefined) {
+        <div aria-busy="true" aria-label="Loading applications">
+          <ph-skeleton shape="card" />
+        </div>
+      }
+      @default {
+        <ph-card [flush]="true">
+          <ph-empty-state
+            icon="warning"
+            tone="error"
+            title="Couldn’t load applications"
+            text="Check your connection and try again."
+          >
+            <ph-button variant="primary" (click)="load(status())">Try again</ph-button>
+          </ph-empty-state>
+        </ph-card>
+      }
+    }
+  </div>
+}

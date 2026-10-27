@@ -1,0 +1,28 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Decide and enroll an applicant
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "ApplicationPage", "Angular page", "Place, Waitlist, Decline")
+  Component(place, "PlaceApplicantDialog", "CDK dialog", "place-applicant")
+  Component(rev, "ReviewEnrollmentDialog", "CDK dialog", "decide-application")
+  Component(apis, "ApplicationsApi, EnrollmentApi, StaffApi", "Contracts + HTTP clients", "tokens")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "ApplicationEndpoints, EnrollmentEndpoints, StaffEndpoints", "Minimal API", "Roster gate, permissions")
+  Component(h, "ReviewEnrollmentHandler", "Handler", "PlaceAsync, ReviewAsync: capacity, plan limit, enrollment, family text, audit")
+  Component(inv, "YouthInvitationHandler", "Handler", "ages 12 to 18, one invitation per child (L2-051)")
+  Component(msg, "MessageWriter", "Service", "queues the family text (L2-021)")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "EnrollmentRequests, Enrollments, Programs, StaffInvitations")
+}
+Rel(page, place, "opens")
+Rel(page, rev, "opens")
+Rel(place, apis, "place, inviteYouth")
+Rel(rev, apis, "review")
+Rel(apis, ep, "JSON/HTTPS")
+Rel(ep, h, "calls")
+Rel(ep, inv, "calls")
+Rel(h, msg, "queues")
+Rel(h, db, "writes + audit")
+Rel(inv, db, "writes + audit")
+@enduml

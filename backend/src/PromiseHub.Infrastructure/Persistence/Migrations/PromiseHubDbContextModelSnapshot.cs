@@ -586,6 +586,40 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.ToTable("Tracks");
                 });
 
+            modelBuilder.Entity("PromiseHub.Domain.Enrollment.EnrollmentNote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Author")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("CreatedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("EnrollmentRequestId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EnrollmentRequestId");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.ToTable("EnrollmentNotes");
+                });
+
             modelBuilder.Entity("PromiseHub.Domain.Enrollment.EnrollmentRequest", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2741,6 +2775,21 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("PromiseHub.Domain.Curriculum.Track", b =>
                 {
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Enrollment.EnrollmentNote", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Enrollment.EnrollmentRequest", null)
+                        .WithMany()
+                        .HasForeignKey("EnrollmentRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
                         .WithMany()
                         .HasForeignKey("OrganizationId")

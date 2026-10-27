@@ -41,6 +41,7 @@ public interface IPromiseHubDb
     DbSet<Domain.Imports.ImportSession> ImportSessions { get; }
     DbSet<Domain.Enrollment.EnrollmentSession> EnrollmentSessions { get; }
     DbSet<Domain.Enrollment.EnrollmentRequest> EnrollmentRequests { get; }
+    DbSet<Domain.Enrollment.EnrollmentNote> EnrollmentNotes { get; }
     DbSet<Domain.Incidents.Incident> Incidents { get; }
     DbSet<Domain.Attendance.NoShowAlert> NoShowAlerts { get; }
     DbSet<Domain.Attendance.ApprovedPickup> ApprovedPickups { get; }

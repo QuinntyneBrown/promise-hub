@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 59 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="59" data-video-title="Review and place applicants" data-parts="Introduction|Pipeline|Application|Notes|Place|Decide|States|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 59</div>
+  <h1>Review and place applicants</h1>
+  <p class="lead">One pipeline for every application, staff notes, and placing young people into cohorts</p>
+</section>
+
+<section id="pipeline" data-part="1" data-cue="Tom Nguyen is the office manager at Harbourview." data-clip="clips/pipeline-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Applications</h3><p><code>GET /applications?status=</code> with the count of each status; a row opens the application.</p></div>
+</section>
+
+<section id="pipeline-shots" data-part="1" data-cue="The tabs filter by status on the server">
+  <h2>Who applied, at a glance</h2>
+  <div class="cols">
+    <img class="shot" alt="Applications: Zoe Campbell referred by Rachel Ellis, Malik Johnson applied for themselves, Kevin Tran by Linh Tran" src="shots/desktop-applications.png">
+    <img class="shot" alt="Applications on a phone" src="shots/phone-applications.png">
+  </div>
+  <p class="muted small"><code>ph-tabs</code> with counts · Referral and Consent needed <code>ph-badge</code>s · in More for admins and program directors while Roster is on</p>
+</section>
+
+<section id="application" data-part="2" data-cue="Tom opens Zoe Campbell.">
+  <h2>Zoe’s referral</h2>
+  <div class="cols">
+    <img class="shot" alt="Zoe Campbell: young person, referral and family cards with notes" src="shots/desktop-application.png">
+    <img class="shot" alt="Zoe’s application on a phone" src="shots/phone-application.png">
+  </div>
+  <p class="muted small"><code>GET /applications/{id}</code> · <code>ph-description-list</code> per card · another organization’s application answers 404</p>
+</section>
+
+<section id="youth" data-part="2" data-cue="When a young person applies for themselves">
+  <h2>A young person’s own application</h2>
+  <img class="shot" alt="Malik Johnson: applied by Malik Johnson, the young person; Denise Johnson consents" src="shots/desktop-youth-application.png">
+</section>
+
+<section id="notes" data-part="3" data-cue="Notes are for staff only.">
+  <h2>Staff notes</h2>
+  <div class="cols">
+    <img class="shot" alt="Add a note dialog" src="shots/desktop-note-dialog.png">
+    <img class="shot" alt="The new note first in Notes" src="shots/desktop-noted.png">
+  </div>
+  <p class="muted small"><code>POST /applications/{id}/notes</code> · <code>EnrollmentNote</code> · up to 2,000 characters · audited without the text · <code>ph-timeline</code></p>
+</section>
+
+<section id="place" data-part="4" data-cue="A cohort in PromiseHub is a program." data-clip="clips/place-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Place Zoe</h3><p>Choose the cohort, invite her as a youth, a note to Tanya, then <code>POST /applications/{id}/place</code>.</p></div>
+</section>
+
+<section id="place-shots" data-part="4" data-cue="Placing moves the application to the chosen cohort">
+  <h2>What placing does</h2>
+  <div class="cols">
+    <img class="shot" alt="Place Zoe Campbell: cohorts with places, a full one disabled, the youth invitation and a note" src="shots/desktop-place-dialog.png">
+    <img class="shot" alt="Placed in After-School Tutoring, read only" src="shots/desktop-placed.png">
+  </div>
+  <p class="muted small">Moves the request · enrolls the child · texts the family · audited as placed · invitation through <code>POST /children/{id}/youth-invitation</code> (ADR 0053)</p>
+</section>
+
+<section id="decide" data-part="5" data-cue="Waitlist and Decline open the same review dialog" data-clip="clips/decide-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Waitlist and decline</h3><p>Malik waitlisted; Kevin declined, first without a reason.</p></div>
+</section>
+
+<section id="decide-shots" data-part="5" data-cue="Once an application is accepted or declined">
+  <h2>Decided</h2>
+  <div class="cols">
+    <img class="shot" alt="Decline needs a reason the guardian will read" src="shots/desktop-decline-reason.png">
+    <img class="shot" alt="Declined: Linh Tran read the reason; no more decisions" src="shots/desktop-declined.png">
+  </div>
+  <p class="muted small">A second decision answers 409 · notes can still be added (L2-072 criterion 7)</p>
+</section>
+
+<section id="states" data-part="6" data-cue="With nothing waiting review" data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Every state</h3><p>All caught up, Try again, not found and a site lead.</p></div>
+</section>
+
+<section id="states-shots" data-part="6" data-cue="With Roster off, the routes lead back to Today">
+  <h2>When there is nothing to show</h2>
+  <div class="cols">
+    <img class="shot" alt="You’re all caught up" src="shots/desktop-empty.png">
+    <img class="shot" alt="Only admins and program directors review applications" src="shots/desktop-forbidden.png">
+  </div>
+</section>
+
+<section id="testing" data-part="7" data-cue="The API tests cover the list and its counts">
+  <h2>How it is tested</h2>
+  <div class="cols">
+    <ul>
+      <li><code>ApplicationReviewTests.cs</code>: list, counts, detail, notes, placing, waitlists, full and archived cohorts, roles, Roster off, tenants</li>
+      <li><code>e2e/tests/enrollment/applications.spec.ts</code>, <code>application.spec.ts</code>, <code>place.spec.ts</code>, <code>decide.spec.ts</code></li>
+      <li>Phone and laptop, axe on every screen, fake API</li>
+    </ul>
+    <img class="shot" alt="We can’t find that application" src="shots/desktop-not-found.png">
+  </div>
+</section>
+
+<section id="phone" data-part="7" data-cue="The browser tests walk the pipeline" data-clip="clips/phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>On a phone</h3><p>The pipeline and Zoe’s referral at 390 pixels, no sideways scrolling.</p></div>
+</section>
+
+<section id="recap" data-part="8" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Recap</h2>
+  <ul class="recap"><li>One pipeline lists every application with who applied</li><li>Notes stay with staff</li><li>Placing chooses the cohort, enrolls, texts the family and can invite a youth</li><li>Waitlist and decline as on the roster, with a message the family reads</li></ul>
+  <p class="muted">Next: manage people</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

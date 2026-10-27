@@ -96,6 +96,9 @@ export const routes: Routes = [
       ...moduleRoute('import', 'Roster', () =>
         import('@promisehub/enrollment').then((m) => m.routes),
       ),
+      ...moduleRoute('applications', 'Roster', () =>
+        import('@promisehub/enrollment').then((m) => m.applicationRoutes),
+      ),
       ...moduleRoute('families', 'Roster', () =>
         import('@promisehub/households').then((m) => m.routes),
       ),

@@ -1,4 +1,6 @@
 import { Routes } from '@angular/router';
+import { ApplicationPage } from './application-page/application-page';
+import { ApplicationsPage } from './applications-page/applications-page';
 import { ImportRosterPage } from './import-roster-page/import-roster-page';
 import { ReviewRosterPage } from './review-roster-page/review-roster-page';
 
@@ -10,4 +12,10 @@ export const routes: Routes = [
 /** Mounted by the app at /programs/:programId/roster while the Roster module is on. */
 export const reviewRoutes: Routes = [
   { path: '', component: ReviewRosterPage, title: 'Roster · PromiseHub' },
+];
+
+/** Mounted by the app at /applications while the Roster module is on (L2-072). */
+export const applicationRoutes: Routes = [
+  { path: '', component: ApplicationsPage, title: 'Applications · PromiseHub' },
+  { path: ':id', component: ApplicationPage, title: 'Application · PromiseHub' },
 ];

@@ -44,6 +44,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Imports.ImportSession> ImportSessions => Set<Domain.Imports.ImportSession>();
     public DbSet<Domain.Enrollment.EnrollmentSession> EnrollmentSessions => Set<Domain.Enrollment.EnrollmentSession>();
     public DbSet<Domain.Enrollment.EnrollmentRequest> EnrollmentRequests => Set<Domain.Enrollment.EnrollmentRequest>();
+    public DbSet<Domain.Enrollment.EnrollmentNote> EnrollmentNotes => Set<Domain.Enrollment.EnrollmentNote>();
     public DbSet<Domain.Incidents.Incident> Incidents => Set<Domain.Incidents.Incident>();
     public DbSet<Domain.Attendance.NoShowAlert> NoShowAlerts => Set<Domain.Attendance.NoShowAlert>();
     public DbSet<Domain.Attendance.ApprovedPickup> ApprovedPickups => Set<Domain.Attendance.ApprovedPickup>();
@@ -450,6 +451,14 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.HasOne<Domain.Programs.Program>().WithMany().HasForeignKey(r => r.ProgramId);
             e.HasOne<Child>().WithMany().HasForeignKey(r => r.ChildId);
             e.HasIndex(r => new { r.ProgramId, r.Status });
+        });
+        modelBuilder.Entity<Domain.Enrollment.EnrollmentNote>(e =>
+        {
+            e.Property(n => n.Author).HasMaxLength(200);
+            e.Property(n => n.Text).HasMaxLength(Domain.Enrollment.EnrollmentNote.MaxLength);
+            e.Property(n => n.CreatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.HasOne<Domain.Enrollment.EnrollmentRequest>().WithMany().HasForeignKey(n => n.EnrollmentRequestId);
+            e.HasIndex(n => n.EnrollmentRequestId);
         });
         modelBuilder.Entity<Domain.Incidents.Incident>(e =>
         {

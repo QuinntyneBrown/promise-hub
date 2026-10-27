@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Review an application
+Person(s, "Admin / program director", "Tom Nguyen, Marisol Delgado")
+Person(a, "Person applying", "Guardian, young person or referrer (L2-071)")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(a, ph, "Applies through the enrollment link", "HTTPS")
+Rel(s, ph, "Reviews applications, adds notes", "HTTPS")
+@enduml

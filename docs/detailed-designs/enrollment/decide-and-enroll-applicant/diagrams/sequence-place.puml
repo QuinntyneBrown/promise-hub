@@ -1,0 +1,53 @@
+@startuml
+title UML sequence behaviour — Tom places Zoe in After‑School Tutoring and invites her
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Tom (Admin)" as tom
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "PlaceApplicantDialog" as dlg
+  participant "ApplicationsApi / StaffApi" as apis
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "ApplicationEndpoints / StaffEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "ReviewEnrollmentHandler" as h
+  participant "YouthInvitationHandler" as inv
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+  participant "SMS / email" as out
+end box
+tom -> dlg : choose After‑School Tutoring, invite on, email, note
+dlg -> apis : place(id, programId, note)
+apis -> ep : POST /applications/{id}/place
+ep -> h : PlaceAsync
+alt unknown or another organization's request
+  h --> ep : 404 (c9)
+else already decided
+  h --> ep : 409 (c7)
+else no program, archived or another organization's
+  h --> ep : 422 Choose a cohort. (c4)
+else full or plan limit
+  h --> ep : 422 reason (c4)
+else
+  h -> db : MoveTo, Accept, Enrollment, waitlist moves up, audit "placed" (c4)
+  h -> out : family text "{child} is enrolled in {program}." (c4)
+  ep --> apis : 204
+end
+opt invite on (admin, Learning on, 12 to 18)
+  dlg -> apis : inviteYouth(childId, email)
+  apis -> ep : POST /children/{childId}/youth-invitation
+  ep -> inv : InviteAsync
+  alt refused
+    inv --> ep : 422 reason
+    dlg --> tom : placed; invitation not sent, why (c5)
+  else
+    inv -> out : invitation email (c5)
+  end
+end
+dlg --> tom : closes; toast; page shows the outcome (c7)
+@enduml

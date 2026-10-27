@@ -22,6 +22,8 @@ import { HttpImportsApi } from './imports/http-imports-api';
 import { IMPORTS_API } from './imports/imports-api.token';
 import { ENROLLMENT_API } from './enrollment/enrollment-api.token';
 import { HttpEnrollmentApi } from './enrollment/http-enrollment-api';
+import { APPLICATIONS_API } from './applications/applications-api.token';
+import { HttpApplicationsApi } from './applications/http-applications-api';
 import { HttpIncidentsApi } from './incidents/http-incidents-api';
 import { INCIDENTS_API } from './incidents/incidents-api.token';
 import { HttpInvitationApi } from './invitations/http-invitation-api';
@@ -85,6 +87,7 @@ export function provideApi(): EnvironmentProviders {
     { provide: GUARDIAN_ENROLLMENT_API, useClass: HttpGuardianEnrollmentApi },
     { provide: IMPORTS_API, useClass: HttpImportsApi },
     { provide: ENROLLMENT_API, useClass: HttpEnrollmentApi },
+    { provide: APPLICATIONS_API, useClass: HttpApplicationsApi },
     { provide: INCIDENTS_API, useClass: HttpIncidentsApi },
     { provide: PICKUP_API, useClass: HttpPickupApi },
     { provide: STAFF_API, useClass: HttpStaffApi },

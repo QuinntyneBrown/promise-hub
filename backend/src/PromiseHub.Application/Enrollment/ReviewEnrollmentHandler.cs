@@ -22,7 +22,44 @@ public sealed class ReviewEnrollmentHandler(IPromiseHubDb db, ITenantContext ten
     public Task<Result> BulkAsync(BulkReviewCommand command, CancellationToken cancellationToken = default) =>
         DecideAsync(command.Ids ?? [], command.Decision, command.Note, cancellationToken);
 
-    private async Task<Result> DecideAsync(Guid[] ids, ReviewDecision decision, string? note, CancellationToken cancellationToken)
+    /// <summary>
+    /// Places an open application into the cohort chosen now (dialog: place-applicant; L2-072 criterion 4): the request moves to that
+    /// program, leaving its old waitlist, and is accepted as any review would. An archived, missing or another organization's program
+    /// answers 422.
+    /// </summary>
+    public async Task<Result> PlaceAsync(Guid id, PlaceApplicantCommand command, CancellationToken cancellationToken = default)
+    {
+        var request = await db.EnrollmentRequests.FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
+        if (request is null)
+        {
+            return Result.NotFound;
+        }
+        if (!request.Open)
+        {
+            return Result.Conflict;
+        }
+        var program = command.ProgramId is { } programId
+            ? await db.Programs.AsNoTracking().FirstOrDefaultAsync(p => p.Id == programId && p.Status != Domain.Programs.ProgramStatus.Archived, cancellationToken)
+            : null;
+        if (program is null)
+        {
+            return Result.Invalid(new Dictionary<string, string> { ["programId"] = "Choose a cohort." });
+        }
+        if (request.ProgramId != program.Id)
+        {
+            if (request.Status == EnrollmentRequestStatus.Waitlisted && request.Position is { } place)
+            {
+                foreach (var behind in await db.EnrollmentRequests.Where(r => r.ProgramId == request.ProgramId && r.Status == EnrollmentRequestStatus.Waitlisted && r.Position > place).ToListAsync(cancellationToken))
+                {
+                    behind.MoveUp();
+                }
+            }
+            request.MoveTo(program.Id);
+        }
+        return await DecideAsync([id], ReviewDecision.Accept, command.Note, cancellationToken, placed: true);
+    }
+
+    private async Task<Result> DecideAsync(Guid[] ids, ReviewDecision decision, string? note, CancellationToken cancellationToken, bool placed = false)
     {
         var requests = await db.EnrollmentRequests.Where(r => ids.Contains(r.Id)).ToListAsync(cancellationToken);
         if (requests.Count == 0 || requests.Count != ids.Distinct().Count())
@@ -91,7 +128,7 @@ public sealed class ReviewEnrollmentHandler(IPromiseHubDb db, ITenantContext ten
                 writer.Queue(MessageSource.Enrollment, $"Enrollment: {program.Name}", body, ChannelChoice.TextWithEmailFallback, audience,
                     new AudienceRequest(program.Id, null, null, body, ChannelChoice.TextWithEmailFallback));
                 audit.Record(new AuditEvent(AuditAction.Updated, "EnrollmentRequest", request.Id,
-                    $"{child.FullName} · {program.Name} · {request.Status switch { EnrollmentRequestStatus.Accepted => "accepted", EnrollmentRequestStatus.Waitlisted => $"waitlisted #{request.Position}", _ => "declined" }}"));
+                    $"{child.FullName} · {program.Name} · {request.Status switch { EnrollmentRequestStatus.Accepted => placed ? "placed" : "accepted", EnrollmentRequestStatus.Waitlisted => $"waitlisted #{request.Position}", _ => "declined" }}"));
                 text = string.IsNullOrWhiteSpace(note) ? null : note.Trim();
             }
         }
