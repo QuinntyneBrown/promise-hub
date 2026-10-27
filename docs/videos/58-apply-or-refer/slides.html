@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 58 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="58" data-video-title="Apply or refer a youth" data-parts="Introduction|Who|Young person|Referrer|Recorded|States|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 58</div>
+  <h1>Apply or refer a youth</h1>
+  <p class="lead">One enrollment link for guardians, young people and the people who refer them</p>
+</section>
+
+<section id="who" data-part="1" data-cue="The link opens on one question: who is applying?">
+  <h2>Who is applying?</h2>
+  <div class="cols">
+    <img class="shot" alt="Enroll in After-School Tutoring: who is applying, with three choices" src="shots/desktop-who.png">
+    <img class="shot" alt="The same question on a phone" src="shots/phone-who.png">
+  </div>
+  <p class="muted small"><code>ph-radio-group</code> with hints · guardian by default · every path verifies a code first (<code>L2-026</code>)</p>
+</section>
+
+<section id="youth" data-part="2" data-cue="Malik Johnson is fourteen." data-clip="clips/youth-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Malik applies for himself</h3><p>About you, his parent or guardian, the privacy agreement, then <code>POST /g/enroll/{slug}/submit</code>.</p></div>
+</section>
+
+<section id="youth-shots" data-part="2" data-cue="Every step is checked on the server">
+  <h2>What a young person can agree to</h2>
+  <div class="cols">
+    <img class="shot" alt="Check and submit: Malik's application with the privacy agreement" src="shots/desktop-youth-review.png">
+    <img class="shot" alt="A ten-year-old asked to have a parent or guardian apply" src="shots/phone-too-young.png">
+  </div>
+  <p class="muted small">Under 18: privacy notice, guardian consents later · 18: season consent · outside 12 to 18: 422 on the date of birth</p>
+</section>
+
+<section id="referrer" data-part="3" data-cue="Rachel Ellis is a guidance counsellor at Bennetto Elementary." data-clip="clips/referrer-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Rachel refers Zoe</h3><p>Her name, role and organization with the verified email, the young person and why, the guardian, and the family's agreement.</p></div>
+</section>
+
+<section id="referrer-shots" data-part="3" data-cue="Rachel never sees Zoe's family record">
+  <h2>The referral</h2>
+  <div class="cols">
+    <img class="shot" alt="About you: Rachel Ellis, guidance counsellor, with her verified contact" src="shots/desktop-referrer.png">
+    <img class="shot" alt="Your referral, with the family's agreement" src="shots/desktop-referral-review.png">
+  </div>
+</section>
+
+<section id="recorded" data-part="4" data-cue="A submission becomes an enrollment request waiting for review">
+  <h2>What is recorded</h2>
+  <table class="facts">
+    <tr><th>On <code>EnrollmentRequest</code></th><th>Guardian</th><th>Young person</th><th>Referrer</th></tr>
+    <tr><td><code>AppliedAs</code></td><td>Guardian</td><td>Youth</td><td>Referrer</td></tr>
+    <tr><td><code>SeasonConsent</code></td><td>Yes</td><td>Only at 18</td><td>No</td></tr>
+    <tr><td><code>Reason</code></td><td>—</td><td>Why interested</td><td>Why referring</td></tr>
+    <tr><td>Household</td><td>Returning or new</td><td>Always new</td><td>Always new</td></tr>
+  </table>
+  <p class="muted small">Referrer name, role, organization and verified contact · audited as Created on <code>Enrollment</code> · ADR 0052</p>
+</section>
+
+<section id="ack" data-part="4" data-cue="The person who applied gets one confirmation">
+  <h2>Acknowledged once</h2>
+  <div class="cols">
+    <img class="shot" alt="Thank you, Malik: waiting for review, consent to come, confirmation sent" src="shots/desktop-youth-submitted.png">
+    <img class="shot" alt="Thank you, Rachel: the office will contact Tanya Campbell" src="shots/desktop-referral-submitted.png">
+  </div>
+</section>
+
+<section id="states" data-part="5" data-cue="If the same young person already has an open application" data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Duplicates, codes, errors, off</h3><p>409 <code>duplicate</code>, 429 <code>too-many</code>, Try again, and Roster off.</p></div>
+</section>
+
+<section id="states-shots" data-part="5" data-cue="A failed load offers Try again">
+  <h2>When it can't go ahead</h2>
+  <div class="cols">
+    <img class="shot" alt="Malik Johnson already has an application for After-School Tutoring" src="shots/desktop-duplicate.png">
+    <img class="shot" alt="We couldn't load this page, with Try again" src="shots/desktop-error.png">
+  </div>
+  <p class="muted small">409 <code>duplicate</code> with the name · 429 <code>too-many</code> after three codes in 15 minutes · nothing recorded or sent</p>
+</section>
+
+<section id="testing" data-part="6" data-cue="The API tests cover each path">
+  <h2>How it is tested</h2>
+  <div class="cols">
+    <ul>
+      <li><code>ApplicationTests.cs</code>: paths, rules, consent, tenancy, Roster off, acknowledgement, duplicates, codes</li>
+      <li><code>EnrollmentTests.cs</code> keeps the guardian path</li>
+      <li><code>e2e/tests/enrollment/apply.spec.ts</code>, <code>e2e/tests/guardian/enroll.spec.ts</code></li>
+      <li>Phone and laptop, axe on every screen, fake API</li>
+    </ul>
+    <img class="shot" alt="With Roster off: This page isn't available" src="shots/desktop-unavailable.png">
+  </div>
+</section>
+
+<section id="phone" data-part="6" data-cue="The browser tests walk every path on a phone" data-clip="clips/phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>On a phone</h3><p>Who is applying, and the age rule at 390 pixels, no sideways scrolling.</p></div>
+</section>
+
+<section id="recap" data-part="7" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Recap</h2>
+  <ul class="recap"><li>One link for guardians, young people and referrers; each proves their contact</li><li>Each path agrees only to what it can; the season consent is recorded</li><li>Same review, a new household, acknowledged once</li></ul>
+  <p class="muted">Next: review and place applicants</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

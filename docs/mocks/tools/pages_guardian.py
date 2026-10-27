@@ -146,7 +146,7 @@ def enroll_youth(S):
         why = "" if e.get("reason") else ("Zoe is curious and kind, and needs somewhere to belong after school." if referrer else "I want to learn to code and help with the younger kids.")
         return (f'<form class="stack" action="#" method="post" novalidate>' + (form_summary([("youth-" + k, m) for k, m in e.items()]) if e else "")
                 + card(f'<div class="two-col">{field("youth-name", "First name", value=first, required=True, autocomplete="off" if referrer else "given-name", autofocus=True, error=e.get("name", ""))}{field("youth-last", "Last name", value=last, required=True)}</div>'
-                       + field("youth-dob", "Date of birth", type_="date", value=dob, required=True, error=e.get("dob", ""), help_="Young people aged 12 to 18 can apply for themselves." if not referrer else "")
+                       + field("youth-dob", "Date of birth", type_="date", value=dob, required=True, error=e.get("dob", ""), help_="You can apply for yourself if you’re 12 to 18." if not referrer else "")
                        + field("youth-school", "School and grade", value="Bennetto Elementary, Grade 8" if referrer else "Sir John A. Macdonald, Grade 9", optional=True)
                        + textarea("youth-reason", "Why are you referring them?" if referrer else "Why are you interested?", value=why, rows=3, error=e.get("reason", ""), help_="A sentence or two is plenty."), title="Who you’re referring" if referrer else "You", tid="youth")
                 + f'<div class="cluster" style="justify-content: space-between;">{btn("Back", "ghost", href=page("enroll-referrer") if referrer else page("enroll", "youth"))}{btn("Continue", "primary", type_="submit", busy=busy, size="lg")}</div></form>' + g_footer())
