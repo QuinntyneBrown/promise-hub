@@ -15,6 +15,7 @@ import type { ConsentRequestOutcome } from '../consent/consent-request-outcome';
 import type { WriteOutcome } from '../write-outcome';
 import type { OnboardingAnswers } from './onboarding-answers';
 import type { OnboardingResult } from './onboarding-result';
+import type { QuizIntro } from './quiz-intro';
 
 /** The signed-in youth’s own learning record (Learning module, ADR 0043). */
 export interface LearningApi {
@@ -37,6 +38,8 @@ export interface LearningApi {
   saveCoding(id: string, answers: CodingAnswers): Observable<CodingSaveResult>;
   /** Submits a coding project to the youth's mentor, once (L2-070 criterion 4). */
   submitProject(id: string, submission: ProjectSubmission): Observable<WriteOutcome>;
+  /** A quiz's rules and the youth's attempts; locked until its lessons are done (L2-075 criteria 1 and 2). */
+  quiz(id: string): Observable<GatedResult<QuizIntro>>;
   /** Asks the guardians of the youth's household for consent. */
   askGuardian(): Observable<ConsentRequestOutcome>;
   /** The youth's first-run setup with its defaults and their program (L2-059). */

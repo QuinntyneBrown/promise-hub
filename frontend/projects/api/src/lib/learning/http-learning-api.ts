@@ -26,6 +26,7 @@ import { WriteOutcome } from '../write-outcome';
 import { OnboardingAnswers } from './onboarding-answers';
 import { OnboardingResult } from './onboarding-result';
 import { YouthOnboarding } from './youth-onboarding';
+import { QuizIntro } from './quiz-intro';
 
 @Injectable()
 export class HttpLearningApi implements LearningApi {
@@ -125,6 +126,12 @@ export class HttpLearningApi implements LearningApi {
         `${this.baseUrl}/learning/coding/${encodeURIComponent(id)}/submission`,
         submission,
       ),
+    );
+  }
+
+  quiz(id: string): Observable<GatedResult<QuizIntro>> {
+    return toGated(
+      this.http.get<QuizIntro>(`${this.baseUrl}/learning/quizzes/${encodeURIComponent(id)}`),
     );
   }
 

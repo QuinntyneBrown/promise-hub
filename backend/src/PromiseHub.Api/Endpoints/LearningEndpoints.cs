@@ -30,6 +30,7 @@ public static class LearningEndpoints
                 ? Results.Created($"/learning/coding/{id}/submission", new { id = submitted.Value })
                 : submitted.ToHttp();
         });
+        learning.MapGet("/quizzes/{id:guid}", async (Guid id, QuizIntroHandler handler, CancellationToken ct) => (await handler.HandleAsync(id, ct)).ToHttp());
         // Streamed under the youth's session cookie with range requests, so the player can seek (ADR 0051).
         learning.MapGet("/lessons/{id:guid}/video", async (Guid id, LessonVideoStream handler, CancellationToken ct) =>
         {

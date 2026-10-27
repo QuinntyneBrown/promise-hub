@@ -629,6 +629,9 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.Property<int>("PassMark")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("RequireApproval")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("RequiredToComplete")
                         .HasColumnType("INTEGER");
 
@@ -1817,6 +1820,72 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("ProjectSubmissions");
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Learning.QuizAttempt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Answers")
+                        .IsRequired()
+                        .HasMaxLength(20000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Correct")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("MembershipId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool?>("Passed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("QuestionOrder")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("QuizId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Score")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("StartedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("SubmittedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Total")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("QuizId");
+
+                    b.HasIndex("MembershipId", "QuizId", "Number")
+                        .IsUnique();
+
+                    b.ToTable("QuizAttempts");
                 });
 
             modelBuilder.Entity("PromiseHub.Domain.Learning.YouthOnboarding", b =>
@@ -3329,6 +3398,27 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
                         .WithMany()
                         .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Learning.QuizAttempt", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Organizations.Membership", null)
+                        .WithMany()
+                        .HasForeignKey("MembershipId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Curriculum.Quiz", null)
+                        .WithMany()
+                        .HasForeignKey("QuizId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

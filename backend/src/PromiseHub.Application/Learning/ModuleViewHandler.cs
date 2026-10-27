@@ -16,6 +16,7 @@ public sealed class ModuleViewHandler(LearnerProgress progress)
         }
         return Gated<ModuleViewDto>.Found(new ModuleViewDto(module.Module.Id, module.Module.Title, module.Module.Description, module.Module.Anchor,
             track.Track.Id, track.Track.Name, module.Position, track.Modules.Count, module.Done, module.State,
-            module.Lessons.Select(l => new LessonItemDto(l.Lesson.Id, l.Lesson.Title, l.Lesson.Kind.ToString(), l.Lesson.Reading, l.Lesson.Minutes, l.State, l.UnlockAfter)).ToList()));
+            module.Lessons.Select(l => new LessonItemDto(l.Lesson.Id, l.Lesson.Title, l.Lesson.Kind.ToString(), l.Lesson.Reading, l.Lesson.Minutes, l.State, l.UnlockAfter)).ToList(),
+            module.Quizzes.Select(q => new QuizItemDto(q.Quiz.Id, q.Quiz.Title, q.Quiz.LessonId, q.QuestionCount, q.Quiz.RequiredToComplete, q.State, q.BestScore, q.UnlockAfter)).ToList()));
     }
 }

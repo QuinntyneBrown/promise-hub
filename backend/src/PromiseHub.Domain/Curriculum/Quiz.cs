@@ -44,6 +44,9 @@ public sealed class Quiz : ITenantOwned
     public bool RequiredToComplete { get; private set; }
     public ContentStatus Status { get; private set; }
 
+    /// <summary>A mentor approves each attempt's score before it counts (ADR 0055); switched on by prompt 63.</summary>
+    public bool RequireApproval { get; private set; }
+
     public void Update(string title, Guid? lessonId, int passMark, int? attemptsAllowed, FeedbackMode feedback, bool shuffle, bool requiredToComplete)
     {
         Title = title;
