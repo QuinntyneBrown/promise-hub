@@ -75,6 +75,10 @@ def medals(items, label: str) -> str:
     return f'<ul class="achievement-badges" aria-label="{esc(label)}">{"".join(items)}</ul>'
 
 
+def small_medal(icon_name: str) -> str:
+    return f'<span class="achievement-badge achievement-badge--sm" aria-hidden="true"><span class="achievement-badge__medal">{icon(icon_name)}</span></span>'
+
+
 def crumbs(cur: str) -> str:
     return breadcrumb([("Learning", page("learn-home"))], cur)
 
@@ -107,7 +111,7 @@ def learn_journey(S):
     strip = card(f'<div class="stack">{progress(2, 6, "Badges earned", show="2 of 6 earned")}'
                  + medals([medal(n, i, c) for n, i, _d, c in EARNED] + [medal(n, i, "Locked", locked=True) for n, i, _d, _c in LOCKED[:2]], "Your badges")
                  + f'<div>{btn("See all badges", "", icon_name="arrow-right", href=page("learn-badges"))}</div></div>', title="Badges", tid="badges")
-    more = card(ul_list([list_item("Your progress", "Quizzes, attendance and competencies", href=page("learn-progress"), lead=f'<span class="icon-tile" aria-hidden="true">{icon("chart")}</span>')],
+    more = card(ul_list([list_item("Your progress", "Quizzes, attendance and competencies", href=page("learn-progress"))],
                         card=False, label="More about you"), title="More", tid="more", cls="card--flush")
     S.add("default", "Sofía opens Your journey from Learning: her overall progress, weekly streak, badges and stage, then her roadmap module by module.", **YKW,
           main=hdr + numbers() + f'<div class="split"><div class="stack">{roadmap()}</div><div class="stack">{stages()}{strip}{more}</div></div>',
@@ -133,10 +137,10 @@ def learn_badges(S):
     locked = card(medals([medal(n, i, f"{d} {c}." if c not in ("Not yet", "Awarded by hand") else d, locked=True) for n, i, d, c in LOCKED], "Badges still to unlock"),
                   title="Still to unlock", tid="to-unlock")
     timeline = card(ul_list([
-        list_item("Joined After‑School Tutoring", "Mon 14 Sep · Welcome to PromiseHub", lead=f'<span class="icon-tile" aria-hidden="true">{icon("flag")}</span>'),
-        list_item("First Steps badge", "Mon 12 Oct · Finished a first lesson", lead=f'<span class="icon-tile" aria-hidden="true">{icon("star")}</span>'),
-        list_item("Speaks Up badge", "Thu 29 Oct · Shared an idea with the whole group", lead=f'<span class="icon-tile" aria-hidden="true">{icon("flag")}</span>'),
-        list_item("Next up: Servant Heart", "1 of 3 lessons · Finish Leading by Serving", lead=f'<span class="icon-tile" aria-hidden="true">{icon("heart")}</span>', end=badge("Next", "info")),
+        list_item("Joined After‑School Tutoring", "Mon 14 Sep · Welcome to PromiseHub", lead=small_medal("flag")),
+        list_item("First Steps badge", "Mon 12 Oct · Finished a first lesson", lead=small_medal("star")),
+        list_item("Speaks Up badge", "Thu 29 Oct · Shared an idea with the whole group", lead=small_medal("flag")),
+        list_item("Next up: Servant Heart", "1 of 3 lessons · Finish Leading by Serving", lead=small_medal("heart"), end=badge("Next", "info")),
     ], card=False, label="Your milestones"), title="Your milestones", tid="milestones", cls="card--flush")
     S.add("default", "Sofía opens Badges: 2 of 6 earned with when, the ones still locked with what earns them and how far she is, and her milestones.", **YKW,
           main=hdr("You’ve earned 2 of 6 badges. Keep going, Sofía.") + f'<div class="split"><div class="stack">{collection}{earned}{locked}</div><div class="stack">{timeline}</div></div>',

@@ -1,46 +1,120 @@
-import type { Page, Route } from '@playwright/test';
-import { type FakeChild, type FakeGuardian, type FakeHousehold, ageOf, hasMedicalFlag, medicalFlag, reachable, seedHouseholds } from './households';
-import { FakeBadges } from './fake-badges';
-import { FakeCurriculum } from './fake-curriculum';
-import { FakeProgression } from './fake-progression';
-import { FakeLearning } from './fake-learning';
-import { FakeReviews, type YouthAccounts } from './fake-reviews';
-import { type FakeEvent, type FakeProgram, NOW, seedEvents, seedPrograms } from './programs';
-import { type Membership, type ModuleId, moduleCatalog, memberships, organizations, seededMfaCode, seededPassword } from './seed';
+import type { Page, Route } from "@playwright/test";
+import {
+  type FakeChild,
+  type FakeGuardian,
+  type FakeHousehold,
+  ageOf,
+  hasMedicalFlag,
+  medicalFlag,
+  reachable,
+  seedHouseholds,
+} from "./households";
+import { FakeBadges } from "./fake-badges";
+import { FakeCurriculum } from "./fake-curriculum";
+import { FakeProgression } from "./fake-progression";
+import { FakeJourney } from "./fake-journey";
+import { FakeLearning } from "./fake-learning";
+import { FakeReviews, type YouthAccounts } from "./fake-reviews";
+import {
+  type FakeEvent,
+  type FakeProgram,
+  NOW,
+  seedEvents,
+  seedPrograms,
+} from "./programs";
+import {
+  type Membership,
+  type ModuleId,
+  moduleCatalog,
+  memberships,
+  organizations,
+  seededMfaCode,
+  seededPassword,
+} from "./seed";
 
 /** Mirrors backend RolePermissions. */
 const can = {
-  writeHouseholds: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
-  deleteHouseholds: (m: Membership) => m.role === 'Admin',
-  readMedical: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
-  readDateOfBirth: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
-  writeMedical: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
-  managePrograms: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
-  manageEvents: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
-  cancelEvents: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
-  runSessions: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker', 'Volunteer'].includes(m.role),
-  runAnySession: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
-  sendMessages: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
-  manageSlips: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
-  managePickups: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
-  reviewIncidents: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
-  reviewEnrollments: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
-  viewReports: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
-  readSmallCounts: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
-  useStaffApp: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker', 'VolunteerCoordinator'].includes(m.role),
-  learn: (m: Membership) => m.role === 'Youth',
-  mentorYouth: (m: Membership) => m.role === 'Mentor',
-  authorCurriculum: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
+  writeHouseholds: (m: Membership) =>
+    ["Admin", "ProgramDirector"].includes(m.role),
+  deleteHouseholds: (m: Membership) => m.role === "Admin",
+  readMedical: (m: Membership) =>
+    ["Admin", "ProgramDirector", "SiteLead"].includes(m.role),
+  readDateOfBirth: (m: Membership) =>
+    ["Admin", "ProgramDirector", "SiteLead"].includes(m.role),
+  writeMedical: (m: Membership) =>
+    ["Admin", "ProgramDirector"].includes(m.role),
+  managePrograms: (m: Membership) =>
+    ["Admin", "ProgramDirector"].includes(m.role),
+  manageEvents: (m: Membership) =>
+    ["Admin", "ProgramDirector", "SiteLead"].includes(m.role),
+  cancelEvents: (m: Membership) =>
+    ["Admin", "ProgramDirector"].includes(m.role),
+  runSessions: (m: Membership) =>
+    [
+      "Admin",
+      "ProgramDirector",
+      "SiteLead",
+      "YouthWorker",
+      "Volunteer",
+    ].includes(m.role),
+  runAnySession: (m: Membership) =>
+    ["Admin", "ProgramDirector", "SiteLead"].includes(m.role),
+  sendMessages: (m: Membership) =>
+    ["Admin", "ProgramDirector", "SiteLead"].includes(m.role),
+  manageSlips: (m: Membership) =>
+    ["Admin", "ProgramDirector", "SiteLead"].includes(m.role),
+  managePickups: (m: Membership) =>
+    ["Admin", "ProgramDirector", "SiteLead"].includes(m.role),
+  reviewIncidents: (m: Membership) =>
+    ["Admin", "ProgramDirector"].includes(m.role),
+  reviewEnrollments: (m: Membership) =>
+    ["Admin", "ProgramDirector"].includes(m.role),
+  viewReports: (m: Membership) =>
+    ["Admin", "ProgramDirector", "SiteLead"].includes(m.role),
+  readSmallCounts: (m: Membership) =>
+    ["Admin", "ProgramDirector"].includes(m.role),
+  useStaffApp: (m: Membership) =>
+    [
+      "Admin",
+      "ProgramDirector",
+      "SiteLead",
+      "YouthWorker",
+      "VolunteerCoordinator",
+    ].includes(m.role),
+  learn: (m: Membership) => m.role === "Youth",
+  mentorYouth: (m: Membership) => m.role === "Mentor",
+  authorCurriculum: (m: Membership) =>
+    ["Admin", "ProgramDirector"].includes(m.role),
 };
 
 /**
  * What a participant role (Youth, Mentor, Volunteer) may call: mirrors the API's fallback policy, which closes every staff
  * endpoint to them unless it opts in (ADR 0043). Volunteers also open their assigned sessions.
  */
-const PARTICIPANT_PATHS = [/^\/api\/me(\/|$)/, /^\/api\/notifications(\/|$)/, /^\/api\/auth\//, /^\/api\/learning\//, /^\/api\/mentoring\//, /^\/api\/curriculum(\/|$)/];
-const VOLUNTEER_PATHS = [/^\/api\/sessions\/today$/, /^\/api\/sessions\/[^/]+\/roster$/];
+const PARTICIPANT_PATHS = [
+  /^\/api\/me(\/|$)/,
+  /^\/api\/notifications(\/|$)/,
+  /^\/api\/auth\//,
+  /^\/api\/learning\//,
+  /^\/api\/mentoring\//,
+  /^\/api\/curriculum(\/|$)/,
+];
+const VOLUNTEER_PATHS = [
+  /^\/api\/sessions\/today$/,
+  /^\/api\/sessions\/[^/]+\/roster$/,
+];
 
-type ImportField = 'ChildName' | 'DateOfBirth' | 'School' | 'GuardianName' | 'GuardianPhone' | 'GuardianEmail' | 'Allergies' | 'Language' | 'Notes' | 'Skip';
+type ImportField =
+  | "ChildName"
+  | "DateOfBirth"
+  | "School"
+  | "GuardianName"
+  | "GuardianPhone"
+  | "GuardianEmail"
+  | "Allergies"
+  | "Language"
+  | "Notes"
+  | "Skip";
 
 interface FakeImport {
   id: string;
@@ -54,15 +128,61 @@ interface FakeImport {
 }
 
 const IMPORT_SYNONYMS: [ImportField, string[]][] = [
-  ['ChildName', ['child', 'child name', 'student', 'student name', 'kid', 'name', 'participant']],
-  ['DateOfBirth', ['dob', 'date of birth', 'birthday', 'birth date', 'birthdate']],
-  ['School', ['school', 'grade', 'school and grade']],
-  ['GuardianName', ['parent', 'guardian', 'parent name', 'guardian name', 'parent/guardian', 'mother', 'father', 'contact name']],
-  ['GuardianPhone', ['cell', 'phone', 'mobile', 'parent phone', 'guardian phone', 'cell phone', 'phone number']],
-  ['GuardianEmail', ['email', 'e-mail', 'parent email', 'guardian email']],
-  ['Allergies', ['allergies', 'allergy', 'medical', 'allergies/meds', 'allergies and medication']],
-  ['Language', ['lang', 'language', 'home language']],
-  ['Notes', ['notes', 'note', 'comments']],
+  [
+    "ChildName",
+    [
+      "child",
+      "child name",
+      "student",
+      "student name",
+      "kid",
+      "name",
+      "participant",
+    ],
+  ],
+  [
+    "DateOfBirth",
+    ["dob", "date of birth", "birthday", "birth date", "birthdate"],
+  ],
+  ["School", ["school", "grade", "school and grade"]],
+  [
+    "GuardianName",
+    [
+      "parent",
+      "guardian",
+      "parent name",
+      "guardian name",
+      "parent/guardian",
+      "mother",
+      "father",
+      "contact name",
+    ],
+  ],
+  [
+    "GuardianPhone",
+    [
+      "cell",
+      "phone",
+      "mobile",
+      "parent phone",
+      "guardian phone",
+      "cell phone",
+      "phone number",
+    ],
+  ],
+  ["GuardianEmail", ["email", "e-mail", "parent email", "guardian email"]],
+  [
+    "Allergies",
+    [
+      "allergies",
+      "allergy",
+      "medical",
+      "allergies/meds",
+      "allergies and medication",
+    ],
+  ],
+  ["Language", ["lang", "language", "home language"]],
+  ["Notes", ["notes", "note", "comments"]],
 ];
 
 interface FakeEnrollChild {
@@ -77,11 +197,20 @@ interface FakeEnrollChild {
 }
 
 interface FakeEnrollDraft {
-  household: { guardianName: string | null; mobile: string | null; email: string | null; language: string | null };
+  household: {
+    guardianName: string | null;
+    mobile: string | null;
+    email: string | null;
+    language: string | null;
+  };
   children: FakeEnrollChild[];
   /** Guardian (or missing), Youth or Referrer (L2-071). */
   applyingAs?: string | null;
-  referrer?: { name: string | null; role: string | null; organization: string | null } | null;
+  referrer?: {
+    name: string | null;
+    role: string | null;
+    organization: string | null;
+  } | null;
   reason?: string | null;
 }
 
@@ -94,24 +223,27 @@ interface FakeSlip {
   askPhotos: boolean;
   askSwimming: boolean;
   askLunch: boolean;
-  reminders: 'TwiceWeekly' | 'Daily' | 'Once' | 'None';
-  channel: 'TextAndEmail' | 'EmailOnly';
-  status: 'Draft' | 'Scheduled' | 'Sent';
+  reminders: "TwiceWeekly" | "Daily" | "Once" | "None";
+  channel: "TextAndEmail" | "EmailOnly";
+  status: "Draft" | "Scheduled" | "Sent";
   scheduledFor: string | null;
   sentAt: string | null;
   version: number;
-  answers: Map<string, { status: 'Signed' | 'Declined'; by: string; version: number }>;
+  answers: Map<
+    string,
+    { status: "Signed" | "Declined"; by: string; version: number }
+  >;
   messageId: string | null;
 }
 
-type ChannelChoice = 'TextWithEmailFallback' | 'EmailOnly' | 'TextOnly';
+type ChannelChoice = "TextWithEmailFallback" | "EmailOnly" | "TextOnly";
 
 interface FakeDelivery {
   household: string;
   guardian: string | null;
-  channel: 'Sms' | 'Email';
+  channel: "Sms" | "Email";
   language: string;
-  status: 'Queued' | 'Sent' | 'FellBackToEmail' | 'Paused' | 'Failed';
+  status: "Queued" | "Sent" | "FellBackToEmail" | "Paused" | "Failed";
   reason: string | null;
   at: string | null;
 }
@@ -136,18 +268,24 @@ interface AudienceBody {
   channel: ChannelChoice;
 }
 
-const GSM7 = '@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#¤%&\'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà';
+const GSM7 =
+  "@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !\"#¤%&'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà";
 
 /** The seeded memberships; accepting an invitation adds to the list for one test only. */
 const SEEDED_MEMBERSHIPS = memberships.length;
 
 /** The password policy as the server applies it (L2-053): 12 to 128 characters and not the email's name. */
-function passwordProblem(password: string | undefined, email: string): string | null {
-  const value = password ?? '';
-  if (value.length < 12) return 'Use at least 12 characters.';
-  if (value.length > 128) return 'Use at most 128 characters.';
-  const local = email.split('@')[0]!;
-  return local.length >= 3 && value.toLowerCase().includes(local.toLowerCase()) ? 'Don’t use your email in your password.' : null;
+function passwordProblem(
+  password: string | undefined,
+  email: string,
+): string | null {
+  const value = password ?? "";
+  if (value.length < 12) return "Use at least 12 characters.";
+  if (value.length > 128) return "Use at most 128 characters.";
+  const local = email.split("@")[0]!;
+  return local.length >= 3 && value.toLowerCase().includes(local.toLowerCase())
+    ? "Don’t use your email in your password."
+    : null;
 }
 
 /** SMS segments as the server counts them: 160/153 GSM-7 characters, 70/67 otherwise. */
@@ -166,7 +304,7 @@ function titleOf(body: string): string {
 }
 
 interface FakeAttendance {
-  status: 'NotYet' | 'Present' | 'Absent' | 'SignedOut';
+  status: "NotYet" | "Present" | "Absent" | "SignedOut";
   checkedInAt: string | null;
   signedOutAt?: string | null;
   collectedBy?: string | null;
@@ -182,7 +320,7 @@ interface FakeWalkIn {
 
 type Handler = (route: Route, params: Record<string, string>) => Promise<void>;
 
-const MFA_ROLES = new Set(['Admin', 'ProgramDirector']);
+const MFA_ROLES = new Set(["Admin", "ProgramDirector"]);
 
 /**
  * Answers the real API's contracts from seeded in-memory data. The session is the
@@ -190,7 +328,7 @@ const MFA_ROLES = new Set(['Admin', 'ProgramDirector']);
  * Any request the fake does not route is recorded and fails the test.
  */
 /** The reference a faked fault answers with, as the API's request trace id would be. */
-export const FAULT_REFERENCE = '0HNA1B2C3D4E5:00000001';
+export const FAULT_REFERENCE = "0HNA1B2C3D4E5:00000001";
 
 /** A youth's first-run setup as the API stores it (L2-059). */
 export interface FakeOnboarding {
@@ -226,16 +364,25 @@ export class FakeApi {
   private enrollmentRequests: {
     id?: string;
     programId: string;
-    status: 'WaitingReview' | 'Waitlisted' | 'Accepted' | 'Declined';
+    status: "WaitingReview" | "Waitlisted" | "Accepted" | "Declined";
     position: number | null;
     childId?: string;
     submittedAt?: string;
     note?: string | null;
-    appliedAs?: 'Guardian' | 'Youth' | 'Referrer';
+    appliedAs?: "Guardian" | "Youth" | "Referrer";
     reason?: string | null;
     seasonConsent?: boolean;
-    referrer?: { name: string; role: string; organization: string | null; contact: string } | null;
-    applicant?: { firstName: string; lastName: string; dateOfBirth: string | null };
+    referrer?: {
+      name: string;
+      role: string;
+      organization: string | null;
+      contact: string;
+    } | null;
+    applicant?: {
+      firstName: string;
+      lastName: string;
+      dateOfBirth: string | null;
+    };
     submittedBy?: string;
     householdId?: string;
     reviewedBy?: string | null;
@@ -256,7 +403,7 @@ export class FakeApi {
     actionTaken: string;
     guardianContact: string;
     severity: string;
-    status: 'NeedsReview' | 'Open' | 'Closed';
+    status: "NeedsReview" | "Open" | "Closed";
     reportedAt: string;
     review?: { note: string; outcome: string; by: string; at: string } | null;
     followUps?: { text: string; by: string; at: string }[];
@@ -264,84 +411,232 @@ export class FakeApi {
   }[] = [];
   /** No-show texts the job sent, and the guardian's reply: "event:child" → state and time. */
   /** In-app notifications: recipient membership, kind, text, link and read time. */
-  private notifications: { id: string; organizationId: string; membershipId: string; kind: string; text: string; link: string; createdAt: string; readAt: string | null }[] = [];
-  private noShows = new Map<string, { state: 'TextSent' | 'OnTheWay' | 'Absent'; at: string }>();
+  private notifications: {
+    id: string;
+    organizationId: string;
+    membershipId: string;
+    kind: string;
+    text: string;
+    link: string;
+    createdAt: string;
+    readAt: string | null;
+  }[] = [];
+  private noShows = new Map<
+    string,
+    { state: "TextSent" | "OnTheWay" | "Absent"; at: string }
+  >();
   /** Household home links as texted with an enrollment decision: token → household. */
   private homeLinks = new Map<string, string>([
-    ['tok-home-tran', 'hh-tran'],
-    ['tok-home-rivera', 'hh-rivera'],
+    ["tok-home-tran", "hh-tran"],
+    ["tok-home-rivera", "hh-rivera"],
   ]);
   /** The verified enrollment session of this browser: program, contact and draft (the HttpOnly cookie, in the fake). */
   /** Codes sent per program and contact in the current 15-minute window (L2-071 criterion 9). */
   private enrollCodes = new Map<string, number>();
-  private enrollSession: { programId: string; contact: string; householdId: string | null; draft: FakeEnrollDraft | null; submitted: boolean } | null = null;
+  private enrollSession: {
+    programId: string;
+    contact: string;
+    householdId: string | null;
+    draft: FakeEnrollDraft | null;
+    submitted: boolean;
+  } | null = null;
   /** Guardian links as texted with a sent slip: token → household, child and event. */
-  private guardianLinks = new Map<string, { householdId: string; childId: string; eventId: string; expired?: boolean }>([
-    ['tok-mateo', { householdId: 'hh-rivera', childId: 'c-mateo', eventId: 'e-rbg' }],
-    ['tok-sofia', { householdId: 'hh-rivera', childId: 'c-sofia', eventId: 'e-rbg' }],
-    ['tok-jordan', { householdId: 'hh-thompson', childId: 'c-jordan', eventId: 'e-rbg' }],
-    ['tok-expired', { householdId: 'hh-rivera', childId: 'c-mateo', eventId: 'e-rbg', expired: true }],
+  private guardianLinks = new Map<
+    string,
+    { householdId: string; childId: string; eventId: string; expired?: boolean }
+  >([
+    [
+      "tok-mateo",
+      { householdId: "hh-rivera", childId: "c-mateo", eventId: "e-rbg" },
+    ],
+    [
+      "tok-sofia",
+      { householdId: "hh-rivera", childId: "c-sofia", eventId: "e-rbg" },
+    ],
+    [
+      "tok-jordan",
+      { householdId: "hh-thompson", childId: "c-jordan", eventId: "e-rbg" },
+    ],
+    [
+      "tok-expired",
+      {
+        householdId: "hh-rivera",
+        childId: "c-mateo",
+        eventId: "e-rbg",
+        expired: true,
+      },
+    ],
   ]);
   /** Consent links as texted or emailed (ADR 0046): token → household and child; an expired one is over 30 days old or replaced. */
-  private consentLinks = new Map<string, { householdId: string; childId: string; expired?: boolean }>([
-    ['tok-consent-sofia', { householdId: 'hh-rivera', childId: 'c-sofia' }],
-    ['tok-consent-expired', { householdId: 'hh-rivera', childId: 'c-sofia', expired: true }],
+  private consentLinks = new Map<
+    string,
+    { householdId: string; childId: string; expired?: boolean }
+  >([
+    ["tok-consent-sofia", { householdId: "hh-rivera", childId: "c-sofia" }],
+    [
+      "tok-consent-expired",
+      { householdId: "hh-rivera", childId: "c-sofia", expired: true },
+    ],
   ]);
   /** Guardian consents given in this test, newest last (L2-055, L2-058). */
-  private consents: { childId: string; signedBy: string; relationship: string; signedAt: string; reference: string; withdrawnAt: string | null; withdrawnBy: string | null }[] = [];
+  private consents: {
+    childId: string;
+    signedBy: string;
+    relationship: string;
+    signedAt: string;
+    reference: string;
+    withdrawnAt: string | null;
+    withdrawnBy: string | null;
+  }[] = [];
   /** Children whose consent link was sent in this test, with when (L2-056, L2-058). */
   consentLinksSent = new Map<string, string>();
   /** Households whose device has verified a code (the HttpOnly cookie, in the fake). */
   private trustedHouseholds = new Set<string>();
   /** Survey links as texted after an event: token → household, child and event; answers by token. */
-  private surveyLinks = new Map<string, { householdId: string; childId: string; eventId: string; organizationId: string; closed?: boolean }>([
-    ['tok-survey-mateo', { householdId: 'hh-rivera', childId: 'c-mateo', eventId: 'e-tutoring-today', organizationId: 'org-harbourview' }],
+  private surveyLinks = new Map<
+    string,
+    {
+      householdId: string;
+      childId: string;
+      eventId: string;
+      organizationId: string;
+      closed?: boolean;
+    }
+  >([
+    [
+      "tok-survey-mateo",
+      {
+        householdId: "hh-rivera",
+        childId: "c-mateo",
+        eventId: "e-tutoring-today",
+        organizationId: "org-harbourview",
+      },
+    ],
   ]);
-  private surveyAnswers = new Map<string, { rating: number; comment: string | null }>();
+  private surveyAnswers = new Map<
+    string,
+    { rating: number; comment: string | null }
+  >();
   private wrongCodes = new Map<string, number>();
   private lockedLinks = new Set<string>();
   /** The six-digit code the fake texts to a contact on file. */
-  readonly guardianCode = '482913';
+  readonly guardianCode = "482913";
   private smsUsed = new Map<string, number>();
   /** Password reset links: token → email and whether it is still usable. */
   private resetLinks = new Map<string, { email: string; usable: boolean }>([
-    ['tok-reset-jaylen', { email: 'jaylen@harbourview.example', usable: true }],
-    ['tok-reset-sofia', { email: 'sofia@harbourview.example', usable: true }],
+    ["tok-reset-jaylen", { email: "jaylen@harbourview.example", usable: true }],
+    ["tok-reset-sofia", { email: "sofia@harbourview.example", usable: true }],
   ]);
   resetRequestedFor: string | null = null;
   /** Recovery codes left per person, and whether the other devices were signed out. */
   private recoveryCodes = new Map<string, number>();
   signedOutOthers = false;
   /** The audit log as the API keeps it: organization, when, who, action, record type and summary. */
-  private auditEntries: { organizationId: string; when: string; who: string; action: string; record: string; summary: string; device: string | null }[] = [
-    { organizationId: 'org-harbourview', when: '2026-11-05T20:41:00Z', who: 'Carmen Rivera', action: 'Signed', record: 'PermissionSlip', summary: 'Mateo Rivera · signed by Carmen Rivera · version 1', device: 'Phone' },
-    { organizationId: 'org-harbourview', when: '2026-11-05T18:10:00Z', who: 'Tom Nguyen', action: 'Updated', record: 'Enrollment', summary: 'Kevin Tran · After-School Tutoring · accepted', device: 'Laptop' },
-    { organizationId: 'org-harbourview', when: '2026-11-02T14:10:00Z', who: 'Tom Nguyen', action: 'Viewed', record: 'ChildMedical', summary: 'Mateo Rivera · medical details', device: 'Laptop' },
-    { organizationId: 'org-harbourview', when: '2026-10-20T15:00:00Z', who: 'Marisol Delgado', action: 'Exported', record: 'ReportExport', summary: 'harbourview-youth-collective-report.csv · CSV · 12 rows', device: 'Laptop' },
-    { organizationId: 'org-northgate', when: '2026-11-04T12:00:00Z', who: 'Grace Mensah', action: 'Updated', record: 'Organization', summary: 'Northgate Kids · Burlington', device: null },
+  private auditEntries: {
+    organizationId: string;
+    when: string;
+    who: string;
+    action: string;
+    record: string;
+    summary: string;
+    device: string | null;
+  }[] = [
+    {
+      organizationId: "org-harbourview",
+      when: "2026-11-05T20:41:00Z",
+      who: "Carmen Rivera",
+      action: "Signed",
+      record: "PermissionSlip",
+      summary: "Mateo Rivera · signed by Carmen Rivera · version 1",
+      device: "Phone",
+    },
+    {
+      organizationId: "org-harbourview",
+      when: "2026-11-05T18:10:00Z",
+      who: "Tom Nguyen",
+      action: "Updated",
+      record: "Enrollment",
+      summary: "Kevin Tran · After-School Tutoring · accepted",
+      device: "Laptop",
+    },
+    {
+      organizationId: "org-harbourview",
+      when: "2026-11-02T14:10:00Z",
+      who: "Tom Nguyen",
+      action: "Viewed",
+      record: "ChildMedical",
+      summary: "Mateo Rivera · medical details",
+      device: "Laptop",
+    },
+    {
+      organizationId: "org-harbourview",
+      when: "2026-10-20T15:00:00Z",
+      who: "Marisol Delgado",
+      action: "Exported",
+      record: "ReportExport",
+      summary: "harbourview-youth-collective-report.csv · CSV · 12 rows",
+      device: "Laptop",
+    },
+    {
+      organizationId: "org-northgate",
+      when: "2026-11-04T12:00:00Z",
+      who: "Grace Mensah",
+      action: "Updated",
+      record: "Organization",
+      summary: "Northgate Kids · Burlington",
+      device: null,
+    },
   ];
   /** Consent retention per organization, when saved (null: until deleted by request); otherwise 7 years. */
   private retention = new Map<string, number | null>();
   /** Consent policies saved per organization (L2-056); otherwise 18 and the default wording. */
-  private consentPolicies = new Map<string, { consentAge: number; wording: string }>();
+  private consentPolicies = new Map<
+    string,
+    { consentAge: number; wording: string }
+  >();
   /** Guardian data requests: household, kind, email and who fulfilled it. */
-  private dataRequests: { id: string; organizationId: string; householdId: string; household: string; kind: 'Export' | 'Delete'; email: string; fulfilledBy: string | null }[] = [];
+  private dataRequests: {
+    id: string;
+    organizationId: string;
+    householdId: string;
+    household: string;
+    kind: "Export" | "Delete";
+    email: string;
+    fulfilledBy: string | null;
+  }[] = [];
   /** Plans changed in billing, and organizations whose last payment failed (with when). */
-  private plans = new Map<string, 'Free' | 'Standard' | 'Plus'>();
+  private plans = new Map<string, "Free" | "Standard" | "Plus">();
   private paymentFailed = new Map<string, string>();
   /** Organizations whose admin confirmed name and city in setup (Harbourview did, as seeded), with any new profile. */
-  private profiles = new Map<string, { name: string; city: string }>([['org-harbourview', { name: 'Harbourview Youth Collective', city: 'Hamilton, Ontario' }]]);
+  private profiles = new Map<string, { name: string; city: string }>([
+    [
+      "org-harbourview",
+      { name: "Harbourview Youth Collective", city: "Hamilton, Ontario" },
+    ],
+  ]);
   /** Report exports by id: organization, file name and CSV. */
-  private reportExports = new Map<string, { organizationId: string; fileName: string; csv: string }>();
+  private reportExports = new Map<
+    string,
+    { organizationId: string; fileName: string; csv: string }
+  >();
   /** Notification settings per organization, when saved; otherwise the defaults. */
-  private notificationSettings = new Map<string, { noShowDelayMinutes: number; emailSupervisorsOnIncidents: boolean; smsCap: number }>();
+  private notificationSettings = new Map<
+    string,
+    {
+      noShowDelayMinutes: number;
+      emailSupervisorsOnIncidents: boolean;
+      smsCap: number;
+    }
+  >();
   /** Who works each session; youth workers run only these (as seeded: Jaylen and Aisha tonight). */
-  private sessionStaff = new Map<string, string[]>([['e-tutoring-today', ['m-jaylen', 'm-aisha', 'm-leo']]]);
+  private sessionStaff = new Map<string, string[]>([
+    ["e-tutoring-today", ["m-jaylen", "m-aisha", "m-leo"]],
+  ]);
   /** Youth accounts and the child each links to (L2-045), as the seed links them. */
   private youthLinks = new Map<string, string>([
-    ['m-sofia', 'c-sofia'],
-    ['m-nadia', 'c-nadia'],
-    ['m-lucia', 'c-ng-lucia'],
+    ["m-sofia", "c-sofia"],
+    ["m-nadia", "c-nadia"],
+    ["m-lucia", "c-ng-lucia"],
   ]);
   private nextId = 1;
 
@@ -373,49 +668,122 @@ export class FakeApi {
 
   /** A youth who already saved part of the setup, or finished it. */
   saveOnboarding(membershipId: string, setup: Partial<FakeOnboarding>): void {
-    this.onboardings.set(membershipId, { step: 1, preferredName: '', pronouns: null, lessonReminders: true, mentorMessages: true, announcements: false, completed: false, ...setup });
+    this.onboardings.set(membershipId, {
+      step: 1,
+      preferredName: "",
+      pronouns: null,
+      lessonReminders: true,
+      mentorMessages: true,
+      announcements: false,
+      completed: false,
+      ...setup,
+    });
   }
 
   /** Opens a program's enrollment, as a director would; the link is /g/enroll/<program-name>. */
   openEnrollment(programId: string): string {
     const program = this.programs.find((x) => x.id === programId)!;
-    const slug = program.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const slug = program.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
     this.enrollmentSlugs.set(programId, slug);
     program.enrollmentOpen = true;
     return slug;
   }
 
   /** A child of a seeded household who asked to enroll in a program, waiting for review. */
-  requestEnrollment(programId: string, childId: string, submittedAt = '2026-11-02T15:00:00Z'): void {
-    this.enrollmentRequests.push({ id: `er-${this.nextId++}`, programId, status: 'WaitingReview', position: null, childId, submittedAt });
+  requestEnrollment(
+    programId: string,
+    childId: string,
+    submittedAt = "2026-11-02T15:00:00Z",
+  ): void {
+    this.enrollmentRequests.push({
+      id: `er-${this.nextId++}`,
+      programId,
+      status: "WaitingReview",
+      position: null,
+      childId,
+      submittedAt,
+    });
   }
 
   /** A child's enrollment as staff decided it, with the note the guardian reads; an accepted child is on the roster. */
-  decideEnrollment(programId: string, childId: string, status: 'Accepted' | 'Waitlisted' | 'Declined', note: string | null = null): void {
-    const position = status === 'Waitlisted' ? this.enrollmentRequests.filter((r) => r.programId === programId && r.status === 'Waitlisted').length + 1 : null;
-    this.enrollmentRequests.push({ id: `er-${this.nextId++}`, programId, status, position, childId, submittedAt: '2026-11-02T15:00:00Z', note });
-    if (status === 'Accepted') this.programs.find((x) => x.id === programId)!.roster.push(childId);
+  decideEnrollment(
+    programId: string,
+    childId: string,
+    status: "Accepted" | "Waitlisted" | "Declined",
+    note: string | null = null,
+  ): void {
+    const position =
+      status === "Waitlisted"
+        ? this.enrollmentRequests.filter(
+            (r) => r.programId === programId && r.status === "Waitlisted",
+          ).length + 1
+        : null;
+    this.enrollmentRequests.push({
+      id: `er-${this.nextId++}`,
+      programId,
+      status,
+      position,
+      childId,
+      submittedAt: "2026-11-02T15:00:00Z",
+      note,
+    });
+    if (status === "Accepted")
+      this.programs.find((x) => x.id === programId)!.roster.push(childId);
   }
 
   /** The no-show job texted this child's household; a reply of 2 also marks the child absent, as the API does. */
-  noShowAlert(eventId: string, childId: string, state: 'TextSent' | 'OnTheWay' | 'Absent' = 'TextSent', at = '2026-10-21T20:15:00Z'): void {
+  noShowAlert(
+    eventId: string,
+    childId: string,
+    state: "TextSent" | "OnTheWay" | "Absent" = "TextSent",
+    at = "2026-10-21T20:15:00Z",
+  ): void {
     this.noShows.set(`${eventId}:${childId}`, { state, at });
-    if (state === 'Absent') this.sessionRecords(eventId).set(childId, { status: 'Absent', checkedInAt: null });
+    if (state === "Absent")
+      this.sessionRecords(eventId).set(childId, {
+        status: "Absent",
+        checkedInAt: null,
+      });
   }
 
   /** An incident someone already reported (seeded as the API would store it). */
-  reportIncident(reporterId: string, category: string, childId: string): string {
+  reportIncident(
+    reporterId: string,
+    category: string,
+    childId: string,
+  ): string {
     const m = memberships.find((x) => x.id === reporterId)!;
     const id = `inc-${this.nextId++}`;
-    this.incidents.push({ id, organizationId: m.organizationId, reporterId, reportedBy: m.personName, category, childId, occurredAt: '2026-10-21T18:40:00Z', place: 'Gym', whatHappened: 'Fell during the relay.', actionTaken: 'Ice pack.', guardianContact: 'LeftMessage', severity: 'Minor', status: 'NeedsReview', reportedAt: NOW.toISOString() });
+    this.incidents.push({
+      id,
+      organizationId: m.organizationId,
+      reporterId,
+      reportedBy: m.personName,
+      category,
+      childId,
+      occurredAt: "2026-10-21T18:40:00Z",
+      place: "Gym",
+      whatHappened: "Fell during the relay.",
+      actionTaken: "Ice pack.",
+      guardianContact: "LeftMessage",
+      severity: "Minor",
+      status: "NeedsReview",
+      reportedAt: NOW.toISOString(),
+    });
     this.notifyIncident(m, id, childId, category);
     return id;
   }
 
   /** Takes a household's children off every roster, as if they never enrolled. */
   unenrollHousehold(householdId: string): void {
-    const ids = this.households.find((h) => h.id === householdId)!.children.map((c) => c.id);
-    for (const p of this.programs) p.roster = p.roster.filter((id) => !ids.includes(id));
+    const ids = this.households
+      .find((h) => h.id === householdId)!
+      .children.map((c) => c.id);
+    for (const p of this.programs)
+      p.roster = p.roster.filter((id) => !ids.includes(id));
   }
 
   /** Closes a program's enrollment; its link stays the same. */
@@ -424,8 +792,18 @@ export class FakeApi {
   }
 
   /** An open application already waiting review for a young person, as if submitted earlier (L2-071 criterion 8). */
-  applied(programId: string, applicant: { firstName: string; lastName: string; dateOfBirth: string }): void {
-    this.enrollmentRequests.push({ programId, status: 'WaitingReview', position: null, appliedAs: 'Youth', seasonConsent: false, applicant });
+  applied(
+    programId: string,
+    applicant: { firstName: string; lastName: string; dateOfBirth: string },
+  ): void {
+    this.enrollmentRequests.push({
+      programId,
+      status: "WaitingReview",
+      position: null,
+      appliedAs: "Youth",
+      seasonConsent: false,
+      applicant,
+    });
   }
 
   /**
@@ -438,10 +816,15 @@ export class FakeApi {
       firstName: string;
       lastName: string;
       dateOfBirth: string;
-      appliedAs: 'Guardian' | 'Youth' | 'Referrer';
+      appliedAs: "Guardian" | "Youth" | "Referrer";
       guardian: { name: string; mobile: string };
       reason?: string | null;
-      referrer?: { name: string; role: string; organization: string | null; contact: string } | null;
+      referrer?: {
+        name: string;
+        role: string;
+        organization: string | null;
+        contact: string;
+      } | null;
       submittedAt: string;
     },
   ): string {
@@ -453,25 +836,63 @@ export class FakeApi {
       id: householdId,
       organizationId: program.organizationId,
       name: a.lastName,
-      language: 'English',
-      guardians: [{ id: `g-app-${n}`, name: a.guardian.name, relationship: 'Parent', mobile: a.guardian.mobile, email: null, language: 'English', isPrimary: true, canPickUp: true, canSign: true }],
-      children: [{ id: childId, firstName: a.firstName, lastName: a.lastName, dateOfBirth: a.dateOfBirth, school: null, medical: { allergies: null, medication: null, conditions: null, doctor: null, redAlert: false, updatedAt: null, updatedBy: null } }],
+      language: "English",
+      guardians: [
+        {
+          id: `g-app-${n}`,
+          name: a.guardian.name,
+          relationship: "Parent",
+          mobile: a.guardian.mobile,
+          email: null,
+          language: "English",
+          isPrimary: true,
+          canPickUp: true,
+          canSign: true,
+        },
+      ],
+      children: [
+        {
+          id: childId,
+          firstName: a.firstName,
+          lastName: a.lastName,
+          dateOfBirth: a.dateOfBirth,
+          school: null,
+          medical: {
+            allergies: null,
+            medication: null,
+            conditions: null,
+            doctor: null,
+            redAlert: false,
+            updatedAt: null,
+            updatedBy: null,
+          },
+        },
+      ],
     });
     const id = `er-${this.nextId++}`;
     this.enrollmentRequests.push({
       id,
       programId,
-      status: 'WaitingReview',
+      status: "WaitingReview",
       position: null,
       childId,
       householdId,
       submittedAt: a.submittedAt,
       appliedAs: a.appliedAs,
       reason: a.reason ?? null,
-      seasonConsent: a.appliedAs === 'Guardian',
+      seasonConsent: a.appliedAs === "Guardian",
       referrer: a.referrer ?? null,
-      applicant: { firstName: a.firstName, lastName: a.lastName, dateOfBirth: a.dateOfBirth },
-      submittedBy: a.appliedAs === 'Referrer' ? a.referrer!.name : a.appliedAs === 'Youth' ? `${a.firstName} ${a.lastName}` : a.guardian.name,
+      applicant: {
+        firstName: a.firstName,
+        lastName: a.lastName,
+        dateOfBirth: a.dateOfBirth,
+      },
+      submittedBy:
+        a.appliedAs === "Referrer"
+          ? a.referrer!.name
+          : a.appliedAs === "Youth"
+            ? `${a.firstName} ${a.lastName}`
+            : a.guardian.name,
     });
     return id;
   }
@@ -487,40 +908,60 @@ export class FakeApi {
   }
 
   /** A staff note already on an application. */
-  noteApplication(id: string, author: string, text: string, createdAt = '2026-11-05T19:15:00Z'): void {
+  noteApplication(
+    id: string,
+    author: string,
+    text: string,
+    createdAt = "2026-11-05T19:15:00Z",
+  ): void {
     const r = this.enrollmentRequests.find((x) => x.id === id)!;
-    (r.notes ??= []).push({ id: `note-${this.nextId++}`, author, text, createdAt });
+    (r.notes ??= []).push({
+      id: `note-${this.nextId++}`,
+      author,
+      text,
+      createdAt,
+    });
   }
 
   /** Zoe Campbell, 13, referred by Rachel Ellis to a program (the cast of L2-071). */
-  referZoe(programId: string, submittedAt = '2026-11-05T18:02:00Z'): string {
+  referZoe(programId: string, submittedAt = "2026-11-05T18:02:00Z"): string {
     return this.application(programId, {
-      firstName: 'Zoe',
-      lastName: 'Campbell',
-      dateOfBirth: '2013-03-14',
-      appliedAs: 'Referrer',
-      guardian: { name: 'Tanya Campbell', mobile: '905-555-0320' },
-      reason: 'Zoe is curious and kind, and needs somewhere to belong after school.',
-      referrer: { name: 'Rachel Ellis', role: 'Guidance counsellor', organization: 'Bennetto Elementary', contact: 'rachel.ellis@bennetto.example.ca' },
+      firstName: "Zoe",
+      lastName: "Campbell",
+      dateOfBirth: "2013-03-14",
+      appliedAs: "Referrer",
+      guardian: { name: "Tanya Campbell", mobile: "905-555-0320" },
+      reason:
+        "Zoe is curious and kind, and needs somewhere to belong after school.",
+      referrer: {
+        name: "Rachel Ellis",
+        role: "Guidance counsellor",
+        organization: "Bennetto Elementary",
+        contact: "rachel.ellis@bennetto.example.ca",
+      },
       submittedAt,
     });
   }
 
   /** Malik Johnson, 14, applying for himself to a program (the cast of L2-071). */
-  malikApplies(programId: string, submittedAt = '2026-11-04T23:48:00Z'): string {
+  malikApplies(
+    programId: string,
+    submittedAt = "2026-11-04T23:48:00Z",
+  ): string {
     return this.application(programId, {
-      firstName: 'Malik',
-      lastName: 'Johnson',
-      dateOfBirth: '2012-06-02',
-      appliedAs: 'Youth',
-      guardian: { name: 'Denise Johnson', mobile: '905-555-0310' },
-      reason: 'I want to learn to code and help with the younger kids.',
+      firstName: "Malik",
+      lastName: "Johnson",
+      dateOfBirth: "2012-06-02",
+      appliedAs: "Youth",
+      guardian: { name: "Denise Johnson", mobile: "905-555-0310" },
+      reason: "I want to learn to code and help with the younger kids.",
       submittedAt,
     });
   }
 
   enrollmentRequestCount(programId: string): number {
-    return this.enrollmentRequests.filter((r) => r.programId === programId).length;
+    return this.enrollmentRequests.filter((r) => r.programId === programId)
+      .length;
   }
 
   /** The last enrollment request submitted through a link, as the server would store it (L2-071). */
@@ -536,7 +977,8 @@ export class FakeApi {
 
   /** Takes away every way to reach a household: no mobile, and its email bounced. */
   makeUnreachable(householdId: string): void {
-    for (const g of this.households.find((h) => h.id === householdId)!.guardians) {
+    for (const g of this.households.find((h) => h.id === householdId)!
+      .guardians) {
       g.mobile = null;
       g.emailBounced = true;
     }
@@ -548,16 +990,29 @@ export class FakeApi {
   }
 
   /** A guardian's answer for one child, as the guardian slip page will record it. */
-  answerSlip(eventId: string, childId: string, status: 'Signed' | 'Declined', by = 'Carmen Rivera'): void {
+  answerSlip(
+    eventId: string,
+    childId: string,
+    status: "Signed" | "Declined",
+    by = "Carmen Rivera",
+  ): void {
     const slip = this.slipOf(eventId)!;
     slip.answers.set(childId, { status, by, version: slip.version });
   }
 
   /** Writes and sends an event's slip, as a director would. */
-  sendSlip(eventId: string, body = 'We’re taking the After-School Tutoring group to the Royal Botanical Gardens.'): void {
+  sendSlip(
+    eventId: string,
+    body = "We’re taking the After-School Tutoring group to the Royal Botanical Gardens.",
+  ): void {
     const slip = this.slipOf(eventId)!;
-    Object.assign(slip, { body, signBy: '2026-11-12', status: 'Sent', sentAt: NOW.toISOString() });
-    this.events.find((e) => e.id === eventId)!.slipStatus = 'Sent';
+    Object.assign(slip, {
+      body,
+      signBy: "2026-11-12",
+      status: "Sent",
+      sentAt: NOW.toISOString(),
+    });
+    this.events.find((e) => e.id === eventId)!.slipStatus = "Sent";
   }
 
   /** Sets the SMS segments an organization has used this month (the cap is 2,000 on Standard, 200 on Free). */
@@ -567,8 +1022,15 @@ export class FakeApi {
 
   /** Adds a session tonight in After-School Tutoring with no staff assigned, as a director would. */
   addSessionTonight(name: string): void {
-    const base = this.events.find((e) => e.id === 'e-tutoring-today')!;
-    this.events.push({ ...base, id: `e-${this.nextId++}`, name, startsAt: '2026-11-05T23:00:00Z', endsAt: '2026-11-06T00:00:00Z', place: 'Room 3' });
+    const base = this.events.find((e) => e.id === "e-tutoring-today")!;
+    this.events.push({
+      ...base,
+      id: `e-${this.nextId++}`,
+      name,
+      startsAt: "2026-11-05T23:00:00Z",
+      endsAt: "2026-11-06T00:00:00Z",
+      place: "Room 3",
+    });
   }
 
   /** Curriculum authoring state (tracks, modules, lessons); tests call its helpers, such as clear. */
@@ -578,7 +1040,11 @@ export class FakeApi {
   readonly learningState = new FakeLearning(this.curriculumState);
 
   /** Badges and their awards (L2-084, L2-085); tests read and change it, such as clear. */
-  readonly badges = new FakeBadges(this.curriculumState, () => this.reviews.competencies, () => memberships);
+  readonly badges = new FakeBadges(
+    this.curriculumState,
+    () => this.reviews.competencies,
+    () => memberships,
+  );
 
   /** The progression framework (L2-086); its competencies are the ones mentors assess in reviews. */
   readonly progression = new FakeProgression(() => this.reviews.competencies);
@@ -590,7 +1056,9 @@ export class FakeApi {
 
   /** Removes every household of an organization, for empty states. */
   clearHouseholds(organizationId: string): void {
-    this.households = this.households.filter((h) => h.organizationId !== organizationId);
+    this.households = this.households.filter(
+      (h) => h.organizationId !== organizationId,
+    );
   }
 
   /** The session cookie stops authenticating, as after 12 idle hours. */
@@ -608,264 +1076,1398 @@ export class FakeApi {
   }
 
   private readonly routes: [string, RegExp, Handler][] = [
-    ['GET', /^\/api\/me$/, (route) => this.me(route)],
-    ['GET', /^\/api\/learning\/me$/, (route) => this.learner(route)],
-    ['GET', /^\/api\/learning\/home$/, (route) => this.youthWork(route, (m, programs) => this.learningState.home(route, m.id, programs))],
-    ['GET', /^\/api\/learning\/tracks\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.track(route, m.id, programs, p['id']!))],
-    ['GET', /^\/api\/learning\/modules\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.module(route, m.id, programs, p['id']!))],
-    ['GET', /^\/api\/learning\/lessons\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.lesson(route, m.id, programs, p['id']!))],
-    ['GET', /^\/api\/learning\/lessons\/(?<id>[^/]+)\/video$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.video(route, m.id, programs, p['id']!))],
-    ['GET', /^\/api\/learning\/coding\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.coding(route, m.id, programs, p['id']!))],
-    ['PUT', /^\/api\/learning\/coding\/(?<id>[^/]+)\/progress$/, (route, p) => this.youthWork(route, (m, programs) => this.afterLearning(m, this.learningState.saveCoding(route, m.id, programs, p['id']!)))],
-    ['POST', /^\/api\/learning\/coding\/(?<id>[^/]+)\/submission$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.submit(route, m.id, programs, p['id']!))],
-    ['GET', /^\/api\/learning\/quizzes\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.quizzes.intro(route, m.id, this.learningState.quizPlace(m.id, programs, p['id']!)))],
-    ['POST', /^\/api\/learning\/quizzes\/(?<id>[^/]+)\/attempts$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.quizzes.start(route, m.id, this.learningState.quizPlace(m.id, programs, p['id']!)))],
-    ['PUT', /^\/api\/learning\/attempts\/(?<id>[^/]+)\/answers$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.quizzes.save(route, m.id, p['id']!, (q) => this.learningState.quizPlace(m.id, programs, q)))],
-    ['POST', /^\/api\/learning\/attempts\/(?<id>[^/]+)\/submit$/, (route, p) => this.youthWork(route, (m, programs) => this.afterLearning(m, this.learningState.quizzes.submit(route, m.id, p['id']!, (q) => this.learningState.quizPlace(m.id, programs, q))))],
-    ['GET', /^\/api\/learning\/attempts\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.quizzes.result(route, m.id, p['id']!, (q) => this.learningState.quizPlace(m.id, programs, q)))],
-    ['GET', /^\/api\/learning\/quizzes\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.quizzes.intro(route, m.id, this.learningState.quizPlace(m.id, programs, p['id']!)))],
-    ['POST', /^\/api\/learning\/quizzes\/(?<id>[^/]+)\/attempts$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.quizzes.start(route, m.id, this.learningState.quizPlace(m.id, programs, p['id']!)))],
-    ['PUT', /^\/api\/learning\/attempts\/(?<id>[^/]+)\/answers$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.quizzes.save(route, m.id, p['id']!, (q) => this.learningState.quizPlace(m.id, programs, q)))],
-    ['POST', /^\/api\/learning\/attempts\/(?<id>[^/]+)\/submit$/, (route, p) => this.youthWork(route, (m, programs) => this.afterLearning(m, this.learningState.quizzes.submit(route, m.id, p['id']!, (q) => this.learningState.quizPlace(m.id, programs, q))))],
-    ['GET', /^\/api\/learning\/attempts\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.quizzes.result(route, m.id, p['id']!, (q) => this.learningState.quizPlace(m.id, programs, q)))],
-    ['GET', /^\/api\/learning\/assignments\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.assignmentBrief(route, m, programs, p['id']!))],
-    ['POST', /^\/api\/learning\/assignments\/(?<id>[^/]+)\/submission$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.work.submit(route, m.id, m.personName, this.learningState.assignmentPlace(m.id, programs, p['id']!)))],
-    ['GET', /^\/api\/learning\/submissions\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.work.view(route, m.id, p['id']!, (a) => this.learningState.assignmentPlace(m.id, programs, a), (t) => this.youthMentorName(m, t)))],
-    ['GET', /^\/api\/learning\/submissions\/(?<id>[^/]+)\/file$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.work.file(route, m.id, p['id']!, (a) => this.learningState.assignmentPlace(m.id, programs, a)))],
-    ['POST', /^\/api\/learning\/submissions\/(?<id>[^/]+)\/resubmit$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.work.resubmit(route, m.id, m.personName, p['id']!, (a) => this.learningState.assignmentPlace(m.id, programs, a)))],
-    ['POST', /^\/api\/learning\/lessons\/(?<id>[^/]+)\/complete$/, (route, p) => this.youthWork(route, (m, programs) => this.afterLearning(m, this.learningState.completeLesson(route, m.id, programs, p['id']!)))],
-    ['POST', /^\/api\/learning\/consent-request$/, (route) => this.askGuardian(route)],
-    ['GET', /^\/api\/learning\/onboarding$/, (route) => this.onboarding(route)],
-    ['PUT', /^\/api\/learning\/onboarding$/, (route) => this.saveOnboardingStep(route)],
-    ['POST', /^\/api\/learning\/onboarding\/complete$/, (route) => this.completeOnboarding(route)],
-    ['GET', /^\/api\/curriculum$/, (route) => this.author(route, (org) => this.curriculumState.list(route, org))],
-    ['POST', /^\/api\/curriculum\/tracks$/, (route) => this.author(route, (org) => this.curriculumState.createTrack(route, org))],
-    ['PUT', /^\/api\/curriculum\/tracks\/(?<id>[^/]+)\/module-order$/, (route, p) => this.author(route, (org) => this.curriculumState.reorderModules(route, org, p['id']!))],
-    ['POST', /^\/api\/curriculum\/modules$/, (route) => this.author(route, (org) => this.curriculumState.createModule(route, org))],
-    ['GET', /^\/api\/curriculum\/modules\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.curriculumState.getModule(route, org, p['id']!))],
-    ['PUT', /^\/api\/curriculum\/modules\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.curriculumState.updateModule(route, org, p['id']!))],
-    ['PUT', /^\/api\/curriculum\/tracks\/(?<id>[^/]+)\/cohorts$/, (route, p) => this.author(route, (org) => this.curriculumState.setCohorts(route, org, p['id']!))],
-    ['PUT', /^\/api\/curriculum\/tracks\/(?<id>[^/]+)\/status$/, (route, p) => this.author(route, (org) => this.curriculumState.setTrackStatus(route, org, p['id']!))],
-    ['PUT', /^\/api\/curriculum\/modules\/(?<id>[^/]+)\/status$/, (route, p) => this.author(route, (org) => this.curriculumState.setModuleStatus(route, org, p['id']!))],
-    ['PUT', /^\/api\/curriculum\/modules\/(?<id>[^/]+)\/lesson-order$/, (route, p) => this.author(route, (org) => this.curriculumState.reorderLessons(route, org, p['id']!))],
-    ['POST', /^\/api\/curriculum\/lessons$/, (route) => this.author(route, (org) => this.curriculumState.createLesson(route, org))],
-    ['GET', /^\/api\/curriculum\/lessons\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.curriculumState.getLesson(route, org, p['id']!))],
-    ['PUT', /^\/api\/curriculum\/lessons\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.curriculumState.updateLesson(route, org, p['id']!))],
-    ['PUT', /^\/api\/curriculum\/lessons\/(?<id>[^/]+)\/status$/, (route, p) => this.author(route, (org) => this.curriculumState.setLessonStatus(route, org, p['id']!))],
-    ['DELETE', /^\/api\/curriculum\/lessons\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.curriculumState.deleteLesson(route, org, p['id']!))],
-    ['POST', /^\/api\/curriculum\/quizzes$/, (route) => this.author(route, (org) => this.curriculumState.assessments.createQuiz(route, org))],
-    ['GET', /^\/api\/curriculum\/quizzes\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.curriculumState.assessments.getQuiz(route, org, p['id']!))],
-    ['PUT', /^\/api\/curriculum\/quizzes\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.curriculumState.assessments.updateQuiz(route, org, p['id']!))],
-    ['PUT', /^\/api\/curriculum\/quizzes\/(?<id>[^/]+)\/question-order$/, (route, p) => this.author(route, (org) => this.curriculumState.assessments.reorderQuestions(route, org, p['id']!))],
-    ['PUT', /^\/api\/curriculum\/quizzes\/(?<id>[^/]+)\/status$/, (route, p) => this.author(route, (org) => this.curriculumState.assessments.setQuizStatus(route, org, p['id']!))],
-    ['POST', /^\/api\/curriculum\/quizzes\/(?<id>[^/]+)\/questions$/, (route, p) => this.author(route, (org) => this.curriculumState.assessments.addQuestion(route, org, p['id']!))],
-    ['PUT', /^\/api\/curriculum\/quiz-questions\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.curriculumState.assessments.updateQuestion(route, org, p['id']!))],
-    ['DELETE', /^\/api\/curriculum\/quiz-questions\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.curriculumState.assessments.deleteQuestion(route, org, p['id']!))],
-    ['POST', /^\/api\/curriculum\/assignments$/, (route) => this.author(route, (org) => this.curriculumState.assessments.createAssignment(route, org))],
-    ['GET', /^\/api\/curriculum\/assignments\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.curriculumState.assessments.getAssignment(route, org, p['id']!))],
-    ['PUT', /^\/api\/curriculum\/assignments\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.curriculumState.assessments.updateAssignment(route, org, p['id']!))],
-    ['PUT', /^\/api\/curriculum\/assignments\/(?<id>[^/]+)\/status$/, (route, p) => this.author(route, (org) => this.curriculumState.assessments.setAssignmentStatus(route, org, p['id']!))],
-    ['GET', /^\/api\/curriculum\/badges$/, (route) => this.author(route, (org) => this.badges.list(route, org))],
-    ['GET', /^\/api\/curriculum\/badges\/options$/, (route) => this.author(route, (org) => this.badges.options(route, org))],
-    ['GET', /^\/api\/curriculum\/badges\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.badges.get(route, org, p['id']!))],
-    ['POST', /^\/api\/curriculum\/badges$/, (route) => this.author(route, (org) => this.badges.create(route, org))],
-    ['PUT', /^\/api\/curriculum\/badges\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.badges.update(route, org, p['id']!))],
-    ['DELETE', /^\/api\/curriculum\/badges\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.badges.remove(route, org, p['id']!))],
-    ['POST', /^\/api\/curriculum\/badges\/(?<id>[^/]+)\/awards$/, (route, p) => this.author(route, (org) => this.awardBadgeByHand(route, org, p['id']!))],
-    ['GET', /^\/api\/curriculum\/progression$/, (route) => this.author(route, (org) => this.progression.get(route, org))],
-    ['POST', /^\/api\/curriculum\/progression\/stages$/, (route) => this.author(route, (org) => this.progression.addStage(route, org))],
-    ['PUT', /^\/api\/curriculum\/progression\/stages\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.progression.updateStage(route, org, p['id']!))],
-    ['PUT', /^\/api\/curriculum\/progression\/stage-order$/, (route) => this.author(route, (org) => this.progression.reorder(route, org))],
-    ['POST', /^\/api\/curriculum\/progression\/stages\/(?<id>[^/]+)\/competencies$/, (route, p) => this.author(route, (org) => this.progression.addCompetency(route, org, p['id']!))],
-    ['DELETE', /^\/api\/curriculum\/progression\/competencies\/(?<id>[^/]+)$/, (route, p) => this.author(route, (org) => this.progression.removeCompetency(route, org, p['id']!))],
-    ['POST', /^\/api\/curriculum\/lessons\/(?<id>[^/]+)\/video$/, (route, p) => this.author(route, (org) => this.curriculumState.uploadVideo(route, org, p['id']!, memberships.find((x) => x.id === this.membershipId)!.personName))],
-    ['DELETE', /^\/api\/curriculum\/lessons\/(?<id>[^/]+)\/video$/, (route, p) => this.author(route, (org) => this.curriculumState.removeVideo(route, org, p['id']!))],
-    ['GET', /^\/api\/mentoring\/youth$/, (route) => this.mentoredYouth(route)],
-    ['GET', /^\/api\/mentoring\/dashboard$/, (route) => this.mentorDashboard(route)],
-    ['GET', /^\/api\/mentoring\/reviews$/, (route) => this.mentorReviews(route, (m, youth) => this.reviews.queue(route, m.organizationId, youth))],
-    ['GET', /^\/api\/mentoring\/submissions\/(?<id>[^/]+)$/, (route, p) => this.mentorReviews(route, (m, youth) => this.reviews.review(route, m.organizationId, youth, p['id']!, m.personName))],
-    ['GET', /^\/api\/mentoring\/submissions\/(?<id>[^/]+)\/file$/, (route, p) => this.mentorReviews(route, (_m, youth) => this.reviews.file(route, youth, p['id']!))],
-    ['GET', /^\/api\/mentoring\/quiz-approvals$/, (route) => this.mentorReviews(route, (m, youth) => this.reviews.quizApprovals(route, m.organizationId, youth))],
-    ['POST', /^\/api\/mentoring\/quiz-approvals\/approve-all$/, (route) => this.mentorReviews(route, (_m, youth) => this.afterReview(youth, this.reviews.approveAll(route, youth)))],
-    ['POST', /^\/api\/mentoring\/quiz-attempts\/(?<id>[^/]+)\/approve$/, (route, p) => this.mentorReviews(route, (_m, youth) => this.afterReview(youth, this.reviews.approveQuiz(route, youth, p['id']!)))],
-    ['POST', /^\/api\/mentoring\/submissions\/(?<id>[^/]+)\/grade$/, (route, p) => this.mentorReviews(route, (m, youth) => this.afterReview(youth, this.reviews.grade(route, youth, p['id']!, m.personName)))],
-    ['GET', /^\/api\/mentoring\/youth\/(?<id>[^/]+)$/, (route, p) => this.mentorYouthRecord(route, p['id']!)],
-    ['GET', /^\/api\/mentoring\/youth\/(?<id>[^/]+)\/competencies$/, (route, p) => this.mentorCompetencies(route, p['id']!, false)],
-    ['PUT', /^\/api\/mentoring\/youth\/(?<id>[^/]+)\/competencies$/, (route, p) => this.mentorCompetencies(route, p['id']!, true)],
-    ['GET', /^\/api\/mentoring\/cohorts\/(?<id>[^/]+)$/, (route, p) => this.mentorCohort(route, p['id']!)],
-    ['GET', /^\/api\/programs\/(?<id>[^/]+)\/mentoring$/, (route, p) => this.cohortMentoring(route, p['id']!)],
-    ['PUT', /^\/api\/programs\/(?<id>[^/]+)\/mentors$/, (route, p) => this.setCohortMentors(route, p['id']!)],
-    ['PUT', /^\/api\/programs\/(?<id>[^/]+)\/youth\/(?<child>[^/]+)\/mentor$/, (route, p) => this.assignYouthMentorRoute(route, p['id']!, p['child']!)],
-    ['DELETE', /^\/api\/programs\/(?<id>[^/]+)\/youth\/(?<child>[^/]+)\/mentor$/, (route, p) => this.removeYouthMentor(route, p['id']!, p['child']!)],
-    ['GET', /^\/api\/website\/(?<slug>[^/]+)$/, (route, p) => this.website(route, p['slug']!)],
-    ['POST', /^\/api\/auth\/sign-in$/, (route) => this.signIn(route)],
-    ['POST', /^\/api\/auth\/mfa$/, (route) => this.mfa(route)],
-    ['POST', /^\/api\/auth\/sign-out$/, (route) => this.signOut(route)],
-    ['GET', /^\/api\/setup$/, (route) => this.setup(route)],
-    ['POST', /^\/api\/auth\/forgot-password$/, (route) => this.forgotPassword(route)],
-    ['GET', /^\/api\/auth\/reset-password\/(?<token>[^/]+)$/, (route, p) => this.checkReset(route, p['token']!)],
-    ['POST', /^\/api\/auth\/reset-password$/, (route) => this.resetPassword(route)],
-    ['GET', /^\/api\/me\/account$/, (route) => this.account(route)],
-    ['POST', /^\/api\/me\/recovery-codes$/, (route) => this.newRecoveryCodes(route)],
-    ['POST', /^\/api\/me\/sign-out-others$/, (route) => this.signOutOthers(route)],
-    ['GET', /^\/api\/billing$/, (route) => this.billing(route)],
-    ['GET', /^\/api\/audit$/, (route) => this.auditLog(route)],
-    ['GET', /^\/api\/platform\/organizations$/, (route) => this.platformOrganizations(route)],
-    ['POST', /^\/api\/platform\/organizations$/, (route) => this.addOrganization(route)],
-    ['POST', /^\/api\/platform\/organizations\/(?<id>[^/]+)\/suspend$/, (route, p) => this.suspendOrganization(route, p['id']!)],
-    ['POST', /^\/api\/platform\/organizations\/(?<id>[^/]+)\/reinstate$/, (route, p) => this.reinstateOrganization(route, p['id']!)],
-    ['PUT', /^\/api\/billing\/plan$/, (route) => this.changePlan(route)],
-    ['GET', /^\/api\/me\/organizations$/, (route) => this.myOrganizations(route)],
-    ['POST', /^\/api\/me\/organization$/, (route) => this.switchOrganization(route)],
-    ['GET', /^\/api\/settings\/organization$/, (route) => this.getOrganizationProfile(route)],
-    ['PUT', /^\/api\/settings\/organization$/, (route) => this.saveOrganizationProfile(route)],
-    ['GET', /^\/api\/settings\/privacy$/, (route) => this.getPrivacy(route)],
-    ['GET', /^\/api\/settings\/data-requests$/, (route) => this.listDataRequests(route)],
-    ['POST', /^\/api\/settings\/data-requests\/(?<id>[^/]+)\/fulfil$/, (route, p) => this.fulfilDataRequest(route, p['id']!)],
-    ['POST', /^\/api\/g\/home\/(?<token>[^/]+)\/data-requests$/, (route, p) => this.askForData(route, p['token']!)],
-    ['PUT', /^\/api\/settings\/privacy$/, (route) => this.savePrivacy(route)],
-    ['GET', /^\/api\/settings\/consent$/, (route) => this.getConsentPolicy(route)],
-    ['PUT', /^\/api\/settings\/consent$/, (route) => this.saveConsentPolicy(route)],
-    ['GET', /^\/api\/settings\/notifications$/, (route) => this.getNotificationSettings(route)],
-    ['PUT', /^\/api\/settings\/notifications$/, (route) => this.saveNotificationSettings(route)],
-    ['GET', /^\/api\/settings\/modules$/, (route) => this.getModules(route)],
-    ['PUT', /^\/api\/settings\/modules$/, (route) => this.saveModules(route)],
-    ['GET', /^\/api\/today$/, (route) => this.today(route)],
-    ['GET', /^\/api\/search$/, (route) => this.search(route)],
-    ['GET', /^\/api\/reports$/, (route) => this.report(route)],
-    ['POST', /^\/api\/events\/(?<id>[^/]+)\/survey$/, (route, p) => this.sendSurvey(route, p['id']!)],
-    ['GET', /^\/api\/g\/survey\/(?<token>[^/]+)$/, (route, p) => this.guardianSurvey(route, p['token']!)],
-    ['POST', /^\/api\/g\/survey\/(?<token>[^/]+)$/, (route, p) => this.answerSurvey(route, p['token']!)],
-    ['POST', /^\/api\/reports\/exports$/, (route) => this.exportReport(route)],
-    ['GET', /^\/api\/reports\/exports\/(?<id>[^/]+)$/, (route, p) => this.downloadExport(route, p['id']!)],
-    ['GET', /^\/api\/notifications$/, (route) => this.listNotifications(route)],
-    ['POST', /^\/api\/notifications\/read-all$/, (route) => this.readAllNotifications(route)],
-    ['POST', /^\/api\/notifications\/(?<id>[^/]+)\/read$/, (route, p) => this.readNotification(route, p['id']!)],
-    ['GET', /^\/api\/households$/, (route) => this.listHouseholds(route)],
-    ['POST', /^\/api\/households$/, (route) => this.createHousehold(route)],
-    ['GET', /^\/api\/households\/(?<id>[^/]+)$/, (route, p) => this.getHousehold(route, p['id']!)],
-    ['DELETE', /^\/api\/households\/(?<id>[^/]+)$/, (route, p) => this.deleteHousehold(route, p['id']!)],
-    ['POST', /^\/api\/households\/(?<id>[^/]+)\/children$/, (route, p) => this.addChild(route, p['id']!)],
-    ['POST', /^\/api\/households\/(?<id>[^/]+)\/guardians$/, (route, p) => this.addGuardian(route, p['id']!)],
-    ['PUT', /^\/api\/guardians\/(?<id>[^/]+)$/, (route, p) => this.updateGuardian(route, p['id']!)],
-    ['GET', /^\/api\/children$/, (route) => this.findChildren(route)],
-    ['GET', /^\/api\/programs$/, (route) => this.listPrograms(route)],
-    ['POST', /^\/api\/programs$/, (route) => this.saveProgram(route, null)],
-    ['GET', /^\/api\/programs\/(?<id>[^/]+)$/, (route, p) => this.getProgram(route, p['id']!)],
-    ['PUT', /^\/api\/programs\/(?<id>[^/]+)$/, (route, p) => this.saveProgram(route, p['id']!)],
-    ['POST', /^\/api\/programs\/(?<id>[^/]+)\/archive$/, (route, p) => this.archiveProgram(route, p['id']!)],
-    ['POST', /^\/api\/programs\/(?<id>[^/]+)\/restore$/, (route, p) => this.restoreProgram(route, p['id']!)],
-    ['POST', /^\/api\/programs\/(?<id>[^/]+)\/enrollments$/, (route, p) => this.enroll(route, p['id']!)],
-    ['DELETE', /^\/api\/programs\/(?<id>[^/]+)\/enrollments\/(?<child>[^/]+)$/, (route, p) => this.unenroll(route, p['id']!, p['child']!)],
-    ['GET', /^\/api\/events$/, (route) => this.listEvents(route)],
-    ['POST', /^\/api\/events$/, (route) => this.saveEvent(route, null)],
-    ['GET', /^\/api\/events\/(?<id>[^/]+)$/, (route, p) => this.getEvent(route, p['id']!)],
-    ['PUT', /^\/api\/events\/(?<id>[^/]+)$/, (route, p) => this.saveEvent(route, p['id']!)],
-    ['POST', /^\/api\/events\/(?<id>[^/]+)\/cancel$/, (route, p) => this.cancelEvent(route, p['id']!)],
-    ['GET', /^\/api\/sessions\/today$/, (route) => this.todaySessions(route)],
-    ['GET', /^\/api\/sessions\/(?<id>[^/]+)\/roster$/, (route, p) => this.sessionRoster(route, p['id']!)],
-    ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/check-ins$/, (route, p) => this.attend(route, p['id']!, 'Present')],
-    ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/absences$/, (route, p) => this.attend(route, p['id']!, 'Absent')],
-    ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/walk-ins$/, (route, p) => this.addWalkIn(route, p['id']!)],
-    ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/end$/, (route, p) => this.endSession(route, p['id']!)],
-    ['PUT', /^\/api\/sessions\/(?<id>[^/]+)\/notes$/, (route, p) => this.sessionNotes(route, p['id']!)],
-    ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/sign-outs$/, (route, p) => this.signChildOut(route, p['id']!)],
-    ['GET', /^\/api\/children\/(?<id>[^/]+)\/pickups$/, (route, p) => this.pickups(route, p['id']!)],
-    ['POST', /^\/api\/children\/(?<id>[^/]+)\/pickups$/, (route, p) => this.addPickup(route, p['id']!)],
-    ['GET', /^\/api\/staff$/, (route) => this.listStaff(route)],
-    ['GET', /^\/api\/coverage$/, (route) => this.coverage(route)],
-    ['PUT', /^\/api\/sessions\/(?<id>[^/]+)\/staff$/, (route, p) => this.assignStaff(route, p['id']!)],
-    ['GET', /^\/api\/invitations\/(?<token>[^/]+)$/, (route, p) => this.getInvitation(route, p['token']!)],
-    ['POST', /^\/api\/invitations\/(?<token>[^/]+)\/accept$/, (route, p) => this.acceptInvitation(route, p['token']!)],
-    ['POST', /^\/api\/invitations\/(?<token>[^/]+)\/request-new$/, (route, p) => this.requestNewLink(route, p['token']!)],
-    ['PUT', /^\/api\/me\/phone$/, (route) => this.savePhone(route)],
-    ['POST', /^\/api\/staff\/invitations$/, (route) => this.inviteStaff(route)],
-    ['DELETE', /^\/api\/staff\/invitations\/(?<id>[^/]+)$/, (route, p) => this.withdrawInvitation(route, p['id']!)],
-    ['POST', /^\/api\/staff\/invitations\/(?<id>[^/]+)\/resend$/, (route, p) => this.resendInvitation(route, p['id']!)],
-    ['PUT', /^\/api\/staff\/(?<id>[^/]+)\/role$/, (route, p) => this.changeRole(route, p['id']!)],
-    ['DELETE', /^\/api\/staff\/(?<id>[^/]+)$/, (route, p) => this.removeStaff(route, p['id']!)],
-    ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/pickup-requests$/, (route, p) => this.askForPickup(route, p['id']!)],
-    ['GET', /^\/api\/pickup-requests\/(?<id>[^/]+)$/, (route, p) => this.pickupRequest(route, p['id']!)],
-    ['PUT', /^\/api\/g\/home\/(?<token>[^/]+)\/household$/, (route, p) => this.guardianUpdateHousehold(route, p['token']!)],
-    ['PUT', /^\/api\/g\/home\/(?<token>[^/]+)\/children\/(?<id>[^/]+)\/medical$/, (route, p) => this.guardianUpdateMedical(route, p['token']!, p['id']!)],
-    ['POST', /^\/api\/g\/home\/(?<token>[^/]+)\/pickup-requests\/(?<id>[^/]+)$/, (route, p) => this.guardianDecidesPickup(route, p['token']!, p['id']!)],
-    ['DELETE', /^\/api\/children\/(?<id>[^/]+)\/pickups\/(?<pickup>[^/]+)$/, (route, p) => this.removePickup(route, p['id']!, p['pickup']!)],
-    ['POST', /^\/api\/g\/home\/(?<token>[^/]+)\/children\/(?<id>[^/]+)\/pickups$/, (route, p) => this.guardianAddPickup(route, p['token']!, p['id']!)],
-    ['DELETE', /^\/api\/g\/home\/(?<token>[^/]+)\/children\/(?<id>[^/]+)\/pickups\/(?<pickup>[^/]+)$/, (route, p) => this.guardianRemovePickup(route, p['token']!, p['id']!, p['pickup']!)],
-    ['GET', /^\/api\/programs\/(?<id>[^/]+)\/enrollments$/, (route, p) => this.listEnrollmentRequests(route, p['id']!)],
-    ['GET', /^\/api\/applications$/, (route) => this.listApplications(route)],
-    ['GET', /^\/api\/applications\/(?<id>[^/]+)$/, (route, p) => this.getApplication(route, p['id']!)],
-    ['POST', /^\/api\/applications\/(?<id>[^/]+)\/notes$/, (route, p) => this.addApplicationNote(route, p['id']!)],
-    ['POST', /^\/api\/applications\/(?<id>[^/]+)\/place$/, (route, p) => this.placeApplication(route, p['id']!)],
-    ['POST', /^\/api\/enrollments\/review$/, (route) => this.reviewEnrollments(route, null)],
-    ['POST', /^\/api\/enrollments\/(?<id>[^/]+)\/review$/, (route, p) => this.reviewEnrollments(route, p['id']!)],
-    ['POST', /^\/api\/programs\/(?<id>[^/]+)\/enrollment\/open$/, (route, p) => this.openEnrollmentRoute(route, p['id']!)],
-    ['POST', /^\/api\/programs\/(?<id>[^/]+)\/enrollment\/close$/, (route, p) => this.closeEnrollmentRoute(route, p['id']!)],
-    ['GET', /^\/api\/g\/enroll\/(?<slug>[^/]+)$/, (route, p) => this.enrollPage(route, p['slug']!)],
-    ['POST', /^\/api\/g\/enroll\/(?<slug>[^/]+)\/code$/, (route, p) => this.enrollCode(route, p['slug']!)],
-    ['POST', /^\/api\/g\/enroll\/(?<slug>[^/]+)\/verify$/, (route, p) => this.enrollVerify(route, p['slug']!)],
-    ['GET', /^\/api\/g\/enroll\/(?<slug>[^/]+)\/draft$/, (route, p) => this.enrollDraft(route, p['slug']!)],
-    ['PUT', /^\/api\/g\/enroll\/(?<slug>[^/]+)\/draft$/, (route, p) => this.enrollSave(route, p['slug']!)],
-    ['POST', /^\/api\/g\/enroll\/(?<slug>[^/]+)\/submit$/, (route, p) => this.enrollSubmit(route, p['slug']!)],
-    ['POST', /^\/api\/imports$/, (route) => this.uploadImport(route)],
-    ['PUT', /^\/api\/imports\/(?<id>[^/]+)\/mapping$/, (route, p) => this.mapImport(route, p['id']!)],
-    ['POST', /^\/api\/imports\/(?<id>[^/]+)\/run$/, (route, p) => this.runImport(route, p['id']!)],
-    ['POST', /^\/api\/g\/auth\/code$/, (route) => this.guardianCodeRoute(route)],
-    ['POST', /^\/api\/g\/auth\/verify$/, (route) => this.guardianVerify(route)],
-    ['GET', /^\/api\/incidents$/, (route) => this.listIncidents(route)],
-    ['GET', /^\/api\/incidents\/form$/, (route) => this.incidentForm(route)],
-    ['GET', /^\/api\/incidents\/(?<id>[^/]+)$/, (route, p) => this.getIncident(route, p['id']!)],
-    ['POST', /^\/api\/incidents$/, (route) => this.createIncident(route)],
-    ['POST', /^\/api\/incidents\/(?<id>[^/]+)\/review$/, (route, p) => this.reviewIncident(route, p['id']!)],
-    ['POST', /^\/api\/incidents\/(?<id>[^/]+)\/reopen$/, (route, p) => this.reopenIncident(route, p['id']!)],
-    ['POST', /^\/api\/incidents\/(?<id>[^/]+)\/notes$/, (route, p) => this.addIncidentNote(route, p['id']!)],
-    ['GET', /^\/api\/g\/home\/(?<token>[^/]+)$/, (route, p) => this.guardianHome(route, p['token']!)],
-    ['POST', /^\/api\/g\/home\/(?<token>[^/]+)\/no-show$/, (route, p) => this.answerNoShow(route, p['token']!)],
-    ['GET', /^\/api\/g\/slips\/(?<token>[^/]+)$/, (route, p) => this.guardianSlip(route, p['token']!)],
-    ['POST', /^\/api\/g\/slips\/(?<token>[^/]+)\/sign$/, (route, p) => this.guardianAnswer(route, p['token']!, 'Signed')],
-    ['POST', /^\/api\/g\/slips\/(?<token>[^/]+)\/decline$/, (route, p) => this.guardianAnswer(route, p['token']!, 'Declined')],
-    ['GET', /^\/api\/sessions\/(?<id>[^/]+)\/clearance$/, (route, p) => this.clearance(route, p['id']!)],
-    ['GET', /^\/api\/slips\/(?<id>[^/]+)\/unsigned$/, (route, p) => this.unsignedFamilies(route, p['id']!)],
-    ['POST', /^\/api\/slips\/(?<id>[^/]+)\/remind$/, (route, p) => this.remindNow(route, p['id']!)],
-    ['POST', /^\/api\/slips\/(?<id>[^/]+)\/sign-on-tablet$/, (route, p) => this.signOnTablet(route, p['id']!)],
-    ['GET', /^\/api\/events\/(?<id>[^/]+)\/slip$/, (route, p) => this.getSlip(route, p['id']!)],
-    ['PUT', /^\/api\/events\/(?<id>[^/]+)\/slip$/, (route, p) => this.saveSlip(route, p['id']!)],
-    ['GET', /^\/api\/slips$/, (route) => this.listSlips(route)],
-    ['POST', /^\/api\/slips\/(?<id>[^/]+)\/send$/, (route, p) => this.sendSlipRoute(route, p['id']!)],
-    ['POST', /^\/api\/slips\/(?<id>[^/]+)\/send-now$/, (route, p) => this.slipTransition(route, p['id']!, 'send-now')],
-    ['POST', /^\/api\/slips\/(?<id>[^/]+)\/cancel-send$/, (route, p) => this.slipTransition(route, p['id']!, 'cancel')],
-    ['PUT', /^\/api\/slips\/(?<id>[^/]+)$/, (route, p) => this.editSlip(route, p['id']!)],
-    ['GET', /^\/api\/messages$/, (route) => this.listMessages(route)],
-    ['POST', /^\/api\/messages\/preview$/, (route) => this.previewMessage(route)],
-    ['POST', /^\/api\/messages$/, (route) => this.sendMessage(route)],
-    ['GET', /^\/api\/messages\/(?<id>[^/]+)$/, (route, p) => this.getMessage(route, p['id']!)],
-    ['GET', /^\/api\/messaging\/sms-cap$/, (route) => this.smsCap(route)],
-    ['GET', /^\/api\/children\/(?<id>[^/]+)\/quick-card$/, (route, p) => this.quickCard(route, p['id']!)],
-    ['GET', /^\/api\/children\/(?<id>[^/]+)\/youth-account$/, (route, p) => this.youthAccount(route, p['id']!)],
-    ['GET', /^\/api\/children\/(?<id>[^/]+)\/consent$/, (route, p) => this.childConsent(route, p['id']!)],
-    ['POST', /^\/api\/children\/(?<id>[^/]+)\/consent-request$/, (route, p) => this.sendConsentLink(route, p['id']!)],
-    ['GET', /^\/api\/g\/consent\/(?<token>[^/]+)$/, (route, p) => this.guardianConsent(route, p['token']!)],
-    ['POST', /^\/api\/g\/consent\/(?<token>[^/]+)\/sign$/, (route, p) => this.giveConsentRoute(route, p['token']!)],
-    ['POST', /^\/api\/g\/consent\/(?<token>[^/]+)\/withdraw$/, (route, p) => this.withdrawConsentRoute(route, p['token']!)],
-    ['POST', /^\/api\/children\/(?<id>[^/]+)\/youth-invitation$/, (route, p) => this.inviteYouth(route, p['id']!)],
-    ['GET', /^\/api\/children\/(?<id>[^/]+)$/, (route, p) => this.getChild(route, p['id']!)],
-    ['PUT', /^\/api\/children\/(?<id>[^/]+)$/, (route, p) => this.updateChild(route, p['id']!)],
-    ['PUT', /^\/api\/children\/(?<id>[^/]+)\/medical$/, (route, p) => this.updateMedical(route, p['id']!)],
+    ["GET", /^\/api\/me$/, (route) => this.me(route)],
+    ["GET", /^\/api\/learning\/me$/, (route) => this.learner(route)],
+    [
+      "GET",
+      /^\/api\/learning\/journey$/,
+      (route) =>
+        this.youthWork(route, (m, programs) =>
+          this.journey.journey(
+            route,
+            m,
+            programs,
+            this.youthLinks.get(m.id) ?? null,
+          ),
+        ),
+    ],
+    [
+      "GET",
+      /^\/api\/learning\/home$/,
+      (route) =>
+        this.youthWork(route, (m, programs) =>
+          this.learningState.home(route, m.id, programs),
+        ),
+    ],
+    [
+      "GET",
+      /^\/api\/learning\/tracks\/(?<id>[^/]+)$/,
+      (route, p) =>
+        this.youthWork(route, (m, programs) =>
+          this.learningState.track(route, m.id, programs, p["id"]!),
+        ),
+    ],
+    [
+      "GET",
+      /^\/api\/learning\/modules\/(?<id>[^/]+)$/,
+      (route, p) =>
+        this.youthWork(route, (m, programs) =>
+          this.learningState.module(route, m.id, programs, p["id"]!),
+        ),
+    ],
+    [
+      "GET",
+      /^\/api\/learning\/lessons\/(?<id>[^/]+)$/,
+      (route, p) =>
+        this.youthWork(route, (m, programs) =>
+          this.learningState.lesson(route, m.id, programs, p["id"]!),
+        ),
+    ],
+    [
+      "GET",
+      /^\/api\/learning\/lessons\/(?<id>[^/]+)\/video$/,
+      (route, p) =>
+        this.youthWork(route, (m, programs) =>
+          this.learningState.video(route, m.id, programs, p["id"]!),
+        ),
+    ],
+    [
+      "GET",
+      /^\/api\/learning\/coding\/(?<id>[^/]+)$/,
+      (route, p) =>
+        this.youthWork(route, (m, programs) =>
+          this.learningState.coding(route, m.id, programs, p["id"]!),
+        ),
+    ],
+    [
+      "PUT",
+      /^\/api\/learning\/coding\/(?<id>[^/]+)\/progress$/,
+      (route, p) =>
+        this.youthWork(route, (m, programs) =>
+          this.afterLearning(
+            m,
+            this.learningState.saveCoding(route, m.id, programs, p["id"]!),
+          ),
+        ),
+    ],
+    [
+      "POST",
+      /^\/api\/learning\/coding\/(?<id>[^/]+)\/submission$/,
+      (route, p) =>
+        this.youthWork(route, (m, programs) =>
+          this.learningState.submit(route, m.id, programs, p["id"]!),
+        ),
+    ],
+    [
+      "GET",
+      /^\/api\/learning\/quizzes\/(?<id>[^/]+)$/,
+      (route, p) =>
+        this.youthWork(route, (m, programs) =>
+          this.learningState.quizzes.intro(
+            route,
+            m.id,
+            this.learningState.quizPlace(m.id, programs, p["id"]!),
+          ),
+        ),
+    ],
+    [
+      "POST",
+      /^\/api\/learning\/quizzes\/(?<id>[^/]+)\/attempts$/,
+      (route, p) =>
+        this.youthWork(route, (m, programs) =>
+          this.learningState.quizzes.start(
+            route,
+            m.id,
+            this.learningState.quizPlace(m.id, programs, p["id"]!),
+          ),
+        ),
+    ],
+    [
+      "PUT",
+      /^\/api\/learning\/attempts\/(?<id>[^/]+)\/answers$/,
+      (route, p) =>
+        this.youthWork(route, (m, programs) =>
+          this.learningState.quizzes.save(route, m.id, p["id"]!, (q) =>
+            this.learningState.quizPlace(m.id, programs, q),
+          ),
+        ),
+    ],
+    [
+      "POST",
+      /^\/api\/learning\/attempts\/(?<id>[^/]+)\/submit$/,
+      (route, p) =>
+        this.youthWork(route, (m, programs) =>
+          this.afterLearning(
+            m,
+            this.learningState.quizzes.submit(route, m.id, p["id"]!, (q) =>
+              this.learningState.quizPlace(m.id, programs, q),
+            ),
+          ),
+        ),
+    ],
+    [
+      "GET",
+      /^\/api\/learning\/attempts\/(?<id>[^/]+)$/,
+      (route, p) =>
+        this.youthWork(route, (m, programs) =>
+          this.learningState.quizzes.result(route, m.id, p["id"]!, (q) =>
+            this.learningState.quizPlace(m.id, programs, q),
+          ),
+        ),
+    ],
+    [
+      "GET",
+      /^\/api\/learning\/quizzes\/(?<id>[^/]+)$/,
+      (route, p) =>
+        this.youthWork(route, (m, programs) =>
+          this.learningState.quizzes.intro(
+            route,
+            m.id,
+            this.learningState.quizPlace(m.id, programs, p["id"]!),
+          ),
+        ),
+    ],
+    [
+      "POST",
+      /^\/api\/learning\/quizzes\/(?<id>[^/]+)\/attempts$/,
+      (route, p) =>
+        this.youthWork(route, (m, programs) =>
+          this.learningState.quizzes.start(
+            route,
+            m.id,
+            this.learningState.quizPlace(m.id, programs, p["id"]!),
+          ),
+        ),
+    ],
+    [
+      "PUT",
+      /^\/api\/learning\/attempts\/(?<id>[^/]+)\/answers$/,
+      (route, p) =>
+        this.youthWork(route, (m, programs) =>
+          this.learningState.quizzes.save(route, m.id, p["id"]!, (q) =>
+            this.learningState.quizPlace(m.id, programs, q),
+          ),
+        ),
+    ],
+    [
+      "POST",
+      /^\/api\/learning\/attempts\/(?<id>[^/]+)\/submit$/,
+      (route, p) =>
+        this.youthWork(route, (m, programs) =>
+          this.afterLearning(
+            m,
+            this.learningState.quizzes.submit(route, m.id, p["id"]!, (q) =>
+              this.learningState.quizPlace(m.id, programs, q),
+            ),
+          ),
+        ),
+    ],
+    [
+      "GET",
+      /^\/api\/learning\/attempts\/(?<id>[^/]+)$/,
+      (route, p) =>
+        this.youthWork(route, (m, programs) =>
+          this.learningState.quizzes.result(route, m.id, p["id"]!, (q) =>
+            this.learningState.quizPlace(m.id, programs, q),
+          ),
+        ),
+    ],
+    [
+      "GET",
+      /^\/api\/learning\/assignments\/(?<id>[^/]+)$/,
+      (route, p) =>
+        this.youthWork(route, (m, programs) =>
+          this.assignmentBrief(route, m, programs, p["id"]!),
+        ),
+    ],
+    [
+      "POST",
+      /^\/api\/learning\/assignments\/(?<id>[^/]+)\/submission$/,
+      (route, p) =>
+        this.youthWork(route, (m, programs) =>
+          this.learningState.work.submit(
+            route,
+            m.id,
+            m.personName,
+            this.learningState.assignmentPlace(m.id, programs, p["id"]!),
+          ),
+        ),
+    ],
+    [
+      "GET",
+      /^\/api\/learning\/submissions\/(?<id>[^/]+)$/,
+      (route, p) =>
+        this.youthWork(route, (m, programs) =>
+          this.learningState.work.view(
+            route,
+            m.id,
+            p["id"]!,
+            (a) => this.learningState.assignmentPlace(m.id, programs, a),
+            (t) => this.youthMentorName(m, t),
+          ),
+        ),
+    ],
+    [
+      "GET",
+      /^\/api\/learning\/submissions\/(?<id>[^/]+)\/file$/,
+      (route, p) =>
+        this.youthWork(route, (m, programs) =>
+          this.learningState.work.file(route, m.id, p["id"]!, (a) =>
+            this.learningState.assignmentPlace(m.id, programs, a),
+          ),
+        ),
+    ],
+    [
+      "POST",
+      /^\/api\/learning\/submissions\/(?<id>[^/]+)\/resubmit$/,
+      (route, p) =>
+        this.youthWork(route, (m, programs) =>
+          this.learningState.work.resubmit(
+            route,
+            m.id,
+            m.personName,
+            p["id"]!,
+            (a) => this.learningState.assignmentPlace(m.id, programs, a),
+          ),
+        ),
+    ],
+    [
+      "POST",
+      /^\/api\/learning\/lessons\/(?<id>[^/]+)\/complete$/,
+      (route, p) =>
+        this.youthWork(route, (m, programs) =>
+          this.afterLearning(
+            m,
+            this.learningState.completeLesson(route, m.id, programs, p["id"]!),
+          ),
+        ),
+    ],
+    [
+      "POST",
+      /^\/api\/learning\/consent-request$/,
+      (route) => this.askGuardian(route),
+    ],
+    ["GET", /^\/api\/learning\/onboarding$/, (route) => this.onboarding(route)],
+    [
+      "PUT",
+      /^\/api\/learning\/onboarding$/,
+      (route) => this.saveOnboardingStep(route),
+    ],
+    [
+      "POST",
+      /^\/api\/learning\/onboarding\/complete$/,
+      (route) => this.completeOnboarding(route),
+    ],
+    [
+      "GET",
+      /^\/api\/curriculum$/,
+      (route) =>
+        this.author(route, (org) => this.curriculumState.list(route, org)),
+    ],
+    [
+      "POST",
+      /^\/api\/curriculum\/tracks$/,
+      (route) =>
+        this.author(route, (org) =>
+          this.curriculumState.createTrack(route, org),
+        ),
+    ],
+    [
+      "PUT",
+      /^\/api\/curriculum\/tracks\/(?<id>[^/]+)\/module-order$/,
+      (route, p) =>
+        this.author(route, (org) =>
+          this.curriculumState.reorderModules(route, org, p["id"]!),
+        ),
+    ],
+    [
+      "POST",
+      /^\/api\/curriculum\/modules$/,
+      (route) =>
+        this.author(route, (org) =>
+          this.curriculumState.createModule(route, org),
+        ),
+    ],
+    [
+      "GET",
+      /^\/api\/curriculum\/modules\/(?<id>[^/]+)$/,
+      (route, p) =>
+        this.author(route, (org) =>
+          this.curriculumState.getModule(route, org, p["id"]!),
+        ),
+    ],
+    [
+      "PUT",
+      /^\/api\/curriculum\/modules\/(?<id>[^/]+)$/,
+      (route, p) =>
+        this.author(route, (org) =>
+          this.curriculumState.updateModule(route, org, p["id"]!),
+        ),
+    ],
+    [
+      "PUT",
+      /^\/api\/curriculum\/tracks\/(?<id>[^/]+)\/cohorts$/,
+      (route, p) =>
+        this.author(route, (org) =>
+          this.curriculumState.setCohorts(route, org, p["id"]!),
+        ),
+    ],
+    [
+      "PUT",
+      /^\/api\/curriculum\/tracks\/(?<id>[^/]+)\/status$/,
+      (route, p) =>
+        this.author(route, (org) =>
+          this.curriculumState.setTrackStatus(route, org, p["id"]!),
+        ),
+    ],
+    [
+      "PUT",
+      /^\/api\/curriculum\/modules\/(?<id>[^/]+)\/status$/,
+      (route, p) =>
+        this.author(route, (org) =>
+          this.curriculumState.setModuleStatus(route, org, p["id"]!),
+        ),
+    ],
+    [
+      "PUT",
+      /^\/api\/curriculum\/modules\/(?<id>[^/]+)\/lesson-order$/,
+      (route, p) =>
+        this.author(route, (org) =>
+          this.curriculumState.reorderLessons(route, org, p["id"]!),
+        ),
+    ],
+    [
+      "POST",
+      /^\/api\/curriculum\/lessons$/,
+      (route) =>
+        this.author(route, (org) =>
+          this.curriculumState.createLesson(route, org),
+        ),
+    ],
+    [
+      "GET",
+      /^\/api\/curriculum\/lessons\/(?<id>[^/]+)$/,
+      (route, p) =>
+        this.author(route, (org) =>
+          this.curriculumState.getLesson(route, org, p["id"]!),
+        ),
+    ],
+    [
+      "PUT",
+      /^\/api\/curriculum\/lessons\/(?<id>[^/]+)$/,
+      (route, p) =>
+        this.author(route, (org) =>
+          this.curriculumState.updateLesson(route, org, p["id"]!),
+        ),
+    ],
+    [
+      "PUT",
+      /^\/api\/curriculum\/lessons\/(?<id>[^/]+)\/status$/,
+      (route, p) =>
+        this.author(route, (org) =>
+          this.curriculumState.setLessonStatus(route, org, p["id"]!),
+        ),
+    ],
+    [
+      "DELETE",
+      /^\/api\/curriculum\/lessons\/(?<id>[^/]+)$/,
+      (route, p) =>
+        this.author(route, (org) =>
+          this.curriculumState.deleteLesson(route, org, p["id"]!),
+        ),
+    ],
+    [
+      "POST",
+      /^\/api\/curriculum\/quizzes$/,
+      (route) =>
+        this.author(route, (org) =>
+          this.curriculumState.assessments.createQuiz(route, org),
+        ),
+    ],
+    [
+      "GET",
+      /^\/api\/curriculum\/quizzes\/(?<id>[^/]+)$/,
+      (route, p) =>
+        this.author(route, (org) =>
+          this.curriculumState.assessments.getQuiz(route, org, p["id"]!),
+        ),
+    ],
+    [
+      "PUT",
+      /^\/api\/curriculum\/quizzes\/(?<id>[^/]+)$/,
+      (route, p) =>
+        this.author(route, (org) =>
+          this.curriculumState.assessments.updateQuiz(route, org, p["id"]!),
+        ),
+    ],
+    [
+      "PUT",
+      /^\/api\/curriculum\/quizzes\/(?<id>[^/]+)\/question-order$/,
+      (route, p) =>
+        this.author(route, (org) =>
+          this.curriculumState.assessments.reorderQuestions(
+            route,
+            org,
+            p["id"]!,
+          ),
+        ),
+    ],
+    [
+      "PUT",
+      /^\/api\/curriculum\/quizzes\/(?<id>[^/]+)\/status$/,
+      (route, p) =>
+        this.author(route, (org) =>
+          this.curriculumState.assessments.setQuizStatus(route, org, p["id"]!),
+        ),
+    ],
+    [
+      "POST",
+      /^\/api\/curriculum\/quizzes\/(?<id>[^/]+)\/questions$/,
+      (route, p) =>
+        this.author(route, (org) =>
+          this.curriculumState.assessments.addQuestion(route, org, p["id"]!),
+        ),
+    ],
+    [
+      "PUT",
+      /^\/api\/curriculum\/quiz-questions\/(?<id>[^/]+)$/,
+      (route, p) =>
+        this.author(route, (org) =>
+          this.curriculumState.assessments.updateQuestion(route, org, p["id"]!),
+        ),
+    ],
+    [
+      "DELETE",
+      /^\/api\/curriculum\/quiz-questions\/(?<id>[^/]+)$/,
+      (route, p) =>
+        this.author(route, (org) =>
+          this.curriculumState.assessments.deleteQuestion(route, org, p["id"]!),
+        ),
+    ],
+    [
+      "POST",
+      /^\/api\/curriculum\/assignments$/,
+      (route) =>
+        this.author(route, (org) =>
+          this.curriculumState.assessments.createAssignment(route, org),
+        ),
+    ],
+    [
+      "GET",
+      /^\/api\/curriculum\/assignments\/(?<id>[^/]+)$/,
+      (route, p) =>
+        this.author(route, (org) =>
+          this.curriculumState.assessments.getAssignment(route, org, p["id"]!),
+        ),
+    ],
+    [
+      "PUT",
+      /^\/api\/curriculum\/assignments\/(?<id>[^/]+)$/,
+      (route, p) =>
+        this.author(route, (org) =>
+          this.curriculumState.assessments.updateAssignment(
+            route,
+            org,
+            p["id"]!,
+          ),
+        ),
+    ],
+    [
+      "PUT",
+      /^\/api\/curriculum\/assignments\/(?<id>[^/]+)\/status$/,
+      (route, p) =>
+        this.author(route, (org) =>
+          this.curriculumState.assessments.setAssignmentStatus(
+            route,
+            org,
+            p["id"]!,
+          ),
+        ),
+    ],
+    [
+      "GET",
+      /^\/api\/curriculum\/badges$/,
+      (route) => this.author(route, (org) => this.badges.list(route, org)),
+    ],
+    [
+      "GET",
+      /^\/api\/curriculum\/badges\/options$/,
+      (route) => this.author(route, (org) => this.badges.options(route, org)),
+    ],
+    [
+      "GET",
+      /^\/api\/curriculum\/badges\/(?<id>[^/]+)$/,
+      (route, p) =>
+        this.author(route, (org) => this.badges.get(route, org, p["id"]!)),
+    ],
+    [
+      "POST",
+      /^\/api\/curriculum\/badges$/,
+      (route) => this.author(route, (org) => this.badges.create(route, org)),
+    ],
+    [
+      "PUT",
+      /^\/api\/curriculum\/badges\/(?<id>[^/]+)$/,
+      (route, p) =>
+        this.author(route, (org) => this.badges.update(route, org, p["id"]!)),
+    ],
+    [
+      "DELETE",
+      /^\/api\/curriculum\/badges\/(?<id>[^/]+)$/,
+      (route, p) =>
+        this.author(route, (org) => this.badges.remove(route, org, p["id"]!)),
+    ],
+    [
+      "POST",
+      /^\/api\/curriculum\/badges\/(?<id>[^/]+)\/awards$/,
+      (route, p) =>
+        this.author(route, (org) =>
+          this.awardBadgeByHand(route, org, p["id"]!),
+        ),
+    ],
+    [
+      "GET",
+      /^\/api\/curriculum\/progression$/,
+      (route) => this.author(route, (org) => this.progression.get(route, org)),
+    ],
+    [
+      "POST",
+      /^\/api\/curriculum\/progression\/stages$/,
+      (route) =>
+        this.author(route, (org) => this.progression.addStage(route, org)),
+    ],
+    [
+      "PUT",
+      /^\/api\/curriculum\/progression\/stages\/(?<id>[^/]+)$/,
+      (route, p) =>
+        this.author(route, (org) =>
+          this.progression.updateStage(route, org, p["id"]!),
+        ),
+    ],
+    [
+      "PUT",
+      /^\/api\/curriculum\/progression\/stage-order$/,
+      (route) =>
+        this.author(route, (org) => this.progression.reorder(route, org)),
+    ],
+    [
+      "POST",
+      /^\/api\/curriculum\/progression\/stages\/(?<id>[^/]+)\/competencies$/,
+      (route, p) =>
+        this.author(route, (org) =>
+          this.progression.addCompetency(route, org, p["id"]!),
+        ),
+    ],
+    [
+      "DELETE",
+      /^\/api\/curriculum\/progression\/competencies\/(?<id>[^/]+)$/,
+      (route, p) =>
+        this.author(route, (org) =>
+          this.progression.removeCompetency(route, org, p["id"]!),
+        ),
+    ],
+    [
+      "POST",
+      /^\/api\/curriculum\/lessons\/(?<id>[^/]+)\/video$/,
+      (route, p) =>
+        this.author(route, (org) =>
+          this.curriculumState.uploadVideo(
+            route,
+            org,
+            p["id"]!,
+            memberships.find((x) => x.id === this.membershipId)!.personName,
+          ),
+        ),
+    ],
+    [
+      "DELETE",
+      /^\/api\/curriculum\/lessons\/(?<id>[^/]+)\/video$/,
+      (route, p) =>
+        this.author(route, (org) =>
+          this.curriculumState.removeVideo(route, org, p["id"]!),
+        ),
+    ],
+    ["GET", /^\/api\/mentoring\/youth$/, (route) => this.mentoredYouth(route)],
+    [
+      "GET",
+      /^\/api\/mentoring\/dashboard$/,
+      (route) => this.mentorDashboard(route),
+    ],
+    [
+      "GET",
+      /^\/api\/mentoring\/reviews$/,
+      (route) =>
+        this.mentorReviews(route, (m, youth) =>
+          this.reviews.queue(route, m.organizationId, youth),
+        ),
+    ],
+    [
+      "GET",
+      /^\/api\/mentoring\/submissions\/(?<id>[^/]+)$/,
+      (route, p) =>
+        this.mentorReviews(route, (m, youth) =>
+          this.reviews.review(
+            route,
+            m.organizationId,
+            youth,
+            p["id"]!,
+            m.personName,
+          ),
+        ),
+    ],
+    [
+      "GET",
+      /^\/api\/mentoring\/submissions\/(?<id>[^/]+)\/file$/,
+      (route, p) =>
+        this.mentorReviews(route, (_m, youth) =>
+          this.reviews.file(route, youth, p["id"]!),
+        ),
+    ],
+    [
+      "GET",
+      /^\/api\/mentoring\/quiz-approvals$/,
+      (route) =>
+        this.mentorReviews(route, (m, youth) =>
+          this.reviews.quizApprovals(route, m.organizationId, youth),
+        ),
+    ],
+    [
+      "POST",
+      /^\/api\/mentoring\/quiz-approvals\/approve-all$/,
+      (route) =>
+        this.mentorReviews(route, (_m, youth) =>
+          this.afterReview(youth, this.reviews.approveAll(route, youth)),
+        ),
+    ],
+    [
+      "POST",
+      /^\/api\/mentoring\/quiz-attempts\/(?<id>[^/]+)\/approve$/,
+      (route, p) =>
+        this.mentorReviews(route, (_m, youth) =>
+          this.afterReview(
+            youth,
+            this.reviews.approveQuiz(route, youth, p["id"]!),
+          ),
+        ),
+    ],
+    [
+      "POST",
+      /^\/api\/mentoring\/submissions\/(?<id>[^/]+)\/grade$/,
+      (route, p) =>
+        this.mentorReviews(route, (m, youth) =>
+          this.afterReview(
+            youth,
+            this.reviews.grade(route, youth, p["id"]!, m.personName),
+          ),
+        ),
+    ],
+    [
+      "GET",
+      /^\/api\/mentoring\/youth\/(?<id>[^/]+)$/,
+      (route, p) => this.mentorYouthRecord(route, p["id"]!),
+    ],
+    [
+      "GET",
+      /^\/api\/mentoring\/youth\/(?<id>[^/]+)\/competencies$/,
+      (route, p) => this.mentorCompetencies(route, p["id"]!, false),
+    ],
+    [
+      "PUT",
+      /^\/api\/mentoring\/youth\/(?<id>[^/]+)\/competencies$/,
+      (route, p) => this.mentorCompetencies(route, p["id"]!, true),
+    ],
+    [
+      "GET",
+      /^\/api\/mentoring\/cohorts\/(?<id>[^/]+)$/,
+      (route, p) => this.mentorCohort(route, p["id"]!),
+    ],
+    [
+      "GET",
+      /^\/api\/programs\/(?<id>[^/]+)\/mentoring$/,
+      (route, p) => this.cohortMentoring(route, p["id"]!),
+    ],
+    [
+      "PUT",
+      /^\/api\/programs\/(?<id>[^/]+)\/mentors$/,
+      (route, p) => this.setCohortMentors(route, p["id"]!),
+    ],
+    [
+      "PUT",
+      /^\/api\/programs\/(?<id>[^/]+)\/youth\/(?<child>[^/]+)\/mentor$/,
+      (route, p) => this.assignYouthMentorRoute(route, p["id"]!, p["child"]!),
+    ],
+    [
+      "DELETE",
+      /^\/api\/programs\/(?<id>[^/]+)\/youth\/(?<child>[^/]+)\/mentor$/,
+      (route, p) => this.removeYouthMentor(route, p["id"]!, p["child"]!),
+    ],
+    [
+      "GET",
+      /^\/api\/website\/(?<slug>[^/]+)$/,
+      (route, p) => this.website(route, p["slug"]!),
+    ],
+    ["POST", /^\/api\/auth\/sign-in$/, (route) => this.signIn(route)],
+    ["POST", /^\/api\/auth\/mfa$/, (route) => this.mfa(route)],
+    ["POST", /^\/api\/auth\/sign-out$/, (route) => this.signOut(route)],
+    ["GET", /^\/api\/setup$/, (route) => this.setup(route)],
+    [
+      "POST",
+      /^\/api\/auth\/forgot-password$/,
+      (route) => this.forgotPassword(route),
+    ],
+    [
+      "GET",
+      /^\/api\/auth\/reset-password\/(?<token>[^/]+)$/,
+      (route, p) => this.checkReset(route, p["token"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/auth\/reset-password$/,
+      (route) => this.resetPassword(route),
+    ],
+    ["GET", /^\/api\/me\/account$/, (route) => this.account(route)],
+    [
+      "POST",
+      /^\/api\/me\/recovery-codes$/,
+      (route) => this.newRecoveryCodes(route),
+    ],
+    [
+      "POST",
+      /^\/api\/me\/sign-out-others$/,
+      (route) => this.signOutOthers(route),
+    ],
+    ["GET", /^\/api\/billing$/, (route) => this.billing(route)],
+    ["GET", /^\/api\/audit$/, (route) => this.auditLog(route)],
+    [
+      "GET",
+      /^\/api\/platform\/organizations$/,
+      (route) => this.platformOrganizations(route),
+    ],
+    [
+      "POST",
+      /^\/api\/platform\/organizations$/,
+      (route) => this.addOrganization(route),
+    ],
+    [
+      "POST",
+      /^\/api\/platform\/organizations\/(?<id>[^/]+)\/suspend$/,
+      (route, p) => this.suspendOrganization(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/platform\/organizations\/(?<id>[^/]+)\/reinstate$/,
+      (route, p) => this.reinstateOrganization(route, p["id"]!),
+    ],
+    ["PUT", /^\/api\/billing\/plan$/, (route) => this.changePlan(route)],
+    [
+      "GET",
+      /^\/api\/me\/organizations$/,
+      (route) => this.myOrganizations(route),
+    ],
+    [
+      "POST",
+      /^\/api\/me\/organization$/,
+      (route) => this.switchOrganization(route),
+    ],
+    [
+      "GET",
+      /^\/api\/settings\/organization$/,
+      (route) => this.getOrganizationProfile(route),
+    ],
+    [
+      "PUT",
+      /^\/api\/settings\/organization$/,
+      (route) => this.saveOrganizationProfile(route),
+    ],
+    ["GET", /^\/api\/settings\/privacy$/, (route) => this.getPrivacy(route)],
+    [
+      "GET",
+      /^\/api\/settings\/data-requests$/,
+      (route) => this.listDataRequests(route),
+    ],
+    [
+      "POST",
+      /^\/api\/settings\/data-requests\/(?<id>[^/]+)\/fulfil$/,
+      (route, p) => this.fulfilDataRequest(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/g\/home\/(?<token>[^/]+)\/data-requests$/,
+      (route, p) => this.askForData(route, p["token"]!),
+    ],
+    ["PUT", /^\/api\/settings\/privacy$/, (route) => this.savePrivacy(route)],
+    [
+      "GET",
+      /^\/api\/settings\/consent$/,
+      (route) => this.getConsentPolicy(route),
+    ],
+    [
+      "PUT",
+      /^\/api\/settings\/consent$/,
+      (route) => this.saveConsentPolicy(route),
+    ],
+    [
+      "GET",
+      /^\/api\/settings\/notifications$/,
+      (route) => this.getNotificationSettings(route),
+    ],
+    [
+      "PUT",
+      /^\/api\/settings\/notifications$/,
+      (route) => this.saveNotificationSettings(route),
+    ],
+    ["GET", /^\/api\/settings\/modules$/, (route) => this.getModules(route)],
+    ["PUT", /^\/api\/settings\/modules$/, (route) => this.saveModules(route)],
+    ["GET", /^\/api\/today$/, (route) => this.today(route)],
+    ["GET", /^\/api\/search$/, (route) => this.search(route)],
+    ["GET", /^\/api\/reports$/, (route) => this.report(route)],
+    [
+      "POST",
+      /^\/api\/events\/(?<id>[^/]+)\/survey$/,
+      (route, p) => this.sendSurvey(route, p["id"]!),
+    ],
+    [
+      "GET",
+      /^\/api\/g\/survey\/(?<token>[^/]+)$/,
+      (route, p) => this.guardianSurvey(route, p["token"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/g\/survey\/(?<token>[^/]+)$/,
+      (route, p) => this.answerSurvey(route, p["token"]!),
+    ],
+    ["POST", /^\/api\/reports\/exports$/, (route) => this.exportReport(route)],
+    [
+      "GET",
+      /^\/api\/reports\/exports\/(?<id>[^/]+)$/,
+      (route, p) => this.downloadExport(route, p["id"]!),
+    ],
+    ["GET", /^\/api\/notifications$/, (route) => this.listNotifications(route)],
+    [
+      "POST",
+      /^\/api\/notifications\/read-all$/,
+      (route) => this.readAllNotifications(route),
+    ],
+    [
+      "POST",
+      /^\/api\/notifications\/(?<id>[^/]+)\/read$/,
+      (route, p) => this.readNotification(route, p["id"]!),
+    ],
+    ["GET", /^\/api\/households$/, (route) => this.listHouseholds(route)],
+    ["POST", /^\/api\/households$/, (route) => this.createHousehold(route)],
+    [
+      "GET",
+      /^\/api\/households\/(?<id>[^/]+)$/,
+      (route, p) => this.getHousehold(route, p["id"]!),
+    ],
+    [
+      "DELETE",
+      /^\/api\/households\/(?<id>[^/]+)$/,
+      (route, p) => this.deleteHousehold(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/households\/(?<id>[^/]+)\/children$/,
+      (route, p) => this.addChild(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/households\/(?<id>[^/]+)\/guardians$/,
+      (route, p) => this.addGuardian(route, p["id"]!),
+    ],
+    [
+      "PUT",
+      /^\/api\/guardians\/(?<id>[^/]+)$/,
+      (route, p) => this.updateGuardian(route, p["id"]!),
+    ],
+    ["GET", /^\/api\/children$/, (route) => this.findChildren(route)],
+    ["GET", /^\/api\/programs$/, (route) => this.listPrograms(route)],
+    ["POST", /^\/api\/programs$/, (route) => this.saveProgram(route, null)],
+    [
+      "GET",
+      /^\/api\/programs\/(?<id>[^/]+)$/,
+      (route, p) => this.getProgram(route, p["id"]!),
+    ],
+    [
+      "PUT",
+      /^\/api\/programs\/(?<id>[^/]+)$/,
+      (route, p) => this.saveProgram(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/programs\/(?<id>[^/]+)\/archive$/,
+      (route, p) => this.archiveProgram(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/programs\/(?<id>[^/]+)\/restore$/,
+      (route, p) => this.restoreProgram(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/programs\/(?<id>[^/]+)\/enrollments$/,
+      (route, p) => this.enroll(route, p["id"]!),
+    ],
+    [
+      "DELETE",
+      /^\/api\/programs\/(?<id>[^/]+)\/enrollments\/(?<child>[^/]+)$/,
+      (route, p) => this.unenroll(route, p["id"]!, p["child"]!),
+    ],
+    ["GET", /^\/api\/events$/, (route) => this.listEvents(route)],
+    ["POST", /^\/api\/events$/, (route) => this.saveEvent(route, null)],
+    [
+      "GET",
+      /^\/api\/events\/(?<id>[^/]+)$/,
+      (route, p) => this.getEvent(route, p["id"]!),
+    ],
+    [
+      "PUT",
+      /^\/api\/events\/(?<id>[^/]+)$/,
+      (route, p) => this.saveEvent(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/events\/(?<id>[^/]+)\/cancel$/,
+      (route, p) => this.cancelEvent(route, p["id"]!),
+    ],
+    ["GET", /^\/api\/sessions\/today$/, (route) => this.todaySessions(route)],
+    [
+      "GET",
+      /^\/api\/sessions\/(?<id>[^/]+)\/roster$/,
+      (route, p) => this.sessionRoster(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/sessions\/(?<id>[^/]+)\/check-ins$/,
+      (route, p) => this.attend(route, p["id"]!, "Present"),
+    ],
+    [
+      "POST",
+      /^\/api\/sessions\/(?<id>[^/]+)\/absences$/,
+      (route, p) => this.attend(route, p["id"]!, "Absent"),
+    ],
+    [
+      "POST",
+      /^\/api\/sessions\/(?<id>[^/]+)\/walk-ins$/,
+      (route, p) => this.addWalkIn(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/sessions\/(?<id>[^/]+)\/end$/,
+      (route, p) => this.endSession(route, p["id"]!),
+    ],
+    [
+      "PUT",
+      /^\/api\/sessions\/(?<id>[^/]+)\/notes$/,
+      (route, p) => this.sessionNotes(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/sessions\/(?<id>[^/]+)\/sign-outs$/,
+      (route, p) => this.signChildOut(route, p["id"]!),
+    ],
+    [
+      "GET",
+      /^\/api\/children\/(?<id>[^/]+)\/pickups$/,
+      (route, p) => this.pickups(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/children\/(?<id>[^/]+)\/pickups$/,
+      (route, p) => this.addPickup(route, p["id"]!),
+    ],
+    ["GET", /^\/api\/staff$/, (route) => this.listStaff(route)],
+    ["GET", /^\/api\/coverage$/, (route) => this.coverage(route)],
+    [
+      "PUT",
+      /^\/api\/sessions\/(?<id>[^/]+)\/staff$/,
+      (route, p) => this.assignStaff(route, p["id"]!),
+    ],
+    [
+      "GET",
+      /^\/api\/invitations\/(?<token>[^/]+)$/,
+      (route, p) => this.getInvitation(route, p["token"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/invitations\/(?<token>[^/]+)\/accept$/,
+      (route, p) => this.acceptInvitation(route, p["token"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/invitations\/(?<token>[^/]+)\/request-new$/,
+      (route, p) => this.requestNewLink(route, p["token"]!),
+    ],
+    ["PUT", /^\/api\/me\/phone$/, (route) => this.savePhone(route)],
+    ["POST", /^\/api\/staff\/invitations$/, (route) => this.inviteStaff(route)],
+    [
+      "DELETE",
+      /^\/api\/staff\/invitations\/(?<id>[^/]+)$/,
+      (route, p) => this.withdrawInvitation(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/staff\/invitations\/(?<id>[^/]+)\/resend$/,
+      (route, p) => this.resendInvitation(route, p["id"]!),
+    ],
+    [
+      "PUT",
+      /^\/api\/staff\/(?<id>[^/]+)\/role$/,
+      (route, p) => this.changeRole(route, p["id"]!),
+    ],
+    [
+      "DELETE",
+      /^\/api\/staff\/(?<id>[^/]+)$/,
+      (route, p) => this.removeStaff(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/sessions\/(?<id>[^/]+)\/pickup-requests$/,
+      (route, p) => this.askForPickup(route, p["id"]!),
+    ],
+    [
+      "GET",
+      /^\/api\/pickup-requests\/(?<id>[^/]+)$/,
+      (route, p) => this.pickupRequest(route, p["id"]!),
+    ],
+    [
+      "PUT",
+      /^\/api\/g\/home\/(?<token>[^/]+)\/household$/,
+      (route, p) => this.guardianUpdateHousehold(route, p["token"]!),
+    ],
+    [
+      "PUT",
+      /^\/api\/g\/home\/(?<token>[^/]+)\/children\/(?<id>[^/]+)\/medical$/,
+      (route, p) => this.guardianUpdateMedical(route, p["token"]!, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/g\/home\/(?<token>[^/]+)\/pickup-requests\/(?<id>[^/]+)$/,
+      (route, p) => this.guardianDecidesPickup(route, p["token"]!, p["id"]!),
+    ],
+    [
+      "DELETE",
+      /^\/api\/children\/(?<id>[^/]+)\/pickups\/(?<pickup>[^/]+)$/,
+      (route, p) => this.removePickup(route, p["id"]!, p["pickup"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/g\/home\/(?<token>[^/]+)\/children\/(?<id>[^/]+)\/pickups$/,
+      (route, p) => this.guardianAddPickup(route, p["token"]!, p["id"]!),
+    ],
+    [
+      "DELETE",
+      /^\/api\/g\/home\/(?<token>[^/]+)\/children\/(?<id>[^/]+)\/pickups\/(?<pickup>[^/]+)$/,
+      (route, p) =>
+        this.guardianRemovePickup(route, p["token"]!, p["id"]!, p["pickup"]!),
+    ],
+    [
+      "GET",
+      /^\/api\/programs\/(?<id>[^/]+)\/enrollments$/,
+      (route, p) => this.listEnrollmentRequests(route, p["id"]!),
+    ],
+    ["GET", /^\/api\/applications$/, (route) => this.listApplications(route)],
+    [
+      "GET",
+      /^\/api\/applications\/(?<id>[^/]+)$/,
+      (route, p) => this.getApplication(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/applications\/(?<id>[^/]+)\/notes$/,
+      (route, p) => this.addApplicationNote(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/applications\/(?<id>[^/]+)\/place$/,
+      (route, p) => this.placeApplication(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/enrollments\/review$/,
+      (route) => this.reviewEnrollments(route, null),
+    ],
+    [
+      "POST",
+      /^\/api\/enrollments\/(?<id>[^/]+)\/review$/,
+      (route, p) => this.reviewEnrollments(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/programs\/(?<id>[^/]+)\/enrollment\/open$/,
+      (route, p) => this.openEnrollmentRoute(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/programs\/(?<id>[^/]+)\/enrollment\/close$/,
+      (route, p) => this.closeEnrollmentRoute(route, p["id"]!),
+    ],
+    [
+      "GET",
+      /^\/api\/g\/enroll\/(?<slug>[^/]+)$/,
+      (route, p) => this.enrollPage(route, p["slug"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/g\/enroll\/(?<slug>[^/]+)\/code$/,
+      (route, p) => this.enrollCode(route, p["slug"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/g\/enroll\/(?<slug>[^/]+)\/verify$/,
+      (route, p) => this.enrollVerify(route, p["slug"]!),
+    ],
+    [
+      "GET",
+      /^\/api\/g\/enroll\/(?<slug>[^/]+)\/draft$/,
+      (route, p) => this.enrollDraft(route, p["slug"]!),
+    ],
+    [
+      "PUT",
+      /^\/api\/g\/enroll\/(?<slug>[^/]+)\/draft$/,
+      (route, p) => this.enrollSave(route, p["slug"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/g\/enroll\/(?<slug>[^/]+)\/submit$/,
+      (route, p) => this.enrollSubmit(route, p["slug"]!),
+    ],
+    ["POST", /^\/api\/imports$/, (route) => this.uploadImport(route)],
+    [
+      "PUT",
+      /^\/api\/imports\/(?<id>[^/]+)\/mapping$/,
+      (route, p) => this.mapImport(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/imports\/(?<id>[^/]+)\/run$/,
+      (route, p) => this.runImport(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/g\/auth\/code$/,
+      (route) => this.guardianCodeRoute(route),
+    ],
+    ["POST", /^\/api\/g\/auth\/verify$/, (route) => this.guardianVerify(route)],
+    ["GET", /^\/api\/incidents$/, (route) => this.listIncidents(route)],
+    ["GET", /^\/api\/incidents\/form$/, (route) => this.incidentForm(route)],
+    [
+      "GET",
+      /^\/api\/incidents\/(?<id>[^/]+)$/,
+      (route, p) => this.getIncident(route, p["id"]!),
+    ],
+    ["POST", /^\/api\/incidents$/, (route) => this.createIncident(route)],
+    [
+      "POST",
+      /^\/api\/incidents\/(?<id>[^/]+)\/review$/,
+      (route, p) => this.reviewIncident(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/incidents\/(?<id>[^/]+)\/reopen$/,
+      (route, p) => this.reopenIncident(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/incidents\/(?<id>[^/]+)\/notes$/,
+      (route, p) => this.addIncidentNote(route, p["id"]!),
+    ],
+    [
+      "GET",
+      /^\/api\/g\/home\/(?<token>[^/]+)$/,
+      (route, p) => this.guardianHome(route, p["token"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/g\/home\/(?<token>[^/]+)\/no-show$/,
+      (route, p) => this.answerNoShow(route, p["token"]!),
+    ],
+    [
+      "GET",
+      /^\/api\/g\/slips\/(?<token>[^/]+)$/,
+      (route, p) => this.guardianSlip(route, p["token"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/g\/slips\/(?<token>[^/]+)\/sign$/,
+      (route, p) => this.guardianAnswer(route, p["token"]!, "Signed"),
+    ],
+    [
+      "POST",
+      /^\/api\/g\/slips\/(?<token>[^/]+)\/decline$/,
+      (route, p) => this.guardianAnswer(route, p["token"]!, "Declined"),
+    ],
+    [
+      "GET",
+      /^\/api\/sessions\/(?<id>[^/]+)\/clearance$/,
+      (route, p) => this.clearance(route, p["id"]!),
+    ],
+    [
+      "GET",
+      /^\/api\/slips\/(?<id>[^/]+)\/unsigned$/,
+      (route, p) => this.unsignedFamilies(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/slips\/(?<id>[^/]+)\/remind$/,
+      (route, p) => this.remindNow(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/slips\/(?<id>[^/]+)\/sign-on-tablet$/,
+      (route, p) => this.signOnTablet(route, p["id"]!),
+    ],
+    [
+      "GET",
+      /^\/api\/events\/(?<id>[^/]+)\/slip$/,
+      (route, p) => this.getSlip(route, p["id"]!),
+    ],
+    [
+      "PUT",
+      /^\/api\/events\/(?<id>[^/]+)\/slip$/,
+      (route, p) => this.saveSlip(route, p["id"]!),
+    ],
+    ["GET", /^\/api\/slips$/, (route) => this.listSlips(route)],
+    [
+      "POST",
+      /^\/api\/slips\/(?<id>[^/]+)\/send$/,
+      (route, p) => this.sendSlipRoute(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/slips\/(?<id>[^/]+)\/send-now$/,
+      (route, p) => this.slipTransition(route, p["id"]!, "send-now"),
+    ],
+    [
+      "POST",
+      /^\/api\/slips\/(?<id>[^/]+)\/cancel-send$/,
+      (route, p) => this.slipTransition(route, p["id"]!, "cancel"),
+    ],
+    [
+      "PUT",
+      /^\/api\/slips\/(?<id>[^/]+)$/,
+      (route, p) => this.editSlip(route, p["id"]!),
+    ],
+    ["GET", /^\/api\/messages$/, (route) => this.listMessages(route)],
+    [
+      "POST",
+      /^\/api\/messages\/preview$/,
+      (route) => this.previewMessage(route),
+    ],
+    ["POST", /^\/api\/messages$/, (route) => this.sendMessage(route)],
+    [
+      "GET",
+      /^\/api\/messages\/(?<id>[^/]+)$/,
+      (route, p) => this.getMessage(route, p["id"]!),
+    ],
+    ["GET", /^\/api\/messaging\/sms-cap$/, (route) => this.smsCap(route)],
+    [
+      "GET",
+      /^\/api\/children\/(?<id>[^/]+)\/quick-card$/,
+      (route, p) => this.quickCard(route, p["id"]!),
+    ],
+    [
+      "GET",
+      /^\/api\/children\/(?<id>[^/]+)\/youth-account$/,
+      (route, p) => this.youthAccount(route, p["id"]!),
+    ],
+    [
+      "GET",
+      /^\/api\/children\/(?<id>[^/]+)\/consent$/,
+      (route, p) => this.childConsent(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/children\/(?<id>[^/]+)\/consent-request$/,
+      (route, p) => this.sendConsentLink(route, p["id"]!),
+    ],
+    [
+      "GET",
+      /^\/api\/g\/consent\/(?<token>[^/]+)$/,
+      (route, p) => this.guardianConsent(route, p["token"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/g\/consent\/(?<token>[^/]+)\/sign$/,
+      (route, p) => this.giveConsentRoute(route, p["token"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/g\/consent\/(?<token>[^/]+)\/withdraw$/,
+      (route, p) => this.withdrawConsentRoute(route, p["token"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/children\/(?<id>[^/]+)\/youth-invitation$/,
+      (route, p) => this.inviteYouth(route, p["id"]!),
+    ],
+    [
+      "GET",
+      /^\/api\/children\/(?<id>[^/]+)$/,
+      (route, p) => this.getChild(route, p["id"]!),
+    ],
+    [
+      "PUT",
+      /^\/api\/children\/(?<id>[^/]+)$/,
+      (route, p) => this.updateChild(route, p["id"]!),
+    ],
+    [
+      "PUT",
+      /^\/api\/children\/(?<id>[^/]+)\/medical$/,
+      (route, p) => this.updateMedical(route, p["id"]!),
+    ],
   ];
 
   /** Staff changes in this test: roles changed, access removed and invitations sent (seeded memberships stay as they are). */
   private roleOverrides = new Map<string, string>();
-  private invitationLinks = new Map<string, { email: string; role: string; expired: boolean; accepted: boolean; withdrawn?: boolean; childId: string | null; suggestedName: string | null }>();
+  private invitationLinks = new Map<
+    string,
+    {
+      email: string;
+      role: string;
+      expired: boolean;
+      accepted: boolean;
+      withdrawn?: boolean;
+      childId: string | null;
+      suggestedName: string | null;
+    }
+  >();
   private removedMembers = new Set<string>();
-  private invitations: { id: string; organizationId: string; email: string; role: string; invitedBy: string; withdrawn: boolean; childId?: string; childName?: string; expired?: boolean; replacementRequested?: boolean }[] = [];
+  private invitations: {
+    id: string;
+    organizationId: string;
+    email: string;
+    role: string;
+    invitedBy: string;
+    withdrawn: boolean;
+    childId?: string;
+    childName?: string;
+    expired?: boolean;
+    replacementRequested?: boolean;
+  }[] = [];
   /** Expired links whose holder asked for a new one in this test (L2-054). */
   newLinkRequests: string[] = [];
   /** Emails whose invitation was resent in this test, in order. */
   resentInvitations: string[] = [];
   /** Staff asked a guardian about an adult not on the approved list. */
-  private pickupRequests: { id: string; eventId: string; childId: string; householdId: string; collector: string; status: 'Pending' | 'Approved' | 'Refused'; decidedBy: string | null }[] = [];
+  private pickupRequests: {
+    id: string;
+    eventId: string;
+    childId: string;
+    householdId: string;
+    collector: string;
+    status: "Pending" | "Approved" | "Refused";
+    decidedBy: string | null;
+  }[] = [];
   /** Approved adults besides the guardians, as added by staff or the family. */
-  private extraPickups: { id: string; childId: string; householdId: string; name: string; relationship: string; removed: boolean }[] = [];
+  private extraPickups: {
+    id: string;
+    childId: string;
+    householdId: string;
+    name: string;
+    relationship: string;
+    removed: boolean;
+  }[] = [];
   /** While true, every API call fails as if the device had no signal (the app shell stays loaded). */
   private offline = false;
   /** Children whose offline check-in arrived after another device marked them absent: "event:child". */
@@ -878,38 +2480,67 @@ export class FakeApi {
   /** An offline check-in reached the server after another device marked the child absent; present wins and the row is flagged. */
   attendanceConflict(eventId: string, childId: string): void {
     this.conflicts.add(`${eventId}:${childId}`);
-    this.sessionRecords(eventId).set(childId, { status: 'Present', checkedInAt: '2026-11-05T21:05:00Z' });
+    this.sessionRecords(eventId).set(childId, {
+      status: "Present",
+      checkedInAt: "2026-11-05T21:05:00Z",
+    });
   }
 
   /** Whether the fake recorded this child as checked in at this session (to check a synced action). */
   attendanceOf(eventId: string, childId: string): string {
-    return this.sessionRecords(eventId).get(childId)?.status ?? 'NotYet';
+    return this.sessionRecords(eventId).get(childId)?.status ?? "NotYet";
   }
 
   private async handle(route: Route): Promise<void> {
-    if (this.offline) return route.abort('internetdisconnected');
+    if (this.offline) return route.abort("internetdisconnected");
     const url = new URL(route.request().url());
     const failure = this.failures.get(url.pathname);
     if (failure) {
       // A fault answers as the API's ExceptionHandlingMiddleware does: a code and a reference to quote (L2-041).
-      return route.fulfill(failure >= 500 ? { status: failure, json: { code: 'server-error', reference: FAULT_REFERENCE } } : { status: failure });
+      return route.fulfill(
+        failure >= 500
+          ? {
+              status: failure,
+              json: { code: "server-error", reference: FAULT_REFERENCE },
+            }
+          : { status: failure },
+      );
     }
     // A removed membership continues in the person's next one, or the account is inactive (L2-002, L2-050).
     const current = memberships.find((x) => x.id === this.membershipId);
     if (current && this.removedMemberships.has(current.id)) {
-      const next = memberships.find((x) => x.email === current.email && !this.removedMemberships.has(x.id));
+      const next = memberships.find(
+        (x) => x.email === current.email && !this.removedMemberships.has(x.id),
+      );
       // Like the cookie, the session stays and every request answers the same until someone signs in again.
-      if (!next && !url.pathname.startsWith('/api/auth')) return route.fulfill({ status: 401, json: { code: 'account-deactivated' } });
+      if (!next && !url.pathname.startsWith("/api/auth"))
+        return route.fulfill({
+          status: 401,
+          json: { code: "account-deactivated" },
+        });
       if (next) this.membershipId = next.id;
     }
     // A suspended organization is closed to its staff; platform administration stays open (L2-003).
     const caller = memberships.find((x) => x.id === this.membershipId);
-    if (caller && this.suspended.has(caller.organizationId) && !url.pathname.startsWith('/api/platform') && !url.pathname.startsWith('/api/auth')) {
-      return route.fulfill({ status: 403, json: { code: 'suspended' } });
+    if (
+      caller &&
+      this.suspended.has(caller.organizationId) &&
+      !url.pathname.startsWith("/api/platform") &&
+      !url.pathname.startsWith("/api/auth")
+    ) {
+      return route.fulfill({ status: 403, json: { code: "suspended" } });
     }
-    if (caller && !can.useStaffApp(caller) && !url.pathname.startsWith('/api/website/')) {
-      const allowed = PARTICIPANT_PATHS.some((p) => p.test(url.pathname)) || (caller.role === 'Volunteer' && VOLUNTEER_PATHS.some((p) => p.test(url.pathname)));
-      if (!allowed) return route.fulfill({ status: 403, json: { code: 'forbidden' } });
+    if (
+      caller &&
+      !can.useStaffApp(caller) &&
+      !url.pathname.startsWith("/api/website/")
+    ) {
+      const allowed =
+        PARTICIPANT_PATHS.some((p) => p.test(url.pathname)) ||
+        (caller.role === "Volunteer" &&
+          VOLUNTEER_PATHS.some((p) => p.test(url.pathname)));
+      if (!allowed)
+        return route.fulfill({ status: 403, json: { code: "forbidden" } });
     }
     for (const [method, pattern, handler] of this.routes) {
       const match = pattern.exec(url.pathname);
@@ -923,7 +2554,7 @@ export class FakeApi {
   private unauthenticated(route: Route): Promise<void> {
     return route.fulfill({
       status: 401,
-      json: { code: this.expired ? 'session-expired' : 'unauthenticated' },
+      json: { code: this.expired ? "session-expired" : "unauthenticated" },
     });
   }
 
@@ -932,7 +2563,9 @@ export class FakeApi {
     if (!membership) {
       return this.unauthenticated(route);
     }
-    const organization = organizations.find((o) => o.id === membership.organizationId)!;
+    const organization = organizations.find(
+      (o) => o.id === membership.organizationId,
+    )!;
     return route.fulfill({
       json: {
         personName: membership.personName,
@@ -947,14 +2580,18 @@ export class FakeApi {
   }
 
   /** The caller when signed in, their module is on and their role holds the permission; otherwise answers 401, 404 or 403. */
-  private async participantModuleCaller(route: Route, module: ModuleId, allowed: (m: Membership) => boolean): Promise<Membership | null> {
+  private async participantModuleCaller(
+    route: Route,
+    module: ModuleId,
+    allowed: (m: Membership) => boolean,
+  ): Promise<Membership | null> {
     const m = memberships.find((x) => x.id === this.membershipId);
     if (!m) {
       await this.unauthenticated(route);
       return null;
     }
     if (!allowed(m)) {
-      await route.fulfill({ status: 403, json: { code: 'forbidden' } });
+      await route.fulfill({ status: 403, json: { code: "forbidden" } });
       return null;
     }
     if (!this.modules.get(m.organizationId)!.includes(module)) {
@@ -966,12 +2603,24 @@ export class FakeApi {
 
   /** GET /learning/me: the youth's own linked child only (L2-007 criterion 9, L2-045). */
   private async learner(route: Route): Promise<void> {
-    const m = await this.participantModuleCaller(route, 'Learning', can.learn);
+    const m = await this.participantModuleCaller(route, "Learning", can.learn);
     if (!m) return;
     const linked = this.youthLinks.get(m.id);
-    const found = linked ? this.households.flatMap((h) => h.children).find((c) => c.id === linked) : undefined;
+    const found = linked
+      ? this.households.flatMap((h) => h.children).find((c) => c.id === linked)
+      : undefined;
     return route.fulfill({
-      json: { personName: m.personName, child: found ? { id: found.id, firstName: found.firstName, lastName: found.lastName, age: ageOf(found.dateOfBirth) } : null },
+      json: {
+        personName: m.personName,
+        child: found
+          ? {
+              id: found.id,
+              firstName: found.firstName,
+              lastName: found.lastName,
+              age: ageOf(found.dateOfBirth),
+            }
+          : null,
+      },
     });
   }
 
@@ -979,18 +2628,32 @@ export class FakeApi {
    * Every youth-work endpoint (L2-068 to L2-070): refused with 403 consent-required until a guardian consents (L2-056, L2-057),
    * then no-cohort until placed (L2-060); the handler gets the programs the youth is placed in.
    */
-  private async youthWork(route: Route, handle: (m: Membership, programs: FakeProgram[]) => Promise<void>): Promise<void> {
+  private async youthWork(
+    route: Route,
+    handle: (m: Membership, programs: FakeProgram[]) => Promise<void>,
+  ): Promise<void> {
     const m = await this.consentedYouth(route);
     if (!m) return;
     const programs = this.placementsOf(m);
-    if (!programs.length) return route.fulfill({ status: 403, json: { code: 'no-cohort' } });
+    if (!programs.length)
+      return route.fulfill({ status: 403, json: { code: "no-cohort" } });
     return handle(m, programs);
   }
 
   /** GET /learning/assignments/{id}: the brief with her mentor's name. */
-  private assignmentBrief(route: Route, m: Membership, programs: FakeProgram[], id: string): Promise<void> {
+  private assignmentBrief(
+    route: Route,
+    m: Membership,
+    programs: FakeProgram[],
+    id: string,
+  ): Promise<void> {
     const place = this.learningState.assignmentPlace(m.id, programs, id);
-    return this.learningState.work.brief(route, m.id, place, place ? this.youthMentorName(m, place.trackId) : null);
+    return this.learningState.work.brief(
+      route,
+      m.id,
+      place,
+      place ? this.youthMentorName(m, place.trackId) : null,
+    );
   }
 
   /** The youth's mentor (ADR 0056): her own, else the lead mentor of a program of hers that follows the track. */
@@ -1012,16 +2675,31 @@ export class FakeApi {
   private placementsOf(m: Membership): FakeProgram[] {
     const childId = this.youthLinks.get(m.id);
     if (!childId) return [];
-    return this.programs.filter((p) => p.organizationId === m.organizationId && p.status === 'Active' && p.roster.includes(childId));
+    return this.programs.filter(
+      (p) =>
+        p.organizationId === m.organizationId &&
+        p.status === "Active" &&
+        p.roster.includes(childId),
+    );
   }
 
   /** The caller for a Learning endpoint that a youth without consent in force is refused (L2-056); null when answered already. */
   private async consentedYouth(route: Route): Promise<Membership | null> {
-    const m = await this.participantModuleCaller(route, 'Learning', can.learn);
+    const m = await this.participantModuleCaller(route, "Learning", can.learn);
     if (!m) return null;
     const childId = this.youthLinks.get(m.id);
-    if (childId && this.consentRequired(m.organizationId, childId) && this.consentStatusName(childId) !== 'Given') {
-      await route.fulfill({ status: 403, json: { code: 'consent-required', consentAge: this.consentPolicyOf(m.organizationId).consentAge } });
+    if (
+      childId &&
+      this.consentRequired(m.organizationId, childId) &&
+      this.consentStatusName(childId) !== "Given"
+    ) {
+      await route.fulfill({
+        status: 403,
+        json: {
+          code: "consent-required",
+          consentAge: this.consentPolicyOf(m.organizationId).consentAge,
+        },
+      });
       return null;
     }
     return m;
@@ -1032,7 +2710,12 @@ export class FakeApi {
     const childId = this.youthLinks.get(m.id);
     if (!childId) return undefined;
     return this.programs
-      .filter((p) => p.organizationId === m.organizationId && p.status === 'Active' && p.roster.includes(childId))
+      .filter(
+        (p) =>
+          p.organizationId === m.organizationId &&
+          p.status === "Active" &&
+          p.roster.includes(childId),
+      )
       .sort((a, b) => a.startsOn.localeCompare(b.startsOn))[0];
   }
 
@@ -1042,18 +2725,34 @@ export class FakeApi {
     if (!m) return;
     const program = this.placementOf(m);
     const childId = this.youthLinks.get(m.id);
-    const child = childId ? this.households.flatMap((h) => h.children).find((c) => c.id === childId) : undefined;
+    const child = childId
+      ? this.households.flatMap((h) => h.children).find((c) => c.id === childId)
+      : undefined;
     const saved = this.onboardings.get(m.id);
     return route.fulfill({
       json: {
-        status: saved ? (saved.completed ? 'completed' : 'in-progress') : 'not-started',
+        status: saved
+          ? saved.completed
+            ? "completed"
+            : "in-progress"
+          : "not-started",
         step: saved?.step ?? 1,
-        preferredName: saved?.preferredName ?? child?.firstName ?? m.personName.split(' ')[0],
+        preferredName:
+          saved?.preferredName ??
+          child?.firstName ??
+          m.personName.split(" ")[0],
         pronouns: saved?.pronouns ?? null,
         lessonReminders: saved?.lessonReminders ?? true,
         mentorMessages: saved?.mentorMessages ?? true,
         announcements: saved?.announcements ?? false,
-        program: program ? { name: program.name, schedule: program.schedule, startsOn: program.startsOn, endsOn: program.endsOn } : null,
+        program: program
+          ? {
+              name: program.name,
+              schedule: program.schedule,
+              startsOn: program.startsOn,
+              endsOn: program.endsOn,
+            }
+          : null,
       },
     });
   }
@@ -1062,14 +2761,24 @@ export class FakeApi {
   private async saveOnboardingStep(route: Route): Promise<void> {
     const m = await this.consentedYouth(route);
     if (!m) return;
-    const body = route.request().postDataJSON() as Omit<FakeOnboarding, 'completed'>;
-    const name = (body.preferredName ?? '').trim();
+    const body = route.request().postDataJSON() as Omit<
+      FakeOnboarding,
+      "completed"
+    >;
+    const name = (body.preferredName ?? "").trim();
     const errors: Record<string, string> = {};
-    if (!name) errors['preferredName'] = 'Tell us what to call you.';
-    else if (name.length > 60) errors['preferredName'] = 'Use 60 characters or fewer.';
-    if (body.pronouns !== null && !['she/her', 'he/him', 'they/them'].includes(body.pronouns)) errors['pronouns'] = 'Choose pronouns from the list.';
-    if (body.step < 1 || body.step > 3) errors['step'] = 'Choose a step from 1 to 3.';
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    if (!name) errors["preferredName"] = "Tell us what to call you.";
+    else if (name.length > 60)
+      errors["preferredName"] = "Use 60 characters or fewer.";
+    if (
+      body.pronouns !== null &&
+      !["she/her", "he/him", "they/them"].includes(body.pronouns)
+    )
+      errors["pronouns"] = "Choose pronouns from the list.";
+    if (body.step < 1 || body.step > 3)
+      errors["step"] = "Choose a step from 1 to 3.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
     const completed = this.onboardings.get(m.id)?.completed ?? false;
     this.onboardings.set(m.id, { ...body, preferredName: name, completed });
     return route.fulfill({ status: 204 });
@@ -1080,88 +2789,175 @@ export class FakeApi {
     const m = await this.consentedYouth(route);
     if (!m) return;
     const saved = this.onboardings.get(m.id);
-    if (!saved?.preferredName) return route.fulfill({ status: 409, json: { code: 'conflict' } });
+    if (!saved?.preferredName)
+      return route.fulfill({ status: 409, json: { code: "conflict" } });
     if (!saved.completed) {
       saved.completed = true;
-      this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'Completed', record: 'YouthOnboarding', summary: `First-run setup completed as ${saved.preferredName}`, device: null });
+      this.auditEntries.push({
+        organizationId: m.organizationId,
+        when: NOW.toISOString(),
+        who: m.personName,
+        action: "Completed",
+        record: "YouthOnboarding",
+        summary: `First-run setup completed as ${saved.preferredName}`,
+        device: null,
+      });
     }
     return route.fulfill({ status: 204 });
   }
 
   /** POST /learning/consent-request: the youth asks the guardians of their own household (L2-056 criterion 3). */
   private async askGuardian(route: Route): Promise<void> {
-    const m = await this.participantModuleCaller(route, 'Learning', can.learn);
+    const m = await this.participantModuleCaller(route, "Learning", can.learn);
     if (!m) return;
     const childId = this.youthLinks.get(m.id);
-    const household = childId ? this.households.find((h) => h.children.some((c) => c.id === childId)) : undefined;
-    if (!childId || !household) return route.fulfill({ status: 409, json: { code: 'not-needed' } });
+    const household = childId
+      ? this.households.find((h) => h.children.some((c) => c.id === childId))
+      : undefined;
+    if (!childId || !household)
+      return route.fulfill({ status: 409, json: { code: "not-needed" } });
     return this.deliverConsentLink(route, m.organizationId, household, childId);
   }
 
   /** Every /curriculum call (L2-066, L2-067): Learning on and AuthorCurriculum, then the caller's organization only. */
-  private async author(route: Route, handle: (organizationId: string) => Promise<void>): Promise<void> {
-    const m = await this.participantModuleCaller(route, 'Learning', can.authorCurriculum);
+  private async author(
+    route: Route,
+    handle: (organizationId: string) => Promise<void>,
+  ): Promise<void> {
+    const m = await this.participantModuleCaller(
+      route,
+      "Learning",
+      can.authorCurriculum,
+    );
     if (!m) return;
     return handle(m.organizationId);
   }
 
   /** The mentor's scope (L2-065, ADR 0049): cohorts on their team that are not archived, and their youth, direct or through those cohorts. */
-  private mentorScope(m: Membership): { cohorts: { program: FakeProgram; isLead: boolean }[]; youth: FakeChild[] } {
+  private mentorScope(m: Membership): {
+    cohorts: { program: FakeProgram; isLead: boolean }[];
+    youth: FakeChild[];
+  } {
     const cohorts = this.programs
-      .filter((p) => p.organizationId === m.organizationId && p.status === 'Active')
+      .filter(
+        (p) => p.organizationId === m.organizationId && p.status === "Active",
+      )
       .map((program) => ({ program, team: this.cohortMentors.get(program.id) }))
-      .filter((x) => x.team && (x.team.lead === m.id || x.team.supporting.includes(m.id)))
+      .filter(
+        (x) =>
+          x.team && (x.team.lead === m.id || x.team.supporting.includes(m.id)),
+      )
       .map((x) => ({ program: x.program, isLead: x.team!.lead === m.id }));
-    const ids = new Set([...this.youthMentors].filter(([, mentor]) => mentor === m.id).map(([child]) => child));
+    const ids = new Set(
+      [...this.youthMentors]
+        .filter(([, mentor]) => mentor === m.id)
+        .map(([child]) => child),
+    );
     cohorts.forEach((c) => c.program.roster.forEach((id) => ids.add(id)));
     const youth = this.households
       .filter((h) => h.organizationId === m.organizationId)
       .flatMap((h) => h.children)
       .filter((c) => ids.has(c.id))
-      .sort((a, b) => `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`));
+      .sort((a, b) =>
+        `${a.firstName} ${a.lastName}`.localeCompare(
+          `${b.firstName} ${b.lastName}`,
+        ),
+      );
     return { cohorts, youth };
   }
 
-  private mentoredYouthRow(c: FakeChild): { id: string; name: string; age: number | null; programs: string[] } {
-    const programs = this.programs.filter((p) => p.status === 'Active' && p.roster.includes(c.id)).map((p) => p.name).sort();
-    return { id: c.id, name: `${c.firstName} ${c.lastName}`, age: ageOf(c.dateOfBirth), programs };
+  private mentoredYouthRow(c: FakeChild): {
+    id: string;
+    name: string;
+    age: number | null;
+    programs: string[];
+  } {
+    const programs = this.programs
+      .filter((p) => p.status === "Active" && p.roster.includes(c.id))
+      .map((p) => p.name)
+      .sort();
+    return {
+      id: c.id,
+      name: `${c.firstName} ${c.lastName}`,
+      age: ageOf(c.dateOfBirth),
+      programs,
+    };
   }
 
   /** GET /mentoring/youth: every youth in the mentor's scope with age and programs (L2-062 criterion 5, L2-063 criterion 4). */
   private async mentoredYouth(route: Route): Promise<void> {
-    const m = await this.participantModuleCaller(route, 'Mentoring', can.mentorYouth);
+    const m = await this.participantModuleCaller(
+      route,
+      "Mentoring",
+      can.mentorYouth,
+    );
     if (!m) return;
-    return route.fulfill({ json: { youth: this.mentorScope(m).youth.map((c) => this.mentoredYouthRow(c)) } });
+    return route.fulfill({
+      json: {
+        youth: this.mentorScope(m).youth.map((c) => this.mentoredYouthRow(c)),
+      },
+    });
   }
 
   /** The mentor's reviews (L2-080, L2-081, ADR 0057). */
-  readonly reviews = new FakeReviews(this.curriculumState, this.learningState.work, this.learningState.quizzes);
+  readonly reviews = new FakeReviews(
+    this.curriculumState,
+    this.learningState.work,
+    this.learningState.quizzes,
+  );
+
+  /** A youth's journey, badges and progress (L2-087, L2-088), read from the other fakes. */
+  readonly journey = new FakeJourney(
+    this.learningState,
+    this.progression,
+    this.reviews,
+  );
 
   /** Every review endpoint: Mentoring and Learning on and MentorYouth, then his youth accounts. */
   /** After a youth's learning event: her automatic badges are checked (L2-085), as BadgeAwarder does. */
-  private async afterLearning(m: Membership, handled: Promise<void>): Promise<void> {
+  private async afterLearning(
+    m: Membership,
+    handled: Promise<void>,
+  ): Promise<void> {
     await handled;
     this.awardBadges(m.organizationId, m.id);
   }
 
   /** After a mentor's approval or grade: the badges of each of his youth are checked (L2-085). */
-  private async afterReview(youth: YouthAccounts, handled: Promise<void>): Promise<void> {
+  private async afterReview(
+    youth: YouthAccounts,
+    handled: Promise<void>,
+  ): Promise<void> {
     await handled;
-    for (const id of youth.keys()) this.awardBadges(memberships.find((x) => x.id === id)!.organizationId, id);
+    for (const id of youth.keys())
+      this.awardBadges(
+        memberships.find((x) => x.id === id)!.organizationId,
+        id,
+      );
   }
 
   /** POST /curriculum/badges/{id}/awards (L2-085 criterion 4): the youth is told who awarded it. */
-  private async awardBadgeByHand(route: Route, org: string, id: string): Promise<void> {
+  private async awardBadgeByHand(
+    route: Route,
+    org: string,
+    id: string,
+  ): Promise<void> {
     const by = memberships.find((x) => x.id === this.membershipId)!.personName;
-    const awarded = await this.badges.award(route, org, id, by, NOW.toISOString());
+    const awarded = await this.badges.award(
+      route,
+      org,
+      id,
+      by,
+      NOW.toISOString(),
+    );
     if (!awarded) return;
     this.notifications.push({
       id: `n-${this.nextId++}`,
       organizationId: org,
       membershipId: awarded.membershipId,
-      kind: 'learning',
+      kind: "learning",
       text: `${by} awarded you the ${awarded.badge} badge.`,
-      link: '/learning',
+      link: "/learning",
       createdAt: new Date(NOW.getTime() + this.nextId * 1000).toISOString(),
       readAt: null,
     });
@@ -1175,10 +2971,12 @@ export class FakeApi {
       {
         lessonDone: (id) => l.isDone(membershipId, id),
         quizPassed: (id) => {
-          const quiz = this.curriculumState.assessments.quizzes.find((q) => q.id === id);
+          const quiz = this.curriculumState.assessments.quizzes.find(
+            (q) => q.id === id,
+          );
           return !!quiz && l.quizzes.passed(membershipId, quiz);
         },
-        accepted: (id) => l.work.mine(membershipId, id)?.status === 'Accepted',
+        accepted: (id) => l.work.mine(membershipId, id)?.status === "Accepted",
       },
       NOW.toISOString(),
     );
@@ -1187,159 +2985,364 @@ export class FakeApi {
         id: `n-${this.nextId++}`,
         organizationId: org,
         membershipId,
-        kind: 'learning',
+        kind: "learning",
         text: `You earned the ${name} badge.`,
-        link: '/learning',
+        link: "/learning",
         createdAt: new Date(NOW.getTime() + this.nextId * 1000).toISOString(),
         readAt: null,
       });
     }
   }
 
-  private async mentorReviews(route: Route, then: (m: Membership, youth: YouthAccounts) => Promise<void>): Promise<void> {
-    const m = await this.participantModuleCaller(route, 'Mentoring', can.mentorYouth);
+  private async mentorReviews(
+    route: Route,
+    then: (m: Membership, youth: YouthAccounts) => Promise<void>,
+  ): Promise<void> {
+    const m = await this.participantModuleCaller(
+      route,
+      "Mentoring",
+      can.mentorYouth,
+    );
     if (!m) return;
-    if (!this.modules.get(m.organizationId)!.includes('Learning')) return route.fulfill({ status: 404 });
+    if (!this.modules.get(m.organizationId)!.includes("Learning"))
+      return route.fulfill({ status: 404 });
     const children = new Set(this.mentorScope(m).youth.map((c) => c.id));
     const youth: YouthAccounts = new Map(
       [...this.youthLinks]
-        .filter(([id, child]) => children.has(child) && !this.removedMembers.has(id))
-        .map(([id]) => [id, memberships.find((x) => x.id === id)!.personName] as [string, string])
-        .filter(([id]) => memberships.some((x) => x.id === id && x.organizationId === m.organizationId)),
+        .filter(
+          ([id, child]) => children.has(child) && !this.removedMembers.has(id),
+        )
+        .map(
+          ([id]) =>
+            [id, memberships.find((x) => x.id === id)!.personName] as [
+              string,
+              string,
+            ],
+        )
+        .filter(([id]) =>
+          memberships.some(
+            (x) => x.id === id && x.organizationId === m.organizationId,
+          ),
+        ),
     );
     return then(m, youth);
   }
 
   /** GET /mentoring/dashboard (L2-063): youth, cohorts and, while Roll Call is on, attendance of the last 7 and 14 days. */
   private async mentorDashboard(route: Route): Promise<void> {
-    const m = await this.participantModuleCaller(route, 'Mentoring', can.mentorYouth);
+    const m = await this.participantModuleCaller(
+      route,
+      "Mentoring",
+      can.mentorYouth,
+    );
     if (!m) return;
     const scope = this.mentorScope(m);
     const youth = scope.youth.map((c) => this.mentoredYouthRow(c));
     const cohorts = scope.cohorts
-      .map(({ program, isLead }) => ({ programId: program.id, name: program.name, term: program.term, role: isLead ? 'Lead' : 'Supporting', youthCount: program.roster.length }))
+      .map(({ program, isLead }) => ({
+        programId: program.id,
+        name: program.name,
+        term: program.term,
+        role: isLead ? "Lead" : "Supporting",
+        youthCount: program.roster.length,
+      }))
       .sort((a, b) => a.name.localeCompare(b.name));
-    if (!this.modules.get(m.organizationId)!.includes('RollCall')) {
-      return route.fulfill({ json: { youth, cohorts, checkedInThisWeek: null, recentActivity: null } });
+    if (!this.modules.get(m.organizationId)!.includes("RollCall")) {
+      return route.fulfill({
+        json: { youth, cohorts, checkedInThisWeek: null, recentActivity: null },
+      });
     }
     const now = NOW.getTime();
-    const changes = this.mentorAttendance(m, scope.youth.map((c) => c.id)).filter((a) => now - Date.parse(a.startsAt) <= 14 * 86400000);
-    const week = new Set(changes.filter((a) => a.kind !== 'Absent' && now - Date.parse(a.startsAt) <= 7 * 86400000).map((a) => a.childId));
+    const changes = this.mentorAttendance(
+      m,
+      scope.youth.map((c) => c.id),
+    ).filter((a) => now - Date.parse(a.startsAt) <= 14 * 86400000);
+    const week = new Set(
+      changes
+        .filter(
+          (a) =>
+            a.kind !== "Absent" && now - Date.parse(a.startsAt) <= 7 * 86400000,
+        )
+        .map((a) => a.childId),
+    );
     const recentActivity = changes
-      .map(({ childId, youthName, kind, session, at }) => ({ childId, youthName, kind, session, at }))
+      .map(({ childId, youthName, kind, session, at }) => ({
+        childId,
+        youthName,
+        kind,
+        session,
+        at,
+      }))
       .sort((a, b) => b.at.localeCompare(a.at))
       .slice(0, 5);
-    return route.fulfill({ json: { youth, cohorts, checkedInThisWeek: week.size, recentActivity } });
+    return route.fulfill({
+      json: { youth, cohorts, checkedInThisWeek: week.size, recentActivity },
+    });
   }
 
   /** Attendance of these children at sessions of the mentor's organization that have started, as activity rows. */
-  private mentorAttendance(m: Membership, childIds: string[]): { childId: string; youthName: string; kind: string; session: string; at: string; startsAt: string; status: string }[] {
+  private mentorAttendance(
+    m: Membership,
+    childIds: string[],
+  ): {
+    childId: string;
+    youthName: string;
+    kind: string;
+    session: string;
+    at: string;
+    startsAt: string;
+    status: string;
+  }[] {
     const children = this.households.flatMap((h) => h.children);
     return this.events
-      .filter((e) => e.organizationId === m.organizationId && Date.parse(e.startsAt) <= NOW.getTime())
+      .filter(
+        (e) =>
+          e.organizationId === m.organizationId &&
+          Date.parse(e.startsAt) <= NOW.getTime(),
+      )
       .flatMap((e) =>
         [...this.sessionRecords(e.id)]
-          .filter(([id, r]) => childIds.includes(id) && r.status !== 'NotYet')
+          .filter(([id, r]) => childIds.includes(id) && r.status !== "NotYet")
           .map(([id, r]) => {
             const c = children.find((x) => x.id === id)!;
-            const kind = r.status === 'SignedOut' ? 'SignedOut' : r.status === 'Absent' ? 'Absent' : 'CheckedIn';
-            const at = kind === 'SignedOut' ? (r.signedOutAt ?? e.startsAt) : kind === 'Absent' ? e.startsAt : (r.checkedInAt ?? e.startsAt);
-            return { childId: id, youthName: `${c.firstName} ${c.lastName}`, kind, session: e.name, at, startsAt: e.startsAt, status: r.status };
+            const kind =
+              r.status === "SignedOut"
+                ? "SignedOut"
+                : r.status === "Absent"
+                  ? "Absent"
+                  : "CheckedIn";
+            const at =
+              kind === "SignedOut"
+                ? (r.signedOutAt ?? e.startsAt)
+                : kind === "Absent"
+                  ? e.startsAt
+                  : (r.checkedInAt ?? e.startsAt);
+            return {
+              childId: id,
+              youthName: `${c.firstName} ${c.lastName}`,
+              kind,
+              session: e.name,
+              at,
+              startsAt: e.startsAt,
+              status: r.status,
+            };
           }),
       );
   }
 
   /** GET /mentoring/youth/{childId} (L2-064): the mentor-safe record; 404 outside the organization, 403 (audited) outside the scope. */
-  private async mentorYouthRecord(route: Route, childId: string): Promise<void> {
-    const m = await this.participantModuleCaller(route, 'Mentoring', can.mentorYouth);
+  private async mentorYouthRecord(
+    route: Route,
+    childId: string,
+  ): Promise<void> {
+    const m = await this.participantModuleCaller(
+      route,
+      "Mentoring",
+      can.mentorYouth,
+    );
     if (!m) return;
-    const household = this.households.find((h) => h.organizationId === m.organizationId && h.children.some((c) => c.id === childId));
+    const household = this.households.find(
+      (h) =>
+        h.organizationId === m.organizationId &&
+        h.children.some((c) => c.id === childId),
+    );
     if (!household) return route.fulfill({ status: 404 });
     const scope = this.mentorScope(m);
     const child = household.children.find((c) => c.id === childId)!;
     if (!scope.youth.some((c) => c.id === childId)) {
-      this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'AccessDenied', record: 'Child', summary: 'Mentor record outside the mentor’s youth', device: null });
-      return route.fulfill({ status: 403, json: { code: 'forbidden' } });
+      this.auditEntries.push({
+        organizationId: m.organizationId,
+        when: NOW.toISOString(),
+        who: m.personName,
+        action: "AccessDenied",
+        record: "Child",
+        summary: "Mentor record outside the mentor’s youth",
+        device: null,
+      });
+      return route.fulfill({ status: 403, json: { code: "forbidden" } });
     }
     const mentorId = this.youthMentors.get(childId);
-    const mentor = mentorId ? this.activeMentors(m.organizationId).find((x) => x.id === mentorId)?.name ?? null : null;
-    const youthAccount = [...this.youthLinks].find(([, c]) => c === childId)?.[0];
+    const mentor = mentorId
+      ? (this.activeMentors(m.organizationId).find((x) => x.id === mentorId)
+          ?.name ?? null)
+      : null;
+    const youthAccount = [...this.youthLinks].find(
+      ([, c]) => c === childId,
+    )?.[0];
     const setup = youthAccount ? this.onboardings.get(youthAccount) : undefined;
     const done = setup?.completed ? setup : null;
     const guardians = [...household.guardians]
-      .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.name.localeCompare(b.name))
-      .map((g) => ({ name: g.name, relationship: g.relationship, mobile: g.mobile, email: g.email, isPrimary: g.isPrimary }));
-    const recentAttendance = this.modules.get(m.organizationId)!.includes('RollCall')
+      .sort(
+        (a, b) =>
+          Number(b.isPrimary) - Number(a.isPrimary) ||
+          a.name.localeCompare(b.name),
+      )
+      .map((g) => ({
+        name: g.name,
+        relationship: g.relationship,
+        mobile: g.mobile,
+        email: g.email,
+        isPrimary: g.isPrimary,
+      }));
+    const recentAttendance = this.modules
+      .get(m.organizationId)!
+      .includes("RollCall")
       ? this.mentorAttendance(m, [childId])
           .map((a) => ({ session: a.session, at: a.at, status: a.kind }))
           .sort((a, b) => b.at.localeCompare(a.at))
           .slice(0, 10)
       : null;
-    this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'Viewed', record: 'Child', summary: `${child.firstName} ${child.lastName} · mentor record`, device: null });
+    this.auditEntries.push({
+      organizationId: m.organizationId,
+      when: NOW.toISOString(),
+      who: m.personName,
+      action: "Viewed",
+      record: "Child",
+      summary: `${child.firstName} ${child.lastName} · mentor record`,
+      device: null,
+    });
     const row = this.mentoredYouthRow(child);
     return route.fulfill({
-      json: { id: child.id, name: row.name, preferredName: done?.preferredName ?? null, pronouns: done?.pronouns ?? null, age: row.age, school: child.school, programs: row.programs, mentor, guardians, recentAttendance },
+      json: {
+        id: child.id,
+        name: row.name,
+        preferredName: done?.preferredName ?? null,
+        pronouns: done?.pronouns ?? null,
+        age: row.age,
+        school: child.school,
+        programs: row.programs,
+        mentor,
+        guardians,
+        recentAttendance,
+      },
     });
   }
 
   /** GET and PUT /mentoring/youth/{childId}/competencies (L2-082): Mentoring on; 404 outside the organization, 403 (audited) outside the scope. */
-  private async mentorCompetencies(route: Route, childId: string, save: boolean): Promise<void> {
-    const m = await this.participantModuleCaller(route, 'Mentoring', can.mentorYouth);
+  private async mentorCompetencies(
+    route: Route,
+    childId: string,
+    save: boolean,
+  ): Promise<void> {
+    const m = await this.participantModuleCaller(
+      route,
+      "Mentoring",
+      can.mentorYouth,
+    );
     if (!m) return;
-    const child = this.households.filter((h) => h.organizationId === m.organizationId).flatMap((h) => h.children).find((c) => c.id === childId);
+    const child = this.households
+      .filter((h) => h.organizationId === m.organizationId)
+      .flatMap((h) => h.children)
+      .find((c) => c.id === childId);
     if (!child) return route.fulfill({ status: 404 });
     if (!this.mentorScope(m).youth.some((c) => c.id === childId)) {
-      this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'AccessDenied', record: 'Child', summary: 'Competencies outside the mentor’s youth', device: null });
-      return route.fulfill({ status: 403, json: { code: 'forbidden' } });
+      this.auditEntries.push({
+        organizationId: m.organizationId,
+        when: NOW.toISOString(),
+        who: m.personName,
+        action: "AccessDenied",
+        record: "Child",
+        summary: "Competencies outside the mentor’s youth",
+        device: null,
+      });
+      return route.fulfill({ status: 403, json: { code: "forbidden" } });
     }
     const name = `${child.firstName} ${child.lastName}`;
     return save
-      ? this.reviews.saveCompetencies(route, m.organizationId, childId, name, m.personName, NOW.toISOString())
+      ? this.reviews.saveCompetencies(
+          route,
+          m.organizationId,
+          childId,
+          name,
+          m.personName,
+          NOW.toISOString(),
+        )
       : this.reviews.competencySheet(route, m.organizationId, childId, name);
   }
 
   /** GET /mentoring/cohorts/{programId} (L2-065): a cohort on the mentor's team; 404 outside the organization, 403 (audited) otherwise. */
   private async mentorCohort(route: Route, programId: string): Promise<void> {
-    const m = await this.participantModuleCaller(route, 'Mentoring', can.mentorYouth);
+    const m = await this.participantModuleCaller(
+      route,
+      "Mentoring",
+      can.mentorYouth,
+    );
     if (!m) return;
-    const program = this.programs.find((p) => p.id === programId && p.organizationId === m.organizationId);
+    const program = this.programs.find(
+      (p) => p.id === programId && p.organizationId === m.organizationId,
+    );
     if (!program) return route.fulfill({ status: 404 });
-    const mine = this.mentorScope(m).cohorts.find((c) => c.program.id === programId);
+    const mine = this.mentorScope(m).cohorts.find(
+      (c) => c.program.id === programId,
+    );
     if (!mine) {
-      this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'AccessDenied', record: 'Program', summary: `${program.name} · not on the mentor’s team`, device: null });
-      return route.fulfill({ status: 403, json: { code: 'forbidden' } });
+      this.auditEntries.push({
+        organizationId: m.organizationId,
+        when: NOW.toISOString(),
+        who: m.personName,
+        action: "AccessDenied",
+        record: "Program",
+        summary: `${program.name} · not on the mentor’s team`,
+        device: null,
+      });
+      return route.fulfill({ status: 403, json: { code: "forbidden" } });
     }
     const mentors = this.activeMentors(m.organizationId);
-    const nameOf = (id: string | undefined) => mentors.find((x) => x.id === id)?.name ?? null;
+    const nameOf = (id: string | undefined) =>
+      mentors.find((x) => x.id === id)?.name ?? null;
     const team = this.cohortMentors.get(programId)!;
     const children = this.households.flatMap((h) => h.children);
     const members = program.roster
       .map((id) => children.find((c) => c.id === id)!)
-      .sort((a, b) => `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`))
-      .map((c) => ({ id: c.id, name: `${c.firstName} ${c.lastName}`, age: ageOf(c.dateOfBirth), mentor: nameOf(this.youthMentors.get(c.id)) }));
+      .sort((a, b) =>
+        `${a.firstName} ${a.lastName}`.localeCompare(
+          `${b.firstName} ${b.lastName}`,
+        ),
+      )
+      .map((c) => ({
+        id: c.id,
+        name: `${c.firstName} ${c.lastName}`,
+        age: ageOf(c.dateOfBirth),
+        mentor: nameOf(this.youthMentors.get(c.id)),
+      }));
     return route.fulfill({
       json: {
         programId,
         name: program.name,
         term: program.term,
         schedule: program.schedule,
-        role: mine.isLead ? 'Lead' : 'Supporting',
+        role: mine.isLead ? "Lead" : "Supporting",
         lead: nameOf(team.lead),
-        supporting: team.supporting.map((id) => nameOf(id)).filter((n): n is string => !!n).sort(),
+        supporting: team.supporting
+          .map((id) => nameOf(id))
+          .filter((n): n is string => !!n)
+          .sort(),
         members,
       },
     });
   }
 
   /** Records a child's attendance at a session, as Roll Call would. */
-  recordAttendance(eventId: string, childId: string, status: 'Present' | 'Absent' | 'SignedOut', at: string | null): void {
-    this.sessionRecords(eventId).set(childId, { status, checkedInAt: status === 'Absent' ? null : at, signedOutAt: status === 'SignedOut' ? at : null });
+  recordAttendance(
+    eventId: string,
+    childId: string,
+    status: "Present" | "Absent" | "SignedOut",
+    at: string | null,
+  ): void {
+    this.sessionRecords(eventId).set(childId, {
+      status,
+      checkedInAt: status === "Absent" ? null : at,
+      signedOutAt: status === "SignedOut" ? at : null,
+    });
   }
 
   /** Each child's one mentor (L2-062): child id to mentor membership id. */
   private youthMentors = new Map<string, string>();
   /** Each cohort's mentor team: program id to its lead and supporting mentors. */
-  private cohortMentors = new Map<string, { lead: string; supporting: string[] }>();
+  private cohortMentors = new Map<
+    string,
+    { lead: string; supporting: string[] }
+  >();
 
   /** Assigns a mentor to a child, as a program director would from a cohort's roster. */
   assignYouthMentor(childId: string, mentorId: string): void {
@@ -1347,19 +3350,34 @@ export class FakeApi {
   }
 
   /** Sets a cohort's mentor team, as a program director would. */
-  setCohortTeam(programId: string, lead: string, supporting: string[] = []): void {
+  setCohortTeam(
+    programId: string,
+    lead: string,
+    supporting: string[] = [],
+  ): void {
     this.cohortMentors.set(programId, { lead, supporting });
   }
 
-  private activeMentors(organizationId: string): { id: string; name: string }[] {
+  private activeMentors(
+    organizationId: string,
+  ): { id: string; name: string }[] {
     return memberships
-      .filter((x) => x.organizationId === organizationId && x.role === 'Mentor' && !this.removedMemberships.has(x.id))
+      .filter(
+        (x) =>
+          x.organizationId === organizationId &&
+          x.role === "Mentor" &&
+          !this.removedMemberships.has(x.id),
+      )
       .map((x) => ({ id: x.id, name: x.personName }))
       .sort((a, b) => a.name.localeCompare(b.name));
   }
 
   /** The caller and the cohort for a mentor assignment endpoint: Roster and Mentoring on, the caller's own program (L2-062 criteria 7, 8). */
-  private async mentoringCohort(route: Route, programId: string, write: boolean): Promise<{ m: Membership; p: FakeProgram } | null> {
+  private async mentoringCohort(
+    route: Route,
+    programId: string,
+    write: boolean,
+  ): Promise<{ m: Membership; p: FakeProgram } | null> {
     const m = await this.rosterCaller(route);
     if (!m) return null;
     if (write && !can.managePrograms(m)) {
@@ -1367,83 +3385,138 @@ export class FakeApi {
       return null;
     }
     const p = this.ownProgram(m, programId);
-    if (!this.modules.get(m.organizationId)!.includes('Mentoring') || !p) {
+    if (!this.modules.get(m.organizationId)!.includes("Mentoring") || !p) {
       await route.fulfill({ status: 404 });
       return null;
     }
     return { m, p };
   }
 
-  private async cohortMentoring(route: Route, programId: string): Promise<void> {
+  private async cohortMentoring(
+    route: Route,
+    programId: string,
+  ): Promise<void> {
     const found = await this.mentoringCohort(route, programId, false);
     if (!found) return;
     const { m, p } = found;
     const mentors = this.activeMentors(m.organizationId);
-    const byId = (id: string | undefined) => mentors.find((x) => x.id === id) ?? null;
+    const byId = (id: string | undefined) =>
+      mentors.find((x) => x.id === id) ?? null;
     const team = this.cohortMentors.get(p.id);
     const children = this.childrenOf(m);
     const youth = p.roster
       .map((cid) => children.find((x) => x.child.id === cid))
       .filter((x) => !!x)
-      .sort((a, b) => a!.child.lastName.localeCompare(b!.child.lastName) || a!.child.firstName.localeCompare(b!.child.firstName))
-      .map((x) => ({ childId: x!.child.id, name: `${x!.child.firstName} ${x!.child.lastName}`, mentor: byId(this.youthMentors.get(x!.child.id)) }));
+      .sort(
+        (a, b) =>
+          a!.child.lastName.localeCompare(b!.child.lastName) ||
+          a!.child.firstName.localeCompare(b!.child.firstName),
+      )
+      .map((x) => ({
+        childId: x!.child.id,
+        name: `${x!.child.firstName} ${x!.child.lastName}`,
+        mentor: byId(this.youthMentors.get(x!.child.id)),
+      }));
     return route.fulfill({
       json: {
         programId: p.id,
         lead: byId(team?.lead),
-        supporting: (team?.supporting ?? []).map(byId).filter((x) => !!x).sort((a, b) => a!.name.localeCompare(b!.name)),
+        supporting: (team?.supporting ?? [])
+          .map(byId)
+          .filter((x) => !!x)
+          .sort((a, b) => a!.name.localeCompare(b!.name)),
         youth,
         mentors,
       },
     });
   }
 
-  private async assignYouthMentorRoute(route: Route, programId: string, childId: string): Promise<void> {
+  private async assignYouthMentorRoute(
+    route: Route,
+    programId: string,
+    childId: string,
+  ): Promise<void> {
     const found = await this.mentoringCohort(route, programId, true);
     if (!found) return;
     const { m, p } = found;
     if (!p.roster.includes(childId)) return route.fulfill({ status: 404 });
-    const { mentorId } = route.request().postDataJSON() as { mentorId: string | null };
-    const invalid = (message: string) => route.fulfill({ status: 422, json: { errors: { mentorId: message } } });
-    if (p.status === 'Archived') return invalid(`${p.name} is archived.`);
-    if (!mentorId) return invalid('Choose a mentor.');
-    if (!this.activeMentors(m.organizationId).some((x) => x.id === mentorId)) return invalid('Choose an active mentor.');
+    const { mentorId } = route.request().postDataJSON() as {
+      mentorId: string | null;
+    };
+    const invalid = (message: string) =>
+      route.fulfill({ status: 422, json: { errors: { mentorId: message } } });
+    if (p.status === "Archived") return invalid(`${p.name} is archived.`);
+    if (!mentorId) return invalid("Choose a mentor.");
+    if (!this.activeMentors(m.organizationId).some((x) => x.id === mentorId))
+      return invalid("Choose an active mentor.");
     this.youthMentors.set(childId, mentorId);
     return route.fulfill({ status: 204 });
   }
 
-  private async removeYouthMentor(route: Route, programId: string, childId: string): Promise<void> {
+  private async removeYouthMentor(
+    route: Route,
+    programId: string,
+    childId: string,
+  ): Promise<void> {
     const found = await this.mentoringCohort(route, programId, true);
     if (!found) return;
-    if (!found.p.roster.includes(childId)) return route.fulfill({ status: 404 });
-    if (found.p.status === 'Archived') return route.fulfill({ status: 422, json: { errors: { mentorId: `${found.p.name} is archived.` } } });
+    if (!found.p.roster.includes(childId))
+      return route.fulfill({ status: 404 });
+    if (found.p.status === "Archived")
+      return route.fulfill({
+        status: 422,
+        json: { errors: { mentorId: `${found.p.name} is archived.` } },
+      });
     this.youthMentors.delete(childId);
     return route.fulfill({ status: 204 });
   }
 
-  private async setCohortMentors(route: Route, programId: string): Promise<void> {
+  private async setCohortMentors(
+    route: Route,
+    programId: string,
+  ): Promise<void> {
     const found = await this.mentoringCohort(route, programId, true);
     if (!found) return;
     const { m, p } = found;
-    const b = route.request().postDataJSON() as { leadMentorId: string | null; supportingMentorIds: string[] };
+    const b = route.request().postDataJSON() as {
+      leadMentorId: string | null;
+      supportingMentorIds: string[];
+    };
     const supporting = [...new Set(b.supportingMentorIds ?? [])];
     const errors: Record<string, string> = {};
-    if (p.status === 'Archived') errors['leadMentorId'] = `${p.name} is archived.`;
-    else if (!b.leadMentorId) errors['leadMentorId'] = 'Choose a lead mentor.';
-    else if (supporting.includes(b.leadMentorId)) errors['supportingMentorIds'] = 'The lead mentor can’t also be a supporting mentor.';
-    else if (![b.leadMentorId, ...supporting].every((id) => this.activeMentors(m.organizationId).some((x) => x.id === id))) errors['leadMentorId'] = 'Choose active mentors.';
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    if (p.status === "Archived")
+      errors["leadMentorId"] = `${p.name} is archived.`;
+    else if (!b.leadMentorId) errors["leadMentorId"] = "Choose a lead mentor.";
+    else if (supporting.includes(b.leadMentorId))
+      errors["supportingMentorIds"] =
+        "The lead mentor can’t also be a supporting mentor.";
+    else if (
+      ![b.leadMentorId, ...supporting].every((id) =>
+        this.activeMentors(m.organizationId).some((x) => x.id === id),
+      )
+    )
+      errors["leadMentorId"] = "Choose active mentors.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
     this.cohortMentors.set(p.id, { lead: b.leadMentorId!, supporting });
     return route.fulfill({ status: 204 });
   }
 
   /** GET /website/{slug}: anonymous; unknown, suspended and module-off all answer 404 (L2-005 criterion 7). */
   private async website(route: Route, slug: string): Promise<void> {
-    const organization = organizations.find((o) => o.slug === slug.toLowerCase());
-    if (!organization || this.suspended.has(organization.id) || !this.modules.get(organization.id)!.includes('PublicWebsite')) {
+    const organization = organizations.find(
+      (o) => o.slug === slug.toLowerCase(),
+    );
+    if (
+      !organization ||
+      this.suspended.has(organization.id) ||
+      !this.modules.get(organization.id)!.includes("PublicWebsite")
+    ) {
       return route.fulfill({ status: 404 });
     }
-    return route.fulfill({ json: { name: organization.name, city: organization.city } });
+    return route.fulfill({
+      json: { name: organization.name, city: organization.city },
+    });
   }
 
   /** Five consecutive failures for this email, as if they had just been made (L2-047). */
@@ -1458,7 +3531,15 @@ export class FakeApi {
       this.signInFailures.set(email, failures);
       if (failures !== 5) continue;
       for (const m of memberships.filter((x) => x.email === email)) {
-        this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'SignInLocked', record: 'StaffUser', summary: 'Sign-in locked after 5 failed attempts', device: null });
+        this.auditEntries.push({
+          organizationId: m.organizationId,
+          when: NOW.toISOString(),
+          who: m.personName,
+          action: "SignInLocked",
+          record: "StaffUser",
+          summary: "Sign-in locked after 5 failed attempts",
+          device: null,
+        });
       }
     }
   }
@@ -1468,43 +3549,59 @@ export class FakeApi {
   }
 
   private async signIn(route: Route): Promise<void> {
-    const { email, password } = route.request().postDataJSON() as { email: string; password: string };
+    const { email, password } = route.request().postDataJSON() as {
+      email: string;
+      password: string;
+    };
     const key = email.trim().toLowerCase();
     if ((this.signInFailures.get(key) ?? 0) >= 5) {
-      return route.fulfill({ status: 423, json: { code: 'locked', lockedUntil: '2026-11-05T21:27:00Z' } });
+      return route.fulfill({
+        status: 423,
+        json: { code: "locked", lockedUntil: "2026-11-05T21:27:00Z" },
+      });
     }
     const membership = memberships
       .filter((m) => m.email === key && !this.removedMemberships.has(m.id))
       .sort((a, b) => a.organizationId.localeCompare(b.organizationId))[0];
     // The right password with every membership removed: told only now, never for a wrong password (L2-050).
-    if (!membership && password === seededPassword && memberships.some((m) => m.email === key)) {
-      return route.fulfill({ status: 403, json: { code: 'account-deactivated' } });
+    if (
+      !membership &&
+      password === seededPassword &&
+      memberships.some((m) => m.email === key)
+    ) {
+      return route.fulfill({
+        status: 403,
+        json: { code: "account-deactivated" },
+      });
     }
     if (!membership || password !== seededPassword) {
       this.failSignIn(key, 1);
-      return route.fulfill({ status: 401, json: { code: 'invalid-credentials' } });
+      return route.fulfill({
+        status: 401,
+        json: { code: "invalid-credentials" },
+      });
     }
     // Only consecutive failures count: a success starts the count again.
     this.signInFailures.delete(key);
     if (MFA_ROLES.has(membership.role)) {
       this.mfaPending = membership.id;
-      return route.fulfill({ json: { status: 'mfa-required' } });
+      return route.fulfill({ json: { status: "mfa-required" } });
     }
     this.startSession(membership.id);
-    return route.fulfill({ json: { status: 'signed-in' } });
+    return route.fulfill({ json: { status: "signed-in" } });
   }
 
   private async mfa(route: Route): Promise<void> {
     const { code } = route.request().postDataJSON() as { code: string };
     if (!this.mfaPending) {
-      return route.fulfill({ status: 401, json: { code: 'mfa-expired' } });
+      return route.fulfill({ status: 401, json: { code: "mfa-expired" } });
     }
     if (code !== seededMfaCode) {
-      return route.fulfill({ status: 401, json: { code: 'invalid-code' } });
+      return route.fulfill({ status: 401, json: { code: "invalid-code" } });
     }
     this.startSession(this.mfaPending);
     this.mfaPending = null;
-    return route.fulfill({ json: { status: 'signed-in' } });
+    return route.fulfill({ json: { status: "signed-in" } });
   }
 
   private async signOut(route: Route): Promise<void> {
@@ -1513,7 +3610,15 @@ export class FakeApi {
       return this.unauthenticated(route);
     }
     // The session ends on the server and the sign-out is audited in its organization (L2-048).
-    this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'SignedOut', record: 'StaffUser', summary: 'Signed out', device: null });
+    this.auditEntries.push({
+      organizationId: m.organizationId,
+      when: NOW.toISOString(),
+      who: m.personName,
+      action: "SignedOut",
+      record: "StaffUser",
+      summary: "Signed out",
+      device: null,
+    });
     this.membershipId = null;
     return route.fulfill({ status: 204 });
   }
@@ -1522,28 +3627,38 @@ export class FakeApi {
   private async auditLog(route: Route): Promise<void> {
     const m = memberships.find((x) => x.id === this.membershipId);
     if (!m) return this.unauthenticated(route);
-    if (m.role !== 'Admin') return this.forbidden(route);
+    if (m.role !== "Admin") return this.forbidden(route);
     const url = new URL(route.request().url());
-    const q = (url.searchParams.get('q') ?? '').trim().toLowerCase();
-    const action = url.searchParams.get('action');
-    const days = Number(url.searchParams.get('days') ?? 7);
+    const q = (url.searchParams.get("q") ?? "").trim().toLowerCase();
+    const action = url.searchParams.get("action");
+    const days = Number(url.searchParams.get("days") ?? 7);
     const since = new Date(NOW.getTime() - days * 86400000).toISOString();
     const entries = this.auditEntries
       .filter((e) => e.organizationId === m.organizationId && e.when >= since)
       .filter((e) => !action || e.action === action)
-      .filter((e) => !q || `${e.who} ${e.record} ${e.summary}`.toLowerCase().includes(q))
+      .filter(
+        (e) =>
+          !q || `${e.who} ${e.record} ${e.summary}`.toLowerCase().includes(q),
+      )
       .sort((a, b) => b.when.localeCompare(a.when))
       .map(({ organizationId: _, ...e }) => e);
-    return route.fulfill({ json: { entries, total: entries.length, page: 1, pageSize: 50 } });
+    return route.fulfill({
+      json: { entries, total: entries.length, page: 1, pageSize: 50 },
+    });
   }
 
   /** Organizations a platform admin suspended (with the reason) and added in this test (L2-003). */
   private suspended = new Map<string, string>();
-  private addedOrganizations: { id: string; name: string; plan: 'Free' | 'Standard' | 'Plus'; modulesOn: number }[] = [];
+  private addedOrganizations: {
+    id: string;
+    name: string;
+    plan: "Free" | "Standard" | "Plus";
+    modulesOn: number;
+  }[] = [];
   /** Welcome emails sent to new organizations' first admins. */
   readonly welcomeEmails: string[] = [];
 
-  suspend(organizationId: string, reason = 'Unpaid invoice'): void {
+  suspend(organizationId: string, reason = "Unpaid invoice"): void {
     this.suspended.set(organizationId, reason);
   }
 
@@ -1554,7 +3669,7 @@ export class FakeApi {
       void this.unauthenticated(route);
       return null;
     }
-    if (m.email !== 'tom@harbourview.example') {
+    if (m.email !== "tom@harbourview.example") {
       void this.forbidden(route);
       return null;
     }
@@ -1564,23 +3679,33 @@ export class FakeApi {
   private async platformOrganizations(route: Route): Promise<void> {
     if (!this.platformCaller(route)) return;
     const url = new URL(route.request().url());
-    const q = (url.searchParams.get('q') ?? '').trim().toLowerCase();
-    const plan = url.searchParams.get('plan');
-    const status = url.searchParams.get('status');
+    const q = (url.searchParams.get("q") ?? "").trim().toLowerCase();
+    const plan = url.searchParams.get("plan");
+    const status = url.searchParams.get("status");
     const rows = [
       ...organizations.map((o) => ({
         id: o.id,
         name: o.name,
         plan: this.planOf(o.id),
-        activeChildren: this.households.filter((h) => h.organizationId === o.id).reduce((n, h) => n + h.children.length, 0),
+        activeChildren: this.households
+          .filter((h) => h.organizationId === o.id)
+          .reduce((n, h) => n + h.children.length, 0),
         modulesOn: this.modules.get(o.id)!.length,
-        setUp: o.id === 'org-harbourview',
+        setUp: o.id === "org-harbourview",
       })),
-      ...this.addedOrganizations.map((o) => ({ ...o, activeChildren: 0, setUp: false })),
+      ...this.addedOrganizations.map((o) => ({
+        ...o,
+        activeChildren: 0,
+        setUp: false,
+      })),
     ]
       .map(({ setUp, ...o }) => ({
         ...o,
-        status: this.suspended.has(o.id) ? 'Suspended' : setUp ? 'Active' : 'SettingUp',
+        status: this.suspended.has(o.id)
+          ? "Suspended"
+          : setUp
+            ? "Active"
+            : "SettingUp",
         suspensionReason: this.suspended.get(o.id) ?? null,
       }))
       .filter((o) => !q || o.name.toLowerCase().includes(q))
@@ -1592,18 +3717,39 @@ export class FakeApi {
 
   private async addOrganization(route: Route): Promise<void> {
     if (!this.platformCaller(route)) return;
-    const body = route.request().postDataJSON() as { name?: string; adminEmail?: string; plan?: string; preset?: string };
-    const name = (body.name ?? '').trim();
-    const email = (body.adminEmail ?? '').trim().toLowerCase();
+    const body = route.request().postDataJSON() as {
+      name?: string;
+      adminEmail?: string;
+      plan?: string;
+      preset?: string;
+    };
+    const name = (body.name ?? "").trim();
+    const email = (body.adminEmail ?? "").trim().toLowerCase();
     const errors: Record<string, string> = {};
-    if (!name) errors['name'] = 'Enter the organization’s name.';
-    else if ([...organizations, ...this.addedOrganizations].some((o) => o.name === name)) errors['name'] = 'An organization with this name already exists.';
-    if (!email) errors['adminEmail'] = 'Enter the first admin’s email.';
-    else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) errors['adminEmail'] = 'That doesn’t look like an email address.';
-    const presets: Record<string, number> = { 'Whole suite': 8, 'Just check-in': 3, 'Just slips': 2 };
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    if (!name) errors["name"] = "Enter the organization’s name.";
+    else if (
+      [...organizations, ...this.addedOrganizations].some(
+        (o) => o.name === name,
+      )
+    )
+      errors["name"] = "An organization with this name already exists.";
+    if (!email) errors["adminEmail"] = "Enter the first admin’s email.";
+    else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
+      errors["adminEmail"] = "That doesn’t look like an email address.";
+    const presets: Record<string, number> = {
+      "Whole suite": 8,
+      "Just check-in": 3,
+      "Just slips": 2,
+    };
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
     const id = `org-added-${this.addedOrganizations.length + 1}`;
-    this.addedOrganizations.push({ id, name, plan: body.plan as 'Free' | 'Standard', modulesOn: presets[body.preset ?? ''] ?? 8 });
+    this.addedOrganizations.push({
+      id,
+      name,
+      plan: body.plan as "Free" | "Standard",
+      modulesOn: presets[body.preset ?? ""] ?? 8,
+    });
     this.welcomeEmails.push(email);
     return route.fulfill({ status: 201, json: { id } });
   }
@@ -1611,7 +3757,15 @@ export class FakeApi {
   private async suspendOrganization(route: Route, id: string): Promise<void> {
     if (!this.platformCaller(route)) return;
     const { reason } = route.request().postDataJSON() as { reason?: string };
-    if (!reason?.trim()) return route.fulfill({ status: 422, json: { errors: { reason: 'Give a reason; the organization’s admins will see it.' } } });
+    if (!reason?.trim())
+      return route.fulfill({
+        status: 422,
+        json: {
+          errors: {
+            reason: "Give a reason; the organization’s admins will see it.",
+          },
+        },
+      });
     this.suspended.set(id, reason.trim());
     return route.fulfill({ status: 204 });
   }
@@ -1622,39 +3776,84 @@ export class FakeApi {
     return route.fulfill({ status: 204 });
   }
 
-  failPayment(organizationId: string, at = '2026-11-01T12:00:00Z'): void {
+  failPayment(organizationId: string, at = "2026-11-01T12:00:00Z"): void {
     this.paymentFailed.set(organizationId, at);
   }
 
-  private planOf(organizationId: string): 'Free' | 'Standard' | 'Plus' {
-    return this.plans.get(organizationId) ?? organizations.find((o) => o.id === organizationId)!.plan;
+  private planOf(organizationId: string): "Free" | "Standard" | "Plus" {
+    return (
+      this.plans.get(organizationId) ??
+      organizations.find((o) => o.id === organizationId)!.plan
+    );
   }
 
-  private static readonly terms = { Free: { price: 0, children: 50, sms: 200 }, Standard: { price: 89, children: 500, sms: 2000 }, Plus: { price: 149, children: 2000, sms: 5000 } };
+  private static readonly terms = {
+    Free: { price: 0, children: 50, sms: 200 },
+    Standard: { price: 89, children: 500, sms: 2000 },
+    Plus: { price: 149, children: 2000, sms: 5000 },
+  };
 
   /** Mirrors backend BillingHandler. */
   private async billing(route: Route): Promise<void> {
     const m = memberships.find((x) => x.id === this.membershipId);
     if (!m) return this.unauthenticated(route);
-    if (m.role !== 'Admin') return this.forbidden(route);
+    if (m.role !== "Admin") return this.forbidden(route);
     const plan = this.planOf(m.organizationId);
     const t = FakeApi.terms[plan];
-    const active = new Set(this.programs.filter((p) => p.organizationId === m.organizationId).flatMap((p) => p.roster)).size;
+    const active = new Set(
+      this.programs
+        .filter((p) => p.organizationId === m.organizationId)
+        .flatMap((p) => p.roster),
+    ).size;
     const failed = this.paymentFailed.get(m.organizationId);
-    const graceUntil = failed ? new Date(new Date(failed).getTime() + 14 * 86400000).toISOString() : null;
-    const status = !graceUntil ? 'Active' : NOW.toISOString() < graceUntil ? 'PaymentFailed' : 'Suspended';
-    return route.fulfill({ json: { plan, monthlyPrice: t.price, childLimit: t.children, activeChildren: active, smsUsed: this.smsUsed.get(m.organizationId) ?? 0, smsCap: t.sms, status, graceUntil } });
+    const graceUntil = failed
+      ? new Date(new Date(failed).getTime() + 14 * 86400000).toISOString()
+      : null;
+    const status = !graceUntil
+      ? "Active"
+      : NOW.toISOString() < graceUntil
+        ? "PaymentFailed"
+        : "Suspended";
+    return route.fulfill({
+      json: {
+        plan,
+        monthlyPrice: t.price,
+        childLimit: t.children,
+        activeChildren: active,
+        smsUsed: this.smsUsed.get(m.organizationId) ?? 0,
+        smsCap: t.sms,
+        status,
+        graceUntil,
+      },
+    });
   }
 
   private async changePlan(route: Route): Promise<void> {
     const m = memberships.find((x) => x.id === this.membershipId);
     if (!m) return this.unauthenticated(route);
-    if (m.role !== 'Admin') return this.forbidden(route);
-    const b = route.request().postDataJSON() as { plan: 'Free' | 'Standard' | 'Plus' };
+    if (m.role !== "Admin") return this.forbidden(route);
+    const b = route.request().postDataJSON() as {
+      plan: "Free" | "Standard" | "Plus";
+    };
     const current = this.planOf(m.organizationId);
-    if (!(b.plan in FakeApi.terms)) return route.fulfill({ status: 422, json: { errors: { plan: 'Choose Free, Standard or Plus.' } } });
-    if (b.plan === current) return route.fulfill({ status: 422, json: { errors: { plan: `You’re already on ${b.plan}.` } } });
-    const proratedCharge = Math.max(0, Math.round(((FakeApi.terms[b.plan].price - FakeApi.terms[current].price) * 26) / 30 * 100) / 100);
+    if (!(b.plan in FakeApi.terms))
+      return route.fulfill({
+        status: 422,
+        json: { errors: { plan: "Choose Free, Standard or Plus." } },
+      });
+    if (b.plan === current)
+      return route.fulfill({
+        status: 422,
+        json: { errors: { plan: `You’re already on ${b.plan}.` } },
+      });
+    const proratedCharge = Math.max(
+      0,
+      Math.round(
+        (((FakeApi.terms[b.plan].price - FakeApi.terms[current].price) * 26) /
+          30) *
+          100,
+      ) / 100,
+    );
     this.plans.set(m.organizationId, b.plan);
     return route.fulfill({ json: { plan: b.plan, proratedCharge } });
   }
@@ -1664,7 +3863,8 @@ export class FakeApi {
 
   /** An admin removes every membership of this person (L2-050). */
   deactivate(email: string): void {
-    for (const m of memberships.filter((x) => x.email === email)) this.removedMemberships.add(m.id);
+    for (const m of memberships.filter((x) => x.email === email))
+      this.removedMemberships.add(m.id);
   }
 
   removeMembership(id: string): void {
@@ -1677,7 +3877,12 @@ export class FakeApi {
     if (!m) return this.unauthenticated(route);
     const mine = memberships
       .filter((x) => x.email === m.email && !this.removedMemberships.has(x.id))
-      .map((x) => ({ membershipId: x.id, name: organizations.find((o) => o.id === x.organizationId)!.name, role: x.role, active: x.id === m.id }))
+      .map((x) => ({
+        membershipId: x.id,
+        name: organizations.find((o) => o.id === x.organizationId)!.name,
+        role: x.role,
+        active: x.id === m.id,
+      }))
       .sort((a, b) => a.name.localeCompare(b.name));
     return route.fulfill({ json: { organizations: mine } });
   }
@@ -1686,7 +3891,12 @@ export class FakeApi {
     const m = memberships.find((x) => x.id === this.membershipId);
     if (!m) return this.unauthenticated(route);
     const b = route.request().postDataJSON() as { membershipId: string };
-    const target = memberships.find((x) => x.id === b.membershipId && x.email === m.email && !this.removedMemberships.has(x.id));
+    const target = memberships.find(
+      (x) =>
+        x.id === b.membershipId &&
+        x.email === m.email &&
+        !this.removedMemberships.has(x.id),
+    );
     if (!target) return route.fulfill({ status: 404 });
     this.membershipId = target.id;
     return route.fulfill({ status: 204 });
@@ -1710,22 +3920,36 @@ export class FakeApi {
   }
 
   private async resetPassword(route: Route): Promise<void> {
-    const b = route.request().postDataJSON() as { token: string; password: string; repeat: string };
+    const b = route.request().postDataJSON() as {
+      token: string;
+      password: string;
+      repeat: string;
+    };
     const link = this.resetLinks.get(b.token);
     if (!link?.usable) return route.fulfill({ status: 410 });
     const errors: Record<string, string> = {};
     const weak = passwordProblem(b.password, link.email);
-    if (weak) errors['password'] = weak;
-    if (b.repeat !== b.password) errors['repeat'] = 'The two passwords don’t match.';
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    if (weak) errors["password"] = weak;
+    if (b.repeat !== b.password)
+      errors["repeat"] = "The two passwords don’t match.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
     link.usable = false;
     const member = memberships.find((m) => m.email === link.email)!;
     if (this.isLocked(link.email)) {
-      this.auditEntries.push({ organizationId: member.organizationId, when: NOW.toISOString(), who: member.personName, action: 'SignInUnlocked', record: 'StaffUser', summary: 'Unlocked sign-in by password reset', device: null });
+      this.auditEntries.push({
+        organizationId: member.organizationId,
+        when: NOW.toISOString(),
+        who: member.personName,
+        action: "SignInUnlocked",
+        record: "StaffUser",
+        summary: "Unlocked sign-in by password reset",
+        device: null,
+      });
     }
     this.signInFailures.delete(link.email);
     this.membershipId = member.id;
-    return route.fulfill({ json: { status: 'signed-in' } });
+    return route.fulfill({ json: { status: "signed-in" } });
   }
 
   /** Mirrors backend AccountHandler. */
@@ -1734,7 +3958,15 @@ export class FakeApi {
     if (!m) return this.unauthenticated(route);
     const org = organizations.find((o) => o.id === m.organizationId)!;
     return route.fulfill({
-      json: { name: m.personName, email: m.email, role: m.role, organization: org.name, mobile: null, twoStepOn: ['Admin', 'ProgramDirector'].includes(m.role), recoveryCodesLeft: this.recoveryCodes.get(m.email) ?? 0 },
+      json: {
+        name: m.personName,
+        email: m.email,
+        role: m.role,
+        organization: org.name,
+        mobile: null,
+        twoStepOn: ["Admin", "ProgramDirector"].includes(m.role),
+        recoveryCodesLeft: this.recoveryCodes.get(m.email) ?? 0,
+      },
     });
   }
 
@@ -1742,7 +3974,11 @@ export class FakeApi {
     const m = memberships.find((x) => x.id === this.membershipId);
     if (!m) return this.unauthenticated(route);
     this.recoveryCodes.set(m.email, 10);
-    const codes = Array.from({ length: 10 }, (_, i) => `k${i}x2-${(7000 + i * 37).toString(36).slice(-4).padStart(4, 'm')}`);
+    const codes = Array.from(
+      { length: 10 },
+      (_, i) =>
+        `k${i}x2-${(7000 + i * 37).toString(36).slice(-4).padStart(4, "m")}`,
+    );
     return route.fulfill({ json: { codes } });
   }
 
@@ -1758,13 +3994,35 @@ export class FakeApi {
     const organizationId = await this.settingsCaller(route);
     if (!organizationId) return;
     const steps = [
-      { key: 'organization', done: this.profiles.has(organizationId) },
-      { key: 'modules', done: true },
-      { key: 'program', done: this.programs.some((p) => p.organizationId === organizationId) },
-      { key: 'children', done: this.households.some((h) => h.organizationId === organizationId && h.children.length > 0) },
-      { key: 'staff', done: memberships.filter((m) => m.organizationId === organizationId).length > 1 || this.invitations.some((i) => i.organizationId === organizationId) },
+      { key: "organization", done: this.profiles.has(organizationId) },
+      { key: "modules", done: true },
+      {
+        key: "program",
+        done: this.programs.some((p) => p.organizationId === organizationId),
+      },
+      {
+        key: "children",
+        done: this.households.some(
+          (h) => h.organizationId === organizationId && h.children.length > 0,
+        ),
+      },
+      {
+        key: "staff",
+        done:
+          memberships.filter((m) => m.organizationId === organizationId)
+            .length > 1 ||
+          this.invitations.some((i) => i.organizationId === organizationId),
+      },
     ];
-    if (this.modules.get(organizationId)!.includes('Slips')) steps.push({ key: 'slip', done: this.events.some((e) => e.organizationId === organizationId && this.slipOf(e.id)?.status === 'Sent') });
+    if (this.modules.get(organizationId)!.includes("Slips"))
+      steps.push({
+        key: "slip",
+        done: this.events.some(
+          (e) =>
+            e.organizationId === organizationId &&
+            this.slipOf(e.id)?.status === "Sent",
+        ),
+      });
     const next = steps.find((s) => !s.done)?.key ?? null;
     return route.fulfill({ json: { steps, next, complete: next === null } });
   }
@@ -1774,7 +4032,17 @@ export class FakeApi {
     if (!organizationId) return;
     const org = organizations.find((o) => o.id === organizationId)!;
     const p = this.profiles.get(organizationId);
-    return route.fulfill({ json: { name: p?.name ?? org.name, city: p?.city ?? (organizationId === 'org-northgate' ? 'Burlington, Ontario' : 'Hamilton, Ontario'), plan: org.plan } });
+    return route.fulfill({
+      json: {
+        name: p?.name ?? org.name,
+        city:
+          p?.city ??
+          (organizationId === "org-northgate"
+            ? "Burlington, Ontario"
+            : "Hamilton, Ontario"),
+        plan: org.plan,
+      },
+    });
   }
 
   private async saveOrganizationProfile(route: Route): Promise<void> {
@@ -1782,29 +4050,67 @@ export class FakeApi {
     if (!organizationId) return;
     const b = route.request().postDataJSON() as { name: string; city: string };
     const errors: Record<string, string> = {};
-    if (!b.name?.trim()) errors['name'] = 'Enter your organization’s name.';
-    if (!b.city?.trim()) errors['city'] = 'Enter the city you work in.';
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
-    this.profiles.set(organizationId, { name: b.name.trim(), city: b.city.trim() });
+    if (!b.name?.trim()) errors["name"] = "Enter your organization’s name.";
+    if (!b.city?.trim()) errors["city"] = "Enter the city you work in.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
+    this.profiles.set(organizationId, {
+      name: b.name.trim(),
+      city: b.city.trim(),
+    });
     return route.fulfill({ status: 204 });
   }
 
   /** A request a guardian already sent (seeded as the API would store it). */
-  askedForData(householdId: string, kind: 'Export' | 'Delete', email = 'carmen.rivera@example.com'): void {
+  askedForData(
+    householdId: string,
+    kind: "Export" | "Delete",
+    email = "carmen.rivera@example.com",
+  ): void {
     const h = this.households.find((x) => x.id === householdId)!;
-    this.dataRequests.push({ id: `dr-${this.nextId++}`, organizationId: h.organizationId, householdId, household: h.name, kind, email, fulfilledBy: null });
+    this.dataRequests.push({
+      id: `dr-${this.nextId++}`,
+      organizationId: h.organizationId,
+      householdId,
+      household: h.name,
+      kind,
+      email,
+      fulfilledBy: null,
+    });
   }
 
   /** Mirrors backend DataRequestHandler. */
   private async askForData(route: Route, token: string): Promise<void> {
     const householdId = this.homeLinks.get(token);
-    const household = householdId ? this.households.find((h) => h.id === householdId) : undefined;
-    if (!household) return route.fulfill({ status: 410, json: { code: 'link-expired' } });
-    if (!this.trustedHouseholds.has(household.id)) return route.fulfill({ status: 401, json: { code: 'verification-required' } });
-    const b = route.request().postDataJSON() as { kind: 'Export' | 'Delete'; email: string };
-    if (!b.email?.trim()) return route.fulfill({ status: 422, json: { errors: { email: 'Enter an email.' } } });
+    const household = householdId
+      ? this.households.find((h) => h.id === householdId)
+      : undefined;
+    if (!household)
+      return route.fulfill({ status: 410, json: { code: "link-expired" } });
+    if (!this.trustedHouseholds.has(household.id))
+      return route.fulfill({
+        status: 401,
+        json: { code: "verification-required" },
+      });
+    const b = route.request().postDataJSON() as {
+      kind: "Export" | "Delete";
+      email: string;
+    };
+    if (!b.email?.trim())
+      return route.fulfill({
+        status: 422,
+        json: { errors: { email: "Enter an email." } },
+      });
     const id = `dr-${this.nextId++}`;
-    this.dataRequests.push({ id, organizationId: household.organizationId, householdId: household.id, household: household.name, kind: b.kind, email: b.email.trim(), fulfilledBy: null });
+    this.dataRequests.push({
+      id,
+      organizationId: household.organizationId,
+      householdId: household.id,
+      household: household.name,
+      kind: b.kind,
+      email: b.email.trim(),
+      fulfilledBy: null,
+    });
     return route.fulfill({ status: 201, json: { id } });
   }
 
@@ -1814,18 +4120,31 @@ export class FakeApi {
     const requests = this.dataRequests
       .filter((r) => r.organizationId === organizationId)
       .sort((a, b) => Number(!!a.fulfilledBy) - Number(!!b.fulfilledBy))
-      .map((r) => ({ id: r.id, household: r.household, kind: r.kind, email: r.email, requestedAt: NOW.toISOString(), status: r.fulfilledBy ? 'Fulfilled' : 'Open', fulfilledBy: r.fulfilledBy }));
+      .map((r) => ({
+        id: r.id,
+        household: r.household,
+        kind: r.kind,
+        email: r.email,
+        requestedAt: NOW.toISOString(),
+        status: r.fulfilledBy ? "Fulfilled" : "Open",
+        fulfilledBy: r.fulfilledBy,
+      }));
     return route.fulfill({ json: { requests } });
   }
 
   private async fulfilDataRequest(route: Route, id: string): Promise<void> {
     const organizationId = await this.settingsCaller(route);
     if (!organizationId) return;
-    const r = this.dataRequests.find((x) => x.id === id && x.organizationId === organizationId);
+    const r = this.dataRequests.find(
+      (x) => x.id === id && x.organizationId === organizationId,
+    );
     if (!r) return route.fulfill({ status: 404 });
     if (r.fulfilledBy) return route.fulfill({ status: 409 });
-    r.fulfilledBy = memberships.find((m) => m.id === this.membershipId)!.personName;
-    if (r.kind === 'Delete') this.households = this.households.filter((h) => h.id !== r.householdId);
+    r.fulfilledBy = memberships.find(
+      (m) => m.id === this.membershipId,
+    )!.personName;
+    if (r.kind === "Delete")
+      this.households = this.households.filter((h) => h.id !== r.householdId);
     return route.fulfill({ status: 204 });
   }
 
@@ -1833,71 +4152,131 @@ export class FakeApi {
   private async getPrivacy(route: Route): Promise<void> {
     const organizationId = await this.settingsCaller(route);
     if (!organizationId) return;
-    const years = this.retention.has(organizationId) ? this.retention.get(organizationId)! : 7;
-    return route.fulfill({ json: { region: 'Canada (Toronto region)', consentRetentionYears: years } });
+    const years = this.retention.has(organizationId)
+      ? this.retention.get(organizationId)!
+      : 7;
+    return route.fulfill({
+      json: { region: "Canada (Toronto region)", consentRetentionYears: years },
+    });
   }
 
   private async savePrivacy(route: Route): Promise<void> {
     const organizationId = await this.settingsCaller(route);
     if (!organizationId) return;
-    const b = route.request().postDataJSON() as { consentRetentionYears: number | null };
-    if (b.consentRetentionYears !== null && ![7, 3].includes(b.consentRetentionYears)) {
-      return route.fulfill({ status: 422, json: { errors: { consentRetentionYears: 'Choose 7 years, 3 years or until deleted by request.' } } });
+    const b = route.request().postDataJSON() as {
+      consentRetentionYears: number | null;
+    };
+    if (
+      b.consentRetentionYears !== null &&
+      ![7, 3].includes(b.consentRetentionYears)
+    ) {
+      return route.fulfill({
+        status: 422,
+        json: {
+          errors: {
+            consentRetentionYears:
+              "Choose 7 years, 3 years or until deleted by request.",
+          },
+        },
+      });
     }
     this.retention.set(organizationId, b.consentRetentionYears);
     return route.fulfill({ status: 204 });
   }
 
   /** The consent policy of an organization: as saved, or 18 with the default wording (L2-056). */
-  consentPolicyOf(organizationId: string): { consentAge: number; wording: string } {
+  consentPolicyOf(organizationId: string): {
+    consentAge: number;
+    wording: string;
+  } {
     const name = organizations.find((o) => o.id === organizationId)!.name;
-    return this.consentPolicies.get(organizationId) ?? { consentAge: 18, wording: `I consent to my child taking part in lessons, mentoring and program activities at ${name}, and to staff contacting them about their program.` };
+    return (
+      this.consentPolicies.get(organizationId) ?? {
+        consentAge: 18,
+        wording: `I consent to my child taking part in lessons, mentoring and program activities at ${name}, and to staff contacting them about their program.`,
+      }
+    );
   }
 
   private async getConsentPolicy(route: Route): Promise<void> {
     const organizationId = await this.settingsCaller(route);
     if (!organizationId) return;
-    if (!this.modules.get(organizationId)!.includes('Roster')) return route.fulfill({ status: 404 });
+    if (!this.modules.get(organizationId)!.includes("Roster"))
+      return route.fulfill({ status: 404 });
     return route.fulfill({ json: this.consentPolicyOf(organizationId) });
   }
 
   private async saveConsentPolicy(route: Route): Promise<void> {
     const organizationId = await this.settingsCaller(route);
     if (!organizationId) return;
-    if (!this.modules.get(organizationId)!.includes('Roster')) return route.fulfill({ status: 404 });
-    const b = route.request().postDataJSON() as { consentAge: number; wording: string };
-    const wording = (b.wording ?? '').trim();
+    if (!this.modules.get(organizationId)!.includes("Roster"))
+      return route.fulfill({ status: 404 });
+    const b = route.request().postDataJSON() as {
+      consentAge: number;
+      wording: string;
+    };
+    const wording = (b.wording ?? "").trim();
     const errors: Record<string, string> = {};
-    if (!(b.consentAge >= 13 && b.consentAge <= 19)) errors['consentAge'] = 'Choose an age from 13 to 19.';
-    if (wording.length < 20 || wording.length > 2000) errors['wording'] = 'Write the wording guardians sign, 20 to 2,000 characters.';
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
-    this.consentPolicies.set(organizationId, { consentAge: b.consentAge, wording });
+    if (!(b.consentAge >= 13 && b.consentAge <= 19))
+      errors["consentAge"] = "Choose an age from 13 to 19.";
+    if (wording.length < 20 || wording.length > 2000)
+      errors["wording"] =
+        "Write the wording guardians sign, 20 to 2,000 characters.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
+    this.consentPolicies.set(organizationId, {
+      consentAge: b.consentAge,
+      wording,
+    });
     return route.fulfill({ status: 204 });
   }
 
   private notificationSettingsOf(organizationId: string) {
     const plan = organizations.find((o) => o.id === organizationId)!.plan;
-    const cap = plan === 'Free' ? 200 : plan === 'Standard' ? 2000 : 5000;
-    return this.notificationSettings.get(organizationId) ?? { noShowDelayMinutes: 15, emailSupervisorsOnIncidents: true, smsCap: cap };
+    const cap = plan === "Free" ? 200 : plan === "Standard" ? 2000 : 5000;
+    return (
+      this.notificationSettings.get(organizationId) ?? {
+        noShowDelayMinutes: 15,
+        emailSupervisorsOnIncidents: true,
+        smsCap: cap,
+      }
+    );
   }
 
   /** Mirrors backend NotificationSettingsHandler. */
   private async getNotificationSettings(route: Route): Promise<void> {
     const organizationId = await this.settingsCaller(route);
     if (!organizationId) return;
-    return route.fulfill({ json: { ...this.notificationSettingsOf(organizationId), smsUsed: this.smsUsed.get(organizationId) ?? 0 } });
+    return route.fulfill({
+      json: {
+        ...this.notificationSettingsOf(organizationId),
+        smsUsed: this.smsUsed.get(organizationId) ?? 0,
+      },
+    });
   }
 
   private async saveNotificationSettings(route: Route): Promise<void> {
     const organizationId = await this.settingsCaller(route);
     if (!organizationId) return;
-    const b = route.request().postDataJSON() as { noShowDelayMinutes: number; emailSupervisorsOnIncidents: boolean; smsCap: number };
+    const b = route.request().postDataJSON() as {
+      noShowDelayMinutes: number;
+      emailSupervisorsOnIncidents: boolean;
+      smsCap: number;
+    };
     const used = this.smsUsed.get(organizationId) ?? 0;
     const errors: Record<string, string> = {};
-    if (!(b.noShowDelayMinutes >= 5 && b.noShowDelayMinutes <= 60)) errors['noShowDelayMinutes'] = 'Choose between 5 and 60 minutes.';
-    if (!(b.smsCap >= Math.max(0, used))) errors['smsCap'] = `Can’t be below ${used.toLocaleString('en-US')}, already used this month.`;
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
-    this.notificationSettings.set(organizationId, { noShowDelayMinutes: b.noShowDelayMinutes, emailSupervisorsOnIncidents: b.emailSupervisorsOnIncidents, smsCap: b.smsCap });
+    if (!(b.noShowDelayMinutes >= 5 && b.noShowDelayMinutes <= 60))
+      errors["noShowDelayMinutes"] = "Choose between 5 and 60 minutes.";
+    if (!(b.smsCap >= Math.max(0, used)))
+      errors["smsCap"] =
+        `Can’t be below ${used.toLocaleString("en-US")}, already used this month.`;
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
+    this.notificationSettings.set(organizationId, {
+      noShowDelayMinutes: b.noShowDelayMinutes,
+      emailSupervisorsOnIncidents: b.emailSupervisorsOnIncidents,
+      smsCap: b.smsCap,
+    });
     return route.fulfill({ status: 204 });
   }
 
@@ -1908,8 +4287,8 @@ export class FakeApi {
       await this.unauthenticated(route);
       return null;
     }
-    if (!['Admin', 'ProgramDirector'].includes(membership.role)) {
-      await route.fulfill({ status: 403, json: { code: 'forbidden' } });
+    if (!["Admin", "ProgramDirector"].includes(membership.role)) {
+      await route.fulfill({ status: 403, json: { code: "forbidden" } });
       return null;
     }
     return membership.organizationId;
@@ -1920,7 +4299,14 @@ export class FakeApi {
     if (!organizationId) return;
     const on = this.modules.get(organizationId)!;
     return route.fulfill({
-      json: { modules: moduleCatalog.map((m) => ({ id: m.id, name: m.name, on: on.includes(m.id), needs: m.needs })) },
+      json: {
+        modules: moduleCatalog.map((m) => ({
+          id: m.id,
+          name: m.name,
+          on: on.includes(m.id),
+          needs: m.needs,
+        })),
+      },
     });
   }
 
@@ -1930,21 +4316,36 @@ export class FakeApi {
     const { on } = route.request().postDataJSON() as { on: ModuleId[] };
     const errors: { module: string; message: string }[] = [];
     const name = (id: ModuleId) => moduleCatalog.find((m) => m.id === id)!.name;
-    if (!on.includes('Roster')) {
-      const dependents = moduleCatalog.filter((m) => on.includes(m.id) && m.needs.includes('Roster')).map((m) => m.name);
+    if (!on.includes("Roster")) {
+      const dependents = moduleCatalog
+        .filter((m) => on.includes(m.id) && m.needs.includes("Roster"))
+        .map((m) => m.name);
       if (dependents.length) {
-        const list = dependents.length === 1 ? dependents[0] : `${dependents.slice(0, -1).join(', ')} and ${dependents.at(-1)}`;
-        errors.push({ module: 'Roster', message: `${list} ${dependents.length === 1 ? 'needs' : 'need'} the roster.` });
+        const list =
+          dependents.length === 1
+            ? dependents[0]
+            : `${dependents.slice(0, -1).join(", ")} and ${dependents.at(-1)}`;
+        errors.push({
+          module: "Roster",
+          message: `${list} ${dependents.length === 1 ? "needs" : "need"} the roster.`,
+        });
       }
     }
     for (const m of moduleCatalog.filter((c) => on.includes(c.id))) {
-      const missing = m.needs.filter((n) => n !== 'Roster' && !on.includes(n));
-      if (missing.length) errors.push({ module: m.id, message: `${m.name} needs ${missing.map(name).join(' and ')}.` });
+      const missing = m.needs.filter((n) => n !== "Roster" && !on.includes(n));
+      if (missing.length)
+        errors.push({
+          module: m.id,
+          message: `${m.name} needs ${missing.map(name).join(" and ")}.`,
+        });
     }
     if (errors.length) {
       return route.fulfill({ status: 422, json: { errors } });
     }
-    this.modules.set(organizationId, moduleCatalog.map((m) => m.id).filter((id) => on.includes(id)));
+    this.modules.set(
+      organizationId,
+      moduleCatalog.map((m) => m.id).filter((id) => on.includes(id)),
+    );
     return route.fulfill({ json: { on: on.length } });
   }
 
@@ -1955,7 +4356,7 @@ export class FakeApi {
       await this.unauthenticated(route);
       return null;
     }
-    if (!this.modules.get(membership.organizationId)!.includes('Roster')) {
+    if (!this.modules.get(membership.organizationId)!.includes("Roster")) {
       await route.fulfill({ status: 404 });
       return null;
     }
@@ -1965,16 +4366,26 @@ export class FakeApi {
   /** Children a youth worker may read: those on the rosters of programs with a session they work. Null for everyone else. */
   private permittedChildren(m: Membership): Set<string> | null {
     if (!can.runSessions(m) || can.runAnySession(m)) return null;
-    const programs = new Set(this.events.filter((e) => (this.sessionStaff.get(e.id) ?? []).includes(m.id)).map((e) => e.programId));
-    return new Set(this.programs.filter((p) => programs.has(p.id)).flatMap((p) => p.roster));
+    const programs = new Set(
+      this.events
+        .filter((e) => (this.sessionStaff.get(e.id) ?? []).includes(m.id))
+        .map((e) => e.programId),
+    );
+    return new Set(
+      this.programs.filter((p) => programs.has(p.id)).flatMap((p) => p.roster),
+    );
   }
 
   private ownHousehold(m: Membership, id: string): FakeHousehold | undefined {
-    return this.households.find((h) => h.id === id && h.organizationId === m.organizationId);
+    return this.households.find(
+      (h) => h.id === id && h.organizationId === m.organizationId,
+    );
   }
 
   private ownChild(m: Membership, id: string) {
-    for (const h of this.households.filter((x) => x.organizationId === m.organizationId)) {
+    for (const h of this.households.filter(
+      (x) => x.organizationId === m.organizationId,
+    )) {
       const child = h.children.find((c) => c.id === id);
       if (child) return { household: h, child };
     }
@@ -1982,48 +4393,71 @@ export class FakeApi {
   }
 
   private forbidden(route: Route): Promise<void> {
-    return route.fulfill({ status: 403, json: { code: 'forbidden' } });
+    return route.fulfill({ status: 403, json: { code: "forbidden" } });
   }
 
   private async listHouseholds(route: Route): Promise<void> {
     const m = await this.rosterCaller(route);
     if (!m) return;
     const url = new URL(route.request().url());
-    const q = (url.searchParams.get('q') ?? '').trim().toLowerCase();
-    const filter = url.searchParams.get('filter');
+    const q = (url.searchParams.get("q") ?? "").trim().toLowerCase();
+    const filter = url.searchParams.get("filter");
     const permitted = this.permittedChildren(m);
     const rows = this.households
       .filter((h) => h.organizationId === m.organizationId)
       .filter((h) => !permitted || h.children.some((c) => permitted.has(c.id)))
       .sort((a, b) => a.name.localeCompare(b.name))
       .map((h) => {
-        const children = h.children.filter((c) => !permitted || permitted.has(c.id)).sort((a, b) => (ageOf(a.dateOfBirth) ?? 99) - (ageOf(b.dateOfBirth) ?? 99));
-        const guardians = [...h.guardians].sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary));
+        const children = h.children
+          .filter((c) => !permitted || permitted.has(c.id))
+          .sort(
+            (a, b) =>
+              (ageOf(a.dateOfBirth) ?? 99) - (ageOf(b.dateOfBirth) ?? 99),
+          );
+        const guardians = [...h.guardians].sort(
+          (a, b) => Number(b.isPrimary) - Number(a.isPrimary),
+        );
         const summary = {
           id: h.id,
           name: h.name,
           primaryGuardian: guardians[0]?.name ?? null,
-          children: children.map((c) => (ageOf(c.dateOfBirth) !== null ? `${c.firstName} (${ageOf(c.dateOfBirth)})` : c.firstName)),
+          children: children.map((c) =>
+            ageOf(c.dateOfBirth) !== null
+              ? `${c.firstName} (${ageOf(c.dateOfBirth)})`
+              : c.firstName,
+          ),
           language: h.language,
           medicalFlags: children.filter(hasMedicalFlag).length,
           missingInfo: !guardians.some(reachable),
         };
-        const text = [h.name, ...guardians.map((g) => `${g.name} ${g.mobile ?? ''} ${g.email ?? ''}`), ...children.map((c) => `${c.firstName} ${c.lastName}`)]
-          .join(' ')
+        const text = [
+          h.name,
+          ...guardians.map(
+            (g) => `${g.name} ${g.mobile ?? ""} ${g.email ?? ""}`,
+          ),
+          ...children.map((c) => `${c.firstName} ${c.lastName}`),
+        ]
+          .join(" ")
           .toLowerCase();
         return { summary, text };
       });
     const counts = {
       all: rows.length,
       missingInfo: rows.filter((r) => r.summary.missingInfo).length,
-      spanish: rows.filter((r) => r.summary.language === 'Spanish').length,
-      french: rows.filter((r) => r.summary.language === 'French').length,
+      spanish: rows.filter((r) => r.summary.language === "Spanish").length,
+      french: rows.filter((r) => r.summary.language === "French").length,
       children: rows.reduce((n, r) => n + r.summary.children.length, 0),
     };
     const households = rows
       .filter((r) => !q || r.text.includes(q))
       .filter((r) =>
-        filter === 'missing-info' ? r.summary.missingInfo : filter === 'spanish' ? r.summary.language === 'Spanish' : filter === 'french' ? r.summary.language === 'French' : true,
+        filter === "missing-info"
+          ? r.summary.missingInfo
+          : filter === "spanish"
+            ? r.summary.language === "Spanish"
+            : filter === "french"
+              ? r.summary.language === "French"
+              : true,
       )
       .map((r) => r.summary);
     return route.fulfill({ json: { households, counts } });
@@ -2044,11 +4478,24 @@ export class FakeApi {
         name: h.name,
         language: h.language,
         guardians: [...h.guardians]
-          .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.name.localeCompare(b.name))
+          .sort(
+            (a, b) =>
+              Number(b.isPrimary) - Number(a.isPrimary) ||
+              a.name.localeCompare(b.name),
+          )
           .map(({ emailBounced: _, ...g }) => g),
         children: [...visible]
-          .sort((a, b) => (ageOf(a.dateOfBirth) ?? 99) - (ageOf(b.dateOfBirth) ?? 99))
-          .map((c) => ({ id: c.id, name: `${c.firstName} ${c.lastName}`, age: ageOf(c.dateOfBirth), school: c.school, medicalFlag: medical ? medicalFlag(c) : null })),
+          .sort(
+            (a, b) =>
+              (ageOf(a.dateOfBirth) ?? 99) - (ageOf(b.dateOfBirth) ?? 99),
+          )
+          .map((c) => ({
+            id: c.id,
+            name: `${c.firstName} ${c.lastName}`,
+            age: ageOf(c.dateOfBirth),
+            school: c.school,
+            medicalFlag: medical ? medicalFlag(c) : null,
+          })),
         medicalRestricted: !medical,
       },
     });
@@ -2058,20 +4505,40 @@ export class FakeApi {
     const m = await this.rosterCaller(route);
     if (!m) return;
     if (!can.writeHouseholds(m)) return this.forbidden(route);
-    const body = route.request().postDataJSON() as { guardianName: string; mobile: string; email: string; language: string };
+    const body = route.request().postDataJSON() as {
+      guardianName: string;
+      mobile: string;
+      email: string;
+      language: string;
+    };
     const errors: Record<string, string> = {};
-    if (!body.guardianName?.trim()) errors['guardianName'] = 'Enter the guardian’s name.';
-    if (!body.mobile?.trim() && !body.email?.trim()) errors['mobile'] = 'Enter a mobile number or an email.';
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    if (!body.guardianName?.trim())
+      errors["guardianName"] = "Enter the guardian’s name.";
+    if (!body.mobile?.trim() && !body.email?.trim())
+      errors["mobile"] = "Enter a mobile number or an email.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
     const name = body.guardianName.trim();
-    const last = name.includes(' ') ? name.slice(name.indexOf(' ') + 1) : name;
+    const last = name.includes(" ") ? name.slice(name.indexOf(" ") + 1) : name;
     const id = `hh-new-${this.nextId++}`;
     this.households.push({
       id,
       organizationId: m.organizationId,
       name: last,
       language: body.language,
-      guardians: [{ id: `g-new-${this.nextId++}`, name, relationship: 'Guardian', mobile: body.mobile?.trim() || null, email: body.email?.trim() || null, language: body.language, isPrimary: true, canPickUp: true, canSign: true }],
+      guardians: [
+        {
+          id: `g-new-${this.nextId++}`,
+          name,
+          relationship: "Guardian",
+          mobile: body.mobile?.trim() || null,
+          email: body.email?.trim() || null,
+          language: body.language,
+          isPrimary: true,
+          canPickUp: true,
+          canSign: true,
+        },
+      ],
       children: [],
     });
     return route.fulfill({ status: 201, json: { id } });
@@ -2083,22 +4550,39 @@ export class FakeApi {
     if (!can.writeHouseholds(m)) return this.forbidden(route);
     const h = this.ownHousehold(m, householdId);
     if (!h) return route.fulfill({ status: 404 });
-    const body = route.request().postDataJSON() as { name: string; dateOfBirth: string | null; school: string; allergies: string };
+    const body = route.request().postDataJSON() as {
+      name: string;
+      dateOfBirth: string | null;
+      school: string;
+      allergies: string;
+    };
     const errors: Record<string, string> = {};
-    if (!body.name?.trim()) errors['name'] = 'Enter the child’s name.';
-    if (!body.dateOfBirth) errors['dateOfBirth'] = 'Enter the date of birth.';
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    if (!body.name?.trim()) errors["name"] = "Enter the child’s name.";
+    if (!body.dateOfBirth) errors["dateOfBirth"] = "Enter the date of birth.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
     const name = body.name.trim();
-    const space = name.indexOf(' ');
+    const space = name.indexOf(" ");
     const id = `c-new-${this.nextId++}`;
-    const allergies = body.allergies?.trim() && body.allergies.trim().toLowerCase() !== 'none' ? body.allergies.trim() : null;
+    const allergies =
+      body.allergies?.trim() && body.allergies.trim().toLowerCase() !== "none"
+        ? body.allergies.trim()
+        : null;
     h.children.push({
       id,
       firstName: space < 0 ? name : name.slice(0, space),
-      lastName: space < 0 ? '' : name.slice(space + 1),
+      lastName: space < 0 ? "" : name.slice(space + 1),
       dateOfBirth: body.dateOfBirth,
       school: body.school?.trim() || null,
-      medical: { allergies, medication: null, conditions: null, doctor: null, redAlert: false, updatedAt: allergies ? '2026-11-05T21:12:00Z' : null, updatedBy: allergies ? m.personName : null },
+      medical: {
+        allergies,
+        medication: null,
+        conditions: null,
+        doctor: null,
+        redAlert: false,
+        updatedAt: allergies ? "2026-11-05T21:12:00Z" : null,
+        updatedBy: allergies ? m.personName : null,
+      },
     });
     return route.fulfill({ status: 201, json: { id } });
   }
@@ -2109,13 +4593,33 @@ export class FakeApi {
     if (!can.writeHouseholds(m)) return this.forbidden(route);
     const h = this.ownHousehold(m, householdId);
     if (!h) return route.fulfill({ status: 404 });
-    const body = route.request().postDataJSON() as { name: string; relationship: string; mobile: string; email: string; language: string; canPickUp: boolean; canSign: boolean };
+    const body = route.request().postDataJSON() as {
+      name: string;
+      relationship: string;
+      mobile: string;
+      email: string;
+      language: string;
+      canPickUp: boolean;
+      canSign: boolean;
+    };
     const errors: Record<string, string> = {};
-    if (!body.name?.trim()) errors['name'] = 'Enter the guardian’s name.';
-    if (!body.mobile?.trim() && !body.email?.trim()) errors['mobile'] = 'Enter a mobile number or an email.';
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    if (!body.name?.trim()) errors["name"] = "Enter the guardian’s name.";
+    if (!body.mobile?.trim() && !body.email?.trim())
+      errors["mobile"] = "Enter a mobile number or an email.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
     const id = `g-new-${this.nextId++}`;
-    h.guardians.push({ id, name: body.name.trim(), relationship: body.relationship, mobile: body.mobile?.trim() || null, email: body.email?.trim() || null, language: body.language || h.language, isPrimary: false, canPickUp: body.canPickUp, canSign: body.canSign });
+    h.guardians.push({
+      id,
+      name: body.name.trim(),
+      relationship: body.relationship,
+      mobile: body.mobile?.trim() || null,
+      email: body.email?.trim() || null,
+      language: body.language || h.language,
+      isPrimary: false,
+      canPickUp: body.canPickUp,
+      canSign: body.canSign,
+    });
     return route.fulfill({ status: 201, json: { id } });
   }
 
@@ -2123,11 +4627,30 @@ export class FakeApi {
     const m = await this.rosterCaller(route);
     if (!m) return;
     if (!can.writeHouseholds(m)) return this.forbidden(route);
-    const g = this.households.filter((h) => h.organizationId === m.organizationId).flatMap((h) => h.guardians).find((x) => x.id === id);
+    const g = this.households
+      .filter((h) => h.organizationId === m.organizationId)
+      .flatMap((h) => h.guardians)
+      .find((x) => x.id === id);
     if (!g) return route.fulfill({ status: 404 });
-    const body = route.request().postDataJSON() as { name: string; relationship: string; mobile: string; canPickUp: boolean; canSign: boolean };
-    if (!body.name?.trim()) return route.fulfill({ status: 422, json: { errors: { name: 'Enter the guardian’s name.' } } });
-    Object.assign(g, { name: body.name.trim(), relationship: body.relationship, mobile: body.mobile?.trim() || null, canPickUp: body.canPickUp, canSign: body.canSign });
+    const body = route.request().postDataJSON() as {
+      name: string;
+      relationship: string;
+      mobile: string;
+      canPickUp: boolean;
+      canSign: boolean;
+    };
+    if (!body.name?.trim())
+      return route.fulfill({
+        status: 422,
+        json: { errors: { name: "Enter the guardian’s name." } },
+      });
+    Object.assign(g, {
+      name: body.name.trim(),
+      relationship: body.relationship,
+      mobile: body.mobile?.trim() || null,
+      canPickUp: body.canPickUp,
+      canSign: body.canSign,
+    });
     return route.fulfill({ status: 204 });
   }
 
@@ -2137,7 +4660,8 @@ export class FakeApi {
     const found = this.ownChild(m, id);
     if (!found) return route.fulfill({ status: 404 });
     const { household, child } = found;
-    if (this.permittedChildren(m)?.has(child.id) === false) return this.forbidden(route);
+    if (this.permittedChildren(m)?.has(child.id) === false)
+      return this.forbidden(route);
     const medical = can.readMedical(m);
     return route.fulfill({
       json: {
@@ -2162,16 +4686,21 @@ export class FakeApi {
     if (!can.writeHouseholds(m)) return this.forbidden(route);
     const found = this.ownChild(m, id);
     if (!found) return route.fulfill({ status: 404 });
-    const body = route.request().postDataJSON() as { name: string; dateOfBirth: string | null; school: string };
+    const body = route.request().postDataJSON() as {
+      name: string;
+      dateOfBirth: string | null;
+      school: string;
+    };
     const errors: Record<string, string> = {};
-    if (!body.name?.trim()) errors['name'] = 'Enter the child’s name.';
-    if (!body.dateOfBirth) errors['dateOfBirth'] = 'Enter the date of birth.';
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    if (!body.name?.trim()) errors["name"] = "Enter the child’s name.";
+    if (!body.dateOfBirth) errors["dateOfBirth"] = "Enter the date of birth.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
     const name = body.name.trim();
-    const space = name.indexOf(' ');
+    const space = name.indexOf(" ");
     Object.assign(found.child, {
       firstName: space < 0 ? name : name.slice(0, space),
-      lastName: space < 0 ? '' : name.slice(space + 1),
+      lastName: space < 0 ? "" : name.slice(space + 1),
       dateOfBirth: body.dateOfBirth,
       school: body.school?.trim() || null,
     });
@@ -2184,7 +4713,14 @@ export class FakeApi {
     if (!can.writeMedical(m)) return this.forbidden(route);
     const found = this.ownChild(m, id);
     if (!found) return route.fulfill({ status: 404 });
-    const body = route.request().postDataJSON() as { allergies: string; medication: string; conditions: string; doctor: string; redAlert: boolean; alertInstruction: string };
+    const body = route.request().postDataJSON() as {
+      allergies: string;
+      medication: string;
+      conditions: string;
+      doctor: string;
+      redAlert: boolean;
+      alertInstruction: string;
+    };
     const clean = (v: string) => v?.trim() || null;
     found.child.medical = {
       allergies: clean(body.allergies),
@@ -2194,7 +4730,7 @@ export class FakeApi {
       redAlert: body.redAlert,
       alertInstruction: clean(body.alertInstruction),
       healthCard: found.child.medical.healthCard ?? null,
-      updatedAt: '2026-11-05T21:12:00Z',
+      updatedAt: "2026-11-05T21:12:00Z",
       updatedBy: m.personName,
     };
     return route.fulfill({ status: 204 });
@@ -2206,9 +4742,15 @@ export class FakeApi {
     if (!can.deleteHouseholds(m)) return this.forbidden(route);
     const h = this.ownHousehold(m, id);
     if (!h) return route.fulfill({ status: 404 });
-    const body = route.request().postDataJSON() as { reason: string; confirmName: string };
+    const body = route.request().postDataJSON() as {
+      reason: string;
+      confirmName: string;
+    };
     if (body.confirmName?.trim().toLowerCase() !== h.name.toLowerCase()) {
-      return route.fulfill({ status: 422, json: { errors: { confirmName: `Type ${h.name} to confirm.` } } });
+      return route.fulfill({
+        status: 422,
+        json: { errors: { confirmName: `Type ${h.name} to confirm.` } },
+      });
     }
     this.households = this.households.filter((x) => x !== h);
     return route.fulfill({ status: 204 });
@@ -2223,31 +4765,64 @@ export class FakeApi {
   private async findChildren(route: Route): Promise<void> {
     const m = await this.rosterCaller(route);
     if (!m) return;
-    const q = (new URL(route.request().url()).searchParams.get('q') ?? '').trim().toLowerCase();
+    const q = (new URL(route.request().url()).searchParams.get("q") ?? "")
+      .trim()
+      .toLowerCase();
     const children = !q
       ? []
       : this.childrenOf(m)
-          .filter(({ child }) => this.permittedChildren(m)?.has(child.id) !== false)
-          .filter(({ child }) => `${child.firstName} ${child.lastName}`.toLowerCase().includes(q))
-          .map(({ child, household }) => ({ id: child.id, name: `${child.firstName} ${child.lastName}`, age: ageOf(child.dateOfBirth), householdId: household.id, householdName: household.name }));
+          .filter(
+            ({ child }) => this.permittedChildren(m)?.has(child.id) !== false,
+          )
+          .filter(({ child }) =>
+            `${child.firstName} ${child.lastName}`.toLowerCase().includes(q),
+          )
+          .map(({ child, household }) => ({
+            id: child.id,
+            name: `${child.firstName} ${child.lastName}`,
+            age: ageOf(child.dateOfBirth),
+            householdId: household.id,
+            householdName: household.name,
+          }));
     return route.fulfill({ json: { children } });
   }
 
   private ownProgram(m: Membership, id: string): FakeProgram | undefined {
-    return this.programs.find((p) => p.id === id && p.organizationId === m.organizationId);
+    return this.programs.find(
+      (p) => p.id === id && p.organizationId === m.organizationId,
+    );
   }
 
   private async listPrograms(route: Route): Promise<void> {
     const m = await this.rosterCaller(route);
     if (!m) return;
-    const status = new URL(route.request().url()).searchParams.get('status') === 'archived' ? 'Archived' : 'Active';
-    const own = this.programs.filter((p) => p.organizationId === m.organizationId).sort((a, b) => a.startsOn.localeCompare(b.startsOn) || a.name.localeCompare(b.name));
-    const active = own.filter((p) => p.status === 'Active');
+    const status =
+      new URL(route.request().url()).searchParams.get("status") === "archived"
+        ? "Archived"
+        : "Active";
+    const own = this.programs
+      .filter((p) => p.organizationId === m.organizationId)
+      .sort(
+        (a, b) =>
+          a.startsOn.localeCompare(b.startsOn) || a.name.localeCompare(b.name),
+      );
+    const active = own.filter((p) => p.status === "Active");
     return route.fulfill({
       json: {
         programs: own
           .filter((p) => p.status === status)
-          .map((p) => ({ id: p.id, name: p.name, schedule: p.schedule, startsOn: p.startsOn, endsOn: p.endsOn, enrolled: p.roster.length, capacity: p.capacity, enrollmentOpen: p.enrollmentOpen, status: p.status, term: p.term })),
+          .map((p) => ({
+            id: p.id,
+            name: p.name,
+            schedule: p.schedule,
+            startsOn: p.startsOn,
+            endsOn: p.endsOn,
+            enrolled: p.roster.length,
+            capacity: p.capacity,
+            enrollmentOpen: p.enrollmentOpen,
+            status: p.status,
+            term: p.term,
+          })),
         active: active.length,
         archived: own.length - active.length,
         enrolled: active.reduce((n, p) => n + p.roster.length, 0),
@@ -2264,22 +4839,42 @@ export class FakeApi {
     const roster = p.roster
       .map((cid) => children.find((x) => x.child.id === cid))
       .filter((x) => !!x)
-      .sort((a, b) => a!.child.lastName.localeCompare(b!.child.lastName) || a!.child.firstName.localeCompare(b!.child.firstName))
-      .map((x) => ({ id: x!.child.id, householdId: x!.household.id, name: `${x!.child.firstName} ${x!.child.lastName}`, age: ageOf(x!.child.dateOfBirth), householdName: x!.household.name }));
+      .sort(
+        (a, b) =>
+          a!.child.lastName.localeCompare(b!.child.lastName) ||
+          a!.child.firstName.localeCompare(b!.child.firstName),
+      )
+      .map((x) => ({
+        id: x!.child.id,
+        householdId: x!.household.id,
+        name: `${x!.child.firstName} ${x!.child.lastName}`,
+        age: ageOf(x!.child.dateOfBirth),
+        householdName: x!.household.name,
+      }));
     const { roster: _, organizationId: __, ...rest } = p;
     const slug = this.enrollmentSlugs.get(p.id);
     return route.fulfill({
       json: {
         ...rest,
         enrollmentUrl: slug ? `http://localhost:4317/g/enroll/${slug}` : null,
-        pendingReviews: this.enrollmentRequests.filter((r) => r.programId === p.id && r.status === 'WaitingReview').length,
-        waitlisted: this.enrollmentRequests.filter((r) => r.programId === p.id && r.status === 'Waitlisted').length,
+        pendingReviews: this.enrollmentRequests.filter(
+          (r) => r.programId === p.id && r.status === "WaitingReview",
+        ).length,
+        waitlisted: this.enrollmentRequests.filter(
+          (r) => r.programId === p.id && r.status === "Waitlisted",
+        ).length,
         enrolled: roster.length,
         roster,
         events: this.events
           .filter((e) => e.programId === p.id)
           .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
-          .map((e) => ({ id: e.id, name: e.name, startsAt: e.startsAt, endsAt: e.endsAt, status: e.status })),
+          .map((e) => ({
+            id: e.id,
+            name: e.name,
+            startsAt: e.startsAt,
+            endsAt: e.endsAt,
+            status: e.status,
+          })),
       },
     });
   }
@@ -2290,15 +4885,29 @@ export class FakeApi {
     if (!can.managePrograms(m)) return this.forbidden(route);
     const existing = id ? this.ownProgram(m, id) : undefined;
     if (id && !existing) return route.fulfill({ status: 404 });
-    const b = route.request().postDataJSON() as { name: string; startsOn: string | null; endsOn: string | null; schedule: string; capacity: number; ages: string; enrollmentOpen: boolean; seasonConsent: boolean; term?: string | null };
+    const b = route.request().postDataJSON() as {
+      name: string;
+      startsOn: string | null;
+      endsOn: string | null;
+      schedule: string;
+      capacity: number;
+      ages: string;
+      enrollmentOpen: boolean;
+      seasonConsent: boolean;
+      term?: string | null;
+    };
     const errors: Record<string, string> = {};
-    if (!b.name?.trim()) errors['name'] = 'Enter the program name.';
-    if (!b.startsOn) errors['startsOn'] = 'Enter the start date.';
-    if (!b.endsOn) errors['endsOn'] = 'Enter the end date.';
-    else if (b.startsOn && b.endsOn < b.startsOn) errors['endsOn'] = 'End after it starts.';
-    if (!(b.capacity >= 1)) errors['capacity'] = 'Enter a capacity of 1 or more.';
-    if ((b.term?.trim().length ?? 0) > 40) errors['term'] = 'Keep the term under 40 characters.';
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    if (!b.name?.trim()) errors["name"] = "Enter the program name.";
+    if (!b.startsOn) errors["startsOn"] = "Enter the start date.";
+    if (!b.endsOn) errors["endsOn"] = "Enter the end date.";
+    else if (b.startsOn && b.endsOn < b.startsOn)
+      errors["endsOn"] = "End after it starts.";
+    if (!(b.capacity >= 1))
+      errors["capacity"] = "Enter a capacity of 1 or more.";
+    if ((b.term?.trim().length ?? 0) > 40)
+      errors["term"] = "Keep the term under 40 characters.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
     const values = {
       name: b.name.trim(),
       startsOn: b.startsOn!,
@@ -2315,7 +4924,15 @@ export class FakeApi {
       return route.fulfill({ status: 204 });
     }
     const newId = `p-new-${this.nextId++}`;
-    this.programs.push({ id: newId, organizationId: m.organizationId, ...values, status: 'Active', archivedAt: null, archivedBy: null, roster: [] });
+    this.programs.push({
+      id: newId,
+      organizationId: m.organizationId,
+      ...values,
+      status: "Active",
+      archivedAt: null,
+      archivedBy: null,
+      roster: [],
+    });
     return route.fulfill({ status: 201, json: { id: newId } });
   }
 
@@ -2325,11 +4942,21 @@ export class FakeApi {
     if (!can.managePrograms(m)) return this.forbidden(route);
     const p = this.ownProgram(m, id);
     if (!p) return route.fulfill({ status: 404 });
-    const { confirmName } = route.request().postDataJSON() as { confirmName: string };
+    const { confirmName } = route.request().postDataJSON() as {
+      confirmName: string;
+    };
     if (confirmName?.trim().toLowerCase() !== p.name.toLowerCase()) {
-      return route.fulfill({ status: 422, json: { errors: { confirmName: `Type ${p.name} to confirm.` } } });
+      return route.fulfill({
+        status: 422,
+        json: { errors: { confirmName: `Type ${p.name} to confirm.` } },
+      });
     }
-    Object.assign(p, { status: 'Archived', enrollmentOpen: false, archivedAt: NOW.toISOString(), archivedBy: m.personName });
+    Object.assign(p, {
+      status: "Archived",
+      enrollmentOpen: false,
+      archivedAt: NOW.toISOString(),
+      archivedBy: m.personName,
+    });
     return route.fulfill({ status: 204 });
   }
 
@@ -2339,7 +4966,7 @@ export class FakeApi {
     if (!can.managePrograms(m)) return this.forbidden(route);
     const p = this.ownProgram(m, id);
     if (!p) return route.fulfill({ status: 404 });
-    Object.assign(p, { status: 'Active', archivedAt: null, archivedBy: null });
+    Object.assign(p, { status: "Active", archivedAt: null, archivedBy: null });
     return route.fulfill({ status: 204 });
   }
 
@@ -2351,57 +4978,106 @@ export class FakeApi {
     if (!p) return route.fulfill({ status: 404 });
     const { childId } = route.request().postDataJSON() as { childId: string };
     const found = this.childrenOf(m).find((x) => x.child.id === childId);
-    const invalid = (message: string) => route.fulfill({ status: 422, json: { errors: { childId: message } } });
-    if (!found) return invalid('Choose a child from your roster.');
-    if (p.status === 'Archived') return invalid(`${p.name} is archived.`);
-    if (p.roster.includes(childId)) return invalid(`${found.child.firstName} ${found.child.lastName} is already enrolled.`);
-    if (p.roster.length >= p.capacity) return invalid(`${p.name} is full (${p.roster.length} of ${p.capacity}).`);
+    const invalid = (message: string) =>
+      route.fulfill({ status: 422, json: { errors: { childId: message } } });
+    if (!found) return invalid("Choose a child from your roster.");
+    if (p.status === "Archived") return invalid(`${p.name} is archived.`);
+    if (p.roster.includes(childId))
+      return invalid(
+        `${found.child.firstName} ${found.child.lastName} is already enrolled.`,
+      );
+    if (p.roster.length >= p.capacity)
+      return invalid(
+        `${p.name} is full (${p.roster.length} of ${p.capacity}).`,
+      );
     p.roster.push(childId);
     return route.fulfill({ status: 201, json: { id: `en-${this.nextId++}` } });
   }
 
-  private async unenroll(route: Route, id: string, childId: string): Promise<void> {
+  private async unenroll(
+    route: Route,
+    id: string,
+    childId: string,
+  ): Promise<void> {
     const m = await this.rosterCaller(route);
     if (!m) return;
     if (!can.managePrograms(m)) return this.forbidden(route);
     const p = this.ownProgram(m, id);
-    if (!p || !p.roster.includes(childId)) return route.fulfill({ status: 404 });
+    if (!p || !p.roster.includes(childId))
+      return route.fulfill({ status: 404 });
     p.roster = p.roster.filter((c) => c !== childId);
     return route.fulfill({ status: 204 });
   }
 
   /** Roles that run sessions without running any session (youth workers) open only the ones they are assigned to. */
   private mayRun(m: Membership, eventId: string): boolean {
-    return !can.runSessions(m) || can.runAnySession(m) || (this.sessionStaff.get(eventId) ?? []).includes(m.id);
+    return (
+      !can.runSessions(m) ||
+      can.runAnySession(m) ||
+      (this.sessionStaff.get(eventId) ?? []).includes(m.id)
+    );
   }
 
   private ownEvent(m: Membership, id: string): FakeEvent | undefined {
-    return this.events.find((e) => e.id === id && e.organizationId === m.organizationId);
+    return this.events.find(
+      (e) => e.id === id && e.organizationId === m.organizationId,
+    );
   }
 
   private eventSummary(e: FakeEvent) {
     const p = this.programs.find((x) => x.id === e.programId)!;
-    return { id: e.id, name: e.name, programId: p.id, programName: p.name, startsAt: e.startsAt, endsAt: e.endsAt, place: e.place, rosterSize: p.roster.length, slipStatus: e.slipStatus, status: e.status };
+    return {
+      id: e.id,
+      name: e.name,
+      programId: p.id,
+      programName: p.name,
+      startsAt: e.startsAt,
+      endsAt: e.endsAt,
+      place: e.place,
+      rosterSize: p.roster.length,
+      slipStatus: e.slipStatus,
+      status: e.status,
+    };
   }
 
   private async listEvents(route: Route): Promise<void> {
     const m = await this.rosterCaller(route);
     if (!m) return;
     const url = new URL(route.request().url());
-    const filter = url.searchParams.get('filter');
-    const programId = url.searchParams.get('programId');
-    const q = (url.searchParams.get('q') ?? '').trim().toLowerCase();
+    const filter = url.searchParams.get("filter");
+    const programId = url.searchParams.get("programId");
+    const q = (url.searchParams.get("q") ?? "").trim().toLowerCase();
     const now = NOW.toISOString();
-    const own = this.events.filter((e) => e.organizationId === m.organizationId);
-    const upcoming = own.filter((e) => e.endsAt >= now).sort((a, b) => a.startsAt.localeCompare(b.startsAt));
-    const needSlips = upcoming.filter((e) => e.status === 'Scheduled' && e.slipStatus === 'Draft');
+    const own = this.events.filter(
+      (e) => e.organizationId === m.organizationId,
+    );
+    const upcoming = own
+      .filter((e) => e.endsAt >= now)
+      .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+    const needSlips = upcoming.filter(
+      (e) => e.status === "Scheduled" && e.slipStatus === "Draft",
+    );
     const chosen =
-      filter === 'past' ? own.filter((e) => e.endsAt < now).sort((a, b) => b.startsAt.localeCompare(a.startsAt)) : filter === 'needs-slips' ? needSlips : upcoming;
+      filter === "past"
+        ? own
+            .filter((e) => e.endsAt < now)
+            .sort((a, b) => b.startsAt.localeCompare(a.startsAt))
+        : filter === "needs-slips"
+          ? needSlips
+          : upcoming;
     const events = chosen
       .map((e) => this.eventSummary(e))
       .filter((e) => !programId || e.programId === programId)
-      .filter((e) => !q || `${e.name} ${e.programName} ${e.place ?? ''}`.toLowerCase().includes(q));
-    return route.fulfill({ json: { events, upcoming: upcoming.length, needSlips: needSlips.length } });
+      .filter(
+        (e) =>
+          !q ||
+          `${e.name} ${e.programName} ${e.place ?? ""}`
+            .toLowerCase()
+            .includes(q),
+      );
+    return route.fulfill({
+      json: { events, upcoming: upcoming.length, needSlips: needSlips.length },
+    });
   }
 
   private async getEvent(route: Route, id: string): Promise<void> {
@@ -2410,7 +5086,13 @@ export class FakeApi {
     const e = this.ownEvent(m, id);
     if (!e) return route.fulfill({ status: 404 });
     const { organizationId: _, ...rest } = e;
-    return route.fulfill({ json: { ...rest, programName: this.eventSummary(e).programName, rosterSize: this.eventSummary(e).rosterSize } });
+    return route.fulfill({
+      json: {
+        ...rest,
+        programName: this.eventSummary(e).programName,
+        rosterSize: this.eventSummary(e).rosterSize,
+      },
+    });
   }
 
   private async saveEvent(route: Route, id: string | null): Promise<void> {
@@ -2419,15 +5101,27 @@ export class FakeApi {
     if (!can.manageEvents(m)) return this.forbidden(route);
     const existing = id ? this.ownEvent(m, id) : undefined;
     if (id && !existing) return route.fulfill({ status: 404 });
-    const b = route.request().postDataJSON() as { name: string; programId: string; startsAt: string | null; endsAt: string | null; place: string; requiresSlip: boolean; noShowAlert: boolean; staffNotes: string };
+    const b = route.request().postDataJSON() as {
+      name: string;
+      programId: string;
+      startsAt: string | null;
+      endsAt: string | null;
+      place: string;
+      requiresSlip: boolean;
+      noShowAlert: boolean;
+      staffNotes: string;
+    };
     const errors: Record<string, string> = {};
-    if (!b.name?.trim()) errors['name'] = 'Enter the event name.';
+    if (!b.name?.trim()) errors["name"] = "Enter the event name.";
     const program = this.ownProgram(m, b.programId);
-    if (!program || program.status !== 'Active') errors['programId'] = 'Choose an active program.';
-    if (!b.startsAt) errors['startsAt'] = 'Enter when it starts.';
-    if (!b.endsAt) errors['endsAt'] = 'Enter when it ends.';
-    else if (b.startsAt && new Date(b.endsAt) <= new Date(b.startsAt)) errors['endsAt'] = 'End after it starts.';
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    if (!program || program.status !== "Active")
+      errors["programId"] = "Choose an active program.";
+    if (!b.startsAt) errors["startsAt"] = "Enter when it starts.";
+    if (!b.endsAt) errors["endsAt"] = "Enter when it ends.";
+    else if (b.startsAt && new Date(b.endsAt) <= new Date(b.startsAt))
+      errors["endsAt"] = "End after it starts.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
     const values = {
       name: b.name.trim(),
       programId: b.programId,
@@ -2439,7 +5133,13 @@ export class FakeApi {
       staffNotes: b.staffNotes?.trim() || null,
     };
     if (existing) {
-      Object.assign(existing, values, { slipStatus: values.requiresSlip ? (existing.slipStatus === 'NotNeeded' ? 'Draft' : existing.slipStatus) : 'NotNeeded' });
+      Object.assign(existing, values, {
+        slipStatus: values.requiresSlip
+          ? existing.slipStatus === "NotNeeded"
+            ? "Draft"
+            : existing.slipStatus
+          : "NotNeeded",
+      });
       return route.fulfill({ status: 204 });
     }
     const newId = `e-new-${this.nextId++}`;
@@ -2447,8 +5147,8 @@ export class FakeApi {
       id: newId,
       organizationId: m.organizationId,
       ...values,
-      status: 'Scheduled',
-      slipStatus: values.requiresSlip ? 'Draft' : 'NotNeeded',
+      status: "Scheduled",
+      slipStatus: values.requiresSlip ? "Draft" : "NotNeeded",
       cancelledAt: null,
       cancelledBy: null,
       cancellationMessage: null,
@@ -2463,9 +5163,22 @@ export class FakeApi {
     if (!can.cancelEvents(m)) return this.forbidden(route);
     const e = this.ownEvent(m, id);
     if (!e) return route.fulfill({ status: 404 });
-    const b = route.request().postDataJSON() as { message: string; tellGuardians: boolean };
-    if (b.tellGuardians && !b.message?.trim()) return route.fulfill({ status: 422, json: { errors: { message: 'Write the message to guardians.' } } });
-    Object.assign(e, { status: 'Cancelled', cancelledAt: NOW.toISOString(), cancelledBy: m.personName, cancellationMessage: b.message?.trim() || null, guardiansTold: b.tellGuardians });
+    const b = route.request().postDataJSON() as {
+      message: string;
+      tellGuardians: boolean;
+    };
+    if (b.tellGuardians && !b.message?.trim())
+      return route.fulfill({
+        status: 422,
+        json: { errors: { message: "Write the message to guardians." } },
+      });
+    Object.assign(e, {
+      status: "Cancelled",
+      cancelledAt: NOW.toISOString(),
+      cancelledBy: m.personName,
+      cancellationMessage: b.message?.trim() || null,
+      guardiansTold: b.tellGuardians,
+    });
     return route.fulfill({ status: 204 });
   }
 
@@ -2476,7 +5189,7 @@ export class FakeApi {
       await this.unauthenticated(route);
       return null;
     }
-    if (!this.modules.get(membership.organizationId)!.includes('RollCall')) {
+    if (!this.modules.get(membership.organizationId)!.includes("RollCall")) {
       await route.fulfill({ status: 404 });
       return null;
     }
@@ -2493,8 +5206,12 @@ export class FakeApi {
     const records = this.sessionRecords(e.id);
     const walkIns = this.walkIns.filter((w) => w.eventId === e.id);
     const ids = [...p.roster, ...walkIns.map((w) => w.id)];
-    const checkedIn = ids.filter((id) => ['Present', 'SignedOut'].includes(records.get(id)?.status ?? '')).length;
-    const absent = ids.filter((id) => records.get(id)?.status === 'Absent').length;
+    const checkedIn = ids.filter((id) =>
+      ["Present", "SignedOut"].includes(records.get(id)?.status ?? ""),
+    ).length;
+    const absent = ids.filter(
+      (id) => records.get(id)?.status === "Absent",
+    ).length;
     return {
       id: e.id,
       name: e.name,
@@ -2518,10 +5235,16 @@ export class FakeApi {
     const m = await this.rollCallCaller(route);
     if (!m) return;
     // "Today" is 5 November 2026 in Hamilton: 05:00Z to the next 05:00Z.
-    const start = '2026-11-05T05:00:00.000Z';
-    const end = '2026-11-06T05:00:00.000Z';
+    const start = "2026-11-05T05:00:00.000Z";
+    const end = "2026-11-06T05:00:00.000Z";
     const sessions = this.events
-      .filter((e) => e.organizationId === m.organizationId && e.status === 'Scheduled' && e.startsAt < end && e.endsAt > start)
+      .filter(
+        (e) =>
+          e.organizationId === m.organizationId &&
+          e.status === "Scheduled" &&
+          e.startsAt < end &&
+          e.endsAt > start,
+      )
       .filter((e) => this.mayRun(m, e.id))
       .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
       .map((e) => this.sessionSummary(e));
@@ -2546,7 +5269,7 @@ export class FakeApi {
         age: ageOf(child.dateOfBirth),
         school: child.school,
         medicalFlag: can.readMedical(m) ? medicalFlag(child) : null,
-        status: records.get(child.id)?.status ?? 'NotYet',
+        status: records.get(child.id)?.status ?? "NotYet",
         checkedInAt: records.get(child.id)?.checkedInAt ?? null,
         walkIn: false,
         signedOutAt: records.get(child.id)?.signedOutAt ?? null,
@@ -2564,14 +5287,22 @@ export class FakeApi {
         name: w.childName,
         age: null,
         school: null,
-        medicalFlag: can.readMedical(m) && w.medicalNotes ? 'Medical note' : null,
-        status: records.get(w.id)?.status ?? 'NotYet',
+        medicalFlag:
+          can.readMedical(m) && w.medicalNotes ? "Medical note" : null,
+        status: records.get(w.id)?.status ?? "NotYet",
         checkedInAt: records.get(w.id)?.checkedInAt ?? null,
         walkIn: true,
         signedOutAt: records.get(w.id)?.signedOutAt ?? null,
         collectedBy: records.get(w.id)?.collectedBy ?? null,
       }));
-    return route.fulfill({ json: { session: this.sessionSummary(e), children: [...children, ...walkIns].sort((a, b) => a.name.localeCompare(b.name)) } });
+    return route.fulfill({
+      json: {
+        session: this.sessionSummary(e),
+        children: [...children, ...walkIns].sort((a, b) =>
+          a.name.localeCompare(b.name),
+        ),
+      },
+    });
   }
 
   private async runnableSession(route: Route, id: string) {
@@ -2597,16 +5328,31 @@ export class FakeApi {
     const found = await this.runnableSession(route, id);
     if (!found) return;
     const { m, e } = found;
-    if (e.status !== 'Scheduled') return route.fulfill({ status: 409, json: { code: 'conflict' } });
-    const b = route.request().postDataJSON() as { notCheckedIn: 'MarkAbsent' | 'LeaveNotRecorded'; notSignedOut: 'SignOutAtEnd' | 'LeaveUnsigned' };
+    if (e.status !== "Scheduled")
+      return route.fulfill({ status: 409, json: { code: "conflict" } });
+    const b = route.request().postDataJSON() as {
+      notCheckedIn: "MarkAbsent" | "LeaveNotRecorded";
+      notSignedOut: "SignOutAtEnd" | "LeaveUnsigned";
+    };
     const records = this.sessionRecords(e.id);
     const p = this.programs.find((x) => x.id === e.programId)!;
     for (const childId of p.roster) {
       const r = records.get(childId);
-      if ((!r || r.status === 'NotYet') && b.notCheckedIn === 'MarkAbsent') records.set(childId, { status: 'Absent', checkedInAt: null });
-      else if (r?.status === 'Present' && b.notSignedOut === 'SignOutAtEnd') records.set(childId, { ...r, status: 'SignedOut', signedOutAt: e.endsAt, collectedBy: 'A guardian, at the end of the session' });
+      if ((!r || r.status === "NotYet") && b.notCheckedIn === "MarkAbsent")
+        records.set(childId, { status: "Absent", checkedInAt: null });
+      else if (r?.status === "Present" && b.notSignedOut === "SignOutAtEnd")
+        records.set(childId, {
+          ...r,
+          status: "SignedOut",
+          signedOutAt: e.endsAt,
+          collectedBy: "A guardian, at the end of the session",
+        });
     }
-    Object.assign(e, { status: 'Ended', endedAt: NOW.toISOString(), endedBy: m.personName });
+    Object.assign(e, {
+      status: "Ended",
+      endedAt: NOW.toISOString(),
+      endedBy: m.personName,
+    });
     return route.fulfill({ json: this.sessionSummary(e) });
   }
 
@@ -2618,24 +5364,53 @@ export class FakeApi {
     return route.fulfill({ status: 204 });
   }
 
-  private async attend(route: Route, id: string, status: 'Present' | 'Absent'): Promise<void> {
+  private async attend(
+    route: Route,
+    id: string,
+    status: "Present" | "Absent",
+  ): Promise<void> {
     const m = await this.rollCallCaller(route);
     if (!m) return;
     if (!can.runSessions(m)) return this.forbidden(route);
     const e = this.ownEvent(m, id);
     if (!e) return route.fulfill({ status: 404 });
     if (!this.mayRun(m, e.id)) return this.forbidden(route);
-    const b = route.request().postDataJSON() as { childId: string; arrivedAt?: string | null; clientActionId: string };
-    if (this.actions.has(b.clientActionId)) return route.fulfill({ json: { status: 'saved' } });
-    if (e.status === 'Cancelled') return route.fulfill({ status: 422, json: { errors: { session: 'This session is cancelled.' } } });
-    if (e.status === 'Ended') return route.fulfill({ status: 422, json: { errors: { session: 'This session has ended.' } } });
+    const b = route.request().postDataJSON() as {
+      childId: string;
+      arrivedAt?: string | null;
+      clientActionId: string;
+    };
+    if (this.actions.has(b.clientActionId))
+      return route.fulfill({ json: { status: "saved" } });
+    if (e.status === "Cancelled")
+      return route.fulfill({
+        status: 422,
+        json: { errors: { session: "This session is cancelled." } },
+      });
+    if (e.status === "Ended")
+      return route.fulfill({
+        status: 422,
+        json: { errors: { session: "This session has ended." } },
+      });
     const p = this.programs.find((x) => x.id === e.programId)!;
     if (!p.roster.includes(b.childId)) {
-      return route.fulfill({ status: 422, json: { errors: { childId: 'This child is not on tonight’s roster. Add a walk-in instead.' } } });
+      return route.fulfill({
+        status: 422,
+        json: {
+          errors: {
+            childId:
+              "This child is not on tonight’s roster. Add a walk-in instead.",
+          },
+        },
+      });
     }
     this.actions.add(b.clientActionId);
-    this.sessionRecords(e.id).set(b.childId, { status, checkedInAt: status === 'Present' ? (b.arrivedAt ?? NOW.toISOString()) : null });
-    return route.fulfill({ json: { status: 'saved' } });
+    this.sessionRecords(e.id).set(b.childId, {
+      status,
+      checkedInAt:
+        status === "Present" ? (b.arrivedAt ?? NOW.toISOString()) : null,
+    });
+    return route.fulfill({ json: { status: "saved" } });
   }
 
   private async addWalkIn(route: Route, id: string): Promise<void> {
@@ -2645,14 +5420,29 @@ export class FakeApi {
     const e = this.ownEvent(m, id);
     if (!e) return route.fulfill({ status: 404 });
     if (!this.mayRun(m, e.id)) return this.forbidden(route);
-    const b = route.request().postDataJSON() as { childName: string; guardian: string; medicalNotes: string };
+    const b = route.request().postDataJSON() as {
+      childName: string;
+      guardian: string;
+      medicalNotes: string;
+    };
     const errors: Record<string, string> = {};
-    if (!b.childName?.trim()) errors['childName'] = 'Enter the child’s name.';
-    if (!b.guardian?.trim()) errors['guardian'] = 'Enter the guardian’s name and phone.';
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
-    const walkIn = { id: `w-${this.nextId++}`, eventId: e.id, childName: b.childName.trim(), guardian: b.guardian.trim(), medicalNotes: b.medicalNotes?.trim() || null };
+    if (!b.childName?.trim()) errors["childName"] = "Enter the child’s name.";
+    if (!b.guardian?.trim())
+      errors["guardian"] = "Enter the guardian’s name and phone.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
+    const walkIn = {
+      id: `w-${this.nextId++}`,
+      eventId: e.id,
+      childName: b.childName.trim(),
+      guardian: b.guardian.trim(),
+      medicalNotes: b.medicalNotes?.trim() || null,
+    };
     this.walkIns.push(walkIn);
-    this.sessionRecords(e.id).set(walkIn.id, { status: 'Present', checkedInAt: NOW.toISOString() });
+    this.sessionRecords(e.id).set(walkIn.id, {
+      status: "Present",
+      checkedInAt: NOW.toISOString(),
+    });
     return route.fulfill({ status: 201, json: { id: walkIn.id } });
   }
 
@@ -2660,7 +5450,7 @@ export class FakeApi {
   private async pickupCaller(route: Route): Promise<Membership | null> {
     const m = await this.rollCallCaller(route);
     if (!m) return null;
-    if (!this.modules.get(m.organizationId)!.includes('Pickup')) {
+    if (!this.modules.get(m.organizationId)!.includes("Pickup")) {
       await route.fulfill({ status: 404 });
       return null;
     }
@@ -2668,7 +5458,11 @@ export class FakeApi {
   }
 
   private sortedGuardians(household: FakeHousehold): FakeGuardian[] {
-    return [...household.guardians].sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.name.localeCompare(b.name));
+    return [...household.guardians].sort(
+      (a, b) =>
+        Number(b.isPrimary) - Number(a.isPrimary) ||
+        a.name.localeCompare(b.name),
+    );
   }
 
   private async pickups(route: Route, id: string): Promise<void> {
@@ -2684,18 +5478,41 @@ export class FakeApi {
         primaryName: guardians[0]?.name ?? null,
         primaryPhone: guardians[0]?.mobile ?? null,
         approved: [
-          ...guardians.filter((g) => g.canPickUp).map((g) => ({ guardianId: g.id, name: g.name, relationship: g.relationship, isPrimary: g.isPrimary, pickupId: null })),
-          ...this.activePickups(found.child.id).map((x) => ({ guardianId: null, name: x.name, relationship: x.relationship, isPrimary: false, pickupId: x.id })),
+          ...guardians
+            .filter((g) => g.canPickUp)
+            .map((g) => ({
+              guardianId: g.id,
+              name: g.name,
+              relationship: g.relationship,
+              isPrimary: g.isPrimary,
+              pickupId: null,
+            })),
+          ...this.activePickups(found.child.id).map((x) => ({
+            guardianId: null,
+            name: x.name,
+            relationship: x.relationship,
+            isPrimary: false,
+            pickupId: x.id,
+          })),
         ],
       },
     });
   }
 
   /** An adult already approved besides the guardians (seeded as the API would store it). */
-  approvePickup(childId: string, name: string, relationship = 'Aunt'): string {
-    const household = this.households.find((h) => h.children.some((c) => c.id === childId))!;
+  approvePickup(childId: string, name: string, relationship = "Aunt"): string {
+    const household = this.households.find((h) =>
+      h.children.some((c) => c.id === childId),
+    )!;
     const id = `pu-${this.nextId++}`;
-    this.extraPickups.push({ id, childId, householdId: household.id, name, relationship, removed: false });
+    this.extraPickups.push({
+      id,
+      childId,
+      householdId: household.id,
+      name,
+      relationship,
+      removed: false,
+    });
     return id;
   }
 
@@ -2705,7 +5522,7 @@ export class FakeApi {
       await this.unauthenticated(route);
       return null;
     }
-    if (m.role !== 'Admin') {
+    if (m.role !== "Admin") {
       await this.forbidden(route);
       return null;
     }
@@ -2713,12 +5530,28 @@ export class FakeApi {
   }
 
   private staffOf(m: Membership) {
-    return memberships.filter((x) => x.organizationId === m.organizationId && !this.removedMembers.has(x.id));
+    return memberships.filter(
+      (x) =>
+        x.organizationId === m.organizationId && !this.removedMembers.has(x.id),
+    );
   }
 
   /** An emailed invitation for this test, reachable at /invite/{token}; expired ones answer 410. */
-  sentInvitation(token: string, email: string, role = 'YouthWorker', expired = false, youth: { childId: string; suggestedName: string } | null = null): void {
-    this.invitationLinks.set(token, { email, role, expired, accepted: false, childId: youth?.childId ?? null, suggestedName: youth?.suggestedName ?? null });
+  sentInvitation(
+    token: string,
+    email: string,
+    role = "YouthWorker",
+    expired = false,
+    youth: { childId: string; suggestedName: string } | null = null,
+  ): void {
+    this.invitationLinks.set(token, {
+      email,
+      role,
+      expired,
+      accepted: false,
+      childId: youth?.childId ?? null,
+      suggestedName: youth?.suggestedName ?? null,
+    });
   }
 
   /** An admin withdrew this emailed invitation; its link answers 410 "withdrawn". */
@@ -2727,8 +5560,20 @@ export class FakeApi {
   }
 
   /** An invitation on Harbourview's Staff and roles, as an admin sent it; expired ones stay listed to resend (L2-052). */
-  pendingInvitation(i: { email: string; role: string; childName?: string; expired?: boolean; replacementRequested?: boolean }): void {
-    this.invitations.push({ id: `inv-${this.nextId++}`, organizationId: 'org-harbourview', invitedBy: 'Tom Nguyen', withdrawn: false, ...i });
+  pendingInvitation(i: {
+    email: string;
+    role: string;
+    childName?: string;
+    expired?: boolean;
+    replacementRequested?: boolean;
+  }): void {
+    this.invitations.push({
+      id: `inv-${this.nextId++}`,
+      organizationId: "org-harbourview",
+      invitedBy: "Tom Nguyen",
+      withdrawn: false,
+      ...i,
+    });
   }
 
   /** The child a youth account made by accepting an invitation links to, by its email. */
@@ -2743,53 +5588,96 @@ export class FakeApi {
   private async getInvitation(route: Route, token: string): Promise<void> {
     const i = this.invitationLinks.get(token);
     const reason = this.goneReason(i);
-    if (reason) return route.fulfill({ status: 410, json: { reason, invitedBy: i ? 'Tom Nguyen' : null, organization: i ? 'Harbourview Youth Collective' : null } });
-    return route.fulfill({ json: { email: i!.email, organization: 'Harbourview Youth Collective', role: i!.role, invitedBy: 'Tom Nguyen', suggestedName: i!.suggestedName } });
+    if (reason)
+      return route.fulfill({
+        status: 410,
+        json: {
+          reason,
+          invitedBy: i ? "Tom Nguyen" : null,
+          organization: i ? "Harbourview Youth Collective" : null,
+        },
+      });
+    return route.fulfill({
+      json: {
+        email: i!.email,
+        organization: "Harbourview Youth Collective",
+        role: i!.role,
+        invitedBy: "Tom Nguyen",
+        suggestedName: i!.suggestedName,
+      },
+    });
   }
 
   /** Anonymous: only an expired link may ask, and asking twice records once (L2-054). */
   private async requestNewLink(route: Route, token: string): Promise<void> {
-    if (this.goneReason(this.invitationLinks.get(token)) !== 'expired') return route.fulfill({ status: 404 });
+    if (this.goneReason(this.invitationLinks.get(token)) !== "expired")
+      return route.fulfill({ status: 404 });
     if (!this.newLinkRequests.includes(token)) this.newLinkRequests.push(token);
     return route.fulfill({ status: 202 });
   }
 
   /** Why a link no longer works, as the server answers it (L2-052, L2-054); an unknown token reads as used. */
-  private goneReason(i: { expired: boolean; accepted: boolean; withdrawn?: boolean } | undefined): string | null {
-    if (!i || i.accepted) return 'used';
-    if (i.withdrawn) return 'withdrawn';
-    return i.expired ? 'expired' : null;
+  private goneReason(
+    i: { expired: boolean; accepted: boolean; withdrawn?: boolean } | undefined,
+  ): string | null {
+    if (!i || i.accepted) return "used";
+    if (i.withdrawn) return "withdrawn";
+    return i.expired ? "expired" : null;
   }
 
   private async acceptInvitation(route: Route, token: string): Promise<void> {
     const i = this.invitationLinks.get(token);
     const reason = this.goneReason(i);
-    if (reason) return route.fulfill({ status: 410, json: { reason, invitedBy: i ? 'Tom Nguyen' : null, organization: i ? 'Harbourview Youth Collective' : null } });
-    const b = route.request().postDataJSON() as { name?: string; password?: string };
+    if (reason)
+      return route.fulfill({
+        status: 410,
+        json: {
+          reason,
+          invitedBy: i ? "Tom Nguyen" : null,
+          organization: i ? "Harbourview Youth Collective" : null,
+        },
+      });
+    const b = route.request().postDataJSON() as {
+      name?: string;
+      password?: string;
+    };
     const errors: Record<string, string> = {};
-    if (!b.name?.trim()) errors['name'] = 'Enter your name.';
+    if (!b.name?.trim()) errors["name"] = "Enter your name.";
     const weak = passwordProblem(b.password, i.email);
-    if (weak) errors['password'] = weak;
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    if (weak) errors["password"] = weak;
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
     i.accepted = true;
-    if (['Youth', 'Mentor', 'Volunteer'].includes(i.role)) {
+    if (["Youth", "Mentor", "Volunteer"].includes(i.role)) {
       // A participant joins as a new membership of this test; a youth account links to the invitation's child (L2-052).
       const id = `m-joined-${this.nextId++}`;
-      memberships.push({ id, organizationId: 'org-harbourview', personName: b.name!.trim(), email: i.email, role: i.role as Membership['role'] });
+      memberships.push({
+        id,
+        organizationId: "org-harbourview",
+        personName: b.name!.trim(),
+        email: i.email,
+        role: i.role as Membership["role"],
+      });
       if (i.childId) this.youthLinks.set(id, i.childId);
       this.membershipId = id;
-      return route.fulfill({ json: { status: 'signed-in' } });
+      return route.fulfill({ json: { status: "signed-in" } });
     }
     // The new worker signs in as the seeded youth worker membership (the fake has no account store).
-    this.membershipId = 'm-aisha';
-    return route.fulfill({ json: { status: 'signed-in' } });
+    this.membershipId = "m-aisha";
+    return route.fulfill({ json: { status: "signed-in" } });
   }
 
   private async savePhone(route: Route): Promise<void> {
     const m = memberships.find((x) => x.id === this.membershipId);
     if (!m) return this.unauthenticated(route);
     const b = route.request().postDataJSON() as { mobile?: string };
-    if ((b.mobile ?? '').replace(/\D/g, '').length !== 10) return route.fulfill({ status: 422, json: { errors: { mobile: 'Include the area code, like 905-555-0101.' } } });
+    if ((b.mobile ?? "").replace(/\D/g, "").length !== 10)
+      return route.fulfill({
+        status: 422,
+        json: {
+          errors: { mobile: "Include the area code, like 905-555-0101." },
+        },
+      });
     this.savedPhone = b.mobile!;
     return route.fulfill({ status: 204 });
   }
@@ -2797,29 +5685,79 @@ export class FakeApi {
   private async coverage(route: Route): Promise<void> {
     const m = memberships.find((x) => x.id === this.membershipId);
     if (!m) return this.unauthenticated(route);
-    if (!['Admin', 'ProgramDirector', 'SiteLead', 'VolunteerCoordinator'].includes(m.role)) return this.forbidden(route);
+    if (
+      ![
+        "Admin",
+        "ProgramDirector",
+        "SiteLead",
+        "VolunteerCoordinator",
+      ].includes(m.role)
+    )
+      return this.forbidden(route);
     const people = this.staffOf(m);
     const end = NOW.getTime() + 14 * 24 * 3600 * 1000;
     const sessions = this.events
-      .filter((e) => e.organizationId === m.organizationId && e.status === 'Scheduled' && new Date(e.endsAt).getTime() > NOW.getTime() && new Date(e.startsAt).getTime() < end)
+      .filter(
+        (e) =>
+          e.organizationId === m.organizationId &&
+          e.status === "Scheduled" &&
+          new Date(e.endsAt).getTime() > NOW.getTime() &&
+          new Date(e.startsAt).getTime() < end,
+      )
       .sort((a, z) => a.startsAt.localeCompare(z.startsAt))
       .map((e) => {
-        const staff = (this.sessionStaff.get(e.id) ?? []).map((id) => people.find((p) => p.id === id)).filter((p) => !!p).map((p) => ({ id: p!.id, name: p!.personName, role: p!.role }));
-        return { id: e.id, name: e.name, startsAt: e.startsAt, endsAt: e.endsAt, place: e.place, staff, gap: staff.length === 0 };
+        const staff = (this.sessionStaff.get(e.id) ?? [])
+          .map((id) => people.find((p) => p.id === id))
+          .filter((p) => !!p)
+          .map((p) => ({ id: p!.id, name: p!.personName, role: p!.role }));
+        return {
+          id: e.id,
+          name: e.name,
+          startsAt: e.startsAt,
+          endsAt: e.endsAt,
+          place: e.place,
+          staff,
+          gap: staff.length === 0,
+        };
       });
     // Youth accounts are never staffed onto a session (ADR 0043).
-    const assignable = people.filter((p) => p.role !== 'Youth');
-    return route.fulfill({ json: { sessions, people: assignable.map((p) => ({ id: p.id, name: p.personName, role: p.role })) } });
+    const assignable = people.filter((p) => p.role !== "Youth");
+    return route.fulfill({
+      json: {
+        sessions,
+        people: assignable.map((p) => ({
+          id: p.id,
+          name: p.personName,
+          role: p.role,
+        })),
+      },
+    });
   }
 
   private async assignStaff(route: Route, eventId: string): Promise<void> {
     const m = memberships.find((x) => x.id === this.membershipId);
     if (!m) return this.unauthenticated(route);
-    if (!['Admin', 'ProgramDirector', 'SiteLead', 'VolunteerCoordinator'].includes(m.role)) return this.forbidden(route);
+    if (
+      ![
+        "Admin",
+        "ProgramDirector",
+        "SiteLead",
+        "VolunteerCoordinator",
+      ].includes(m.role)
+    )
+      return this.forbidden(route);
     const e = this.ownEvent(m, eventId);
     if (!e) return route.fulfill({ status: 404 });
     const b = route.request().postDataJSON() as { membershipIds: string[] };
-    if (b.membershipIds.some((id) => !this.staffOf(m).some((p) => p.id === id))) return route.fulfill({ status: 422, json: { errors: { membershipIds: 'Choose people who work for this organization.' } } });
+    if (b.membershipIds.some((id) => !this.staffOf(m).some((p) => p.id === id)))
+      return route.fulfill({
+        status: 422,
+        json: {
+          errors: {
+            membershipIds: "Choose people who work for this organization.",
+          },
+        },
+      });
     this.sessionStaff.set(e.id, [...b.membershipIds]);
     return route.fulfill({ status: 204 });
   }
@@ -2830,7 +5768,13 @@ export class FakeApi {
     return route.fulfill({
       json: {
         members: this.staffOf(m)
-          .map((x) => ({ id: x.id, name: x.personName, email: x.email, role: this.roleOverrides.get(x.id) ?? x.role, isYou: x.id === m.id }))
+          .map((x) => ({
+            id: x.id,
+            name: x.personName,
+            email: x.email,
+            role: this.roleOverrides.get(x.id) ?? x.role,
+            isYou: x.id === m.id,
+          }))
           .sort((a, z) => a.name.localeCompare(z.name)),
         invitations: this.invitations
           .filter((i) => i.organizationId === m.organizationId && !i.withdrawn)
@@ -2839,10 +5783,13 @@ export class FakeApi {
             email: i.email,
             role: i.role,
             invitedBy: i.invitedBy,
-            invitedAt: '2026-11-05T21:12:00Z',
-            expiresAt: i.expired ? '2026-11-04T21:12:00Z' : '2026-11-19T21:12:00Z',
-            status: i.expired ? 'Expired' : 'Pending',
-            childName: i.childName ?? (i.childId ? this.childName(i.childId) : null),
+            invitedAt: "2026-11-05T21:12:00Z",
+            expiresAt: i.expired
+              ? "2026-11-04T21:12:00Z"
+              : "2026-11-19T21:12:00Z",
+            status: i.expired ? "Expired" : "Pending",
+            childName:
+              i.childName ?? (i.childId ? this.childName(i.childId) : null),
             replacementRequested: !!i.replacementRequested,
           })),
       },
@@ -2852,28 +5799,79 @@ export class FakeApi {
   private async inviteStaff(route: Route): Promise<void> {
     const m = memberships.find((x) => x.id === this.membershipId);
     if (!m) return this.unauthenticated(route);
-    if (!['Admin', 'VolunteerCoordinator'].includes(m.role)) return this.forbidden(route);
-    const b = route.request().postDataJSON() as { email?: string; role?: string };
-    const email = (b.email ?? '').trim().toLowerCase();
+    if (!["Admin", "VolunteerCoordinator"].includes(m.role))
+      return this.forbidden(route);
+    const b = route.request().postDataJSON() as {
+      email?: string;
+      role?: string;
+    };
+    const email = (b.email ?? "").trim().toLowerCase();
     const errors: Record<string, string> = {};
-    if (!/^[^@]+@[^@]+\.[^@]+$/.test(email)) errors['email'] = 'Enter a work email like name@example.org.';
-    if (!['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker', 'VolunteerCoordinator', 'Youth', 'Mentor', 'Volunteer'].includes(b.role ?? '')) errors['role'] = 'Choose a role.';
-    if (!errors['role'] && m.role === 'VolunteerCoordinator' && b.role !== 'YouthWorker') errors['role'] = 'Coordinators invite youth workers. Ask an admin for other roles.';
-    else if (!errors['role'] && b.role === 'Youth') errors['role'] = 'Invite youth from their child record.';
-    else if (!errors['role'] && b.role === 'Mentor' && !this.modules.get(m.organizationId)!.includes('Mentoring')) errors['role'] = 'Turn on Mentoring to invite mentors.';
+    if (!/^[^@]+@[^@]+\.[^@]+$/.test(email))
+      errors["email"] = "Enter a work email like name@example.org.";
+    if (
+      ![
+        "Admin",
+        "ProgramDirector",
+        "SiteLead",
+        "YouthWorker",
+        "VolunteerCoordinator",
+        "Youth",
+        "Mentor",
+        "Volunteer",
+      ].includes(b.role ?? "")
+    )
+      errors["role"] = "Choose a role.";
+    if (
+      !errors["role"] &&
+      m.role === "VolunteerCoordinator" &&
+      b.role !== "YouthWorker"
+    )
+      errors["role"] =
+        "Coordinators invite youth workers. Ask an admin for other roles.";
+    else if (!errors["role"] && b.role === "Youth")
+      errors["role"] = "Invite youth from their child record.";
+    else if (
+      !errors["role"] &&
+      b.role === "Mentor" &&
+      !this.modules.get(m.organizationId)!.includes("Mentoring")
+    )
+      errors["role"] = "Turn on Mentoring to invite mentors.";
     const member = this.staffOf(m).find((x) => x.email === email);
-    if (!errors['email'] && member) errors['email'] = `${member.personName} already has access.`;
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    if (!errors["email"] && member)
+      errors["email"] = `${member.personName} already has access.`;
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
     const id = `inv-${this.nextId++}`;
-    this.invitations.push({ id, organizationId: m.organizationId, email, role: b.role!, invitedBy: m.personName, withdrawn: false });
+    this.invitations.push({
+      id,
+      organizationId: m.organizationId,
+      email,
+      role: b.role!,
+      invitedBy: m.personName,
+      withdrawn: false,
+    });
     return route.fulfill({ status: 201, json: { id } });
   }
 
   /** The caller for the youth-account endpoints: an admin, Learning on, a child of their organization (L2-051). */
-  private async youthCaller(route: Route, childId: string): Promise<{ m: Membership; child: { id: string; firstName: string; lastName: string; dateOfBirth: string } } | null> {
+  private async youthCaller(
+    route: Route,
+    childId: string,
+  ): Promise<{
+    m: Membership;
+    child: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      dateOfBirth: string;
+    };
+  } | null> {
     const m = await this.adminCaller(route);
     if (!m) return null;
-    const found = this.modules.get(m.organizationId)!.includes('Learning') ? this.ownChild(m, childId) : undefined;
+    const found = this.modules.get(m.organizationId)!.includes("Learning")
+      ? this.ownChild(m, childId)
+      : undefined;
     if (!found) {
       await route.fulfill({ status: 404 });
       return null;
@@ -2883,47 +5881,93 @@ export class FakeApi {
 
   private linkedYouth(childId: string): Membership | undefined {
     const id = [...this.youthLinks].find(([, c]) => c === childId)?.[0];
-    return memberships.find((x) => x.id === id && !this.removedMembers.has(x.id));
+    return memberships.find(
+      (x) => x.id === id && !this.removedMembers.has(x.id),
+    );
   }
 
   private async youthAccount(route: Route, childId: string): Promise<void> {
     const found = await this.youthCaller(route, childId);
     if (!found) return;
     const member = this.linkedYouth(childId);
-    if (member) return route.fulfill({ json: { status: 'Active', name: member.personName, email: member.email, expiresAt: null } });
-    const waiting = this.invitations.find((i) => i.childId === childId && !i.withdrawn);
-    return route.fulfill({ json: waiting ? { status: 'Invited', name: null, email: waiting.email, expiresAt: '2026-11-19T21:12:00Z' } : { status: 'None', name: null, email: null, expiresAt: null } });
+    if (member)
+      return route.fulfill({
+        json: {
+          status: "Active",
+          name: member.personName,
+          email: member.email,
+          expiresAt: null,
+        },
+      });
+    const waiting = this.invitations.find(
+      (i) => i.childId === childId && !i.withdrawn,
+    );
+    return route.fulfill({
+      json: waiting
+        ? {
+            status: "Invited",
+            name: null,
+            email: waiting.email,
+            expiresAt: "2026-11-19T21:12:00Z",
+          }
+        : { status: "None", name: null, email: null, expiresAt: null },
+    });
   }
 
   private async inviteYouth(route: Route, childId: string): Promise<void> {
     const found = await this.youthCaller(route, childId);
     if (!found) return;
     const { m, child } = found;
-    const email = ((route.request().postDataJSON() as { email?: string }).email ?? '').trim().toLowerCase();
+    const email = (
+      (route.request().postDataJSON() as { email?: string }).email ?? ""
+    )
+      .trim()
+      .toLowerCase();
     const name = `${child.firstName} ${child.lastName}`;
     const age = ageOf(child.dateOfBirth);
     const errors: Record<string, string> = {};
-    if (age < 12 || age > 18) errors['childId'] = 'Youth accounts are for ages 12 to 18.';
-    else if (this.linkedYouth(child.id)) errors['childId'] = `${name} already has a youth account.`;
-    else if (this.invitations.some((i) => i.childId === child.id && !i.withdrawn)) errors['childId'] = `An invitation for ${name} is already waiting.`;
+    if (age < 12 || age > 18)
+      errors["childId"] = "Youth accounts are for ages 12 to 18.";
+    else if (this.linkedYouth(child.id))
+      errors["childId"] = `${name} already has a youth account.`;
+    else if (
+      this.invitations.some((i) => i.childId === child.id && !i.withdrawn)
+    )
+      errors["childId"] = `An invitation for ${name} is already waiting.`;
     const member = this.staffOf(m).find((x) => x.email === email);
-    if (!/^[^@]+@[^@]+\.[^@]+$/.test(email)) errors['email'] = 'Enter an email like name@example.org.';
-    else if (member) errors['email'] = `${member.personName} already has access.`;
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    if (!/^[^@]+@[^@]+\.[^@]+$/.test(email))
+      errors["email"] = "Enter an email like name@example.org.";
+    else if (member)
+      errors["email"] = `${member.personName} already has access.`;
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
     const id = `inv-${this.nextId++}`;
-    this.invitations.push({ id, organizationId: m.organizationId, email, role: 'Youth', invitedBy: m.personName, withdrawn: false, childId: child.id });
+    this.invitations.push({
+      id,
+      organizationId: m.organizationId,
+      email,
+      role: "Youth",
+      invitedBy: m.personName,
+      withdrawn: false,
+      childId: child.id,
+    });
     return route.fulfill({ status: 201, json: { id } });
   }
 
   private childName(childId: string): string | null {
-    const c = this.households.flatMap((h) => h.children).find((x) => x.id === childId);
+    const c = this.households
+      .flatMap((h) => h.children)
+      .find((x) => x.id === childId);
     return c ? `${c.firstName} ${c.lastName}` : null;
   }
 
   private async resendInvitation(route: Route, id: string): Promise<void> {
     const m = await this.adminCaller(route);
     if (!m) return;
-    const i = this.invitations.find((x) => x.id === id && x.organizationId === m.organizationId && !x.withdrawn);
+    const i = this.invitations.find(
+      (x) =>
+        x.id === id && x.organizationId === m.organizationId && !x.withdrawn,
+    );
     if (!i) return route.fulfill({ status: 404 });
     i.expired = false;
     i.replacementRequested = false;
@@ -2934,7 +5978,10 @@ export class FakeApi {
   private async withdrawInvitation(route: Route, id: string): Promise<void> {
     const m = await this.adminCaller(route);
     if (!m) return;
-    const i = this.invitations.find((x) => x.id === id && x.organizationId === m.organizationId && !x.withdrawn);
+    const i = this.invitations.find(
+      (x) =>
+        x.id === id && x.organizationId === m.organizationId && !x.withdrawn,
+    );
     if (!i) return route.fulfill({ status: 404 });
     i.withdrawn = true;
     return route.fulfill({ status: 204 });
@@ -2945,8 +5992,15 @@ export class FakeApi {
     if (!m) return;
     const target = this.staffOf(m).find((x) => x.id === id);
     if (!target) return route.fulfill({ status: 404 });
-    if (target.id === m.id) return route.fulfill({ status: 422, json: { errors: { role: 'You can’t change your own role.' } } });
-    this.roleOverrides.set(id, (route.request().postDataJSON() as { role: string }).role);
+    if (target.id === m.id)
+      return route.fulfill({
+        status: 422,
+        json: { errors: { role: "You can’t change your own role." } },
+      });
+    this.roleOverrides.set(
+      id,
+      (route.request().postDataJSON() as { role: string }).role,
+    );
     return route.fulfill({ status: 204 });
   }
 
@@ -2955,23 +6009,46 @@ export class FakeApi {
     if (!m) return;
     const target = this.staffOf(m).find((x) => x.id === id);
     if (!target) return route.fulfill({ status: 404 });
-    if (target.id === m.id) return route.fulfill({ status: 422, json: { errors: { member: 'You can’t remove your own access. Ask another admin.' } } });
+    if (target.id === m.id)
+      return route.fulfill({
+        status: 422,
+        json: {
+          errors: {
+            member: "You can’t remove your own access. Ask another admin.",
+          },
+        },
+      });
     this.removedMembers.add(id);
     return route.fulfill({ status: 204 });
   }
 
   /** The guardian answers the latest waiting pickup request from their phone, as the family page would. */
   guardianDecides(approve: boolean): void {
-    const r = [...this.pickupRequests].reverse().find((x) => x.status === 'Pending')!;
+    const r = [...this.pickupRequests]
+      .reverse()
+      .find((x) => x.status === "Pending")!;
     const household = this.households.find((h) => h.id === r.householdId)!;
-    Object.assign(r, { status: approve ? 'Approved' : 'Refused', decidedBy: this.sortedGuardians(household)[0]?.name ?? null });
+    Object.assign(r, {
+      status: approve ? "Approved" : "Refused",
+      decidedBy: this.sortedGuardians(household)[0]?.name ?? null,
+    });
   }
 
   /** Someone waiting to collect a child of this household (seeded as the API would store it). */
   waitingPickup(eventId: string, childId: string, collector: string): string {
-    const household = this.households.find((h) => h.children.some((c) => c.id === childId))!;
+    const household = this.households.find((h) =>
+      h.children.some((c) => c.id === childId),
+    )!;
     const id = `pr-${this.nextId++}`;
-    this.pickupRequests.push({ id, eventId, childId, householdId: household.id, collector, status: 'Pending', decidedBy: null });
+    this.pickupRequests.push({
+      id,
+      eventId,
+      childId,
+      householdId: household.id,
+      collector,
+      status: "Pending",
+      decidedBy: null,
+    });
     return id;
   }
 
@@ -2979,12 +6056,26 @@ export class FakeApi {
     const m = await this.pickupCaller(route);
     if (!m) return;
     const e = this.ownEvent(m, eventId);
-    const b = route.request().postDataJSON() as { childId: string; collectorName: string };
+    const b = route.request().postDataJSON() as {
+      childId: string;
+      collectorName: string;
+    };
     const found = this.ownChild(m, b.childId);
     if (!e || !found) return route.fulfill({ status: 404 });
-    if (this.sessionRecords(e.id).get(b.childId)?.status !== 'Present') return route.fulfill({ status: 422, json: { errors: { childId: 'Not checked in.' } } });
-    if (!b.collectorName?.trim()) return route.fulfill({ status: 422, json: { errors: { collectorName: 'Enter their name.' } } });
-    return route.fulfill({ status: 201, json: { id: this.waitingPickup(e.id, b.childId, b.collectorName.trim()) } });
+    if (this.sessionRecords(e.id).get(b.childId)?.status !== "Present")
+      return route.fulfill({
+        status: 422,
+        json: { errors: { childId: "Not checked in." } },
+      });
+    if (!b.collectorName?.trim())
+      return route.fulfill({
+        status: 422,
+        json: { errors: { collectorName: "Enter their name." } },
+      });
+    return route.fulfill({
+      status: 201,
+      json: { id: this.waitingPickup(e.id, b.childId, b.collectorName.trim()) },
+    });
   }
 
   private async pickupRequest(route: Route, id: string): Promise<void> {
@@ -2992,33 +6083,76 @@ export class FakeApi {
     if (!m) return;
     const r = this.pickupRequests.find((x) => x.id === id);
     if (!r) return route.fulfill({ status: 404 });
-    return route.fulfill({ json: { id: r.id, childId: r.childId, collectorName: r.collector, status: r.status, decidedBy: r.decidedBy, decidedAt: null, incidentId: r.status === 'Refused' ? 'inc-refused' : null } });
+    return route.fulfill({
+      json: {
+        id: r.id,
+        childId: r.childId,
+        collectorName: r.collector,
+        status: r.status,
+        decidedBy: r.decidedBy,
+        decidedAt: null,
+        incidentId: r.status === "Refused" ? "inc-refused" : null,
+      },
+    });
   }
 
-  private async guardianDecidesPickup(route: Route, token: string, id: string): Promise<void> {
+  private async guardianDecidesPickup(
+    route: Route,
+    token: string,
+    id: string,
+  ): Promise<void> {
     const household = this.guardianHousehold(token);
-    if (!household) return route.fulfill({ status: 410, json: { code: 'link-expired' } });
-    if (!this.trustedHouseholds.has(household.id)) return route.fulfill({ status: 401, json: { code: 'verification-required' } });
-    const r = this.pickupRequests.find((x) => x.id === id && x.householdId === household.id && x.status === 'Pending');
+    if (!household)
+      return route.fulfill({ status: 410, json: { code: "link-expired" } });
+    if (!this.trustedHouseholds.has(household.id))
+      return route.fulfill({
+        status: 401,
+        json: { code: "verification-required" },
+      });
+    const r = this.pickupRequests.find(
+      (x) =>
+        x.id === id && x.householdId === household.id && x.status === "Pending",
+    );
     if (!r) return route.fulfill({ status: 404 });
     const b = route.request().postDataJSON() as { approve: boolean };
-    Object.assign(r, { status: b.approve ? 'Approved' : 'Refused', decidedBy: this.sortedGuardians(household)[0]?.name ?? null });
+    Object.assign(r, {
+      status: b.approve ? "Approved" : "Refused",
+      decidedBy: this.sortedGuardians(household)[0]?.name ?? null,
+    });
     return route.fulfill({ status: 204 });
   }
 
-  private async guardianUpdateHousehold(route: Route, token: string): Promise<void> {
+  private async guardianUpdateHousehold(
+    route: Route,
+    token: string,
+  ): Promise<void> {
     const household = this.guardianHousehold(token);
-    if (!household) return route.fulfill({ status: 410, json: { code: 'link-expired' } });
-    if (!this.trustedHouseholds.has(household.id)) return route.fulfill({ status: 401, json: { code: 'verification-required' } });
-    const b = route.request().postDataJSON() as { mobile?: string; email?: string; language?: string };
+    if (!household)
+      return route.fulfill({ status: 410, json: { code: "link-expired" } });
+    if (!this.trustedHouseholds.has(household.id))
+      return route.fulfill({
+        status: 401,
+        json: { code: "verification-required" },
+      });
+    const b = route.request().postDataJSON() as {
+      mobile?: string;
+      email?: string;
+      language?: string;
+    };
     const mobile = b.mobile?.trim() || null;
     const email = b.email?.trim() || null;
     const errors: Record<string, string> = {};
-    if (mobile && mobile.replace(/\D/g, '').length !== 10) errors['mobile'] = 'Enter a ten-digit mobile number.';
-    if (email && !/^[^@]+@[^@]+\.[^@]+$/.test(email)) errors['email'] = 'Enter an email like name@example.com.';
-    if (!mobile && !email) errors['mobile'] = 'Leave a mobile number or an email so we can reach you.';
-    if (!['English', 'Spanish', 'French'].includes(b.language ?? '')) errors['language'] = 'Choose English, Spanish or French.';
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    if (mobile && mobile.replace(/\D/g, "").length !== 10)
+      errors["mobile"] = "Enter a ten-digit mobile number.";
+    if (email && !/^[^@]+@[^@]+\.[^@]+$/.test(email))
+      errors["email"] = "Enter an email like name@example.com.";
+    if (!mobile && !email)
+      errors["mobile"] =
+        "Leave a mobile number or an email so we can reach you.";
+    if (!["English", "Spanish", "French"].includes(b.language ?? ""))
+      errors["language"] = "Choose English, Spanish or French.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
     const primary = this.sortedGuardians(household)[0]!;
     const changed = primary.mobile !== mobile;
     Object.assign(primary, { mobile, email });
@@ -3031,43 +6165,80 @@ export class FakeApi {
   }
 
   /** A guardian saved a child's medical details from the family page (seeded as the API would store it). */
-  guardianUpdatesMedical(token: string, childId: string, allergies: string, medication: string): void {
+  guardianUpdatesMedical(
+    token: string,
+    childId: string,
+    allergies: string,
+    medication: string,
+  ): void {
     const household = this.guardianHousehold(token)!;
     const child = household.children.find((c) => c.id === childId)!;
     child.medical = { ...child.medical, allergies, medication };
   }
 
-  private async guardianUpdateMedical(route: Route, token: string, childId: string): Promise<void> {
+  private async guardianUpdateMedical(
+    route: Route,
+    token: string,
+    childId: string,
+  ): Promise<void> {
     const household = this.guardianHousehold(token);
-    if (!household) return route.fulfill({ status: 410, json: { code: 'link-expired' } });
-    if (!this.trustedHouseholds.has(household.id)) return route.fulfill({ status: 401, json: { code: 'verification-required' } });
+    if (!household)
+      return route.fulfill({ status: 410, json: { code: "link-expired" } });
+    if (!this.trustedHouseholds.has(household.id))
+      return route.fulfill({
+        status: 401,
+        json: { code: "verification-required" },
+      });
     const child = household.children.find((c) => c.id === childId);
     if (!child) return route.fulfill({ status: 404 });
-    const b = route.request().postDataJSON() as { allergies?: string; medication?: string };
-    child.medical = { ...child.medical, allergies: b.allergies?.trim() || null, medication: b.medication?.trim() || null };
+    const b = route.request().postDataJSON() as {
+      allergies?: string;
+      medication?: string;
+    };
+    child.medical = {
+      ...child.medical,
+      allergies: b.allergies?.trim() || null,
+      medication: b.medication?.trim() || null,
+    };
     return route.fulfill({ status: 204 });
   }
 
   private activePickups(childId: string) {
-    return this.extraPickups.filter((x) => x.childId === childId && !x.removed).sort((a, z) => a.name.localeCompare(z.name));
+    return this.extraPickups
+      .filter((x) => x.childId === childId && !x.removed)
+      .sort((a, z) => a.name.localeCompare(z.name));
   }
 
   private validatePickup(route: Route, firstName: string) {
-    const b = route.request().postDataJSON() as { name?: string; relationship?: string; siblings?: boolean };
+    const b = route.request().postDataJSON() as {
+      name?: string;
+      relationship?: string;
+      siblings?: boolean;
+    };
     const errors: Record<string, string> = {};
-    if (!b.name?.trim()) errors['name'] = 'Enter the adult’s full name.';
-    if (!b.relationship?.trim()) errors['relationship'] = `Say how they know ${firstName}.`;
+    if (!b.name?.trim()) errors["name"] = "Enter the adult’s full name.";
+    if (!b.relationship?.trim())
+      errors["relationship"] = `Say how they know ${firstName}.`;
     return { b, errors };
   }
 
-  private async savePickup(route: Route, household: { id: string; children: { id: string; firstName: string }[] }, childId: string): Promise<void> {
+  private async savePickup(
+    route: Route,
+    household: { id: string; children: { id: string; firstName: string }[] },
+    childId: string,
+  ): Promise<void> {
     const child = household.children.find((c) => c.id === childId);
     if (!child) return route.fulfill({ status: 404 });
     const { b, errors } = this.validatePickup(route, child.firstName);
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
-    let first = '';
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
+    let first = "";
     for (const c of b.siblings ? household.children : [child]) {
-      const id = this.approvePickup(c.id, b.name!.trim(), b.relationship!.trim());
+      const id = this.approvePickup(
+        c.id,
+        b.name!.trim(),
+        b.relationship!.trim(),
+      );
       if (c.id === childId) first = id;
     }
     return route.fulfill({ status: 201, json: { id: first } });
@@ -3082,12 +6253,18 @@ export class FakeApi {
     return this.savePickup(route, found.household, childId);
   }
 
-  private async removePickup(route: Route, childId: string, pickupId: string): Promise<void> {
+  private async removePickup(
+    route: Route,
+    childId: string,
+    pickupId: string,
+  ): Promise<void> {
     const m = await this.pickupCaller(route);
     if (!m) return;
     if (!can.managePickups(m)) return this.forbidden(route);
     const found = this.ownChild(m, childId);
-    const pickup = this.extraPickups.find((x) => x.id === pickupId && x.childId === childId && !x.removed);
+    const pickup = this.extraPickups.find(
+      (x) => x.id === pickupId && x.childId === childId && !x.removed,
+    );
     if (!found || !pickup) return route.fulfill({ status: 404 });
     pickup.removed = true;
     return route.fulfill({ status: 204 });
@@ -3095,21 +6272,48 @@ export class FakeApi {
 
   private guardianHousehold(token: string) {
     const householdId = this.homeLinks.get(token);
-    return householdId ? this.households.find((h) => h.id === householdId) : undefined;
+    return householdId
+      ? this.households.find((h) => h.id === householdId)
+      : undefined;
   }
 
-  private async guardianAddPickup(route: Route, token: string, childId: string): Promise<void> {
+  private async guardianAddPickup(
+    route: Route,
+    token: string,
+    childId: string,
+  ): Promise<void> {
     const household = this.guardianHousehold(token);
-    if (!household) return route.fulfill({ status: 410, json: { code: 'link-expired' } });
-    if (!this.trustedHouseholds.has(household.id)) return route.fulfill({ status: 401, json: { code: 'verification-required' } });
+    if (!household)
+      return route.fulfill({ status: 410, json: { code: "link-expired" } });
+    if (!this.trustedHouseholds.has(household.id))
+      return route.fulfill({
+        status: 401,
+        json: { code: "verification-required" },
+      });
     return this.savePickup(route, household, childId);
   }
 
-  private async guardianRemovePickup(route: Route, token: string, childId: string, pickupId: string): Promise<void> {
+  private async guardianRemovePickup(
+    route: Route,
+    token: string,
+    childId: string,
+    pickupId: string,
+  ): Promise<void> {
     const household = this.guardianHousehold(token);
-    if (!household) return route.fulfill({ status: 410, json: { code: 'link-expired' } });
-    if (!this.trustedHouseholds.has(household.id)) return route.fulfill({ status: 401, json: { code: 'verification-required' } });
-    const pickup = this.extraPickups.find((x) => x.id === pickupId && x.childId === childId && x.householdId === household.id && !x.removed);
+    if (!household)
+      return route.fulfill({ status: 410, json: { code: "link-expired" } });
+    if (!this.trustedHouseholds.has(household.id))
+      return route.fulfill({
+        status: 401,
+        json: { code: "verification-required" },
+      });
+    const pickup = this.extraPickups.find(
+      (x) =>
+        x.id === pickupId &&
+        x.childId === childId &&
+        x.householdId === household.id &&
+        !x.removed,
+    );
     if (!pickup) return route.fulfill({ status: 404 });
     pickup.removed = true;
     return route.fulfill({ status: 204 });
@@ -3132,33 +6336,52 @@ export class FakeApi {
       leftAt: string | null;
       clientActionId: string;
     };
-    if (this.actions.has(b.clientActionId)) return route.fulfill({ json: { status: 'saved' } });
+    if (this.actions.has(b.clientActionId))
+      return route.fulfill({ json: { status: "saved" } });
     const found = this.ownChild(m, b.childId);
     const record = this.sessionRecords(e.id).get(b.childId);
-    if (found && record?.status !== 'Present') {
-      return route.fulfill({ status: 422, json: { errors: { childId: `${found.child.firstName} ${found.child.lastName} is not checked in.` } } });
+    if (found && record?.status !== "Present") {
+      return route.fulfill({
+        status: 422,
+        json: {
+          errors: {
+            childId: `${found.child.firstName} ${found.child.lastName} is not checked in.`,
+          },
+        },
+      });
     }
     const guardians = found ? this.sortedGuardians(found.household) : [];
     const primary = guardians[0];
-    const first = found?.child.firstName ?? 'the child';
+    const first = found?.child.firstName ?? "the child";
     const errors: Record<string, string> = {};
     let collectedBy: string | null = null;
     if (b.guardianId) {
       const g = guardians.find((x) => x.id === b.guardianId && x.canPickUp);
-      if (!g) errors['who'] = `Not on ${first}’s approved list. Call ${primary?.name} at ${primary?.mobile} before ${first} leaves.`;
+      if (!g)
+        errors["who"] =
+          `Not on ${first}’s approved list. Call ${primary?.name} at ${primary?.mobile} before ${first} leaves.`;
       collectedBy = g?.name ?? null;
     } else if (b.someoneElse) {
-      if (!b.otherName?.trim()) errors['otherName'] = 'Enter their name.';
-      if (!b.guardianConfirmed) errors['guardianConfirmed'] = `${primary?.name ?? 'The guardian'} needs to okay this by phone first.`;
+      if (!b.otherName?.trim()) errors["otherName"] = "Enter their name.";
+      if (!b.guardianConfirmed)
+        errors["guardianConfirmed"] =
+          `${primary?.name ?? "The guardian"} needs to okay this by phone first.`;
       collectedBy = b.otherName?.trim() ?? null;
     } else {
-      errors['who'] = `Choose who is taking ${first} home.`;
+      errors["who"] = `Choose who is taking ${first} home.`;
     }
-    if (!b.idChecked) errors['idChecked'] = 'Check photo ID, or confirm you know this person.';
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    if (!b.idChecked)
+      errors["idChecked"] = "Check photo ID, or confirm you know this person.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
     this.actions.add(b.clientActionId);
-    this.sessionRecords(e.id).set(b.childId, { ...record!, status: 'SignedOut', signedOutAt: b.leftAt ?? NOW.toISOString(), collectedBy });
-    return route.fulfill({ json: { status: 'saved' } });
+    this.sessionRecords(e.id).set(b.childId, {
+      ...record!,
+      status: "SignedOut",
+      signedOutAt: b.leftAt ?? NOW.toISOString(),
+      collectedBy,
+    });
+    return route.fulfill({ json: { status: "saved" } });
   }
 
   private async messagingCaller(route: Route): Promise<Membership | null> {
@@ -3167,7 +6390,7 @@ export class FakeApi {
       await this.unauthenticated(route);
       return null;
     }
-    if (!this.modules.get(m.organizationId)!.includes('Messages')) {
+    if (!this.modules.get(m.organizationId)!.includes("Messages")) {
       await route.fulfill({ status: 404 });
       return null;
     }
@@ -3180,32 +6403,80 @@ export class FakeApi {
 
   private capOf(m: Membership) {
     const plan = organizations.find((o) => o.id === m.organizationId)!.plan;
-    const cap = plan === 'Free' ? 200 : plan === 'Standard' ? 2000 : 5000;
+    const cap = plan === "Free" ? 200 : plan === "Standard" ? 2000 : 5000;
     const used = this.smsUsed.get(m.organizationId) ?? 0;
     return { cap, used, remaining: Math.max(0, cap - used) };
   }
 
   /** Households with children enrolled in the program (or the event's program), each with the channel that reaches its primary guardian. */
   private audienceOf(m: Membership, b: AudienceBody) {
-    const programId = b.eventId ? this.ownEvent(m, b.eventId)?.programId : b.programId;
-    const programs = this.programs.filter((p) => p.organizationId === m.organizationId && (!programId || p.id === programId));
+    const programId = b.eventId
+      ? this.ownEvent(m, b.eventId)?.programId
+      : b.programId;
+    const programs = this.programs.filter(
+      (p) =>
+        p.organizationId === m.organizationId &&
+        (!programId || p.id === programId),
+    );
     const childIds = new Set(programs.flatMap((p) => p.roster));
-    const label = b.eventId ? (this.ownEvent(m, b.eventId)?.name ?? 'All programs') : (programs.length === 1 && programId ? programs[0]!.name : 'All programs');
+    const label = b.eventId
+      ? (this.ownEvent(m, b.eventId)?.name ?? "All programs")
+      : programs.length === 1 && programId
+        ? programs[0]!.name
+        : "All programs";
     const recipients = this.households
-      .filter((h) => h.organizationId === m.organizationId && h.children.some((c) => childIds.has(c.id)) && (!b.language || h.language === b.language))
+      .filter(
+        (h) =>
+          h.organizationId === m.organizationId &&
+          h.children.some((c) => childIds.has(c.id)) &&
+          (!b.language || h.language === b.language),
+      )
       .sort((a, z) => a.name.localeCompare(z.name))
       .map((h) => {
         const g = this.sortedGuardians(h)[0];
         const mobile = g?.mobile || null;
         const email = g?.email && !g.emailBounced ? g.email : null;
-        const base = { household: h.name.replace(/ household$/, ''), guardian: g?.name ?? null, language: h.language };
-        if (b.channel === 'TextOnly') return { ...base, channel: 'Sms' as const, to: mobile, fallback: null, unreachable: mobile ? null : 'No mobile number' };
-        if (b.channel === 'EmailOnly') return { ...base, channel: 'Email' as const, to: email, fallback: null, unreachable: email ? null : 'No email address' };
+        const base = {
+          household: h.name.replace(/ household$/, ""),
+          guardian: g?.name ?? null,
+          language: h.language,
+        };
+        if (b.channel === "TextOnly")
+          return {
+            ...base,
+            channel: "Sms" as const,
+            to: mobile,
+            fallback: null,
+            unreachable: mobile ? null : "No mobile number",
+          };
+        if (b.channel === "EmailOnly")
+          return {
+            ...base,
+            channel: "Email" as const,
+            to: email,
+            fallback: null,
+            unreachable: email ? null : "No email address",
+          };
         return mobile
-          ? { ...base, channel: 'Sms' as const, to: mobile, fallback: email, unreachable: null }
-          : { ...base, channel: 'Email' as const, to: email, fallback: null, unreachable: email ? null : 'No mobile number or email' };
+          ? {
+              ...base,
+              channel: "Sms" as const,
+              to: mobile,
+              fallback: email,
+              unreachable: null,
+            }
+          : {
+              ...base,
+              channel: "Email" as const,
+              to: email,
+              fallback: null,
+              unreachable: email ? null : "No mobile number or email",
+            };
       });
-    return { label: b.language ? `${label} · ${b.language} households` : label, recipients };
+    return {
+      label: b.language ? `${label} · ${b.language} households` : label,
+      recipients,
+    };
   }
 
   private async previewMessage(route: Route): Promise<void> {
@@ -3214,10 +6485,10 @@ export class FakeApi {
     const b = route.request().postDataJSON() as AudienceBody;
     const { recipients } = this.audienceOf(m, b);
     const org = organizations.find((o) => o.id === m.organizationId)!;
-    const text = `${org.name}: ${(b.body ?? '').trim()}`;
+    const text = `${org.name}: ${(b.body ?? "").trim()}`;
     const segments = segmentsOf(text);
     const reachable = recipients.filter((r) => !r.unreachable);
-    const texts = reachable.filter((r) => r.channel === 'Sms');
+    const texts = reachable.filter((r) => r.channel === "Sms");
     const { remaining } = this.capOf(m);
     const textable = Math.floor(remaining / segments);
     return route.fulfill({
@@ -3230,7 +6501,8 @@ export class FakeApi {
         segments,
         totalSegments: texts.length * segments,
         remainingSegments: remaining,
-        fallingBackToEmail: texts.slice(textable).filter((r) => r.fallback).length,
+        fallingBackToEmail: texts.slice(textable).filter((r) => r.fallback)
+          .length,
       },
     });
   }
@@ -3240,39 +6512,88 @@ export class FakeApi {
     const m = await this.messagingCaller(route);
     if (!m) return;
     const b = route.request().postDataJSON() as AudienceBody;
-    const body = (b.body ?? '').trim();
+    const body = (b.body ?? "").trim();
     const { label, recipients } = this.audienceOf(m, b);
     const errors: Record<string, string> = {};
-    if (!body) errors['body'] = 'Enter a message.';
-    else if (body.length > 480) errors['body'] = 'Keep it to 480 characters.';
-    if (recipients.length === 0) errors['audience'] = 'Nobody matches. Loosen a filter.';
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    if (!body) errors["body"] = "Enter a message.";
+    else if (body.length > 480) errors["body"] = "Keep it to 480 characters.";
+    if (recipients.length === 0)
+      errors["audience"] = "Nobody matches. Loosen a filter.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
     const org = organizations.find((o) => o.id === m.organizationId)!;
     const segments = segmentsOf(`${org.name}: ${body}`);
     const now = NOW.toISOString();
     const deliveries: FakeDelivery[] = recipients.map((r) => {
-      const base = { household: r.household, guardian: r.guardian, language: r.language, at: null as string | null };
-      if (r.unreachable) return { ...base, channel: r.channel, status: 'Failed', reason: r.unreachable };
-      if (r.channel === 'Email') return { ...base, channel: 'Email', status: 'Sent', reason: null, at: now };
+      const base = {
+        household: r.household,
+        guardian: r.guardian,
+        language: r.language,
+        at: null as string | null,
+      };
+      if (r.unreachable)
+        return {
+          ...base,
+          channel: r.channel,
+          status: "Failed",
+          reason: r.unreachable,
+        };
+      if (r.channel === "Email")
+        return {
+          ...base,
+          channel: "Email",
+          status: "Sent",
+          reason: null,
+          at: now,
+        };
       const { remaining, used } = this.capOf(m);
       if (remaining >= segments) {
         this.smsUsed.set(m.organizationId, used + segments);
-        return { ...base, channel: 'Sms', status: 'Sent', reason: null, at: now };
+        return {
+          ...base,
+          channel: "Sms",
+          status: "Sent",
+          reason: null,
+          at: now,
+        };
       }
       return r.fallback
-        ? { ...base, channel: 'Email', status: 'FellBackToEmail', reason: 'SMS cap reached', at: now }
-        : { ...base, channel: 'Sms', status: 'Paused', reason: 'SMS cap reached' };
+        ? {
+            ...base,
+            channel: "Email",
+            status: "FellBackToEmail",
+            reason: "SMS cap reached",
+            at: now,
+          }
+        : {
+            ...base,
+            channel: "Sms",
+            status: "Paused",
+            reason: "SMS cap reached",
+          };
     });
     const id = `msg-${this.nextId++}`;
-    this.messages.unshift({ id, organizationId: m.organizationId, title: titleOf(body), body, sentAt: now, sentBy: m.personName, audience: label, channel: b.channel, deliveries });
+    this.messages.unshift({
+      id,
+      organizationId: m.organizationId,
+      title: titleOf(body),
+      body,
+      sentAt: now,
+      sentBy: m.personName,
+      audience: label,
+      channel: b.channel,
+      deliveries,
+    });
     return route.fulfill({ status: 201, json: { id } });
   }
 
   private counts(d: FakeDelivery[]) {
     return {
-      deliveredCount: d.filter((x) => x.status === 'Sent' || x.status === 'FellBackToEmail').length,
-      failedCount: d.filter((x) => x.status === 'Failed').length,
-      pausedCount: d.filter((x) => x.status === 'Paused').length,
+      deliveredCount: d.filter(
+        (x) => x.status === "Sent" || x.status === "FellBackToEmail",
+      ).length,
+      failedCount: d.filter((x) => x.status === "Failed").length,
+      pausedCount: d.filter((x) => x.status === "Paused").length,
     };
   }
 
@@ -3282,18 +6603,33 @@ export class FakeApi {
     const { cap, used } = this.capOf(m);
     const messages = this.messages
       .filter((x) => x.organizationId === m.organizationId)
-      .map((x) => ({ id: x.id, title: x.title, sentAt: x.sentAt, sentBy: x.sentBy, recipientCount: x.deliveries.length, audience: x.audience, channel: x.channel, status: 'Sent', ...this.counts(x.deliveries) }));
-    return route.fulfill({ json: { messages, segmentsUsed: used, segmentCap: cap } });
+      .map((x) => ({
+        id: x.id,
+        title: x.title,
+        sentAt: x.sentAt,
+        sentBy: x.sentBy,
+        recipientCount: x.deliveries.length,
+        audience: x.audience,
+        channel: x.channel,
+        status: "Sent",
+        ...this.counts(x.deliveries),
+      }));
+    return route.fulfill({
+      json: { messages, segmentsUsed: used, segmentCap: cap },
+    });
   }
 
   private async getMessage(route: Route, id: string): Promise<void> {
     const m = await this.messagingCaller(route);
     if (!m) return;
-    const x = this.messages.find((y) => y.id === id && y.organizationId === m.organizationId);
+    const x = this.messages.find(
+      (y) => y.id === id && y.organizationId === m.organizationId,
+    );
     if (!x) return route.fulfill({ status: 404 });
     const org = organizations.find((o) => o.id === m.organizationId)!;
     const smsText = `${org.name}: ${x.body}`;
-    const problem = (d: FakeDelivery) => (d.status === 'Failed' || d.status === 'Paused' ? 0 : 1);
+    const problem = (d: FakeDelivery) =>
+      d.status === "Failed" || d.status === "Paused" ? 0 : 1;
     return route.fulfill({
       json: {
         id: x.id,
@@ -3306,11 +6642,14 @@ export class FakeApi {
         sentBy: x.sentBy,
         audience: x.audience,
         channel: x.channel,
-        status: 'Sent',
+        status: "Sent",
         recipientCount: x.deliveries.length,
         ...this.counts(x.deliveries),
         languages: [...new Set(x.deliveries.map((d) => d.language))].sort(),
-        deliveries: [...x.deliveries].sort((a, z) => problem(a) - problem(z) || a.household.localeCompare(z.household)),
+        deliveries: [...x.deliveries].sort(
+          (a, z) =>
+            problem(a) - problem(z) || a.household.localeCompare(z.household),
+        ),
       },
     });
   }
@@ -3319,34 +6658,71 @@ export class FakeApi {
     const m = await this.messagingCaller(route);
     if (!m) return;
     const { cap, used, remaining } = this.capOf(m);
-    return route.fulfill({ json: { cap, used, remaining, state: remaining === 0 ? 'Reached' : 'Ok', period: '2026-11' } });
+    return route.fulfill({
+      json: {
+        cap,
+        used,
+        remaining,
+        state: remaining === 0 ? "Reached" : "Ok",
+        period: "2026-11",
+      },
+    });
   }
 
   private async reviewCaller(route: Route): Promise<Membership | null> {
     const m = await this.rosterCaller(route);
     if (!m) return null;
-    if (!['Admin', 'ProgramDirector'].includes(m.role)) {
+    if (!["Admin", "ProgramDirector"].includes(m.role)) {
       await this.forbidden(route);
       return null;
     }
     return m;
   }
 
-  private async listEnrollmentRequests(route: Route, programId: string): Promise<void> {
+  private async listEnrollmentRequests(
+    route: Route,
+    programId: string,
+  ): Promise<void> {
     const m = await this.reviewCaller(route);
     if (!m) return;
     if (!this.ownProgram(m, programId)) return route.fulfill({ status: 404 });
-    const status = new URL(route.request().url()).searchParams.get('status') ?? 'WaitingReview';
+    const status =
+      new URL(route.request().url()).searchParams.get("status") ??
+      "WaitingReview";
     const enrolledAnywhere = new Set(this.programs.flatMap((x) => x.roster));
     const requests = this.enrollmentRequests
-      .filter((r) => r.programId === programId && r.status === status && r.childId)
+      .filter(
+        (r) => r.programId === programId && r.status === status && r.childId,
+      )
       .map((r) => {
-        const { child, household } = this.childrenOf(m).find((x) => x.child.id === r.childId)!;
+        const { child, household } = this.childrenOf(m).find(
+          (x) => x.child.id === r.childId,
+        )!;
         const g = this.sortedGuardians(household)[0];
-        const medical = [child.medical.allergies, child.medical.medication].filter(Boolean).join('; ');
-        return { id: r.id!, childId: child.id, householdId: household.id, child: `${child.firstName} ${child.lastName}`, age: ageOf(child.dateOfBirth), guardian: g?.name ?? '', phone: g?.mobile ?? null, language: household.language, medical: medical || null, returning: enrolledAnywhere.has(child.id), submittedAt: r.submittedAt!, status: r.status, position: r.position };
+        const medical = [child.medical.allergies, child.medical.medication]
+          .filter(Boolean)
+          .join("; ");
+        return {
+          id: r.id!,
+          childId: child.id,
+          householdId: household.id,
+          child: `${child.firstName} ${child.lastName}`,
+          age: ageOf(child.dateOfBirth),
+          guardian: g?.name ?? "",
+          phone: g?.mobile ?? null,
+          language: household.language,
+          medical: medical || null,
+          returning: enrolledAnywhere.has(child.id),
+          submittedAt: r.submittedAt!,
+          status: r.status,
+          position: r.position,
+        };
       })
-      .sort((a, z) => (status === 'Waitlisted' ? (a.position ?? 0) - (z.position ?? 0) : a.child.localeCompare(z.child)));
+      .sort((a, z) =>
+        status === "Waitlisted"
+          ? (a.position ?? 0) - (z.position ?? 0)
+          : a.child.localeCompare(z.child),
+      );
     return route.fulfill({ json: { requests } });
   }
 
@@ -3354,25 +6730,42 @@ export class FakeApi {
   private async listApplications(route: Route): Promise<void> {
     const m = await this.reviewCaller(route);
     if (!m) return;
-    const status = new URL(route.request().url()).searchParams.get('status') ?? 'WaitingReview';
-    const own = this.enrollmentRequests.filter((r) => r.id && r.childId && this.ownProgram(m, r.programId));
+    const status =
+      new URL(route.request().url()).searchParams.get("status") ??
+      "WaitingReview";
+    const own = this.enrollmentRequests.filter(
+      (r) => r.id && r.childId && this.ownProgram(m, r.programId),
+    );
     const count = (s: string) => own.filter((r) => r.status === s).length;
     const enrolledAnywhere = new Set(this.programs.flatMap((x) => x.roster));
     const applications = own
       .filter((r) => r.status === status)
       .map((r) => this.applicationSummary(m, r, enrolledAnywhere))
       .sort((a, z) =>
-        status === 'WaitingReview'
+        status === "WaitingReview"
           ? z.submittedAt.localeCompare(a.submittedAt)
-          : status === 'Waitlisted'
-            ? a.program.localeCompare(z.program) || (a.position ?? 0) - (z.position ?? 0)
-            : (z.reviewedAt ?? '').localeCompare(a.reviewedAt ?? ''),
+          : status === "Waitlisted"
+            ? a.program.localeCompare(z.program) ||
+              (a.position ?? 0) - (z.position ?? 0)
+            : (z.reviewedAt ?? "").localeCompare(a.reviewedAt ?? ""),
       );
-    return route.fulfill({ json: { counts: { waitingReview: count('WaitingReview'), waitlisted: count('Waitlisted'), accepted: count('Accepted'), declined: count('Declined') }, applications } });
+    return route.fulfill({
+      json: {
+        counts: {
+          waitingReview: count("WaitingReview"),
+          waitlisted: count("Waitlisted"),
+          accepted: count("Accepted"),
+          declined: count("Declined"),
+        },
+        applications,
+      },
+    });
   }
 
   private ownApplication(m: Membership, id: string) {
-    return this.enrollmentRequests.find((r) => r.id === id && r.childId && this.ownProgram(m, r.programId));
+    return this.enrollmentRequests.find(
+      (r) => r.id === id && r.childId && this.ownProgram(m, r.programId),
+    );
   }
 
   /** One application with the family and staff notes, newest first (L2-072). */
@@ -3381,8 +6774,14 @@ export class FakeApi {
     if (!m) return;
     const r = this.ownApplication(m, id);
     if (!r) return route.fulfill({ status: 404 });
-    const summary = this.applicationSummary(m, r, new Set(this.programs.flatMap((x) => x.roster)));
-    const { child, household } = this.childrenOf(m).find((x) => x.child.id === r.childId)!;
+    const summary = this.applicationSummary(
+      m,
+      r,
+      new Set(this.programs.flatMap((x) => x.roster)),
+    );
+    const { child, household } = this.childrenOf(m).find(
+      (x) => x.child.id === r.childId,
+    )!;
     const g = this.sortedGuardians(household)[0];
     return route.fulfill({
       json: {
@@ -3391,10 +6790,19 @@ export class FakeApi {
         dateOfBirth: child.dateOfBirth,
         householdId: household.id,
         household: household.name,
-        guardian: g ? { name: g.name, mobile: g.mobile, email: g.email, language: g.language } : null,
+        guardian: g
+          ? {
+              name: g.name,
+              mobile: g.mobile,
+              email: g.email,
+              language: g.language,
+            }
+          : null,
         reason: r.reason ?? null,
-        referrer: r.appliedAs === 'Referrer' && r.referrer ? r.referrer : null,
-        notes: [...(r.notes ?? [])].sort((a, z) => z.createdAt.localeCompare(a.createdAt)),
+        referrer: r.appliedAs === "Referrer" && r.referrer ? r.referrer : null,
+        notes: [...(r.notes ?? [])].sort((a, z) =>
+          z.createdAt.localeCompare(a.createdAt),
+        ),
       },
     });
   }
@@ -3404,9 +6812,20 @@ export class FakeApi {
     if (!m) return;
     const r = this.ownApplication(m, id);
     if (!r) return route.fulfill({ status: 404 });
-    const text = ((route.request().postDataJSON() as { text?: string | null }).text ?? '').trim();
-    if (!text || text.length > 2000) return route.fulfill({ status: 422, json: { errors: { text: 'Write a note of up to 2,000 characters.' } } });
-    const note = { id: `note-${this.nextId++}`, author: m.personName, text, createdAt: new Date(NOW.getTime() + this.nextId * 1000).toISOString() };
+    const text = (
+      (route.request().postDataJSON() as { text?: string | null }).text ?? ""
+    ).trim();
+    if (!text || text.length > 2000)
+      return route.fulfill({
+        status: 422,
+        json: { errors: { text: "Write a note of up to 2,000 characters." } },
+      });
+    const note = {
+      id: `note-${this.nextId++}`,
+      author: m.personName,
+      text,
+      createdAt: new Date(NOW.getTime() + this.nextId * 1000).toISOString(),
+    };
     (r.notes ??= []).push(note);
     return route.fulfill({ status: 201, json: { id: note.id } });
   }
@@ -3417,19 +6836,40 @@ export class FakeApi {
     if (!m) return;
     const r = this.ownApplication(m, id);
     if (!r) return route.fulfill({ status: 404 });
-    if (r.status === 'Accepted' || r.status === 'Declined') return route.fulfill({ status: 409, json: { code: 'conflict' } });
-    const b = route.request().postDataJSON() as { programId?: string | null; note?: string | null };
+    if (r.status === "Accepted" || r.status === "Declined")
+      return route.fulfill({ status: 409, json: { code: "conflict" } });
+    const b = route.request().postDataJSON() as {
+      programId?: string | null;
+      note?: string | null;
+    };
     const program = b.programId ? this.ownProgram(m, b.programId) : undefined;
-    if (!program || program.status === 'Archived') return route.fulfill({ status: 422, json: { errors: { programId: 'Choose a cohort.' } } });
+    if (!program || program.status === "Archived")
+      return route.fulfill({
+        status: 422,
+        json: { errors: { programId: "Choose a cohort." } },
+      });
     if (program.roster.length + 1 > program.capacity) {
-      return route.fulfill({ status: 422, json: { errors: { decision: `${program.name} is full (${program.roster.length} of ${program.capacity}). Waitlist instead.` } } });
+      return route.fulfill({
+        status: 422,
+        json: {
+          errors: {
+            decision: `${program.name} is full (${program.roster.length} of ${program.capacity}). Waitlist instead.`,
+          },
+        },
+      });
     }
-    if (r.status === 'Waitlisted' && r.position !== null) {
-      for (const behind of this.enrollmentRequests.filter((x) => x.programId === r.programId && x.status === 'Waitlisted' && (x.position ?? 0) > r.position!)) behind.position = behind.position! - 1;
+    if (r.status === "Waitlisted" && r.position !== null) {
+      for (const behind of this.enrollmentRequests.filter(
+        (x) =>
+          x.programId === r.programId &&
+          x.status === "Waitlisted" &&
+          (x.position ?? 0) > r.position!,
+      ))
+        behind.position = behind.position! - 1;
     }
     r.programId = program.id;
     r.position = null;
-    r.status = 'Accepted';
+    r.status = "Accepted";
     r.note = b.note?.trim() || null;
     r.reviewedBy = m.personName;
     r.reviewedAt = NOW.toISOString();
@@ -3437,17 +6877,24 @@ export class FakeApi {
     return route.fulfill({ status: 204 });
   }
 
-  private applicationSummary(m: Membership, r: (typeof this.enrollmentRequests)[number], enrolledAnywhere: Set<string>) {
-    const { child, household } = this.childrenOf(m).find((x) => x.child.id === r.childId)!;
+  private applicationSummary(
+    m: Membership,
+    r: (typeof this.enrollmentRequests)[number],
+    enrolledAnywhere: Set<string>,
+  ) {
+    const { child, household } = this.childrenOf(m).find(
+      (x) => x.child.id === r.childId,
+    )!;
     const program = this.programs.find((p) => p.id === r.programId)!;
-    const appliedAs = r.appliedAs ?? 'Guardian';
+    const appliedAs = r.appliedAs ?? "Guardian";
     return {
       id: r.id!,
       childId: child.id,
       child: `${child.firstName} ${child.lastName}`,
       age: ageOf(child.dateOfBirth),
       appliedAs,
-      appliedBy: r.submittedBy ?? this.sortedGuardians(household)[0]?.name ?? '',
+      appliedBy:
+        r.submittedBy ?? this.sortedGuardians(household)[0]?.name ?? "",
       referrerRole: r.referrer?.role ?? null,
       programId: program.id,
       program: program.name,
@@ -3455,42 +6902,86 @@ export class FakeApi {
       status: r.status,
       position: r.position,
       seasonConsent: r.seasonConsent ?? true,
-      returning: enrolledAnywhere.has(child.id) && r.status !== 'Accepted',
+      returning: enrolledAnywhere.has(child.id) && r.status !== "Accepted",
       reviewedBy: r.reviewedBy ?? null,
       reviewedAt: r.reviewedAt ?? null,
       note: r.note ?? null,
     };
   }
 
-  private async reviewEnrollments(route: Route, id: string | null): Promise<void> {
+  private async reviewEnrollments(
+    route: Route,
+    id: string | null,
+  ): Promise<void> {
     const m = await this.reviewCaller(route);
     if (!m) return;
-    const b = route.request().postDataJSON() as { ids?: string[]; decision: 'Accept' | 'Waitlist' | 'Decline'; note?: string | null };
+    const b = route.request().postDataJSON() as {
+      ids?: string[];
+      decision: "Accept" | "Waitlist" | "Decline";
+      note?: string | null;
+    };
     const ids = id ? [id] : (b.ids ?? []);
-    const requests = this.enrollmentRequests.filter((r) => r.id && ids.includes(r.id) && this.ownProgram(m, r.programId));
-    if (!requests.length || requests.length !== ids.length) return route.fulfill({ status: 404 });
-    if (requests.some((r) => r.status === 'Accepted' || r.status === 'Declined' || (b.decision === 'Waitlist' && r.status === 'Waitlisted'))) return route.fulfill({ status: 409, json: { code: 'conflict' } });
+    const requests = this.enrollmentRequests.filter(
+      (r) => r.id && ids.includes(r.id) && this.ownProgram(m, r.programId),
+    );
+    if (!requests.length || requests.length !== ids.length)
+      return route.fulfill({ status: 404 });
+    if (
+      requests.some(
+        (r) =>
+          r.status === "Accepted" ||
+          r.status === "Declined" ||
+          (b.decision === "Waitlist" && r.status === "Waitlisted"),
+      )
+    )
+      return route.fulfill({ status: 409, json: { code: "conflict" } });
     const note = b.note?.trim() || null;
-    if (b.decision === 'Decline' && !note) return route.fulfill({ status: 422, json: { errors: { note: 'Write a reason the guardian will read.' } } });
+    if (b.decision === "Decline" && !note)
+      return route.fulfill({
+        status: 422,
+        json: { errors: { note: "Write a reason the guardian will read." } },
+      });
     const program = this.programs.find((x) => x.id === requests[0]!.programId)!;
-    if (b.decision === 'Accept' && program.roster.length + requests.length > program.capacity) {
-      return route.fulfill({ status: 422, json: { errors: { decision: `${program.name} is full (${program.roster.length} of ${program.capacity}). Waitlist instead.` } } });
+    if (
+      b.decision === "Accept" &&
+      program.roster.length + requests.length > program.capacity
+    ) {
+      return route.fulfill({
+        status: 422,
+        json: {
+          errors: {
+            decision: `${program.name} is full (${program.roster.length} of ${program.capacity}). Waitlist instead.`,
+          },
+        },
+      });
     }
-    let position = Math.max(0, ...this.enrollmentRequests.filter((r) => r.programId === program.id && r.status === 'Waitlisted').map((r) => r.position ?? 0));
+    let position = Math.max(
+      0,
+      ...this.enrollmentRequests
+        .filter((r) => r.programId === program.id && r.status === "Waitlisted")
+        .map((r) => r.position ?? 0),
+    );
     for (const r of requests) {
-      const leftPlace = r.status === 'Waitlisted' ? r.position : null;
+      const leftPlace = r.status === "Waitlisted" ? r.position : null;
       if (leftPlace !== null) {
-        for (const behind of this.enrollmentRequests.filter((x) => x.programId === program.id && x.status === 'Waitlisted' && (x.position ?? 0) > leftPlace)) behind.position = behind.position! - 1;
+        for (const behind of this.enrollmentRequests.filter(
+          (x) =>
+            x.programId === program.id &&
+            x.status === "Waitlisted" &&
+            (x.position ?? 0) > leftPlace,
+        ))
+          behind.position = behind.position! - 1;
         position--;
       }
-      if (b.decision === 'Accept') {
-        r.status = 'Accepted';
-        if (!program.roster.includes(r.childId!)) program.roster.push(r.childId!);
-      } else if (b.decision === 'Waitlist') {
-        r.status = 'Waitlisted';
+      if (b.decision === "Accept") {
+        r.status = "Accepted";
+        if (!program.roster.includes(r.childId!))
+          program.roster.push(r.childId!);
+      } else if (b.decision === "Waitlist") {
+        r.status = "Waitlisted";
         r.position = ++position;
       } else {
-        r.status = 'Declined';
+        r.status = "Declined";
       }
       r.note = note;
       r.reviewedBy = m.personName;
@@ -3504,7 +6995,11 @@ export class FakeApi {
     if (!m) return;
     if (!can.managePrograms(m)) return this.forbidden(route);
     if (!this.ownProgram(m, id)) return route.fulfill({ status: 404 });
-    return route.fulfill({ json: { url: `http://localhost:4317/g/enroll/${this.openEnrollment(id)}` } });
+    return route.fulfill({
+      json: {
+        url: `http://localhost:4317/g/enroll/${this.openEnrollment(id)}`,
+      },
+    });
   }
 
   private async closeEnrollmentRoute(route: Route, id: string): Promise<void> {
@@ -3519,10 +7014,16 @@ export class FakeApi {
 
   /** Resolves an enrollment link like the server: the program, and 404 when Roster is off. */
   private async enrollScope(route: Route, slug: string) {
-    const programId = [...this.enrollmentSlugs.entries()].find(([, s]) => s === slug)?.[0];
-    const program = programId ? this.programs.find((x) => x.id === programId) : undefined;
-    const org = program ? organizations.find((o) => o.id === program.organizationId) : undefined;
-    if (!program || !org || !this.modules.get(org.id)!.includes('Roster')) {
+    const programId = [...this.enrollmentSlugs.entries()].find(
+      ([, s]) => s === slug,
+    )?.[0];
+    const program = programId
+      ? this.programs.find((x) => x.id === programId)
+      : undefined;
+    const org = program
+      ? organizations.find((o) => o.id === program.organizationId)
+      : undefined;
+    if (!program || !org || !this.modules.get(org.id)!.includes("Roster")) {
       await route.fulfill({ status: 404 });
       return null;
     }
@@ -3530,9 +7031,9 @@ export class FakeApi {
   }
 
   private enrollContact(typed: string): string | null {
-    const value = (typed ?? '').trim();
-    if (value.includes('@')) return value.toLowerCase();
-    const digits = value.replace(/\D/g, '').slice(-10);
+    const value = (typed ?? "").trim();
+    if (value.includes("@")) return value.toLowerCase();
+    const digits = value.replace(/\D/g, "").slice(-10);
     return digits.length === 10 ? digits : null;
   }
 
@@ -3540,18 +7041,36 @@ export class FakeApi {
     const scope = await this.enrollScope(route, slug);
     if (!scope) return;
     const { program, org } = scope;
-    return route.fulfill({ json: { program: program.name, organization: org.name, phone: '905-555-0100', open: program.enrollmentOpen, schedule: program.schedule, ages: program.ages, startsOn: program.startsOn } });
+    return route.fulfill({
+      json: {
+        program: program.name,
+        organization: org.name,
+        phone: "905-555-0100",
+        open: program.enrollmentOpen,
+        schedule: program.schedule,
+        ages: program.ages,
+        startsOn: program.startsOn,
+      },
+    });
   }
 
   private async enrollCode(route: Route, slug: string): Promise<void> {
     const scope = await this.enrollScope(route, slug);
     if (!scope) return;
-    if (!scope.program.enrollmentOpen) return route.fulfill({ status: 409, json: { code: 'conflict' } });
-    const contact = this.enrollContact((route.request().postDataJSON() as { contact: string }).contact);
-    if (!contact) return route.fulfill({ status: 422, json: { errors: { contact: 'Enter a mobile number or an email.' } } });
+    if (!scope.program.enrollmentOpen)
+      return route.fulfill({ status: 409, json: { code: "conflict" } });
+    const contact = this.enrollContact(
+      (route.request().postDataJSON() as { contact: string }).contact,
+    );
+    if (!contact)
+      return route.fulfill({
+        status: 422,
+        json: { errors: { contact: "Enter a mobile number or an email." } },
+      });
     const key = `${scope.program.id}:${contact}`;
     const sent = this.enrollCodes.get(key) ?? 0;
-    if (sent >= 3) return route.fulfill({ status: 429, json: { code: 'too-many' } });
+    if (sent >= 3)
+      return route.fulfill({ status: 429, json: { code: "too-many" } });
     this.enrollCodes.set(key, sent + 1);
     return route.fulfill({ status: 202 });
   }
@@ -3559,21 +7078,50 @@ export class FakeApi {
   private async enrollVerify(route: Route, slug: string): Promise<void> {
     const scope = await this.enrollScope(route, slug);
     if (!scope) return;
-    const b = route.request().postDataJSON() as { contact: string; code: string };
+    const b = route.request().postDataJSON() as {
+      contact: string;
+      code: string;
+    };
     const contact = this.enrollContact(b.contact);
-    if (!contact || b.code !== this.guardianCode) return route.fulfill({ status: 422, json: { errors: { code: 'That code didn’t work. Check the latest text or email.' } } });
+    if (!contact || b.code !== this.guardianCode)
+      return route.fulfill({
+        status: 422,
+        json: {
+          errors: {
+            code: "That code didn’t work. Check the latest text or email.",
+          },
+        },
+      });
     const household = this.households.find(
-      (h) => h.organizationId === scope.org.id && h.guardians.some((g) => (contact.includes('@') ? g.email?.toLowerCase() === contact : g.mobile?.replace(/\D/g, '') === contact)),
+      (h) =>
+        h.organizationId === scope.org.id &&
+        h.guardians.some((g) =>
+          contact.includes("@")
+            ? g.email?.toLowerCase() === contact
+            : g.mobile?.replace(/\D/g, "") === contact,
+        ),
     );
-    this.enrollSession = { programId: scope.program.id, contact, householdId: household?.id ?? null, draft: null, submitted: false };
+    this.enrollSession = {
+      programId: scope.program.id,
+      contact,
+      householdId: household?.id ?? null,
+      draft: null,
+      submitted: false,
+    };
     return route.fulfill({ status: 204 });
   }
 
   private async enrollSessionFor(route: Route, slug: string) {
     const scope = await this.enrollScope(route, slug);
     if (!scope) return null;
-    if (!this.enrollSession || this.enrollSession.programId !== scope.program.id) {
-      await route.fulfill({ status: 401, json: { code: 'verification-required' } });
+    if (
+      !this.enrollSession ||
+      this.enrollSession.programId !== scope.program.id
+    ) {
+      await route.fulfill({
+        status: 401,
+        json: { code: "verification-required" },
+      });
       return null;
     }
     return { ...scope, session: this.enrollSession };
@@ -3583,11 +7131,23 @@ export class FakeApi {
     const found = await this.enrollSessionFor(route, slug);
     if (!found) return;
     const { program, session } = found;
-    const code = (language: string | null) => (language === 'Spanish' ? 'es' : language === 'French' ? 'fr' : 'en');
+    const code = (language: string | null) =>
+      language === "Spanish" ? "es" : language === "French" ? "fr" : "en";
     if (session.draft) {
-      return route.fulfill({ json: { returning: !!session.householdId, language: code(session.draft.household.language), program: program.name, contact: this.enrollDisplay(session.contact), applyingAs: 'Guardian', ...session.draft } });
+      return route.fulfill({
+        json: {
+          returning: !!session.householdId,
+          language: code(session.draft.household.language),
+          program: program.name,
+          contact: this.enrollDisplay(session.contact),
+          applyingAs: "Guardian",
+          ...session.draft,
+        },
+      });
     }
-    const household = session.householdId ? this.households.find((h) => h.id === session.householdId) : undefined;
+    const household = session.householdId
+      ? this.households.find((h) => h.id === session.householdId)
+      : undefined;
     if (household) {
       const g = this.sortedGuardians(household)[0]!;
       return route.fulfill({
@@ -3596,66 +7156,141 @@ export class FakeApi {
           language: code(household.language),
           program: program.name,
           contact: this.enrollDisplay(session.contact),
-          applyingAs: 'Guardian',
-          household: { guardianName: g.name, mobile: g.mobile, email: g.email, language: household.language },
+          applyingAs: "Guardian",
+          household: {
+            guardianName: g.name,
+            mobile: g.mobile,
+            email: g.email,
+            language: household.language,
+          },
           children: [...household.children]
             .sort((a, z) => a.firstName.localeCompare(z.firstName))
-            .map((c) => ({ id: c.id, firstName: c.firstName, lastName: c.lastName, dateOfBirth: c.dateOfBirth, school: c.school, allergies: c.medical.allergies, medication: c.medical.medication, enroll: true })),
+            .map((c) => ({
+              id: c.id,
+              firstName: c.firstName,
+              lastName: c.lastName,
+              dateOfBirth: c.dateOfBirth,
+              school: c.school,
+              allergies: c.medical.allergies,
+              medication: c.medical.medication,
+              enroll: true,
+            })),
         },
       });
     }
-    const phone = session.contact.includes('@') ? null : `${session.contact.slice(0, 3)}-${session.contact.slice(3, 6)}-${session.contact.slice(6)}`;
-    return route.fulfill({ json: { returning: false, language: 'en', program: program.name, contact: this.enrollDisplay(session.contact), applyingAs: 'Guardian', household: { guardianName: null, mobile: phone, email: phone ? null : session.contact, language: 'English' }, children: [] } });
+    const phone = session.contact.includes("@")
+      ? null
+      : `${session.contact.slice(0, 3)}-${session.contact.slice(3, 6)}-${session.contact.slice(6)}`;
+    return route.fulfill({
+      json: {
+        returning: false,
+        language: "en",
+        program: program.name,
+        contact: this.enrollDisplay(session.contact),
+        applyingAs: "Guardian",
+        household: {
+          guardianName: null,
+          mobile: phone,
+          email: phone ? null : session.contact,
+          language: "English",
+        },
+        children: [],
+      },
+    });
   }
 
   private enrollDisplay(contact: string): string {
-    return contact.includes('@') ? contact : `${contact.slice(0, 3)}-${contact.slice(3, 6)}-${contact.slice(6)}`;
+    return contact.includes("@")
+      ? contact
+      : `${contact.slice(0, 3)}-${contact.slice(3, 6)}-${contact.slice(6)}`;
   }
 
   /** Whole years from a date of birth to the fake's today. */
   private enrollAge(dateOfBirth: string): number {
-    const [y, m, d] = dateOfBirth.split('-').map(Number) as [number, number, number];
+    const [y, m, d] = dateOfBirth.split("-").map(Number) as [
+      number,
+      number,
+      number,
+    ];
     const today = NOW;
     let age = today.getUTCFullYear() - y;
-    if (today.getUTCMonth() + 1 < m || (today.getUTCMonth() + 1 === m && today.getUTCDate() < d)) age--;
+    if (
+      today.getUTCMonth() + 1 < m ||
+      (today.getUTCMonth() + 1 === m && today.getUTCDate() < d)
+    )
+      age--;
     return age;
   }
 
   /** The server's draft rules (L2-013 criterion 6, L2-071 criteria 2 to 4 and 11). */
   private enrollErrors(draft: FakeEnrollDraft): Record<string, string> {
     const errors: Record<string, string> = {};
-    const applying = draft.applyingAs ?? 'Guardian';
-    if (!['Guardian', 'Youth', 'Referrer'].includes(applying)) return { applyingAs: 'Choose who is applying.' };
+    const applying = draft.applyingAs ?? "Guardian";
+    if (!["Guardian", "Youth", "Referrer"].includes(applying))
+      return { applyingAs: "Choose who is applying." };
     const children = draft.children ?? [];
-    if (!draft.household?.mobile?.trim() && !draft.household?.email?.trim()) errors['mobile'] = 'Add a mobile number or an email.';
-    if (applying === 'Guardian') {
-      if (!draft.household?.guardianName?.trim()) errors['guardianName'] = 'Enter your full name.';
-      if (!children.some((c) => c.enroll)) errors['children'] = 'Add at least one child.';
+    if (!draft.household?.mobile?.trim() && !draft.household?.email?.trim())
+      errors["mobile"] = "Add a mobile number or an email.";
+    if (applying === "Guardian") {
+      if (!draft.household?.guardianName?.trim())
+        errors["guardianName"] = "Enter your full name.";
+      if (!children.some((c) => c.enroll))
+        errors["children"] = "Add at least one child.";
       children.forEach((c, i) => {
         if (!c.enroll) return;
-        if (!c.firstName?.trim() || !c.lastName?.trim()) errors[`children[${i}].name`] = 'Enter the child’s first and last name.';
-        if (!c.dateOfBirth) errors[`children[${i}].dateOfBirth`] = 'Enter the child’s date of birth.';
+        if (!c.firstName?.trim() || !c.lastName?.trim())
+          errors[`children[${i}].name`] =
+            "Enter the child’s first and last name.";
+        if (!c.dateOfBirth)
+          errors[`children[${i}].dateOfBirth`] =
+            "Enter the child’s date of birth.";
       });
       return errors;
     }
-    const youth = applying === 'Youth';
-    if (!draft.household?.guardianName?.trim()) errors['guardianName'] = youth ? 'Enter your parent or guardian’s name.' : 'Enter their parent or guardian’s name.';
-    if (children.filter((c) => c.enroll).length > 1) errors['children'] = 'Apply for one young person at a time.';
+    const youth = applying === "Youth";
+    if (!draft.household?.guardianName?.trim())
+      errors["guardianName"] = youth
+        ? "Enter your parent or guardian’s name."
+        : "Enter their parent or guardian’s name.";
+    if (children.filter((c) => c.enroll).length > 1)
+      errors["children"] = "Apply for one young person at a time.";
     const person = children.find((c) => c.enroll);
-    if (!person?.firstName?.trim() || !person?.lastName?.trim()) errors['children[0].name'] = 'Enter the young person’s first and last name.';
-    else if (person.firstName.trim().length > 100 || person.lastName.trim().length > 100) errors['children[0].name'] = 'Keep each name under 100 characters.';
-    if (!person?.dateOfBirth) errors['children[0].dateOfBirth'] = 'Enter the young person’s date of birth.';
-    else if (youth && (this.enrollAge(person.dateOfBirth) < 12 || this.enrollAge(person.dateOfBirth) > 18))
-      errors['children[0].dateOfBirth'] = 'Young people aged 12 to 18 can apply for themselves. Ask a parent or guardian to apply for you.';
-    if (!draft.reason?.trim()) errors['reason'] = youth ? 'Tell us why you’re interested.' : 'Tell us why you’re referring them.';
-    else if (draft.reason.trim().length > 1000) errors['reason'] = 'Keep it under 1,000 characters.';
+    if (!person?.firstName?.trim() || !person?.lastName?.trim())
+      errors["children[0].name"] =
+        "Enter the young person’s first and last name.";
+    else if (
+      person.firstName.trim().length > 100 ||
+      person.lastName.trim().length > 100
+    )
+      errors["children[0].name"] = "Keep each name under 100 characters.";
+    if (!person?.dateOfBirth)
+      errors["children[0].dateOfBirth"] =
+        "Enter the young person’s date of birth.";
+    else if (
+      youth &&
+      (this.enrollAge(person.dateOfBirth) < 12 ||
+        this.enrollAge(person.dateOfBirth) > 18)
+    )
+      errors["children[0].dateOfBirth"] =
+        "Young people aged 12 to 18 can apply for themselves. Ask a parent or guardian to apply for you.";
+    if (!draft.reason?.trim())
+      errors["reason"] = youth
+        ? "Tell us why you’re interested."
+        : "Tell us why you’re referring them.";
+    else if (draft.reason.trim().length > 1000)
+      errors["reason"] = "Keep it under 1,000 characters.";
     if (!youth) {
       const r = draft.referrer;
-      if (!r?.name?.trim()) errors['referrerName'] = 'Enter your full name.';
-      else if (r.name.trim().length > 100) errors['referrerName'] = 'Keep your name under 100 characters.';
-      if (!r?.role?.trim()) errors['referrerRole'] = 'Tell us how you know the young person.';
-      else if (r.role.trim().length > 100) errors['referrerRole'] = 'Keep your role under 100 characters.';
-      if ((r?.organization?.trim().length ?? 0) > 120) errors['referrerOrganization'] = 'Keep the organization under 120 characters.';
+      if (!r?.name?.trim()) errors["referrerName"] = "Enter your full name.";
+      else if (r.name.trim().length > 100)
+        errors["referrerName"] = "Keep your name under 100 characters.";
+      if (!r?.role?.trim())
+        errors["referrerRole"] = "Tell us how you know the young person.";
+      else if (r.role.trim().length > 100)
+        errors["referrerRole"] = "Keep your role under 100 characters.";
+      if ((r?.organization?.trim().length ?? 0) > 120)
+        errors["referrerOrganization"] =
+          "Keep the organization under 120 characters.";
     }
     return errors;
   }
@@ -3665,7 +7300,8 @@ export class FakeApi {
     if (!found) return;
     const draft = route.request().postDataJSON() as FakeEnrollDraft;
     const errors = this.enrollErrors(draft);
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
     found.session.draft = draft;
     return route.fulfill({ status: 204 });
   }
@@ -3674,50 +7310,89 @@ export class FakeApi {
     const found = await this.enrollSessionFor(route, slug);
     if (!found) return;
     const { program, session } = found;
-    if (session.submitted || !program.enrollmentOpen || !session.draft) return route.fulfill({ status: 409, json: { code: 'conflict' } });
+    if (session.submitted || !program.enrollmentOpen || !session.draft)
+      return route.fulfill({ status: 409, json: { code: "conflict" } });
     const draft = session.draft;
-    const appliedAs = (draft.applyingAs ?? 'Guardian') as 'Guardian' | 'Youth' | 'Referrer';
+    const appliedAs = (draft.applyingAs ?? "Guardian") as
+      "Guardian" | "Youth" | "Referrer";
     const person = draft.children.find((c) => c.enroll)!;
-    const seasonConsent = appliedAs === 'Guardian' || (appliedAs === 'Youth' && this.enrollAge(person.dateOfBirth!) >= 18);
+    const seasonConsent =
+      appliedAs === "Guardian" ||
+      (appliedAs === "Youth" && this.enrollAge(person.dateOfBirth!) >= 18);
     if (!(route.request().postDataJSON() as { consent: boolean }).consent) {
-      const consent = appliedAs === 'Referrer' ? 'Confirm the family agrees to be contacted.' : !seasonConsent ? 'Agree to the privacy notice to submit.' : 'Agree to the season consent to submit.';
+      const consent =
+        appliedAs === "Referrer"
+          ? "Confirm the family agrees to be contacted."
+          : !seasonConsent
+            ? "Agree to the privacy notice to submit."
+            : "Agree to the season consent to submit.";
       return route.fulfill({ status: 422, json: { errors: { consent } } });
     }
-    const same = (a: string | null | undefined, b: string | null | undefined) => (a ?? '').trim().toLowerCase() === (b ?? '').trim().toLowerCase();
+    const same = (a: string | null | undefined, b: string | null | undefined) =>
+      (a ?? "").trim().toLowerCase() === (b ?? "").trim().toLowerCase();
     const children = draft.children.filter((c) => c.enroll);
     for (const c of children) {
       const open = this.enrollmentRequests.find(
         (r) =>
           r.programId === program.id &&
-          (r.status === 'WaitingReview' || r.status === 'Waitlisted') &&
+          (r.status === "WaitingReview" || r.status === "Waitlisted") &&
           r.applicant &&
           same(r.applicant.firstName, c.firstName) &&
           same(r.applicant.lastName, c.lastName) &&
           r.applicant.dateOfBirth === c.dateOfBirth,
       );
-      if (open) return route.fulfill({ status: 409, json: { code: 'duplicate', name: `${open.applicant!.firstName} ${open.applicant!.lastName}` } });
+      if (open)
+        return route.fulfill({
+          status: 409,
+          json: {
+            code: "duplicate",
+            name: `${open.applicant!.firstName} ${open.applicant!.lastName}`,
+          },
+        });
     }
-    let waitlisted = this.enrollmentRequests.filter((r) => r.programId === program.id && r.status === 'Waitlisted').length;
+    let waitlisted = this.enrollmentRequests.filter(
+      (r) => r.programId === program.id && r.status === "Waitlisted",
+    ).length;
     let first: number | null = null;
     const referrer =
-      appliedAs === 'Referrer' ? { name: draft.referrer!.name!.trim(), role: draft.referrer!.role!.trim(), organization: draft.referrer?.organization?.trim() || null, contact: session.contact } : null;
+      appliedAs === "Referrer"
+        ? {
+            name: draft.referrer!.name!.trim(),
+            role: draft.referrer!.role!.trim(),
+            organization: draft.referrer?.organization?.trim() || null,
+            contact: session.contact,
+          }
+        : null;
     for (const c of children) {
       const full = program.roster.length >= program.capacity;
       const position = full ? ++waitlisted : null;
       first ??= position;
       this.enrollmentRequests.push({
         programId: program.id,
-        status: full ? 'Waitlisted' : 'WaitingReview',
+        status: full ? "Waitlisted" : "WaitingReview",
         position,
         appliedAs,
         reason: draft.reason?.trim() || null,
         seasonConsent,
         referrer,
-        applicant: { firstName: c.firstName.trim(), lastName: c.lastName.trim(), dateOfBirth: c.dateOfBirth },
+        applicant: {
+          firstName: c.firstName.trim(),
+          lastName: c.lastName.trim(),
+          dateOfBirth: c.dateOfBirth,
+        },
       });
     }
     session.submitted = true;
-    return route.fulfill({ json: { status: first === null ? 'WaitingReview' : 'Waitlisted', position: first, children: children.length, program: program.name, appliedAs, seasonConsent } });
+    return route.fulfill({
+      json: {
+        status: first === null ? "WaitingReview" : "Waitlisted",
+        position: first,
+        children: children.length,
+        program: program.name,
+        appliedAs,
+        seasonConsent,
+      },
+    });
   }
 
   /** Imports need the Roster module and household writing (admins and program directors). */
@@ -3735,73 +7410,155 @@ export class FakeApi {
   private async uploadImport(route: Route): Promise<void> {
     const m = await this.importCaller(route);
     if (!m) return;
-    const raw = route.request().postDataBuffer()?.toString('utf-8') ?? '';
-    const fileName = /filename="([^"]+)"/.exec(raw)?.[1] ?? 'file';
-    const start = raw.indexOf('\r\n\r\n') + 4;
-    const end = raw.lastIndexOf('\r\n--');
-    const text = raw.slice(start, end > start ? end : undefined).replace(/^\uFEFF/, '');
+    const raw = route.request().postDataBuffer()?.toString("utf-8") ?? "";
+    const fileName = /filename="([^"]+)"/.exec(raw)?.[1] ?? "file";
+    const start = raw.indexOf("\r\n\r\n") + 4;
+    const end = raw.lastIndexOf("\r\n--");
+    const text = raw
+      .slice(start, end > start ? end : undefined)
+      .replace(/^\uFEFF/, "");
     const lines = text.split(/\r?\n/).filter((l) => l.trim());
-    if (!fileName.toLowerCase().endsWith('.csv') || text.includes('\u0000') || lines.length === 0 || !lines[0]!.includes(',')) {
-      return route.fulfill({ status: 422, json: { errors: { file: `We couldn’t read ${fileName}. Export it as CSV or XLSX and try again. Nothing was imported.` } } });
+    if (
+      !fileName.toLowerCase().endsWith(".csv") ||
+      text.includes("\u0000") ||
+      lines.length === 0 ||
+      !lines[0]!.includes(",")
+    ) {
+      return route.fulfill({
+        status: 422,
+        json: {
+          errors: {
+            file: `We couldn’t read ${fileName}. Export it as CSV or XLSX and try again. Nothing was imported.`,
+          },
+        },
+      });
     }
-    const [header, ...rows] = lines.map((l) => l.split(','));
-    const imp: FakeImport = { id: `imp-${this.nextId++}`, organizationId: m.organizationId, fileName, headers: header!.map((h) => h.trim()), rows, mapping: null, programId: null, done: false };
+    const [header, ...rows] = lines.map((l) => l.split(","));
+    const imp: FakeImport = {
+      id: `imp-${this.nextId++}`,
+      organizationId: m.organizationId,
+      fileName,
+      headers: header!.map((h) => h.trim()),
+      rows,
+      mapping: null,
+      programId: null,
+      done: false,
+    };
     this.imports.push(imp);
     const columns = imp.headers.map((name, i) => ({
       name,
       sample: rows.map((r) => r[i]).find((v) => v && v.trim()) ?? null,
-      field: IMPORT_SYNONYMS.find(([, names]) => names.includes(name.toLowerCase()))?.[0] ?? null,
+      field:
+        IMPORT_SYNONYMS.find(([, names]) =>
+          names.includes(name.toLowerCase()),
+        )?.[0] ?? null,
     }));
-    return route.fulfill({ status: 201, json: { id: imp.id, fileName, rowCount: rows.length, matched: columns.filter((c) => c.field).length, columns } });
+    return route.fulfill({
+      status: 201,
+      json: {
+        id: imp.id,
+        fileName,
+        rowCount: rows.length,
+        matched: columns.filter((c) => c.field).length,
+        columns,
+      },
+    });
   }
 
   private importRows(imp: FakeImport) {
     const value = (row: string[], field: ImportField) => {
-      const column = Object.entries(imp.mapping ?? {}).find(([, f]) => f === field)?.[0];
+      const column = Object.entries(imp.mapping ?? {}).find(
+        ([, f]) => f === field,
+      )?.[0];
       const v = column ? row[imp.headers.indexOf(column)]?.trim() : undefined;
       return v ? v : null;
     };
     return imp.rows.map((row, i) => ({
       line: i + 2,
-      child: value(row, 'ChildName') ?? '',
-      dob: value(row, 'DateOfBirth'),
-      guardian: value(row, 'GuardianName'),
-      phone: value(row, 'GuardianPhone'),
-      email: value(row, 'GuardianEmail'),
+      child: value(row, "ChildName") ?? "",
+      dob: value(row, "DateOfBirth"),
+      guardian: value(row, "GuardianName"),
+      phone: value(row, "GuardianPhone"),
+      email: value(row, "GuardianEmail"),
     }));
   }
 
-  private importProblem(r: { child: string; phone: string | null; email: string | null }): string | null {
-    return !r.child ? 'No child name' : !r.phone && !r.email ? 'No phone or email' : !r.phone ? 'No mobile; email only' : null;
+  private importProblem(r: {
+    child: string;
+    phone: string | null;
+    email: string | null;
+  }): string | null {
+    return !r.child
+      ? "No child name"
+      : !r.phone && !r.email
+        ? "No phone or email"
+        : !r.phone
+          ? "No mobile; email only"
+          : null;
   }
 
   private importDuplicates(m: Membership, imp: FakeImport): Set<number> {
-    const existing = this.childrenOf(m).map(({ child }) => `${child.firstName} ${child.lastName}`.toLowerCase() + '|' + child.dateOfBirth);
-    return new Set(this.importRows(imp).filter((r) => existing.includes(`${r.child.toLowerCase()}|${r.dob}`)).map((r) => r.line));
+    const existing = this.childrenOf(m).map(
+      ({ child }) =>
+        `${child.firstName} ${child.lastName}`.toLowerCase() +
+        "|" +
+        child.dateOfBirth,
+    );
+    return new Set(
+      this.importRows(imp)
+        .filter((r) => existing.includes(`${r.child.toLowerCase()}|${r.dob}`))
+        .map((r) => r.line),
+    );
   }
 
   private async mapImport(route: Route, id: string): Promise<void> {
     const m = await this.importCaller(route);
     if (!m) return;
-    const imp = this.imports.find((x) => x.id === id && x.organizationId === m.organizationId);
+    const imp = this.imports.find(
+      (x) => x.id === id && x.organizationId === m.organizationId,
+    );
     if (!imp) return route.fulfill({ status: 404 });
-    const b = route.request().postDataJSON() as { mapping: Record<string, ImportField>; programId: string | null };
-    const mapping = Object.fromEntries(Object.entries(b.mapping ?? {}).filter(([c, f]) => imp.headers.includes(c) && f !== 'Skip'));
+    const b = route.request().postDataJSON() as {
+      mapping: Record<string, ImportField>;
+      programId: string | null;
+    };
+    const mapping = Object.fromEntries(
+      Object.entries(b.mapping ?? {}).filter(
+        ([c, f]) => imp.headers.includes(c) && f !== "Skip",
+      ),
+    );
     const fields = Object.values(mapping);
     const errors: Record<string, string> = {};
-    if (!fields.includes('ChildName')) errors['ChildName'] = 'Map the child’s name.';
-    if (!fields.includes('GuardianName')) errors['GuardianName'] = 'Map the guardian’s name.';
-    if (!fields.includes('GuardianPhone') && !fields.includes('GuardianEmail')) errors['GuardianContact'] = 'Map the guardian’s phone or email.';
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    if (!fields.includes("ChildName"))
+      errors["ChildName"] = "Map the child’s name.";
+    if (!fields.includes("GuardianName"))
+      errors["GuardianName"] = "Map the guardian’s name.";
+    if (!fields.includes("GuardianPhone") && !fields.includes("GuardianEmail"))
+      errors["GuardianContact"] = "Map the guardian’s phone or email.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
     Object.assign(imp, { mapping, programId: b.programId ?? null });
     const rows = this.importRows(imp);
     const duplicates = this.importDuplicates(m, imp);
     return route.fulfill({
       json: {
         rows: rows.length,
-        duplicates: rows.filter((r) => duplicates.has(r.line)).map((r) => ({ row: r.line, child: r.child, reason: 'Already in PromiseHub: same name and date of birth' })),
-        needLook: rows.filter((r) => this.importProblem(r)).map((r) => ({ row: r.line, child: r.child, reason: this.importProblem(r) })),
-        programName: this.programs.find((p) => p.id === b.programId)?.name ?? null,
+        duplicates: rows
+          .filter((r) => duplicates.has(r.line))
+          .map((r) => ({
+            row: r.line,
+            child: r.child,
+            reason: "Already in PromiseHub: same name and date of birth",
+          })),
+        needLook: rows
+          .filter((r) => this.importProblem(r))
+          .map((r) => ({
+            row: r.line,
+            child: r.child,
+            reason: this.importProblem(r),
+          })),
+        programName:
+          this.programs.find((p) => p.id === b.programId)?.name ?? null,
       },
     });
   }
@@ -3809,10 +7566,15 @@ export class FakeApi {
   private async runImport(route: Route, id: string): Promise<void> {
     const m = await this.importCaller(route);
     if (!m) return;
-    const imp = this.imports.find((x) => x.id === id && x.organizationId === m.organizationId);
+    const imp = this.imports.find(
+      (x) => x.id === id && x.organizationId === m.organizationId,
+    );
     if (!imp) return route.fulfill({ status: 404 });
-    if (imp.done || !imp.mapping) return route.fulfill({ status: 409, json: { code: 'conflict' } });
-    const merge = new Set((route.request().postDataJSON() as { merge: number[] }).merge ?? []);
+    if (imp.done || !imp.mapping)
+      return route.fulfill({ status: 409, json: { code: "conflict" } });
+    const merge = new Set(
+      (route.request().postDataJSON() as { merge: number[] }).merge ?? [],
+    );
     const duplicates = this.importDuplicates(m, imp);
     const created = new Set<string>();
     const updated = new Set<string>();
@@ -3822,7 +7584,7 @@ export class FakeApi {
     let skipped = 0;
     for (const r of this.importRows(imp)) {
       const problem = this.importProblem(r);
-      if (problem === 'No child name' || problem === 'No phone or email') {
+      if (problem === "No child name" || problem === "No phone or email") {
         toFix.push({ row: r.line, child: r.child, reason: problem });
         continue;
       }
@@ -3830,7 +7592,11 @@ export class FakeApi {
         skipped++;
         continue;
       }
-      const onFile = this.households.find((h) => h.organizationId === m.organizationId && h.guardians.some((g) => g.mobile && r.phone && g.mobile === r.phone));
+      const onFile = this.households.find(
+        (h) =>
+          h.organizationId === m.organizationId &&
+          h.guardians.some((g) => g.mobile && r.phone && g.mobile === r.phone),
+      );
       if (onFile) updated.add(onFile.id);
       else created.add(r.phone ?? r.email ?? r.guardian ?? r.child);
       if (!duplicates.has(r.line)) children++;
@@ -3838,12 +7604,25 @@ export class FakeApi {
     }
     imp.done = true;
     return route.fulfill({
-      json: { fileName: imp.fileName, rows: imp.rows.length, imported, familiesCreated: created.size, familiesUpdated: updated.size, children, enrolled: imp.programId ? children : 0, skipped, needFix: toFix.length, toFix, programName: this.programs.find((p) => p.id === imp.programId)?.name ?? null },
+      json: {
+        fileName: imp.fileName,
+        rows: imp.rows.length,
+        imported,
+        familiesCreated: created.size,
+        familiesUpdated: updated.size,
+        children,
+        enrolled: imp.programId ? children : 0,
+        skipped,
+        needFix: toFix.length,
+        toFix,
+        programName:
+          this.programs.find((p) => p.id === imp.programId)?.name ?? null,
+      },
     });
   }
 
   private guardianLanguage(language: string): string {
-    return language === 'Spanish' ? 'es' : language === 'French' ? 'fr' : 'en';
+    return language === "Spanish" ? "es" : language === "French" ? "fr" : "en";
   }
 
   /** Resolves a guardian link like the server: gone, module off, verification needed, or the page's data. */
@@ -3853,7 +7632,7 @@ export class FakeApi {
       await this.unauthenticated(route);
       return null;
     }
-    if (!this.modules.get(m.organizationId)!.includes('Incidents')) {
+    if (!this.modules.get(m.organizationId)!.includes("Incidents")) {
       await route.fulfill({ status: 404 });
       return null;
     }
@@ -3861,26 +7640,52 @@ export class FakeApi {
   }
 
   private readableIncidents(m: Membership) {
-    const log = ['Admin', 'ProgramDirector'].includes(m.role);
-    return this.incidents.filter((i) => i.organizationId === m.organizationId && (log || i.reporterId === m.id));
+    const log = ["Admin", "ProgramDirector"].includes(m.role);
+    return this.incidents.filter(
+      (i) =>
+        i.organizationId === m.organizationId && (log || i.reporterId === m.id),
+    );
   }
 
   private childName(id: string): string {
-    const c = this.households.flatMap((h) => h.children).find((x) => x.id === id);
-    return c ? `${c.firstName} ${c.lastName}` : '';
+    const c = this.households
+      .flatMap((h) => h.children)
+      .find((x) => x.id === id);
+    return c ? `${c.firstName} ${c.lastName}` : "";
   }
 
   private async listIncidents(route: Route): Promise<void> {
     const m = await this.incidentCaller(route);
     if (!m) return;
-    const incidents = this.readableIncidents(m).map((i) => ({ id: i.id, category: i.category, child: this.childName(i.childId), occurredAt: i.occurredAt, severity: i.severity, status: i.status, reportedBy: i.reportedBy }));
-    return route.fulfill({ json: { canReadLog: ['Admin', 'ProgramDirector'].includes(m.role), incidents } });
+    const incidents = this.readableIncidents(m).map((i) => ({
+      id: i.id,
+      category: i.category,
+      child: this.childName(i.childId),
+      occurredAt: i.occurredAt,
+      severity: i.severity,
+      status: i.status,
+      reportedBy: i.reportedBy,
+    }));
+    return route.fulfill({
+      json: {
+        canReadLog: ["Admin", "ProgramDirector"].includes(m.role),
+        incidents,
+      },
+    });
   }
 
   private async incidentForm(route: Route): Promise<void> {
     const m = await this.incidentCaller(route);
     if (!m) return;
-    const supervisor = memberships.filter((x) => x.organizationId === m.organizationId && x.role === 'ProgramDirector').map((x) => x.personName).sort()[0] ?? null;
+    const supervisor =
+      memberships
+        .filter(
+          (x) =>
+            x.organizationId === m.organizationId &&
+            x.role === "ProgramDirector",
+        )
+        .map((x) => x.personName)
+        .sort()[0] ?? null;
     const children = this.households
       .filter((h) => h.organizationId === m.organizationId)
       .flatMap((h) => h.children)
@@ -3894,9 +7699,22 @@ export class FakeApi {
     if (!m) return;
     const i = this.readableIncidents(m).find((x) => x.id === id);
     if (!i) return route.fulfill({ status: 404 });
-    i.trail = [...(i.trail ?? [{ text: `${i.reportedBy} submitted the report`, at: i.reportedAt }]), { text: `${m.personName} opened the report`, at: NOW.toISOString() }];
+    i.trail = [
+      ...(i.trail ?? [
+        { text: `${i.reportedBy} submitted the report`, at: i.reportedAt },
+      ]),
+      { text: `${m.personName} opened the report`, at: NOW.toISOString() },
+    ];
     const { organizationId: _, reporterId: __, ...rest } = i;
-    return route.fulfill({ json: { ...rest, review: i.review ?? null, followUps: i.followUps ?? [], child: this.childName(i.childId), canReview: ['Admin', 'ProgramDirector'].includes(m.role) } });
+    return route.fulfill({
+      json: {
+        ...rest,
+        review: i.review ?? null,
+        followUps: i.followUps ?? [],
+        child: this.childName(i.childId),
+        canReview: ["Admin", "ProgramDirector"].includes(m.role),
+      },
+    });
   }
 
   private async createIncident(route: Route): Promise<void> {
@@ -3904,25 +7722,47 @@ export class FakeApi {
     if (!m) return;
     const b = route.request().postDataJSON() as Record<string, string | null>;
     const errors: Record<string, string> = {};
-    if (!b['category']) errors['category'] = 'Choose the type.';
-    const child = this.households.filter((h) => h.organizationId === m.organizationId).flatMap((h) => h.children).find((c) => c.id === b['childId']);
-    if (!child) errors['childId'] = 'Choose the child involved.';
-    if (!b['occurredAt']) errors['occurredAt'] = 'Enter when it happened.';
-    if (!b['whatHappened']?.trim()) errors['whatHappened'] = 'Describe what happened.';
-    if (!b['actionTaken']?.trim()) errors['actionTaken'] = 'Describe what you did.';
-    if (!b['guardianContact']) errors['guardianContact'] = 'Say whether the guardian was contacted.';
-    if (!b['severity']) errors['severity'] = 'Choose the severity.';
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    if (!b["category"]) errors["category"] = "Choose the type.";
+    const child = this.households
+      .filter((h) => h.organizationId === m.organizationId)
+      .flatMap((h) => h.children)
+      .find((c) => c.id === b["childId"]);
+    if (!child) errors["childId"] = "Choose the child involved.";
+    if (!b["occurredAt"]) errors["occurredAt"] = "Enter when it happened.";
+    if (!b["whatHappened"]?.trim())
+      errors["whatHappened"] = "Describe what happened.";
+    if (!b["actionTaken"]?.trim())
+      errors["actionTaken"] = "Describe what you did.";
+    if (!b["guardianContact"])
+      errors["guardianContact"] = "Say whether the guardian was contacted.";
+    if (!b["severity"]) errors["severity"] = "Choose the severity.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
     const id = `inc-${this.nextId++}`;
-    this.notifyIncident(m, id, child!.id, b['category']!);
-    this.incidents.push({ id, organizationId: m.organizationId, reporterId: m.id, reportedBy: m.personName, category: b['category']!, childId: child!.id, occurredAt: new Date(b['occurredAt']!).toISOString(), place: b['place'] || 'Other', whatHappened: b['whatHappened']!.trim(), actionTaken: b['actionTaken']!.trim(), guardianContact: b['guardianContact']!, severity: b['severity']!, status: 'NeedsReview', reportedAt: NOW.toISOString() });
+    this.notifyIncident(m, id, child!.id, b["category"]!);
+    this.incidents.push({
+      id,
+      organizationId: m.organizationId,
+      reporterId: m.id,
+      reportedBy: m.personName,
+      category: b["category"]!,
+      childId: child!.id,
+      occurredAt: new Date(b["occurredAt"]!).toISOString(),
+      place: b["place"] || "Other",
+      whatHappened: b["whatHappened"]!.trim(),
+      actionTaken: b["actionTaken"]!.trim(),
+      guardianContact: b["guardianContact"]!,
+      severity: b["severity"]!,
+      status: "NeedsReview",
+      reportedAt: NOW.toISOString(),
+    });
     return route.fulfill({ status: 201, json: { id } });
   }
 
   private async incidentSupervisor(route: Route, id: string) {
     const m = await this.incidentCaller(route);
     if (!m) return null;
-    if (!['Admin', 'ProgramDirector'].includes(m.role)) {
+    if (!["Admin", "ProgramDirector"].includes(m.role)) {
       await this.forbidden(route);
       return null;
     }
@@ -3938,19 +7778,33 @@ export class FakeApi {
     const found = await this.incidentSupervisor(route, id);
     if (!found) return;
     const { m, i } = found;
-    if (i.status === 'Closed') return route.fulfill({ status: 409, json: { code: 'conflict' } });
-    const b = route.request().postDataJSON() as { note?: string; outcome?: string };
-    if (!b.note?.trim()) return route.fulfill({ status: 422, json: { errors: { note: 'Write a review note.' } } });
-    i.review = { note: b.note.trim(), outcome: b.outcome ?? 'ClosedNoAction', by: m.personName, at: NOW.toISOString() };
-    i.status = b.outcome === 'KeepOpen' ? 'Open' : 'Closed';
+    if (i.status === "Closed")
+      return route.fulfill({ status: 409, json: { code: "conflict" } });
+    const b = route.request().postDataJSON() as {
+      note?: string;
+      outcome?: string;
+    };
+    if (!b.note?.trim())
+      return route.fulfill({
+        status: 422,
+        json: { errors: { note: "Write a review note." } },
+      });
+    i.review = {
+      note: b.note.trim(),
+      outcome: b.outcome ?? "ClosedNoAction",
+      by: m.personName,
+      at: NOW.toISOString(),
+    };
+    i.status = b.outcome === "KeepOpen" ? "Open" : "Closed";
     return route.fulfill({ status: 204 });
   }
 
   private async reopenIncident(route: Route, id: string): Promise<void> {
     const found = await this.incidentSupervisor(route, id);
     if (!found) return;
-    if (found.i.status !== 'Closed') return route.fulfill({ status: 409, json: { code: 'conflict' } });
-    found.i.status = 'Open';
+    if (found.i.status !== "Closed")
+      return route.fulfill({ status: 409, json: { code: "conflict" } });
+    found.i.status = "Open";
     return route.fulfill({ status: 204 });
   }
 
@@ -3960,61 +7814,163 @@ export class FakeApi {
     const i = this.readableIncidents(m).find((x) => x.id === id);
     if (!i) return route.fulfill({ status: 404 });
     const b = route.request().postDataJSON() as { text?: string };
-    if (!b.text?.trim()) return route.fulfill({ status: 422, json: { errors: { text: 'Write the follow-up.' } } });
-    i.followUps = [...(i.followUps ?? []), { text: b.text.trim(), by: m.personName, at: NOW.toISOString() }];
+    if (!b.text?.trim())
+      return route.fulfill({
+        status: 422,
+        json: { errors: { text: "Write the follow-up." } },
+      });
+    i.followUps = [
+      ...(i.followUps ?? []),
+      { text: b.text.trim(), by: m.personName, at: NOW.toISOString() },
+    ];
     return route.fulfill({ status: 204 });
   }
 
   /** A slip link or a home link: either picks the household. */
   private linkOf(token: string): { householdId: string } | undefined {
     const home = this.homeLinks.get(token);
-    return home ? { householdId: home } : (this.guardianLinks.get(token) ?? this.surveyLinks.get(token) ?? this.consentLinks.get(token));
+    return home
+      ? { householdId: home }
+      : (this.guardianLinks.get(token) ??
+          this.surveyLinks.get(token) ??
+          this.consentLinks.get(token));
   }
 
   private async guardianHome(route: Route, token: string): Promise<void> {
     const householdId = this.homeLinks.get(token);
-    const household = householdId ? this.households.find((h) => h.id === householdId) : undefined;
-    const org = household ? organizations.find((o) => o.id === household.organizationId)! : undefined;
-    if (!household || !org) return route.fulfill({ status: 410, json: { code: 'link-expired', organization: null, phone: null } });
-    if (!this.modules.get(org.id)!.includes('Roster')) return route.fulfill({ status: 404 });
+    const household = householdId
+      ? this.households.find((h) => h.id === householdId)
+      : undefined;
+    const org = household
+      ? organizations.find((o) => o.id === household.organizationId)!
+      : undefined;
+    if (!household || !org)
+      return route.fulfill({
+        status: 410,
+        json: { code: "link-expired", organization: null, phone: null },
+      });
+    if (!this.modules.get(org.id)!.includes("Roster"))
+      return route.fulfill({ status: 404 });
     if (!this.trustedHouseholds.has(household.id)) {
-      const contacts = household.guardians.filter((g) => g.mobile).map((g) => `•••-•••-${g.mobile!.slice(-4)}`);
-      return route.fulfill({ status: 401, json: { code: 'verification-required', language: this.guardianLanguage(household.language), organization: org.name, phone: '905-555-0100', contacts } });
+      const contacts = household.guardians
+        .filter((g) => g.mobile)
+        .map((g) => `•••-•••-${g.mobile!.slice(-4)}`);
+      return route.fulfill({
+        status: 401,
+        json: {
+          code: "verification-required",
+          language: this.guardianLanguage(household.language),
+          organization: org.name,
+          phone: "905-555-0100",
+          contacts,
+        },
+      });
     }
-    const label = { Accepted: 'Enrolled', Waitlisted: 'Waitlisted', Declined: 'Declined', WaitingReview: 'WaitingReview' } as const;
+    const label = {
+      Accepted: "Enrolled",
+      Waitlisted: "Waitlisted",
+      Declined: "Declined",
+      WaitingReview: "WaitingReview",
+    } as const;
     const children = [...household.children]
       .sort((a, z) => a.firstName.localeCompare(z.firstName))
       .map((c) => {
-        const requests = this.enrollmentRequests.filter((r) => r.childId === c.id);
-        const fromRequests = requests.map((r) => ({ program: this.programs.find((x) => x.id === r.programId)!, status: label[r.status], position: r.position, note: r.note ?? null }));
-        const onRoster = this.programs.filter((x) => x.roster.includes(c.id) && !requests.some((r) => r.programId === x.id)).map((program) => ({ program, status: 'Enrolled', position: null, note: null }));
+        const requests = this.enrollmentRequests.filter(
+          (r) => r.childId === c.id,
+        );
+        const fromRequests = requests.map((r) => ({
+          program: this.programs.find((x) => x.id === r.programId)!,
+          status: label[r.status],
+          position: r.position,
+          note: r.note ?? null,
+        }));
+        const onRoster = this.programs
+          .filter(
+            (x) =>
+              x.roster.includes(c.id) &&
+              !requests.some((r) => r.programId === x.id),
+          )
+          .map((program) => ({
+            program,
+            status: "Enrolled",
+            position: null,
+            note: null,
+          }));
         return {
           id: c.id,
           allergies: c.medical.allergies,
           medication: c.medical.medication,
-          pickups: this.modules.get(org.id)!.includes('Pickup') ? this.activePickups(c.id).map((x) => ({ id: x.id, name: x.name, relationship: x.relationship })) : null,
+          pickups: this.modules.get(org.id)!.includes("Pickup")
+            ? this.activePickups(c.id).map((x) => ({
+                id: x.id,
+                name: x.name,
+                relationship: x.relationship,
+              }))
+            : null,
           name: `${c.firstName} ${c.lastName}`,
           firstName: c.firstName,
           enrollments: [...fromRequests, ...onRoster]
-            .map((e) => ({ program: e.program.name, status: e.status, position: e.position, note: e.note, startsOn: e.program.startsOn, schedule: e.program.schedule }))
+            .map((e) => ({
+              program: e.program.name,
+              status: e.status,
+              position: e.position,
+              note: e.note,
+              startsOn: e.program.startsOn,
+              schedule: e.program.schedule,
+            }))
             .sort((a, z) => a.program.localeCompare(z.program)),
         };
       });
     const primary = this.sortedGuardians(household)[0];
-    return route.fulfill({ json: { language: this.guardianLanguage(household.language), organization: org.name, phone: '905-555-0100', firstName: primary?.name.split(' ')[0] ?? '', children, noShows: this.openNoShows(household),
-          contact: primary ? { name: primary.name, mobile: primary.mobile, email: primary.email, language: household.language } : null, pickupRequests: this.pickupRequests
-          .filter((r) => r.householdId === household.id && r.status === 'Pending')
-          .map((r) => ({ id: r.id, child: household.children.find((c) => c.id === r.childId)!.firstName, collector: r.collector, event: this.events.find((x) => x.id === r.eventId)?.name ?? '', requestedAt: NOW.toISOString() })) } });
+    return route.fulfill({
+      json: {
+        language: this.guardianLanguage(household.language),
+        organization: org.name,
+        phone: "905-555-0100",
+        firstName: primary?.name.split(" ")[0] ?? "",
+        children,
+        noShows: this.openNoShows(household),
+        contact: primary
+          ? {
+              name: primary.name,
+              mobile: primary.mobile,
+              email: primary.email,
+              language: household.language,
+            }
+          : null,
+        pickupRequests: this.pickupRequests
+          .filter(
+            (r) => r.householdId === household.id && r.status === "Pending",
+          )
+          .map((r) => ({
+            id: r.id,
+            child: household.children.find((c) => c.id === r.childId)!
+              .firstName,
+            collector: r.collector,
+            event: this.events.find((x) => x.id === r.eventId)?.name ?? "",
+            requestedAt: NOW.toISOString(),
+          })),
+      },
+    });
   }
 
   /** The household's unanswered no-show texts, one per session, with the children's first names. */
-  private openNoShows(household: { id: string; organizationId: string; children: { id: string; firstName: string }[] }) {
-    if (!this.modules.get(household.organizationId)!.includes('RollCall')) return [];
+  private openNoShows(household: {
+    id: string;
+    organizationId: string;
+    children: { id: string; firstName: string }[];
+  }) {
+    if (!this.modules.get(household.organizationId)!.includes("RollCall"))
+      return [];
     const byEvent = new Map<string, string[]>();
     for (const [key, v] of this.noShows) {
-      const [eventId, childId] = key.split(':') as [string, string];
+      const [eventId, childId] = key.split(":") as [string, string];
       const child = household.children.find((c) => c.id === childId);
-      if (child && v.state === 'TextSent') byEvent.set(eventId, [...(byEvent.get(eventId) ?? []), child.firstName].sort());
+      if (child && v.state === "TextSent")
+        byEvent.set(
+          eventId,
+          [...(byEvent.get(eventId) ?? []), child.firstName].sort(),
+        );
     }
     return [...byEvent].map(([eventId, children]) => {
       const e = this.events.find((x) => x.id === eventId)!;
@@ -4024,32 +7980,73 @@ export class FakeApi {
 
   private async answerNoShow(route: Route, token: string): Promise<void> {
     const householdId = this.homeLinks.get(token);
-    const household = householdId ? this.households.find((h) => h.id === householdId) : undefined;
-    if (!household) return route.fulfill({ status: 410, json: { code: 'link-expired' } });
-    if (!this.trustedHouseholds.has(household.id)) return route.fulfill({ status: 401, json: { code: 'verification-required' } });
-    const b = route.request().postDataJSON() as { eventId: string; reply: 'OnTheWay' | 'Absent' };
-    const open = household.children.filter((c) => this.noShows.get(`${b.eventId}:${c.id}`)?.state === 'TextSent');
+    const household = householdId
+      ? this.households.find((h) => h.id === householdId)
+      : undefined;
+    if (!household)
+      return route.fulfill({ status: 410, json: { code: "link-expired" } });
+    if (!this.trustedHouseholds.has(household.id))
+      return route.fulfill({
+        status: 401,
+        json: { code: "verification-required" },
+      });
+    const b = route.request().postDataJSON() as {
+      eventId: string;
+      reply: "OnTheWay" | "Absent";
+    };
+    const open = household.children.filter(
+      (c) => this.noShows.get(`${b.eventId}:${c.id}`)?.state === "TextSent",
+    );
     if (!open.length) return route.fulfill({ status: 404 });
-    for (const c of open) this.noShowAlert(b.eventId, c.id, b.reply, NOW.toISOString());
+    for (const c of open)
+      this.noShowAlert(b.eventId, c.id, b.reply, NOW.toISOString());
     return route.fulfill({ status: 204 });
   }
 
   private async guardianScope(route: Route, token: string) {
     const link = this.guardianLinks.get(token);
-    const household = link ? this.households.find((h) => h.id === link.householdId) : undefined;
-    const org = household ? organizations.find((o) => o.id === household.organizationId)! : undefined;
+    const household = link
+      ? this.households.find((h) => h.id === link.householdId)
+      : undefined;
+    const org = household
+      ? organizations.find((o) => o.id === household.organizationId)!
+      : undefined;
     const slip = link ? this.slips.get(link.eventId) : undefined;
-    if (!link || !household || !org || link.expired || slip?.status !== 'Sent') {
-      await route.fulfill({ status: 410, json: { code: 'link-expired', organization: org?.name ?? null, phone: org ? '905-555-0100' : null } });
+    if (
+      !link ||
+      !household ||
+      !org ||
+      link.expired ||
+      slip?.status !== "Sent"
+    ) {
+      await route.fulfill({
+        status: 410,
+        json: {
+          code: "link-expired",
+          organization: org?.name ?? null,
+          phone: org ? "905-555-0100" : null,
+        },
+      });
       return null;
     }
-    if (!this.modules.get(org.id)!.includes('Slips')) {
+    if (!this.modules.get(org.id)!.includes("Slips")) {
       await route.fulfill({ status: 404 });
       return null;
     }
     if (!this.trustedHouseholds.has(household.id)) {
-      const contacts = household.guardians.filter((g) => g.mobile).map((g) => `•••-•••-${g.mobile!.slice(-4)}`);
-      await route.fulfill({ status: 401, json: { code: 'verification-required', language: this.guardianLanguage(household.language), organization: org.name, phone: '905-555-0100', contacts } });
+      const contacts = household.guardians
+        .filter((g) => g.mobile)
+        .map((g) => `•••-•••-${g.mobile!.slice(-4)}`);
+      await route.fulfill({
+        status: 401,
+        json: {
+          code: "verification-required",
+          language: this.guardianLanguage(household.language),
+          organization: org.name,
+          phone: "905-555-0100",
+          contacts,
+        },
+      });
       return null;
     }
     const child = household.children.find((c) => c.id === link.childId)!;
@@ -4058,14 +8055,30 @@ export class FakeApi {
   }
 
   /** A guardian consented for a child, as if signed from the consent link (L2-055). */
-  giveConsent(childId: string, by = 'Carmen Rivera', relationship = 'Parent'): void {
-    this.consents.push({ childId, signedBy: by, relationship, signedAt: NOW.toISOString(), reference: 'GC-4F7A2C', withdrawnAt: null, withdrawnBy: null });
+  giveConsent(
+    childId: string,
+    by = "Carmen Rivera",
+    relationship = "Parent",
+  ): void {
+    this.consents.push({
+      childId,
+      signedBy: by,
+      relationship,
+      signedAt: NOW.toISOString(),
+      reference: "GC-4F7A2C",
+      withdrawnAt: null,
+      withdrawnBy: null,
+    });
   }
 
   /** The guardian withdrew the consent in force (L2-058 criterion 2). */
-  withdrawConsent(childId: string, by = 'Carmen Rivera'): void {
+  withdrawConsent(childId: string, by = "Carmen Rivera"): void {
     const latest = this.consentOf(childId);
-    if (latest && !latest.withdrawnAt) Object.assign(latest, { withdrawnAt: NOW.toISOString(), withdrawnBy: by });
+    if (latest && !latest.withdrawnAt)
+      Object.assign(latest, {
+        withdrawnAt: NOW.toISOString(),
+        withdrawnBy: by,
+      });
   }
 
   /** The child's latest consent, if any. */
@@ -4075,15 +8088,30 @@ export class FakeApi {
 
   /** Whether a child needs consent (ADR 0046): a youth account, and under the consent age or no date of birth. */
   private consentRequired(organizationId: string, childId: string): boolean {
-    const child = this.households.flatMap((h) => h.children).find((c) => c.id === childId);
-    const youth = [...this.youthLinks].some(([membershipId, linked]) => linked === childId && memberships.some((m) => m.id === membershipId && m.organizationId === organizationId && !this.removedMembers.has(m.id)));
+    const child = this.households
+      .flatMap((h) => h.children)
+      .find((c) => c.id === childId);
+    const youth = [...this.youthLinks].some(
+      ([membershipId, linked]) =>
+        linked === childId &&
+        memberships.some(
+          (m) =>
+            m.id === membershipId &&
+            m.organizationId === organizationId &&
+            !this.removedMembers.has(m.id),
+        ),
+    );
     const age = child ? ageOf(child.dateOfBirth) : null;
-    return !!child && youth && (age === null || age < this.consentPolicyOf(organizationId).consentAge);
+    return (
+      !!child &&
+      youth &&
+      (age === null || age < this.consentPolicyOf(organizationId).consentAge)
+    );
   }
 
-  private consentStatusName(childId: string): 'Needed' | 'Given' | 'Withdrawn' {
+  private consentStatusName(childId: string): "Needed" | "Given" | "Withdrawn" {
     const latest = this.consentOf(childId);
-    return !latest ? 'Needed' : latest.withdrawnAt ? 'Withdrawn' : 'Given';
+    return !latest ? "Needed" : latest.withdrawnAt ? "Withdrawn" : "Given";
   }
 
   /** GET /children/{id}/consent: any staff role of the child's organization (L2-058 criterion 3). */
@@ -4115,33 +8143,81 @@ export class FakeApi {
     if (!can.writeHouseholds(m)) return this.forbidden(route);
     const found = this.ownChild(m, id);
     if (!found) return route.fulfill({ status: 404 });
-    return this.deliverConsentLink(route, m.organizationId, found.household, id);
+    return this.deliverConsentLink(
+      route,
+      m.organizationId,
+      found.household,
+      id,
+    );
   }
 
   /** Texts the household's signers, as the server does; 409 when not needed, 422 when nobody can be reached. */
-  private async deliverConsentLink(route: Route, organizationId: string, household: FakeHousehold, childId: string): Promise<void> {
-    if (!this.consentRequired(organizationId, childId) || this.consentStatusName(childId) === 'Given') return route.fulfill({ status: 409, json: { code: 'not-needed' } });
-    const signers = household.guardians.filter((g) => g.canSign && (g.mobile || (g.email && !g.emailBounced)));
-    if (!signers.length) return route.fulfill({ status: 422, json: { code: 'no-guardian' } });
+  private async deliverConsentLink(
+    route: Route,
+    organizationId: string,
+    household: FakeHousehold,
+    childId: string,
+  ): Promise<void> {
+    if (
+      !this.consentRequired(organizationId, childId) ||
+      this.consentStatusName(childId) === "Given"
+    )
+      return route.fulfill({ status: 409, json: { code: "not-needed" } });
+    const signers = household.guardians.filter(
+      (g) => g.canSign && (g.mobile || (g.email && !g.emailBounced)),
+    );
+    if (!signers.length)
+      return route.fulfill({ status: 422, json: { code: "no-guardian" } });
     this.consentLinksSent.set(childId, NOW.toISOString());
-    return route.fulfill({ status: 202, json: { sentTo: signers.map((g) => (g.mobile ? `•••-•••-${g.mobile.slice(-4)}` : `${g.email![0]}•••${g.email!.slice(g.email!.indexOf('@'))}`)) } });
+    return route.fulfill({
+      status: 202,
+      json: {
+        sentTo: signers.map((g) =>
+          g.mobile
+            ? `•••-•••-${g.mobile.slice(-4)}`
+            : `${g.email![0]}•••${g.email!.slice(g.email!.indexOf("@"))}`,
+        ),
+      },
+    });
   }
 
   private async consentScope(route: Route, token: string) {
     const link = this.consentLinks.get(token);
-    const household = link ? this.households.find((h) => h.id === link.householdId) : undefined;
-    const org = household ? organizations.find((o) => o.id === household.organizationId)! : undefined;
+    const household = link
+      ? this.households.find((h) => h.id === link.householdId)
+      : undefined;
+    const org = household
+      ? organizations.find((o) => o.id === household.organizationId)!
+      : undefined;
     if (!link || !household || !org || link.expired) {
-      await route.fulfill({ status: 410, json: { code: 'link-expired', organization: org?.name ?? null, phone: org ? '905-555-0100' : null } });
+      await route.fulfill({
+        status: 410,
+        json: {
+          code: "link-expired",
+          organization: org?.name ?? null,
+          phone: org ? "905-555-0100" : null,
+        },
+      });
       return null;
     }
-    if (!this.modules.get(org.id)!.includes('Roster')) {
+    if (!this.modules.get(org.id)!.includes("Roster")) {
       await route.fulfill({ status: 404 });
       return null;
     }
     if (!this.trustedHouseholds.has(household.id)) {
-      const contacts = household.guardians.filter((g) => g.mobile).map((g) => `•••-•••-${g.mobile!.slice(-4)}`);
-      await route.fulfill({ status: 401, json: { code: 'verification-required', language: this.guardianLanguage(household.language), organization: org.name, phone: '905-555-0100', contacts } });
+      const contacts = household.guardians
+        .filter((g) => g.mobile)
+        .map((g) => `•••-•••-${g.mobile!.slice(-4)}`);
+      await route.fulfill({
+        status: 401,
+        json: {
+          code: "verification-required",
+          language: this.guardianLanguage(household.language),
+          organization: org.name,
+          phone: "905-555-0100",
+          contacts,
+        },
+      });
       return null;
     }
     const child = household.children.find((c) => c.id === link.childId)!;
@@ -4158,9 +8234,14 @@ export class FakeApi {
       json: {
         language: this.guardianLanguage(household.language),
         organization: org.name,
-        phone: '905-555-0100',
-        guardianName: this.sortedGuardians(household)[0]?.name.split(' ')[0] ?? '',
-        child: { name: `${child.firstName} ${child.lastName}`, firstName: child.firstName, age: ageOf(child.dateOfBirth) },
+        phone: "905-555-0100",
+        guardianName:
+          this.sortedGuardians(household)[0]?.name.split(" ")[0] ?? "",
+        child: {
+          name: `${child.firstName} ${child.lastName}`,
+          firstName: child.firstName,
+          age: ageOf(child.dateOfBirth),
+        },
         wording: this.consentPolicyOf(org.id).wording,
         consentAge: this.consentPolicyOf(org.id).consentAge,
         status: this.consentStatusName(child.id),
@@ -4179,46 +8260,78 @@ export class FakeApi {
     const scope = await this.consentScope(route, token);
     if (!scope) return;
     const { household, child } = scope;
-    if (this.consentStatusName(child.id) === 'Given') return route.fulfill({ status: 409, json: { code: 'conflict' } });
-    const b = route.request().postDataJSON() as { name?: string; relationship?: string; agree?: boolean };
-    const typed = (b.name ?? '').trim().replace(/\s+/g, ' ');
-    const signer = household.guardians.find((g) => g.canSign && g.name.toLowerCase() === typed.toLowerCase());
+    if (this.consentStatusName(child.id) === "Given")
+      return route.fulfill({ status: 409, json: { code: "conflict" } });
+    const b = route.request().postDataJSON() as {
+      name?: string;
+      relationship?: string;
+      agree?: boolean;
+    };
+    const typed = (b.name ?? "").trim().replace(/\s+/g, " ");
+    const signer = household.guardians.find(
+      (g) => g.canSign && g.name.toLowerCase() === typed.toLowerCase(),
+    );
     const errors: Record<string, string> = {};
-    if (!b.relationship?.trim()) errors['relationship'] = `Choose how you’re related to ${child.firstName}.`;
-    if (!b.agree) errors['agree'] = 'Tick the box to give consent.';
-    if (!typed) errors['name'] = 'Type your full name to sign.';
-    else if (!signer) errors['name'] = `That name doesn’t match a guardian of ${child.firstName}.`;
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    if (!b.relationship?.trim())
+      errors["relationship"] =
+        `Choose how you’re related to ${child.firstName}.`;
+    if (!b.agree) errors["agree"] = "Tick the box to give consent.";
+    if (!typed) errors["name"] = "Type your full name to sign.";
+    else if (!signer)
+      errors["name"] =
+        `That name doesn’t match a guardian of ${child.firstName}.`;
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
     this.giveConsent(child.id, signer!.name, b.relationship!.trim());
     return route.fulfill({ status: 204 });
   }
 
   /** POST /g/consent/{token}/withdraw: 409 with no consent in force (L2-058 criterion 2). */
-  private async withdrawConsentRoute(route: Route, token: string): Promise<void> {
+  private async withdrawConsentRoute(
+    route: Route,
+    token: string,
+  ): Promise<void> {
     const scope = await this.consentScope(route, token);
     if (!scope) return;
-    if (this.consentStatusName(scope.child.id) !== 'Given') return route.fulfill({ status: 409, json: { code: 'conflict' } });
-    this.withdrawConsent(scope.child.id, this.sortedGuardians(scope.household)[0]!.name);
+    if (this.consentStatusName(scope.child.id) !== "Given")
+      return route.fulfill({ status: 409, json: { code: "conflict" } });
+    this.withdrawConsent(
+      scope.child.id,
+      this.sortedGuardians(scope.household)[0]!.name,
+    );
     return route.fulfill({ status: 204 });
   }
 
   private async guardianCodeRoute(route: Route): Promise<void> {
-    const b = route.request().postDataJSON() as { token: string; contact: string };
+    const b = route.request().postDataJSON() as {
+      token: string;
+      contact: string;
+    };
     const link = this.linkOf(b.token);
-    if (!link) return route.fulfill({ status: 410, json: { code: 'link-expired' } });
+    if (!link)
+      return route.fulfill({ status: 410, json: { code: "link-expired" } });
     return route.fulfill({ status: 202 });
   }
 
   private async guardianVerify(route: Route): Promise<void> {
     const b = route.request().postDataJSON() as { token: string; code: string };
     const link = this.linkOf(b.token);
-    if (!link) return route.fulfill({ status: 410, json: { code: 'link-expired' } });
-    if (this.lockedLinks.has(b.token)) return route.fulfill({ status: 423, json: { code: 'locked' } });
+    if (!link)
+      return route.fulfill({ status: 410, json: { code: "link-expired" } });
+    if (this.lockedLinks.has(b.token))
+      return route.fulfill({ status: 423, json: { code: "locked" } });
     if (b.code !== this.guardianCode) {
       const wrong = (this.wrongCodes.get(b.token) ?? 0) + 1;
       this.wrongCodes.set(b.token, wrong);
       if (wrong >= 3) this.lockedLinks.add(b.token);
-      return route.fulfill({ status: 422, json: { errors: { code: 'That code didn’t work. Check the latest text or email.' } } });
+      return route.fulfill({
+        status: 422,
+        json: {
+          errors: {
+            code: "That code didn’t work. Check the latest text or email.",
+          },
+        },
+      });
     }
     this.trustedHouseholds.add(link.householdId);
     return route.fulfill({ status: 204 });
@@ -4235,36 +8348,75 @@ export class FakeApi {
       json: {
         language: this.guardianLanguage(household.language),
         organization: org.name,
-        phone: '905-555-0100',
-        guardianName: primary?.name.split(' ')[0] ?? '',
-        event: { name: event.name, startsAt: event.startsAt, endsAt: event.endsAt, place: event.place },
-        child: { name: `${child.firstName} ${child.lastName}`, firstName: child.firstName, age: ageOf(child.dateOfBirth), allergies: child.medical.allergies, medication: child.medical.medication },
-        emergencyContact: primary ? { name: primary.name, phone: primary.mobile } : null,
+        phone: "905-555-0100",
+        guardianName: primary?.name.split(" ")[0] ?? "",
+        event: {
+          name: event.name,
+          startsAt: event.startsAt,
+          endsAt: event.endsAt,
+          place: event.place,
+        },
+        child: {
+          name: `${child.firstName} ${child.lastName}`,
+          firstName: child.firstName,
+          age: ageOf(child.dateOfBirth),
+          allergies: child.medical.allergies,
+          medication: child.medical.medication,
+        },
+        emergencyContact: primary
+          ? { name: primary.name, phone: primary.mobile }
+          : null,
         title: slip.title || event.name,
         body: slip.body,
         signBy: slip.signBy,
         askPhotos: slip.askPhotos,
         askSwimming: slip.askSwimming,
         askLunch: slip.askLunch,
-        status: current?.status ?? 'Open',
+        status: current?.status ?? "Open",
         answeredAt: current ? NOW.toISOString() : null,
         answeredBy: current?.by ?? null,
       },
     });
   }
 
-  private async guardianAnswer(route: Route, token: string, status: 'Signed' | 'Declined'): Promise<void> {
+  private async guardianAnswer(
+    route: Route,
+    token: string,
+    status: "Signed" | "Declined",
+  ): Promise<void> {
     const scope = await this.guardianScope(route, token);
     if (!scope) return;
     const { household, slip, child } = scope;
     const current = slip.answers.get(child.id);
-    if (current && current.version === slip.version && (status === 'Signed' || current.status === 'Declined')) return route.fulfill({ status: 409, json: { code: 'conflict' } });
-    const b = route.request().postDataJSON() as { name?: string; reason?: string };
-    const typed = (b.name ?? '').trim().replace(/\s+/g, ' ');
-    const signer = household.guardians.find((g) => g.canSign && g.name.toLowerCase() === typed.toLowerCase());
-    if (status === 'Signed') {
-      if (!typed) return route.fulfill({ status: 422, json: { errors: { name: 'Type your full name to sign.' } } });
-      if (!signer) return route.fulfill({ status: 422, json: { errors: { name: `That name doesn’t match a guardian of ${child.firstName}.` } } });
+    if (
+      current &&
+      current.version === slip.version &&
+      (status === "Signed" || current.status === "Declined")
+    )
+      return route.fulfill({ status: 409, json: { code: "conflict" } });
+    const b = route.request().postDataJSON() as {
+      name?: string;
+      reason?: string;
+    };
+    const typed = (b.name ?? "").trim().replace(/\s+/g, " ");
+    const signer = household.guardians.find(
+      (g) => g.canSign && g.name.toLowerCase() === typed.toLowerCase(),
+    );
+    if (status === "Signed") {
+      if (!typed)
+        return route.fulfill({
+          status: 422,
+          json: { errors: { name: "Type your full name to sign." } },
+        });
+      if (!signer)
+        return route.fulfill({
+          status: 422,
+          json: {
+            errors: {
+              name: `That name doesn’t match a guardian of ${child.firstName}.`,
+            },
+          },
+        });
     }
     const by = signer?.name ?? this.sortedGuardians(household)[0]!.name;
     slip.answers.set(child.id, { status, by, version: slip.version });
@@ -4273,21 +8425,38 @@ export class FakeApi {
 
   /** Families with a child still to answer the slip, as the server lists them. */
   private families(m: Membership, slip: FakeSlip, event: FakeEvent) {
-    const outstanding = this.slipResponses(m, slip, event).filter((r) => r.status === 'Outstanding');
+    const outstanding = this.slipResponses(m, slip, event).filter(
+      (r) => r.status === "Outstanding",
+    );
     return this.households
-      .filter((h) => outstanding.some((r) => r.household === h.name && h.organizationId === m.organizationId))
+      .filter((h) =>
+        outstanding.some(
+          (r) =>
+            r.household === h.name && h.organizationId === m.organizationId,
+        ),
+      )
       .sort((a, z) => a.name.localeCompare(z.name))
       .map((h) => {
-        const reachable = h.guardians.some((g) => g.mobile || (g.email && !g.emailBounced));
+        const reachable = h.guardians.some(
+          (g) => g.mobile || (g.email && !g.emailBounced),
+        );
         return {
           householdId: h.id,
           household: h.name,
           guardian: this.sortedGuardians(h)[0]?.name ?? null,
-          children: outstanding.filter((r) => r.household === h.name).map((r) => r.child.split(' ')[0]!),
-          childIds: outstanding.filter((r) => r.household === h.name).map((r) => r.childId),
+          children: outstanding
+            .filter((r) => r.household === h.name)
+            .map((r) => r.child.split(" ")[0]!),
+          childIds: outstanding
+            .filter((r) => r.household === h.name)
+            .map((r) => r.childId),
           lastRemindedAt: null as string | null,
           reachable,
-          reason: reachable ? null : h.guardians.some((g) => g.emailBounced) ? 'Email bounced, no mobile' : 'No mobile or email',
+          reason: reachable
+            ? null
+            : h.guardians.some((g) => g.emailBounced)
+              ? "Email bounced, no mobile"
+              : "No mobile or email",
         };
       });
   }
@@ -4297,13 +8466,41 @@ export class FakeApi {
     if (!m) return;
     const event = this.ownEvent(m, sessionId);
     const slip = event?.requiresSlip ? this.slips.get(event.id) : undefined;
-    if (!event || !slip || slip.status !== 'Sent') return route.fulfill({ status: 404 });
-    const order: Record<string, number> = { Missing: 0, Declined: 1, Cleared: 2 };
+    if (!event || !slip || slip.status !== "Sent")
+      return route.fulfill({ status: 404 });
+    const order: Record<string, number> = {
+      Missing: 0,
+      Declined: 1,
+      Cleared: 2,
+    };
     const children = this.slipResponses(m, slip, event)
-      .map((r) => ({ childId: r.childId, householdId: this.households.find((h) => h.name === r.household && h.organizationId === m.organizationId)!.id, name: r.child, status: r.status === 'Signed' ? 'Cleared' : r.status === 'Declined' ? 'Declined' : 'Missing' }))
-      .sort((a, z) => order[a.status]! - order[z.status]! || a.name.localeCompare(z.name));
+      .map((r) => ({
+        childId: r.childId,
+        householdId: this.households.find(
+          (h) =>
+            h.name === r.household && h.organizationId === m.organizationId,
+        )!.id,
+        name: r.child,
+        status:
+          r.status === "Signed"
+            ? "Cleared"
+            : r.status === "Declined"
+              ? "Declined"
+              : "Missing",
+      }))
+      .sort(
+        (a, z) =>
+          order[a.status]! - order[z.status]! || a.name.localeCompare(z.name),
+      );
     return route.fulfill({
-      json: { slipId: slip.id, title: slip.title || event.name, cleared: children.filter((c) => c.status === 'Cleared').length, missing: children.filter((c) => c.status === 'Missing').length, declined: children.filter((c) => c.status === 'Declined').length, children },
+      json: {
+        slipId: slip.id,
+        title: slip.title || event.name,
+        cleared: children.filter((c) => c.status === "Cleared").length,
+        missing: children.filter((c) => c.status === "Missing").length,
+        declined: children.filter((c) => c.status === "Declined").length,
+        children,
+      },
     });
   }
 
@@ -4312,7 +8509,13 @@ export class FakeApi {
     if (!m) return;
     const found = this.slipById(m, id);
     if (!found) return route.fulfill({ status: 404 });
-    return route.fulfill({ json: { households: this.families(m, found.slip, found.event).map(({ childIds: _, ...f }) => f) } });
+    return route.fulfill({
+      json: {
+        households: this.families(m, found.slip, found.event).map(
+          ({ childIds: _, ...f }) => f,
+        ),
+      },
+    });
   }
 
   private async remindNow(route: Route, id: string): Promise<void> {
@@ -4321,9 +8524,18 @@ export class FakeApi {
     const found = this.slipById(m, id);
     if (!found) return route.fulfill({ status: 404 });
     const b = route.request().postDataJSON() as { body: string };
-    if (!(b.body ?? '').includes('{link}')) return route.fulfill({ status: 422, json: { errors: { body: 'Keep {link} in the message.' } } });
+    if (!(b.body ?? "").includes("{link}"))
+      return route.fulfill({
+        status: 422,
+        json: { errors: { body: "Keep {link} in the message." } },
+      });
     const families = this.families(m, found.slip, found.event);
-    return route.fulfill({ json: { households: families.filter((f) => f.reachable).length, unreachable: families.filter((f) => !f.reachable).length } });
+    return route.fulfill({
+      json: {
+        households: families.filter((f) => f.reachable).length,
+        unreachable: families.filter((f) => !f.reachable).length,
+      },
+    });
   }
 
   private async signOnTablet(route: Route, id: string): Promise<void> {
@@ -4332,15 +8544,42 @@ export class FakeApi {
     if (!can.runSessions(m)) return this.forbidden(route);
     const found = this.slipById(m, id);
     if (!found) return route.fulfill({ status: 404 });
-    const b = route.request().postDataJSON() as { householdId: string; name: string };
-    const family = this.families(m, found.slip, found.event).find((f) => f.householdId === b.householdId);
-    if (!family) return route.fulfill({ status: 409, json: { code: 'conflict' } });
-    const typed = (b.name ?? '').trim().replace(/\s+/g, ' ');
-    if (!typed) return route.fulfill({ status: 422, json: { errors: { name: 'The guardian needs to type their full name.' } } });
+    const b = route.request().postDataJSON() as {
+      householdId: string;
+      name: string;
+    };
+    const family = this.families(m, found.slip, found.event).find(
+      (f) => f.householdId === b.householdId,
+    );
+    if (!family)
+      return route.fulfill({ status: 409, json: { code: "conflict" } });
+    const typed = (b.name ?? "").trim().replace(/\s+/g, " ");
+    if (!typed)
+      return route.fulfill({
+        status: 422,
+        json: {
+          errors: { name: "The guardian needs to type their full name." },
+        },
+      });
     const household = this.households.find((h) => h.id === b.householdId)!;
-    const signer = household.guardians.find((g) => g.canSign && g.name.toLowerCase() === typed.toLowerCase());
-    if (!signer) return route.fulfill({ status: 422, json: { errors: { name: 'That name doesn’t match a guardian of this family.' } } });
-    for (const childId of family.childIds) found.slip.answers.set(childId, { status: 'Signed', by: signer.name, version: found.slip.version });
+    const signer = household.guardians.find(
+      (g) => g.canSign && g.name.toLowerCase() === typed.toLowerCase(),
+    );
+    if (!signer)
+      return route.fulfill({
+        status: 422,
+        json: {
+          errors: {
+            name: "That name doesn’t match a guardian of this family.",
+          },
+        },
+      });
+    for (const childId of family.childIds)
+      found.slip.answers.set(childId, {
+        status: "Signed",
+        by: signer.name,
+        version: found.slip.version,
+      });
     return route.fulfill({ status: 204 });
   }
 
@@ -4352,15 +8591,15 @@ export class FakeApi {
       this.slips.set(eventId, {
         id: `slip-${eventId}`,
         eventId,
-        title: '',
-        body: '',
+        title: "",
+        body: "",
         signBy: e.startsAt.slice(0, 10),
         askPhotos: true,
         askSwimming: false,
         askLunch: true,
-        reminders: 'TwiceWeekly',
-        channel: 'TextAndEmail',
-        status: 'Draft',
+        reminders: "TwiceWeekly",
+        channel: "TextAndEmail",
+        status: "Draft",
         scheduledFor: null,
         sentAt: null,
         version: 1,
@@ -4371,19 +8610,25 @@ export class FakeApi {
     return this.slips.get(eventId);
   }
 
-  private slipById(m: Membership, id: string): { slip: FakeSlip; event: FakeEvent } | undefined {
+  private slipById(
+    m: Membership,
+    id: string,
+  ): { slip: FakeSlip; event: FakeEvent } | undefined {
     const slip = [...this.slips.values()].find((x) => x.id === id);
     const event = slip ? this.ownEvent(m, slip.eventId) : undefined;
     return slip && event ? { slip, event } : undefined;
   }
 
-  private async slipsCaller(route: Route, write = false): Promise<Membership | null> {
+  private async slipsCaller(
+    route: Route,
+    write = false,
+  ): Promise<Membership | null> {
     const m = memberships.find((x) => x.id === this.membershipId);
     if (!m) {
       await this.unauthenticated(route);
       return null;
     }
-    if (!this.modules.get(m.organizationId)!.includes('Slips')) {
+    if (!this.modules.get(m.organizationId)!.includes("Slips")) {
       await route.fulfill({ status: 404 });
       return null;
     }
@@ -4402,14 +8647,24 @@ export class FakeApi {
       .map(({ child, household }) => {
         const a = slip.answers.get(child.id);
         const current = a && a.version === slip.version ? a : null;
-        return { childId: child.id, child: `${child.firstName} ${child.lastName}`, household: household.name, status: current?.status ?? 'Outstanding', signedBy: current?.by ?? null };
+        return {
+          childId: child.id,
+          child: `${child.firstName} ${child.lastName}`,
+          household: household.name,
+          status: current?.status ?? "Outstanding",
+          signedBy: current?.by ?? null,
+        };
       });
   }
 
   private slipDto(m: Membership, slip: FakeSlip, event: FakeEvent) {
     const responses = this.slipResponses(m, slip, event);
     const message = this.messages.find((x) => x.id === slip.messageId);
-    const of = (status: FakeDelivery['status']) => (message?.deliveries ?? []).filter((d) => d.status === status).map((d) => d.household).sort();
+    const of = (status: FakeDelivery["status"]) =>
+      (message?.deliveries ?? [])
+        .filter((d) => d.status === status)
+        .map((d) => d.household)
+        .sort();
     return {
       id: slip.id,
       eventId: event.id,
@@ -4429,11 +8684,18 @@ export class FakeApi {
       version: slip.version,
       households: new Set(responses.map((r) => r.household)).size,
       children: responses.length,
-      signed: responses.filter((r) => r.status === 'Signed').length,
-      declined: responses.filter((r) => r.status === 'Declined').length,
-      outstanding: responses.filter((r) => r.status === 'Outstanding').length,
+      signed: responses.filter((r) => r.status === "Signed").length,
+      declined: responses.filter((r) => r.status === "Declined").length,
+      outstanding: responses.filter((r) => r.status === "Outstanding").length,
       responses,
-      delivery: message ? { sent: of('Sent').length, emailInstead: of('FellBackToEmail'), paused: of('Paused'), failed: of('Failed') } : null,
+      delivery: message
+        ? {
+            sent: of("Sent").length,
+            emailInstead: of("FellBackToEmail"),
+            paused: of("Paused"),
+            failed: of("Failed"),
+          }
+        : null,
     };
   }
 
@@ -4452,49 +8714,147 @@ export class FakeApi {
     const event = this.ownEvent(m, eventId);
     const slip = event ? this.slipOf(eventId) : undefined;
     if (!event || !slip) return route.fulfill({ status: 404 });
-    if (slip.status === 'Sent') return route.fulfill({ status: 409, json: { code: 'conflict' } });
-    const b = route.request().postDataJSON() as Pick<FakeSlip, 'title' | 'body' | 'signBy' | 'askPhotos' | 'askSwimming' | 'askLunch' | 'reminders' | 'channel'>;
-    if ((b.body ?? '').trim().length > 600) return route.fulfill({ status: 422, json: { errors: { body: 'Keep it to 600 characters.' } } });
-    Object.assign(slip, { ...b, title: (b.title ?? '').trim(), body: (b.body ?? '').trim() });
+    if (slip.status === "Sent")
+      return route.fulfill({ status: 409, json: { code: "conflict" } });
+    const b = route.request().postDataJSON() as Pick<
+      FakeSlip,
+      | "title"
+      | "body"
+      | "signBy"
+      | "askPhotos"
+      | "askSwimming"
+      | "askLunch"
+      | "reminders"
+      | "channel"
+    >;
+    if ((b.body ?? "").trim().length > 600)
+      return route.fulfill({
+        status: 422,
+        json: { errors: { body: "Keep it to 600 characters." } },
+      });
+    Object.assign(slip, {
+      ...b,
+      title: (b.title ?? "").trim(),
+      body: (b.body ?? "").trim(),
+    });
     return route.fulfill({ status: 204 });
   }
 
-  private slipErrors(title: string, body: string, signBy: string, event: FakeEvent): Record<string, string> {
+  private slipErrors(
+    title: string,
+    body: string,
+    signBy: string,
+    event: FakeEvent,
+  ): Record<string, string> {
     const errors: Record<string, string> = {};
-    if (!title.trim()) errors['title'] = 'Enter a slip title.';
-    if (!body.trim()) errors['body'] = 'Enter the slip text.';
+    if (!title.trim()) errors["title"] = "Enter a slip title.";
+    if (!body.trim()) errors["body"] = "Enter the slip text.";
     // Event days are in Hamilton time; the seeded events start in the afternoon UTC, so the UTC date is the local date.
     const day = event.startsAt.slice(0, 10);
     if (signBy >= day) {
-      const label = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(`${day}T12:00:00Z`)).replace(',', '');
-      errors['signBy'] = `Must be before ${label}.`;
+      const label = new Intl.DateTimeFormat("en-GB", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        timeZone: "UTC",
+      })
+        .format(new Date(`${day}T12:00:00Z`))
+        .replace(",", "");
+      errors["signBy"] = `Must be before ${label}.`;
     }
     return errors;
   }
 
   /** Queues the slip's message to the event's households through the same path as Messages. */
-  private deliverSlip(m: Membership, slip: FakeSlip, event: FakeEvent, edited: boolean): void {
+  private deliverSlip(
+    m: Membership,
+    slip: FakeSlip,
+    event: FakeEvent,
+    edited: boolean,
+  ): void {
     const org = organizations.find((o) => o.id === m.organizationId)!;
-    const audience = this.audienceOf(m, { programId: null, eventId: event.id, language: null, body: '', channel: slip.channel === 'EmailOnly' ? 'EmailOnly' : 'TextWithEmailFallback' });
+    const audience = this.audienceOf(m, {
+      programId: null,
+      eventId: event.id,
+      language: null,
+      body: "",
+      channel:
+        slip.channel === "EmailOnly" ? "EmailOnly" : "TextWithEmailFallback",
+    });
     const title = slip.title || event.name;
-    const body = edited ? `The permission slip for “${title}” has changed. Please read it and sign again.` : `Please sign the permission slip for “${title}”.`;
+    const body = edited
+      ? `The permission slip for “${title}” has changed. Please read it and sign again.`
+      : `Please sign the permission slip for “${title}”.`;
     const segments = segmentsOf(`${org.name}: ${body}`);
     const deliveries: FakeDelivery[] = audience.recipients.map((r) => {
-      const base = { household: r.household, guardian: r.guardian, language: r.language, at: null as string | null };
-      if (r.unreachable) return { ...base, channel: r.channel, status: 'Failed', reason: r.unreachable };
-      if (r.channel === 'Email') return { ...base, channel: 'Email', status: 'Sent', reason: null, at: NOW.toISOString() };
+      const base = {
+        household: r.household,
+        guardian: r.guardian,
+        language: r.language,
+        at: null as string | null,
+      };
+      if (r.unreachable)
+        return {
+          ...base,
+          channel: r.channel,
+          status: "Failed",
+          reason: r.unreachable,
+        };
+      if (r.channel === "Email")
+        return {
+          ...base,
+          channel: "Email",
+          status: "Sent",
+          reason: null,
+          at: NOW.toISOString(),
+        };
       const { remaining, used } = this.capOf(m);
       if (remaining >= segments) {
         this.smsUsed.set(m.organizationId, used + segments);
-        return { ...base, channel: 'Sms', status: 'Sent', reason: null, at: NOW.toISOString() };
+        return {
+          ...base,
+          channel: "Sms",
+          status: "Sent",
+          reason: null,
+          at: NOW.toISOString(),
+        };
       }
-      return r.fallback ? { ...base, channel: 'Email', status: 'FellBackToEmail', reason: 'SMS cap reached', at: NOW.toISOString() } : { ...base, channel: 'Sms', status: 'Paused', reason: 'SMS cap reached' };
+      return r.fallback
+        ? {
+            ...base,
+            channel: "Email",
+            status: "FellBackToEmail",
+            reason: "SMS cap reached",
+            at: NOW.toISOString(),
+          }
+        : {
+            ...base,
+            channel: "Sms",
+            status: "Paused",
+            reason: "SMS cap reached",
+          };
     });
     const id = `msg-${this.nextId++}`;
-    this.messages.unshift({ id, organizationId: m.organizationId, title: `Permission slip: ${title}`, body, sentAt: NOW.toISOString(), sentBy: m.personName, audience: audience.label, channel: slip.channel === 'EmailOnly' ? 'EmailOnly' : 'TextWithEmailFallback', deliveries });
+    this.messages.unshift({
+      id,
+      organizationId: m.organizationId,
+      title: `Permission slip: ${title}`,
+      body,
+      sentAt: NOW.toISOString(),
+      sentBy: m.personName,
+      audience: audience.label,
+      channel:
+        slip.channel === "EmailOnly" ? "EmailOnly" : "TextWithEmailFallback",
+      deliveries,
+    });
     slip.messageId = id;
-    if (!edited) Object.assign(slip, { status: 'Sent', sentAt: NOW.toISOString(), scheduledFor: null });
-    event.slipStatus = 'Sent';
+    if (!edited)
+      Object.assign(slip, {
+        status: "Sent",
+        sentAt: NOW.toISOString(),
+        scheduledFor: null,
+      });
+    event.slipStatus = "Sent";
   }
 
   private async sendSlipRoute(route: Route, id: string): Promise<void> {
@@ -4503,31 +8863,43 @@ export class FakeApi {
     const found = this.slipById(m, id);
     if (!found) return route.fulfill({ status: 404 });
     const { slip, event } = found;
-    if (slip.status === 'Sent') return route.fulfill({ status: 409, json: { code: 'conflict' } });
-    const errors = this.slipErrors(slip.title || event.name, slip.body, slip.signBy, event);
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    if (slip.status === "Sent")
+      return route.fulfill({ status: 409, json: { code: "conflict" } });
+    const errors = this.slipErrors(
+      slip.title || event.name,
+      slip.body,
+      slip.signBy,
+      event,
+    );
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
     const b = route.request().postDataJSON() as { at?: string | null };
     if (b.at && b.at > NOW.toISOString()) {
-      Object.assign(slip, { status: 'Scheduled', scheduledFor: b.at });
-      event.slipStatus = 'Scheduled';
+      Object.assign(slip, { status: "Scheduled", scheduledFor: b.at });
+      event.slipStatus = "Scheduled";
     } else {
       this.deliverSlip(m, slip, event, false);
     }
     return route.fulfill({ status: 204 });
   }
 
-  private async slipTransition(route: Route, id: string, action: 'send-now' | 'cancel'): Promise<void> {
+  private async slipTransition(
+    route: Route,
+    id: string,
+    action: "send-now" | "cancel",
+  ): Promise<void> {
     const m = await this.slipsCaller(route, true);
     if (!m) return;
     const found = this.slipById(m, id);
     if (!found) return route.fulfill({ status: 404 });
     const { slip, event } = found;
-    if (slip.status !== 'Scheduled') return route.fulfill({ status: 409, json: { code: 'conflict' } });
-    if (action === 'send-now') {
+    if (slip.status !== "Scheduled")
+      return route.fulfill({ status: 409, json: { code: "conflict" } });
+    if (action === "send-now") {
       this.deliverSlip(m, slip, event, false);
     } else {
-      Object.assign(slip, { status: 'Draft', scheduledFor: null });
-      event.slipStatus = 'Draft';
+      Object.assign(slip, { status: "Draft", scheduledFor: null });
+      event.slipStatus = "Draft";
     }
     return route.fulfill({ status: 204 });
   }
@@ -4538,11 +8910,27 @@ export class FakeApi {
     const found = this.slipById(m, id);
     if (!found) return route.fulfill({ status: 404 });
     const { slip, event } = found;
-    if (slip.status !== 'Sent') return route.fulfill({ status: 409, json: { code: 'conflict' } });
-    const b = route.request().postDataJSON() as { title: string; body: string; signBy: string; material: boolean };
-    const errors = this.slipErrors(b.title ?? '', b.body ?? '', b.signBy, event);
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
-    Object.assign(slip, { title: b.title.trim(), body: b.body.trim(), signBy: b.signBy });
+    if (slip.status !== "Sent")
+      return route.fulfill({ status: 409, json: { code: "conflict" } });
+    const b = route.request().postDataJSON() as {
+      title: string;
+      body: string;
+      signBy: string;
+      material: boolean;
+    };
+    const errors = this.slipErrors(
+      b.title ?? "",
+      b.body ?? "",
+      b.signBy,
+      event,
+    );
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
+    Object.assign(slip, {
+      title: b.title.trim(),
+      body: b.body.trim(),
+      signBy: b.signBy,
+    });
     if (b.material) {
       slip.version++;
       this.deliverSlip(m, slip, event, true);
@@ -4555,39 +8943,96 @@ export class FakeApi {
     const m = await this.rosterCaller(route);
     if (!m) return;
     const on = this.modules.get(m.organizationId)!;
-    const programs = this.programs.filter((p) => p.organizationId === m.organizationId);
-    const ownEvents = this.events.filter((e) => e.organizationId === m.organizationId);
-    const tomorrow = '2026-11-06T05:00:00Z';
-    const horizon = '2026-11-20T05:00:00Z';
-    const slipsDue = on.includes('Slips')
+    const programs = this.programs.filter(
+      (p) => p.organizationId === m.organizationId,
+    );
+    const ownEvents = this.events.filter(
+      (e) => e.organizationId === m.organizationId,
+    );
+    const tomorrow = "2026-11-06T05:00:00Z";
+    const horizon = "2026-11-20T05:00:00Z";
+    const slipsDue = on.includes("Slips")
       ? ownEvents
-          .filter((e) => e.requiresSlip && this.slipOf(e.id)?.status === 'Sent' && this.slipOf(e.id)!.signBy >= '2026-11-05')
+          .filter(
+            (e) =>
+              e.requiresSlip &&
+              this.slipOf(e.id)?.status === "Sent" &&
+              this.slipOf(e.id)!.signBy >= "2026-11-05",
+          )
           .map((e) => {
             const slip = this.slipOf(e.id)!;
             const responses = this.slipResponses(m, slip, e);
-            const signed = responses.filter((r) => r.status === 'Signed').length;
-            return { eventId: e.id, title: slip.title || e.name, signBy: slip.signBy, signed, expected: responses.length, unsigned: responses.length - signed };
+            const signed = responses.filter(
+              (r) => r.status === "Signed",
+            ).length;
+            return {
+              eventId: e.id,
+              title: slip.title || e.name,
+              signBy: slip.signBy,
+              signed,
+              expected: responses.length,
+              unsigned: responses.length - signed,
+            };
           })
           .sort((a, b) => a.signBy.localeCompare(b.signBy))
       : null;
     const comingUp = ownEvents
-      .filter((e) => e.status === 'Scheduled' && e.startsAt >= tomorrow && e.startsAt < horizon)
+      .filter(
+        (e) =>
+          e.status === "Scheduled" &&
+          e.startsAt >= tomorrow &&
+          e.startsAt < horizon,
+      )
       .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
-      .map((e) => ({ id: e.id, name: e.name, startsAt: e.startsAt, place: e.place, requiresSlip: e.requiresSlip }));
+      .map((e) => ({
+        id: e.id,
+        name: e.name,
+        startsAt: e.startsAt,
+        place: e.place,
+        requiresSlip: e.requiresSlip,
+      }));
     const programIds = new Set(programs.map((p) => p.id));
     const tasks = [
-      on.includes('Incidents') && can.reviewIncidents(m)
-        ? { kind: 'incidents', count: this.incidents.filter((i) => i.organizationId === m.organizationId && i.status === 'NeedsReview').length }
+      on.includes("Incidents") && can.reviewIncidents(m)
+        ? {
+            kind: "incidents",
+            count: this.incidents.filter(
+              (i) =>
+                i.organizationId === m.organizationId &&
+                i.status === "NeedsReview",
+            ).length,
+          }
         : null,
-      can.reviewEnrollments(m) ? { kind: 'enrollments', count: this.enrollmentRequests.filter((r) => programIds.has(r.programId) && r.status === 'WaitingReview').length } : null,
-      on.includes('Pickup') && can.managePickups(m)
-        ? { kind: 'pickups', count: this.pickupRequests.filter((r) => ownEvents.some((e) => e.id === r.eventId) && r.status === 'Pending').length }
+      can.reviewEnrollments(m)
+        ? {
+            kind: "enrollments",
+            count: this.enrollmentRequests.filter(
+              (r) =>
+                programIds.has(r.programId) && r.status === "WaitingReview",
+            ).length,
+          }
+        : null,
+      on.includes("Pickup") && can.managePickups(m)
+        ? {
+            kind: "pickups",
+            count: this.pickupRequests.filter(
+              (r) =>
+                ownEvents.some((e) => e.id === r.eventId) &&
+                r.status === "Pending",
+            ).length,
+          }
         : null,
     ].filter((t) => t && t.count > 0);
     return route.fulfill({
       json: {
-        activeChildren: new Set(programs.filter((p) => p.status === 'Active').flatMap((p) => p.roster)).size,
-        households: this.households.filter((h) => h.organizationId === m.organizationId).length,
+        activeChildren: new Set(
+          programs
+            .filter((p) => p.status === "Active")
+            .flatMap((p) => p.roster),
+        ).size,
+        households: this.households.filter(
+          (h) => h.organizationId === m.organizationId,
+        ).length,
         slipsDue,
         comingUp,
         tasks,
@@ -4599,49 +9044,99 @@ export class FakeApi {
   private async search(route: Route): Promise<void> {
     const m = await this.rosterCaller(route);
     if (!m) return;
-    const q = (new URL(route.request().url()).searchParams.get('q') ?? '').trim().toLowerCase();
-    const slipsOn = this.modules.get(m.organizationId)!.includes('Slips');
-    if (!q) return route.fulfill({ json: { children: [], households: [], events: slipsOn ? [] : null } });
-    const digits = q.replace(/\D/g, '');
+    const q = (new URL(route.request().url()).searchParams.get("q") ?? "")
+      .trim()
+      .toLowerCase();
+    const slipsOn = this.modules.get(m.organizationId)!.includes("Slips");
+    if (!q)
+      return route.fulfill({
+        json: { children: [], households: [], events: slipsOn ? [] : null },
+      });
+    const digits = q.replace(/\D/g, "");
     const permitted = this.permittedChildren(m);
-    const own = this.households.filter((h) => h.organizationId === m.organizationId);
-    const visible = own.filter((h) => !permitted || h.children.some((c) => permitted.has(c.id)));
+    const own = this.households.filter(
+      (h) => h.organizationId === m.organizationId,
+    );
+    const visible = own.filter(
+      (h) => !permitted || h.children.some((c) => permitted.has(c.id)),
+    );
     const children = own
       .flatMap((h) => h.children.map((c) => ({ c, h })))
       .filter(({ c }) => !permitted || permitted.has(c.id))
-      .filter(({ c }) => `${c.firstName} ${c.lastName}`.toLowerCase().includes(q))
+      .filter(({ c }) =>
+        `${c.firstName} ${c.lastName}`.toLowerCase().includes(q),
+      )
       .sort((a, b) => a.c.firstName.localeCompare(b.c.firstName))
-      .map(({ c, h }) => ({ id: c.id, name: `${c.firstName} ${c.lastName}`, age: ageOf(c.dateOfBirth), householdId: h.id, householdName: h.name }));
+      .map(({ c, h }) => ({
+        id: c.id,
+        name: `${c.firstName} ${c.lastName}`,
+        age: ageOf(c.dateOfBirth),
+        householdId: h.id,
+        householdName: h.name,
+      }));
     const households = visible
       .filter(
         (h) =>
           h.name.toLowerCase().includes(q) ||
-          h.guardians.some((g) => g.name.toLowerCase().includes(q) || (g.email ?? '').toLowerCase().includes(q) || (digits.length >= 3 && (g.mobile ?? '').replace(/\D/g, '').includes(digits))),
+          h.guardians.some(
+            (g) =>
+              g.name.toLowerCase().includes(q) ||
+              (g.email ?? "").toLowerCase().includes(q) ||
+              (digits.length >= 3 &&
+                (g.mobile ?? "").replace(/\D/g, "").includes(digits)),
+          ),
       )
       .sort((a, b) => a.name.localeCompare(b.name))
       .map((h) => {
-        const gs = [...h.guardians].sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary));
-        return { id: h.id, name: h.name, guardians: gs.map((g) => g.name).join(', '), phone: gs.find((g) => g.mobile)?.mobile ?? null, language: h.language };
+        const gs = [...h.guardians].sort(
+          (a, b) => Number(b.isPrimary) - Number(a.isPrimary),
+        );
+        return {
+          id: h.id,
+          name: h.name,
+          guardians: gs.map((g) => g.name).join(", "),
+          phone: gs.find((g) => g.mobile)?.mobile ?? null,
+          language: h.language,
+        };
       });
     const events = slipsOn
       ? this.events
-          .filter((e) => e.organizationId === m.organizationId && e.name.toLowerCase().includes(q))
+          .filter(
+            (e) =>
+              e.organizationId === m.organizationId &&
+              e.name.toLowerCase().includes(q),
+          )
           .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
-          .map((e) => ({ id: e.id, name: e.name, startsAt: e.startsAt, place: e.place }))
+          .map((e) => ({
+            id: e.id,
+            name: e.name,
+            startsAt: e.startsAt,
+            place: e.place,
+          }))
       : null;
     return route.fulfill({ json: { children, households, events } });
   }
 
   /** Notifies everyone who reviews incidents in the reporter's organization. Mirrors backend NotificationWriter. */
-  private notifyIncident(reporter: Membership, incidentId: string, childId: string, category: string): void {
-    const child = this.households.flatMap((h) => h.children).find((c) => c.id === childId);
-    const name = child ? `${child.firstName} ${child.lastName}` : 'a child';
-    for (const r of memberships.filter((x) => x.organizationId === reporter.organizationId && can.reviewIncidents(x))) {
+  private notifyIncident(
+    reporter: Membership,
+    incidentId: string,
+    childId: string,
+    category: string,
+  ): void {
+    const child = this.households
+      .flatMap((h) => h.children)
+      .find((c) => c.id === childId);
+    const name = child ? `${child.firstName} ${child.lastName}` : "a child";
+    for (const r of memberships.filter(
+      (x) =>
+        x.organizationId === reporter.organizationId && can.reviewIncidents(x),
+    )) {
       this.notifications.push({
         id: `n-${this.nextId++}`,
         organizationId: reporter.organizationId,
         membershipId: r.id,
-        kind: 'incidents',
+        kind: "incidents",
         text: `Incident reported by ${reporter.personName}: ${name}, ${category.toLowerCase()}.`,
         link: `/incidents/${incidentId}`,
         createdAt: new Date(NOW.getTime() + this.nextId * 1000).toISOString(),
@@ -4653,8 +9148,10 @@ export class FakeApi {
   private visibleNotifications(m: Membership) {
     const on = this.modules.get(m.organizationId)!;
     return this.notifications
-      .filter((n) => n.membershipId === m.id && n.organizationId === m.organizationId)
-      .filter((n) => (n.kind === 'incidents' ? on.includes('Incidents') : true))
+      .filter(
+        (n) => n.membershipId === m.id && n.organizationId === m.organizationId,
+      )
+      .filter((n) => (n.kind === "incidents" ? on.includes("Incidents") : true))
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
 
@@ -4663,14 +9160,26 @@ export class FakeApi {
     if (!m) return this.unauthenticated(route);
     const mine = this.visibleNotifications(m);
     return route.fulfill({
-      json: { unread: mine.filter((n) => !n.readAt).length, items: mine.map(({ id, kind, text, link, createdAt, readAt }) => ({ id, kind, text, link, createdAt, readAt })) },
+      json: {
+        unread: mine.filter((n) => !n.readAt).length,
+        items: mine.map(({ id, kind, text, link, createdAt, readAt }) => ({
+          id,
+          kind,
+          text,
+          link,
+          createdAt,
+          readAt,
+        })),
+      },
     });
   }
 
   private async readNotification(route: Route, id: string): Promise<void> {
     const m = memberships.find((x) => x.id === this.membershipId);
     if (!m) return this.unauthenticated(route);
-    const n = this.notifications.find((x) => x.id === id && x.membershipId === m.id);
+    const n = this.notifications.find(
+      (x) => x.id === id && x.membershipId === m.id,
+    );
     if (!n) return route.fulfill({ status: 404 });
     n.readAt ??= NOW.toISOString();
     return route.fulfill({ status: 204 });
@@ -4679,7 +9188,8 @@ export class FakeApi {
   private async readAllNotifications(route: Route): Promise<void> {
     const m = memberships.find((x) => x.id === this.membershipId);
     if (!m) return this.unauthenticated(route);
-    for (const n of this.visibleNotifications(m)) n.readAt ??= NOW.toISOString();
+    for (const n of this.visibleNotifications(m))
+      n.readAt ??= NOW.toISOString();
     return route.fulfill({ status: 204 });
   }
 
@@ -4689,7 +9199,7 @@ export class FakeApi {
       await this.unauthenticated(route);
       return null;
     }
-    if (!this.modules.get(m.organizationId)!.includes('Reports')) {
+    if (!this.modules.get(m.organizationId)!.includes("Reports")) {
       await route.fulfill({ status: 404 });
       return null;
     }
@@ -4701,38 +9211,94 @@ export class FakeApi {
   }
 
   /** Mirrors backend ReportCalculator. */
-  private computeReport(m: Membership, programId: string | null, mask: boolean) {
-    const programs = this.programs.filter((p) => p.organizationId === m.organizationId && (!programId || p.id === programId));
+  private computeReport(
+    m: Membership,
+    programId: string | null,
+    mask: boolean,
+  ) {
+    const programs = this.programs.filter(
+      (p) =>
+        p.organizationId === m.organizationId &&
+        (!programId || p.id === programId),
+    );
     const childIds = new Set(programs.flatMap((p) => p.roster));
-    const own = this.households.filter((h) => h.organizationId === m.organizationId);
-    const children = own.flatMap((h) => h.children.map((c) => ({ c, h }))).filter(({ c }) => childIds.has(c.id));
-    const sessions = this.events.filter((e) => programs.some((p) => p.id === e.programId) && e.status !== 'Cancelled' && e.startsAt <= NOW.toISOString());
+    const own = this.households.filter(
+      (h) => h.organizationId === m.organizationId,
+    );
+    const children = own
+      .flatMap((h) => h.children.map((c) => ({ c, h })))
+      .filter(({ c }) => childIds.has(c.id));
+    const sessions = this.events.filter(
+      (e) =>
+        programs.some((p) => p.id === e.programId) &&
+        e.status !== "Cancelled" &&
+        e.startsAt <= NOW.toISOString(),
+    );
     const rate = (events: FakeEvent[]): number | null => {
-      const recs = events.flatMap((e) => [...this.sessionRecords(e.id).values()]);
-      const present = recs.filter((r) => r.status === 'Present' || r.status === 'SignedOut').length;
-      const absent = recs.filter((r) => r.status === 'Absent').length;
-      return present + absent ? Math.round((100 * present) / (present + absent)) : null;
+      const recs = events.flatMap((e) => [
+        ...this.sessionRecords(e.id).values(),
+      ]);
+      const present = recs.filter(
+        (r) => r.status === "Present" || r.status === "SignedOut",
+      ).length;
+      const absent = recs.filter((r) => r.status === "Absent").length;
+      return present + absent
+        ? Math.round((100 * present) / (present + absent))
+        : null;
     };
-    const count = (n: number) => (mask && n > 0 && n < 5 ? '<5' : String(n));
-    const bands: [string, number, number][] = [['Under 6', 0, 5], ['6–8', 6, 8], ['9–11', 9, 11], ['12–13', 12, 13], ['14 and over', 14, 200]];
+    const count = (n: number) => (mask && n > 0 && n < 5 ? "<5" : String(n));
+    const bands: [string, number, number][] = [
+      ["Under 6", 0, 5],
+      ["6–8", 6, 8],
+      ["9–11", 9, 11],
+      ["12–13", 12, 13],
+      ["14 and over", 14, 200],
+    ];
     const languages = new Map<string, number>();
-    for (const h of own.filter((x) => children.some(({ h: ch }) => ch.id === x.id))) languages.set(h.language, (languages.get(h.language) ?? 0) + 1);
+    for (const h of own.filter((x) =>
+      children.some(({ h: ch }) => ch.id === x.id),
+    ))
+      languages.set(h.language, (languages.get(h.language) ?? 0) + 1);
     return {
       childrenServed: children.length,
       attendanceRate: rate(sessions) ?? 0,
       sessionsDelivered: sessions.length,
       slipsSigned: 0,
-      ages: bands.map(([band, min, max]) => ({ band, count: count(children.filter(({ c }) => (ageOf(c.dateOfBirth) ?? -1) >= min && (ageOf(c.dateOfBirth) ?? -1) <= max).length) })),
+      ages: bands.map(([band, min, max]) => ({
+        band,
+        count: count(
+          children.filter(
+            ({ c }) =>
+              (ageOf(c.dateOfBirth) ?? -1) >= min &&
+              (ageOf(c.dateOfBirth) ?? -1) <= max,
+          ).length,
+        ),
+      })),
       programs: programs
-        .filter((p) => p.status === 'Active')
+        .filter((p) => p.status === "Active")
         .sort((a, b) => a.name.localeCompare(b.name))
-        .map((p) => ({ id: p.id, name: p.name, attendanceRate: rate(sessions.filter((e) => e.programId === p.id)) })),
-      languages: [...languages.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([language, households]) => ({ language, households })),
+        .map((p) => ({
+          id: p.id,
+          name: p.name,
+          attendanceRate: rate(sessions.filter((e) => e.programId === p.id)),
+        })),
+      languages: [...languages.entries()]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .map(([language, households]) => ({ language, households })),
       masked: mask,
-      surveyResponses: [...this.surveyAnswers.keys()].filter((t) => this.surveyLinks.get(t)?.organizationId === m.organizationId).length,
+      surveyResponses: [...this.surveyAnswers.keys()].filter(
+        (t) => this.surveyLinks.get(t)?.organizationId === m.organizationId,
+      ).length,
       surveyAverage: (() => {
-        const r = [...this.surveyAnswers.entries()].filter(([t]) => this.surveyLinks.get(t)?.organizationId === m.organizationId).map(([, a]) => a.rating);
-        return r.length ? Math.round((r.reduce((a, b) => a + b, 0) / r.length) * 10) / 10 : null;
+        const r = [...this.surveyAnswers.entries()]
+          .filter(
+            ([t]) =>
+              this.surveyLinks.get(t)?.organizationId === m.organizationId,
+          )
+          .map(([, a]) => a.rating);
+        return r.length
+          ? Math.round((r.reduce((a, b) => a + b, 0) / r.length) * 10) / 10
+          : null;
       })(),
     };
   }
@@ -4740,8 +9306,12 @@ export class FakeApi {
   private async report(route: Route): Promise<void> {
     const m = await this.reportsCaller(route);
     if (!m) return;
-    const programId = new URL(route.request().url()).searchParams.get('programId');
-    return route.fulfill({ json: this.computeReport(m, programId, !can.readSmallCounts(m)) });
+    const programId = new URL(route.request().url()).searchParams.get(
+      "programId",
+    );
+    return route.fulfill({
+      json: this.computeReport(m, programId, !can.readSmallCounts(m)),
+    });
   }
 
   private async exportReport(route: Route): Promise<void> {
@@ -4749,12 +9319,30 @@ export class FakeApi {
     if (!m) return;
     const b = route.request().postDataJSON() as { programId: string | null };
     const r = this.computeReport(m, b.programId, true);
-    const csv = ['Measure,Value', `Children served,${r.childrenServed}`, '', 'Age,Children', ...r.ages.map((a) => `${a.band},${a.count}`)].join('\n');
+    const csv = [
+      "Measure,Value",
+      `Children served,${r.childrenServed}`,
+      "",
+      "Age,Children",
+      ...r.ages.map((a) => `${a.band},${a.count}`),
+    ].join("\n");
     const id = `export-${this.nextId++}`;
     const org = organizations.find((o) => o.id === m.organizationId)!;
-    const fileName = `${org.name.toLowerCase().split(' ').join('-')}-report-2026-11-05.csv`;
-    this.reportExports.set(id, { organizationId: m.organizationId, fileName, csv });
-    return route.fulfill({ status: 201, json: { id, fileName, rows: r.ages.length + r.programs.length + r.languages.length + 4, expiresAt: '2026-11-12T21:12:00Z' } });
+    const fileName = `${org.name.toLowerCase().split(" ").join("-")}-report-2026-11-05.csv`;
+    this.reportExports.set(id, {
+      organizationId: m.organizationId,
+      fileName,
+      csv,
+    });
+    return route.fulfill({
+      status: 201,
+      json: {
+        id,
+        fileName,
+        rows: r.ages.length + r.programs.length + r.languages.length + 4,
+        expiresAt: "2026-11-12T21:12:00Z",
+      },
+    });
   }
 
   /** Closes a survey link, as a week after sending. */
@@ -4765,28 +9353,61 @@ export class FakeApi {
   private async sendSurvey(route: Route, eventId: string): Promise<void> {
     const m = await this.reportsCaller(route);
     if (!m) return;
-    const e = this.events.find((x) => x.id === eventId && x.organizationId === m.organizationId);
+    const e = this.events.find(
+      (x) => x.id === eventId && x.organizationId === m.organizationId,
+    );
     if (!e) return route.fulfill({ status: 404 });
     const program = this.programs.find((p) => p.id === e.programId)!;
-    const households = new Set(this.households.filter((h) => h.children.some((c) => program.roster.includes(c.id))).map((h) => h.id));
-    return route.fulfill({ status: 201, json: { id: `survey-${this.nextId++}`, households: households.size, closesAt: '2026-11-12T21:12:00Z' } });
+    const households = new Set(
+      this.households
+        .filter((h) => h.children.some((c) => program.roster.includes(c.id)))
+        .map((h) => h.id),
+    );
+    return route.fulfill({
+      status: 201,
+      json: {
+        id: `survey-${this.nextId++}`,
+        households: households.size,
+        closesAt: "2026-11-12T21:12:00Z",
+      },
+    });
   }
 
   private surveyScope(token: string) {
     const link = this.surveyLinks.get(token);
-    const household = link ? this.households.find((h) => h.id === link.householdId) : undefined;
-    const org = link ? organizations.find((o) => o.id === link.organizationId) : undefined;
+    const household = link
+      ? this.households.find((h) => h.id === link.householdId)
+      : undefined;
+    const org = link
+      ? organizations.find((o) => o.id === link.organizationId)
+      : undefined;
     return link && household && org ? { link, household, org } : null;
   }
 
   /** Mirrors backend GuardianSurveyHandler. */
   private async guardianSurvey(route: Route, token: string): Promise<void> {
     const s = this.surveyScope(token);
-    if (!s) return route.fulfill({ status: 410, json: { code: 'link-expired', organization: null, phone: null } });
-    if (!this.modules.get(s.org.id)!.includes('Reports')) return route.fulfill({ status: 404 });
+    if (!s)
+      return route.fulfill({
+        status: 410,
+        json: { code: "link-expired", organization: null, phone: null },
+      });
+    if (!this.modules.get(s.org.id)!.includes("Reports"))
+      return route.fulfill({ status: 404 });
     if (!this.trustedHouseholds.has(s.household.id)) {
-      const contacts = s.household.guardians.filter((g) => g.mobile).map((g) => `•••-•••-${g.mobile!.slice(-4)}`);
-      return route.fulfill({ status: 401, json: { code: 'verification-required', language: this.guardianLanguage(s.household.language), organization: s.org.name, phone: '905-555-0100', contacts } });
+      const contacts = s.household.guardians
+        .filter((g) => g.mobile)
+        .map((g) => `•••-•••-${g.mobile!.slice(-4)}`);
+      return route.fulfill({
+        status: 401,
+        json: {
+          code: "verification-required",
+          language: this.guardianLanguage(s.household.language),
+          organization: s.org.name,
+          phone: "905-555-0100",
+          contacts,
+        },
+      });
     }
     const child = s.household.children.find((c) => c.id === s.link.childId)!;
     const event = this.events.find((e) => e.id === s.link.eventId)!;
@@ -4795,25 +9416,46 @@ export class FakeApi {
       json: {
         language: this.guardianLanguage(s.household.language),
         organization: s.org.name,
-        organizationPhone: '905-555-0100',
-        guardianFirstName: primary?.name.split(' ')[0] ?? '',
+        organizationPhone: "905-555-0100",
+        guardianFirstName: primary?.name.split(" ")[0] ?? "",
         eventName: event.name,
         childFirstName: child.firstName,
-        sentBy: 'Marisol Delgado',
-        status: this.surveyAnswers.has(token) ? 'Answered' : s.link.closed ? 'Closed' : 'Open',
+        sentBy: "Marisol Delgado",
+        status: this.surveyAnswers.has(token)
+          ? "Answered"
+          : s.link.closed
+            ? "Closed"
+            : "Open",
       },
     });
   }
 
   private async answerSurvey(route: Route, token: string): Promise<void> {
     const s = this.surveyScope(token);
-    if (!s) return route.fulfill({ status: 410, json: { code: 'link-expired' } });
-    if (!this.modules.get(s.org.id)!.includes('Reports')) return route.fulfill({ status: 404 });
-    if (!this.trustedHouseholds.has(s.household.id)) return route.fulfill({ status: 401, json: { code: 'verification-required' } });
-    if (this.surveyAnswers.has(token) || s.link.closed) return route.fulfill({ status: 409 });
-    const b = route.request().postDataJSON() as { rating: number | null; comment: string | null };
-    if (!(b.rating && b.rating >= 1 && b.rating <= 5)) return route.fulfill({ status: 422, json: { errors: { rating: 'Pick a number from 1 to 5.' } } });
-    this.surveyAnswers.set(token, { rating: b.rating, comment: b.comment?.trim() || null });
+    if (!s)
+      return route.fulfill({ status: 410, json: { code: "link-expired" } });
+    if (!this.modules.get(s.org.id)!.includes("Reports"))
+      return route.fulfill({ status: 404 });
+    if (!this.trustedHouseholds.has(s.household.id))
+      return route.fulfill({
+        status: 401,
+        json: { code: "verification-required" },
+      });
+    if (this.surveyAnswers.has(token) || s.link.closed)
+      return route.fulfill({ status: 409 });
+    const b = route.request().postDataJSON() as {
+      rating: number | null;
+      comment: string | null;
+    };
+    if (!(b.rating && b.rating >= 1 && b.rating <= 5))
+      return route.fulfill({
+        status: 422,
+        json: { errors: { rating: "Pick a number from 1 to 5." } },
+      });
+    this.surveyAnswers.set(token, {
+      rating: b.rating,
+      comment: b.comment?.trim() || null,
+    });
     return route.fulfill({ status: 204 });
   }
 
@@ -4821,8 +9463,16 @@ export class FakeApi {
     const m = await this.reportsCaller(route);
     if (!m) return;
     const e = this.reportExports.get(id);
-    if (!e || e.organizationId !== m.organizationId) return route.fulfill({ status: 404 });
-    return route.fulfill({ status: 200, contentType: 'text/csv', headers: { 'content-disposition': `attachment; filename="${e.fileName}"` }, body: e.csv });
+    if (!e || e.organizationId !== m.organizationId)
+      return route.fulfill({ status: 404 });
+    return route.fulfill({
+      status: 200,
+      contentType: "text/csv",
+      headers: {
+        "content-disposition": `attachment; filename="${e.fileName}"`,
+      },
+      body: e.csv,
+    });
   }
 
   private async listSlips(route: Route): Promise<void> {
@@ -4835,7 +9485,17 @@ export class FakeApi {
       .map(({ e, slip }) => {
         const responses = this.slipResponses(m, slip, e);
         const program = this.programs.find((p) => p.id === e.programId)!;
-        return { id: slip.id, eventId: e.id, title: slip.title || e.name, programName: program.name, signBy: slip.signBy, status: slip.status, children: responses.length, signed: responses.filter((r) => r.status === 'Signed').length, declined: responses.filter((r) => r.status === 'Declined').length };
+        return {
+          id: slip.id,
+          eventId: e.id,
+          title: slip.title || e.name,
+          programName: program.name,
+          signBy: slip.signBy,
+          status: slip.status,
+          children: responses.length,
+          signed: responses.filter((r) => r.status === "Signed").length,
+          declined: responses.filter((r) => r.status === "Declined").length,
+        };
       });
     return route.fulfill({ json: { slips } });
   }
@@ -4843,14 +9503,25 @@ export class FakeApi {
   private async quickCard(route: Route, id: string): Promise<void> {
     const m = memberships.find((x) => x.id === this.membershipId);
     if (!m) return this.unauthenticated(route);
-    if (!this.modules.get(m.organizationId)!.includes('QuickCards')) return route.fulfill({ status: 404 });
+    if (!this.modules.get(m.organizationId)!.includes("QuickCards"))
+      return route.fulfill({ status: 404 });
     const found = this.ownChild(m, id);
     if (!found) return route.fulfill({ status: 404 });
     const { child, household } = found;
     const allowed = can.readMedical(m);
     const med = child.medical;
-    const hasMedical = !!(med.allergies || med.medication || med.conditions || med.doctor || med.healthCard);
-    const guardians = [...household.guardians].sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.name.localeCompare(b.name));
+    const hasMedical = !!(
+      med.allergies ||
+      med.medication ||
+      med.conditions ||
+      med.doctor ||
+      med.healthCard
+    );
+    const guardians = [...household.guardians].sort(
+      (a, b) =>
+        Number(b.isPrimary) - Number(a.isPrimary) ||
+        a.name.localeCompare(b.name),
+    );
     return route.fulfill({
       json: {
         id: child.id,
@@ -4858,15 +9529,57 @@ export class FakeApi {
         name: `${child.firstName} ${child.lastName}`,
         age: ageOf(child.dateOfBirth),
         school: child.school,
-        programs: this.programs.filter((p) => p.organizationId === m.organizationId && p.roster.includes(child.id)).map((p) => p.name).sort(),
+        programs: this.programs
+          .filter(
+            (p) =>
+              p.organizationId === m.organizationId &&
+              p.roster.includes(child.id),
+          )
+          .map((p) => p.name)
+          .sort(),
         primaryGuardian: guardians[0]?.name ?? null,
         language: household.language,
-        allergyAlert: allowed && med.redAlert && med.allergies ? { title: `Severe allergy: ${med.allergies}`, instruction: med.alertInstruction ?? null } : null,
-        medical: allowed && hasMedical ? { allergies: med.allergies, medication: med.medication, conditions: med.conditions, doctor: med.doctor, healthCard: med.healthCard ?? null } : null,
-        callOrder: guardians.filter((g) => g.mobile).map((g) => ({ name: g.name, relationship: g.relationship, phone: g.mobile, language: g.language, isPrimary: g.isPrimary })),
+        allergyAlert:
+          allowed && med.redAlert && med.allergies
+            ? {
+                title: `Severe allergy: ${med.allergies}`,
+                instruction: med.alertInstruction ?? null,
+              }
+            : null,
+        medical:
+          allowed && hasMedical
+            ? {
+                allergies: med.allergies,
+                medication: med.medication,
+                conditions: med.conditions,
+                doctor: med.doctor,
+                healthCard: med.healthCard ?? null,
+              }
+            : null,
+        callOrder: guardians
+          .filter((g) => g.mobile)
+          .map((g) => ({
+            name: g.name,
+            relationship: g.relationship,
+            phone: g.mobile,
+            language: g.language,
+            isPrimary: g.isPrimary,
+          })),
         approvedPickups: [
-          ...guardians.filter((g) => g.canPickUp).map((g) => ({ name: g.name, relationship: g.relationship, isPrimary: g.isPrimary, pickupId: null })),
-          ...this.activePickups(child.id).map((x) => ({ name: x.name, relationship: x.relationship, isPrimary: false, pickupId: x.id })),
+          ...guardians
+            .filter((g) => g.canPickUp)
+            .map((g) => ({
+              name: g.name,
+              relationship: g.relationship,
+              isPrimary: g.isPrimary,
+              pickupId: null,
+            })),
+          ...this.activePickups(child.id).map((x) => ({
+            name: x.name,
+            relationship: x.relationship,
+            isPrimary: false,
+            pickupId: x.id,
+          })),
         ],
         notes: child.notes ?? null,
         medicalRestricted: !allowed,
@@ -4881,6 +9594,9 @@ export class FakeApi {
 
   private async reject(route: Route): Promise<void> {
     this.unrouted.push(`${route.request().method()} ${route.request().url()}`);
-    await route.fulfill({ status: 599, body: 'Unrouted request in the fake API' });
+    await route.fulfill({
+      status: 599,
+      body: "Unrouted request in the fake API",
+    });
   }
 }

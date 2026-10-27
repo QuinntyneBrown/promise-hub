@@ -144,6 +144,8 @@ public static class DependencyInjection
         services.AddScoped<Learning.OnboardingHandler>();
         services.AddScoped<Learning.LearnerProgress>();
         services.AddScoped<Learning.LearningHomeHandler>();
+        services.AddScoped<Learning.LearnerStanding>();
+        services.AddScoped<Learning.JourneyHandler>();
         services.AddScoped<Learning.TrackViewHandler>();
         services.AddScoped<Learning.ModuleViewHandler>();
         services.AddScoped<Learning.LessonViewHandler>();

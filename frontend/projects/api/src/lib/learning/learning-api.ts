@@ -24,12 +24,15 @@ import type { AssignmentBrief } from './assignment-brief';
 import type { AssignmentSubmissionView } from './assignment-submission-view';
 import type { SubmissionWork } from './submission-work';
 import type { SubmitOutcome } from './submit-outcome';
+import type { Journey } from './journey';
 
 /** The signed-in youth’s own learning record (Learning module, ADR 0043). */
 export interface LearningApi {
   learner(): Observable<LoadResult<Learner>>;
   /** The Learning home; refused as consent-required until a guardian consents (L2-056) and no-cohort until placed (L2-060). */
   home(): Observable<LearningHomeResult>;
+  /** Her journey: progress, streak, roadmap and stages (L2-087). */
+  journey(): Observable<LoadResult<Journey>>;
   /** One of the youth's tracks (L2-068). */
   track(id: string): Observable<GatedResult<TrackView>>;
   /** One module; locked until its prerequisite is done (L2-068 criterion 3). */

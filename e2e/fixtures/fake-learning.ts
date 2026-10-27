@@ -1,33 +1,38 @@
-import { readFileSync } from 'node:fs';
-import type { Route } from '@playwright/test';
-import type { FakeCurriculum, FakeLesson, FakeModule, FakeTrack } from './fake-curriculum';
-import type { FakeProgram } from './programs';
-import type { FakeQuiz } from './fake-assessments';
-import { FakeQuizTaking, type QuizPlace } from './fake-quiz-taking';
-import type { FakeAssignment } from './fake-assessments';
-import { FakeSubmissions, type AssignmentPlace } from './fake-submissions';
+import { readFileSync } from "node:fs";
+import type { Route } from "@playwright/test";
+import type {
+  FakeCurriculum,
+  FakeLesson,
+  FakeModule,
+  FakeTrack,
+} from "./fake-curriculum";
+import { NOW, type FakeProgram } from "./programs";
+import type { FakeQuiz } from "./fake-assessments";
+import { FakeQuizTaking, type QuizPlace } from "./fake-quiz-taking";
+import type { FakeAssignment } from "./fake-assessments";
+import { FakeSubmissions, type AssignmentPlace } from "./fake-submissions";
 
-interface LessonState {
+export interface LessonState {
   lesson: FakeLesson;
   done: boolean;
   locked: boolean;
   unlockAfter: string | null;
 }
 
-interface QuizState {
+export interface QuizState {
   quiz: FakeQuiz;
   locked: boolean;
   unlockAfter: string | null;
   passed: boolean;
 }
 
-interface AssignmentState {
+export interface AssignmentState {
   assignment: FakeAssignment;
   locked: boolean;
   unlockAfter: string | null;
 }
 
-interface ModuleState {
+export interface ModuleState {
   module: FakeModule;
   position: number;
   lessons: LessonState[];
@@ -37,19 +42,31 @@ interface ModuleState {
   assignments: AssignmentState[];
 }
 
-interface TrackState {
+export interface TrackState {
   track: FakeTrack;
   program: string;
   modules: ModuleState[];
 }
 
-const lessonStatus = (l: LessonState) => (l.done ? 'done' : l.locked ? 'locked' : 'next');
-const moduleDone = (m: ModuleState) => m.lessons.filter((l) => l.done).length;
-const moduleComplete = (m: ModuleState) => m.lessons.every((l) => l.done) && m.quizzes.filter((q) => q.quiz.requiredToComplete).every((q) => q.passed);
-const moduleStatus = (m: ModuleState) =>
-  m.locked ? 'locked' : m.lessons.length > 0 && moduleComplete(m) ? 'done' : moduleDone(m) > 0 ? 'in-progress' : 'not-started';
-const trackDone = (t: TrackState) => t.modules.reduce((n, m) => n + moduleDone(m), 0);
-const trackTotal = (t: TrackState) => t.modules.reduce((n, m) => n + m.lessons.length, 0);
+const lessonStatus = (l: LessonState) =>
+  l.done ? "done" : l.locked ? "locked" : "next";
+export const moduleDone = (m: ModuleState) =>
+  m.lessons.filter((l) => l.done).length;
+const moduleComplete = (m: ModuleState) =>
+  m.lessons.every((l) => l.done) &&
+  m.quizzes.filter((q) => q.quiz.requiredToComplete).every((q) => q.passed);
+export const moduleStatus = (m: ModuleState) =>
+  m.locked
+    ? "locked"
+    : m.lessons.length > 0 && moduleComplete(m)
+      ? "done"
+      : moduleDone(m) > 0
+        ? "in-progress"
+        : "not-started";
+export const trackDone = (t: TrackState) =>
+  t.modules.reduce((n, m) => n + moduleDone(m), 0);
+export const trackTotal = (t: TrackState) =>
+  t.modules.reduce((n, m) => n + m.lessons.length, 0);
 
 /**
  * A youth's lessons as the API answers them (L2-068 to L2-070, ADR 0051): only Published content of Published tracks followed by
@@ -70,11 +87,30 @@ export class FakeLearning {
     this.quizzes = new FakeQuizTaking(curriculum.assessments);
   }
 
-  /** Marks lessons done for a youth, as if completed earlier. */
+  /** When each youth membership completed each lesson, keyed membership:lesson (the streak, L2-087 criterion 2). */
+  private readonly completedAt = new Map<string, string>();
+
+  /** Marks lessons done for a youth, as if completed now (or earlier, with completeOn). */
   complete(membershipId: string, ...lessonIds: string[]): void {
+    this.completeOn(membershipId, NOW.toISOString(), ...lessonIds);
+  }
+
+  /** Marks lessons done for a youth at a given time; a lesson already done keeps its first time. */
+  completeOn(membershipId: string, at: string, ...lessonIds: string[]): void {
     const set = this.done.get(membershipId) ?? new Set<string>();
-    lessonIds.forEach((id) => set.add(id));
+    lessonIds.forEach((id) => {
+      set.add(id);
+      if (!this.completedAt.has(`${membershipId}:${id}`))
+        this.completedAt.set(`${membershipId}:${id}`, at);
+    });
     this.done.set(membershipId, set);
+  }
+
+  /** The times a youth completed her lessons. */
+  completionTimes(membershipId: string): string[] {
+    return [...this.completedAt]
+      .filter(([k]) => k.startsWith(`${membershipId}:`))
+      .map(([, at]) => at);
   }
 
   isDone(membershipId: string, lessonId: string): boolean {
@@ -85,9 +121,16 @@ export class FakeLearning {
   tracks(membershipId: string, programs: FakeProgram[]): TrackState[] {
     const seen = new Set<string>();
     const result: TrackState[] = [];
-    for (const p of [...programs].sort((a, b) => a.startsOn.localeCompare(b.startsOn))) {
+    for (const p of [...programs].sort((a, b) =>
+      a.startsOn.localeCompare(b.startsOn),
+    )) {
       const trackId = this.curriculum.programTracks.get(p.id);
-      const track = this.curriculum.tracks.find((t) => t.id === trackId && t.status === 'Published' && t.organizationId === p.organizationId);
+      const track = this.curriculum.tracks.find(
+        (t) =>
+          t.id === trackId &&
+          t.status === "Published" &&
+          t.organizationId === p.organizationId,
+      );
       if (!track || seen.has(track.id)) continue;
       seen.add(track.id);
       result.push(this.build(membershipId, track, p.name));
@@ -95,24 +138,47 @@ export class FakeLearning {
     return result;
   }
 
-  private build(membershipId: string, track: FakeTrack, program: string): TrackState {
+  private build(
+    membershipId: string,
+    track: FakeTrack,
+    program: string,
+  ): TrackState {
     const done = this.done.get(membershipId) ?? new Set<string>();
     const all = this.curriculum.modules.filter((m) => m.trackId === track.id);
     const published = (moduleId: string) =>
-      this.curriculum.lessons.filter((l) => l.moduleId === moduleId && l.status === 'Published' && !l.deleted).sort((a, b) => a.position - b.position);
-    const published_ = (moduleId: string) => published(moduleId).map((l) => l.id);
+      this.curriculum.lessons
+        .filter(
+          (l) =>
+            l.moduleId === moduleId && l.status === "Published" && !l.deleted,
+        )
+        .sort((a, b) => a.position - b.position);
+    const published_ = (moduleId: string) =>
+      published(moduleId).map((l) => l.id);
     const quizzesOf = (moduleId: string) =>
       this.curriculum.assessments.quizzes
-        .filter((q) => q.moduleId === moduleId && q.status === 'Published' && (q.lessonId === null || published_(moduleId).includes(q.lessonId)))
-        .sort((a, b) => (a.lessonId === null ? 1 : 0) - (b.lessonId === null ? 1 : 0) || a.title.localeCompare(b.title));
+        .filter(
+          (q) =>
+            q.moduleId === moduleId &&
+            q.status === "Published" &&
+            (q.lessonId === null || published_(moduleId).includes(q.lessonId)),
+        )
+        .sort(
+          (a, b) =>
+            (a.lessonId === null ? 1 : 0) - (b.lessonId === null ? 1 : 0) ||
+            a.title.localeCompare(b.title),
+        );
     const complete = (moduleId: string) =>
-      published(moduleId).every((l) => done.has(l.id)) && quizzesOf(moduleId).filter((q) => q.requiredToComplete).every((q) => this.quizzes.passed(membershipId, q));
+      published(moduleId).every((l) => done.has(l.id)) &&
+      quizzesOf(moduleId)
+        .filter((q) => q.requiredToComplete)
+        .every((q) => this.quizzes.passed(membershipId, q));
     const modules = all
-      .filter((m) => m.status === 'Published')
+      .filter((m) => m.status === "Published")
       .sort((a, b) => a.position - b.position)
       .map((module, i): ModuleState => {
         const prereq = all.find((m) => m.id === module.prerequisiteModuleId);
-        const locked = !!prereq && prereq.status === 'Published' && !complete(prereq.id);
+        const locked =
+          !!prereq && prereq.status === "Published" && !complete(prereq.id);
         let firstNotDone: string | null = null;
         const lessons = published(module.id).map((lesson): LessonState => {
           const isDone = done.has(lesson.id);
@@ -121,30 +187,58 @@ export class FakeLearning {
             lesson,
             done: isDone,
             locked: lessonLocked,
-            unlockAfter: lessonLocked ? (locked ? prereq!.title : firstNotDone) : null,
+            unlockAfter: lessonLocked
+              ? locked
+                ? prereq!.title
+                : firstNotDone
+              : null,
           };
           if (!isDone && firstNotDone === null) firstNotDone = lesson.title;
           return state;
         });
         const quizzes = quizzesOf(module.id).map((quiz): QuizState => {
-          const own = quiz.lessonId ? lessons.find((l) => l.lesson.id === quiz.lessonId)! : null;
-          const waitFor = own ? (own.done ? null : own.lesson.title) : firstNotDone;
+          const own = quiz.lessonId
+            ? lessons.find((l) => l.lesson.id === quiz.lessonId)!
+            : null;
+          const waitFor = own
+            ? own.done
+              ? null
+              : own.lesson.title
+            : firstNotDone;
           const quizLocked = locked || waitFor !== null;
-          return { quiz, locked: quizLocked, unlockAfter: quizLocked ? (locked ? prereq!.title : waitFor) : null, passed: this.quizzes.passed(membershipId, quiz) };
+          return {
+            quiz,
+            locked: quizLocked,
+            unlockAfter: quizLocked ? (locked ? prereq!.title : waitFor) : null,
+            passed: this.quizzes.passed(membershipId, quiz),
+          };
         });
         const assignments = this.curriculum.assessments.assignments
-          .filter((a) => a.moduleId === module.id && a.status === 'Published' && (a.lessonId === null || published_(module.id).includes(a.lessonId)))
+          .filter(
+            (a) =>
+              a.moduleId === module.id &&
+              a.status === "Published" &&
+              (a.lessonId === null ||
+                published_(module.id).includes(a.lessonId)),
+          )
           .sort(
             (a, b) =>
               (a.lessonId === null ? 1 : 0) - (b.lessonId === null ? 1 : 0) ||
-              lessons.findIndex((l) => l.lesson.id === a.lessonId) - lessons.findIndex((l) => l.lesson.id === b.lessonId) ||
+              lessons.findIndex((l) => l.lesson.id === a.lessonId) -
+                lessons.findIndex((l) => l.lesson.id === b.lessonId) ||
               a.title.localeCompare(b.title),
           )
           .map((assignment): AssignmentState => {
-            const own = assignment.lessonId ? lessons.find((l) => l.lesson.id === assignment.lessonId)! : null;
+            const own = assignment.lessonId
+              ? lessons.find((l) => l.lesson.id === assignment.lessonId)!
+              : null;
             const waitFor = own && !own.done ? own.lesson.title : null;
             const aLocked = locked || waitFor !== null;
-            return { assignment, locked: aLocked, unlockAfter: aLocked ? (locked ? prereq!.title : waitFor) : null };
+            return {
+              assignment,
+              locked: aLocked,
+              unlockAfter: aLocked ? (locked ? prereq!.title : waitFor) : null,
+            };
           });
         return {
           module,
@@ -159,7 +253,10 @@ export class FakeLearning {
     return { track, program, modules };
   }
 
-  private findModule(tracks: TrackState[], moduleId: string): { track: TrackState; module: ModuleState } | null {
+  private findModule(
+    tracks: TrackState[],
+    moduleId: string,
+  ): { track: TrackState; module: ModuleState } | null {
     for (const track of tracks) {
       const module = track.modules.find((m) => m.module.id === moduleId);
       if (module) return { track, module };
@@ -167,7 +264,10 @@ export class FakeLearning {
     return null;
   }
 
-  findLesson(tracks: TrackState[], lessonId: string): { track: TrackState; module: ModuleState; lesson: LessonState } | null {
+  findLesson(
+    tracks: TrackState[],
+    lessonId: string,
+  ): { track: TrackState; module: ModuleState; lesson: LessonState } | null {
     for (const track of tracks) {
       for (const module of track.modules) {
         const lesson = module.lessons.find((l) => l.lesson.id === lessonId);
@@ -178,7 +278,11 @@ export class FakeLearning {
   }
 
   /** GET /learning/home. */
-  home(route: Route, membershipId: string, programs: FakeProgram[]): Promise<void> {
+  home(
+    route: Route,
+    membershipId: string,
+    programs: FakeProgram[],
+  ): Promise<void> {
     const tracks = this.tracks(membershipId, programs);
     let next = null;
     for (const t of tracks) {
@@ -217,7 +321,12 @@ export class FakeLearning {
   }
 
   /** GET /learning/tracks/{id}. */
-  track(route: Route, membershipId: string, programs: FakeProgram[], id: string): Promise<void> {
+  track(
+    route: Route,
+    membershipId: string,
+    programs: FakeProgram[],
+    id: string,
+  ): Promise<void> {
     const tracks = this.tracks(membershipId, programs);
     const t = tracks.find((x) => x.track.id === id);
     if (!t) return route.fulfill({ status: 404 });
@@ -243,14 +352,19 @@ export class FakeLearning {
   }
 
   /** GET /learning/modules/{id}. */
-  module(route: Route, membershipId: string, programs: FakeProgram[], id: string): Promise<void> {
+  module(
+    route: Route,
+    membershipId: string,
+    programs: FakeProgram[],
+    id: string,
+  ): Promise<void> {
     const found = this.findModule(this.tracks(membershipId, programs), id);
     if (!found) return route.fulfill({ status: 404 });
     const { track, module: m } = found;
     if (m.locked)
       return route.fulfill({
         status: 403,
-        json: { code: 'locked', unlockAfter: m.unlockAfter },
+        json: { code: "locked", unlockAfter: m.unlockAfter },
       });
     return route.fulfill({
       json: {
@@ -277,7 +391,8 @@ export class FakeLearning {
           id: q.quiz.id,
           title: q.quiz.title,
           lessonId: q.quiz.lessonId,
-          questionCount: this.curriculum.assessments.questionsOf(q.quiz.id).length,
+          questionCount: this.curriculum.assessments.questionsOf(q.quiz.id)
+            .length,
           required: q.quiz.requiredToComplete,
           status: this.quizzes.state(membershipId, q.quiz, q.locked),
           bestScore: this.quizzes.best(membershipId, q.quiz.id)?.score ?? null,
@@ -291,14 +406,19 @@ export class FakeLearning {
           dueDate: a.assignment.dueDate,
           status: this.work.state(membershipId, a.assignment.id, a.locked),
           unlockAfter: a.unlockAfter,
-          submissionId: this.work.mine(membershipId, a.assignment.id)?.id ?? null,
+          submissionId:
+            this.work.mine(membershipId, a.assignment.id)?.id ?? null,
         })),
       },
     });
   }
 
   /** The assignment as the youth stands with it, or null when it is not visible to her. */
-  assignmentPlace(membershipId: string, programs: FakeProgram[], assignmentId: string): AssignmentPlace | null {
+  assignmentPlace(
+    membershipId: string,
+    programs: FakeProgram[],
+    assignmentId: string,
+  ): AssignmentPlace | null {
     for (const track of this.tracks(membershipId, programs)) {
       for (const m of track.modules) {
         const a = m.assignments.find((x) => x.assignment.id === assignmentId);
@@ -307,7 +427,9 @@ export class FakeLearning {
             assignment: a.assignment,
             moduleId: m.module.id,
             moduleTitle: m.module.title,
-            lessonTitle: m.lessons.find((l) => l.lesson.id === a.assignment.lessonId)?.lesson.title ?? null,
+            lessonTitle:
+              m.lessons.find((l) => l.lesson.id === a.assignment.lessonId)
+                ?.lesson.title ?? null,
             trackId: track.track.id,
             locked: a.locked,
             unlockAfter: a.unlockAfter,
@@ -318,7 +440,11 @@ export class FakeLearning {
   }
 
   /** The quiz as the youth stands with it, or null when it is not visible to her. */
-  quizPlace(membershipId: string, programs: FakeProgram[], quizId: string): QuizPlace | null {
+  quizPlace(
+    membershipId: string,
+    programs: FakeProgram[],
+    quizId: string,
+  ): QuizPlace | null {
     for (const track of this.tracks(membershipId, programs)) {
       for (const m of track.modules) {
         const q = m.quizzes.find((x) => x.quiz.id === quizId);
@@ -327,7 +453,9 @@ export class FakeLearning {
             quiz: q.quiz,
             moduleId: m.module.id,
             moduleTitle: m.module.title,
-            lessonTitle: m.lessons.find((l) => l.lesson.id === q.quiz.lessonId)?.lesson.title ?? null,
+            lessonTitle:
+              m.lessons.find((l) => l.lesson.id === q.quiz.lessonId)?.lesson
+                .title ?? null,
             locked: q.locked,
             unlockAfter: q.unlockAfter,
           };
@@ -337,11 +465,20 @@ export class FakeLearning {
   }
 
   /** GET /learning/lessons/{id}: never the leader notes. */
-  lesson(route: Route, membershipId: string, programs: FakeProgram[], id: string): Promise<void> {
+  lesson(
+    route: Route,
+    membershipId: string,
+    programs: FakeProgram[],
+    id: string,
+  ): Promise<void> {
     const found = this.findLesson(this.tracks(membershipId, programs), id);
     if (!found) return route.fulfill({ status: 404 });
     const { track, module: m, lesson: l } = found;
-    if (l.locked) return route.fulfill({ status: 403, json: { code: 'locked', unlockAfter: l.unlockAfter } });
+    if (l.locked)
+      return route.fulfill({
+        status: 403,
+        json: { code: "locked", unlockAfter: l.unlockAfter },
+      });
     const index = m.lessons.indexOf(l);
     const next = m.lessons[index + 1]?.lesson ?? null;
     return route.fulfill({
@@ -372,13 +509,23 @@ export class FakeLearning {
   failCompletes = false;
 
   /** POST /learning/lessons/{id}/complete: reading and scripture only; once. */
-  completeLesson(route: Route, membershipId: string, programs: FakeProgram[], id: string): Promise<void> {
+  completeLesson(
+    route: Route,
+    membershipId: string,
+    programs: FakeProgram[],
+    id: string,
+  ): Promise<void> {
     if (this.failCompletes) return route.fulfill({ status: 500 });
     const found = this.findLesson(this.tracks(membershipId, programs), id);
     if (!found) return route.fulfill({ status: 404 });
     const { module: m, lesson: l } = found;
-    if (l.locked) return route.fulfill({ status: 403, json: { code: 'locked', unlockAfter: l.unlockAfter } });
-    if (l.lesson.kind === 'Coding' || l.lesson.kind === 'Project') return route.fulfill({ status: 409, json: { code: 'conflict' } });
+    if (l.locked)
+      return route.fulfill({
+        status: 403,
+        json: { code: "locked", unlockAfter: l.unlockAfter },
+      });
+    if (l.lesson.kind === "Coding" || l.lesson.kind === "Project")
+      return route.fulfill({ status: 409, json: { code: "conflict" } });
     this.complete(membershipId, id);
     return route.fulfill({ json: this.after(m, id) });
   }
@@ -387,40 +534,80 @@ export class FakeLearning {
   after(
     m: ModuleState,
     lessonId: string,
-  ): { nextLessonId: string | null; nextLessonTitle: string | null; nextLessonKind: string | null; moduleCompleted: boolean } {
+  ): {
+    nextLessonId: string | null;
+    nextLessonTitle: string | null;
+    nextLessonKind: string | null;
+    moduleCompleted: boolean;
+  } {
     const index = m.lessons.findIndex((x) => x.lesson.id === lessonId);
     const completed = m.lessons.every((x, i) => i === index || x.done);
-    const next = m.lessons.slice(index + 1).find((x) => !x.done)?.lesson ?? null;
-    return { nextLessonId: next?.id ?? null, nextLessonTitle: next?.title ?? null, nextLessonKind: next?.kind ?? null, moduleCompleted: completed };
+    const next =
+      m.lessons.slice(index + 1).find((x) => !x.done)?.lesson ?? null;
+    return {
+      nextLessonId: next?.id ?? null,
+      nextLessonTitle: next?.title ?? null,
+      nextLessonKind: next?.kind ?? null,
+      moduleCompleted: completed,
+    };
   }
 
   /** Answers every video request with 500, to show the player's failed state. */
   failVideos = false;
 
   /** GET /learning/lessons/{id}/video: the stored file with range support, only for a lesson the youth may open (ADR 0051). */
-  video(route: Route, membershipId: string, programs: FakeProgram[], id: string): Promise<void> {
+  video(
+    route: Route,
+    membershipId: string,
+    programs: FakeProgram[],
+    id: string,
+  ): Promise<void> {
     if (this.failVideos) return route.fulfill({ status: 500 });
     const found = this.findLesson(this.tracks(membershipId, programs), id);
-    if (!found || !found.lesson.lesson.video) return route.fulfill({ status: 404 });
-    if (found.lesson.locked) return route.fulfill({ status: 403, json: { code: 'locked', unlockAfter: found.lesson.unlockAfter } });
-    const bytes = readFileSync(new URL('./media/lesson.webm', import.meta.url));
-    const range = /bytes=(\d+)-(\d*)/.exec(route.request().headers()['range'] ?? '');
-    if (!range) return route.fulfill({ status: 200, contentType: 'video/webm', body: bytes, headers: { 'accept-ranges': 'bytes' } });
+    if (!found || !found.lesson.lesson.video)
+      return route.fulfill({ status: 404 });
+    if (found.lesson.locked)
+      return route.fulfill({
+        status: 403,
+        json: { code: "locked", unlockAfter: found.lesson.unlockAfter },
+      });
+    const bytes = readFileSync(new URL("./media/lesson.webm", import.meta.url));
+    const range = /bytes=(\d+)-(\d*)/.exec(
+      route.request().headers()["range"] ?? "",
+    );
+    if (!range)
+      return route.fulfill({
+        status: 200,
+        contentType: "video/webm",
+        body: bytes,
+        headers: { "accept-ranges": "bytes" },
+      });
     const start = Number(range[1]);
-    const end = range[2] ? Math.min(Number(range[2]), bytes.length - 1) : bytes.length - 1;
+    const end = range[2]
+      ? Math.min(Number(range[2]), bytes.length - 1)
+      : bytes.length - 1;
     return route.fulfill({
       status: 206,
-      contentType: 'video/webm',
+      contentType: "video/webm",
       body: bytes.subarray(start, end + 1),
-      headers: { 'accept-ranges': 'bytes', 'content-range': `bytes ${start}-${end}/${bytes.length}` },
+      headers: {
+        "accept-ranges": "bytes",
+        "content-range": `bytes ${start}-${end}/${bytes.length}`,
+      },
     });
   }
 
   /** Each youth's saved code and ticks, by membership and lesson. */
-  private readonly workspaces = new Map<string, { code: string; checked: string[] }>();
+  private readonly workspaces = new Map<
+    string,
+    { code: string; checked: string[] }
+  >();
 
   /** Each youth's project submissions, by membership and lesson. */
-  private readonly submissions = new Map<string, { code: string; note: string | null; submittedAt: string }>();
+  private readonly submissions = new Map<
+    string,
+    { code: string; note: string | null; submittedAt: string }
+  >();
 
   /** Answers every submission with 500, to show the dialog's failed state. */
   failSubmissions = false;
@@ -429,11 +616,25 @@ export class FakeLearning {
   failSaves = false;
 
   /** GET /learning/coding/{id}: coding lessons and projects only. */
-  coding(route: Route, membershipId: string, programs: FakeProgram[], id: string): Promise<void> {
+  coding(
+    route: Route,
+    membershipId: string,
+    programs: FakeProgram[],
+    id: string,
+  ): Promise<void> {
     const found = this.findLesson(this.tracks(membershipId, programs), id);
-    if (!found || (found.lesson.lesson.kind !== 'Coding' && found.lesson.lesson.kind !== 'Project')) return route.fulfill({ status: 404 });
+    if (
+      !found ||
+      (found.lesson.lesson.kind !== "Coding" &&
+        found.lesson.lesson.kind !== "Project")
+    )
+      return route.fulfill({ status: 404 });
     const { module: m, lesson: l } = found;
-    if (l.locked) return route.fulfill({ status: 403, json: { code: 'locked', unlockAfter: l.unlockAfter } });
+    if (l.locked)
+      return route.fulfill({
+        status: 403,
+        json: { code: "locked", unlockAfter: l.unlockAfter },
+      });
     const saved = this.workspaces.get(`${membershipId}:${id}`);
     const index = m.lessons.indexOf(l);
     const next = m.lessons[index + 1]?.lesson ?? null;
@@ -449,7 +650,11 @@ export class FakeLearning {
         position: index + 1,
         lessonCount: m.lessons.length,
         steps: l.lesson.steps,
-        code: this.submissions.get(`${membershipId}:${id}`)?.code ?? saved?.code ?? l.lesson.starterCode ?? '',
+        code:
+          this.submissions.get(`${membershipId}:${id}`)?.code ??
+          saved?.code ??
+          l.lesson.starterCode ??
+          "",
         checkedStepIds: saved?.checked ?? [],
         done: l.done,
         submission: this.submissionOf(membershipId, id),
@@ -460,26 +665,54 @@ export class FakeLearning {
 
   private submissionOf(membershipId: string, id: string) {
     const sub = this.submissions.get(`${membershipId}:${id}`);
-    return sub ? { status: 'Submitted', submittedAt: sub.submittedAt, note: sub.note } : null;
+    return sub
+      ? { status: "Submitted", submittedAt: sub.submittedAt, note: sub.note }
+      : null;
   }
 
   /** PUT /learning/coding/{id}/progress: saves code and ticks; ticking every step completes a coding lesson. */
-  saveCoding(route: Route, membershipId: string, programs: FakeProgram[], id: string): Promise<void> {
+  saveCoding(
+    route: Route,
+    membershipId: string,
+    programs: FakeProgram[],
+    id: string,
+  ): Promise<void> {
     if (this.failSaves) return route.fulfill({ status: 500 });
     const found = this.findLesson(this.tracks(membershipId, programs), id);
-    if (!found || (found.lesson.lesson.kind !== 'Coding' && found.lesson.lesson.kind !== 'Project')) return route.fulfill({ status: 404 });
+    if (
+      !found ||
+      (found.lesson.lesson.kind !== "Coding" &&
+        found.lesson.lesson.kind !== "Project")
+    )
+      return route.fulfill({ status: 404 });
     const { module: m, lesson: l } = found;
-    if (l.locked) return route.fulfill({ status: 403, json: { code: 'locked', unlockAfter: l.unlockAfter } });
-    const body = route.request().postDataJSON() as { code?: string; checkedStepIds?: string[] };
-    const code = body.code ?? '';
+    if (l.locked)
+      return route.fulfill({
+        status: 403,
+        json: { code: "locked", unlockAfter: l.unlockAfter },
+      });
+    const body = route.request().postDataJSON() as {
+      code?: string;
+      checkedStepIds?: string[];
+    };
+    const code = body.code ?? "";
     const ticks = [...new Set(body.checkedStepIds ?? [])];
     const stepIds = l.lesson.steps.map((x) => x.id);
     const errors: Record<string, string> = {};
-    if (code.length > 50000) errors['code'] = 'Keep your code under 50,000 characters.';
-    if (ticks.some((t) => !stepIds.includes(t))) errors['checkedStepIds'] = 'Tick only items of this checklist.';
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
-    this.workspaces.set(`${membershipId}:${id}`, { code, checked: stepIds.filter((x) => ticks.includes(x)) });
-    const completes = l.lesson.kind === 'Coding' && stepIds.length > 0 && ticks.length === stepIds.length;
+    if (code.length > 50000)
+      errors["code"] = "Keep your code under 50,000 characters.";
+    if (ticks.some((t) => !stepIds.includes(t)))
+      errors["checkedStepIds"] = "Tick only items of this checklist.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
+    this.workspaces.set(`${membershipId}:${id}`, {
+      code,
+      checked: stepIds.filter((x) => ticks.includes(x)),
+    });
+    const completes =
+      l.lesson.kind === "Coding" &&
+      stepIds.length > 0 &&
+      ticks.length === stepIds.length;
     if (completes) this.complete(membershipId, id);
     const done = completes || l.done;
     const after = done ? this.after(m, id) : null;
@@ -497,22 +730,43 @@ export class FakeLearning {
   }
 
   /** POST /learning/coding/{id}/submission: projects only, once (L2-070 criterion 4). */
-  submit(route: Route, membershipId: string, programs: FakeProgram[], id: string): Promise<void> {
+  submit(
+    route: Route,
+    membershipId: string,
+    programs: FakeProgram[],
+    id: string,
+  ): Promise<void> {
     if (this.failSubmissions) return route.fulfill({ status: 500 });
     const found = this.findLesson(this.tracks(membershipId, programs), id);
-    if (!found || found.lesson.lesson.kind !== 'Project') return route.fulfill({ status: 404 });
-    if (found.lesson.locked) return route.fulfill({ status: 403, json: { code: 'locked', unlockAfter: found.lesson.unlockAfter } });
-    const body = route.request().postDataJSON() as { code?: string; note?: string | null };
-    const code = body.code ?? '';
+    if (!found || found.lesson.lesson.kind !== "Project")
+      return route.fulfill({ status: 404 });
+    if (found.lesson.locked)
+      return route.fulfill({
+        status: 403,
+        json: { code: "locked", unlockAfter: found.lesson.unlockAfter },
+      });
+    const body = route.request().postDataJSON() as {
+      code?: string;
+      note?: string | null;
+    };
+    const code = body.code ?? "";
     const note = body.note?.trim() ? body.note.trim() : null;
     const errors: Record<string, string> = {};
-    if (!code.trim()) errors['code'] = 'Write some code before you submit.';
-    else if (code.length > 50000) errors['code'] = 'Keep your code under 50,000 characters.';
-    if (note && note.length > 1000) errors['note'] = 'Keep the note under 1,000 characters.';
-    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    if (!code.trim()) errors["code"] = "Write some code before you submit.";
+    else if (code.length > 50000)
+      errors["code"] = "Keep your code under 50,000 characters.";
+    if (note && note.length > 1000)
+      errors["note"] = "Keep the note under 1,000 characters.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
     const key = `${membershipId}:${id}`;
-    if (this.submissions.has(key)) return route.fulfill({ status: 409, json: { code: 'conflict' } });
-    this.submissions.set(key, { code, note, submittedAt: '2026-11-05T21:12:00Z' });
+    if (this.submissions.has(key))
+      return route.fulfill({ status: 409, json: { code: "conflict" } });
+    this.submissions.set(key, {
+      code,
+      note,
+      submittedAt: "2026-11-05T21:12:00Z",
+    });
     this.complete(membershipId, id);
     return route.fulfill({ status: 201, json: { id: `sub-${id}` } });
   }

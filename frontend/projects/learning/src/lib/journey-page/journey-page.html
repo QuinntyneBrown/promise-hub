@@ -1,0 +1,103 @@
+@let r = result();
+<ph-breadcrumb [items]="[{ label: 'Learning', link: '/learning' }, { label: 'Your journey' }]" />
+@if (r === null) {
+  <ph-page-header title="Your journey" />
+  <div class="stack" aria-busy="true" aria-label="Loading your journey">
+    <ph-skeleton shape="card" />
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (r.status === 'loaded') {
+  @let j = r.value;
+  @if (!j.tracks.length) {
+    <ph-page-header title="Your journey" subtitle="Your path through your program’s lessons." />
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="learning"
+        title="Your journey starts with your first track"
+        text="When your program publishes a track, its modules appear here as your roadmap."
+      >
+        <ph-button link="/learning">Back to Learning</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  } @else {
+    <ph-page-header title="Your journey" [subtitle]="subtitle(j)" />
+    <div class="kpis">
+      <ph-stat
+        label="Overall progress"
+        [value]="percent(j)"
+        [caption]="j.completedLessons + ' of ' + j.totalLessons + ' lessons'"
+      />
+      <ph-stat label="Streak" [value]="weeks(j.streakWeeks)" caption="A lesson every week" />
+      @if (stage(j); as s) {
+        <ph-stat label="Stage" [value]="s.name" [caption]="s.caption" />
+      }
+    </div>
+    <div class="split">
+      <div class="stack">
+        @for (t of j.tracks; track t.id) {
+          <ph-card [title]="t.name">
+            <div class="stack">
+              <ph-list [label]="t.name + ' modules, in order'">
+                @for (m of t.modules; track m.id; let i = $index) {
+                  <ph-list-item
+                    [title]="i + 1 + '. ' + m.title"
+                    [meta]="moduleMeta(m, j.current?.moduleId === m.id)"
+                    [link]="m.status === 'locked' ? null : ['/learning/modules', m.id]"
+                  >
+                    <ph-badge [tone]="tone[m.status]">{{ label[m.status] }}</ph-badge>
+                  </ph-list-item>
+                }
+              </ph-list>
+              @if (j.current?.trackId === t.id) {
+                <div>
+                  <ph-button
+                    variant="primary"
+                    icon="arrow-right"
+                    [link]="['/learning/modules', j.current!.moduleId]"
+                    >Continue {{ j.current!.moduleTitle }}</ph-button
+                  >
+                </div>
+              }
+            </div>
+          </ph-card>
+        }
+      </div>
+      <div class="stack">
+        @if (j.stages.length) {
+          <ph-card title="Your stage" [flush]="true">
+            <ph-list label="Stages, in order">
+              @for (s of j.stages; track s.id; let i = $index) {
+                <ph-list-item [title]="i + 1 + '. ' + s.name" [meta]="stageMeta(s)">
+                  <ph-badge [tone]="stageTone[s.status]">{{ stageLabel[s.status] }}</ph-badge>
+                </ph-list-item>
+              }
+            </ph-list>
+          </ph-card>
+        }
+      </div>
+    </div>
+  }
+} @else if (r.status === 'forbidden') {
+  <ph-page-header title="Your journey" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      title="Learning isn’t open for you yet"
+      text="Your journey, badges and progress appear once Learning opens for you. Learning says what’s needed."
+    >
+      <ph-button variant="primary" link="/learning">Back to Learning</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-page-header title="Your journey" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load your journey"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}

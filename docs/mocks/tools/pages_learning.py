@@ -85,9 +85,9 @@ def learn_home(S):
             list_item("Digital Skills", "0 of 2 lessons · Saturday Sports", href=page("learn-track", "coding"), end=badge("Not started")),
         ], card=False, label="Your tracks"), title="Your tracks", tid="tracks", cls="card--flush")
         journey = card(ul_list([
-            list_item("Your journey", "Roadmap, streak and stage", href=page("learn-journey"), lead=lead_icon("map-pin")),
-            list_item("Badges", "2 of 6 earned", href=page("learn-badges"), lead=lead_icon("award")),
-            list_item("Your progress", "Quizzes, attendance and competencies", href=page("learn-progress"), lead=lead_icon("chart")),
+            list_item("Your journey", "Roadmap, streak and stage", href=page("learn-journey")),
+            list_item("Badges", "What you’ve earned and what’s next", href=page("learn-badges")),
+            list_item("Your progress", "Quizzes, attendance and competencies", href=page("learn-progress")),
         ], card=False, label="Your journey"), title="Your journey", tid="journey", cls="card--flush")
         return hdr + extra + f'<div class="split"><div class="stack">{cont}{overall}</div><div class="stack">{tracks}{journey}</div></div>'
 

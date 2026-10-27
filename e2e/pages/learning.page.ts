@@ -11,6 +11,11 @@ export class LearningPage extends BasePage {
     await expect(this.page.getByRole('heading', { level: 1, name: 'Learning' })).toBeVisible();
   }
 
+  /** The Your journey card's link to the journey (mock: learn-home). */
+  async openJourney(): Promise<void> {
+    await this.page.getByRole('region', { name: 'Your journey' }).getByRole('link', { name: /^Your journey/ }).click();
+  }
+
   get emptyState(): Locator {
     return this.page.getByRole('heading', { name: 'No lessons yet' });
   }
