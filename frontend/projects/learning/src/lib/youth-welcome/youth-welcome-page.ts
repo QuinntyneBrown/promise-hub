@@ -123,6 +123,11 @@ export class YouthWelcomePage {
     this.save(this.step() + 1, () => this.step.update((s) => s + 1));
   }
 
+  /** Saves what is on screen at the current step, so Learning offers to resume here (L2-059 criterion 4). */
+  protected finishLater(): void {
+    this.save(this.step(), () => void this.router.navigateByUrl('/learning'));
+  }
+
   protected back(): void {
     this.errors.set({});
     this.failed.set(false);

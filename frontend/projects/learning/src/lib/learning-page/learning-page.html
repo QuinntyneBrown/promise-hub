@@ -6,15 +6,27 @@
     <ph-skeleton shape="card" />
   </div>
 } @else if (r.status === 'loaded') {
-  <ph-card [flush]="true">
-    <ph-empty-state
-      icon="learning"
-      title="No lessons yet"
-      text="When your program publishes a track, its lessons appear here."
-    >
-      <ph-button link="/">Back to Today</ph-button>
-    </ph-empty-state>
-  </ph-card>
+  <div class="stack">
+    @if (resumeStep(); as step) {
+      <ph-alert
+        tone="info"
+        title="Finish setting up"
+        [text]="'You stopped at step ' + step + ' of 3.'"
+        data-testid="resume-setup"
+      >
+        <ph-button variant="primary" link="/learning/welcome">Pick up where I left off</ph-button>
+      </ph-alert>
+    }
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="learning"
+        title="No lessons yet"
+        text="When your program publishes a track, its lessons appear here."
+      >
+        <ph-button link="/">Back to Today</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  </div>
 } @else if (r.status === 'consent-required') {
   <div class="stack" data-testid="consent-gate">
     @if (a?.status === 'error' || a?.status === 'forbidden') {

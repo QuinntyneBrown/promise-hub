@@ -84,8 +84,10 @@ test.describe('Consent required', () => {
 test.describe('An adult youth', () => {
   test.use({ signedInAs: 'm-nadia' });
 
-  test('Given Nadia is 18, when she opens Learning, then no consent is asked for', async ({ page, api }) => {
+  test('Given Nadia is 18, placed and set up, when she opens Learning, then no consent is asked for', async ({ page, api }) => {
     api.setModules('org-harbourview', [...SUITE, 'Learning']);
+    api.placeInProgram('c-nadia', 'p-tutoring');
+    api.saveOnboarding('m-nadia', { step: 3, preferredName: 'Nadia', completed: true });
     const learning = new LearningPage(page);
 
     await learning.open();

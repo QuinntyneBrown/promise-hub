@@ -42,6 +42,8 @@ test.describe('Account inactive', () => {
     test.use({ signedInAs: 'm-nadia' });
 
     test('Given Nadia is signed in, when her access is turned off, then her next page is the inactive page', async ({ page, api }) => {
+      api.placeInProgram('c-nadia', 'p-tutoring');
+      api.saveOnboarding('m-nadia', { step: 3, preferredName: 'Nadia', completed: true });
       const learning = new LearningPage(page);
       await learning.open();
       await learning.expectOpen();

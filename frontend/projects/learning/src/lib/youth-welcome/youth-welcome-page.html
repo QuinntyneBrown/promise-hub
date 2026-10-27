@@ -114,7 +114,7 @@
           <span></span>
         }
         <div class="actions__end">
-          <ph-button variant="ghost" link="/learning">Finish later</ph-button>
+          <ph-button variant="ghost" (click)="finishLater()">Finish later</ph-button>
           @if (step() < 3) {
             <ph-button variant="primary" type="submit" icon="arrow-right" [busy]="busy()"
               >Continue</ph-button
