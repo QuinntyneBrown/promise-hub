@@ -103,6 +103,8 @@ def settings_privacy(S):
                 + card(fieldset("Keep consent records and slips for", choice("ret", "7 years after the event", checked=True) + choice("ret", "3 years after the event") + choice("ret", "Until deleted by request"))
                        + fieldset("Keep inactive family records for", choice("ret2", "2 seasons after the last enrollment, then anonymize", checked=True) + choice("ret2", "Until deleted by request"))
                        + f'<div class="form-actions cluster">{f"<p class=\"save-status save-status--saved\" role=\"status\">{icon("check")}Saved just now</p>" if saved else ""}{btn("Save retention", "primary", type_="submit", busy=busy)}</div>', title="Retention", tid="retention")
+                + card(facts([("Consent needed under", "18 years"), ("Wording guardians sign", "I consent to my child taking part in lessons, mentoring and program activities at Harbourview Youth Collective, and to staff contacting them about their program."), ("Last changed", "By Marisol Delgado · Mon 2 Nov 2026")])
+                       + f'<div class="cluster" style="margin-top: var(--space-3);">{btn("Edit consent policy", "", icon_name="edit", data_href=dialog("consent-policy"))}</div>', title="Guardian consent", tid="consent")
                 + card(f'<p class="text-muted">Export or delete a household on request. Both are logged.</p><div class="cluster" style="margin-top: var(--space-3);">{btn("Export a household", "", icon_name="download", data_href=dialog("export-data"))}{btn("Delete a household", "", icon_name="trash", data_href=dialog("delete-household"))}{btn("Open the audit log", "ghost", href=page("audit-log"))}</div>', title="Requests from guardians", tid="requests")
                 + '<div class="danger-zone"><div><div class="section-title">Export everything</div><p class="text-muted">All data as CSV, emailed to admins.</p></div>' + btn("Export all data", "", icon_name="download", data_href=dialog("export-data")) + "</div>"
                 + "</form>")
@@ -113,6 +115,7 @@ def settings_privacy(S):
     S.add("forbidden", "A site lead opening privacy settings.", nav="settings", user=J, main=page_header("Privacy and data", "") + card(empty("Admins set privacy", "Ask an admin or a program director.", action=btn("Back to Today", "", href=page("today")), icon_name="lock"), cls="card--flush"))
     S.add("submitting", "Saving retention.", nav="settings", user=M, main=hdr + body(busy=True))
     S.add("success", "Saved.", nav="settings", user=M, main=hdr + body(saved=True), toast_html=toast_region(toast("success", "Retention saved")))
+    S.add("consent-saved", "After saving the consent policy: youth under the new age need consent from their next request.", nav="settings", user=M, main=hdr + body().replace("18 years", "16 years"), toast_html=toast_region(toast("success", "Consent policy saved", "It applies from each youth’s next request.")))
 
 
 # ------------------------------------------------------------------ Audit log
