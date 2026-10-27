@@ -480,6 +480,7 @@ export class FakeApi {
     ['GET', /^\/api\/curriculum$/, (route) => this.curriculum(route)],
     ['GET', /^\/api\/mentoring\/youth$/, (route) => this.mentoredYouth(route)],
     ['GET', /^\/api\/mentoring\/dashboard$/, (route) => this.mentorDashboard(route)],
+    ['GET', /^\/api\/mentoring\/youth\/(?<id>[^/]+)$/, (route, p) => this.mentorYouthRecord(route, p['id']!)],
     ['GET', /^\/api\/programs\/(?<id>[^/]+)\/mentoring$/, (route, p) => this.cohortMentoring(route, p['id']!)],
     ['PUT', /^\/api\/programs\/(?<id>[^/]+)\/mentors$/, (route, p) => this.setCohortMentors(route, p['id']!)],
     ['PUT', /^\/api\/programs\/(?<id>[^/]+)\/youth\/(?<child>[^/]+)\/mentor$/, (route, p) => this.assignYouthMentorRoute(route, p['id']!, p['child']!)],
@@ -924,6 +925,39 @@ export class FakeApi {
             return { childId: id, youthName: `${c.firstName} ${c.lastName}`, kind, session: e.name, at, startsAt: e.startsAt, status: r.status };
           }),
       );
+  }
+
+  /** GET /mentoring/youth/{childId} (L2-064): the mentor-safe record; 404 outside the organization, 403 (audited) outside the scope. */
+  private async mentorYouthRecord(route: Route, childId: string): Promise<void> {
+    const m = await this.participantModuleCaller(route, 'Mentoring', can.mentorYouth);
+    if (!m) return;
+    const household = this.households.find((h) => h.organizationId === m.organizationId && h.children.some((c) => c.id === childId));
+    if (!household) return route.fulfill({ status: 404 });
+    const scope = this.mentorScope(m);
+    const child = household.children.find((c) => c.id === childId)!;
+    if (!scope.youth.some((c) => c.id === childId)) {
+      this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'AccessDenied', record: 'Child', summary: 'Mentor record outside the mentor’s youth', device: null });
+      return route.fulfill({ status: 403, json: { code: 'forbidden' } });
+    }
+    const mentorId = this.youthMentors.get(childId);
+    const mentor = mentorId ? this.activeMentors(m.organizationId).find((x) => x.id === mentorId)?.name ?? null : null;
+    const youthAccount = [...this.youthLinks].find(([, c]) => c === childId)?.[0];
+    const setup = youthAccount ? this.onboardings.get(youthAccount) : undefined;
+    const done = setup?.completed ? setup : null;
+    const guardians = [...household.guardians]
+      .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.name.localeCompare(b.name))
+      .map((g) => ({ name: g.name, relationship: g.relationship, mobile: g.mobile, email: g.email, isPrimary: g.isPrimary }));
+    const recentAttendance = this.modules.get(m.organizationId)!.includes('RollCall')
+      ? this.mentorAttendance(m, [childId])
+          .map((a) => ({ session: a.session, at: a.at, status: a.kind }))
+          .sort((a, b) => b.at.localeCompare(a.at))
+          .slice(0, 10)
+      : null;
+    this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'Viewed', record: 'Child', summary: `${child.firstName} ${child.lastName} · mentor record`, device: null });
+    const row = this.mentoredYouthRow(child);
+    return route.fulfill({
+      json: { id: child.id, name: row.name, preferredName: done?.preferredName ?? null, pronouns: done?.pronouns ?? null, age: row.age, school: child.school, programs: row.programs, mentor, guardians, recentAttendance },
+    });
   }
 
   /** Records a child's attendance at a session, as Roll Call would. */

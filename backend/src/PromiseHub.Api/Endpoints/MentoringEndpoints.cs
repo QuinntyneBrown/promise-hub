@@ -14,6 +14,11 @@ public static class MentoringEndpoints
         var mentoring = app.MapGroup("/mentoring").RequireModule(ModuleId.Mentoring).RequirePermission(Permission.MentorYouth);
         mentoring.MapGet("/youth", (MentoringHandler handler, CancellationToken ct) => handler.HandleAsync(ct));
         mentoring.MapGet("/dashboard", (MentorDashboardHandler handler, CancellationToken ct) => handler.HandleAsync(ct));
+        mentoring.MapGet("/youth/{childId:guid}", async (Guid childId, MentorYouthRecordHandler handler, CancellationToken ct) =>
+        {
+            var (status, record) = await handler.HandleAsync(childId, ct);
+            return record is not null ? Results.Ok(record) : new Application.Result(status).ToHttp();
+        });
         return app;
     }
 }

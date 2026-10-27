@@ -1,0 +1,95 @@
+@let r = result();
+<ph-breadcrumb
+  [items]="[
+    { label: 'Mentoring', link: '/mentoring' },
+    { label: 'My youth', link: '/mentoring/youth' },
+    { label: r?.status === 'loaded' ? r.value.name : 'Youth record' },
+  ]"
+/>
+@if (r === null) {
+  <ph-page-header title="Youth record" />
+  <div class="split" aria-busy="true" aria-label="Loading the record">
+    <ph-skeleton shape="card" />
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (r.status === 'loaded') {
+  @let y = r.value;
+  <ph-page-header [title]="y.name" [subtitle]="subtitle(y)" />
+  <div class="split">
+    <div class="stack">
+      <ph-card title="About">
+        <ph-description-list [facts]="about(y)" />
+      </ph-card>
+      @if (y.recentAttendance; as attendance) {
+        <ph-card title="Recent attendance" [flush]="true">
+          @if (attendance.length) {
+            <ph-table caption="Recent attendance" [columns]="columns" [rows]="rows(attendance)" />
+          } @else {
+            <ph-empty-state
+              icon="check-in"
+              title="No attendance yet"
+              text="Check-ins at your youth’s sessions appear here."
+            />
+          }
+        </ph-card>
+      }
+    </div>
+    <div class="stack">
+      <ph-card title="Guardian contacts" [flush]="true">
+        @if (callable(y).length) {
+          <ph-call-list label="Guardian contacts" [contacts]="callable(y)" />
+        }
+        @if (noMobile(y).length) {
+          <ph-list label="Guardians without a mobile">
+            @for (g of noMobile(y); track g.name) {
+              <ph-list-item
+                [title]="g.name"
+                [meta]="g.relationship + ' · ' + (g.email ?? 'No mobile or email on file')"
+                [avatar]="g.name"
+              />
+            }
+          </ph-list>
+        }
+      </ph-card>
+      <ph-alert
+        tone="info"
+        title="Medical details stay with staff on site"
+        text="Allergies, medication, the date of birth and the Quick Card are not part of a mentor’s view."
+      />
+    </div>
+  </div>
+} @else if (r.status === 'forbidden') {
+  <ph-page-header title="Youth record" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      title="This youth isn’t assigned to you"
+      text="You can open the records of the youth you mentor. Ask a program director if this looks wrong."
+    >
+      <ph-button link="/mentoring/youth">Back to My youth</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else if (r.status === 'not-found') {
+  <ph-page-header title="Youth record" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="search"
+      title="We can’t find that youth"
+      text="They may belong to another organization."
+    >
+      <ph-button link="/mentoring/youth">Back to My youth</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-page-header title="Youth record" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load this record"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}

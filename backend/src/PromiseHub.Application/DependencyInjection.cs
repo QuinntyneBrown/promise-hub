@@ -149,6 +149,7 @@ public static class DependencyInjection
         services.AddScoped<Mentoring.MentorScope>();
         services.AddScoped<Mentoring.MentoredYouthReader>();
         services.AddScoped<Mentoring.MentorDashboardHandler>();
+        services.AddScoped<Mentoring.MentorYouthRecordHandler>();
         services.AddScoped<Mentoring.ActiveMentors>();
         services.AddScoped<Mentoring.CohortMentoringHandler>();
         services.AddScoped<Mentoring.AssignYouthMentorHandler>();
