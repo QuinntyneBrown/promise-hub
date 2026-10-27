@@ -10,7 +10,7 @@ Terms used in this document:
 - **passage** — the scripture text a scripture lesson quotes, with its reading as the reference
 - **text size** — A− and A+ steps (normal, large, extra large) that resize the passage and teaching on the page
 
-Ported from Waypoint `learning-experience/complete-lessons` (`L2-LEARN-002`). Routing to the reflection and saving the text size and a bookmark on the server wait for reflections (prompt 58).
+Ported from Waypoint `learning-experience/complete-lessons` (`L2-LEARN-002`). The lesson links to its reflection when it has reflection prompts ([write-reflections](../write-reflections/README.md)). Saving the text size and a bookmark on the server is deferred: it did not arrive with reflections (prompt 66), and text size stays a reading control on the page.
 
 ## Description
 
