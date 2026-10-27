@@ -23,6 +23,13 @@ public static class LearningEndpoints
         learning.MapGet("/coding/{id:guid}", async (Guid id, CodingLessonHandler handler, CancellationToken ct) => (await handler.HandleAsync(id, ct)).ToHttp());
         learning.MapPut("/coding/{id:guid}/progress", async (Guid id, SaveCodingRequest request, CodingProgressCommand handler, CancellationToken ct) =>
             (await handler.SaveAsync(id, request, ct)).ToHttp());
+        learning.MapPost("/coding/{id:guid}/submission", async (Guid id, SubmitProjectRequest request, ProjectSubmissionCommand handler, CancellationToken ct) =>
+        {
+            var submitted = await handler.SubmitAsync(id, request, ct);
+            return submitted.Status == Application.ResultStatus.Done
+                ? Results.Created($"/learning/coding/{id}/submission", new { id = submitted.Value })
+                : submitted.ToHttp();
+        });
         // Streamed under the youth's session cookie with range requests, so the player can seek (ADR 0051).
         learning.MapGet("/lessons/{id:guid}/video", async (Guid id, LessonVideoStream handler, CancellationToken ct) =>
         {

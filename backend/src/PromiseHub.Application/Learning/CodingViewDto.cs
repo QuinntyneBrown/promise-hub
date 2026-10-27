@@ -15,4 +15,5 @@ public sealed record CodingViewDto(
     string Code,
     IReadOnlyList<Guid> CheckedStepIds,
     bool Done,
+    SubmissionDto? Submission,
     LessonRefDto? Next);

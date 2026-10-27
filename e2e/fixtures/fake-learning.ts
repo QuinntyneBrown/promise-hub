@@ -304,6 +304,12 @@ export class FakeLearning {
   /** Each youth's saved code and ticks, by membership and lesson. */
   private readonly workspaces = new Map<string, { code: string; checked: string[] }>();
 
+  /** Each youth's project submissions, by membership and lesson. */
+  private readonly submissions = new Map<string, { code: string; note: string | null; submittedAt: string }>();
+
+  /** Answers every submission with 500, to show the dialog's failed state. */
+  failSubmissions = false;
+
   /** Answers every coding save with 500, to show the failed state. */
   failSaves = false;
 
@@ -328,12 +334,18 @@ export class FakeLearning {
         position: index + 1,
         lessonCount: m.lessons.length,
         steps: l.lesson.steps,
-        code: saved?.code ?? l.lesson.starterCode ?? '',
+        code: this.submissions.get(`${membershipId}:${id}`)?.code ?? saved?.code ?? l.lesson.starterCode ?? '',
         checkedStepIds: saved?.checked ?? [],
         done: l.done,
+        submission: this.submissionOf(membershipId, id),
         next: next ? { id: next.id, title: next.title, kind: next.kind } : null,
       },
     });
+  }
+
+  private submissionOf(membershipId: string, id: string) {
+    const sub = this.submissions.get(`${membershipId}:${id}`);
+    return sub ? { status: 'Submitted', submittedAt: sub.submittedAt, note: sub.note } : null;
   }
 
   /** PUT /learning/coding/{id}/progress: saves code and ticks; ticking every step completes a coding lesson. */
@@ -367,5 +379,26 @@ export class FakeLearning {
         moduleCompleted: after?.moduleCompleted ?? false,
       },
     });
+  }
+
+  /** POST /learning/coding/{id}/submission: projects only, once (L2-070 criterion 4). */
+  submit(route: Route, membershipId: string, programs: FakeProgram[], id: string): Promise<void> {
+    if (this.failSubmissions) return route.fulfill({ status: 500 });
+    const found = this.findLesson(this.tracks(membershipId, programs), id);
+    if (!found || found.lesson.lesson.kind !== 'Project') return route.fulfill({ status: 404 });
+    if (found.lesson.locked) return route.fulfill({ status: 403, json: { code: 'locked', unlockAfter: found.lesson.unlockAfter } });
+    const body = route.request().postDataJSON() as { code?: string; note?: string | null };
+    const code = body.code ?? '';
+    const note = body.note?.trim() ? body.note.trim() : null;
+    const errors: Record<string, string> = {};
+    if (!code.trim()) errors['code'] = 'Write some code before you submit.';
+    else if (code.length > 50000) errors['code'] = 'Keep your code under 50,000 characters.';
+    if (note && note.length > 1000) errors['note'] = 'Keep the note under 1,000 characters.';
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    const key = `${membershipId}:${id}`;
+    if (this.submissions.has(key)) return route.fulfill({ status: 409, json: { code: 'conflict' } });
+    this.submissions.set(key, { code, note, submittedAt: '2026-11-05T21:12:00Z' });
+    this.complete(membershipId, id);
+    return route.fulfill({ status: 201, json: { id: `sub-${id}` } });
   }
 }

@@ -35,6 +35,17 @@ test.describe('Coding lessons', () => {
     await coding.expectAccessible();
   });
 
+  test('Given her code includes a script, when she runs it, then the page shows but the script never runs', async ({ page }) => {
+    const coding = new LearnCodingPage(page);
+    await coding.open('l-webpage');
+
+    await coding.write('<h1>Still here</h1><p id="out">not run</p><script>document.getElementById("out").textContent = "ran";</script>');
+    await coding.run();
+
+    await expect(coding.preview.getByRole('heading', { name: 'Still here' })).toBeVisible();
+    await expect(coding.preview.locator('#out')).toHaveText('not run');
+  });
+
   test('Given two items ticked, when she saves, then her code and ticks come back after a reload and the lesson stays in progress', async ({ page }) => {
     const coding = new LearnCodingPage(page);
     await coding.open('l-webpage');

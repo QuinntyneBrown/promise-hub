@@ -70,4 +70,32 @@ export class LearnCodingPage extends BasePage {
   async apiStatus(id: string): Promise<number> {
     return this.page.evaluate(async (l) => (await fetch(`/api/learning/coding/${l}`)).status, id);
   }
+
+  get brief(): Locator {
+    return this.page.getByRole('region', { name: 'The brief' });
+  }
+
+  async submitForReview(): Promise<void> {
+    await this.page.getByRole('button', { name: 'Submit for review' }).click();
+  }
+
+  get dialog(): Locator {
+    return this.page.getByRole('dialog');
+  }
+
+  async writeNote(note: string): Promise<void> {
+    await this.dialog.getByLabel(/Note to your mentor/).fill(note);
+  }
+
+  async confirmSubmit(): Promise<void> {
+    await this.dialog.getByRole('button', { name: 'Submit for review' }).click();
+  }
+
+  get submittedBadge(): Locator {
+    return this.page.locator('ph-page-header').getByText('Submitted');
+  }
+
+  get sentForReview(): Locator {
+    return this.page.locator('ph-alert').filter({ hasText: 'Sent for review' });
+  }
 }

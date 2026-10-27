@@ -14,7 +14,11 @@
     ></textarea>
     <div class="preview" role="region" aria-label="Preview">
       @if (preview() !== null) {
-        <iframe title="Preview of your page" sandbox="" [attr.srcdoc]="preview()"></iframe>
+        <iframe
+          title="Preview of your page"
+          sandbox="allow-scripts"
+          [attr.srcdoc]="preview()"
+        ></iframe>
       } @else {
         <p class="empty">Your preview appears here when you run your code.</p>
       }

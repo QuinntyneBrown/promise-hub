@@ -18,6 +18,7 @@ import { CodingView } from './coding-view';
 import { CodingAnswers } from './coding-answers';
 import { CodingSaved } from './coding-saved';
 import { CodingSaveResult } from './coding-save-result';
+import { ProjectSubmission } from './project-submission';
 import { ConsentRequestOutcome } from '../consent/consent-request-outcome';
 import { toConsentRequest } from '../consent/to-consent-request';
 import { toWrite } from '../http-results';
@@ -116,6 +117,15 @@ export class HttpLearningApi implements LearningApi {
           ),
         ),
       );
+  }
+
+  submitProject(id: string, submission: ProjectSubmission): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<{ id: string }>(
+        `${this.baseUrl}/learning/coding/${encodeURIComponent(id)}/submission`,
+        submission,
+      ),
+    );
   }
 
   askGuardian(): Observable<ConsentRequestOutcome> {

@@ -4,12 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { CodingSaved, CodingView, GatedResult, LEARNING_API } from '@promisehub/api';
 import {
   PhAlert,
+  PhBadge,
   PhBreadcrumb,
   PhButton,
   PhCard,
   PhCheckboxGroup,
   PhCodePlayground,
   PhCodeSample,
+  PhDialogs,
   PhEmptyState,
   PhPageHeader,
   PhProgressBar,
@@ -18,16 +20,20 @@ import {
 } from '@promisehub/components';
 import { Subject, startWith, switchMap, tap } from 'rxjs';
 import { lessonLink } from '../lesson-link';
+import { SubmitProjectDialog } from '../submit-project-dialog/submit-project-dialog';
+import { SubmitProjectDialogData } from '../submit-project-dialog/submit-project-dialog-data';
 
 /**
- * A coding lesson (mock: learn-coding-lesson, L2-070): steps with code samples, the playground, and the checklist; Save progress
- * keeps the code and ticks on the server and ticking every item completes the lesson.
+ * A coding lesson or project (mocks: learn-coding-lesson, learn-coding-project; L2-070): steps with code samples, the playground, and
+ * the checklist; Save progress keeps the code and ticks on the server and ticking every item completes the lesson. A project is
+ * built in the same playground, saved as a draft and submitted for review from submit-project.
  */
 @Component({
   selector: 'ph-coding-page',
   imports: [
     FormsModule,
     PhAlert,
+    PhBadge,
     PhBreadcrumb,
     PhButton,
     PhCard,
@@ -46,6 +52,7 @@ import { lessonLink } from '../lesson-link';
 export class CodingPage {
   private readonly api = inject(LEARNING_API);
   private readonly toasts = inject(ToastService);
+  private readonly dialogs = inject(PhDialogs);
   private readonly refresh$ = new Subject<void>();
 
   /** Route parameter. */
@@ -127,7 +134,9 @@ export class CodingPage {
       .subscribe((outcome) => {
         this.busy.set(false);
         if (outcome.status === 'loaded') {
-          if (outcome.value.done) {
+          if (c.kind === 'Project') {
+            this.toasts.show({ tone: 'success', title: 'Draft saved', text: c.title });
+          } else if (outcome.value.done) {
             this.saved.set(outcome.value);
             this.toasts.show({ tone: 'success', title: 'Lesson complete', text: c.title });
           } else {
@@ -141,6 +150,21 @@ export class CodingPage {
           this.errors.set(outcome.errors);
         } else {
           this.failed.set(true);
+        }
+      });
+  }
+
+  protected submit(c: CodingView): void {
+    this.dialogs
+      .open<boolean, SubmitProjectDialogData, SubmitProjectDialog>(SubmitProjectDialog, {
+        lessonId: c.id,
+        title: c.title,
+        code: this.code(),
+      })
+      .closed.subscribe((sent) => {
+        if (sent) {
+          this.toasts.show({ tone: 'success', title: 'Sent for review', text: c.title });
+          this.reload();
         }
       });
   }

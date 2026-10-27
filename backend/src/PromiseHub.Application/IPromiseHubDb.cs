@@ -70,6 +70,7 @@ public interface IPromiseHubDb
     DbSet<Domain.Learning.LessonProgress> LessonProgress { get; }
     DbSet<Domain.Curriculum.CodingStep> CodingSteps { get; }
     DbSet<Domain.Learning.CodingWorkspace> CodingWorkspaces { get; }
+    DbSet<Domain.Learning.ProjectSubmission> ProjectSubmissions { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

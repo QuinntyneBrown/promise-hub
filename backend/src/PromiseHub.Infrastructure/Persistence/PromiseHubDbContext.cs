@@ -65,6 +65,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Learning.LessonProgress> LessonProgress => Set<Domain.Learning.LessonProgress>();
     public DbSet<Domain.Curriculum.CodingStep> CodingSteps => Set<Domain.Curriculum.CodingStep>();
     public DbSet<Domain.Learning.CodingWorkspace> CodingWorkspaces => Set<Domain.Learning.CodingWorkspace>();
+    public DbSet<Domain.Learning.ProjectSubmission> ProjectSubmissions => Set<Domain.Learning.ProjectSubmission>();
     public DbSet<DataRequest> DataRequests => Set<DataRequest>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
     public DbSet<Domain.Incidents.IncidentFollowUp> IncidentFollowUps => Set<Domain.Incidents.IncidentFollowUp>();
@@ -177,6 +178,16 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(w => w.UpdatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.HasOne<Membership>().WithMany().HasForeignKey(w => w.MembershipId);
             e.HasOne<Domain.Curriculum.Lesson>().WithMany().HasForeignKey(w => w.LessonId);
+        });
+        modelBuilder.Entity<Domain.Learning.ProjectSubmission>(e =>
+        {
+            e.HasIndex(p => new { p.MembershipId, p.LessonId }).IsUnique();
+            e.Property(p => p.Code).HasMaxLength(Domain.Curriculum.Lesson.MaximumCode);
+            e.Property(p => p.Note).HasMaxLength(Domain.Learning.ProjectSubmission.MaximumNote);
+            e.Property(p => p.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(p => p.SubmittedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.HasOne<Membership>().WithMany().HasForeignKey(p => p.MembershipId);
+            e.HasOne<Domain.Curriculum.Lesson>().WithMany().HasForeignKey(p => p.LessonId);
         });
         modelBuilder.Entity<Domain.Learning.LessonProgress>(e =>
         {

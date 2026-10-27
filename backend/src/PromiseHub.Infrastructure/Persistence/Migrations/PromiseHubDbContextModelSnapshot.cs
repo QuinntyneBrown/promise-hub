@@ -1518,6 +1518,50 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.ToTable("LessonProgress");
                 });
 
+            modelBuilder.Entity("PromiseHub.Domain.Learning.ProjectSubmission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("LessonId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("MembershipId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("SubmittedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LessonId");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("MembershipId", "LessonId")
+                        .IsUnique();
+
+                    b.ToTable("ProjectSubmissions");
+                });
+
             modelBuilder.Entity("PromiseHub.Domain.Learning.YouthOnboarding", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2908,6 +2952,27 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                 });
 
             modelBuilder.Entity("PromiseHub.Domain.Learning.LessonProgress", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Curriculum.Lesson", null)
+                        .WithMany()
+                        .HasForeignKey("LessonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Organizations.Membership", null)
+                        .WithMany()
+                        .HasForeignKey("MembershipId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Learning.ProjectSubmission", b =>
                 {
                     b.HasOne("PromiseHub.Domain.Curriculum.Lesson", null)
                         .WithMany()

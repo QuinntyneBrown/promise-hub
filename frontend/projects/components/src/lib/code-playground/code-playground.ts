@@ -5,7 +5,8 @@ let nextId = 0;
 
 /**
  * Code playground (design system: code-playground): a labelled editor for a small page of HTML and CSS, Run, and a preview that
- * renders the code in an iframe with an empty `sandbox`, so no script runs and nothing leaves the page.
+ * renders the code in a sandboxed iframe of its own opaque origin, under a Content-Security-Policy that blocks every script and
+ * request, so nothing the youth writes runs or leaves the page.
  */
 @Component({
   selector: 'ph-code-playground',
@@ -31,6 +32,17 @@ export class PhCodePlayground {
   }
 
   protected run(): void {
-    this.preview.set(this.code());
+    this.preview.set(PhCodePlayground.document(this.code()));
+  }
+
+  /** The preview document: the youth's markup under a policy that allows inline styles and data images only. */
+  static document(code: string): string {
+    return (
+      '<!doctype html><html lang="en"><head><meta charset="utf-8">' +
+      '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\'; img-src data:">' +
+      '<title>Preview</title></head><body>' +
+      code +
+      '</body></html>'
+    );
   }
 }

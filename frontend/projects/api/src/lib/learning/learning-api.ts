@@ -10,6 +10,7 @@ import type { LessonCompletion } from './lesson-completion';
 import type { CodingView } from './coding-view';
 import type { CodingAnswers } from './coding-answers';
 import type { CodingSaveResult } from './coding-save-result';
+import type { ProjectSubmission } from './project-submission';
 import type { ConsentRequestOutcome } from '../consent/consent-request-outcome';
 import type { WriteOutcome } from '../write-outcome';
 import type { OnboardingAnswers } from './onboarding-answers';
@@ -34,6 +35,8 @@ export interface LearningApi {
   coding(id: string): Observable<GatedResult<CodingView>>;
   /** Saves code and ticks; ticking every step completes a coding lesson. */
   saveCoding(id: string, answers: CodingAnswers): Observable<CodingSaveResult>;
+  /** Submits a coding project to the youth's mentor, once (L2-070 criterion 4). */
+  submitProject(id: string, submission: ProjectSubmission): Observable<WriteOutcome>;
   /** Asks the guardians of the youth's household for consent. */
   askGuardian(): Observable<ConsentRequestOutcome>;
   /** The youth's first-run setup with its defaults and their program (L2-059). */

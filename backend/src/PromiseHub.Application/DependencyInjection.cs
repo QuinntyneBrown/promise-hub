@@ -150,6 +150,7 @@ public static class DependencyInjection
         services.AddScoped<Learning.LessonVideoStream>();
         services.AddScoped<Learning.CodingLessonHandler>();
         services.AddScoped<Learning.CodingProgressCommand>();
+        services.AddScoped<Learning.ProjectSubmissionCommand>();
         services.AddScoped<Staff.LinkYouthHandler>();
         services.AddScoped<Staff.InvitationIssuer>();
         services.AddScoped<Staff.YouthInvitationHandler>();

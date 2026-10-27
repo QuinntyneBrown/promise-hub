@@ -1,6 +1,7 @@
 import type { CodingStep } from './coding-step';
 import type { LessonKind } from './lesson-kind';
 import type { LessonRef } from './lesson-ref';
+import type { SubmissionView } from './submission-view';
 
 /** A coding lesson or project as the youth works on it (L2-070). */
 export interface CodingView {
@@ -17,5 +18,7 @@ export interface CodingView {
   code: string;
   checkedStepIds: string[];
   done: boolean;
+  /** The project as sent for review; null until submitted. */
+  submission: SubmissionView | null;
   next: LessonRef | null;
 }

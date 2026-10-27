@@ -107,6 +107,8 @@ export * from './lib/learning/coding-view';
 export * from './lib/learning/coding-answers';
 export * from './lib/learning/coding-saved';
 export * from './lib/learning/coding-save-result';
+export * from './lib/learning/project-submission';
+export * from './lib/learning/submission-view';
 export * from './lib/learning/gated-result';
 export * from './lib/learning/onboarding-answers';
 export * from './lib/learning/onboarding-program';
