@@ -32,9 +32,13 @@ Backend:
 - **`QuizIntroHandler`** — the intro through `LearnerProgress`: 404 when not visible, 403 `locked` with unlock-after; attempts used, the next attempt number, the attempt in progress and the best score; never correct answers.
 - **`QuizAttemptCommand`** — `StartAsync` resumes the attempt in progress or creates the next one (409 `no-attempts` past the limit), fixing the attempt order and auditing Created on `QuizAttempt`; `SaveAsync` validates and stores the answers and position (409 `submitted` once submitted, 422 for a foreign question, an option out of range, two options on a one-answer question or a short answer over 200 characters); `SubmitAsync` saves the final answers, scores them through `QuizScoring`, records the score, passed and the time, and audits Submitted.
 - **`QuizScoring`** — right when a multiple choice or true / false answer is the correct option, a multiple answer is exactly the correct options, a short answer matches an accepted answer ignoring capitals and surrounding spaces; score = rounded percentage right.
-- Domain: `QuizAttempt` and `AttemptStatus` (`PromiseHub.Domain/Learning/`), `Quiz.RequireApproval` (`PromiseHub.Domain/Curriculum/`). Answers are stored as JSON text keyed by question id.
+- Domain: `QuizAttempt` and `AttemptStatus` (`PromiseHub.Domain/Learning/`), `Quiz.RequireApproval` (`PromiseHub.Domain/Curriculum/`). Answers are stored as JSON text, a list of question id, choices and text (`QuizAnswers`), and the attempt order is applied by `AttemptOrder`.
 
 Tenancy: every row carries `OrganizationId`, the global tenant filter applies, and attempts are found only by the caller's membership, so another youth's or organization's attempt is 404.
+
+## Built so far
+
+Prompt 61 delivered everything above. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/LearningQuizIntroTests.cs`, `LearningQuizAttemptTests.cs`, `LearningQuizSubmitTests.cs` and `e2e/tests/learning/quizzes.spec.ts`.
 
 ## Requirements
 

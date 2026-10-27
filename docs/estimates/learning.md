@@ -9,7 +9,7 @@
 | obtain-required-consent | 1 day | 100% |
 | onboard-youth | 2 days | 100% |
 | read-own-record | 1 day | 100% |
-| review-quiz-results | 3 days | 0% |
+| review-quiz-results | 3 days | 100% |
 | stream-lesson-video | 2 days | 100% |
 | submit-coding-projects | 2 days | 100% |
-| take-quizzes | 4 days | 0% |
+| take-quizzes | 4 days | 100% |

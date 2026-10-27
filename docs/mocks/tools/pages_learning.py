@@ -393,6 +393,8 @@ def quiz_question(n: int, answer=None, *, error: str = "") -> str:
 
 
 def saved_chip(state: str = "saved") -> str:
+    if not state:
+        return ""
     if state == "saving":
         return f'<span class="sync-chip" role="status">{icon("refresh")}Saving…</span>'
     if state == "offline":
@@ -436,7 +438,7 @@ def learn_quiz_intro(S):
           main=body("2 of 2", action=f'<div class="form-actions">{btn("See your result", "", href=page("learn-quiz-result"))}{btn("Try again", "primary", icon_name="refresh", href=page("learn-quiz"))}</div>',
                     extra=alert("success", "You passed with 75%", "Your best score counts. Trying again can only raise it.")))
     S.add("locked", "Opened before every lesson of the module is done: 403, and what unlocks it.", **YKW,
-          main=quiz_crumbs() + page_header(QUIZ) + locked_card("Finish Leading Like a Coach first", "The quiz unlocks when every lesson of Leading by Serving is done.", "Back to the module", page("learn-module")))
+          main=quiz_crumbs() + page_header(QUIZ) + locked_card("Finish Leading Like a Coach first", "The quiz unlocks when the lessons before it are done.", "Back to Learning", page("learn-home")))
     S.add("loading", "The quiz loading.", **YKW, main=quiz_crumbs("Quiz") + page_header("Quiz") + skeleton_kpis(4) + skeleton_list(4, "Loading the quiz"))
     S.add("error", "The quiz failed to load.", **YKW, main=quiz_crumbs("Quiz") + page_header("Quiz") + failed("We couldn’t load this quiz"))
     S.add("not-found", "A draft quiz, one of a track she doesn’t follow, or another organization’s.", **YKW, main=quiz_crumbs("Quiz") + page_header("Quiz") + not_found("quiz"))
@@ -465,14 +467,14 @@ def learn_quiz(S):
     S.add("submitting", "Submit answers confirmed: the attempt is being scored and the button can’t be pressed twice.", **YKW, main=body(4, "others", last=True, submit_busy=True))
     S.add("submitted", "The attempt was already submitted (another tab): answers can’t change; she goes to her result.", **YKW,
           main=quiz_crumbs("Submitted") + page_header(QUIZ) + card(empty("This attempt is already submitted", "Answers can’t change once an attempt is submitted.",
-                                                                          action=btn("See your result", "primary", href=page("learn-quiz-result")), icon_name="lock"), cls="card--flush"))
-    S.add("failed", "The submit failed: her answers are kept and saved; she can try again.", **YKW,
-          main=body(4, "others", last=True, extra=alert("danger", "We couldn’t submit your quiz", "Your answers are saved. Try again.")))
+                                                                          action=btn("Back to the quiz", "primary", href=page("learn-quiz-intro", "passed")), icon_name="lock"), cls="card--flush"))
+    S.add("failed", "A save failed for a reason other than the connection: her answer stays on screen and the next change tries again. A failed submit shows in submit-quiz/failed.", **YKW,
+          main=body(2, 1, "", extra=alert("danger", "We couldn’t save your answer", "Your answer is still here. Change it or move on to try again.")))
     S.add("loading", "The attempt loading.", **YKW, main=quiz_crumbs("Quiz") + page_header("Quiz") + skeleton_list(4, "Loading the question"))
     S.add("error", "The attempt failed to start.", **YKW, main=quiz_crumbs("Quiz") + page_header("Quiz") + failed("We couldn’t open the quiz"))
     S.add("exhausted", "Starting another attempt with none left: 409, and her best attempt.", **YKW,
-          main=quiz_crumbs("Quiz") + page_header(QUIZ) + card(empty("No attempts left", "You’ve used both attempts. Your best score is the one that counts.",
-                                                                     action=btn("See your best attempt", "primary", href=page("learn-quiz-result", "last-attempt")), icon_name="lock"), cls="card--flush"))
+          main=quiz_crumbs("Quiz") + page_header(QUIZ) + card(empty("No attempts left", "You’ve used every attempt. Your best score is the one that counts.",
+                                                                     action=btn("Back to the quiz", "primary", href=page("learn-quiz-intro", "exhausted")), icon_name="lock"), cls="card--flush"))
 
 
 # ---------------------------------------------------------------- learn-quiz-result
@@ -509,7 +511,7 @@ def learn_quiz_result(S):
     def scores(score, passed, attempt="1 of 2", best="") -> str:
         return kpis([("Your score", score, "3 of 4 correct" if score == "75%" else "2 of 4 correct"),
                      ("Pass mark", "70%", "Passed" if passed else "Not passed yet"),
-                     ("Attempt", attempt, best)])
+                     ("Attempt", attempt, best or f"Best score {score}")])
 
     def actions(retake=True, label="Try again") -> str:
         r = btn(label, "", icon_name="refresh", href=page("learn-quiz-intro", "retake")) if retake else ""
@@ -524,15 +526,16 @@ def learn_quiz_result(S):
           main=hdr() + alert("warning", "Not this time", "You got 50%. You need 70% to pass and you have 1 attempt left.")
           + f'<div class="stack">{scores("50%", False)}{review(REVIEW_FAIL)}{actions()}</div>')
     S.add("last-attempt", "Both attempts used: no Try again; her best attempt (75%) counts.", **YKW,
-          main=hdr("Attempt 2 of 2 · submitted Tue 27 Oct, 4:30 pm") + alert("info", "No attempts left", "Your best score, 75%, is the one that counts.")
-          + f'<div class="stack">{scores("75%", True, "2 of 2", "Best of 2")}{review(REVIEW_PASS)}{actions(retake=False)}</div>')
+          main=hdr("Attempt 2 of 2 · submitted Tue 27 Oct, 4:30 pm") + alert("info", "No attempts left", "You’ve used both attempts. Your best score, 75%, is the one that counts.")
+          + f'<div class="stack">{scores("75%", True, "2 of 2", "Best score 75%")}{review(REVIEW_PASS)}{actions(retake=False)}</div>')
     S.add("score-only", "A quiz set to show the score only: the score and pass, no answers.", **YKW,
           main=hdr() + alert("success", "You passed, Sofía", "75% on your first attempt.")
           + f'<div class="stack">{scores("75%", True)}{card("<p class=\"text-muted\">This quiz shows your score only. Your mentor can talk the answers through with you.</p>", title="Review your answers", tid="review")}{actions(label="Try for a better score")}</div>')
     S.add("awaiting-approval", "A quiz whose scores a mentor approves before they count: submitted, the score held back until Daniel approves it.", **YKW,
-          main=hdr() + f'<div class="stack">{card(empty("Waiting for your mentor", "Your answers are in. Daniel Osei checks this quiz before the score counts. You’ll see it here when he has.", icon_name="clock"), cls="card--flush")}{actions(retake=False)}</div>',
+          main=hdr() + f'<div class="stack">{card(empty("Waiting for your mentor", "Your answers are in. Your mentor checks this quiz before the score counts. You’ll see it here when they have.", icon_name="clock"), cls="card--flush")}{actions(retake=False)}</div>',
           toast_html=toast_region(toast("success", "Quiz submitted", "Waiting for your mentor")))
     S.add("loading", "The result loading.", **YKW, main=quiz_crumbs("Result") + page_header("Quiz result") + skeleton_kpis(3) + skeleton_list(4, "Loading your answers"))
     S.add("error", "The result failed to load.", **YKW, main=quiz_crumbs("Result") + page_header("Quiz result") + failed("We couldn’t load your result"))
     S.add("not-found", "Another youth’s attempt, one still in progress, or another organization’s: not found.", **YKW,
-          main=quiz_crumbs("Result") + page_header("Quiz result") + not_found("result"))
+          main=quiz_crumbs("Result") + page_header("Quiz result") + card(empty("We can’t find that result", "It may still be in progress, or it isn’t yours.",
+                                                                           action=btn("Back to Learning", "", href=page("learn-home")), icon_name="search"), cls="card--flush"))

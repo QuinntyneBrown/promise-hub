@@ -26,6 +26,10 @@ Backend:
 - **`QuizResultHandler`** — `GET /learning/attempts/{id}` for the caller's own submitted attempt (an attempt in progress, another youth's or another organization's is 404); answers the score, correct and total, passed, attempts used and left, the best score and whether a retake is possible; the review only when the feedback rule allows; nothing scored while awaiting approval.
 - **`LearnerProgress`** — the module is complete when every published lesson is done and every published required quiz has a passing best score; this also unlocks modules that name it as prerequisite.
 
+## Built so far
+
+Prompt 61 delivered everything above. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/LearningQuizResultTests.cs`, `LearningQuizSubmitTests.cs` and `e2e/tests/learning/quizzes.spec.ts`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

@@ -74,7 +74,7 @@ export class LearnQuizPage extends BasePage {
   }
 
   get failed(): Locator {
-    return this.page.getByRole('alert').filter({ hasText: 'We couldn’t submit your quiz' });
+    return this.page.getByRole('alert').filter({ hasText: 'We couldn’t save your answer' });
   }
 
   get alreadySubmitted(): Locator {
