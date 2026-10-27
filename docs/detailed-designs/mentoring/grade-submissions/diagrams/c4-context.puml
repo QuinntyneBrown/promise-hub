@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Grade submissions
+Person(m, "Mentor", "Grades their youth’s work")
+Person(y, "Youth", "Sends work, reads the grade")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(m, ph, "Reviews and grades", "HTTPS")
+Rel(y, ph, "Submits and reads feedback", "HTTPS")
+@enduml

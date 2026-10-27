@@ -1,0 +1,28 @@
+@startuml
+title Class structure — Grade submissions
+skinparam classAttributeIconSize 0
+class AssignmentSubmission {
+  Status, Round, Late, Feedback?, Points?
+  Scores?, ReviewComment?, Version
+  StartReview(by, at)
+  SaveDraftGrade(scores, comment)
+  RequestRevision(note, by, at)
+  Accept(points, note, by, at)
+}
+class RubricCriterion { Position, Description, Points }
+class GradeSubmissionHandler { HandleAsync(id, GradeRequest) }
+class GradeRequest { Decision, Scores, Comment, Version }
+class SubmissionReviewHandler { HandleAsync(id); FileAsync(id) }
+class SubmissionReviewDto { Youth, Assignment, Work, Rubric, Comment, History, Version }
+class ReviewQueueHandler { HandleAsync() }
+class ReviewItemDto { Id, Kind, YouthName, Title, Module, SubmittedAt, Late, Score? }
+class MentorYouthMemberships { IdsAsync() }
+GradeSubmissionHandler ..> GradeRequest
+GradeSubmissionHandler ..> AssignmentSubmission
+GradeSubmissionHandler ..> RubricCriterion
+SubmissionReviewHandler ..> SubmissionReviewDto
+ReviewQueueHandler ..> ReviewItemDto
+GradeSubmissionHandler --> MentorYouthMemberships
+SubmissionReviewHandler --> MentorYouthMemberships
+ReviewQueueHandler --> MentorYouthMemberships
+@enduml

@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Protect concurrent updates
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(gp, "GradePage", "Angular page", "conflict state")
+  Component(mapi, "MentoringApi", "Contract + HTTP client", "")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "MentoringEndpoints", "Minimal API", "409 stale")
+  Component(g, "GradeSubmissionHandler", "Handler", "version check")
+  Component(ctx, "PromiseHubDbContext", "EF Core", "Version is a concurrency token")
+  ComponentDb(db, "PromiseHub database", "SQLite", "AssignmentSubmissions")
+}
+Rel(gp, mapi, "grade(version)")
+Rel(mapi, ep, "HTTPS")
+Rel(ep, g, "POST")
+Rel(g, ctx, "SaveChanges")
+Rel(ctx, db, "UPDATE … WHERE Version = @old")
+@enduml

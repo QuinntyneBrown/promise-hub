@@ -1,0 +1,22 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Assess competencies
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(cp, "CompetenciesPage", "Angular page", "mentor-competency")
+  Component(bg, "ph-button-group / ph-textarea", "components library", "")
+  Component(mapi, "MentoringApi", "Contract + HTTP client", "MENTORING_API")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "MentoringEndpoints", "Minimal API", "youth/{childId}/competencies")
+  Component(h, "CompetenciesHandler", "Handler", "read and append")
+  Component(sc, "MentorScope", "Service", "the mentor’s youth")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Competencies, CompetencyAssessments, AuditEntries")
+}
+Rel(cp, bg, "composes")
+Rel(cp, mapi, "competencies, saveCompetencies")
+Rel(mapi, ep, "HTTPS")
+Rel(ep, h, "GET/PUT")
+Rel(h, sc, "CanSeeYouthAsync")
+Rel(h, db, "reads and appends")
+@enduml

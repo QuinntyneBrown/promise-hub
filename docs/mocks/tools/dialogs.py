@@ -617,3 +617,38 @@ def unsaved_changes(S):
     S.add("default", "Leaving learn-submit with unsent changes: Keep editing, Save draft and leave, or the quiet Leave without saving. Escape keeps editing.",
           **over("learn-submit", "default", overlays=dialog_box("Leave without submitting?", "Your reflection hasn’t been sent or saved.", body,
                                                               btn("Leave without saving", "ghost") + footer("Save draft and leave", cancel="Keep editing"), icon_name="alert-triangle")))
+
+
+# ------------------------------------------------------------------ Grade and assess (prompt 63)
+G_NOTE = "Great story, Sofía! Can you add a line about one thing you noticed? Then this is a full pass."
+
+
+def revision_body(err):
+    err = err or {}
+    return (textarea("revision-note", "What should she change?", value="" if "revision-note" in err else G_NOTE, rows=4, error=err.get("revision-note", ""),
+                     help_="Sofía sees this note on her submission and in her notifications, and can resubmit.", attrs=" required autofocus"))
+
+
+simple("request-revision", "Request a revision", "mentor-grade", ["L2-080", "L2-065", "L1-024"], "Sofía gets your note and can resubmit.",
+       revision_body, "Send request", icon_name="edit", invalid_err={"revision-note": "Write what she should change."},
+       failed_text="Nothing was sent. Your note is still here; try again.")
+
+simple("approve-submission", "Approve Sofía’s submission?", "mentor-grade", ["L2-080", "L2-065", "L1-024"], "Serve someone this week · 25 of 25 points",
+       lambda e: '<p>Sofía sees the points and your comment, and the assignment counts as done.</p>', "Approve", icon_name="check-circle", form=False,
+       failed_text="It wasn’t approved. Your scores and comment are still on the page; try again.")
+
+
+def approve_quiz_body(err):
+    err = err or {}
+    return (facts([("Youth", "Nadia Haddad"), ("Quiz", "Knowing Yourself quiz · attempt 1"), ("Auto-score", "75% · 3 of 4 right"), ("Pass mark", "70%")])
+            + field("override", "Override score (optional)", type_="number", value="150" if "override" in err else "", inputmode="numeric", attrs=' min="0" max="100" step="1"',
+                    help_="A percentage from 0 to 100. Leave it blank to approve the 75% auto-score.", error=err.get("override", "")))
+
+
+simple("approve-quiz", "Approve this quiz score?", "mentor-quiz-approvals", ["L2-081", "L2-065", "L1-024"], "Nadia sees only the score you approve.",
+       approve_quiz_body, "Approve score", icon_name="check-circle", invalid_err={"override": "Enter a whole number from 0 to 100, or leave it blank."},
+       failed_text="The score wasn’t approved. Try again.")
+
+simple("approve-all-quizzes", "Approve all 2 quiz scores?", "mentor-quiz-approvals", ["L2-081", "L2-065", "L1-024"], "Each is approved at its auto-score",
+       lambda e: '<p>Nadia Haddad · Knowing Yourself quiz · 75%<br>Sofía Rivera · Leading by Serving quiz · 50%</p><p class="text-muted">To change a score, approve it on its own instead.</p>',
+       "Approve all", icon_name="check", form=False, failed_text="Nothing was approved. Try again.")

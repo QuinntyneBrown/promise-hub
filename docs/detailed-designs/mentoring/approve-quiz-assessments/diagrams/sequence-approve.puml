@@ -1,0 +1,41 @@
+@startuml
+title UML sequence behaviour — Approving a quiz score
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Mentor (Daniel)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "QuizApprovalsPage" as qp
+  participant "ApproveQuizDialog" as dlg
+  participant "MentoringApi" as mapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "MentoringEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "QuizApprovalHandler" as h
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> qp : opens Quiz approvals
+qp -> mapi : quizApprovals()
+mapi -> ep : GET /mentoring/quiz-approvals
+ep -> h : ListAsync (his youth only, L2-081 c1)
+h -> db : attempts AwaitingApproval
+h --> qp : Nadia, Knowing Yourself quiz, 75%, pass mark 70%
+actor -> dlg : Approve, override blank
+dlg -> mapi : approveQuiz(id, null)
+mapi -> ep : POST /mentoring/quiz-attempts/{id}/approve
+ep -> h : ApproveAsync
+alt override outside 0..100
+  h --> dlg : 422 override (c2)
+else not awaiting approval
+  h --> dlg : 409 not-awaiting (c5)
+else
+  h -> db : AutoScore kept, Score 75, Passed, Scored, Notification, audit Updated (c2, c3)
+  h --> dlg : 200
+end
+@enduml

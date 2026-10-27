@@ -141,6 +141,7 @@ Edit tokens and shared component CSS first. Edit catalogue metadata and generato
 | Existing tokens.css | Copied organization comment referenced a different product’s ADR and implied an implemented server feature | Replaced the comment with the scoped pair contract; no existing token value changed. Organization branding remains unimplemented. |
 | Quick Card phone facts | The .quick-card-specific two-column rule overrode the narrower generic phone rule | Matched specificity in the phone rule so labels stack above values below 640px, as documented; no information is removed. |
 | Core catalogue | Tooltip, spinner and complete sidebar/pagination specimens were not all present in mocks | Documented core compositions using inherited roles and tokens; source sections identify core additions explicitly. |
+| Grade and assess mocks (prompt 63) | Rubric scores, quiz overrides and competency levels needed no new component | Rubric scores and the override use text-field (number), the review queue and quiz approvals use table with tabs, competency levels use button-group with aria-pressed; sources added to those pages. No token changed. |
 | Inherited component CSS | Includes historical selectors unused by PromiseHub | Retained for compatibility; catalogue scope is the PromiseHub evidence plus the core set. Do not interpret unused inherited selectors as implemented product features. |
 
 ## Verification

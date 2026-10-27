@@ -1,0 +1,11 @@
+@startuml
+title Class structure — Protect concurrent updates
+skinparam classAttributeIconSize 0
+class AssignmentSubmission { Version : int }
+class GradeSubmissionHandler { HandleAsync(id, GradeRequest) }
+class GradeRequest { Version }
+class PromiseHubDbContext { OnModelCreating(): Version IsConcurrencyToken }
+GradeSubmissionHandler ..> GradeRequest
+GradeSubmissionHandler ..> AssignmentSubmission
+PromiseHubDbContext ..> AssignmentSubmission
+@enduml

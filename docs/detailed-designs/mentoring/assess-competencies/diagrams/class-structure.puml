@@ -1,0 +1,13 @@
+@startuml
+title Class structure — Assess competencies
+skinparam classAttributeIconSize 0
+class Competency { Position, Name, Description }
+class CompetencyAssessment { ChildId, CompetencyId, Level, Notes?, AssessorMembershipId, AssessorName, At }
+enum CompetencyLevel { NotStarted, Developing, Proficient, Mastered }
+class CompetenciesHandler { GetAsync(childId); SaveAsync(childId, changes) }
+class CompetencySheetDto { ChildId, Name, Items, ProficientOrMastered, Total }
+Competency "1" -- "*" CompetencyAssessment
+CompetencyAssessment --> CompetencyLevel
+CompetenciesHandler ..> CompetencySheetDto
+CompetenciesHandler ..> CompetencyAssessment
+@enduml
