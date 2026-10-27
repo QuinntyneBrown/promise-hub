@@ -75,6 +75,7 @@ export class AuditLogPage {
     { value: 'Deleted', label: 'Deleted' },
     { value: 'Signed', label: 'Signed' },
     { value: 'Sent', label: 'Sent' },
+    { value: 'Withdrawn', label: 'Withdrawn' },
     { value: 'Exported', label: 'Exported' },
     { value: 'SignedIn', label: 'Signed in' },
     { value: 'SignInLocked', label: 'Sign-in locked' },

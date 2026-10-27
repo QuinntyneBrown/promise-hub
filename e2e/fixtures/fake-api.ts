@@ -588,6 +588,7 @@ export class FakeApi {
     ['POST', /^\/api\/children\/(?<id>[^/]+)\/consent-request$/, (route, p) => this.sendConsentLink(route, p['id']!)],
     ['GET', /^\/api\/g\/consent\/(?<token>[^/]+)$/, (route, p) => this.guardianConsent(route, p['token']!)],
     ['POST', /^\/api\/g\/consent\/(?<token>[^/]+)\/sign$/, (route, p) => this.giveConsentRoute(route, p['token']!)],
+    ['POST', /^\/api\/g\/consent\/(?<token>[^/]+)\/withdraw$/, (route, p) => this.withdrawConsentRoute(route, p['token']!)],
     ['POST', /^\/api\/children\/(?<id>[^/]+)\/youth-invitation$/, (route, p) => this.inviteYouth(route, p['id']!)],
     ['GET', /^\/api\/children\/(?<id>[^/]+)$/, (route, p) => this.getChild(route, p['id']!)],
     ['PUT', /^\/api\/children\/(?<id>[^/]+)$/, (route, p) => this.updateChild(route, p['id']!)],
@@ -3176,6 +3177,12 @@ export class FakeApi {
     this.consents.push({ childId, signedBy: by, relationship, signedAt: NOW.toISOString(), reference: 'GC-4F7A2C', withdrawnAt: null, withdrawnBy: null });
   }
 
+  /** The guardian withdrew the consent in force (L2-058 criterion 2). */
+  withdrawConsent(childId: string, by = 'Carmen Rivera'): void {
+    const latest = this.consentOf(childId);
+    if (latest && !latest.withdrawnAt) Object.assign(latest, { withdrawnAt: NOW.toISOString(), withdrawnBy: by });
+  }
+
   /** The child's latest consent, if any. */
   consentOf(childId: string) {
     return this.consents.filter((c) => c.childId === childId).at(-1) ?? null;
@@ -3298,6 +3305,15 @@ export class FakeApi {
     else if (!signer) errors['name'] = `That name doesn’t match a guardian of ${child.firstName}.`;
     if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
     this.giveConsent(child.id, signer!.name, b.relationship!.trim());
+    return route.fulfill({ status: 204 });
+  }
+
+  /** POST /g/consent/{token}/withdraw: 409 with no consent in force (L2-058 criterion 2). */
+  private async withdrawConsentRoute(route: Route, token: string): Promise<void> {
+    const scope = await this.consentScope(route, token);
+    if (!scope) return;
+    if (this.consentStatusName(scope.child.id) !== 'Given') return route.fulfill({ status: 409, json: { code: 'conflict' } });
+    this.withdrawConsent(scope.child.id, this.sortedGuardians(scope.household)[0]!.name);
     return route.fulfill({ status: 204 });
   }
 

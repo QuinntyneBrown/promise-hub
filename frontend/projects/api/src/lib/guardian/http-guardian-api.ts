@@ -35,6 +35,12 @@ export class HttpGuardianApi implements GuardianApi {
     );
   }
 
+  withdrawConsent(token: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(`${this.baseUrl}/g/consent/${encodeURIComponent(token)}/withdraw`, {}),
+    );
+  }
+
   requestData(token: string, kind: 'Export' | 'Delete', email: string): Observable<WriteOutcome> {
     return toWrite(
       this.http.post<{ id: string }>(

@@ -50,6 +50,17 @@ test.describe('Consent required', () => {
     expect(await learning.lessonsStatus()).toBe(200);
   });
 
+  test('Given Carmen consented and then withdrew, when Sofía opens Learning, then she is held on consent-required again', async ({ page, api }) => {
+    api.giveConsent('c-sofia');
+    api.withdrawConsent('c-sofia');
+    const learning = new LearningPage(page);
+
+    await learning.open();
+
+    await expect(learning.consentRequired).toBeVisible();
+    expect(await learning.lessonsStatus()).toBe(403);
+  });
+
   test('Given no guardian of Sofía can be reached, when she asks, then she is told to ask program staff', async ({ page, api }) => {
     api.makeUnreachable('hh-rivera');
     const learning = new LearningPage(page);

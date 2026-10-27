@@ -34,6 +34,17 @@ test.describe('Guardian consent on the child record', () => {
     await expect(child.consent.getByRole('button', { name: 'Send consent link' })).toHaveCount(0);
   });
 
+  test('Given Carmen withdrew, when Tom opens Sofía’s record, then the card says who withdrew and offers a new link', async ({ page, api }) => {
+    api.giveConsent('c-sofia');
+    api.withdrawConsent('c-sofia');
+    const child = new ChildPage(page);
+
+    await child.open('/families/hh-rivera/children/c-sofia');
+
+    await expect(child.consent).toContainText('Withdrawn by Carmen Rivera');
+    await expect(child.consent.getByRole('button', { name: 'Send consent link' })).toBeVisible();
+  });
+
   test('Given Mateo has no youth account, when his record opens, then no consent card is rendered', async ({ page }) => {
     const child = new ChildPage(page);
 

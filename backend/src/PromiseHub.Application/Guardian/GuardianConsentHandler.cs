@@ -98,6 +98,29 @@ public sealed class GuardianConsentHandler(IPromiseHubDb db, GuardianAccess acce
         return GuardianResult.Of(GuardianOutcome.Done);
     }
 
+    /// <summary>Withdraws the consent in force (L2-058 criterion 2): the youth is gated from the next request; the record stays (L2-057).</summary>
+    public async Task<GuardianResult> WithdrawAsync(GuardianRequest request, WithdrawConsentRequest body, CancellationToken cancellationToken = default)
+    {
+        var (problem, page) = await LoadAsync(request, cancellationToken);
+        if (problem is not null)
+        {
+            return problem;
+        }
+        var (_, child, guardians, status, _) = page!.Value;
+        var consent = status.InForce ? await db.GuardianConsents.SingleAsync(c => c.Id == status.Latest!.Id, cancellationToken) : null;
+        if (consent is null)
+        {
+            return GuardianResult.Of(GuardianOutcome.Conflict);
+        }
+        var typed = string.Join(' ', (body.Name ?? string.Empty).Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var by = guardians.FirstOrDefault(g => string.Equals(g.Name, typed, StringComparison.OrdinalIgnoreCase))?.Name
+            ?? guardians.OrderByDescending(g => g.IsPrimary).ThenBy(g => g.Name).First().Name;
+        consent.Withdraw(by, clock.GetUtcNow());
+        audit.Record(new AuditEvent(AuditAction.Withdrawn, "GuardianConsent", consent.Id, $"{child.FullName} · consent withdrawn by {by} · {consent.Reference}"));
+        await db.SaveChangesAsync(cancellationToken);
+        return GuardianResult.Of(GuardianOutcome.Done);
+    }
+
     private async Task<(GuardianResult? Problem, (GuardianScope Scope, Child Child, List<Domain.Households.Guardian> Guardians, ConsentStatus Status, string Wording)? Page)> LoadAsync(
         GuardianRequest request, CancellationToken cancellationToken)
     {

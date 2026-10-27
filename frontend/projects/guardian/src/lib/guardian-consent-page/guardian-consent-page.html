@@ -103,6 +103,11 @@
               <ph-description-list [facts]="recordFacts(s)" />
             </div>
           </ph-card>
+          <div>
+            <ph-button variant="ghost" hasPopup="dialog" (click)="withdraw(s)">{{
+              ct.withdraw
+            }}</ph-button>
+          </div>
         } @else {
           @if (s.status === 'Withdrawn') {
             <h1>{{ ct.withdrawnHeading }}</h1>

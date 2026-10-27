@@ -16,6 +16,8 @@ export interface GuardianApi {
   /** The consent page for one youth (L2-055). */
   consent(token: string): Observable<GuardianPageResult<GuardianConsent>>;
   giveConsent(token: string, answers: ConsentAnswers): Observable<WriteOutcome>;
+  /** Withdraws the consent in force (L2-058). */
+  withdrawConsent(token: string): Observable<WriteOutcome>;
   home(token: string): Observable<GuardianPageResult<GuardianHome>>;
   survey(token: string): Observable<GuardianPageResult<GuardianSurvey>>;
   /** Asks for a copy (Export) or deletion (Delete) of the household's data (L2-030 criterion 4). */

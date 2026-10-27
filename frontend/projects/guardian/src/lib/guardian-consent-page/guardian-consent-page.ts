@@ -18,6 +18,7 @@ import {
   PhCard,
   PhCheckbox,
   PhDescriptionList,
+  PhDialogs,
   PhEmptyState,
   PhGuardianShell,
   PhSelect,
@@ -26,6 +27,7 @@ import {
 } from '@promisehub/components';
 import { RELATIONSHIPS, consentText } from '../consent-text';
 import { GuardianLanguage, guardianText } from '../guardian-text';
+import { WithdrawConsentDialog } from '../withdraw-consent-dialog/withdraw-consent-dialog';
 
 type Step = 'contact' | 'code' | 'locked';
 
@@ -56,6 +58,7 @@ const LOCALE: Record<GuardianLanguage, string> = { en: 'en-GB', es: 'es', fr: 'f
 export class GuardianConsentPage {
   private readonly api = inject(GUARDIAN_API);
   private readonly document = inject(DOCUMENT);
+  private readonly dialogs = inject(PhDialogs);
 
   readonly token = input.required<string>();
 
@@ -154,6 +157,24 @@ export class GuardianConsentPage {
       else if (r.status === 'gone') this.load(this.token());
       else this.failed.set(true);
     });
+  }
+
+  /** Confirms in a dialog (dialog: withdraw-consent); afterwards the page shows the withdrawn state with the form. */
+  protected withdraw(s: GuardianConsent): void {
+    this.dialogs
+      .open<
+        boolean,
+        { token: string; child: string; text: ReturnType<typeof consentText> },
+        WithdrawConsentDialog
+      >(WithdrawConsentDialog, { token: this.token(), child: s.child.firstName, text: this.c() })
+      .closed.subscribe((done) => {
+        if (!done) return;
+        this.justSigned.set(false);
+        this.name = '';
+        this.relationship = '';
+        this.agree = false;
+        this.load(this.token());
+      });
   }
 
   protected give(): void {

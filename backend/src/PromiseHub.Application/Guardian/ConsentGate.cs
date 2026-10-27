@@ -18,7 +18,9 @@ public sealed class ConsentGate(IPromiseHubDb db, ITenantContext tenant, TimePro
         var youth = await db.Memberships.AsNoTracking()
             .AnyAsync(m => m.OrganizationId == tenant.OrganizationId && m.ChildId == childId && m.Role == Role.Youth && m.RemovedAt == null, cancellationToken);
         var childAge = child?.AgeOn(DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime));
-        var latest = await db.GuardianConsents.AsNoTracking().Where(c => c.ChildId == childId).OrderByDescending(c => c.SignedAt).FirstOrDefaultAsync(cancellationToken);
+        var consents = await db.GuardianConsents.AsNoTracking().Where(c => c.ChildId == childId).ToListAsync(cancellationToken);
+        // The consent in force when there is one (at most one at a time), otherwise the latest withdrawn one.
+        var latest = consents.FirstOrDefault(c => c.InForce) ?? consents.OrderByDescending(c => c.SignedAt).FirstOrDefault();
         return new ConsentStatus(child is not null && youth && (childAge is null || childAge < age), age, latest);
     }
 
