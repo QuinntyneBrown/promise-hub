@@ -6,7 +6,10 @@ import type { CohortMentoring } from './cohort-mentoring';
 import type { MentorCohort } from './mentor-cohort';
 import type { MentorDashboard } from './mentor-dashboard';
 import type { MentorYouthRecord } from './mentor-youth-record';
+import type { GradeOutcome } from './grade-outcome';
+import type { GradeRequest } from './grade-request';
 import type { ReviewQueue } from './review-queue';
+import type { SubmissionReview } from './submission-review';
 
 /** Mentoring (ADR 0043, ADR 0048): the calling mentor’s youth, and a cohort’s mentors set by program directors. */
 export interface MentoringApi {
@@ -19,6 +22,11 @@ export interface MentoringApi {
   mentorCohort(programId: string): Observable<LoadResult<MentorCohort>>;
   /** Work from the caller's youth waiting for them, oldest first; not found while Learning is off. */
   reviews(): Observable<LoadResult<ReviewQueue>>;
+  /** One of the caller's youth's submissions to grade; the first open starts the review. */
+  submissionReview(id: string): Observable<LoadResult<SubmissionReview>>;
+  /** Where the submission's file downloads from, under the caller's session. */
+  submissionFileUrl(id: string): string;
+  grade(id: string, request: GradeRequest): Observable<GradeOutcome>;
   /** A cohort's team, each roster child's mentor and the active mentors; only while Mentoring is on. */
   cohort(programId: string): Observable<LoadResult<CohortMentoring>>;
   assignYouth(

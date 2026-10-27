@@ -625,12 +625,12 @@ G_NOTE = "Great story, Sofía! Can you add a line about one thing you noticed? T
 
 def revision_body(err):
     err = err or {}
-    return (textarea("revision-note", "What should she change?", value="" if "revision-note" in err else G_NOTE, rows=4, error=err.get("revision-note", ""),
+    return (textarea("revision-note", "What should they change?", value="" if "revision-note" in err else G_NOTE, rows=4, error=err.get("revision-note", ""),
                      help_="Sofía sees this note on her submission and in her notifications, and can resubmit.", attrs=" required autofocus"))
 
 
 simple("request-revision", "Request a revision", "mentor-grade", ["L2-080", "L2-065", "L1-024"], "Sofía gets your note and can resubmit.",
-       revision_body, "Send request", icon_name="edit", invalid_err={"revision-note": "Write what she should change."},
+       revision_body, "Send request", icon_name="edit", invalid_err={"revision-note": "Write what they should change."},
        failed_text="Nothing was sent. Your note is still here; try again.")
 
 simple("approve-submission", "Approve Sofía’s submission?", "mentor-grade", ["L2-080", "L2-065", "L1-024"], "Serve someone this week · 25 of 25 points",
@@ -652,3 +652,14 @@ simple("approve-quiz", "Approve this quiz score?", "mentor-quiz-approvals", ["L2
 simple("approve-all-quizzes", "Approve all 2 quiz scores?", "mentor-quiz-approvals", ["L2-081", "L2-065", "L1-024"], "Each is approved at its auto-score",
        lambda e: '<p>Nadia Haddad · Knowing Yourself quiz · 75%<br>Sofía Rivera · Leading by Serving quiz · 50%</p><p class="text-muted">To change a score, approve it on its own instead.</p>',
        "Approve all", icon_name="check", form=False, failed_text="Nothing was approved. Try again.")
+
+
+@screen("leave-grade", "dialog", "Leave without saving your grade?", opens_from="mentor-grade", reqs=["L2-080", "L1-024"],
+        na={"busy": "Leaving or staying is instant; Save draft and leave shows the page's own busy Save draft.",
+            "invalid": "The dialog has no inputs to validate.",
+            "failed": "A failed draft save keeps the page open with its own failed alert."})
+def leave_grade(S):
+    body = '<p>Save them as a draft to finish later; the youth still sees In review. Or leave and lose them.</p>'
+    S.add("default", "Leaving mentor-grade with unsaved scores or a comment: Keep editing, Save draft and leave, or the quiet Leave without saving. Escape keeps editing.",
+          **over("mentor-grade", "default", overlays=dialog_box("Leave without saving your grade?", "Your scores and comment haven’t been saved.", body,
+                                                              btn("Leave without saving", "ghost") + footer("Save draft and leave", cancel="Keep editing"), icon_name="alert-triangle")))

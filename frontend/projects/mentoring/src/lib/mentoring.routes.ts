@@ -3,7 +3,9 @@ import { MentorDashboardPage } from './mentor-dashboard-page/mentor-dashboard-pa
 import { MentorGroupPage } from './mentor-group-page/mentor-group-page';
 import { MentorYouthDetailPage } from './mentor-youth-detail-page/mentor-youth-detail-page';
 import { MentorYouthPage } from './mentor-youth-page/mentor-youth-page';
+import { GradePage } from './grade-page/grade-page';
 import { ReviewsPage } from './reviews-page/reviews-page';
+import { unsavedGradeGuard } from './unsaved-grade.guard';
 
 export const routes: Routes = [
   { path: '', component: MentorDashboardPage, title: 'Mentoring · PromiseHub' },
@@ -15,4 +17,10 @@ export const routes: Routes = [
 /** Reviews, grading and quiz approval: loaded only while Mentoring and Learning are both on (ADR 0057). */
 export const reviewRoutes: Routes = [
   { path: '', component: ReviewsPage, title: 'Reviews · PromiseHub' },
+  {
+    path: 'submissions/:id',
+    component: GradePage,
+    title: 'Grade a submission · PromiseHub',
+    canDeactivate: [unsavedGradeGuard],
+  },
 ];

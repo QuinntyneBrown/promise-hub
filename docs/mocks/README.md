@@ -303,6 +303,7 @@ Legend: ✅ mock exists · ➖ not applicable (reason in manifest) · ❌ missin
 | Approve Sofía’s submission? (`approve-submission`) | [✅](dialogs/approve-submission/default.html) | [✅](dialogs/approve-submission/busy.html) | ➖ | [✅](dialogs/approve-submission/failed.html) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | `L2-080`, `L2-065`, `L1-024` |
 | Approve this quiz score? (`approve-quiz`) | [✅](dialogs/approve-quiz/default.html) | [✅](dialogs/approve-quiz/busy.html) | [✅](dialogs/approve-quiz/invalid.html) | [✅](dialogs/approve-quiz/failed.html) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | `L2-081`, `L2-065`, `L1-024` |
 | Approve all 2 quiz scores? (`approve-all-quizzes`) | [✅](dialogs/approve-all-quizzes/default.html) | [✅](dialogs/approve-all-quizzes/busy.html) | ➖ | [✅](dialogs/approve-all-quizzes/failed.html) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | `L2-081`, `L2-065`, `L1-024` |
+| Leave without saving your grade? (`leave-grade`) | [✅](dialogs/leave-grade/default.html) | ➖ | ➖ | ➖ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | `L2-080`, `L1-024` |
 
 ### Notifications
 

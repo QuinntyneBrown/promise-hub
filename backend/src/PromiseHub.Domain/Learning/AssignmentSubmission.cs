@@ -5,7 +5,8 @@ namespace PromiseHub.Domain.Learning;
 /// <summary>
 /// One youth membership's work for one assignment (L2-077, L2-078, ADR 0056): her reflection, link and at most one stored file, whether it
 /// was late, its status and round, and the mentor's feedback and points. Read only to her except when a revision is asked for.
-/// Every change returns the history step it makes.
+/// Every change returns the history step it makes and advances <see cref="Version"/>, the concurrency token a grade is checked against
+/// (L2-083, ADR 0057).
 /// </summary>
 public sealed class AssignmentSubmission : ITenantOwned
 {
@@ -26,6 +27,7 @@ public sealed class AssignmentSubmission : ITenantOwned
         SubmittedAt = submittedAt;
         Status = SubmissionStatus.Submitted;
         Round = 1;
+        Version = 1;
     }
 
     public Guid Id { get; private set; }
@@ -58,6 +60,15 @@ public sealed class AssignmentSubmission : ITenantOwned
 
     /// <summary>Points awarded of the assignment's total, once accepted.</summary>
     public int? Points { get; private set; }
+
+    /// <summary>The mentor's scores per rubric criterion as JSON ({"criterionId": points}), draft or final; never shown to the youth.</summary>
+    public string? Scores { get; private set; }
+
+    /// <summary>The mentor's comment as last saved on the grade page; the youth sees it only as <see cref="Feedback"/> once graded.</summary>
+    public string? ReviewComment { get; private set; }
+
+    /// <summary>Advanced by every change; a grade names the version it was read at (L2-083).</summary>
+    public int Version { get; private set; }
 
     public void AttachFile(string name, SubmissionFileKind kind, string contentType, long bytes, string key)
     {
@@ -92,30 +103,42 @@ public sealed class AssignmentSubmission : ITenantOwned
         Round++;
         SubmittedAt = at;
         Status = SubmissionStatus.Submitted;
+        Version++;
         return new(Guid.NewGuid(), OrganizationId, Id, SubmissionEventKind.Resubmitted, actorName, null, at);
     }
 
-    /// <summary>The mentor starts reviewing it (prompt 63).</summary>
+    /// <summary>The mentor keeps scores and a comment without changing anything the youth sees (L2-080 criterion 3).</summary>
+    public void SaveDraftGrade(string? scores, string? comment)
+    {
+        Scores = scores;
+        ReviewComment = comment;
+        Version++;
+    }
+
+    /// <summary>The mentor opens it for the first time (L2-080 criterion 2).</summary>
     public SubmissionEvent StartReview(string mentorName, DateTimeOffset at)
     {
         Status = SubmissionStatus.InReview;
         ReviewerName = mentorName;
+        Version++;
         return new(Guid.NewGuid(), OrganizationId, Id, SubmissionEventKind.ReviewStarted, mentorName, null, at);
     }
 
-    /// <summary>The mentor sends it back with a note (prompt 63).</summary>
+    /// <summary>The mentor sends it back with a note (L2-080 criterion 5).</summary>
     public SubmissionEvent RequestRevision(string note, string mentorName, DateTimeOffset at)
     {
         Status = SubmissionStatus.NeedsRevision;
+        Version++;
         Feedback = note;
         ReviewerName = mentorName;
         return new(Guid.NewGuid(), OrganizationId, Id, SubmissionEventKind.RevisionRequested, mentorName, note, at);
     }
 
-    /// <summary>The mentor accepts it with the points awarded and a comment (prompt 63).</summary>
+    /// <summary>The mentor accepts it with the points awarded and a comment (L2-080 criterion 4).</summary>
     public SubmissionEvent Accept(int points, string? note, string mentorName, DateTimeOffset at)
     {
         Status = SubmissionStatus.Accepted;
+        Version++;
         Points = points;
         Feedback = note;
         ReviewerName = mentorName;

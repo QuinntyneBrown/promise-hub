@@ -3553,6 +3553,24 @@
       }
     },
     {
+      "id": "leave-grade",
+      "kind": "dialog",
+      "title": "Leave without saving your grade?",
+      "opens_from": "mentor-grade",
+      "requirements": [
+        "L2-080",
+        "L1-024"
+      ],
+      "states": [
+        "default"
+      ],
+      "not_applicable": {
+        "busy": "Leaving or staying is instant; Save draft and leave shows the page's own busy Save draft.",
+        "invalid": "The dialog has no inputs to validate.",
+        "failed": "A failed draft save keeps the page open with its own failed alert."
+      }
+    },
+    {
       "id": "toast",
       "kind": "notification",
       "title": "Toast",

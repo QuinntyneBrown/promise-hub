@@ -1756,12 +1756,20 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.Property<int?>("Points")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("ReviewComment")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ReviewerName")
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Round")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Scores")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -1774,6 +1782,10 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.Property<string>("Text")
                         .HasMaxLength(5000)
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 

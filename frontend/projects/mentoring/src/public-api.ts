@@ -4,3 +4,7 @@ export { MentorYouthPage } from './lib/mentor-youth-page/mentor-youth-page';
 export { MentorYouthDetailPage } from './lib/mentor-youth-detail-page/mentor-youth-detail-page';
 export { MentorGroupPage } from './lib/mentor-group-page/mentor-group-page';
 export { ReviewsPage } from './lib/reviews-page/reviews-page';
+export { GradePage } from './lib/grade-page/grade-page';
+export { ApproveSubmissionDialog } from './lib/approve-submission-dialog/approve-submission-dialog';
+export { RequestRevisionDialog } from './lib/request-revision-dialog/request-revision-dialog';
+export { LeaveGradeDialog } from './lib/leave-grade-dialog/leave-grade-dialog';

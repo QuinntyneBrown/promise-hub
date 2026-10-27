@@ -251,6 +251,9 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(a => a.Status).HasConversion<string>().HasMaxLength(20);
             e.Property(a => a.Feedback).HasMaxLength(Domain.Learning.AssignmentSubmission.MaximumFeedback);
             e.Property(a => a.ReviewerName).HasMaxLength(200);
+            e.Property(a => a.Scores).HasMaxLength(2000);
+            e.Property(a => a.ReviewComment).HasMaxLength(Domain.Learning.AssignmentSubmission.MaximumFeedback);
+            e.Property(a => a.Version).IsConcurrencyToken();
             e.Property(a => a.SubmittedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.HasOne<Membership>().WithMany().HasForeignKey(a => a.MembershipId);
             e.HasOne<Domain.Curriculum.Assignment>().WithMany().HasForeignKey(a => a.AssignmentId);

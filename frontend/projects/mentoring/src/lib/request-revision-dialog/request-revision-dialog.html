@@ -1,0 +1,34 @@
+<ph-dialog
+  title="Request a revision"
+  [description]="data.youthFirstName + ' gets your note and can resubmit.'"
+  icon="edit"
+>
+  <form class="stack" (ngSubmit)="send()">
+    @if (failed()) {
+      <ph-alert
+        tone="danger"
+        title="That didn’t go through"
+        text="Nothing was sent. Your note is still here; try again."
+      />
+    }
+    <ph-textarea
+      inputId="revision-note"
+      label="What should they change?"
+      [rows]="4"
+      [help]="
+        data.youthFirstName +
+        ' sees this note on their submission and in their notifications, and can resubmit.'
+      "
+      [error]="error()"
+      name="note"
+      [ngModel]="note()"
+      (ngModelChange)="note.set($event)"
+    />
+  </form>
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close()">Cancel</ph-button>
+    <ph-button variant="primary" icon="send" [busy]="busy()" (click)="send()"
+      >Send request</ph-button
+    >
+  </ng-container>
+</ph-dialog>

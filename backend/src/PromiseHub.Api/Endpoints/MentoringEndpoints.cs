@@ -29,6 +29,14 @@ public static class MentoringEndpoints
         });
         var reviews = mentoring.MapGroup("").RequireModule(ModuleId.Learning);
         reviews.MapGet("/reviews", (ReviewQueueHandler handler, CancellationToken ct) => handler.HandleAsync(ct));
+        reviews.MapGet("/submissions/{id:guid}", async (Guid id, SubmissionReviewHandler handler, CancellationToken ct) => (await handler.HandleAsync(id, ct)).ToHttp());
+        reviews.MapGet("/submissions/{id:guid}/file", async (Guid id, SubmissionReviewHandler handler, CancellationToken ct) =>
+        {
+            var file = await handler.FileAsync(id, ct);
+            return file.Value is { } f ? Results.File(f.Content, f.ContentType, f.FileName) : file.ToHttp();
+        });
+        reviews.MapPost("/submissions/{id:guid}/grade", async (Guid id, GradeRequest request, GradeSubmissionHandler handler, CancellationToken ct) =>
+            (await handler.HandleAsync(id, request, ct)).ToHttp());
         return app;
     }
 }

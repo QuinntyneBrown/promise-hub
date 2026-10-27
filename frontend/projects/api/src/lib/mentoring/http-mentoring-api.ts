@@ -11,7 +11,11 @@ import { MentorCohort } from './mentor-cohort';
 import { MentorDashboard } from './mentor-dashboard';
 import { MentorYouthRecord } from './mentor-youth-record';
 import { MentoringApi } from './mentoring-api';
+import { GradeOutcome } from './grade-outcome';
+import { GradeRequest } from './grade-request';
 import { ReviewQueue } from './review-queue';
+import { SubmissionReview } from './submission-review';
+import { toGradeOutcome } from './to-grade-outcome';
 
 @Injectable()
 export class HttpMentoringApi implements MentoringApi {
@@ -36,6 +40,27 @@ export class HttpMentoringApi implements MentoringApi {
 
   reviews(): Observable<LoadResult<ReviewQueue>> {
     return toLoad(this.http.get<ReviewQueue>(`${this.baseUrl}/mentoring/reviews`));
+  }
+
+  submissionReview(id: string): Observable<LoadResult<SubmissionReview>> {
+    return toLoad(
+      this.http.get<SubmissionReview>(
+        `${this.baseUrl}/mentoring/submissions/${encodeURIComponent(id)}`,
+      ),
+    );
+  }
+
+  submissionFileUrl(id: string): string {
+    return `${this.baseUrl}/mentoring/submissions/${encodeURIComponent(id)}/file`;
+  }
+
+  grade(id: string, request: GradeRequest): Observable<GradeOutcome> {
+    return toGradeOutcome(
+      this.http.post<{ status: string; points: number | null; version: number }>(
+        `${this.baseUrl}/mentoring/submissions/${encodeURIComponent(id)}/grade`,
+        request,
+      ),
+    );
   }
 
   cohort(programId: string): Observable<LoadResult<CohortMentoring>> {
