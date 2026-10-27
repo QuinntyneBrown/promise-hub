@@ -84,6 +84,7 @@ public sealed class LearningCodingTests : IAsyncLifetime
     public async Task Other_roles_another_organization_and_Learning_off_are_refused()
     {
         Assert.Equal(HttpStatusCode.Forbidden, (await _factory.ClientFor(Daniel).GetAsync($"/learning/coding/{_c.Strengths}")).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await _factory.ClientFor(Daniel).PutAsJsonAsync($"/learning/coding/{_c.Strengths}/progress", new { code = "<p>x</p>", checkedStepIds = Array.Empty<Guid>() })).StatusCode);
         await _factory.ClientFor(Grace).PutAsJsonAsync("/settings/modules", new { on = new[] { "Roster", "RollCall", "QuickCards", "Learning" } });
         await _factory.ClientFor(Grace).PutAsJsonAsync("/settings/consent", new { consentAge = 13, wording = "We agree that our child may join lessons and mentoring." });
         await _factory.ClientFor(Grace).PostAsJsonAsync($"/programs/{DatabaseSeeder.ProgramId(DatabaseSeeder.Northgate, "Kids Club")}/enrollments", new { childId = DatabaseSeeder.ChildId(DatabaseSeeder.Northgate, "Lucía Rivera") });
@@ -92,6 +93,7 @@ public sealed class LearningCodingTests : IAsyncLifetime
 
         await _factory.ClientFor(LearningContent.Tom).PutAsJsonAsync("/settings/modules", new { on = Suite });
         Assert.Equal(HttpStatusCode.NotFound, (await _factory.ClientFor(LearningContent.Nadia).GetAsync($"/learning/coding/{_c.Strengths}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await Save(_c.Strengths, "<p>x</p>")).StatusCode);
     }
 
     private Task<HttpResponseMessage> Save(Guid lesson, string code, params Guid[] ticks) =>

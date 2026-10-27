@@ -10,6 +10,7 @@ namespace PromiseHub.Api.Tests;
 public sealed class LearningProjectTests : IAsyncLifetime
 {
     private static readonly Guid Grace = DatabaseSeeder.MembershipId(DatabaseSeeder.Northgate, "grace@northgate.example");
+    private static readonly Guid Daniel = DatabaseSeeder.MembershipId(DatabaseSeeder.Harbourview, "daniel@harbourview.example");
     private static readonly Guid Lucia = DatabaseSeeder.MembershipId(DatabaseSeeder.Northgate, "lucia@northgate.example");
     private static readonly string[] Suite = ["Roster", "Slips", "RollCall", "QuickCards", "Pickup", "Messages", "Incidents", "Reports"];
 
@@ -63,8 +64,9 @@ public sealed class LearningProjectTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Only_an_open_project_of_her_own_organization_takes_a_submission()
+    public async Task Only_an_open_project_of_her_own_organization_takes_a_submission_from_a_youth()
     {
+        Assert.Equal(HttpStatusCode.Forbidden, (await _factory.ClientFor(Daniel).PostAsJsonAsync($"/learning/coding/{_c.Strengths}/submission", new { code = "<p>x</p>" })).StatusCode);
         Execute($"UPDATE Lessons SET Kind = 'Project' WHERE upper(Id) = upper('{_c.Values}')");
         Assert.Equal(HttpStatusCode.Forbidden, (await Submit(_c.Values, "<p>Hi</p>", null)).StatusCode);
         Execute($"UPDATE Lessons SET Kind = 'Coding' WHERE upper(Id) = upper('{_c.Strengths}')");
