@@ -1,0 +1,29 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Author badges
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(list, "BadgesPage", "Angular page", "curriculum-badge list")
+  Component(builder, "BadgeBuilderPage", "Angular page", "curriculum-badge new and edit")
+  Component(dlg, "DeleteBadgeDialog", "CDK dialog", "delete-badge")
+  Component(medal, "PhAchievementBadge", "components library", "medal preview")
+  Component(capi, "CurriculumApi", "Contract + HTTP client", "CURRICULUM_API")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "CurriculumEndpoints", "Minimal API", "Learning gate, AuthorCurriculum")
+  Component(read, "BadgesHandler", "Handler", "list, one badge, options")
+  Component(cmd, "BadgeCommands", "Handler", "create, update, delete")
+  Component(rules, "BadgeRules", "Rules", "name, icon, kind, rule and target checks")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Badges, BadgeAwards")
+}
+Rel(list, capi, "badges")
+Rel(builder, capi, "badge, badgeOptions, createBadge, updateBadge")
+Rel(builder, medal, "renders")
+Rel(dlg, capi, "deleteBadge")
+Rel(capi, ep, "JSON/HTTPS")
+Rel(ep, read, "GET")
+Rel(ep, cmd, "POST / PUT / DELETE")
+Rel(cmd, rules, "validates")
+Rel(read, db, "reads")
+Rel(cmd, db, "writes + audit")
+@enduml

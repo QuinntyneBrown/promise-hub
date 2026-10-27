@@ -1,0 +1,43 @@
+@startuml
+title UML sequence behaviour — Adding a stage and a competency
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Program director (Marisol)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "ProgressionPage" as page
+  participant "ProgressionStageDialog / ProgressionCompetencyDialog" as dlg
+  participant "CurriculumApi" as capi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "CurriculumEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "ProgressionCommands" as cmd
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : Add stage
+page -> dlg : open
+actor -> dlg : Mentor, Helps a newer youth find their feet
+dlg -> capi : addStage(fields)
+capi -> ep : POST /curriculum/progression/stages (Learning on, AuthorCurriculum — L2-086 c7)
+ep -> cmd : AddStageAsync
+alt invalid
+  cmd --> dlg : 422 name or description
+else
+  cmd -> db : ProgressionStage last + audit Created (L2-086 c2)
+  cmd --> dlg : 201
+end
+dlg --> page : closed; reload; toast
+actor -> page : Add competency to Mentor
+page -> dlg : open (stage)
+dlg -> capi : addCompetency(stageId, fields)
+capi -> ep : POST /curriculum/progression/stages/{id}/competencies
+ep -> cmd : AddCompetencyAsync
+cmd -> db : Competency after the others + audit Created (L2-086 c4)
+note right of db : mentors assess it from now on (L2-082)
+@enduml

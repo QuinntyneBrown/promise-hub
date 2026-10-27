@@ -1,0 +1,14 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Award badges
+Person(user, "Program director", "Laptop or phone browser")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular 22", "curriculum library, api client, components")
+  Container(api, "PromiseHub API", "ASP.NET Core, .NET 10", "Endpoints, Learning gate, AuthorCurriculum permission, handlers")
+  ContainerDb(db, "PromiseHub database", "SQLite via EF Core", "Tenant-filtered rows")
+}
+Rel(user, web, "Uses", "HTTPS")
+Rel(web, api, "Calls", "JSON/HTTPS")
+Rel(api, db, "Reads and writes", "EF Core")
+@enduml

@@ -1877,3 +1877,13 @@ li.quiz-option:hover { border-color: var(--color-border-strong); }
 .quiz-review__question { margin: 0; font: var(--text-label); overflow-wrap: anywhere; }
 .quiz-review__options { margin: var(--space-2) 0 0; padding: 0; }
 @media (forced-colors: active) { .quiz-option--selected, .quiz-option:has(.quiz-option__input:checked) { border: var(--border-width-thick) solid Highlight; } }
+
+/* Achievement badge (prompt 64, L2-084): a badge youth earn, as a medal with its name and how it is earned. Locked is muted and says so in words. */
+.achievement-badge { display: grid; justify-items: center; align-content: start; gap: var(--space-2); max-width: 14rem; margin-inline: auto; text-align: center; }
+.achievement-badge__medal { display: grid; place-items: center; width: var(--size-avatar-xl); height: var(--size-avatar-xl); border-radius: var(--radius-full); border: var(--border-width-thick) solid var(--color-accent); background: var(--color-accent-subtle); color: var(--color-fg-accent); }
+.achievement-badge__medal .icon { width: var(--size-icon-lg); height: var(--size-icon-lg); }
+.achievement-badge__name { font: var(--text-label); color: var(--color-fg-default); overflow-wrap: anywhere; }
+.achievement-badge__caption { font: var(--text-caption); color: var(--color-fg-muted); overflow-wrap: anywhere; }
+.achievement-badge--locked .achievement-badge__medal { border-color: var(--color-border-strong); background: var(--color-bg-subtle); color: var(--color-fg-muted); }
+.achievement-badge--sm .achievement-badge__medal { width: var(--size-avatar-md); height: var(--size-avatar-md); border-width: var(--border-width-hairline); }
+.achievement-badge--sm .achievement-badge__medal .icon { width: var(--size-icon-md); height: var(--size-icon-md); }

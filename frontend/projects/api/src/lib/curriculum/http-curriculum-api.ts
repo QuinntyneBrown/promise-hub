@@ -7,6 +7,12 @@ import { LoadResult } from '../load-result';
 import { WriteOutcome } from '../write-outcome';
 import { AssignmentDetail } from './assignment-detail';
 import { AssignmentFields } from './assignment-fields';
+import { AwardOutcome } from './award-outcome';
+import { toAwardOutcome } from './to-award-outcome';
+import { BadgeDetail } from './badge-detail';
+import { BadgeFields } from './badge-fields';
+import { BadgeList } from './badge-list';
+import { BadgeOptions } from './badge-options';
 import { CurriculumApi } from './curriculum-api';
 import { ContentStatus } from './content-status';
 import { Curriculum } from './curriculum';
@@ -14,6 +20,8 @@ import { LessonDetail } from './lesson-detail';
 import { LessonFields } from './lesson-fields';
 import { ModuleDetail } from './module-detail';
 import { ModuleFields } from './module-fields';
+import { Progression } from './progression';
+import { StageFields } from './stage-fields';
 import { NewTrack } from './new-track';
 import { QuestionFields } from './question-fields';
 import { QuizDetail } from './quiz-detail';
@@ -194,6 +202,75 @@ export class HttpCurriculumApi implements CurriculumApi {
   setAssignmentStatus(id: string, status: ContentStatus): Observable<WriteOutcome> {
     return toWrite(
       this.http.put<null>(`${this.baseUrl}/curriculum/assignments/${id}/status`, { status }),
+    );
+  }
+
+  badges(): Observable<LoadResult<BadgeList>> {
+    return toLoad(this.http.get<BadgeList>(`${this.baseUrl}/curriculum/badges`));
+  }
+
+  badgeOptions(): Observable<LoadResult<BadgeOptions>> {
+    return toLoad(this.http.get<BadgeOptions>(`${this.baseUrl}/curriculum/badges/options`));
+  }
+
+  badge(id: string): Observable<LoadResult<BadgeDetail>> {
+    return toLoad(this.http.get<BadgeDetail>(`${this.baseUrl}/curriculum/badges/${id}`));
+  }
+
+  createBadge(fields: BadgeFields): Observable<WriteOutcome> {
+    return toWrite(this.http.post<{ id: string }>(`${this.baseUrl}/curriculum/badges`, fields));
+  }
+
+  updateBadge(id: string, fields: BadgeFields): Observable<WriteOutcome> {
+    return toWrite(this.http.put<null>(`${this.baseUrl}/curriculum/badges/${id}`, fields));
+  }
+
+  deleteBadge(id: string): Observable<WriteOutcome> {
+    return toWrite(this.http.delete<null>(`${this.baseUrl}/curriculum/badges/${id}`));
+  }
+
+  awardBadge(id: string, membershipId: string | null): Observable<AwardOutcome> {
+    return toAwardOutcome(
+      this.http.post<{ id: string }>(`${this.baseUrl}/curriculum/badges/${id}/awards`, {
+        membershipId,
+      }),
+    );
+  }
+
+  progression(): Observable<LoadResult<Progression>> {
+    return toLoad(this.http.get<Progression>(`${this.baseUrl}/curriculum/progression`));
+  }
+
+  addStage(fields: StageFields): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<{ id: string }>(`${this.baseUrl}/curriculum/progression/stages`, fields),
+    );
+  }
+
+  updateStage(id: string, fields: StageFields): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.put<null>(`${this.baseUrl}/curriculum/progression/stages/${id}`, fields),
+    );
+  }
+
+  reorderStages(stageIds: string[]): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.put<null>(`${this.baseUrl}/curriculum/progression/stage-order`, { stageIds }),
+    );
+  }
+
+  addCompetency(stageId: string, fields: StageFields): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<{ id: string }>(
+        `${this.baseUrl}/curriculum/progression/stages/${stageId}/competencies`,
+        fields,
+      ),
+    );
+  }
+
+  removeCompetency(id: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.delete<null>(`${this.baseUrl}/curriculum/progression/competencies/${id}`),
     );
   }
 }

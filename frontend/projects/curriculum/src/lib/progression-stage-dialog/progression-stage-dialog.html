@@ -1,0 +1,44 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    [title]="data.stage ? 'Edit ' + data.stage.name : 'Add stage'"
+    [description]="
+      data.stage
+        ? 'A stage is a step on a youth’s journey.'
+        : 'A stage is a step on a youth’s journey. It is added last.'
+    "
+    icon="programs"
+  >
+    <div class="stack">
+      @if (failed()) {
+        <ph-alert
+          tone="danger"
+          title="That didn’t go through"
+          text="The stage was not saved. Try again."
+        />
+      }
+      <ph-text-field
+        inputId="stage-name"
+        label="Stage name"
+        name="name"
+        help="Up to 60 characters."
+        [error]="errors()['name'] ?? null"
+        [(ngModel)]="name"
+      />
+      <ph-text-field
+        inputId="stage-description"
+        label="Short description"
+        name="description"
+        help="Up to 200 characters."
+        [optional]="true"
+        [error]="errors()['description'] ?? null"
+        [(ngModel)]="description"
+      />
+    </div>
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">{{
+        data.stage ? 'Save stage' : 'Add stage'
+      }}</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

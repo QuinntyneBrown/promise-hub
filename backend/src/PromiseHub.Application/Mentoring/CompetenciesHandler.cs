@@ -24,7 +24,7 @@ public sealed class CompetenciesHandler(IPromiseHubDb db, ITenantContext tenant,
         {
             return (refused, null);
         }
-        var competencies = await db.Competencies.AsNoTracking().ToDictionaryAsync(c => c.Id, cancellationToken);
+        var competencies = await db.Competencies.AsNoTracking().Where(c => c.RemovedAt == null).ToDictionaryAsync(c => c.Id, cancellationToken);
         var items = request.Items ?? [];
         var errors = new Dictionary<string, string>();
         var levels = new CompetencyLevel[items.Count];
@@ -93,7 +93,7 @@ public sealed class CompetenciesHandler(IPromiseHubDb db, ITenantContext tenant,
     private async Task<CompetencySheetDto> SheetAsync(Guid childId, CancellationToken cancellationToken)
     {
         var child = await db.Children.AsNoTracking().FirstAsync(c => c.Id == childId, cancellationToken);
-        var competencies = await db.Competencies.AsNoTracking().OrderBy(c => c.Position).ToListAsync(cancellationToken);
+        var competencies = await db.Competencies.AsNoTracking().Where(c => c.RemovedAt == null).OrderBy(c => c.Position).ToListAsync(cancellationToken);
         var latest = await LatestAsync(childId, cancellationToken);
         var items = competencies.Select(c =>
         {

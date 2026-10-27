@@ -1,0 +1,39 @@
+@startuml
+title Class structure — Author the progression framework
+skinparam classAttributeIconSize 0
+class ProgressionStage {
+  +Id : Guid
+  +OrganizationId : Guid
+  +Position : int
+  +Name : string
+  +Description : string
+  +Rename(name, description)
+  +MoveTo(position)
+}
+class Competency {
+  +Id : Guid
+  +OrganizationId : Guid
+  +StageId : Guid?
+  +Position : int
+  +Name : string
+  +Description : string
+  +RemovedAt : DateTimeOffset?
+  +Remove(at)
+}
+class CompetencyAssessment {
+  +ChildId : Guid
+  +CompetencyId : Guid
+  +Level : CompetencyLevel
+}
+class ProgressionCommands {
+  +AddStageAsync(StageCommand)
+  +UpdateStageAsync(id, StageCommand)
+  +ReorderAsync(stageIds)
+  +AddCompetencyAsync(stageId, CompetencyCommand)
+  +RemoveCompetencyAsync(id)
+}
+ProgressionStage "1" o-- "*" Competency : earned through
+Competency "1" o-- "*" CompetencyAssessment : kept after removal
+ProgressionCommands ..> ProgressionStage
+ProgressionCommands ..> Competency
+@enduml

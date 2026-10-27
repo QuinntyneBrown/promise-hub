@@ -1,0 +1,39 @@
+@startuml
+title UML sequence behaviour — Creating an automatic badge
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Program director (Marisol)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "BadgeBuilderPage" as page
+  participant "CurriculumApi" as capi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "CurriculumEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "BadgeCommands" as cmd
+  participant "BadgeRules" as rules
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : New badge
+page -> capi : badgeOptions()
+capi -> ep : GET /curriculum/badges/options (Learning on, AuthorCurriculum — L2-084 c6)
+ep --> page : lessons, modules, quizzes, assignments, competencies
+actor -> page : name, icon, Automatically, Completes a module, Leading by Serving
+page -> capi : createBadge(fields)
+capi -> ep : POST /curriculum/badges
+ep -> cmd : CreateAsync
+cmd -> rules : check fields, rule and target of this organization (L2-084 c4)
+alt invalid
+  cmd --> page : 422 errors by field
+else valid
+  cmd -> db : Badge + AuditEntry Created (L2-084 c2)
+  cmd --> page : 201 id
+  page -> page : open /curriculum/badges/{id}
+end
+@enduml

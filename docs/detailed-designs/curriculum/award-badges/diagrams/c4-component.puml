@@ -1,0 +1,24 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Award badges
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(builder, "BadgeBuilderPage", "Angular page", "Earned by, Award badge")
+  Component(dlg, "AwardBadgeDialog", "CDK dialog", "award-badge")
+  Component(capi, "CurriculumApi", "Contract + HTTP client", "CURRICULUM_API")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "CurriculumEndpoints", "Minimal API", "POST /curriculum/badges/{id}/awards")
+  Component(award, "BadgeAwardCommand", "Handler", "award by hand")
+  Component(events, "LessonCompletion / QuizAttemptCommand / QuizApprovalHandler / GradeSubmissionHandler", "Handlers", "learning events")
+  Component(awarder, "BadgeAwarder", "Service", "evaluates automatic rules for one youth")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "BadgeAwards, Notifications, AuditEntries")
+}
+Rel(builder, dlg, "opens")
+Rel(dlg, capi, "awardBadge")
+Rel(capi, ep, "JSON/HTTPS")
+Rel(ep, award, "POST")
+Rel(events, awarder, "after each save")
+Rel(award, db, "award + notification + audit")
+Rel(awarder, db, "reads progress; writes awards")
+@enduml

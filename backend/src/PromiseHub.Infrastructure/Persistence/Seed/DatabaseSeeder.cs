@@ -117,28 +117,41 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
         Enroll(Northgate, kidsClub, "Mateo Rivera");
         Session(Northgate, kidsClub, "Kids Club night", At(2026, 11, 11, 18), At(2026, 11, 11, 19), "Northgate fellowship hall", slip: false);
 
-        // Each organization's competency framework until program directors author it (ADR 0057, prompt 64).
+        // Each organization's progression framework (ADR 0057, ADR 0058): stages, and the competencies mentors assess in the order of their sheet.
+        Stages(Harbourview, ("Explorer", "Finding their place in the group"), ("Contributor", "Takes part and helps others take part"), ("Leader", "Leads others in the cohort"));
         Competencies(Harbourview,
-            ("Serves others", "Notices what needs doing and helps without being asked."),
-            ("Speaks up", "Shares ideas in the group and says when something is wrong."),
-            ("Leads a small group", "Guides a discussion and keeps a small group on track."),
-            ("Follows through", "Finishes what they start and keeps their promises."),
-            ("Works with others", "Listens, takes turns and helps the group decide."));
+            ("Serves others", "Notices what needs doing and helps without being asked.", "Explorer"),
+            ("Speaks up", "Shares ideas in the group and says when something is wrong.", "Contributor"),
+            ("Leads a small group", "Guides a discussion and keeps a small group on track.", "Leader"),
+            ("Follows through", "Finishes what they start and keeps their promises.", "Contributor"),
+            ("Works with others", "Listens, takes turns and helps the group decide.", "Explorer"));
+        Stages(Northgate, ("Explorer", "Finding their place in the group"), ("Contributor", "Takes part and helps others take part"));
         Competencies(Northgate,
-            ("Shows kindness", "Includes others and helps when someone is left out."),
-            ("Tries new things", "Has a go at something new, even when it feels hard."),
-            ("Works with others", "Listens, takes turns and helps the group decide."));
+            ("Shows kindness", "Includes others and helps when someone is left out.", "Explorer"),
+            ("Tries new things", "Has a go at something new, even when it feels hard.", "Explorer"),
+            ("Works with others", "Listens, takes turns and helps the group decide.", "Contributor"));
 
         return await db.SaveChangesAsync(cancellationToken);
     }
 
     public static Guid CompetencyId(Guid organizationId, string name) => SeedIds.Of($"competency:{organizationId}:{name}");
 
-    private void Competencies(Guid organizationId, params (string Name, string Description)[] items)
+    public static Guid StageId(Guid organizationId, string name) => SeedIds.Of($"stage:{organizationId}:{name}");
+
+    private void Stages(Guid organizationId, params (string Name, string Description)[] items)
     {
         for (var i = 0; i < items.Length; i++)
         {
-            Add(new Domain.Mentoring.Competency(CompetencyId(organizationId, items[i].Name), organizationId, i + 1, items[i].Name, items[i].Description));
+            Add(new Domain.Curriculum.ProgressionStage(StageId(organizationId, items[i].Name), organizationId, i + 1, items[i].Name, items[i].Description));
+        }
+    }
+
+    private void Competencies(Guid organizationId, params (string Name, string Description, string Stage)[] items)
+    {
+        for (var i = 0; i < items.Length; i++)
+        {
+            Add(new Domain.Mentoring.Competency(CompetencyId(organizationId, items[i].Name), organizationId, i + 1, items[i].Name, items[i].Description,
+                StageId(organizationId, items[i].Stage)));
         }
     }
 

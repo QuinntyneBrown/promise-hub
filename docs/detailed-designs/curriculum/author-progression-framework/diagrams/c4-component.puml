@@ -1,0 +1,25 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Author the progression framework
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "ProgressionPage", "Angular page", "curriculum-progression")
+  Component(dlg, "ProgressionStageDialog / ProgressionCompetencyDialog / RemoveCompetencyDialog", "CDK dialogs", "stage, competency, remove")
+  Component(capi, "CurriculumApi", "Contract + HTTP client", "CURRICULUM_API")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "CurriculumEndpoints", "Minimal API", "Learning gate, AuthorCurriculum")
+  Component(read, "ProgressionHandler", "Handler", "stages with competencies")
+  Component(cmd, "ProgressionCommands", "Handler", "stages, order, competencies")
+  Component(sheet, "CompetenciesHandler", "Mentoring handler", "mentor's assessment sheet")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "ProgressionStages, Competencies")
+}
+Rel(page, capi, "progression, reorderStages")
+Rel(dlg, capi, "addStage, updateStage, addCompetency, removeCompetency")
+Rel(capi, ep, "JSON/HTTPS")
+Rel(ep, read, "GET")
+Rel(ep, cmd, "POST / PUT / DELETE")
+Rel(read, db, "reads")
+Rel(cmd, db, "writes + audit")
+Rel(sheet, db, "reads competencies not removed")
+@enduml

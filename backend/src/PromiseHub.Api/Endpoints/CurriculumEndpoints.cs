@@ -2,13 +2,14 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using PromiseHub.Api.Authorization;
 using PromiseHub.Api.Modules;
+using PromiseHub.Application;
 using PromiseHub.Application.Curriculum;
 using PromiseHub.Application.Identity;
 using PromiseHub.Domain.Organizations;
 
 namespace PromiseHub.Api.Endpoints;
 
-/// <summary>Curriculum authoring (L2-066, L2-067, L2-073, L2-074, ADR 0050, ADR 0054): the Learning module and AuthorCurriculum (admins and program directors) on every endpoint.</summary>
+/// <summary>Curriculum authoring (L2-066, L2-067, L2-073, L2-074, L2-084 to L2-086, ADR 0050, ADR 0054, ADR 0058): the Learning module and AuthorCurriculum (admins and program directors) on every endpoint.</summary>
 public static class CurriculumEndpoints
 {
     /// <summary>Room for the multipart boundaries and headers around one file.</summary>
@@ -70,6 +71,32 @@ public static class CurriculumEndpoints
             (await handler.UpdateAsync(id, command, ct)).ToHttp());
         curriculum.MapPut("/assignments/{id:guid}/status", async (Guid id, StatusCommand command, AssignmentCommands handler, CancellationToken ct) =>
             (await handler.SetStatusAsync(id, command.Status, ct)).ToHttp());
+        curriculum.MapGet("/badges", (BadgesHandler handler, CancellationToken ct) => handler.ListAsync(ct));
+        curriculum.MapGet("/badges/options", (BadgesHandler handler, CancellationToken ct) => handler.OptionsAsync(ct));
+        curriculum.MapGet("/badges/{id:guid}", async (Guid id, BadgesHandler handler, CancellationToken ct) =>
+            await handler.GetAsync(id, ct) is { } badge ? Results.Ok(badge) : Results.NotFound());
+        curriculum.MapPost("/badges", async (BadgeCommand command, BadgeCommands handler, CancellationToken ct) =>
+            (await handler.CreateAsync(command, ct)).ToHttp("/curriculum/badges"));
+        curriculum.MapPut("/badges/{id:guid}", async (Guid id, BadgeCommand command, BadgeCommands handler, CancellationToken ct) =>
+            (await handler.UpdateAsync(id, command, ct)).ToHttp());
+        curriculum.MapDelete("/badges/{id:guid}", async (Guid id, BadgeCommands handler, CancellationToken ct) =>
+            (await handler.DeleteAsync(id, ct)).ToHttp());
+        curriculum.MapPost("/badges/{id:guid}/awards", async (Guid id, AwardBadgeRequest request, BadgeAwardCommand handler, CancellationToken ct) =>
+        {
+            var award = await handler.AwardAsync(id, request, ct);
+            return award.Status == ResultStatus.Done ? Results.Created($"/curriculum/badges/{id}/awards/{award.Value}", new { id = award.Value }) : award.ToHttp();
+        });
+        curriculum.MapGet("/progression", (ProgressionHandler handler, CancellationToken ct) => handler.HandleAsync(ct));
+        curriculum.MapPost("/progression/stages", async (StageCommand command, ProgressionCommands handler, CancellationToken ct) =>
+            (await handler.AddStageAsync(command, ct)).ToHttp("/curriculum/progression/stages"));
+        curriculum.MapPut("/progression/stages/{id:guid}", async (Guid id, StageCommand command, ProgressionCommands handler, CancellationToken ct) =>
+            (await handler.UpdateStageAsync(id, command, ct)).ToHttp());
+        curriculum.MapPut("/progression/stage-order", async (StageOrderCommand command, ProgressionCommands handler, CancellationToken ct) =>
+            (await handler.ReorderAsync(command.StageIds, ct)).ToHttp());
+        curriculum.MapPost("/progression/stages/{id:guid}/competencies", async (Guid id, CompetencyCommand command, ProgressionCommands handler, CancellationToken ct) =>
+            (await handler.AddCompetencyAsync(id, command, ct)).ToHttp("/curriculum/progression/competencies"));
+        curriculum.MapDelete("/progression/competencies/{id:guid}", async (Guid id, ProgressionCommands handler, CancellationToken ct) =>
+            (await handler.RemoveCompetencyAsync(id, ct)).ToHttp());
         curriculum.MapPost("/lessons/{id:guid}/video", async (Guid id, HttpRequest request, LessonVideoHandler handler, LessonVideoOptions options, CancellationToken ct) =>
         {
             if (!request.HasFormContentType || request.ContentLength > options.MaxBytes + FormOverhead)

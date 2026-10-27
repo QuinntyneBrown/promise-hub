@@ -81,6 +81,9 @@ public interface IPromiseHubDb
     DbSet<Domain.Learning.SubmissionEvent> SubmissionEvents { get; }
     DbSet<Domain.Mentoring.Competency> Competencies { get; }
     DbSet<Domain.Mentoring.CompetencyAssessment> CompetencyAssessments { get; }
+    DbSet<Domain.Curriculum.Badge> Badges { get; }
+    DbSet<Domain.Curriculum.BadgeAward> BadgeAwards { get; }
+    DbSet<Domain.Curriculum.ProgressionStage> ProgressionStages { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

@@ -14,3 +14,11 @@ export { QuizQuestionDialog } from './lib/quiz-question-dialog/quiz-question-dia
 export { DeleteQuestionDialog } from './lib/delete-question-dialog/delete-question-dialog';
 export { AssignmentBuilderPage } from './lib/assignment-builder-page/assignment-builder-page';
 export { RubricCriterionDialog } from './lib/rubric-criterion-dialog/rubric-criterion-dialog';
+export { BadgesPage } from './lib/badges-page/badges-page';
+export { BadgeBuilderPage } from './lib/badge-builder-page/badge-builder-page';
+export { DeleteBadgeDialog } from './lib/delete-badge-dialog/delete-badge-dialog';
+export { AwardBadgeDialog } from './lib/award-badge-dialog/award-badge-dialog';
+export { ProgressionPage } from './lib/progression-page/progression-page';
+export { ProgressionStageDialog } from './lib/progression-stage-dialog/progression-stage-dialog';
+export { ProgressionCompetencyDialog } from './lib/progression-competency-dialog/progression-competency-dialog';
+export { RemoveCompetencyDialog } from './lib/remove-competency-dialog/remove-competency-dialog';

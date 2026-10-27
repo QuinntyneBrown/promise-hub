@@ -3,18 +3,25 @@ import type { LoadResult } from '../load-result';
 import type { WriteOutcome } from '../write-outcome';
 import type { AssignmentDetail } from './assignment-detail';
 import type { AssignmentFields } from './assignment-fields';
+import type { AwardOutcome } from './award-outcome';
+import type { BadgeDetail } from './badge-detail';
+import type { BadgeFields } from './badge-fields';
+import type { BadgeList } from './badge-list';
+import type { BadgeOptions } from './badge-options';
 import type { ContentStatus } from './content-status';
 import type { Curriculum } from './curriculum';
 import type { LessonDetail } from './lesson-detail';
 import type { LessonFields } from './lesson-fields';
 import type { ModuleDetail } from './module-detail';
 import type { ModuleFields } from './module-fields';
+import type { Progression } from './progression';
+import type { StageFields } from './stage-fields';
 import type { NewTrack } from './new-track';
 import type { QuestionFields } from './question-fields';
 import type { QuizDetail } from './quiz-detail';
 import type { QuizSettings } from './quiz-settings';
 
-/** Curriculum authoring for admins and program directors (Learning module, L2-066, L2-067, L2-073, L2-074). */
+/** Curriculum authoring for admins and program directors (Learning module, L2-066, L2-067, L2-073, L2-074, L2-084 to L2-086). */
 export interface CurriculumApi {
   tracks(): Observable<LoadResult<Curriculum>>;
   createTrack(track: NewTrack): Observable<WriteOutcome>;
@@ -49,4 +56,17 @@ export interface CurriculumApi {
   assignment(id: string): Observable<LoadResult<AssignmentDetail>>;
   updateAssignment(id: string, fields: AssignmentFields): Observable<WriteOutcome>;
   setAssignmentStatus(id: string, status: ContentStatus): Observable<WriteOutcome>;
+  badges(): Observable<LoadResult<BadgeList>>;
+  badgeOptions(): Observable<LoadResult<BadgeOptions>>;
+  badge(id: string): Observable<LoadResult<BadgeDetail>>;
+  createBadge(fields: BadgeFields): Observable<WriteOutcome>;
+  updateBadge(id: string, fields: BadgeFields): Observable<WriteOutcome>;
+  deleteBadge(id: string): Observable<WriteOutcome>;
+  awardBadge(id: string, membershipId: string | null): Observable<AwardOutcome>;
+  progression(): Observable<LoadResult<Progression>>;
+  addStage(fields: StageFields): Observable<WriteOutcome>;
+  updateStage(id: string, fields: StageFields): Observable<WriteOutcome>;
+  reorderStages(stageIds: string[]): Observable<WriteOutcome>;
+  addCompetency(stageId: string, fields: StageFields): Observable<WriteOutcome>;
+  removeCompetency(id: string): Observable<WriteOutcome>;
 }

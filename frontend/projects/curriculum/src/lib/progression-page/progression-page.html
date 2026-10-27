@@ -1,0 +1,144 @@
+<ph-breadcrumb [items]="[{ label: 'Curriculum', link: '/curriculum' }, { label: 'Progression' }]" />
+<ph-page-header
+  title="Progression framework"
+  subtitle="The stages youth grow through, and the competencies that earn each one."
+>
+  @if (result()?.status === 'loaded') {
+    <ph-button variant="primary" icon="plus" hasPopup="dialog" (click)="addStage()"
+      >Add stage</ph-button
+    >
+  }
+</ph-page-header>
+@let r = result();
+@if (r === null) {
+  <div aria-busy="true" aria-label="Loading stages" class="split">
+    <ph-skeleton shape="card" />
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (r.status === 'loaded') {
+  @if (r.value.stages.length === 0) {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="programs"
+        title="No stages yet"
+        text="A stage is a step on a youth’s journey, such as Explorer or Leader. Add one, then the competencies that earn it."
+      >
+        <ph-button variant="primary" icon="plus" hasPopup="dialog" (click)="addStage()"
+          >Add stage</ph-button
+        >
+      </ph-empty-state>
+    </ph-card>
+  } @else {
+    @let stages = r.value.stages;
+    <div class="split">
+      <div class="stack">
+        @for (s of stages; track s.id; let i = $index, last = $last) {
+          <ph-card [title]="i + 1 + '. ' + s.name">
+            <div class="stack">
+              <div class="cluster cluster--between">
+                <p class="text-muted">{{ s.description }}</p>
+                <div class="cluster cluster--tight">
+                  <ph-button
+                    variant="ghost"
+                    icon="edit"
+                    [iconOnly]="true"
+                    hasPopup="dialog"
+                    [label]="'Edit ' + s.name"
+                    (click)="editStage(s)"
+                  />
+                  <ph-button
+                    variant="ghost"
+                    icon="arrow-up"
+                    [iconOnly]="true"
+                    [label]="'Move ' + s.name + ' up'"
+                    [disabled]="i === 0"
+                    (click)="move(stages, i, -1)"
+                  />
+                  <ph-button
+                    variant="ghost"
+                    icon="arrow-down"
+                    [iconOnly]="true"
+                    [label]="'Move ' + s.name + ' down'"
+                    [disabled]="last"
+                    (click)="move(stages, i, 1)"
+                  />
+                </div>
+              </div>
+              @if (s.competencies.length) {
+                <ph-list [label]="'Competencies of ' + s.name" [inset]="true">
+                  @for (c of s.competencies; track c.id) {
+                    <ph-list-item [title]="c.name" [meta]="c.description || null">
+                      <ph-button
+                        variant="ghost"
+                        icon="trash"
+                        [iconOnly]="true"
+                        hasPopup="dialog"
+                        [label]="'Remove ' + c.name"
+                        (click)="remove(c)"
+                      />
+                    </ph-list-item>
+                  }
+                </ph-list>
+              } @else {
+                <p class="text-muted">
+                  No competencies yet. Add what a youth shows to reach this stage.
+                </p>
+              }
+            </div>
+            <ng-container ngProjectAs="[phCardFooter]">
+              <ph-button
+                variant="ghost"
+                size="sm"
+                icon="plus"
+                hasPopup="dialog"
+                [label]="'Add competency to ' + s.name"
+                (click)="addCompetency(s)"
+                >Add competency</ph-button
+              >
+            </ng-container>
+          </ph-card>
+        }
+      </div>
+      <div class="stack">
+        <ph-card title="How youth advance">
+          <div class="stack">
+            <p>
+              A youth reaches a stage once their mentor marks every competency in it, and in the
+              stages before it, Proficient or Mastered.
+            </p>
+            <ol class="stack">
+              @for (s of stages; track s.id) {
+                <li>{{ s.name }}</li>
+              }
+            </ol>
+            <p class="text-caption">
+              Mentors assess these competencies on each youth’s record. A badge can count toward
+              one.
+            </p>
+          </div>
+        </ph-card>
+      </div>
+    </div>
+  }
+} @else if (r.status === 'forbidden') {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      title="Program directors write the curriculum"
+      text="Ask an admin or a program director of your organization."
+    >
+      <ph-button link="/">Back to Today</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load the progression framework"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" icon="refresh" (click)="reload()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}

@@ -1,0 +1,38 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    [title]="'Add competency to ' + data.stageName"
+    description="A skill or mark of growth youth show to reach this stage. Mentors assess it on each youth’s record."
+    icon="plus"
+  >
+    <div class="stack">
+      @if (failed()) {
+        <ph-alert
+          tone="danger"
+          title="That didn’t go through"
+          text="The competency was not added. Try again."
+        />
+      }
+      <ph-text-field
+        inputId="competency-name"
+        label="Competency"
+        name="name"
+        help="Up to 80 characters."
+        [error]="errors()['name'] ?? null"
+        [(ngModel)]="name"
+      />
+      <ph-textarea
+        inputId="competency-description"
+        label="What it looks like"
+        name="description"
+        help="Up to 300 characters. Mentors read this when they assess it."
+        [optional]="true"
+        [error]="errors()['description'] ?? null"
+        [(ngModel)]="description"
+      />
+    </div>
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Add competency</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

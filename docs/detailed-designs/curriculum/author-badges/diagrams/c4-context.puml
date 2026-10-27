@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Author badges
+Person(p0, "Program director or admin", "Defines badges and how they are earned")
+Person(p1, "Youth", "Sees earned badges on the journey (prompt 65)")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(p0, ph, "Defines badges, rules and competencies", "HTTPS")
+Rel(p1, ph, "Learns; earns what the rules award", "HTTPS")
+@enduml

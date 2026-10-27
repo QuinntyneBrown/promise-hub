@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PromiseHub.Application.Audit;
+using PromiseHub.Application.Curriculum;
 using PromiseHub.Application.Organizations;
 using PromiseHub.Domain.Audit;
 using PromiseHub.Domain.Curriculum;
@@ -11,7 +12,7 @@ namespace PromiseHub.Application.Learning;
 /// Starts or resumes a youth's quiz attempt and saves her answers as she goes (L2-075 criteria 3, 4, 6 and 7, ADR 0055). An attempt is
 /// found only by the caller's membership and only while its quiz is visible to her, so another youth's or organization's is not found.
 /// </summary>
-public sealed class QuizAttemptCommand(IPromiseHubDb db, ITenantContext tenant, LearnerProgress progress, IAuditWriter audit, TimeProvider clock)
+public sealed class QuizAttemptCommand(IPromiseHubDb db, ITenantContext tenant, LearnerProgress progress, IAuditWriter audit, TimeProvider clock, BadgeAwarder badges)
 {
     public async Task<Gated<QuizAttemptDto>> StartAsync(Guid quizId, CancellationToken cancellationToken = default)
     {
@@ -91,6 +92,10 @@ public sealed class QuizAttemptCommand(IPromiseHubDb db, ITenantContext tenant, 
         audit.Record(new AuditEvent(AuditAction.Submitted, "QuizAttempt", attempt.Id,
             $"{quiz.Title} attempt {attempt.Number} submitted by {tenant.ActorName}: {attempt.Score}%{(attempt.Passed == true ? ", passed" : "")}"));
         await db.SaveChangesAsync(cancellationToken);
+        if (attempt.Status == AttemptStatus.Scored)
+        {
+            await badges.AwardAsync(tenant.MembershipId, cancellationToken);
+        }
         return Gated<Guid>.Found(attempt.Id);
     }
 

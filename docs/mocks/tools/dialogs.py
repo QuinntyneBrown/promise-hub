@@ -663,3 +663,40 @@ def leave_grade(S):
     S.add("default", "Leaving mentor-grade with unsaved scores or a comment: Keep editing, Save draft and leave, or the quiet Leave without saving. Escape keeps editing.",
           **over("mentor-grade", "default", overlays=dialog_box("Leave without saving your grade?", "Your scores and comment haven’t been saved.", body,
                                                               btn("Leave without saving", "ghost") + footer("Save draft and leave", cancel="Keep editing"), icon_name="alert-triangle")))
+
+# ------------------------------------------------------------------ Badges and progression (prompt 64, L2-084 to L2-086)
+simple("award-badge", "Award Speaks Up", "curriculum-badge", ["L2-085", "L2-032", R_CURRIC],
+       "Youth get it at once and see it on their journey. It is recorded with your name.",
+       lambda e: select("youth", "Youth", ["Choose a youth", "Nadia Haddad"], selected="Choose a youth" if e else "Nadia Haddad", error=(e or {}).get("youth", ""),
+                        help_="Youth of your organization who don’t have it yet."),
+       "Award badge", icon_name="award", base_state="edit", invalid_err={"youth": "Choose a youth of your organization."},
+       failed_text="The badge was not awarded. Try again.",
+       extra_states={"already": ("Someone awarded it to Nadia a moment ago: the dialog says so and nothing is added twice.",
+                                 dialog_box("Award Speaks Up", "Youth get it at once and see it on their journey. It is recorded with your name.",
+                                            select("youth", "Youth", ["Nadia Haddad"], selected="Nadia Haddad", error="Nadia Haddad already has this badge.",
+                                                   help_="Youth of your organization who don’t have it yet."),
+                                            footer("Award badge"), icon_name="award", form=True))})
+
+simple("delete-badge", "Delete Speaks Up?", "curriculum-badge", ["L2-084", "L2-032", R_CURRIC],
+       "Youth who earned it keep it. No one else can earn it from now on.",
+       lambda e: "", "Delete badge", icon_name="trash", danger=True, base_state="edit", failed_text="The badge was not deleted. Try again.")
+
+simple("progression-stage", "Add stage", "curriculum-progression", ["L2-086", "L2-032", R_CURRIC], "A stage is a step on a youth’s journey. It is added last.",
+       lambda e: (field("name", "Stage name", value="" if e else "Mentor", required=True, autofocus=True, error=(e or {}).get("name", ""), help_="Up to 60 characters.")
+                  + field("description", "Short description", value="Helps a newer youth find their feet", optional=True, help_="Up to 200 characters.")),
+       "Add stage", icon_name="list", invalid_err={"name": "Give the stage a name."}, failed_text="The stage was not saved. Try again.",
+       extra_states={"edit": ("Editing Explorer: its name and description; its place and competencies stay.",
+                              dialog_box("Edit Explorer", "A stage is a step on a youth’s journey.",
+                                         field("name", "Stage name", value="Explorer", required=True, autofocus=True, help_="Up to 60 characters.")
+                                         + field("description", "Short description", value="Finding their place in the group", optional=True, help_="Up to 200 characters."),
+                                         footer("Save stage"), icon_name="list", form=True))})
+
+simple("progression-competency", "Add competency to Explorer", "curriculum-progression", ["L2-086", "L2-082", "L2-032", R_CURRIC],
+       "A skill or mark of growth youth show to reach this stage. Mentors assess it on each youth’s record.",
+       lambda e: (field("name", "Competency", value="" if e else "Welcomes someone new", required=True, autofocus=True, error=(e or {}).get("name", ""), help_="Up to 80 characters.")
+                  + textarea("description", "What it looks like", value="Says hello, learns their name and includes them in the group.", rows=2, optional=True, help_="Up to 300 characters. Mentors read this when they assess it.")),
+       "Add competency", icon_name="plus", invalid_err={"name": "Name the competency."}, failed_text="The competency was not added. Try again.")
+
+simple("remove-competency", "Remove Works with others?", "curriculum-progression", ["L2-086", "L2-082", "L2-032", R_CURRIC],
+       "Mentors stop assessing it. The assessments they already made are kept.",
+       lambda e: "", "Remove competency", icon_name="trash", danger=True, failed_text="The competency was not removed. Try again.")

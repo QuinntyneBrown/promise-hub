@@ -1,0 +1,36 @@
+@startuml
+title UML sequence behaviour — An automatic badge on a learning event
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Youth (Sofía)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "LearnLessonPage" as page
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "LearningEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "LessonCompletion" as done
+  participant "BadgeAwarder" as awarder
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : Mark as done
+page -> ep : POST /learning/lessons/{id}/complete
+ep -> done : CompleteAsync
+done -> db : LessonProgress + audit Completed
+done -> awarder : AwardAsync(organization, Sofía's membership) (L2-085 c1)
+awarder -> db : automatic badges not held and not deleted
+loop each badge
+  awarder -> db : does she meet the rule? (lesson done, module done, quiz passed, submission accepted)
+  opt meets it
+    awarder -> db : BadgeAward + Notification + audit Created (L2-085 c2)
+  end
+end
+awarder -> db : SaveChanges (unique badge and youth)
+ep --> page : next lesson
+@enduml

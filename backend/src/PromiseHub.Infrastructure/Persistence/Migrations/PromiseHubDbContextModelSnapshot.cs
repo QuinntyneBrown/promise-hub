@@ -420,6 +420,93 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.ToTable("Assignments");
                 });
 
+            modelBuilder.Entity("PromiseHub.Domain.Curriculum.Badge", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CompetencyId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("CreatedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Icon")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Rule")
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("TargetId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompetencyId");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.ToTable("Badges");
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Curriculum.BadgeAward", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("AwardedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AwardedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("BadgeId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("MembershipId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MembershipId");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("BadgeId", "MembershipId")
+                        .IsUnique();
+
+                    b.ToTable("BadgeAwards");
+                });
+
             modelBuilder.Entity("PromiseHub.Domain.Curriculum.CodingStep", b =>
                 {
                     b.Property<Guid>("Id")
@@ -601,6 +688,37 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.HasIndex("OrganizationId");
 
                     b.ToTable("Lessons");
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Curriculum.ProgressionStage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("OrganizationId", "Position");
+
+                    b.ToTable("ProgressionStages");
                 });
 
             modelBuilder.Entity("PromiseHub.Domain.Curriculum.Quiz", b =>
@@ -2130,9 +2248,17 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.Property<int>("Position")
                         .HasColumnType("INTEGER");
 
+                    b.Property<long?>("RemovedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("StageId")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.HasIndex("OrganizationId");
+
+                    b.HasIndex("StageId");
 
                     b.HasIndex("OrganizationId", "Position");
 
@@ -3219,6 +3345,40 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("PromiseHub.Domain.Curriculum.Badge", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Mentoring.Competency", null)
+                        .WithMany()
+                        .HasForeignKey("CompetencyId");
+
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Curriculum.BadgeAward", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Curriculum.Badge", null)
+                        .WithMany()
+                        .HasForeignKey("BadgeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Organizations.Membership", null)
+                        .WithMany()
+                        .HasForeignKey("MembershipId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("PromiseHub.Domain.Curriculum.CodingStep", b =>
                 {
                     b.HasOne("PromiseHub.Domain.Curriculum.Lesson", null)
@@ -3261,6 +3421,15 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Curriculum.ProgressionStage", b =>
+                {
                     b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
                         .WithMany()
                         .HasForeignKey("OrganizationId")
@@ -3720,6 +3889,10 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Curriculum.ProgressionStage", null)
+                        .WithMany()
+                        .HasForeignKey("StageId");
                 });
 
             modelBuilder.Entity("PromiseHub.Domain.Mentoring.CompetencyAssessment", b =>
