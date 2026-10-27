@@ -120,10 +120,10 @@ def application(S):
     S.add("default", "Zoe Campbell’s referral: the young person, Rachel’s referral and reason, Tanya’s contact and staff notes, with Place, Waitlist and Decline.", **KW, main=zoe(),
           notes=note("Place opens place-applicant to choose a cohort; Waitlist and Decline open decide-application, which texts Tanya. Notes are staff-only and audited.", "top: 5rem; right: 1rem;"))
     young = card(facts([("Name", "Malik Johnson"), ("Date of birth", "2 Jun 2012 (14)"), ("Applied for", "After‑School Tutoring"), ("Applied", "Wed 4 Nov, 7:48 pm"),
-                        ("Status", "Waiting review"), ("Season consent", "Not given yet: Malik is under 18, so Denise consents")]), title="Young person", tid="young")
-    why = card(facts([("Applied by", "Malik, for himself"), ("Why", "I want to learn to code and help with the younger kids.")]), title="Application", tid="app")
+                        ("Status", "Waiting review"), ("Season consent", "Not given yet: Malik is under 18, so Denise Johnson consents")]), title="Young person", tid="young")
+    why = card(facts([("Applied by", "Malik Johnson, the young person"), ("Why", "I want to learn to code and help with the younger kids.")]), title="Application", tid="app")
     family = card(facts([("Parent or guardian", "Denise Johnson"), ("Mobile", "905-555-0310"), ("Messages in", "English"), ("Household", "Johnson · new household")]), title="Family", tid="family", footer=btn("Open household", "", size="sm", href=page("household")))
-    S.add("youth", "Malik Johnson applied for themselves: his reason, his verified phone, and the reminder that Denise must consent.", **KW,
+    S.add("youth", "Malik Johnson applied for themselves: his reason and the reminder that Denise must consent; no Referral card.", **KW,
           main=crumbs("Malik Johnson") + page_header("Malik Johnson", "14 · applied Wed 4 Nov for After‑School Tutoring", decide_actions("Malik"))
           + f'<div class="split"><div class="stack">{young}{why}</div><div class="stack">{family}{notes_card([])}</div></div>')
     S.add("loading", "The application loading: skeletons in the same two columns.", **KW,
@@ -132,11 +132,12 @@ def application(S):
     S.add("error", "The application failed to load; the breadcrumb stays.", **KW, main=crumbs("Application") + page_header("Application") + failed("Couldn’t load the application"))
     S.add("not-found", "Another organization’s application, or one that doesn’t exist: the server answers 404 and nothing of it shows.", **KW,
           main=crumbs("Application") + card(empty("We can’t find that application", "It may belong to another organization.", action=btn("Applications", "primary", href=page("applications")), icon_name="search", heading="h1"), cls="card--flush"))
-    placed = alert("success", "Placed in After‑School Tutoring", "Tom Nguyen placed Zoe today at 3:52 pm. Tanya Campbell was texted. A youth invitation went to zoe.campbell@example.ca.",
-                   actions=btn("Open Zoe’s record", "", size="sm", href=page("child")))
-    S.add("placed", "After placing: the outcome on top, read only, no decision buttons; the notes stay.", **KW,
+    placed = alert("success", "Placed in After‑School Tutoring", "Tom Nguyen placed Zoe on 5 Nov 2026. Tanya Campbell was texted: “Welcome! Tutoring is Monday to Thursday, 4 to 6 pm.”")
+    S.add("placed", "After placing: the outcome on top with who placed and the note the family read; no decision buttons; notes can still be added.", **KW,
           main=zoe(status_html="Accepted", actions="", outcome=placed))
-    declined = alert("info", "Declined", "Marisol Delgado declined on Thu 5 Nov. Tanya Campbell read: “Tutoring is full this term; we’ll call you in January.”")
+    S.add("waitlisted", "Zoe waitlisted: her place shows; Place and Decline stay, Waitlist goes.", **KW,
+          main=zoe(status_html="Waitlisted, #1", actions=btn("Place", "primary", icon_name="check", data_href=dialog("place-applicant"), aria_label="Place Zoe") + btn("Decline", "ghost", data_href=dialog("decide-application", "decline"))))
+    declined = alert("info", "Declined", "Marisol Delgado declined on 5 Nov 2026. Tanya Campbell read: “Tutoring is full this term; we’ll call you in January.”")
     S.add("declined", "A declined referral: the reason the family read, read only.", **KW, main=zoe(status_html="Declined", actions="", outcome=declined))
     S.add("forbidden", "Aisha (youth worker) opens an application link: only admins and program directors review applications.", nav="applications", user=STAFF["aisha"],
           main=crumbs("Application") + card(empty("Only admins and program directors review applications", "Ask Tom Nguyen or Marisol Delgado.", action=btn("Back to Today", "", href=page("today")), icon_name="lock", heading="h1"), cls="card--flush"))

@@ -1958,6 +1958,7 @@
         "error",
         "not-found",
         "placed",
+        "waitlisted",
         "declined",
         "forbidden"
       ]
@@ -2141,7 +2142,7 @@
     {
       "id": "decide-application",
       "kind": "dialog",
-      "title": "Waitlist Zoe Campbell?",
+      "title": "Review Zoe Campbell",
       "opens_from": "application",
       "requirements": [
         "L2-072",

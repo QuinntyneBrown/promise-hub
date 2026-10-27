@@ -130,32 +130,33 @@ _COHORTS = [("After‑School Tutoring", "48 of 50 places · applied for", False)
 def _place_body(e=None, *, invite=True, learning=True, picked="After‑School Tutoring"):
     e = e or {}
     radios = "".join(choice("cohort", n, small=m, checked=(n == picked and not e.get("cohort")), attrs=" disabled" if full else "", invalid=bool(e.get("cohort"))) for n, m, full in _COHORTS)
-    out = fieldset("Cohort", radios, error=e.get("cohort", ""), fid="cohort", hint="Zoe joins its roster now. A full cohort can’t take her; waitlist instead.")
+    out = fieldset("Cohort", radios, error=e.get("cohort", ""), fid="cohort")
     if learning:
-        out += switch("invite", "Invite Zoe to PromiseHub as a youth", checked=invite, desc="She sets a password and starts Learning once Tanya consents.")
+        out += switch("invite", "Invite Zoe to PromiseHub as a youth", checked=invite, desc="They set a password and start Learning once a guardian consents.")
         if invite:
             out += field("invite-email", "Zoe’s email", type_="email", value="" if e.get("email") else "zoe.campbell@example.ca", error=e.get("email", ""), autocomplete="off")
     out += textarea("place-note", "Note to the family", rows=2, optional=True, placeholder="Welcome! Tutoring is Monday to Thursday, 4 to 6 pm.")
     return out
 
 
-simple("place-applicant", "Place Zoe Campbell", "application", ["L2-072", R_ENROLL, R_NOTIFY], "Choose her cohort. Tanya Campbell is texted.",
+simple("place-applicant", "Place Zoe Campbell", "application", ["L2-072", R_ENROLL, R_NOTIFY], "Choose the cohort. Tanya Campbell is texted.",
        lambda e: _place_body(e), "Place and text Tanya", icon_name="check",
        invalid_err={"cohort": "Choose a cohort.", "email": "Enter an email like name@example.org."},
        extra_states={
-           "no-invite": ("Placing without a youth invitation: the email field goes away.", dialog_box("Place Zoe Campbell", "Choose her cohort. Tanya Campbell is texted.", _place_body(invite=False), footer("Place and text Tanya"), icon_name="check", form=True)),
-           "full": ("The cohort filled while the dialog was open: the server answers 422 and nothing changes.", dialog_box("Place Zoe Campbell", "Choose her cohort. Tanya Campbell is texted.", _place_body(), footer("Place and text Tanya"), icon_name="check", form=True, alert_html=alert("danger", "After‑School Tutoring is full (50 of 50). Waitlist instead."))),
-           "learning-off": ("Learning is off, or a program director is placing: no youth invitation is offered.", dialog_box("Place Zoe Campbell", "Choose her cohort. Tanya Campbell is texted.", _place_body(learning=False), footer("Place and text Tanya"), icon_name="check", form=True)),
-           "invite-failed": ("Placed, but the invitation was refused (Zoe already has access): the placement stands and the dialog says so.", dialog_box("Zoe is placed", "", alert("warning", "Zoe is in After‑School Tutoring, but the invitation wasn’t sent", "zoe.campbell@example.ca already has access. Invite her from her record.") , btn("Done", "primary", attrs=" autofocus"), icon_name="check-circle")),
+           "no-invite": ("Placing without a youth invitation: the email field goes away.", dialog_box("Place Zoe Campbell", "Choose the cohort. Tanya Campbell is texted.", _place_body(invite=False), footer("Place and text Tanya"), icon_name="check", form=True)),
+           "full": ("The cohort filled while the dialog was open: the server answers 422 and nothing changes.", dialog_box("Place Zoe Campbell", "Choose the cohort. Tanya Campbell is texted.", _place_body(), footer("Place and text Tanya"), icon_name="check", form=True, alert_html=alert("danger", "After‑School Tutoring is full (50 of 50). Waitlist instead."))),
+           "learning-off": ("Learning is off, or a program director is placing: no youth invitation is offered.", dialog_box("Place Zoe Campbell", "Choose the cohort. Tanya Campbell is texted.", _place_body(learning=False), footer("Place and text Tanya"), icon_name="check", form=True)),
+           "invite-failed": ("Placed, but the invitation was refused (Zoe already has access): the placement stands and the dialog says so.", dialog_box("Zoe is placed", "", alert("warning", "Zoe is in After‑School Tutoring, but the invitation wasn’t sent", "Jaylen Okafor already has access.") , btn("Done", "primary", attrs=" autofocus"), icon_name="check-circle")),
        })
 
-simple("decide-application", "Waitlist Zoe Campbell?", "application", ["L2-072", R_ENROLL, R_NOTIFY], "Next place on the After‑School Tutoring waitlist · Tanya Campbell is texted.",
-       lambda e: fieldset("Decision", choice("dec", "Waitlist", small="Next place on the waitlist", checked=True) + choice("dec", "Decline", small="Say why below"))
-                 + textarea("why", "Note to the family", rows=2, optional=True, placeholder="We’ll text you as soon as a place opens."),
+simple("decide-application", "Review Zoe Campbell", "application", ["L2-072", R_ENROLL, R_NOTIFY], "New family · After‑School Tutoring",
+       lambda e: '<p>Tanya Campbell · 905-555-0320 · English · medical: none</p>'
+                 + fieldset("Decision", choice("dec", "Waitlist", small="Next place on the waitlist", checked=True) + choice("dec", "Decline", small="Say why below"))
+                 + textarea("why", "Note to the guardian", rows=2, optional=True, placeholder="We’ll text you as soon as a place opens."),
        "Waitlist and text Tanya", icon_name="clock", na={"invalid": "Waitlist has a default and its note is optional; see decline for the required reason."},
-       extra_states={"decline": ("Declining with the reason the family reads; without one the server answers 422.", dialog_box("Decline Zoe Campbell?", "Tanya Campbell reads the reason.", fieldset("Decision", choice("dec", "Waitlist", small="Next place on the waitlist") + choice("dec", "Decline", small="Say why below", checked=True)) + textarea("why", "Reason the family will read", rows=3, error="Write a reason the guardian will read.", value=""), footer("Decline and text Tanya", danger=True, autofocus_cancel=True), icon_name="x-circle", danger=True, form=True))})
+       extra_states={"decline": ("Declining with the reason the family reads; without one the server answers 422. A waitlisted application offers only Decline.", dialog_box("Review Zoe Campbell", "New family · After‑School Tutoring", '<p>Tanya Campbell · 905-555-0320 · English · medical: none</p>' + fieldset("Decision", choice("dec", "Waitlist", small="Next place on the waitlist") + choice("dec", "Decline", small="Say why below", checked=True)) + textarea("why", "Reason the guardian will read", rows=3, error="Write a reason the guardian will read.", value=""), footer("Decline and text Tanya", danger=True, autofocus_cancel=True), icon_name="x-circle", danger=True, form=True))})
 
-simple("add-application-note", "Add a note", "application", ["L2-072", R_ENROLL], "Only staff see notes. Tanya and Rachel never do.",
+simple("add-application-note", "Add a note", "application", ["L2-072", R_ENROLL], "Only staff see notes. The family never does.",
        lambda e: textarea("app-note", "Note", rows=4, value="" if e else "Called Tanya: she knows about the referral and is happy for Zoe to start.", error=(e or {}).get("note", ""), count="76 / 2,000"),
        "Add note", icon_name="edit", invalid_err={"note": "Write a note of up to 2,000 characters."})
 

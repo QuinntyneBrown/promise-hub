@@ -31,6 +31,10 @@ Backend:
 - Domain: **`EnrollmentNote`** (`PromiseHub.Domain/Enrollment/`, `ITenantOwned`): `OrganizationId`, `EnrollmentRequestId`, `Author`, `Text`, `CreatedAt`. Migration `EnrollmentNotes` in `PromiseHub.Infrastructure/Persistence/Migrations/`.
 - Tenancy: the tenant query filter on `EnrollmentRequests`, `EnrollmentNotes` and every read table makes another organization's application not found (404) and leaves it out of the list.
 
+## Built so far
+
+Prompt 59 delivered everything above in two slices: the pipeline with status tabs (`GET /applications`), and the application with notes (`GET /applications/{id}`, `POST /applications/{id}/notes`, migration `EnrollmentNotes`). Who applied is written "applied for themselves" for a young person, whatever their gender. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/ApplicationReviewTests.cs`, `e2e/tests/enrollment/applications.spec.ts` and `e2e/tests/enrollment/application.spec.ts`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

@@ -29,6 +29,10 @@ Backend:
 - Domain: **`EnrollmentRequest.MoveTo(Guid programId)`**.
 - Tenancy: every lookup goes through the tenant query filter, so another organization's request or program is not found; the family is resolved from the request's own household.
 
+## Built so far
+
+Prompt 59 delivered everything above in two slices: placing with the optional youth invitation (`POST /applications/{id}/place`, `PlaceApplicantDialog`), and waitlisting or declining from the application with the decided outcome. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/ApplicationReviewTests.cs`, `e2e/tests/enrollment/place.spec.ts` and `e2e/tests/enrollment/decide.spec.ts`. Choosing a mentor at placement and merging a new household into an existing family are deferred (ADR 0053).
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |
