@@ -130,8 +130,8 @@ def mentor_youth_detail(S):
     sofia_head = head.replace("Mateo Rivera", "Sofía Rivera").replace("Age 9 · Bennetto Elementary, Grade 4", "Age 12 · Bennetto Elementary, Grade 7")
     shared = card(ul_list([
         list_item("Pick Up the Towel", "Leading by Serving · Feeling thoughtful · Thu 5 Nov, 4:12 pm")
-        .replace("</div></div>", '</div><p class="reading">My little brother Mateo cleared the table after dinner on Tuesday without anyone asking, so Mom could sit down. '
-                 'I noticed I usually wait to be asked. I want to be the one who notices first.</p><p class="text-caption">One thing I’ll do this week: Pack my own lunch on Thursday so Mom has one less thing to do.</p></div>', 1),
+        .replace("</div></div>", '</div><p class="list__text">My little brother Mateo cleared the table after dinner on Tuesday without anyone asking, so Mom could sit down. '
+                 'I noticed I usually wait to be asked. I want to be the one who notices first.</p><div class="list__meta">One thing I’ll do this week: Pack my own lunch on Thursday so Mom has one less thing to do.</div></div>', 1),
     ], card=False, label="Shared reflections, newest first"), title="Shared reflections", tid="reflections", cls="card--flush",
         footer="Only reflections Sofía chose to share. Her private reflections and drafts never reach you.")
     S.add("reflections", "Sofía shared her Pick Up the Towel reflection: Daniel reads it on her record, newest first, with her mood and the one thing she’ll do. The read is audited.", **KW,

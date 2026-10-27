@@ -7,6 +7,9 @@
     @if (meta()) {
       <div class="meta" data-testid="list-meta">{{ meta() }}</div>
     }
+    @if (text()) {
+      <p class="text">{{ text() }}</p>
+    }
     @if (caption()) {
       <span class="caption">{{ caption() }}</span>
     }

@@ -343,6 +343,8 @@ export * from './lib/mentoring/approve-all-outcome';
 export * from './lib/mentoring/competency-level';
 export * from './lib/mentoring/competency-item';
 export * from './lib/mentoring/competency-sheet';
+export * from './lib/mentoring/shared-reflection';
+export * from './lib/mentoring/shared-reflections';
 export * from './lib/mentoring/competency-change';
 export * from './lib/mentoring/mentoring-api';
 export * from './lib/mentoring/mentoring-api.token';

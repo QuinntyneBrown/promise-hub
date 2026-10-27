@@ -67,7 +67,7 @@ Edit tokens and shared component CSS first. Edit catalogue metadata and generato
 | [Divider](components/divider.html) | Separate alternatives with text or draw a decorative rule. |
 | [Container, grid and stack](components/container-grid-stack.html) | Compose consistent pages through shared columns, gutters and vertical rhythm. |
 | [Table](components/table.html) | Compare records through captioned columns with reachable row actions. |
-| [List](components/list.html) | Scan related records with one clear primary link per item. |
+| [List](components/list.html) | Scan related records with one clear primary link per item. A row may carry a paragraph of text (.list__text) under its meta, as for a youth's shared reflection. |
 | [Description list](components/description-list.html) | Present labelled facts, such as contact details and approved pickups. |
 | [Avatar](components/avatar.html) | Identify a person by initials or image alongside their written name. |
 | [Badge](components/badge.html) | Express a named status, role or meaningful count without relying on colour alone. |
@@ -145,7 +145,6 @@ Edit tokens and shared component CSS first. Edit catalogue metadata and generato
 | Grade and assess mocks (prompt 63) | Rubric scores, quiz overrides and competency levels needed no new component | Rubric scores and the override use text-field (number), the review queue and quiz approvals use table with tabs, competency levels use button-group with aria-pressed; sources added to those pages. No token changed. |
 | Badges and progression mocks (prompt 64) | The badge builder needed a medal youth earn, and the inherited .achievement selectors are emoji-based and unused | Added achievement-badge (earned, locked, small) built from the icon set, accent and border tokens; added the award and heart icons. Stages and competencies reuse card, list and button. No token changed. |
 | Journey and progress mocks (prompt 65) | The youth journey and badges pages list several medals together, and no list wrapped achievement badges | Added the achievement-badge collection (.achievement-badges, a labelled list grid) and the --layout-medal-min token (8rem) for its column; streak, stage and progress reuse stat, list, tabs, table and progress-bar. |
-| Reflection mocks (prompt 66) | The reflection page, its leave dialog and the mentor's shared reflections needed no new component | The mood uses radio-group (vertical, with hints), the words use textarea with its counter, sharing uses switch with its description, the leave dialog reuses dialog, and shared reflections reuse card and list. No token changed. |
 | Inherited component CSS | Includes historical selectors unused by PromiseHub | Retained for compatibility; catalogue scope is the PromiseHub evidence plus the core set. Do not interpret unused inherited selectors as implemented product features. |
 
 ## Verification

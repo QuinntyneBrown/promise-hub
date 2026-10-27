@@ -72,6 +72,24 @@ export class FakeReflections {
     return route.fulfill({ json: this.view(row) });
   }
 
+  /** GET /mentoring/youth/{childId}/reflections: only the shared reflections of her youth memberships, newest first (L2-089 criterion 5). */
+  shared(
+    route: Route,
+    childId: string,
+    name: string,
+    membershipIds: string[],
+    lesson: (id: string) => { title: string; moduleTitle: string } | null,
+  ): Promise<void> {
+    const reflections = [...this.rows.values()]
+      .filter((r) => r.shared && membershipIds.includes(r.membershipId))
+      .sort((a, b) => b.savedAt.localeCompare(a.savedAt))
+      .flatMap((r) => {
+        const l = lesson(r.lessonId);
+        return l ? [{ lessonId: r.lessonId, lessonTitle: l.title, moduleTitle: l.moduleTitle, mood: r.mood, text: r.text, action: r.action, savedAt: r.savedAt }] : [];
+      });
+    return route.fulfill({ json: { childId, name, reflections } });
+  }
+
   private view(r: FakeReflection) {
     return { mood: r.mood, text: r.text, action: r.action, shared: r.shared, savedAt: r.savedAt };
   }

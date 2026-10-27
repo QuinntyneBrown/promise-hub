@@ -700,6 +700,7 @@ export class FakeApi {
     ['POST', /^\/api\/mentoring\/quiz-attempts\/(?<id>[^/]+)\/approve$/, (route, p) => this.mentorReviews(route, (_m, youth) => this.afterReview(youth, this.reviews.approveQuiz(route, youth, p['id']!)))],
     ['POST', /^\/api\/mentoring\/submissions\/(?<id>[^/]+)\/grade$/, (route, p) => this.mentorReviews(route, (m, youth) => this.afterReview(youth, this.reviews.grade(route, youth, p['id']!, m.personName)))],
     ['GET', /^\/api\/mentoring\/youth\/(?<id>[^/]+)$/, (route, p) => this.mentorYouthRecord(route, p['id']!)],
+    ['GET', /^\/api\/mentoring\/youth\/(?<id>[^/]+)\/reflections$/, (route, p) => this.mentorReflections(route, p['id']!)],
     ['GET', /^\/api\/mentoring\/youth\/(?<id>[^/]+)\/competencies$/, (route, p) => this.mentorCompetencies(route, p['id']!, false)],
     ['PUT', /^\/api\/mentoring\/youth\/(?<id>[^/]+)\/competencies$/, (route, p) => this.mentorCompetencies(route, p['id']!, true)],
     ['GET', /^\/api\/mentoring\/cohorts\/(?<id>[^/]+)$/, (route, p) => this.mentorCohort(route, p['id']!)],
@@ -1315,6 +1316,27 @@ export class FakeApi {
   }
 
   /** GET and PUT /mentoring/youth/{childId}/competencies (L2-082): Mentoring on; 404 outside the organization, 403 (audited) outside the scope. */
+  /** GET /mentoring/youth/{childId}/reflections (L2-089 criteria 5 and 6): Mentoring and Learning on, a youth in the mentor's scope. */
+  private async mentorReflections(route: Route, childId: string): Promise<void> {
+    const m = await this.participantModuleCaller(route, 'Mentoring', can.mentorYouth);
+    if (!m) return;
+    if (!this.modules.get(m.organizationId)!.includes('Learning')) return route.fulfill({ status: 404 });
+    const child = this.households.filter((h) => h.organizationId === m.organizationId).flatMap((h) => h.children).find((c) => c.id === childId);
+    if (!child) return route.fulfill({ status: 404 });
+    if (!this.mentorScope(m).youth.some((c) => c.id === childId)) {
+      this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'AccessDenied', record: 'Child', summary: 'Shared reflections outside the mentor’s youth', device: null });
+      return route.fulfill({ status: 403, json: { code: 'forbidden' } });
+    }
+    const name = `${child.firstName} ${child.lastName}`;
+    this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'Viewed', record: 'Child', summary: `${name} · shared reflections`, device: null });
+    const youth = [...this.youthLinks].filter(([id, c]) => c === childId && memberships.some((x) => x.id === id && x.organizationId === m.organizationId)).map(([id]) => id);
+    return this.reflectionsState.shared(route, childId, name, youth, (id) => {
+      const lesson = this.curriculumState.lessons.find((l) => l.id === id);
+      const module = lesson ? this.curriculumState.modules.find((x) => x.id === lesson.moduleId) : undefined;
+      return lesson && module ? { title: lesson.title, moduleTitle: module.title } : null;
+    });
+  }
+
   private async mentorCompetencies(route: Route, childId: string, save: boolean): Promise<void> {
     const m = await this.participantModuleCaller(route, 'Mentoring', can.mentorYouth);
     if (!m) return;
