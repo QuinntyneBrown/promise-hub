@@ -40,7 +40,7 @@ Open questions: none. Waypoint's program-administrator read and free-form second
 
 ## Built so far
 
-Nothing yet; prompt 66 builds it in four slices.
+Prompt 66 delivered everything above in four slices: writing and saving a reflection (`GET` and `PUT /learning/lessons/{id}/reflection`, `ReflectionPage`, Write your reflection on the lesson); private or shared enforced on the server (`GET /mentoring/youth/{childId}/reflections`); the Shared reflections card on the mentor's youth record, with `ph-list-item` gaining the list's text variant in the components library; and unsaved-changes protection with the device draft. Saving also raises a toast; the saved alert stays on the page. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/LearningReflectionsTests.cs`, `backend/tests/PromiseHub.Api.Tests/MentorReflectionsTests.cs`, `e2e/tests/learning/reflection.spec.ts`, `e2e/tests/mentoring/shared-reflections.spec.ts`.
 
 ## Requirements
 

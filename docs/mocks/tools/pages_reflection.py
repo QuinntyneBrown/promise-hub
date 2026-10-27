@@ -34,8 +34,8 @@ def mood_field(selected: str = "Thoughtful", err: str = "") -> str:
 def reflection_form(*, text: str = TEXT, action: str = ACTION, mood: str = "Thoughtful", shared: bool = False, err=None, busy: bool = False) -> str:
     err = err or {}
     summary = form_summary(list(err.items())) if err else ""
-    think = card(f'<p class="text-caption">From the lesson</p><ul class="stack" style="margin: 0; padding-left: var(--space-5);"><li>{esc(PROMPT)}</li></ul>',
-                 title="Think about it", tid="think")
+    think = card(ul_list([f'<li class="list__item"><div class="list__body"><div class="list__title">{esc(PROMPT)}</div></div></li>'], card=False, label="From the lesson"),
+                 title="Think about it", tid="think", cls="card--flush")
     words = textarea("reflection", "Your reflection", value=text, rows=6, error=err.get("reflection", ""), count=f"{len(text):,} / 5,000",
                      help_="A few honest sentences is plenty. A draft can be unfinished.")
     act = textarea("action", "One thing I’ll do this week", value=action, rows=2, optional=True, count=f"{len(action):,} / 1,000")

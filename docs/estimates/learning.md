@@ -19,4 +19,4 @@
 | track-and-revise-submissions | 3 days | 100% |
 | view-badges | 3 days | 100% |
 | view-learning-journey | 4 days | 100% |
-| write-reflections | 4 days | 0% |
+| write-reflections | 4 days | 100% |

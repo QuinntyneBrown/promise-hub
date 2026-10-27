@@ -133,7 +133,7 @@ def mentor_youth_detail(S):
         .replace("</div></div>", '</div><p class="list__text">My little brother Mateo cleared the table after dinner on Tuesday without anyone asking, so Mom could sit down. '
                  'I noticed I usually wait to be asked. I want to be the one who notices first.</p><div class="list__meta">One thing I’ll do this week: Pack my own lunch on Thursday so Mom has one less thing to do.</div></div>', 1),
     ], card=False, label="Shared reflections, newest first"), title="Shared reflections", tid="reflections", cls="card--flush",
-        footer="Only reflections Sofía chose to share. Her private reflections and drafts never reach you.")
+        footer="Only reflections Sofía chose to share. Private reflections and drafts never reach you.")
     S.add("reflections", "Sofía shared her Pick Up the Towel reflection: Daniel reads it on her record, newest first, with her mood and the one thing she’ll do. The read is audited.", **KW,
           main=sofia_head + f'<div class="split"><div class="stack">{about}{shared}</div><div class="stack">{contacts}{restricted}</div></div>',
           notes=note("GET /mentoring/youth/{childId}/reflections answers only saved reflections she shared; the card is not shown while Learning is off.", "top: 5rem; right: 1rem;"))

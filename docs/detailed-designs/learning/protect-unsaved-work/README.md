@@ -26,7 +26,7 @@ No backend change: drafts never leave the device.
 
 ## Built so far
 
-Prompt 62 delivered everything above for the assignment submit page; `GET /me` now names the active membership (`membershipId`) so drafts are kept under it. Acceptance tests: `e2e/tests/learning/submissions.spec.ts` (leave, draft, restore, reload) and `backend/tests/PromiseHub.Api.Tests/LearningAssignmentBriefTests.cs` (the session's membership).
+Prompt 62 delivered everything above for the assignment submit page, and prompt 66 the same for the reflection page (`e2e/tests/learning/reflection.spec.ts`); `GET /me` now names the active membership (`membershipId`) so drafts are kept under it. Acceptance tests: `e2e/tests/learning/submissions.spec.ts` (leave, draft, restore, reload) and `backend/tests/PromiseHub.Api.Tests/LearningAssignmentBriefTests.cs` (the session's membership).
 
 ## Requirements
 
