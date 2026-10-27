@@ -84,7 +84,12 @@ def learn_home(S):
             list_item("Leadership Foundations", "4 of 7 lessons · After‑School Tutoring", href=page("learn-track"), end=badge("In progress", "info")),
             list_item("Digital Skills", "0 of 2 lessons · Saturday Sports", href=page("learn-track", "coding"), end=badge("Not started")),
         ], card=False, label="Your tracks"), title="Your tracks", tid="tracks", cls="card--flush")
-        return hdr + extra + f'<div class="split"><div class="stack">{cont}{overall}</div><div class="stack">{tracks}</div></div>'
+        journey = card(ul_list([
+            list_item("Your journey", "Roadmap, streak and stage", href=page("learn-journey"), lead=lead_icon("map-pin")),
+            list_item("Badges", "2 of 6 earned", href=page("learn-badges"), lead=lead_icon("award")),
+            list_item("Your progress", "Quizzes, attendance and competencies", href=page("learn-progress"), lead=lead_icon("chart")),
+        ], card=False, label="Your journey"), title="Your journey", tid="journey", cls="card--flush")
+        return hdr + extra + f'<div class="split"><div class="stack">{cont}{overall}</div><div class="stack">{tracks}{journey}</div></div>'
 
     S.add("default", "Sofía opens Learning: where she left off, her overall progress and the two tracks her programs follow.", **YKW, main=body(),
           notes=note("Everything here comes from the server: only published lessons of tracks her programs follow, with progress saved on the server.", "top: 5rem; right: 1rem;"))

@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — View the learning journey
+Person(y, "Youth", "Sees her roadmap, streak, stage and badges")
+Person(m, "Mentor and program director", "Assess competencies, author badges and stages")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(y, ph, "Reads her own journey and progress", "HTTPS")
+Rel(m, ph, "Records what the journey reads", "HTTPS")
+@enduml

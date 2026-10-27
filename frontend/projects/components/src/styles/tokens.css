@@ -701,6 +701,7 @@
   --layout-form-wide: 40rem;
   --layout-dialog-max: 48rem;
   --layout-card-min: 18rem;
+  --layout-medal-min: 8rem; /* 128px column of an achievement-badge collection */
   --layout-dialog-wide: 44rem;
   --layout-auth-compact: 26rem;
   --layout-control-width: 12rem;

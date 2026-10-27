@@ -1,0 +1,20 @@
+@startuml
+title Class structure — View badges
+skinparam classAttributeIconSize 0
+class BadgesPage {
+  #result : LoadResult
+  #reload() : void
+}
+interface LearningApi {
+  +badges() : Observable<LoadResult>
+}
+class BadgesViewHandler {
+  +HandleAsync(ct) : Dto
+}
+class LearnerBadges
+class LearnerProgress
+BadgesPage ..> LearningApi : LEARNING_API
+LearningApi ..> BadgesViewHandler : GET /learning/badges
+BadgesViewHandler ..> LearnerBadges
+BadgesViewHandler ..> LearnerProgress
+@enduml

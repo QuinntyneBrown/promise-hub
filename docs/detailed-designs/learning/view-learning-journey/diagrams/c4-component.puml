@@ -1,0 +1,31 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — View the learning journey
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "JourneyPage", "Angular page", "learning library")
+  Component(lapi, "LearningApi", "Contract + HTTP client", "LEARNING_API")
+  Component(lib, "Components library", "Angular", "ph-stat, ph-list, ph-achievement-badges, ph-tabs, ph-table")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "LearningEndpoints", "Minimal API", "GET /learning/journey")
+  Component(h, "JourneyHandler", "Handler", "one read")
+  Component(s0, "LearnerProgress", "Service", "tracks, modules, lessons done")
+  Component(s1, "LearnerStreak", "Service", "weeks in a row with a lesson")
+  Component(s2, "LearnerStanding", "Service", "stages and competency levels")
+  Component(s3, "LearnerBadges", "Service", "earned and locked badges")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "LessonProgress, Tracks, Modules, Lessons, ProgressionStages, Competencies, CompetencyAssessments, Badges, BadgeAwards")
+}
+Rel(page, lapi, "loads")
+Rel(page, lib, "composes")
+Rel(lapi, ep, "JSON/HTTPS")
+Rel(ep, h, "GET")
+Rel(h, s0, "uses")
+Rel(s0, db, "reads")
+Rel(h, s1, "uses")
+Rel(s1, db, "reads")
+Rel(h, s2, "uses")
+Rel(s2, db, "reads")
+Rel(h, s3, "uses")
+Rel(s3, db, "reads")
+@enduml

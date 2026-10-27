@@ -1,0 +1,24 @@
+@startuml
+title Class structure — Review personal progress
+skinparam classAttributeIconSize 0
+class ProgressPage {
+  #result : LoadResult
+  #reload() : void
+}
+interface LearningApi {
+  +progress() : Observable<LoadResult>
+}
+class ProgressViewHandler {
+  +HandleAsync(ct) : Dto
+}
+class LearnerProgress
+class LearnerStreak
+class LearnerStanding
+class IModuleGate
+ProgressPage ..> LearningApi : LEARNING_API
+LearningApi ..> ProgressViewHandler : GET /learning/progress
+ProgressViewHandler ..> LearnerProgress
+ProgressViewHandler ..> LearnerStreak
+ProgressViewHandler ..> LearnerStanding
+ProgressViewHandler ..> IModuleGate
+@enduml

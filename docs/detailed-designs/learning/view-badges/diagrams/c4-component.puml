@@ -1,0 +1,25 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — View badges
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "BadgesPage", "Angular page", "learning library")
+  Component(lapi, "LearningApi", "Contract + HTTP client", "LEARNING_API")
+  Component(lib, "Components library", "Angular", "ph-stat, ph-list, ph-achievement-badges, ph-tabs, ph-table")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "LearningEndpoints", "Minimal API", "GET /learning/badges")
+  Component(h, "BadgesViewHandler", "Handler", "one read")
+  Component(s0, "LearnerBadges", "Service", "earned, locked with progress, next up")
+  Component(s1, "LearnerProgress", "Service", "followed tracks and module counts")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Badges, BadgeAwards, Enrollments, Programs, Modules, Lessons, LessonProgress")
+}
+Rel(page, lapi, "loads")
+Rel(page, lib, "composes")
+Rel(lapi, ep, "JSON/HTTPS")
+Rel(ep, h, "GET")
+Rel(h, s0, "uses")
+Rel(s0, db, "reads")
+Rel(h, s1, "uses")
+Rel(s1, db, "reads")
+@enduml

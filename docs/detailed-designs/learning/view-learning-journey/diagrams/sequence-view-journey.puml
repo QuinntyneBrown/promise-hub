@@ -1,0 +1,38 @@
+@startuml
+title UML sequence behaviour — Opening the journey
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Youth (Sofía)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "JourneyPage" as page
+  participant "LearningApi" as lapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "LearningEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "JourneyHandler" as h
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : open from Learning
+page -> lapi : journey()
+lapi -> ep : GET /learning/journey
+alt Learning off
+  ep --> page : 404; the route redirects to Today
+else no Learn permission, no consent or not placed
+  ep --> page : 403; forbidden state (L2-087 c8)
+else
+  ep -> h : HandleAsync
+  h -> db : followed tracks with modules and lessons done (LearnerProgress)
+  h -> db : completion times -> streak (L2-087 c2)
+  h -> db : stages, competencies, latest assessments of her child -> Earned / You’re here / Ahead (c3)
+  h -> db : badges she can earn and her awards -> counts (c4, c6)
+  h --> page : 200
+  page --> actor : default, or empty with one action
+end
+@enduml

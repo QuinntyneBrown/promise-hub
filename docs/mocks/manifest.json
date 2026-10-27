@@ -2285,6 +2285,67 @@
       }
     },
     {
+      "id": "learn-journey",
+      "kind": "page",
+      "title": "Your journey",
+      "route": "/learning/journey",
+      "requirements": [
+        "L2-087",
+        "L1-023",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "forbidden"
+      ]
+    },
+    {
+      "id": "learn-badges",
+      "kind": "page",
+      "title": "Badges",
+      "route": "/learning/badges",
+      "requirements": [
+        "L2-087",
+        "L1-023",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "empty",
+        "none",
+        "loading",
+        "error",
+        "forbidden"
+      ]
+    },
+    {
+      "id": "learn-progress",
+      "kind": "page",
+      "title": "Your progress",
+      "route": "/learning/progress",
+      "requirements": [
+        "L2-088",
+        "L1-023",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "quizzes",
+        "attendance",
+        "roll-call-off",
+        "empty",
+        "loading",
+        "error",
+        "forbidden"
+      ]
+    },
+    {
       "id": "applications",
       "kind": "page",
       "title": "Applications",

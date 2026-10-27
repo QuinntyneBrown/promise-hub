@@ -19,5 +19,7 @@ Prompt 49 built the foundation only ([read-own-record](read-own-record/README.md
 | [`submit-assignments`](submit-assignments/README.md) | 62 Submit assignments | `learning-experience` L2-LEARN-006 |
 | [`track-and-revise-submissions`](track-and-revise-submissions/README.md) | 62 Submit assignments | `learning-experience` L2-LEARN-007 |
 | [`protect-unsaved-work`](protect-unsaved-work/README.md) | 62 Submit assignments | `non-functional` L2-NFR-007 |
-| `view-journey-and-progress` | 65 View journey and progress | L1-LEARN-007, 008 |
+| [`view-learning-journey`](view-learning-journey/README.md) | 65 View journey and progress | `learning-experience` L2-LEARN-009 |
+| [`view-badges`](view-badges/README.md) | 65 View journey and progress | `learning-experience` L2-LEARN-009 |
+| [`review-personal-progress`](review-personal-progress/README.md) | 65 View journey and progress | `learning-experience` L2-LEARN-010 |
 | `write-reflections` | 66 Write reflections | L1-LEARN-006 |
