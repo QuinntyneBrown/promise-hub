@@ -1,0 +1,33 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Write reflections
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "ReflectionPage", "Angular page", "learning library")
+  Component(dlg, "LeaveReflectionDialog", "CDK Dialog", "learning library")
+  Component(rec, "MentorYouthDetailPage", "Angular page", "mentoring library")
+  Component(lapi, "LearningApi / MentoringApi", "Contracts + HTTP clients", "LEARNING_API, MENTORING_API")
+  Component(drafts, "ReflectionDraftStore", "Contract + localStorage", "REFLECTION_DRAFT_STORE")
+  Component(lib, "Components library", "Angular", "ph-radio-group, ph-textarea, ph-switch, ph-card, ph-dialog")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(lep, "LearningEndpoints", "Minimal API", "GET and PUT /learning/lessons/{id}/reflection")
+  Component(mep, "MentoringEndpoints", "Minimal API", "GET /mentoring/youth/{childId}/reflections")
+  Component(rh, "ReflectionHandler", "Handler", "lesson gate, validation, save, audit")
+  Component(sh, "SharedReflectionsHandler", "Handler", "MentorScope, shared only, audit")
+  Component(lp, "LearnerProgress", "Service", "visible and unlocked lessons")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Reflections, Lessons, Modules, Memberships, AuditEntries")
+}
+Rel(page, lapi, "loads and saves")
+Rel(page, drafts, "keeps drafts")
+Rel(page, dlg, "opens on leave")
+Rel(page, lib, "composes")
+Rel(rec, lapi, "loads shared")
+Rel(lapi, lep, "JSON/HTTPS")
+Rel(lapi, mep, "JSON/HTTPS")
+Rel(lep, rh, "calls")
+Rel(mep, sh, "calls")
+Rel(rh, lp, "uses")
+Rel(rh, db, "reads and writes")
+Rel(sh, db, "reads")
+@enduml

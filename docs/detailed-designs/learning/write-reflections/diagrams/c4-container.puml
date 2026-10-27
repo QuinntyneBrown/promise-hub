@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Write reflections
+Person(y, "Youth", "Phone browser")
+Person(m, "Mentor", "Phone or laptop browser")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular 22", "learning and mentoring libraries, api client, components; drafts in localStorage")
+  Container(api, "PromiseHub API", "ASP.NET Core, .NET 10", "Learning and Mentoring gates, permissions, consent and placement, handlers")
+  ContainerDb(db, "PromiseHub database", "SQLite via EF Core", "Tenant-filtered Reflections")
+}
+Rel(y, web, "Uses", "HTTPS")
+Rel(m, web, "Uses", "HTTPS")
+Rel(web, api, "Calls", "JSON/HTTPS")
+Rel(api, db, "Reads and writes", "EF Core")
+@enduml

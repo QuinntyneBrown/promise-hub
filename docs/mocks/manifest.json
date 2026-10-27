@@ -1616,6 +1616,8 @@
       "states": [
         "default",
         "onboarded",
+        "reflections",
+        "no-reflections",
         "rollcall-off",
         "loading",
         "error",
@@ -2343,6 +2345,35 @@
         "loading",
         "error",
         "forbidden"
+      ]
+    },
+    {
+      "id": "learn-reflection",
+      "kind": "page",
+      "title": "Your reflection",
+      "route": "/learning/lessons/:id/reflection",
+      "requirements": [
+        "L2-089",
+        "L2-079",
+        "L1-023",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "empty",
+        "private",
+        "shared",
+        "draft-saved",
+        "restored",
+        "invalid",
+        "busy",
+        "failed",
+        "locked",
+        "forbidden",
+        "not-found",
+        "loading",
+        "error"
       ]
     },
     {
@@ -3581,6 +3612,25 @@
       "requirements": [
         "L2-079",
         "L1-014"
+      ],
+      "states": [
+        "default"
+      ],
+      "not_applicable": {
+        "busy": "Saving a draft on the device is instant; there is no server call to wait for.",
+        "invalid": "The dialog has no inputs to validate.",
+        "failed": "Saving a draft on the device does not call the server."
+      }
+    },
+    {
+      "id": "leave-reflection",
+      "kind": "dialog",
+      "title": "Leave without saving?",
+      "opens_from": "learn-reflection",
+      "requirements": [
+        "L2-089",
+        "L2-079",
+        "L1-023"
       ],
       "states": [
         "default"

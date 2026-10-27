@@ -1,0 +1,51 @@
+@startuml
+title UML sequence behaviour — Saving a reflection
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Youth (Sofía)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "ReflectionPage" as page
+  participant "ReflectionDraftStore" as drafts
+  participant "LearningApi" as lapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "LearningEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "ReflectionHandler" as h
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : Write your reflection
+page -> lapi : reflection(lessonId)
+lapi -> ep : GET /learning/lessons/{id}/reflection
+ep -> h : GetAsync
+h --> page : lesson, prompts, mentor, saved reflection or none (L2-089 c1)
+page -> drafts : load(membership, lesson)
+drafts --> page : draft or none (L2-079 c5)
+actor -> page : mood, words, share on, Save reflection
+page -> lapi : saveReflection(lessonId, body)
+lapi -> ep : PUT /learning/lessons/{id}/reflection
+alt Learning off
+  ep --> page : 404; the route redirects to Today
+else no Learn permission, no consent or not placed
+  ep --> page : 403 (L2-089 c7)
+else
+  ep -> h : SaveAsync
+  alt lesson not visible / locked
+    h --> page : 404 / 403 with what to finish first
+  else missing mood or words, too long
+    h --> page : 422 with field errors (c2)
+  else
+    h -> db : create or replace the row for membership and lesson (c2, c3)
+    h -> db : audit Created or Updated on Reflection, Shared before and after, no words (c4)
+    h --> page : 200 with savedAt
+    page -> drafts : clear(membership, lesson)
+    page --> actor : Reflection saved, shared with Daniel
+  end
+end
+@enduml

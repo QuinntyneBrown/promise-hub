@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Write reflections
+Person(y, "Youth", "Writes reflections on lessons, private or shared")
+Person(m, "Mentor", "Reads the reflections his youth shared")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(y, ph, "Writes and saves her reflection", "HTTPS")
+Rel(m, ph, "Reads shared reflections on the youth record", "HTTPS")
+@enduml

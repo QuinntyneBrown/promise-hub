@@ -2,7 +2,7 @@
 
 ## Overview
 
-A youth writing an assignment on a phone can lose her work by tapping a tab, following a link or closing the browser. This slice asks before that happens and lets her keep a **draft** on the device to pick up later. It applies first to the assignment submit page; other forms adopt it as their journeys need it.
+A youth writing an assignment on a phone can lose her work by tapping a tab, following a link or closing the browser. This slice asks before that happens and lets her keep a **draft** on the device to pick up later. It applies to the assignment submit page and the reflection page (prompt 66); other forms adopt it as their journeys need it.
 
 Terms used in this document:
 
@@ -19,6 +19,8 @@ Ported from Waypoint `non-functional/protect-unsaved-work` (`L2-NFR-007`). Draft
 - **`unsavedChangesGuard`** (`frontend/projects/learning/`) — a `CanDeactivate` guard for pages that implement `canLeave()`.
 - **`UnsavedChangesDialog`** (`unsaved-changes`) — CDK Dialog with Leave without saving (ghost), Keep editing and Save draft and leave; Escape or Close keeps editing.
 - **`AssignmentPage`** — offers Continue your draft when a draft exists for the assignment.
+- **`ReflectionDraftStore`** (`frontend/projects/api/`) — contract and `REFLECTION_DRAFT_STORE` token with `load`, `save` and `clear` of a `ReflectionDraft` (mood, words, action, sharing choice, saved at); `LocalReflectionDraftStore` keeps it as `promisehub.reflection-draft.{membership}.{lesson}` (ADR 0060).
+- **`ReflectionPage`** — the same protection for a reflection: changed means the mood, words, action or sharing choice differ from what loaded or was last kept; Save draft, restore with Start over, cleared by a successful save; leaving opens `LeaveReflectionDialog` (`leave-reflection`, the same three choices).
 
 No backend change: drafts never leave the device.
 
@@ -31,6 +33,7 @@ Prompt 62 delivered everything above for the assignment submit page; `GET /me` n
 | L2 ID | Refines (L1) | Requirement |
 |-------|--------------|-------------|
 | `L2-079` | `L1-014` | A youth is warned before she leaves work she has not sent or saved, and can keep a draft on her device and find it again. |
+| `L2-089` | `L1-023` | A youth writes a reflection on a lesson she can open, says how she feels about it and chooses, each time she saves, whether it stays private or is shared with her mentor. |
 
 ## Diagrams
 
@@ -58,4 +61,4 @@ Drafts live only in device storage; only submitted work reaches the API.
 
 ## Open questions
 
-- Other long forms (reflections in prompt 66, grading in prompt 63) adopt the same guard and store when they are built.
+- Grading (prompt 63) uses its own leave dialog with a server draft (ADR 0057); reflections (prompt 66) use a device draft like assignments (ADR 0060). Other long forms adopt the guard when they are built.

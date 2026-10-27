@@ -619,6 +619,17 @@ def unsaved_changes(S):
                                                               btn("Leave without saving", "ghost") + footer("Save draft and leave", cancel="Keep editing"), icon_name="alert-triangle")))
 
 
+@screen("leave-reflection", "dialog", "Leave without saving?", opens_from="learn-reflection", reqs=["L2-089", "L2-079", "L1-023"],
+        na={"busy": "Saving a draft on the device is instant; there is no server call to wait for.",
+            "invalid": "The dialog has no inputs to validate.",
+            "failed": "Saving a draft on the device does not call the server."})
+def leave_reflection(S):
+    body = '<p>Save a draft on this device to finish it later, or leave and lose what you wrote. Nobody else can see a draft, even with sharing on.</p>'
+    S.add("default", "Leaving learn-reflection with unsaved words: Keep editing, Save draft and leave, or the quiet Leave without saving. Escape keeps editing.",
+          **over("learn-reflection", "default", overlays=dialog_box("Leave without saving?", "Your reflection hasn’t been saved.", body,
+                                                                  btn("Leave without saving", "ghost") + footer("Save draft and leave", cancel="Keep editing"), icon_name="alert-triangle")))
+
+
 # ------------------------------------------------------------------ Grade and assess (prompt 63)
 G_NOTE = "Great story, Sofía! Can you add a line about one thing you noticed? Then this is a full pass."
 
