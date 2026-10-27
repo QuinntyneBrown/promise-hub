@@ -29,6 +29,7 @@ export const routes: Routes = [
   {
     path: 'lessons/:id/reflection',
     component: ReflectionPage,
+    canDeactivate: [unsavedChangesGuard],
     title: 'Your reflection · PromiseHub',
   },
   { path: 'coding/:id', component: CodingPage, title: 'Coding lesson · PromiseHub' },

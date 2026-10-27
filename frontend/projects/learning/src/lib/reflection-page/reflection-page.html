@@ -34,6 +34,11 @@
         text="Everything is still here. Check your connection and try again."
       />
     }
+    @if (restored(); as when) {
+      <ph-alert title="We restored your draft" [text]="'Saved on this device on ' + when + '.'">
+        <ph-button variant="ghost" size="sm" (click)="startOver(v)">Start over</ph-button>
+      </ph-alert>
+    }
     @if (saved(); as s) {
       <ph-alert
         tone="success"
@@ -92,6 +97,7 @@
       />
     </ph-card>
     <div class="actions">
+      <ph-button variant="ghost" icon="check" (click)="saveDraft(v)">Save draft</ph-button>
       <ph-button variant="primary" icon="check-circle" [busy]="saving()" (click)="save(v)"
         >Save reflection</ph-button
       >

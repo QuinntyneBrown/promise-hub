@@ -1,9 +1,19 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  HostListener,
+  computed,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import {
   GatedResult,
   LEARNING_API,
+  REFLECTION_DRAFT_STORE,
+  SESSION_API,
   Reflection,
   ReflectionEditor,
   ReflectionSaveResult,
@@ -11,6 +21,7 @@ import {
 import {
   ErrorSummaryItem,
   PhAlert,
+  PhDialogs,
   PhBreadcrumb,
   PhButton,
   PhCard,
@@ -27,7 +38,10 @@ import {
   ToastService,
   formatDateTime,
 } from '@promisehub/components';
-import { Subject, startWith, switchMap, tap } from 'rxjs';
+import { Observable, Subject, combineLatest, map, startWith, switchMap, tap } from 'rxjs';
+import { CanLeave } from '../can-leave';
+import { LeaveReflectionDialog } from '../leave-reflection-dialog/leave-reflection-dialog';
+import { LeaveChoice } from '../unsaved-changes-dialog/leave-choice';
 
 /** The server's field names and the ids of the fields on the page, for the error summary's links. */
 const FIELD: Record<string, string> = { mood: 'mood', text: 'reflection', action: 'action' };
@@ -41,7 +55,9 @@ const MOODS: RadioOption[] = [
 
 /**
  * Your reflection on a lesson (mock: learn-reflection, L2-089 criteria 1 to 3 and 7): how she feels, her words, one thing she'll do and
- * whether her mentor may read it, checked here as the server checks them, then saved. Private unless she turns sharing on.
+ * whether her mentor may read it, checked here as the server checks them, then saved. Private unless she turns sharing on. Unsaved
+ * words are protected (L2-079 criterion 5): Save draft keeps them on this device, a draft is restored on return, a save clears it, and
+ * leaving with unsaved changes asks first through leave-reflection.
  */
 @Component({
   selector: 'ph-reflection-page',
@@ -65,9 +81,13 @@ const MOODS: RadioOption[] = [
   templateUrl: './reflection-page.html',
   styleUrl: './reflection-page.css',
 })
-export class ReflectionPage {
+export class ReflectionPage implements CanLeave {
   private readonly api = inject(LEARNING_API);
   private readonly toasts = inject(ToastService);
+  private readonly dialogs = inject(PhDialogs);
+  private readonly drafts = inject(REFLECTION_DRAFT_STORE);
+  private readonly session = inject(SESSION_API);
+  private membershipId = '';
   private readonly refresh$ = new Subject<void>();
   protected readonly moods = MOODS;
 
@@ -82,6 +102,11 @@ export class ReflectionPage {
   protected readonly failed = signal(false);
   /** The reflection as last saved on the server, while its confirmation shows. */
   protected readonly saved = signal<Reflection | null>(null);
+  /** When the restored draft was saved, while it shows. */
+  protected readonly restored = signal<string | null>(null);
+  /** What the form held when it loaded or was last saved, here or as a draft. */
+  private readonly baseline = signal('');
+  protected readonly dirty = computed(() => this.snapshot() !== this.baseline());
   protected readonly errors = signal<Record<string, string>>({});
   protected readonly summary = computed<ErrorSummaryItem[]>(() =>
     Object.entries(this.errors()).map(([key, message]) => ({
@@ -97,10 +122,12 @@ export class ReflectionPage {
         this.refresh$.pipe(
           startWith(undefined),
           switchMap(() =>
-            this.api.reflection(id).pipe(
-              tap((r) => {
-                if (r.status === 'loaded') this.fill(r.value.reflection);
+            combineLatest([this.api.reflection(id), this.session.current()]).pipe(
+              tap(([r, me]) => {
+                this.membershipId = me.membershipId;
+                if (r.status === 'loaded') this.fill(r.value);
               }),
+              map(([r]) => r),
               startWith<GatedResult<ReflectionEditor> | null>(null),
             ),
           ),
@@ -110,11 +137,82 @@ export class ReflectionPage {
     { initialValue: null },
   );
 
-  private fill(r: Reflection | null): void {
+  private snapshot(): string {
+    return JSON.stringify([this.mood(), this.text(), this.action(), this.shared()]);
+  }
+
+  private fill(v: ReflectionEditor): void {
+    const r = v.reflection;
     this.mood.set(r?.mood ?? '');
     this.text.set(r?.text ?? '');
     this.action.set(r?.action ?? '');
     this.shared.set(r?.shared ?? false);
+    this.baseline.set(this.snapshot());
+    const draft = this.drafts.load(this.membershipId, v.lessonId);
+    if (draft) {
+      this.mood.set(draft.mood);
+      this.text.set(draft.text);
+      this.action.set(draft.action);
+      this.shared.set(draft.shared);
+      this.baseline.set(this.snapshot());
+    }
+    this.restored.set(draft ? formatDateTime(draft.savedAt) : null);
+  }
+
+  protected saveDraft(v: ReflectionEditor): void {
+    this.keepDraft(v.lessonId);
+    this.toasts.show({
+      tone: 'success',
+      title: 'Draft saved',
+      text: 'On this device. Nobody else can see a draft.',
+    });
+  }
+
+  private keepDraft(lessonId: string): void {
+    this.drafts.save(this.membershipId, lessonId, {
+      mood: this.mood(),
+      text: this.text(),
+      action: this.action(),
+      shared: this.shared(),
+      savedAt: new Date().toISOString(),
+    });
+    this.baseline.set(this.snapshot());
+  }
+
+  /** Clears the draft and goes back to what was last saved on the server. */
+  protected startOver(v: ReflectionEditor): void {
+    this.drafts.clear(this.membershipId, v.lessonId);
+    const r = this.saved() ?? v.reflection;
+    this.mood.set(r?.mood ?? '');
+    this.text.set(r?.text ?? '');
+    this.action.set(r?.action ?? '');
+    this.shared.set(r?.shared ?? false);
+    this.baseline.set(this.snapshot());
+    this.restored.set(null);
+  }
+
+  /** Asks before the router leaves unsaved changes (L2-079 criterion 5). */
+  canLeave(): Observable<boolean> | boolean {
+    const r = this.result();
+    if (!this.dirty() || r?.status !== 'loaded') return true;
+    const lessonId = r.value.lessonId;
+    return this.dialogs
+      .open<LeaveChoice, null, LeaveReflectionDialog>(LeaveReflectionDialog, null)
+      .closed.pipe(
+        map((choice) => {
+          if (choice === 'save') this.keepDraft(lessonId);
+          return choice === 'save' || choice === 'discard';
+        }),
+      );
+  }
+
+  /** Closing or reloading the tab with unsaved changes: the browser asks. */
+  @HostListener('window:beforeunload', ['$event'])
+  protected warn(event: BeforeUnloadEvent): void {
+    if (this.dirty()) {
+      event.preventDefault();
+      event.returnValue = '';
+    }
   }
 
   protected mentor(v: ReflectionEditor): string {
@@ -168,6 +266,9 @@ export class ReflectionPage {
     this.saving.set(false);
     if (outcome.status === 'loaded') {
       this.saved.set(outcome.value);
+      this.drafts.clear(this.membershipId, v.lessonId);
+      this.restored.set(null);
+      this.baseline.set(this.snapshot());
       this.toasts.show({
         tone: 'success',
         title: 'Reflection saved',

@@ -87,6 +87,27 @@ export class LearnReflectionPage extends BasePage {
     await this.leaveDialog.getByRole('button', { name }).click();
   }
 
+  /** Follows the breadcrumb back to the lesson, as leaving the page would. */
+  async leaveForLesson(lesson: string): Promise<void> {
+    await this.page.getByRole('navigation', { name: 'Breadcrumb' }).getByRole('link', { name: lesson }).click();
+  }
+
+  /** Reloads the tab and answers whether the browser asked before leaving. */
+  async reloadAsksFirst(): Promise<boolean> {
+    let asked = false;
+    this.page.once('dialog', async (dialog) => {
+      asked = dialog.type() === 'beforeunload';
+      await dialog.accept();
+    });
+    await this.page.reload();
+    return asked;
+  }
+
+  /** Whether a draft for this membership and lesson is kept on the device. */
+  async hasDraft(membershipId: string, lessonId: string): Promise<boolean> {
+    return this.page.evaluate((key) => localStorage.getItem(key) !== null, `promisehub.reflection-draft.${membershipId}.${lessonId}`);
+  }
+
   async apiStatus(lessonId: string): Promise<number> {
     return this.page.evaluate(async (id) => (await fetch(`/api/learning/lessons/${id}/reflection`)).status, lessonId);
   }

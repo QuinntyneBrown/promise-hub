@@ -5,7 +5,7 @@ import { LearnReflectionPage } from '../../pages/learn-reflection.page';
 import { TodayPage } from '../../pages/today.page';
 
 // Acceptance test. Traces to: L2-089 criteria 1 to 3, 7 and 8 (writing and saving a reflection, its checks, private or shared, the lesson,
-// consent and module gates), L2-035, L2-036.
+// consent and module gates), L2-079 criterion 5 (the leave dialog and the device draft), L2-035, L2-036.
 const SUITE: ModuleId[] = ['Roster', 'Slips', 'RollCall', 'QuickCards', 'Pickup', 'Messages', 'Incidents', 'Reports'];
 const WORDS = 'My little brother Mateo cleared the table after dinner without anyone asking. I want to be the one who notices first.';
 
@@ -65,6 +65,79 @@ test.describe('Write reflections', () => {
     await reflection.save();
     await expect(reflection.saved('Reflection saved')).toContainText('Only you can see it.');
     expect(api.reflectionsState.of('m-sofia', 'l-towel')?.shared).toBe(false);
+  });
+
+  test('Given she has written something, when she leaves for the lesson, then she is asked first; Keep editing keeps her words and Save draft and leave keeps a draft she finds again', async ({
+    page,
+    api,
+  }) => {
+    const reflection = new LearnReflectionPage(page);
+    const lesson = new LearnLessonPage(page);
+    await reflection.open('l-towel');
+    await reflection.write('Thoughtful', WORDS);
+    await reflection.share.check();
+
+    await reflection.leaveForLesson('Pick Up the Towel');
+    await expect(reflection.leaveDialog).toContainText('Your reflection hasn’t been saved.');
+    await reflection.expectAccessible();
+    await reflection.leaveChoice('Keep editing');
+    await expect(reflection.leaveDialog).toHaveCount(0);
+    await expect(reflection.words).toHaveValue(WORDS);
+
+    await reflection.leaveForLesson('Pick Up the Towel');
+    await reflection.leaveChoice('Save draft and leave');
+    await lesson.expectOpen('Pick Up the Towel');
+    expect(await reflection.hasDraft('m-sofia', 'l-towel')).toBe(true);
+    expect(api.reflectionsState.of('m-sofia', 'l-towel')).toBeNull();
+
+    await lesson.writeReflection();
+    await expect(reflection.restored).toBeVisible();
+    await expect(reflection.words).toHaveValue(WORDS);
+    await expect(reflection.mood('Thoughtful')).toBeChecked();
+    await expect(reflection.share).toBeChecked();
+    await reflection.expectAccessible();
+    await reflection.startOver();
+    await expect(reflection.words).toHaveValue('');
+    expect(await reflection.hasDraft('m-sofia', 'l-towel')).toBe(false);
+  });
+
+  test('Given nothing changed, or she chooses Leave without saving, then she leaves and no draft is kept', async ({ page }) => {
+    const reflection = new LearnReflectionPage(page);
+    const lesson = new LearnLessonPage(page);
+    await reflection.open('l-towel');
+
+    await reflection.leaveForLesson('Pick Up the Towel');
+    await lesson.expectOpen('Pick Up the Towel');
+    await expect(reflection.leaveDialog).toHaveCount(0);
+
+    await reflection.open('l-towel');
+    await reflection.write('Hopeful', WORDS);
+    await reflection.leaveForLesson('Pick Up the Towel');
+    await reflection.leaveChoice('Leave without saving');
+    await lesson.expectOpen('Pick Up the Towel');
+    expect(await reflection.hasDraft('m-sofia', 'l-towel')).toBe(false);
+  });
+
+  test('Given she saves a draft, then a toast confirms, a reload asks only while there are unsaved changes, and saving the reflection clears the draft', async ({
+    page,
+  }) => {
+    const reflection = new LearnReflectionPage(page);
+    const lesson = new LearnLessonPage(page);
+    await reflection.open('l-towel');
+    await reflection.write('Challenged', 'First thoughts.');
+    expect(await reflection.reloadAsksFirst()).toBe(true);
+    await reflection.write('Challenged', WORDS);
+
+    await reflection.saveDraft();
+
+    await expect(reflection.toast('Draft saved')).toContainText('Nobody else can see a draft.');
+    expect(await reflection.reloadAsksFirst()).toBe(false);
+    await expect(reflection.restored).toBeVisible();
+    await reflection.save();
+    await expect(reflection.saved('Reflection saved')).toBeVisible();
+    expect(await reflection.hasDraft('m-sofia', 'l-towel')).toBe(false);
+    await reflection.leaveForLesson('Pick Up the Towel');
+    await lesson.expectOpen('Pick Up the Towel');
   });
 
   test('Given an empty form, when she saves, then the mood and her words are asked for beside the fields and in a summary, and nothing is saved', async ({
