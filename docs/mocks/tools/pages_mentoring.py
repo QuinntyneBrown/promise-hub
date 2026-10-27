@@ -207,7 +207,7 @@ def review_crumbs(cur: str) -> str:
 
 def queue_table(rows) -> str:
     body = [[f'<span class="cluster cluster--snug">{avatar(y)}<strong>{esc(y["name"])}</strong></span>', esc(t), esc(k),
-             esc(w) + (" " + badge(late, "warning") if late else ""),
+             badge(f"{w} · {late}", "warning") if late else esc(w),
              btn("Review", "", size="sm", href=page(target), aria_label=f"Review {y['name']}’s {t}")] for y, t, k, w, late, target in rows]
     return table("Waiting for your review", ["Youth", "Work", "Type", "Submitted", "Actions"], body, hide_sm={2, 3})
 
@@ -216,10 +216,10 @@ def queue_table(rows) -> str:
 @screen("mentor-reviews", "page", "Reviews", route="/mentoring/reviews", reqs=["L2-080", "L2-081", "L2-065", R_MENTOR])
 def mentor_reviews(S):
     back = breadcrumb([("Mentoring", page("mentor-dashboard"))], "Reviews")
-    hdr = back + page_header(f'Reviews {badge("4", "info")}', "Work from your youth waiting for you, oldest first.",
+    hdr = back + page_header("Reviews", "Work from your youth waiting for you, oldest first.",
                              btn("Quiz approvals", "", icon_name="check", href=page("mentor-quiz-approvals")))
-    tabs = lambda cur: tabs_nav([("All · 4", page("mentor-reviews"), cur == "all"), ("Assignments · 2", page("mentor-reviews", "assignments"), cur == "a"),
-                                 ("Quizzes · 2", page("mentor-reviews", "quizzes"), cur == "q")], "Filter reviews")
+    tabs = lambda cur: tabs_nav([("All 4", page("mentor-reviews"), cur == "all"), ("Assignments 2", page("mentor-reviews", "assignments"), cur == "a"),
+                                 ("Quizzes 2", page("mentor-reviews", "quizzes"), cur == "q")], "Filter reviews")
     S.add("default", "Daniel opens Reviews: two assignments and two quiz results from his youth, oldest first; Nadia’s came in after the due date.", **RKW,
           main=hdr + tabs("all") + queue_table(QUEUE),
           notes=note("Only work from Daniel’s youth (assigned directly or through a cohort he is on) ever reaches this list; the server filters it.", "top: 5rem; right: 1rem;"))
@@ -250,7 +250,7 @@ def grade_form(scores=(10, 10, 5), comment=G_COMMENT, err=None, busy="", extra="
     summary = form_summary(list(err.items())) if err else ""
     rubric = card(f'<div class="stack">{score_rows(scores, err)}<p class="text-muted" aria-live="polite">Total: <strong>{total} / 25</strong></p></div>', title="Rubric", tid="rubric")
     feedback = card(textarea("comment", f"Comment to Sofía", value=comment, rows=4, optional=True, count=f"{len(comment):,} / 2,000",
-                             help_="She sees this with her points. A request for revision needs a note.", error=err.get("comment", "")), title="Feedback", tid="feedback")
+                             help_="They see this with their points. A request for revision needs a note.", error=err.get("comment", "")), title="Feedback", tid="feedback")
     actions = (f'<div class="form-actions">{btn("Save draft", "ghost", icon_name="check", busy=busy == "draft")}'
                f'{btn("Request revision", "", icon_name="edit", attrs=" aria-haspopup=\"dialog\"", data_href=dialog("request-revision"))}'
                f'{btn("Approve", "primary", icon_name="check-circle", busy=busy == "approve", attrs=" aria-haspopup=\"dialog\"", data_href=dialog("approve-submission"))}</div>')
@@ -269,7 +269,7 @@ def submitted_work(late=False) -> str:
         na={"empty": "A submission always carries the work it was sent with and its assignment’s rubric."})
 def mentor_grade(S):
     hdr = lambda st="In review", kind="info": review_crumbs("Grade") + page_header(f'{ASSIGN} {badge(st, kind)}', "Sofía Rivera · Leading by Serving · submitted Tue 3 Nov, 4:12 pm")
-    who = card(f'<div class="cluster">{avatar(SOFIA_Y, "md")}<div><strong>Sofía Rivera</strong><div class="text-muted">Age 12 · After‑School Tutoring · round 1</div></div></div>', title="Youth", tid="youth")
+    who = card(f'<div class="cluster">{avatar(SOFIA_Y, "md")}<div><strong>Sofía Rivera</strong><div class="text-muted">Round 1</div></div></div>', title="Youth", tid="youth")
 
     def body(form, late=False) -> str:
         return f'<div class="split"><div class="stack">{who}{submitted_work(late)}</div><div class="stack">{form}</div></div>'
@@ -307,7 +307,7 @@ def mentor_grade(S):
 # ---------------------------------------------------------------- mentor-quiz-approvals
 def quiz_table(rows) -> str:
     body = [[f'<span class="cluster cluster--snug">{avatar(y)}<strong>{esc(y["name"])}</strong></span>', esc(q), esc(m),
-             f'{esc(s)} {badge("Below pass mark", "warning") if int(s[:-1]) < int(p[:-1]) else badge("Pass", "success")}', esc(w),
+             badge(f"{s} · Below pass mark", "warning") if int(s[:-1]) < int(p[:-1]) else badge(f"{s} · Pass", "success"), esc(w),
              btn("Approve", "", size="sm", data_href=dialog("approve-quiz"), attrs=' aria-haspopup="dialog"', aria_label=f"Approve {y['name']}’s {q}")]
             for y, q, m, s, p, a, w in rows]
     return table("Quiz results waiting for approval", ["Youth", "Quiz", "Module", "Auto-score", "Submitted", "Actions"], body, hide_sm={2, 4})

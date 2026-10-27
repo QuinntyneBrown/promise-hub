@@ -26,6 +26,10 @@ Backend:
 - **`CompetenciesHandler`** — 404 for a child outside the organization, 403 audited `AccessDenied` outside the mentor's youth; reads the organization's competencies with the latest assessment of each; saving checks every item (422 for an unknown competency or level, or notes over 2,000 characters), appends an assessment for each that changed, audits each `Created`, and answers the updated sheet.
 - **`Competency`**, **`CompetencyAssessment`**, **`CompetencyLevel`** (`PromiseHub.Domain/Mentoring/`) — tenant-owned; the seeder adds five at Harbourview and three at Northgate.
 
+## Built so far
+
+Prompt 63 delivered everything above. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/MentorCompetencyTests.cs` and `e2e/tests/mentoring/competency.spec.ts`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

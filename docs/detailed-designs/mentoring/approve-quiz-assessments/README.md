@@ -16,6 +16,7 @@ Ported from Waypoint `mentoring/approve-quiz-assessments` (`L2-MENTOR-004`) with
 
 Frontend (`frontend/projects/mentoring/`):
 
+- **`QuizBuilderPage`** (curriculum) — Mentor approves each score (`ph-switch`) saves `requireApproval` with the quiz's rules through `PUT /curriculum/quizzes/{id}`.
 - **`QuizApprovalsPage`** (`/mentoring/reviews/quizzes`, mock `mentor-quiz-approvals`) — `ph-table` of attempts with the auto-score against the pass mark in words; Approve opens `ApproveQuizDialog` (optional override, `ph-text-field` number); Approve all opens `ApproveAllQuizzesDialog`; a toast after each approval; empty, error and loading states.
 
 API client (`MENTORING_API`): `quizApprovals()`, `approveQuiz(id, override)`, `approveAllQuizzes()`; contracts `QuizApprovalItem`, `ApproveAllOutcome`.
@@ -25,6 +26,10 @@ Backend:
 - **`MentoringEndpoints`** — `GET /mentoring/quiz-approvals`, `POST /mentoring/quiz-attempts/{{id}}/approve`, `POST /mentoring/quiz-approvals/approve-all`, gated by Mentoring and Learning and `MentorYouth`.
 - **`QuizApprovalHandler`** — lists attempts in `AwaitingApproval` of the mentor's youth memberships; approves one (422 for an override outside 0 to 100, 409 `not-awaiting`, 404 outside scope) or all; each approval notifies the youth and is audited `Updated` with the auto-score and any override.
 - **`QuizAttempt.Approve(override, passMark, by, at)`** — keeps `AutoScore`, sets `Score`, `Passed`, `ApprovedByName`, `ApprovedAt`, and `Status = Scored`, so the youth's result, best score and module completion count only approved scores.
+
+## Built so far
+
+Prompt 63 delivered everything above. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/MentorQuizApprovalTests.cs`, `e2e/tests/mentoring/quiz-approvals.spec.ts` and the approval case in `e2e/tests/curriculum/curriculum-quizzes.spec.ts`.
 
 ## Requirements
 

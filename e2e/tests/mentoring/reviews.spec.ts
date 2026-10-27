@@ -65,10 +65,12 @@ test.describe('The review queue', () => {
     api.setModules('org-harbourview', ALL.filter((m) => m !== 'Learning'));
     const mentoring = new MentoringPage(page);
     const reviews = new MentorReviewsPage(page);
+    const fetched = mentoring.recordApiPaths();
     await mentoring.open();
     await mentoring.expectOpen();
     await expect(mentoring.stat('My youth')).toHaveText('2');
     await expect(mentoring.reviewsButton).toHaveCount(0);
+    expect(fetched.filter((p) => p.startsWith('/api/mentoring/reviews'))).toEqual([]);
 
     await reviews.open();
 

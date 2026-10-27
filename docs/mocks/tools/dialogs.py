@@ -626,7 +626,7 @@ G_NOTE = "Great story, Sofía! Can you add a line about one thing you noticed? T
 def revision_body(err):
     err = err or {}
     return (textarea("revision-note", "What should they change?", value="" if "revision-note" in err else G_NOTE, rows=4, error=err.get("revision-note", ""),
-                     help_="Sofía sees this note on her submission and in her notifications, and can resubmit.", attrs=" required autofocus"))
+                     help_="Sofía sees this note on their submission and in their notifications, and can resubmit.", attrs=" required autofocus"))
 
 
 simple("request-revision", "Request a revision", "mentor-grade", ["L2-080", "L2-065", "L1-024"], "Sofía gets your note and can resubmit.",
@@ -650,7 +650,7 @@ simple("approve-quiz", "Approve this quiz score?", "mentor-quiz-approvals", ["L2
        failed_text="The score wasn’t approved. Try again.")
 
 simple("approve-all-quizzes", "Approve all 2 quiz scores?", "mentor-quiz-approvals", ["L2-081", "L2-065", "L1-024"], "Each is approved at its auto-score",
-       lambda e: '<p>Nadia Haddad · Knowing Yourself quiz · 75%<br>Sofía Rivera · Leading by Serving quiz · 50%</p><p class="text-muted">To change a score, approve it on its own instead.</p>',
+       lambda e: ul_list([list_item("Nadia Haddad", "Knowing Yourself quiz · 75%"), list_item("Sofía Rivera", "Leading by Serving quiz · 50%")], card=False, label="Quiz scores to approve") + '<p class="text-muted">To change a score, approve it on its own instead.</p>',
        "Approve all", icon_name="check", form=False, failed_text="Nothing was approved. Try again.")
 
 

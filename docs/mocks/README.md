@@ -108,6 +108,7 @@ Requirement tags are L1 ids from `docs/specs/L1.md` (L2 acceptance criteria refe
 - [ ] **Small counts** in funder exports are masked under 5.
 - [ ] **Brand:** the violet accent and rounded type are the inherited design system; PromiseHub brand colours are not decided.
 - [ ] **Help / about** pages are not mocked; help is a phone number and email in each footer.
+- [ ] **Competencies** (`mentor-competency`) are seeded per organization (Serves others, Speaks up, Leads a small group, Follows through, Works with others at Harbourview) until program directors author the framework (prompt 64, ADR 0057).
 
 ## Coverage
 

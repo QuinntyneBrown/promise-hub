@@ -16,7 +16,7 @@ class SubmissionReviewHandler { HandleAsync(id); FileAsync(id) }
 class SubmissionReviewDto { Youth, Assignment, Work, Rubric, Comment, History, Version }
 class ReviewQueueHandler { HandleAsync() }
 class ReviewItemDto { Id, Kind, YouthName, Title, Module, SubmittedAt, Late, Score? }
-class MentorYouthMemberships { IdsAsync() }
+class MentorYouthMemberships { ReadAsync() }
 GradeSubmissionHandler ..> GradeRequest
 GradeSubmissionHandler ..> AssignmentSubmission
 GradeSubmissionHandler ..> RubricCriterion

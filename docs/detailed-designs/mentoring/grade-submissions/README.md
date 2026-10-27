@@ -19,7 +19,7 @@ Ported from Waypoint `mentoring/grade-submissions` (`L2-MENTOR-003`) with tenanc
 Frontend (`frontend/projects/mentoring/`, both routes matched only while Mentoring and Learning are on):
 
 - **`ReviewsPage`** (`/mentoring/reviews`, mock `mentor-reviews`) — `ph-tabs` filters All, Assignments and Quizzes on the client; `ph-table` rows with the youth, work, type, submitted time and Late, and a Review link to the grade page or Quiz approvals; empty, error and loading states.
-- **`GradePage`** (`/mentoring/reviews/submissions/:id`, mock `mentor-grade`) — what the youth sent beside the rubric (`ph-text-field` number per criterion), the running total, the comment (`ph-textarea`), Save draft, Request revision (opens `RequestRevisionDialog`) and Approve (opens `ApproveSubmissionDialog`); the error summary, failed, conflict (Load the latest) and outcome states; the `unsaved-changes` guard while scores or the comment differ from what was loaded.
+- **`GradePage`** (`/mentoring/reviews/submissions/:id`, mock `mentor-grade`) — what the youth sent beside the rubric (`ph-text-field` number per criterion), the running total, the comment (`ph-textarea`), Save draft, Request revision (opens `RequestRevisionDialog`) and Approve (opens `ApproveSubmissionDialog`); the error summary, failed, conflict (Load the latest) and outcome states; the `LeaveGradeDialog` (`leave-grade`) through a `CanDeactivate` guard, and the browser's own prompt, while scores or the comment differ from what was loaded.
 - **`MentorDashboardPage`** — offers Reviews with the waiting count while Learning is on.
 
 API client (`MENTORING_API`): `reviews()`, `submissionReview(id)`, `submissionFileUrl(id)`, `grade(id, request)`; contracts `ReviewItem`, `SubmissionReview`, `RubricScore`, `GradeRequest`, `GradeOutcome`.
@@ -27,11 +27,15 @@ API client (`MENTORING_API`): `reviews()`, `submissionReview(id)`, `submissionFi
 Backend (`PromiseHub.Application/Mentoring/`):
 
 - **`MentoringEndpoints`** — `GET /mentoring/reviews`, `GET /mentoring/submissions/{{id}}`, `GET /mentoring/submissions/{{id}}/file`, `POST /mentoring/submissions/{{id}}/grade`, gated by Mentoring and Learning and the `MentorYouth` permission.
-- **`MentorYouthMemberships`** — the youth memberships of the mentor's youth.
+- **`MentorYouthMemberships.ReadAsync`** — the youth memberships of the mentor's youth, with their names.
 - **`ReviewQueueHandler`** — reads submissions and awaiting attempts of those memberships only.
 - **`SubmissionReviewHandler`** — 404 unless the submission belongs to one of those memberships; starts the review on first open (audited `Updated`); answers the work, rubric with saved scores, comment, history and version; streams the file.
 - **`GradeSubmissionHandler`** — checks the version (409 `stale`), the status (409 `not-reviewable`), each score against its criterion (422), a note for `revise` and every score for `approve`; then `SaveDraftGrade`, `Accept` or `RequestRevision`, a `Notification` to the youth membership, an audit entry, and one save.
 - **`AssignmentSubmission`** — gains `Scores` (JSON keyed by criterion), `ReviewComment` and `Version`; `SaveDraftGrade` keeps both and advances the version.
+
+## Built so far
+
+Prompt 63 delivered everything above. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/MentorReviewQueueTests.cs`, `MentorGradeTests.cs`, `e2e/tests/mentoring/reviews.spec.ts` and `grade.spec.ts`.
 
 ## Requirements
 

@@ -18,6 +18,10 @@ Ported from Waypoint `non-functional/protect-concurrent-updates` (`L2-NFR-006`),
 - **`GradePage`** — on 409 `stale` keeps the scores and comment, shows the conflict alert and Load the latest, which reloads the submission and its version.
 - Other records adopt a version when their journey needs one.
 
+## Built so far
+
+Prompt 63 delivered everything above for assignment submissions. Acceptance tests: the stale-grade cases in `backend/tests/PromiseHub.Api.Tests/MentorGradeTests.cs` and `e2e/tests/mentoring/grade.spec.ts`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |
