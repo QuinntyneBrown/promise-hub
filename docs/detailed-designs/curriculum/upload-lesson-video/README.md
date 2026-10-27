@@ -2,7 +2,7 @@
 
 ## Overview
 
-A lesson may carry one **lesson video** that youth watch with the teaching content. The author chooses the file in the lesson editor; the browser sends it in one multipart request with upload progress; the API checks it is a real video of an accepted type and size, stores it through PromiseHub **file storage** and records it on the lesson. Choosing another video replaces the first; Remove deletes it.
+A lesson may carry one **lesson video** that youth watch with the teaching content. The author chooses the file in the lesson editor; the browser sends it in one multipart request; the API checks it is a real video of an accepted type and size, stores it through PromiseHub **file storage** and records it on the lesson. Choosing another video replaces the first; Remove deletes it.
 
 Terms used in this document:
 
@@ -16,8 +16,8 @@ Ported from Waypoint `curriculum-authoring/upload-lesson-video` (`L2-CURRIC-002`
 
 Frontend:
 
-- **`LessonEditorPage`** — the Video card shows `ph-file-upload` (accept `video/mp4,video/quicktime,video/webm`) with no video, `ph-progress-bar` while uploading, the attached video as a `ph-list-item` with Remove, and `ph-alert` for a refused file ("That file isn’t a video we can use") or a failed upload ("The upload didn’t finish").
-- **`CurriculumApi.uploadVideo(lessonId, file)`** — `HttpClient` with `reportProgress` and `observe: 'events'`, mapped to `{ status: 'progress', percent }` then the saved outcome; **`removeVideo(lessonId)`**.
+- **`LessonEditorPage`** — the Video card shows `ph-file-upload` (accept `video/mp4,video/quicktime,video/webm`) with no video, the file's name and size with "Uploading" while it is sent, the attached video as a `ph-list-item` (file name, size, date and uploader) with Remove, and `ph-alert` for a refused file ("That file isn’t a video we can use") or a failed upload ("The upload didn’t finish").
+- **`CurriculumApi.uploadVideo(lessonId, file)`** — a `FormData` post mapped to a `WriteOutcome`; the page reloads the lesson to show the video. **`removeVideo(lessonId)`**. The API client uses `withFetch()`, which reports no upload progress, so no percentage is shown.
 
 Backend:
 
@@ -28,7 +28,7 @@ Backend:
 
 Security (`L2-031`): the file name is only displayed, never used as a path; nothing is served back from this slice; youth and mentors receive 403 from every endpoint here. Streaming the video to youth is prompt 57.
 
-Open questions: chunked resumable upload, transcoding, a poster image and the duration are deferred (ADR 0050). Object storage in a hosted deployment is `<TO SUPPLY>`; it replaces `LocalFileStore` behind the same port.
+Open questions: chunked resumable upload with an upload percentage, transcoding, a poster image and the duration are deferred (ADR 0050). Object storage in a hosted deployment is `<TO SUPPLY>`; it replaces `LocalFileStore` behind the same port.
 
 ## Built so far
 

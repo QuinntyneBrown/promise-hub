@@ -56,7 +56,7 @@ def module_rows(rows, *, link: bool = True) -> str:
 
 def track_card(name: str, key: str, desc: str, st: str, rows, cohorts: str) -> str:
     head = (f'<div class="cluster cluster--between"><div><h2 class="card__title" id="t-{key}">{esc(name)} {badge(st, STATUS_KIND[st])}</h2>'
-            f'<p class="text-muted">{esc(desc)}</p><p class="text-caption">Key: {key} · Followed by {cohorts}</p></div>'
+            f'<p class="text-muted">{esc(desc)}</p><p class="text-caption">Key: {key}</p><p class="text-caption">Followed by {cohorts}</p></div>'
             f'<div class="cluster cluster--snug">{btn("Cohorts", "", size="sm", icon_name="users", attrs=" aria-haspopup=\"dialog\"", aria_label=f"Cohorts following {name}", data_href=dialog("track-cohorts"))}'
             f'{btn("Publish" if st == "Draft" else "Status", "", size="sm", attrs=" aria-haspopup=\"dialog\"", aria_label=("Publish " if st == "Draft" else "Status of ") + name, data_href=dialog("curriculum-status", "track"))}</div></div>')
     body = module_rows(rows) if rows else '<p class="text-muted">No modules yet.</p>'
@@ -69,7 +69,7 @@ def track_card(name: str, key: str, desc: str, st: str, rows, cohorts: str) -> s
 def curriculum_tracks(S):
     hdr = page_header("Curriculum", "Tracks, modules and lessons your youth work through.",
                       btn("New track", "primary", icon_name="plus", attrs=' aria-haspopup="dialog"', data_href=dialog("new-track")))
-    numbers = kpis([("Tracks", "2", "1 published"), ("Modules", "4", "1 published"), ("Lessons", "8", "3 published")])
+    numbers = kpis([("Tracks", "2", "1 published"), ("Modules", "4", "1 published"), ("Lessons", "8", "")])
     tracks = (track_card("Leadership Foundations", "leadership", "Growing as a leader at home, at school and in the cohort.", "Published", LEADERSHIP, "After‑School Tutoring and Saturday Sports")
               + track_card("Digital Skills", "digital", "Using technology safely and creatively.", "Draft", DIGITAL, "no cohort yet"))
     S.add("default", "Marisol opens Curriculum: each track with its modules in youth-facing order, their status, and the cohorts that follow it.", **KW,
@@ -117,8 +117,7 @@ def curriculum_module(S):
         return card(ul_list(items, card=False, label="Lessons, in order"), title="Lessons", tid="lessons", cls="card--flush",
                     footer=btn("Add lesson", "ghost", size="sm", icon_name="plus", attrs=' aria-haspopup="dialog"', data_href=dialog("new-lesson")))
 
-    visibility = card(f'<p>In review. Publishing makes it visible to youth in the cohorts that follow Leadership Foundations.</p>'
-                      + facts([("Cohorts", "After‑School Tutoring, Saturday Sports")]), title="Visibility", tid="visibility")
+    visibility = card(facts([("Status", "In review"), ("Track", "Leadership Foundations"), ("Cohorts", "After‑School Tutoring, Saturday Sports")]), title="Visibility", tid="visibility")
 
     def layout(form, rows=LESSONS, st="In review"):
         return hdr(st) + f'<div class="split"><div class="stack">{form}</div><div class="stack">{lessons(rows)}{visibility}</div></div>'
@@ -172,7 +171,7 @@ def curriculum_lesson(S):
         if state == "uploading":
             inner = (list_item("pick-up-the-towel.mp4", "Uploading · 184 MB", lead=f'<span class="icon-tile" aria-hidden="true">{icon("upload")}</span>')
                      .replace('<li class="list__item">', '<li class="list__item" aria-busy="true">'))
-            return card(ul_list([inner], card=False, label="Lesson video") + f'<div>{progress(63, 100, "Uploading pick-up-the-towel.mp4", show="63%")}</div>', title="Video", tid="video", cls="card--flush")
+            return card(ul_list([inner], card=False, label="Lesson video"), title="Video", tid="video", cls="card--flush")
         if state == "ready":
             row = list_item("pick-up-the-towel.mp4", "Video · 184 MB · uploaded Thu 5 Nov by Marisol Delgado",
                             lead=f'<span class="icon-tile" aria-hidden="true">{icon("file")}</span>', end=btn("Remove", "ghost", size="sm", aria_label="Remove the video pick-up-the-towel.mp4"))
@@ -191,7 +190,7 @@ def curriculum_lesson(S):
     S.add("default", "Marisol opens Pick Up the Towel: its content, the leader notes youth never see, its video and where it belongs.", **KW, main=layout(form()),
           notes=note("Leader guide notes are sent only to authors; youth endpoints never return them. Youth see the lesson only while it, its module and its track are published.", "top: 5rem; right: 1rem;"))
     S.add("no-video", "A lesson without a video: the drop zone offers Choose video.", **KW, main=layout(form(), "none", "Draft"))
-    S.add("video-uploading", "The video uploading: a progress bar with the percentage, the page stays usable.", **KW, main=layout(form(), "uploading", "Draft"))
+    S.add("video-uploading", "The video uploading: its name and size with Uploading; the rest of the page stays usable. A percentage waits for chunked upload (ADR 0050).", **KW, main=layout(form(), "uploading", "Draft"))
     S.add("video-invalid", "Marisol chose a PDF: refused with the reason, nothing attached, the drop zone stays.", **KW, main=layout(form(), "invalid", "Draft"))
     S.add("video-failed", "The upload failed partway: nothing attached, try again.", **KW, main=layout(form(), "failed", "Draft"))
     S.add("invalid", "Saving with no title and 900 minutes: errors beside the fields and in the summary.", **KW,

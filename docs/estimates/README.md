@@ -1,11 +1,10 @@
 # Estimates
 
 - Overall effort: 280 days
-- Complete: 68%
+- Complete: 71%
 
 | Subsystem | Effort | Complete |
 |---|---|---|
-| [curriculum](curriculum.md) | 10 days | 10% |
 | [identity](identity.md) | 27 days | 86% |
 | [organizations](organizations.md) | 35 days | 71% |
 | [platform](platform.md) | 28 days | 45% |
@@ -27,15 +26,15 @@
 | [audit](audit.md) | 6 days | 80% |
 | [search](search.md) | 4 days | 70% |
 | [learning](learning.md) | 5 days | 100% |
+| [curriculum](curriculum.md) | 10 days | 100% |
 | [mentoring](mentoring.md) | 11 days | 100% |
 | [website](website.md) | 1 day | 100% |
 
 ## Roadmap
 
-1. Curriculum authoring (prompt 56): tracks and modules, lessons and lesson video.
-2. Identity, organizations and platform foundations: sign-in, authorization, tenancy, migration, security and jobs.
-3. Shell, household, program and staff foundations: accessible navigation, shared records, program setup and onboarding.
-4. Enrollment, attendance and imports: guardian enrollment, roster import, session flow, pickup, Quick Cards and offline support.
-5. Messaging, notifications, permission slips and guardian experiences: delivery controls, notification center, signing, reminders, localized guardian pages and incidents.
-6. Reports, billing and audit: computation and export, plan metering and payments, then organization audit search.
-7. Waypoint journeys (prompts 50 to 81): their designs extend learning, curriculum, mentoring and website on the finished merge foundation.
+1. Identity, organizations and platform foundations: sign-in, authorization, tenancy, migration, security and jobs.
+2. Shell, household, program and staff foundations: accessible navigation, shared records, program setup and onboarding.
+3. Enrollment, attendance and imports: guardian enrollment, roster import, session flow, pickup, Quick Cards and offline support.
+4. Messaging, notifications, permission slips and guardian experiences: delivery controls, notification center, signing, reminders, localized guardian pages and incidents.
+5. Reports, billing and audit: computation and export, plan metering and payments, then organization audit search.
+6. Waypoint journeys (prompts 50 to 81): their designs extend learning, curriculum, mentoring and website on the finished merge foundation.

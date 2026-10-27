@@ -35,5 +35,5 @@ else
   h -> store : DeleteAsync(previous key) after the save (c7)
   ep --> capi : 201 { fileName, bytes, uploadedAt, uploadedBy }
 end
-capi --> page : progress events, then the video
+capi --> page : saved; the page reloads the lesson and shows the video
 @enduml

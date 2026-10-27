@@ -3,8 +3,8 @@
 LAYOUT_WITH_LEGEND()
 title Components — Upload a lesson video
 Container_Boundary(web, "PromiseHub web app (Angular)") {
-  Component(lesson, "LessonEditorPage", "Angular page", "ph-file-upload, ph-progress-bar")
-  Component(capi, "CurriculumApi", "Contract + HTTP client", "uploadVideo with progress, removeVideo")
+  Component(lesson, "LessonEditorPage", "Angular page", "ph-file-upload, the attached video")
+  Component(capi, "CurriculumApi", "Contract + HTTP client", "uploadVideo, removeVideo")
 }
 Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
   Component(ep, "CurriculumEndpoints", "Minimal API", "multipart, 1 GB request limit")
