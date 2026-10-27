@@ -22,40 +22,42 @@
       </ph-empty-state>
     </ph-card>
   } @else {
-    @if (counts(); as c) {
-      <div class="kpis">
-        <ph-stat
-          label="Badges"
-          [value]="'' + c.badges"
-          [caption]="c.automatic + ' automatic · ' + c.manual + ' by hand'"
-          data-testid="kpi-badges"
-        />
-        <ph-stat
-          label="Awarded"
-          [value]="'' + c.awards"
-          [caption]="'to ' + c.youth + ' youth'"
-          data-testid="kpi-awarded"
-        />
-        <ph-stat
-          label="Most earned"
-          [value]="c.most?.name ?? 'None yet'"
-          [caption]="c.most ? c.most.earnedCount + ' youth' : null"
-          data-testid="kpi-most-earned"
-        />
-      </div>
-    }
-    <ph-card title="All badges" [flush]="true">
-      <ph-list label="Badges" [inset]="true">
-        @for (b of r.value.badges; track b.id) {
-          <ph-list-item [title]="b.name" [meta]="meta(b)" [link]="['/curriculum/badges', b.id]">
-            <ph-achievement-badge phListLead size="sm" [icon]="badgeIcon(b.icon)" />
-            <ph-badge [tone]="b.kind === 'Automatic' ? 'info' : 'neutral'">{{
-              b.kind === 'Automatic' ? 'Automatic' : 'By hand'
-            }}</ph-badge>
-          </ph-list-item>
-        }
-      </ph-list>
-    </ph-card>
+    <div class="stack">
+      @if (counts(); as c) {
+        <div class="kpis">
+          <ph-stat
+            label="Badges"
+            [value]="'' + c.badges"
+            [caption]="c.automatic + ' automatic · ' + c.manual + ' by hand'"
+            data-testid="kpi-badges"
+          />
+          <ph-stat
+            label="Awarded"
+            [value]="'' + c.awards"
+            [caption]="'to ' + c.youth + ' youth'"
+            data-testid="kpi-awarded"
+          />
+          <ph-stat
+            label="Most earned"
+            [value]="c.most?.name ?? 'None yet'"
+            [caption]="c.most ? c.most.earnedCount + ' youth' : null"
+            data-testid="kpi-most-earned"
+          />
+        </div>
+      }
+      <ph-card title="All badges" [flush]="true">
+        <ph-list label="Badges" [inset]="true">
+          @for (b of r.value.badges; track b.id) {
+            <ph-list-item [title]="b.name" [meta]="meta(b)" [link]="['/curriculum/badges', b.id]">
+              <ph-achievement-badge phListLead size="sm" [icon]="badgeIcon(b.icon)" />
+              <ph-badge [tone]="b.kind === 'Automatic' ? 'info' : 'neutral'">{{
+                b.kind === 'Automatic' ? 'Automatic' : 'By hand'
+              }}</ph-badge>
+            </ph-list-item>
+          }
+        </ph-list>
+      </ph-card>
+    </div>
   }
 } @else if (r.status === 'forbidden') {
   <ph-card [flush]="true">
