@@ -70,6 +70,7 @@ app.MapSlipEndpoints();
 app.MapGuardianEndpoints();
 app.MapImportEndpoints();
 app.MapEnrollmentEndpoints();
+app.MapApplicationEndpoints();
 app.MapIncidentEndpoints();
 app.MapSmsWebhookEndpoints();
 app.MapStaffEndpoints();

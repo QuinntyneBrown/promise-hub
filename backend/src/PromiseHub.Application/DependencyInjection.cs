@@ -111,6 +111,7 @@ public static class DependencyInjection
         services.AddScoped<Enrollment.GuardianEnrollmentHandler>();
         services.AddScoped<Enrollment.ListEnrollmentRequestsHandler>();
         services.AddScoped<Enrollment.ReviewEnrollmentHandler>();
+        services.AddScoped<Enrollment.ApplicationsHandler>();
         services.AddScoped<Guardian.GuardianAccess>();
         services.AddScoped<Guardian.GuardianLinkIssuer>();
         services.AddScoped<Guardian.GuardianContactChange>();

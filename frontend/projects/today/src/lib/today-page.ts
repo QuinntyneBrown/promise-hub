@@ -163,7 +163,7 @@ export class TodayPage {
       case 'incidents':
         return '/incidents';
       case 'enrollments':
-        return this.has('Slips') ? '/programs' : null;
+        return this.has('Roster') ? '/applications' : null;
       case 'pickups':
         return '/check-in';
     }

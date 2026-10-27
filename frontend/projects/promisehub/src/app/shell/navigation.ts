@@ -86,6 +86,14 @@ export const NAVIGATION: Section[] = [
     module: 'Incidents',
   },
   {
+    label: 'Applications',
+    link: '/applications',
+    icon: 'inbox',
+    placement: 'overflow',
+    module: 'Roster',
+    roles: ['Admin', 'ProgramDirector'],
+  },
+  {
     label: 'Curriculum',
     link: '/curriculum',
     icon: 'curriculum',

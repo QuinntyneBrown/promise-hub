@@ -233,6 +233,10 @@ export class FakeApi {
     seasonConsent?: boolean;
     referrer?: { name: string; role: string; organization: string | null; contact: string } | null;
     applicant?: { firstName: string; lastName: string; dateOfBirth: string | null };
+    submittedBy?: string;
+    householdId?: string;
+    reviewedBy?: string | null;
+    reviewedAt?: string | null;
   }[] = [];
   /** Incidents as reported: organization, reporter membership and the form's facts. */
   private incidents: {
@@ -418,6 +422,81 @@ export class FakeApi {
   /** An open application already waiting review for a young person, as if submitted earlier (L2-071 criterion 8). */
   applied(programId: string, applicant: { firstName: string; lastName: string; dateOfBirth: string }): void {
     this.enrollmentRequests.push({ programId, status: 'WaitingReview', position: null, appliedAs: 'Youth', seasonConsent: false, applicant });
+  }
+
+  /**
+   * An application as the server stores it after a link submission (L2-071, L2-072): a new household with the guardian and the
+   * young person's child record, and the request waiting review. Answers the request id.
+   */
+  application(
+    programId: string,
+    a: {
+      firstName: string;
+      lastName: string;
+      dateOfBirth: string;
+      appliedAs: 'Guardian' | 'Youth' | 'Referrer';
+      guardian: { name: string; mobile: string };
+      reason?: string | null;
+      referrer?: { name: string; role: string; organization: string | null; contact: string } | null;
+      submittedAt: string;
+    },
+  ): string {
+    const program = this.programs.find((x) => x.id === programId)!;
+    const n = this.nextId++;
+    const householdId = `hh-app-${n}`;
+    const childId = `c-app-${n}`;
+    this.households.push({
+      id: householdId,
+      organizationId: program.organizationId,
+      name: a.lastName,
+      language: 'English',
+      guardians: [{ id: `g-app-${n}`, name: a.guardian.name, relationship: 'Parent', mobile: a.guardian.mobile, email: null, language: 'English', isPrimary: true, canPickUp: true, canSign: true }],
+      children: [{ id: childId, firstName: a.firstName, lastName: a.lastName, dateOfBirth: a.dateOfBirth, school: null, medical: { allergies: null, medication: null, conditions: null, doctor: null, redAlert: false, updatedAt: null, updatedBy: null } }],
+    });
+    const id = `er-${this.nextId++}`;
+    this.enrollmentRequests.push({
+      id,
+      programId,
+      status: 'WaitingReview',
+      position: null,
+      childId,
+      householdId,
+      submittedAt: a.submittedAt,
+      appliedAs: a.appliedAs,
+      reason: a.reason ?? null,
+      seasonConsent: a.appliedAs === 'Guardian',
+      referrer: a.referrer ?? null,
+      applicant: { firstName: a.firstName, lastName: a.lastName, dateOfBirth: a.dateOfBirth },
+      submittedBy: a.appliedAs === 'Referrer' ? a.referrer!.name : a.appliedAs === 'Youth' ? `${a.firstName} ${a.lastName}` : a.guardian.name,
+    });
+    return id;
+  }
+
+  /** Zoe Campbell, 13, referred by Rachel Ellis to a program (the cast of L2-071). */
+  referZoe(programId: string, submittedAt = '2026-11-05T18:02:00Z'): string {
+    return this.application(programId, {
+      firstName: 'Zoe',
+      lastName: 'Campbell',
+      dateOfBirth: '2013-03-14',
+      appliedAs: 'Referrer',
+      guardian: { name: 'Tanya Campbell', mobile: '905-555-0320' },
+      reason: 'Zoe is curious and kind, and needs somewhere to belong after school.',
+      referrer: { name: 'Rachel Ellis', role: 'Guidance counsellor', organization: 'Bennetto Elementary', contact: 'rachel.ellis@bennetto.example.ca' },
+      submittedAt,
+    });
+  }
+
+  /** Malik Johnson, 14, applying for himself to a program (the cast of L2-071). */
+  malikApplies(programId: string, submittedAt = '2026-11-04T23:48:00Z'): string {
+    return this.application(programId, {
+      firstName: 'Malik',
+      lastName: 'Johnson',
+      dateOfBirth: '2012-06-02',
+      appliedAs: 'Youth',
+      guardian: { name: 'Denise Johnson', mobile: '905-555-0310' },
+      reason: 'I want to learn to code and help with the younger kids.',
+      submittedAt,
+    });
   }
 
   enrollmentRequestCount(programId: string): number {
@@ -639,6 +718,7 @@ export class FakeApi {
     ['POST', /^\/api\/g\/home\/(?<token>[^/]+)\/children\/(?<id>[^/]+)\/pickups$/, (route, p) => this.guardianAddPickup(route, p['token']!, p['id']!)],
     ['DELETE', /^\/api\/g\/home\/(?<token>[^/]+)\/children\/(?<id>[^/]+)\/pickups\/(?<pickup>[^/]+)$/, (route, p) => this.guardianRemovePickup(route, p['token']!, p['id']!, p['pickup']!)],
     ['GET', /^\/api\/programs\/(?<id>[^/]+)\/enrollments$/, (route, p) => this.listEnrollmentRequests(route, p['id']!)],
+    ['GET', /^\/api\/applications$/, (route) => this.listApplications(route)],
     ['POST', /^\/api\/enrollments\/review$/, (route) => this.reviewEnrollments(route, null)],
     ['POST', /^\/api\/enrollments\/(?<id>[^/]+)\/review$/, (route, p) => this.reviewEnrollments(route, p['id']!)],
     ['POST', /^\/api\/programs\/(?<id>[^/]+)\/enrollment\/open$/, (route, p) => this.openEnrollmentRoute(route, p['id']!)],
@@ -3078,6 +3158,52 @@ export class FakeApi {
     return route.fulfill({ json: { requests } });
   }
 
+  /** The organization's application pipeline for one status, with the count of each (L2-072). */
+  private async listApplications(route: Route): Promise<void> {
+    const m = await this.reviewCaller(route);
+    if (!m) return;
+    const status = new URL(route.request().url()).searchParams.get('status') ?? 'WaitingReview';
+    const own = this.enrollmentRequests.filter((r) => r.id && r.childId && this.ownProgram(m, r.programId));
+    const count = (s: string) => own.filter((r) => r.status === s).length;
+    const enrolledAnywhere = new Set(this.programs.flatMap((x) => x.roster));
+    const applications = own
+      .filter((r) => r.status === status)
+      .map((r) => this.applicationSummary(m, r, enrolledAnywhere))
+      .sort((a, z) =>
+        status === 'WaitingReview'
+          ? z.submittedAt.localeCompare(a.submittedAt)
+          : status === 'Waitlisted'
+            ? a.program.localeCompare(z.program) || (a.position ?? 0) - (z.position ?? 0)
+            : (z.reviewedAt ?? '').localeCompare(a.reviewedAt ?? ''),
+      );
+    return route.fulfill({ json: { counts: { waitingReview: count('WaitingReview'), waitlisted: count('Waitlisted'), accepted: count('Accepted'), declined: count('Declined') }, applications } });
+  }
+
+  private applicationSummary(m: Membership, r: (typeof this.enrollmentRequests)[number], enrolledAnywhere: Set<string>) {
+    const { child, household } = this.childrenOf(m).find((x) => x.child.id === r.childId)!;
+    const program = this.programs.find((p) => p.id === r.programId)!;
+    const appliedAs = r.appliedAs ?? 'Guardian';
+    return {
+      id: r.id!,
+      childId: child.id,
+      child: `${child.firstName} ${child.lastName}`,
+      age: ageOf(child.dateOfBirth),
+      appliedAs,
+      appliedBy: r.submittedBy ?? this.sortedGuardians(household)[0]?.name ?? '',
+      referrerRole: r.referrer?.role ?? null,
+      programId: program.id,
+      program: program.name,
+      submittedAt: r.submittedAt!,
+      status: r.status,
+      position: r.position,
+      seasonConsent: r.seasonConsent ?? true,
+      returning: enrolledAnywhere.has(child.id) && r.status !== 'Accepted',
+      reviewedBy: r.reviewedBy ?? null,
+      reviewedAt: r.reviewedAt ?? null,
+      note: r.note ?? null,
+    };
+  }
+
   private async reviewEnrollments(route: Route, id: string | null): Promise<void> {
     const m = await this.reviewCaller(route);
     if (!m) return;
@@ -3109,6 +3235,8 @@ export class FakeApi {
         r.status = 'Declined';
       }
       r.note = note;
+      r.reviewedBy = m.personName;
+      r.reviewedAt = NOW.toISOString();
     }
     return route.fulfill({ status: 204 });
   }

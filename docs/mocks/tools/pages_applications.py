@@ -33,7 +33,7 @@ def row(person: dict, name: str, meta: str, end: str = "") -> str:
 
 WAITING = [
     row(ZOE, "Zoe Campbell", "13 · referred by Rachel Ellis, Guidance counsellor · After‑School Tutoring · applied Today", badge("Referral", "info")),
-    row(MALIK, "Malik Johnson", "14 · applied for himself · After‑School Tutoring · applied Wed 4 Nov", badge("Consent needed", "warning")),
+    row(MALIK, "Malik Johnson", "14 · applied for themselves · After‑School Tutoring · applied Wed 4 Nov", badge("Consent needed", "warning")),
     row(NIKOLAI, "Nikolai Petrov", "10 · Elena Petrova · After‑School Tutoring · applied Mon 2 Nov · returning"),
 ]
 WAITLISTED = [
@@ -123,7 +123,7 @@ def application(S):
                         ("Status", "Waiting review"), ("Season consent", "Not given yet: Malik is under 18, so Denise consents")]), title="Young person", tid="young")
     why = card(facts([("Applied by", "Malik, for himself"), ("Why", "I want to learn to code and help with the younger kids.")]), title="Application", tid="app")
     family = card(facts([("Parent or guardian", "Denise Johnson"), ("Mobile", "905-555-0310"), ("Messages in", "English"), ("Household", "Johnson · new household")]), title="Family", tid="family", footer=btn("Open household", "", size="sm", href=page("household")))
-    S.add("youth", "Malik Johnson applied for himself: his reason, his verified phone, and the reminder that Denise must consent.", **KW,
+    S.add("youth", "Malik Johnson applied for themselves: his reason, his verified phone, and the reminder that Denise must consent.", **KW,
           main=crumbs("Malik Johnson") + page_header("Malik Johnson", "14 · applied Wed 4 Nov for After‑School Tutoring", decide_actions("Malik"))
           + f'<div class="split"><div class="stack">{young}{why}</div><div class="stack">{family}{notes_card([])}</div></div>')
     S.add("loading", "The application loading: skeletons in the same two columns.", **KW,
