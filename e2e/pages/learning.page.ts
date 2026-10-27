@@ -45,6 +45,20 @@ export class LearningPage extends BasePage {
     await this.page.getByRole('button', { name: 'Check again' }).click();
   }
 
+  /** The waiting state of a youth in no program (mock: no-cohort). */
+  get noCohort(): Locator {
+    return this.page.getByRole('heading', { name: 'You’re not in a program yet' });
+  }
+
+  /** The resume alert for a setup left unfinished (mock: learning/resume). */
+  get resume(): Locator {
+    return this.page.getByTestId('resume-setup');
+  }
+
+  async pickUpSetup(): Promise<void> {
+    await this.page.getByRole('link', { name: 'Pick up where I left off' }).click();
+  }
+
   /** What the API answers this signed-in person for their lessons. */
   async lessonsStatus(): Promise<number> {
     return this.page.evaluate(async () => (await fetch('/api/learning/lessons')).status);

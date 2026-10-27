@@ -134,6 +134,9 @@ public sealed partial class YouthConsentGateTests : IAsyncLifetime
     {
         _guardian = _factory.CreateClient();
         await _factory.ClientFor(Tom).PutAsJsonAsync("/settings/modules", new { on = WithLearning });
+        // Nadia is placed in a program, so only the consent gate decides her lessons here (L2-060 is NoCohortTests).
+        var tutoring = DatabaseSeeder.ProgramId(DatabaseSeeder.Harbourview, "After-School Tutoring");
+        await _factory.ClientFor(Tom).PostAsJsonAsync($"/programs/{tutoring}/enrollments", new { childId = DatabaseSeeder.ChildId(DatabaseSeeder.Harbourview, "Nadia Haddad") });
     }
 
     public async Task DisposeAsync() => await _factory.DisposeAsync();

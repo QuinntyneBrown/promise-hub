@@ -50,3 +50,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0044](0044-participant-sign-in-and-session-endings.md) | Youth and mentors share staff sign-in; the role home is chosen in the app; sign-out ends the session on the server |
 | [0045](0045-one-invitation-for-every-role.md) | Youth, mentors and volunteers are invited with the same staff invitation; resend reissues it and an expired link can ask for a new one |
 | [0046](0046-guardian-consent-for-youth.md) | Guardian consent is a verified-link guardian page, the consent age and wording are a privacy setting, and the gate is an endpoint filter on youth work |
+| [0047](0047-youth-onboarding-and-program-placement.md) | Youth onboarding is a server-saved Learning setup behind the consent gate; placement is an active program enrollment checked by an endpoint filter |

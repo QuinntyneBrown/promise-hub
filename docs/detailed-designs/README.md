@@ -65,6 +65,8 @@ One folder per subsystem, one folder per vertically sliced feature, each with a 
 | platform | merge-waypoint-foundation | L2-004, L2-007, L2-042, L2-045 |
 | learning | read-own-record (journeys 57, 61, 62, 65, 66 add more; see [learning](learning/README.md)) | L2-005, L2-007, L2-045 |
 | learning | obtain-required-consent | L2-056 |
+| learning | onboard-youth | L2-059 |
+| learning | await-cohort-placement | L2-060 |
 | curriculum | open-curriculum (journeys 56, 60, 64 add more; see [curriculum](curriculum/README.md)) | L2-005, L2-007 |
 | mentoring | list-assigned-youth (journeys 55, 63, 67, 68, 69 add more; see [mentoring](mentoring/README.md)) | L2-005, L2-007 |
 | website | serve-public-site (journey 81 adds more; see [website](website/README.md)) | L2-005 |

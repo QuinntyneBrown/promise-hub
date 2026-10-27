@@ -1,0 +1,44 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+title Class structure — Await program placement
+class Membership <<entity, tenant-owned>> {
+  +Id: Guid
+  +Role: Role
+  +ChildId: Guid?
+}
+class Enrollment <<entity, tenant-owned>> {
+  +ProgramId: Guid
+  +ChildId: Guid
+  +EndedAt: DateTimeOffset?
+  +Active: bool
+}
+class Program <<entity, tenant-owned>> {
+  +Name: string
+  +Schedule: string?
+  +StartsOn: DateOnly
+  +EndsOn: DateOnly
+  +Status: ProgramStatus
+}
+class Placement {
+  +IsPlacedAsync(membershipId): bool
+  +ForMembershipAsync(membershipId): OnboardingProgramDto?
+}
+class PlacementFilter <<IEndpointFilter>> {
+  +InvokeAsync(context, next)
+}
+Membership --> Enrollment : child's
+Enrollment --> Program : in
+Placement ..> Membership : reads
+Placement ..> Enrollment : reads
+Placement ..> Program : reads
+PlacementFilter ..> Placement : asks
+@enduml

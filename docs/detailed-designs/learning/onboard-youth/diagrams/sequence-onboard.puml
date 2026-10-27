@@ -1,0 +1,51 @@
+@startuml
+title UML sequence behaviour — Save, resume and finish setup
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Youth" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "LearningPage" as lpage
+  participant "YouthWelcomePage" as wpage
+  participant "LearningApi" as lapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "Endpoints and filters" as ep
+end box
+box "Backend — PromiseHub.Application and Domain" #ECFDF3
+  participant "OnboardingHandler" as h
+  participant "Placement" as p
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> lpage : opens Learning after first sign-in
+lpage -> lapi : onboarding()
+lapi -> ep : GET /learning/onboarding (module, Learn, consent gate — L2-059 c7, c8)
+ep -> h : GetAsync (caller's membership)
+h -> db : YouthOnboarding for membership? none
+h -> p : ForMembershipAsync
+p -> db : active enrollment, program not archived (own organization — c9)
+ep --> lapi : 200 not-started, step 1, defaults, program
+lpage -> wpage : navigate /learning/welcome (c1)
+actor -> wpage : Continue with name and pronouns
+wpage -> lapi : saveOnboarding(step 2, answers)
+lapi -> ep : PUT /learning/onboarding
+ep -> h : SaveAsync — OnboardingRules (c2)
+h -> db : upsert YouthOnboarding (in progress)
+ep --> wpage : 204
+actor -> wpage : Finish later
+wpage -> lpage : navigate /learning
+lpage -> lapi : onboarding()
+ep --> lpage : 200 in-progress, step 2
+lpage --> actor : learning/resume "You stopped at step 2 of 3" (c4)
+actor -> wpage : Pick up where I left off … Finish
+wpage -> lapi : completeOnboarding()
+lapi -> ep : POST /learning/onboarding/complete
+ep -> h : CompleteAsync
+h -> db : CompletedAt, audit Completed on YouthOnboarding (c5)
+ep --> wpage : 204
+wpage --> actor : Learning with "You’re all set"
+@enduml

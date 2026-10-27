@@ -1,0 +1,38 @@
+@startuml
+title UML sequence behaviour — Waiting for a program
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Youth" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "LearningPage" as page
+  participant "LearningApi" as lapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "Endpoints" as ep
+  participant "PlacementFilter" as pf
+end box
+box "Backend — PromiseHub.Application and Domain" #ECFDF3
+  participant "Placement" as p
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : opens Learning
+page -> lapi : lessons()
+lapi -> ep : GET /learning/lessons (module, Learn, consent first — L2-060 c3, c6)
+ep -> pf : invoke
+pf -> p : IsPlacedAsync(caller)
+p -> db : linked child, active enrollment, program not archived (own organization — c5)
+pf --> lapi : 403 no-cohort (c1, c4)
+page --> actor : no-cohort "You’re not in a program yet"
+== Program staff enroll the child ==
+actor -> page : Check again
+page -> lapi : lessons()
+lapi -> ep : GET /learning/lessons
+pf -> p : IsPlacedAsync(caller) — true
+ep --> lapi : 200 lessons (c2)
+page --> actor : Learning
+@enduml

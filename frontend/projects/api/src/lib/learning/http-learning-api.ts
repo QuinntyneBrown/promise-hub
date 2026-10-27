@@ -10,6 +10,11 @@ import { Lessons } from './lessons';
 import { LessonsResult } from './lessons-result';
 import { ConsentRequestOutcome } from '../consent/consent-request-outcome';
 import { toConsentRequest } from '../consent/to-consent-request';
+import { toWrite } from '../http-results';
+import { WriteOutcome } from '../write-outcome';
+import { OnboardingAnswers } from './onboarding-answers';
+import { OnboardingResult } from './onboarding-result';
+import { YouthOnboarding } from './youth-onboarding';
 
 @Injectable()
 export class HttpLearningApi implements LearningApi {
@@ -27,6 +32,31 @@ export class HttpLearningApi implements LearningApi {
         of<LessonsResult>(
           error.status === 403 && error.error?.code === 'consent-required'
             ? { status: 'consent-required', consentAge: error.error?.consentAge ?? 18 }
+            : error.status === 403 && error.error?.code === 'no-cohort'
+              ? { status: 'no-cohort' }
+              : error.status === 404
+                ? { status: 'not-found' }
+                : error.status === 403
+                  ? { status: 'forbidden' }
+                  : { status: 'error' },
+        ),
+      ),
+    );
+  }
+
+  askGuardian(): Observable<ConsentRequestOutcome> {
+    return toConsentRequest(
+      this.http.post<{ sentTo: string[] }>(`${this.baseUrl}/learning/consent-request`, null),
+    );
+  }
+
+  onboarding(): Observable<OnboardingResult> {
+    return this.http.get<YouthOnboarding>(`${this.baseUrl}/learning/onboarding`).pipe(
+      map((value): OnboardingResult => ({ status: 'loaded', value })),
+      catchError((error: HttpErrorResponse) =>
+        of<OnboardingResult>(
+          error.status === 403 && error.error?.code === 'consent-required'
+            ? { status: 'consent-required', consentAge: error.error?.consentAge ?? 18 }
             : error.status === 404
               ? { status: 'not-found' }
               : error.status === 403
@@ -37,9 +67,11 @@ export class HttpLearningApi implements LearningApi {
     );
   }
 
-  askGuardian(): Observable<ConsentRequestOutcome> {
-    return toConsentRequest(
-      this.http.post<{ sentTo: string[] }>(`${this.baseUrl}/learning/consent-request`, null),
-    );
+  saveOnboarding(answers: OnboardingAnswers): Observable<WriteOutcome> {
+    return toWrite(this.http.put<null>(`${this.baseUrl}/learning/onboarding`, answers));
+  }
+
+  completeOnboarding(): Observable<WriteOutcome> {
+    return toWrite(this.http.post<null>(`${this.baseUrl}/learning/onboarding/complete`, null));
   }
 }

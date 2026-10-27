@@ -1451,7 +1451,8 @@
       "states": [
         "default",
         "loading",
-        "error"
+        "error",
+        "resume"
       ],
       "not_applicable": {
         "empty": "Until the journeys add content, the default state is the empty state."
@@ -1509,6 +1510,50 @@
       ],
       "not_applicable": {
         "empty": "Until the journeys add content, the default state is the empty state."
+      }
+    },
+    {
+      "id": "youth-welcome",
+      "kind": "page",
+      "title": "Youth welcome",
+      "route": "/learning/welcome",
+      "requirements": [
+        "L1-023",
+        "L1-002"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "invalid",
+        "busy",
+        "error",
+        "preferences",
+        "track",
+        "waiting",
+        "finishing",
+        "success"
+      ],
+      "not_applicable": {
+        "empty": "A wizard has no collection to be empty of; the no-cohort state is the program step’s waiting variant.",
+        "forbidden": "Only a youth reaches it; Learning answers 403 to other roles and the shell never links it for them."
+      }
+    },
+    {
+      "id": "no-cohort",
+      "kind": "page",
+      "title": "Not in a program yet",
+      "route": "/learning",
+      "requirements": [
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "error"
+      ],
+      "not_applicable": {
+        "empty": "The state itself is the empty Learning page for a youth with no program.",
+        "forbidden": "Only a youth reaches Learning; other roles get 403 from the server."
       }
     },
     {

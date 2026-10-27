@@ -183,9 +183,21 @@ const MFA_ROLES = new Set(['Admin', 'ProgramDirector']);
 /** The reference a faked fault answers with, as the API's request trace id would be. */
 export const FAULT_REFERENCE = '0HNA1B2C3D4E5:00000001';
 
+/** A youth's first-run setup as the API stores it (L2-059). */
+export interface FakeOnboarding {
+  step: number;
+  preferredName: string;
+  pronouns: string | null;
+  lessonReminders: boolean;
+  mentorMessages: boolean;
+  announcements: boolean;
+  completed: boolean;
+}
+
 export class FakeApi {
   readonly unrouted: string[] = [];
   private failures = new Map<string, number>();
+  private onboardings = new Map<string, FakeOnboarding>();
   private signInFailures = new Map<string, number>();
   private mfaPending: string | null = null;
   private expired = false;
@@ -322,6 +334,27 @@ export class FakeApi {
     this.failures.set(path, status);
   }
 
+  /** The route answers normally again after failNext. */
+  recover(path: string): void {
+    this.failures.delete(path);
+  }
+
+  /** Puts a child on a program's roster, as staff enrolling them would (the youth's placement, L2-060). */
+  placeInProgram(childId: string, programId: string): void {
+    const program = this.programs.find((x) => x.id === programId)!;
+    if (!program.roster.includes(childId)) program.roster.push(childId);
+  }
+
+  /** A youth's saved first-run setup, as the API stores it (L2-059); undefined until the first step is saved. */
+  onboardingOf(membershipId: string): FakeOnboarding | undefined {
+    return this.onboardings.get(membershipId);
+  }
+
+  /** A youth who already saved part of the setup, or finished it. */
+  saveOnboarding(membershipId: string, setup: Partial<FakeOnboarding>): void {
+    this.onboardings.set(membershipId, { step: 1, preferredName: '', pronouns: null, lessonReminders: true, mentorMessages: true, announcements: false, completed: false, ...setup });
+  }
+
   /** Opens a program's enrollment, as a director would; the link is /g/enroll/<program-name>. */
   openEnrollment(programId: string): string {
     const program = this.programs.find((x) => x.id === programId)!;
@@ -441,6 +474,9 @@ export class FakeApi {
     ['GET', /^\/api\/learning\/me$/, (route) => this.learner(route)],
     ['GET', /^\/api\/learning\/lessons$/, (route) => this.lessons(route)],
     ['POST', /^\/api\/learning\/consent-request$/, (route) => this.askGuardian(route)],
+    ['GET', /^\/api\/learning\/onboarding$/, (route) => this.onboarding(route)],
+    ['PUT', /^\/api\/learning\/onboarding$/, (route) => this.saveOnboardingStep(route)],
+    ['POST', /^\/api\/learning\/onboarding\/complete$/, (route) => this.completeOnboarding(route)],
     ['GET', /^\/api\/curriculum$/, (route) => this.curriculum(route)],
     ['GET', /^\/api\/mentoring\/youth$/, (route) => this.mentoredYouth(route)],
     ['GET', /^\/api\/website\/(?<slug>[^/]+)$/, (route, p) => this.website(route, p['slug']!)],
@@ -716,7 +752,7 @@ export class FakeApi {
     });
   }
 
-  /** GET /learning/lessons: youth work, refused with 403 consent-required until a guardian consents (L2-056, L2-057). */
+  /** GET /learning/lessons: youth work, refused with 403 consent-required until a guardian consents (L2-056, L2-057), then no-cohort until placed (L2-060). */
   private async lessons(route: Route): Promise<void> {
     const m = await this.participantModuleCaller(route, 'Learning', can.learn);
     if (!m) return;
@@ -724,7 +760,82 @@ export class FakeApi {
     if (childId && this.consentRequired(m.organizationId, childId) && this.consentStatusName(childId) !== 'Given') {
       return route.fulfill({ status: 403, json: { code: 'consent-required', consentAge: this.consentPolicyOf(m.organizationId).consentAge } });
     }
+    // Program content stays locked until the youth is placed in a program (L2-060, ADR 0047).
+    if (!this.placementOf(m)) return route.fulfill({ status: 403, json: { code: 'no-cohort' } });
     return route.fulfill({ json: { lessons: [] } });
+  }
+
+  /** The caller for a Learning endpoint that a youth without consent in force is refused (L2-056); null when answered already. */
+  private async consentedYouth(route: Route): Promise<Membership | null> {
+    const m = await this.participantModuleCaller(route, 'Learning', can.learn);
+    if (!m) return null;
+    const childId = this.youthLinks.get(m.id);
+    if (childId && this.consentRequired(m.organizationId, childId) && this.consentStatusName(childId) !== 'Given') {
+      await route.fulfill({ status: 403, json: { code: 'consent-required', consentAge: this.consentPolicyOf(m.organizationId).consentAge } });
+      return null;
+    }
+    return m;
+  }
+
+  /** The program a youth is placed in: their child on the roster of an active program of their organization (L2-060, ADR 0047). */
+  private placementOf(m: Membership): FakeProgram | undefined {
+    const childId = this.youthLinks.get(m.id);
+    if (!childId) return undefined;
+    return this.programs
+      .filter((p) => p.organizationId === m.organizationId && p.status === 'Active' && p.roster.includes(childId))
+      .sort((a, b) => a.startsOn.localeCompare(b.startsOn))[0];
+  }
+
+  /** GET /learning/onboarding: the caller's own setup, or its defaults, and their program (L2-059). */
+  private async onboarding(route: Route): Promise<void> {
+    const m = await this.consentedYouth(route);
+    if (!m) return;
+    const program = this.placementOf(m);
+    const childId = this.youthLinks.get(m.id);
+    const child = childId ? this.households.flatMap((h) => h.children).find((c) => c.id === childId) : undefined;
+    const saved = this.onboardings.get(m.id);
+    return route.fulfill({
+      json: {
+        status: saved ? (saved.completed ? 'completed' : 'in-progress') : 'not-started',
+        step: saved?.step ?? 1,
+        preferredName: saved?.preferredName ?? child?.firstName ?? m.personName.split(' ')[0],
+        pronouns: saved?.pronouns ?? null,
+        lessonReminders: saved?.lessonReminders ?? true,
+        mentorMessages: saved?.mentorMessages ?? true,
+        announcements: saved?.announcements ?? false,
+        program: program ? { name: program.name, schedule: program.schedule, startsOn: program.startsOn, endsOn: program.endsOn } : null,
+      },
+    });
+  }
+
+  /** PUT /learning/onboarding: validates and saves one step (L2-059 criterion 2). */
+  private async saveOnboardingStep(route: Route): Promise<void> {
+    const m = await this.consentedYouth(route);
+    if (!m) return;
+    const body = route.request().postDataJSON() as Omit<FakeOnboarding, 'completed'>;
+    const name = (body.preferredName ?? '').trim();
+    const errors: Record<string, string> = {};
+    if (!name) errors['preferredName'] = 'Tell us what to call you.';
+    else if (name.length > 60) errors['preferredName'] = 'Use 60 characters or fewer.';
+    if (body.pronouns !== null && !['she/her', 'he/him', 'they/them'].includes(body.pronouns)) errors['pronouns'] = 'Choose pronouns from the list.';
+    if (body.step < 1 || body.step > 3) errors['step'] = 'Choose a step from 1 to 3.';
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    const completed = this.onboardings.get(m.id)?.completed ?? false;
+    this.onboardings.set(m.id, { ...body, preferredName: name, completed });
+    return route.fulfill({ status: 204 });
+  }
+
+  /** POST /learning/onboarding/complete: finishes the setup once, audited (L2-059 criterion 5). */
+  private async completeOnboarding(route: Route): Promise<void> {
+    const m = await this.consentedYouth(route);
+    if (!m) return;
+    const saved = this.onboardings.get(m.id);
+    if (!saved?.preferredName) return route.fulfill({ status: 409, json: { code: 'conflict' } });
+    if (!saved.completed) {
+      saved.completed = true;
+      this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'Completed', record: 'YouthOnboarding', summary: `First-run setup completed as ${saved.preferredName}`, device: null });
+    }
+    return route.fulfill({ status: 204 });
   }
 
   /** POST /learning/consent-request: the youth asks the guardians of their own household (L2-056 criterion 3). */

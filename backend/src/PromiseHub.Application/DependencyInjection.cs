@@ -139,6 +139,8 @@ public static class DependencyInjection
         services.AddScoped<SessionSignOutHandler>();
         services.AddScoped<CompleteMfaHandler>();
         services.AddScoped<Learning.LearnerHandler>();
+        services.AddScoped<Learning.Placement>();
+        services.AddScoped<Learning.OnboardingHandler>();
         services.AddScoped<Staff.LinkYouthHandler>();
         services.AddScoped<Staff.InvitationIssuer>();
         services.AddScoped<Staff.YouthInvitationHandler>();

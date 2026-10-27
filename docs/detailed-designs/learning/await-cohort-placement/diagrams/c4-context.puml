@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Await program placement
+Person(user, "Youth", "Waits to be placed in a program")
+Person(staff, "Program staff", "Enroll the youth's child record in a program")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(user, ph, "Uses", "HTTPS")
+Rel(staff, ph, "Enrolls", "HTTPS")
+@enduml
