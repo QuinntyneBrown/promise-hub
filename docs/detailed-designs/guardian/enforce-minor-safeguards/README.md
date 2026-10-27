@@ -29,7 +29,7 @@ Every row is tenant-owned and filtered by the organization (ADR 0002); a guardia
 
 ## Built so far
 
-Nothing yet; prompt 52 builds this design.
+Prompt 52 delivered everything above. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/ConsentWithdrawalTests.cs` (a withdrawal gates the next request, the record stays), `YouthConsentGateTests.cs` (staff and mentors refused, Learning off).
 
 ## Requirements
 

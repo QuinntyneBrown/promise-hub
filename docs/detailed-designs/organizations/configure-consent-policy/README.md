@@ -27,7 +27,7 @@ Every row is tenant-owned and filtered by the organization (ADR 0002); a guardia
 
 ## Built so far
 
-Nothing yet; prompt 52 builds this design.
+Prompt 52 delivered everything above: the Guardian consent card on `SettingsPrivacyPage`, `ConsentPolicyDialog`, `PrivacyApi.consentPolicy` and `saveConsentPolicy`, `ConsentPolicyHandler`, `ConsentPolicy` with its migration. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/ConsentPolicyTests.cs`, `e2e/tests/settings/consent-policy.spec.ts`.
 
 ## Requirements
 

@@ -28,7 +28,7 @@ Every row is tenant-owned and filtered by the organization (ADR 0002); a guardia
 
 ## Built so far
 
-Nothing yet; prompt 52 builds this design.
+Prompt 52 delivered everything above: the record on `GuardianConsentPage`, the Guardian consent card on `ChildPage`, `HouseholdsApi.consent` and `sendConsentLink`, `ChildConsentHandler` and the two Roster endpoints. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/GuardianConsentTests.cs`, `e2e/tests/households/child-consent.spec.ts`.
 
 ## Requirements
 

@@ -31,7 +31,7 @@ Every row is tenant-owned and filtered by the organization (ADR 0002); a guardia
 
 ## Built so far
 
-Nothing yet; prompt 52 builds this design.
+Prompt 52 delivered everything above: `GuardianConsentPage`, `GuardianApi.consent` and `giveConsent`, `GuardianConsentHandler.GetAsync` and `SignAsync`, `GuardianConsent` with its migration and `GuardianLink.ForConsent`. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/GuardianConsentTests.cs`, `e2e/tests/guardian/give-consent.spec.ts`.
 
 ## Requirements
 

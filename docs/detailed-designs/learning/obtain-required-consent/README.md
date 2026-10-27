@@ -28,7 +28,7 @@ Every row is tenant-owned and filtered by the organization (ADR 0002); a guardia
 
 ## Built so far
 
-Nothing yet; prompt 52 builds this design.
+Prompt 52 delivered everything above: the consent-required, sent and no-guardian states of `LearningPage`, `LearningApi.askGuardian`, `ConsentRequestHandler`, `ConsentRequestSender` and `GuardianLinkIssuer.IssueConsent`. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/YouthConsentGateTests.cs`, `e2e/tests/learning/consent-required.spec.ts`.
 
 ## Requirements
 

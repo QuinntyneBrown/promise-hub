@@ -29,7 +29,7 @@ def guardian_consent(S):
                     title="What you’re agreeing to", tid="what")
 
     def about():
-        return card(record([("Youth", "Sofía Rivera, 12"), ("Organization", "Harbourview Youth Collective"), ("Signs in as", "Youth · Learning")]),
+        return card(record([("Youth", "Sofía Rivera, 12"), ("Organization", "Harbourview Youth Collective")]),
                     title="About Sofía", tid="about")
 
     def sign(err=None, busy=False, name="Carmen Rivera", rel="Parent", agreed=True):
@@ -52,21 +52,20 @@ def guardian_consent(S):
           main='<h1>Check it’s you</h1><p class="text-muted">We’ll send a six-digit code to a mobile number or email Harbourview Youth Collective has on file for your family.</p>'
           + f'<form class="card stack" action="#" method="post" novalidate>{field("contact", "Your mobile number or email", value="905-555-0142", autocomplete="tel")}{btn("Send me a code", "primary", type_="submit", size="lg")}</form>' + g_footer())
     S.add("invalid", "Sent without a relationship, without the box ticked, and with a name that is no guardian of Sofía.",
-          main=hdr + form_summary([("rel", "Choose how you’re related to Sofía."), ("agree", "Tick the box to give consent."), ("sig", "That name doesn’t match a guardian of Sofía.")])
-          + form(err={"rel": "Choose how you’re related to Sofía.", "agree": "Tick the box to give consent.", "sig": "That name doesn’t match a guardian of Sofía."}, name="Carmen R", rel="Choose…", agreed=False))
+          main=hdr + form(err={"rel": "Choose how you’re related to Sofía.", "agree": "Tick the box to give consent.", "sig": "That name doesn’t match a guardian of Sofía."}, name="Carmen R", rel="Choose…", agreed=False))
     S.add("submitting", "Saving the consent.", main=hdr + form(busy=True))
     S.add("error", "Saving failed; everything typed is kept.", main=hdr + alert("danger", "We couldn’t save your consent", "Your answers are kept. Try again.") + form())
-    given_rows = [("Signed by", "Carmen Rivera (Parent)"), ("When", "Thu 5 Nov 2026, 3:41 pm"), ("Method", "Typed signature"), ("Reference", "GC-4F7A2C")]
-    withdraw = btn("Withdraw consent", "ghost", icon_name="x-circle", data_href=dialog("withdraw-consent"))
+    given_rows = [("Signed by", "Carmen Rivera (Parent)"), ("When", "5 Nov 2026, 15:41"), ("Method", "Typed signature"), ("Reference", "GC-4F7A2C")]
+    withdraw = btn("Withdraw consent", "ghost", data_href=dialog("withdraw-consent"))
     S.add("signed", "Signed: Sofía can start Learning; the record and how to withdraw.",
           main=card(f'<div class="stack center" style="align-items: center;"><span class="empty__icon" aria-hidden="true">{icon("check-circle", "icon--lg")}</span>'
-                    '<h1>Consent given. Thank you, Carmen</h1><p class="text-muted">Sofía can start Learning now. A copy was emailed to carmen.rivera@example.com.</p></div>', cls="card--success")
+                    '<h1>Consent given. Thank you, Carmen</h1><p class="text-muted">Sofía can start Learning now.</p></div>', cls="card--success")
           + card(record(given_rows), title="Your consent record", tid="record") + f'<p class="center">{withdraw}</p>' + g_footer())
     S.add("given", "Opening the link again after consenting: the record, and withdraw.",
           main='<h1>Consent already given</h1><p class="text-muted">Sofía can use Learning.</p>' + card(record(given_rows), title="Your consent record", tid="record")
           + f'<p class="center">{withdraw}</p>' + g_footer())
     S.add("withdrawn", "After withdrawing: Sofía is gated again; a guardian can consent again from the same link.",
-          main='<h1>Consent withdrawn</h1>' + alert("warning", "Sofía can’t use Learning now", "Withdrawn by Carmen Rivera on Thu 5 Nov 2026, 3:52 pm. Staff can see it.")
+          main='<h1>Consent withdrawn</h1>' + alert("warning", "Sofía can’t use Learning now", "Withdrawn by Carmen Rivera on 5 Nov 2026, 15:52. Staff can see it.")
           + form(name="", agreed=False) + g_footer())
     S.add("expired", "The link is more than 30 days old, or a newer link replaced it.",
           main='<h1>This link has expired</h1>' + card(f'<div class="stack"><p>Ask Harbourview Youth Collective for a new one, or Sofía can ask again from her account.</p><div>{btn("Call 905-555-0100", "primary", icon_name="phone", href="tel:+19055550100")}</div></div>') + g_footer())
@@ -98,7 +97,7 @@ def consent_required(S):
     S.add("busy", "Sending the request.", **kw, main=gate(btn("Ask my guardian", "primary", icon_name="send", busy=True)))
     S.add("sent", "Asked: who got the link; Learning opens once a guardian signs.", **kw,
           main=gate(btn("Check again", "", icon_name="refresh"), title="We asked your guardian",
-                    body="We sent a secure link to 905-555-••42. Learning opens as soon as they sign.", icon_name="send"))
+                    body="We sent a secure link to •••-•••-0142. Learning opens as soon as they sign.", icon_name="send"))
     S.add("no-guardian", "No guardian who may sign can be reached: who to ask instead.", **kw,
           main=gate(btn("Back to Today", "", href=page("today", "youth")), title="We can’t reach a guardian",
                     body="Ask the program staff to add a guardian’s mobile number or email to your record.", icon_name="phone"))

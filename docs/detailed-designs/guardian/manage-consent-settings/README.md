@@ -27,7 +27,7 @@ Every row is tenant-owned and filtered by the organization (ADR 0002); a guardia
 
 ## Built so far
 
-Nothing yet; prompt 52 builds this design.
+Prompt 52 delivered everything above: `WithdrawConsentDialog`, `GuardianApi.withdrawConsent`, `GuardianConsentHandler.WithdrawAsync` and the audit action `Withdrawn`. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/ConsentWithdrawalTests.cs`, `e2e/tests/guardian/withdraw-consent.spec.ts`.
 
 ## Requirements
 

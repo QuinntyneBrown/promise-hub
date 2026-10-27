@@ -521,17 +521,17 @@ def child(S):
         return card(ul_list([list_item("Guardian consent", meta, lead=f'<span class="icon-tile icon-tile--sm" aria-hidden="true">{icon("shield", "icon--sm")}</span>', end=status_badge)], card=False)
                     + (f'<div class="card__footer">{action}</div>' if action else ""), title="Guardian consent", tid="consent", cls="card--flush")
     send = btn("Send consent link", "", icon_name="send")
-    needed = consent_card("Needed before Sofía can use Learning · under 18 at Harbourview", badge("Needed", "warning"), send)
+    needed = consent_card("Needed before Sofía can use Learning · under 18", badge("Needed", "warning"), send)
     S.add("consent-needed", "Tom on Sofía’s record: she is 12 with a youth account and no consent yet; he can text the household a consent link.", nav="families", user=T,
           main=shdr + f'<div class="split"><div class="stack">{smed}</div><div class="stack">{saccount}{needed}</div></div>',
           notes=note("Shown while Roster is on, for a child under the consent age with a youth account. Only admins and program directors send the link.", "top: 5rem; right: 1rem;"))
-    sent = consent_card("Link sent to Carmen Rivera · Thu 5 Nov 2026, 3:30 pm", badge("Needed", "warning"), send)
+    sent = consent_card("Link sent · 5 Nov 2026, 15:30", badge("Needed", "warning"), send)
     S.add("consent-sent", "After sending: who got the link; the status stays Needed until a guardian signs.", nav="families", user=T,
-          main=shdr + f'<div class="split"><div class="stack">{smed}</div><div class="stack">{saccount}{sent}</div></div>', toast_html=toast_region(toast("success", "Consent link sent", "Sent to 905-555-••42.")))
-    given = consent_card("Given by Carmen Rivera (Parent) · Thu 5 Nov 2026, 3:41 pm · GC-4F7A2C", badge("Given", "success"))
+          main=shdr + f'<div class="split"><div class="stack">{smed}</div><div class="stack">{saccount}{sent}</div></div>', toast_html=toast_region(toast("success", "Consent link sent", "Sent to •••-•••-0142.")))
+    given = consent_card("Given by Carmen Rivera (Parent) · 5 Nov 2026, 15:41 · GC-4F7A2C", badge("Given", "success"))
     S.add("consent-given", "Once Carmen signed: who, when and the reference.", nav="families", user=T,
           main=shdr + f'<div class="split"><div class="stack">{smed}</div><div class="stack">{saccount}{given}</div></div>')
-    withdrawn = consent_card("Withdrawn by Carmen Rivera · Thu 5 Nov 2026, 3:52 pm", badge("Withdrawn", "danger"), send)
+    withdrawn = consent_card("Withdrawn by Carmen Rivera · 5 Nov 2026, 15:52", badge("Withdrawn", "danger"), send)
     S.add("consent-withdrawn", "After a withdrawal: Sofía is gated again and staff can send a new link.", nav="families", user=T,
           main=shdr + f'<div class="split"><div class="stack">{smed}</div><div class="stack">{saccount}{withdrawn}</div></div>')
     S.add("edge", "Longest name, four allergies, six pickups and 120 sessions of attendance.", nav="families", user=T,
