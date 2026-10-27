@@ -64,6 +64,14 @@ export class ApplicationPage extends BasePage {
     await this.dialog.getByRole('button', { name: /^Place and text / }).click();
   }
 
+  async decide(action: 'Waitlist' | 'Decline', note?: string): Promise<void> {
+    await this.action(action).click();
+    await expect(this.dialog).toBeVisible();
+    await this.dialog.getByRole('radio', { name: new RegExp(`^${action}`) }).check();
+    if (note !== undefined) await this.dialog.getByRole('textbox').fill(note);
+    await this.dialog.getByRole('button', { name: /^(Waitlist|Decline) and text / }).click();
+  }
+
   async addNote(text: string): Promise<void> {
     await this.page.getByRole('button', { name: 'Add note' }).click();
     await expect(this.dialog).toBeVisible();

@@ -16,9 +16,11 @@ export interface ReviewEnrollmentData {
   decision: ReviewDecision;
   program: string;
   places: string;
+  /** The decisions offered; all three by default. An application page offers only Waitlist and Decline (decide-application). */
+  decisions?: ReviewDecision[];
 }
 
-/** Review one enrollment (dialog: review-enrollment): accept, waitlist or decline, with a note the guardian reads. Closes with the decision made. */
+/** Review one enrollment (dialogs: review-enrollment, decide-application): accept, waitlist or decline, with a note the guardian reads. Closes with the decision made. */
 @Component({
   selector: 'ph-review-enrollment-dialog',
   imports: [FormsModule, PhAlert, PhButton, PhDialog, PhRadioGroup, PhTextarea],
@@ -39,7 +41,7 @@ export class ReviewEnrollmentDialog {
     { value: 'Accept', label: 'Accept', hint: 'On the roster now' },
     { value: 'Waitlist', label: 'Waitlist', hint: 'Next place on the waitlist' },
     { value: 'Decline', label: 'Decline', hint: 'Say why below' },
-  ];
+  ].filter((o) => !this.data.decisions || this.data.decisions.includes(o.value as ReviewDecision));
   protected readonly first = this.data.request.guardian.split(' ')[0] ?? '';
   protected readonly primary = computed(() => `${this.decision()} and text ${this.first}`);
 

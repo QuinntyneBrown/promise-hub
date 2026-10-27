@@ -8,7 +8,14 @@ import {
   signal,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { APPLICATIONS_API, Application, LoadResult, SESSION_API, can } from '@promisehub/api';
+import {
+  APPLICATIONS_API,
+  Application,
+  LoadResult,
+  ReviewDecision,
+  SESSION_API,
+  can,
+} from '@promisehub/api';
 import {
   Fact,
   PhAlert,
@@ -29,6 +36,10 @@ import {
 } from '@promisehub/components';
 import { EMPTY, catchError } from 'rxjs';
 import { AddNoteData, AddNoteDialog } from '../add-note-dialog/add-note-dialog';
+import {
+  ReviewEnrollmentData,
+  ReviewEnrollmentDialog,
+} from '../review-enrollment-dialog/review-enrollment-dialog';
 import {
   PlaceApplicantData,
   PlaceApplicantDialog,
@@ -132,6 +143,42 @@ export class ApplicationPage {
           tone: 'success',
           title: `${a.child} placed`,
           text: `${a.guardian?.name ?? 'The family'} is texted.${done.invited ? ' The youth invitation is sent.' : ''}`,
+        });
+        this.load(a.id);
+      });
+  }
+
+  /** Waitlist or decline with the note or reason the family reads, as on the roster (L2-072 criterion 6, L2-013). */
+  protected decide(a: Application, decision: 'Waitlist' | 'Decline'): void {
+    const g = a.guardian;
+    this.dialogs
+      .open<ReviewDecision, ReviewEnrollmentData, ReviewEnrollmentDialog>(ReviewEnrollmentDialog, {
+        request: {
+          id: a.id,
+          childId: a.childId,
+          householdId: a.householdId,
+          child: a.child,
+          age: a.age,
+          guardian: g?.name ?? a.appliedBy,
+          phone: g?.mobile ?? null,
+          language: g?.language ?? 'English',
+          medical: null,
+          returning: a.returning,
+          submittedAt: a.submittedAt,
+          status: a.status === 'Waitlisted' ? 'Waitlisted' : 'WaitingReview',
+          position: a.position,
+        },
+        decision,
+        program: a.program,
+        places: a.program,
+        decisions: a.status === 'Waitlisted' ? ['Decline'] : ['Waitlist', 'Decline'],
+      })
+      .closed.subscribe((done) => {
+        if (!done) return;
+        this.toasts.show({
+          tone: 'success',
+          title: `${a.child} ${done === 'Waitlist' ? 'waitlisted' : 'declined'}`,
+          text: `${g?.name ?? 'The family'} is texted.`,
         });
         this.load(a.id);
       });

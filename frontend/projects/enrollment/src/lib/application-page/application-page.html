@@ -25,6 +25,21 @@
                 (click)="place(a)"
                 >Place</ph-button
               >
+              @if (a.status === 'WaitingReview') {
+                <ph-button
+                  hasPopup="dialog"
+                  [label]="'Waitlist ' + a.firstName"
+                  (click)="decide(a, 'Waitlist')"
+                  >Waitlist</ph-button
+                >
+              }
+              <ph-button
+                variant="ghost"
+                hasPopup="dialog"
+                [label]="'Decline ' + a.firstName"
+                (click)="decide(a, 'Decline')"
+                >Decline</ph-button
+              >
             }
           </ph-page-header>
           @if (outcome(a); as o) {

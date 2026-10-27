@@ -234,6 +234,23 @@ public sealed partial class ApplicationReviewTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.NotFound, (await Place(Guid.NewGuid(), Sports, null)).StatusCode);
     }
 
+    [Fact]
+    public async Task A_declined_application_says_who_decided_and_what_the_family_read_takes_no_decision_but_still_takes_notes()
+    {
+        await Refer("rachel.ellis@bennetto.example.ca");
+        var id = Id((await List("WaitingReview")).GetProperty("applications").EnumerateArray().Single());
+        await _factory.ClientFor(Marisol).PostAsJsonAsync($"/enrollments/{id}/review", new { decision = "Decline", note = "Tutoring is full this term." });
+
+        var app = await _factory.ClientFor(Tom).GetFromJsonAsync<JsonElement>($"/applications/{id}");
+
+        Assert.Equal("Declined", app.GetProperty("status").GetString());
+        Assert.Equal("Marisol Delgado", app.GetProperty("reviewedBy").GetString());
+        Assert.Equal("Tutoring is full this term.", app.GetProperty("note").GetString());
+        Assert.Equal(HttpStatusCode.Conflict, (await Place(id, Sports, null)).StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, (await _factory.ClientFor(Tom).PostAsJsonAsync($"/enrollments/{id}/review", new { decision = "Waitlist" })).StatusCode);
+        Assert.Equal(HttpStatusCode.Created, (await _factory.ClientFor(Tom).PostAsJsonAsync($"/applications/{id}/notes", new { text = "Tanya called back; try again in January." })).StatusCode);
+    }
+
     private Task<HttpResponseMessage> Place(Guid id, Guid programId, string? note) =>
         _factory.ClientFor(Tom).PostAsJsonAsync($"/applications/{id}/place", new { programId, note });
 
