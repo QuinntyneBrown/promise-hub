@@ -4,5 +4,6 @@ export { LearningPage } from './lib/learning-page/learning-page';
 export { LessonPage } from './lib/lesson-page/lesson-page';
 export { ModulePage } from './lib/module-page/module-page';
 export { QuizIntroPage } from './lib/quiz-intro-page/quiz-intro-page';
+export { QuizPage } from './lib/quiz-page/quiz-page';
 export { TrackPage } from './lib/track-page/track-page';
 export { YouthWelcomePage } from './lib/youth-welcome/youth-welcome-page';

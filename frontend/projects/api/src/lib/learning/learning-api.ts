@@ -16,6 +16,9 @@ import type { WriteOutcome } from '../write-outcome';
 import type { OnboardingAnswers } from './onboarding-answers';
 import type { OnboardingResult } from './onboarding-result';
 import type { QuizIntro } from './quiz-intro';
+import type { StartQuizResult } from './start-quiz-result';
+import type { QuizAnswer } from './quiz-answer';
+import type { AnswersOutcome } from './answers-outcome';
 
 /** The signed-in youth’s own learning record (Learning module, ADR 0043). */
 export interface LearningApi {
@@ -40,6 +43,14 @@ export interface LearningApi {
   submitProject(id: string, submission: ProjectSubmission): Observable<WriteOutcome>;
   /** A quiz's rules and the youth's attempts; locked until its lessons are done (L2-075 criteria 1 and 2). */
   quiz(id: string): Observable<GatedResult<QuizIntro>>;
+  /** Starts the next attempt or resumes the one in progress (L2-075 criterion 3). */
+  startQuiz(quizId: string): Observable<StartQuizResult>;
+  /** Saves every answer so far and the question she is on (L2-075 criterion 4). */
+  saveAnswers(
+    attemptId: string,
+    answers: QuizAnswer[],
+    position: number,
+  ): Observable<AnswersOutcome>;
   /** Asks the guardians of the youth's household for consent. */
   askGuardian(): Observable<ConsentRequestOutcome>;
   /** The youth's first-run setup with its defaults and their program (L2-059). */

@@ -1,11 +1,7 @@
-import type { Route } from "@playwright/test";
-import type {
-  FakeAssessments,
-  FakeQuestion,
-  FakeQuiz,
-} from "./fake-assessments";
+import type { Route } from '@playwright/test';
+import type { FakeAssessments, FakeQuestion, FakeQuiz } from './fake-assessments';
 
-export type AttemptStatus = "InProgress" | "Scored" | "AwaitingApproval";
+export type AttemptStatus = 'InProgress' | 'Scored' | 'AwaitingApproval';
 
 export interface FakeAnswer {
   questionId: string;
@@ -39,24 +35,14 @@ export interface QuizPlace {
   unlockAfter: string | null;
 }
 
-const given = (a: FakeAnswer) =>
-  (a.choices?.length ?? 0) > 0 || !!a.text?.trim();
+const given = (a: FakeAnswer) => (a.choices?.length ?? 0) > 0 || !!a.text?.trim();
 
 /** Whether an answer is right (ADR 0055): exactly the correct options, or a short answer matching an accepted one ignoring case and spaces. */
 export function isRight(q: FakeQuestion, a: FakeAnswer | undefined): boolean {
   if (!a) return false;
-  if (q.type === "ShortAnswer")
-    return (
-      !!a.text?.trim() &&
-      q.answers.some(
-        (x) => x.trim().toLowerCase() === a.text!.trim().toLowerCase(),
-      )
-    );
+  if (q.type === 'ShortAnswer') return !!a.text?.trim() && q.answers.some((x) => x.trim().toLowerCase() === a.text!.trim().toLowerCase());
   const chosen = [...new Set(a.choices ?? [])].sort();
-  return (
-    chosen.length === q.correct.length &&
-    [...q.correct].sort().every((c, i) => c === chosen[i])
-  );
+  return chosen.length === q.correct.length && [...q.correct].sort().every((c, i) => c === chosen[i]);
 }
 
 /**
@@ -77,16 +63,14 @@ export class FakeQuizTaking {
   constructor(private readonly assessments: FakeAssessments) {}
 
   mine(membershipId: string, quizId: string): FakeAttempt[] {
-    return this.attempts
-      .filter((a) => a.membershipId === membershipId && a.quizId === quizId)
-      .sort((a, b) => a.number - b.number);
+    return this.attempts.filter((a) => a.membershipId === membershipId && a.quizId === quizId).sort((a, b) => a.number - b.number);
   }
 
   /** The best counted score: the highest scored (not waiting) attempt. */
   best(membershipId: string, quizId: string): FakeAttempt | null {
     return (
       this.mine(membershipId, quizId)
-        .filter((a) => a.status === "Scored")
+        .filter((a) => a.status === 'Scored')
         .sort((a, b) => b.score! - a.score! || a.number - b.number)[0] ?? null
     );
   }
@@ -95,12 +79,12 @@ export class FakeQuizTaking {
   state(membershipId: string, quiz: FakeQuiz, locked: boolean): string {
     const mine = this.mine(membershipId, quiz.id);
     const best = this.best(membershipId, quiz.id);
-    if (locked) return "locked";
-    if (best && best.score! >= quiz.passMark) return "passed";
-    if (mine.some((a) => a.status === "InProgress")) return "in-progress";
-    if (mine.some((a) => a.status === "AwaitingApproval")) return "awaiting";
-    if (mine.some((a) => a.status === "Scored")) return "not-passed";
-    return "next";
+    if (locked) return 'locked';
+    if (best && best.score! >= quiz.passMark) return 'passed';
+    if (mine.some((a) => a.status === 'InProgress')) return 'in-progress';
+    if (mine.some((a) => a.status === 'AwaitingApproval')) return 'awaiting';
+    if (mine.some((a) => a.status === 'Scored')) return 'not-passed';
+    return 'next';
   }
 
   passed(membershipId: string, quiz: FakeQuiz): boolean {
@@ -109,12 +93,7 @@ export class FakeQuizTaking {
   }
 
   /** An attempt already submitted, as if taken earlier: its answers scored as the API would. */
-  submitted(
-    membershipId: string,
-    quizId: string,
-    answers: FakeAnswer[],
-    submittedAt = "2026-10-27T20:12:00Z",
-  ): FakeAttempt {
+  submitted(membershipId: string, quizId: string, answers: FakeAnswer[], submittedAt = '2026-10-27T20:12:00Z'): FakeAttempt {
     const a = this.create(membershipId, quizId);
     a.answers = answers;
     this.score(a, submittedAt);
@@ -122,12 +101,7 @@ export class FakeQuizTaking {
   }
 
   /** An attempt in progress, as if started earlier and left at a question. */
-  inProgress(
-    membershipId: string,
-    quizId: string,
-    answers: FakeAnswer[],
-    position: number,
-  ): FakeAttempt {
+  inProgress(membershipId: string, quizId: string, answers: FakeAnswer[], position: number): FakeAttempt {
     const a = this.create(membershipId, quizId);
     a.answers = answers;
     a.position = position;
@@ -146,7 +120,7 @@ export class FakeQuizTaking {
       order: order.map((q) => q.id),
       answers: [],
       position: 0,
-      status: "InProgress",
+      status: 'InProgress',
       correct: null,
       total: null,
       score: null,
@@ -169,34 +143,28 @@ export class FakeQuizTaking {
     a.total = questions.length;
     a.score = a.total === 0 ? 0 : Math.round((100 * a.correct) / a.total);
     a.passed = a.score >= quiz.passMark;
-    a.status = quiz.requireApproval ? "AwaitingApproval" : "Scored";
+    a.status = quiz.requireApproval ? 'AwaitingApproval' : 'Scored';
     a.submittedAt = at;
   }
 
   private ordered(a: FakeAttempt): FakeQuestion[] {
     const questions = this.assessments.questionsOf(a.quizId);
-    const kept = a.order
-      .map((id) => questions.find((q) => q.id === id))
-      .filter((q): q is FakeQuestion => !!q);
+    const kept = a.order.map((id) => questions.find((q) => q.id === id)).filter((q): q is FakeQuestion => !!q);
     return [...kept, ...questions.filter((q) => !a.order.includes(q.id))];
   }
 
   /** GET /learning/quizzes/{id}. */
-  intro(
-    route: Route,
-    membershipId: string,
-    place: QuizPlace | null,
-  ): Promise<void> {
+  intro(route: Route, membershipId: string, place: QuizPlace | null): Promise<void> {
     if (!place) return route.fulfill({ status: 404 });
     if (place.locked)
       return route.fulfill({
         status: 403,
-        json: { code: "locked", unlockAfter: place.unlockAfter },
+        json: { code: 'locked', unlockAfter: place.unlockAfter },
       });
     const q = place.quiz;
     const mine = this.mine(membershipId, q.id);
-    const open = mine.find((a) => a.status === "InProgress");
-    const submitted = mine.filter((a) => a.status !== "InProgress");
+    const open = mine.find((a) => a.status === 'InProgress');
+    const submitted = mine.filter((a) => a.status !== 'InProgress');
     const best = this.best(membershipId, q.id);
     return route.fulfill({
       json: {
@@ -222,11 +190,8 @@ export class FakeQuizTaking {
         passed: this.passed(membershipId, q),
         bestAttemptId: best?.id ?? null,
         lastAttemptId: submitted.at(-1)?.id ?? null,
-        awaiting: mine.some((a) => a.status === "AwaitingApproval"),
-        canStart:
-          !!open ||
-          q.attemptsAllowed === null ||
-          submitted.length < q.attemptsAllowed,
+        awaiting: mine.some((a) => a.status === 'AwaitingApproval'),
+        canStart: !!open || q.attemptsAllowed === null || submitted.length < q.attemptsAllowed,
       },
     });
   }
@@ -252,70 +217,46 @@ export class FakeQuizTaking {
   }
 
   /** POST /learning/quizzes/{id}/attempts: resumes the attempt in progress or starts the next one. */
-  start(
-    route: Route,
-    membershipId: string,
-    place: QuizPlace | null,
-  ): Promise<void> {
+  start(route: Route, membershipId: string, place: QuizPlace | null): Promise<void> {
     if (!place) return route.fulfill({ status: 404 });
     if (place.locked)
       return route.fulfill({
         status: 403,
-        json: { code: "locked", unlockAfter: place.unlockAfter },
+        json: { code: 'locked', unlockAfter: place.unlockAfter },
       });
     const mine = this.mine(membershipId, place.quiz.id);
-    let attempt = mine.find((a) => a.status === "InProgress");
+    let attempt = mine.find((a) => a.status === 'InProgress');
     if (!attempt) {
-      if (
-        place.quiz.attemptsAllowed !== null &&
-        mine.length >= place.quiz.attemptsAllowed
-      )
-        return route.fulfill({ status: 409, json: { code: "no-attempts" } });
+      if (place.quiz.attemptsAllowed !== null && mine.length >= place.quiz.attemptsAllowed)
+        return route.fulfill({ status: 409, json: { code: 'no-attempts' } });
       attempt = this.create(membershipId, place.quiz.id);
     }
     return route.fulfill({ json: this.view(attempt, place) });
   }
 
-  private validate(
-    a: FakeAttempt,
-    answers: FakeAnswer[],
-  ): Record<string, string> | null {
+  private validate(a: FakeAttempt, answers: FakeAnswer[]): Record<string, string> | null {
     const questions = this.assessments.questionsOf(a.quizId);
     for (const answer of answers) {
       const q = questions.find((x) => x.id === answer.questionId);
-      if (!q) return { answers: "Answer only questions of this quiz." };
+      if (!q) return { answers: 'Answer only questions of this quiz.' };
       const choices = answer.choices ?? [];
-      if (choices.some((c) => c < 0 || c >= q.options.length))
-        return { answers: "Choose one of the options." };
-      if (
-        (q.type === "MultipleChoice" || q.type === "TrueFalse") &&
-        choices.length > 1
-      )
-        return { answers: "Choose one answer." };
-      if ((answer.text?.length ?? 0) > 200)
-        return { answers: "Keep your answer under 200 characters." };
+      if (choices.some((c) => c < 0 || c >= q.options.length)) return { answers: 'Choose one of the options.' };
+      if ((q.type === 'MultipleChoice' || q.type === 'TrueFalse') && choices.length > 1) return { answers: 'Choose one answer.' };
+      if ((answer.text?.length ?? 0) > 200) return { answers: 'Keep your answer under 200 characters.' };
     }
     return null;
   }
 
   private own(membershipId: string, id: string): FakeAttempt | undefined {
-    return this.attempts.find(
-      (a) => a.id === id && a.membershipId === membershipId,
-    );
+    return this.attempts.find((a) => a.id === id && a.membershipId === membershipId);
   }
 
   /** PUT /learning/attempts/{id}/answers. */
-  save(
-    route: Route,
-    membershipId: string,
-    id: string,
-    visible: (quizId: string) => QuizPlace | null,
-  ): Promise<void> {
-    if (this.offline) return route.abort("internetdisconnected");
+  save(route: Route, membershipId: string, id: string, visible: (quizId: string) => QuizPlace | null): Promise<void> {
+    if (this.offline) return route.abort('internetdisconnected');
     const a = this.own(membershipId, id);
     if (!a || !visible(a.quizId)) return route.fulfill({ status: 404 });
-    if (a.status !== "InProgress")
-      return route.fulfill({ status: 409, json: { code: "submitted" } });
+    if (a.status !== 'InProgress') return route.fulfill({ status: 409, json: { code: 'submitted' } });
     const body = route.request().postDataJSON() as {
       answers?: FakeAnswer[];
       position?: number;
@@ -328,17 +269,11 @@ export class FakeQuizTaking {
   }
 
   /** POST /learning/attempts/{id}/submit: saves the final answers, scores them and locks the attempt. */
-  submit(
-    route: Route,
-    membershipId: string,
-    id: string,
-    visible: (quizId: string) => QuizPlace | null,
-  ): Promise<void> {
+  submit(route: Route, membershipId: string, id: string, visible: (quizId: string) => QuizPlace | null): Promise<void> {
     if (this.failSubmits) return route.fulfill({ status: 500 });
     const a = this.own(membershipId, id);
     if (!a || !visible(a.quizId)) return route.fulfill({ status: 404 });
-    if (a.status !== "InProgress")
-      return route.fulfill({ status: 409, json: { code: "submitted" } });
+    if (a.status !== 'InProgress') return route.fulfill({ status: 409, json: { code: 'submitted' } });
     const body = route.request().postDataJSON() as {
       answers?: FakeAnswer[];
       position?: number;
@@ -346,35 +281,21 @@ export class FakeQuizTaking {
     const errors = this.validate(a, body.answers ?? []);
     if (errors) return route.fulfill({ status: 422, json: { errors } });
     a.answers = body.answers ?? [];
-    this.score(a, "2026-10-27T20:12:00Z");
+    this.score(a, '2026-10-27T20:12:00Z');
     return route.fulfill({ json: { id: a.id } });
   }
 
   /** GET /learning/attempts/{id}: her own submitted attempt; the review only as the feedback rule allows. */
-  result(
-    route: Route,
-    membershipId: string,
-    id: string,
-    visible: (quizId: string) => QuizPlace | null,
-  ): Promise<void> {
+  result(route: Route, membershipId: string, id: string, visible: (quizId: string) => QuizPlace | null): Promise<void> {
     const a = this.own(membershipId, id);
     const place = a ? visible(a.quizId) : null;
-    if (!a || !place || a.status === "InProgress")
-      return route.fulfill({ status: 404 });
+    if (!a || !place || a.status === 'InProgress') return route.fulfill({ status: 404 });
     const q = place.quiz;
-    const used = this.mine(membershipId, q.id).filter(
-      (x) => x.status !== "InProgress",
-    ).length;
-    const left =
-      q.attemptsAllowed === null ? null : Math.max(0, q.attemptsAllowed - used);
-    const awaiting = a.status === "AwaitingApproval";
-    const showAnswers =
-      !awaiting &&
-      (q.feedback === "ShowAnswers" ||
-        (q.feedback === "AfterLastAttempt" && left === 0));
-    const open = this.mine(membershipId, q.id).some(
-      (x) => x.status === "InProgress",
-    );
+    const used = this.mine(membershipId, q.id).filter((x) => x.status !== 'InProgress').length;
+    const left = q.attemptsAllowed === null ? null : Math.max(0, q.attemptsAllowed - used);
+    const awaiting = a.status === 'AwaitingApproval';
+    const showAnswers = !awaiting && (q.feedback === 'ShowAnswers' || (q.feedback === 'AfterLastAttempt' && left === 0));
+    const open = this.mine(membershipId, q.id).some((x) => x.status === 'InProgress');
     return route.fulfill({
       json: {
         attemptId: a.id,
@@ -386,7 +307,7 @@ export class FakeQuizTaking {
         attemptsAllowed: q.attemptsAllowed,
         attemptsUsed: used,
         attemptsLeft: left,
-        status: awaiting ? "awaiting-approval" : "scored",
+        status: awaiting ? 'awaiting-approval' : 'scored',
         submittedAt: a.submittedAt,
         score: awaiting ? null : a.score,
         correct: awaiting ? null : a.correct,
@@ -398,9 +319,7 @@ export class FakeQuizTaking {
         feedback: q.feedback,
         review: showAnswers
           ? this.ordered(a).map((question, i) => {
-              const answer = a.answers.find(
-                (x) => x.questionId === question.id,
-              );
+              const answer = a.answers.find((x) => x.questionId === question.id);
               return {
                 questionId: question.id,
                 number: i + 1,
@@ -409,10 +328,8 @@ export class FakeQuizTaking {
                 options: question.options,
                 chosen: answer?.choices ?? [],
                 answerText: answer?.text ?? null,
-                correctOptions:
-                  question.type === "ShortAnswer" ? [] : question.correct,
-                accepted:
-                  question.type === "ShortAnswer" ? question.answers : [],
+                correctOptions: question.type === 'ShortAnswer' ? [] : question.correct,
+                accepted: question.type === 'ShortAnswer' ? question.answers : [],
                 right: isRight(question, answer),
               };
             })

@@ -27,6 +27,11 @@ import { OnboardingAnswers } from './onboarding-answers';
 import { OnboardingResult } from './onboarding-result';
 import { YouthOnboarding } from './youth-onboarding';
 import { QuizIntro } from './quiz-intro';
+import { QuizAttemptView } from './quiz-attempt-view';
+import { StartQuizResult } from './start-quiz-result';
+import { QuizAnswer } from './quiz-answer';
+import { AnswersOutcome } from './answers-outcome';
+import { toAnswersOutcome } from './to-answers-outcome';
 
 @Injectable()
 export class HttpLearningApi implements LearningApi {
@@ -132,6 +137,46 @@ export class HttpLearningApi implements LearningApi {
   quiz(id: string): Observable<GatedResult<QuizIntro>> {
     return toGated(
       this.http.get<QuizIntro>(`${this.baseUrl}/learning/quizzes/${encodeURIComponent(id)}`),
+    );
+  }
+
+  startQuiz(quizId: string): Observable<StartQuizResult> {
+    return this.http
+      .post<QuizAttemptView>(
+        `${this.baseUrl}/learning/quizzes/${encodeURIComponent(quizId)}/attempts`,
+        null,
+      )
+      .pipe(
+        map((value): StartQuizResult => ({ status: 'loaded', value })),
+        catchError((error: HttpErrorResponse) =>
+          of<StartQuizResult>(
+            error.status === 409 && error.error?.code === 'no-attempts'
+              ? { status: 'no-attempts' }
+              : error.status === 403 && error.error?.code === 'locked'
+                ? { status: 'locked', unlockAfter: error.error?.unlockAfter ?? null }
+                : {
+                    status:
+                      error.status === 404
+                        ? 'not-found'
+                        : error.status === 403
+                          ? 'forbidden'
+                          : 'error',
+                  },
+          ),
+        ),
+      );
+  }
+
+  saveAnswers(
+    attemptId: string,
+    answers: QuizAnswer[],
+    position: number,
+  ): Observable<AnswersOutcome> {
+    return toAnswersOutcome(
+      this.http.put<null>(
+        `${this.baseUrl}/learning/attempts/${encodeURIComponent(attemptId)}/answers`,
+        { answers, position },
+      ),
     );
   }
 
