@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Enforce minor safeguards
+Person(user, "Youth", "Uses Learning")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+System_Ext(msg, "SMS and email providers", "Not used")
+Rel(user, ph, "Uses", "HTTPS")
+Rel(ph, msg, "Sends through")
+@enduml

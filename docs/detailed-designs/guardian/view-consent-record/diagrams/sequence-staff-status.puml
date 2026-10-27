@@ -1,0 +1,40 @@
+@startuml
+title UML sequence behaviour — Staff read the status and send a link
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Person" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "Page" as page
+  participant "HouseholdsApi" as hapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "Endpoints" as ep
+end box
+box "Backend — PromiseHub.Application and Domain" #ECFDF3
+  participant "Handler" as h
+  participant "ConsentGate" as g
+  participant "ConsentRequestSender" as s
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : open Sofía's record
+page -> hapi : consent(childId)
+hapi -> ep : GET /children/{id}/consent
+ep -> h : GetAsync (child in this organization, else 404)
+h -> g : StatusAsync
+g -> db : policy, youth account, consents
+ep --> page : required, Needed
+page --> actor : child/consent-needed
+actor -> page : Send consent link
+page -> hapi : sendConsentLink(childId)
+hapi -> ep : POST /children/{id}/consent-request (WriteHouseholds)
+ep -> h : SendAsync
+h -> s : issue link, revoke earlier, text or email signers
+s -> db : GuardianLink, audit Sent (L2-058)
+ep --> page : 202 sentTo
+page --> actor : child/consent-sent
+@enduml

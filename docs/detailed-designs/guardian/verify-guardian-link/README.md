@@ -44,6 +44,10 @@ Backend:
 - **`GuardianLink`**, **`GuardianVerification`**, **`TrustedGuardianDevice`** — domain entities in `PromiseHub.Domain/Guardian/`.
 - **`ITokenGenerator`**, **`ISmsSender`**, **`IEmailSender`**, **`AuditLog`** — infrastructure services. Code requests, lockouts and verifications are audited.
 
+### Consent links (prompt 52)
+
+A link can also carry guardian consent (`GuardianLink.ForConsent`, ADR 0046): it names a household and a child, lives 30 days and is replaced by the next consent link for that child. Code verification and device trust are unchanged; the home, slip and survey handlers refuse consent links and the consent handler refuses every other link (410). See `manage-guardian-consent`.
+
 ## Requirements
 
 The feature realizes the following level-2 (L2) requirements. Each L2 requirement refines a level-1 (L1) requirement, cited by identifier.

@@ -1,0 +1,34 @@
+@startuml
+title UML sequence behaviour — Ask my guardian
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Person" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "Page" as page
+  participant "LearningApi" as lapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "Endpoints" as ep
+end box
+box "Backend — PromiseHub.Application and Domain" #ECFDF3
+  participant "Handler" as h
+  participant "ConsentRequestSender" as s
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+  participant "ISmsSender" as sms
+end box
+actor -> page : Ask my guardian
+page -> lapi : askGuardian()
+lapi -> ep : POST /learning/consent-request
+ep -> h : RequestAsync (caller's linked child)
+h -> s : SendAsync(child)
+s -> db : consent link in the last 10 minutes? else revoke earlier links
+s -> db : GuardianLink ForConsent, audit Sent
+s -> sms : "Sofía pidió su consentimiento … /g/consent/{token}" (Spanish household)
+ep --> page : 202 sentTo ["905-555-••42"]
+page --> actor : consent-required/sent
+@enduml

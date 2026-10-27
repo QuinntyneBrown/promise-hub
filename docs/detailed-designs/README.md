@@ -11,6 +11,7 @@ One folder per subsystem, one folder per vertically sliced feature, each with a 
 | organizations | configure-modules | L2-004 |
 | organizations | enforce-module-gates | L2-005 |
 | organizations | set-privacy-and-residency | L2-030 |
+| organizations | configure-consent-policy | L2-056 |
 | identity | sign-in | L2-006 |
 | identity | authorize-request | L2-007, L2-045 |
 | identity | sign-in-as-youth-or-mentor | L2-046 |
@@ -30,6 +31,11 @@ One folder per subsystem, one folder per vertically sliced feature, each with a 
 | imports | import-roster | L2-010 |
 | guardian | verify-guardian-link | L2-026 |
 | guardian | localize-guardian-pages | L2-027 |
+| guardian | manage-guardian-consent | L2-055 |
+| guardian | unlock-minor-participation | L2-056, L2-057 |
+| guardian | enforce-minor-safeguards | L2-057 |
+| guardian | view-consent-record | L2-058 |
+| guardian | manage-consent-settings | L2-058 |
 | programs | manage-programs | L2-012 |
 | events | manage-events | L2-012 |
 | slips | write-and-send-slip | L2-014 |
@@ -58,6 +64,7 @@ One folder per subsystem, one folder per vertically sliced feature, each with a 
 | platform | migrate-and-seed | L2-042 |
 | platform | merge-waypoint-foundation | L2-004, L2-007, L2-042, L2-045 |
 | learning | read-own-record (journeys 57, 61, 62, 65, 66 add more; see [learning](learning/README.md)) | L2-005, L2-007, L2-045 |
+| learning | obtain-required-consent | L2-056 |
 | curriculum | open-curriculum (journeys 56, 60, 64 add more; see [curriculum](curriculum/README.md)) | L2-005, L2-007 |
 | mentoring | list-assigned-youth (journeys 55, 63, 67, 68, 69 add more; see [mentoring](mentoring/README.md)) | L2-005, L2-007 |
 | website | serve-public-site (journey 81 adds more; see [website](website/README.md)) | L2-005 |

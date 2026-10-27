@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Unlock minor participation
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "LearningPage", "Angular page", "Lessons or consent-required")
+  Component(lapi, "LearningApi", "Contract + HTTP client", "lessons")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "ParticipantModuleEndpoints", "Minimal API", "Learning endpoints")
+  Component(f, "RequireGuardianConsent", "Endpoint filter", "403 consent-required")
+  Component(g, "ConsentGate", "Application service", "Required and in force")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Links, consents, policy, audit entries")
+}
+Rel(page, lapi, "lessons")
+Rel(lapi, ep, "GET /learning/lessons")
+Rel(ep, f, "filters")
+Rel(f, g, "GatedAsync")
+Rel(g, db, "membership, child, policy, consents")
+@enduml

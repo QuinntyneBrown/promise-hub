@@ -52,6 +52,10 @@ Slice 12 delivered `GuardianSlipPage` at `/g/slip/:token` (code check, the slip 
 
 Undecided details: the exact name-matching rule (diacritics, middle names) `<TO SUPPLY>`; the hash algorithm for the slip text `<TO SUPPLY>`; retention period of signature records, which follows the organization's consent retention setting (`L2-030`).
 
+### Shared with guardian consent (prompt 52)
+
+Guardian consent (`manage-guardian-consent`) signs the same way: a typed name that matches a guardian of the household who may sign, ignoring case and spacing, with the time, device, household language and a SHA-256 of the text as shown. A slip records answers for one event; a consent records the relationship and stays in force until withdrawn.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

@@ -1,0 +1,36 @@
+@startuml
+title UML sequence behaviour — A withdrawal during a session
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Person" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "Page" as page
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "Endpoints" as ep
+  participant "RequireGuardianConsent" as f
+end box
+box "Backend — PromiseHub.Application and Domain" #ECFDF3
+  participant "ConsentGate" as g
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : signed in while consent was in force
+page -> ep : GET /learning/lessons
+ep -> f : filter
+f -> g : GatedAsync
+g -> db : consent in force
+ep --> page : 200
+note over actor, db : Carmen withdraws consent
+actor -> page : next lesson
+page -> ep : GET /learning/lessons
+ep -> f : filter
+f -> g : GatedAsync
+g -> db : latest consent withdrawn (L2-057 criterion 2)
+f --> page : 403 consent-required
+page --> actor : consent-required, still signed in
+@enduml

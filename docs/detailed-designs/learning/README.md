@@ -6,6 +6,7 @@ Prompt 49 built the foundation only ([read-own-record](read-own-record/README.md
 
 | Design | Prompt | Waypoint source |
 |---|---|---|
+| [`obtain-required-consent`](obtain-required-consent/README.md) | 52 Give guardian consent | `platform-services` L2-PLATFORM-011 |
 | `complete-lessons` | 57 Complete lessons | `learning-experience` L1-LEARN-001 to 003 |
 | `take-quizzes` | 61 Take quizzes | L1-LEARN-004 |
 | `submit-assignments` | 62 Submit assignments | L1-LEARN-005 |

@@ -44,6 +44,10 @@ Backend:
 - **`Household.Language`**, **`SupportedLanguages`**, **`MessageTemplate`**, **`Survey`**, **`SurveyResponse`** — domain types in `PromiseHub.Domain/Households/`, `PromiseHub.Domain/Messaging/` and `PromiseHub.Domain/Surveys/`.
 - **`AuditLog`** — records language changes and survey submissions.
 
+### Consent page (prompt 52)
+
+`GuardianConsentPage` reads its strings from `consent-text.ts` in English, Spanish and French and sets `html lang` like the slip page. The consent wording is shown as the organization wrote it; the Spanish and French pages say the English wording is the one signed. The consent link text is sent in the household language.
+
 ## Requirements
 
 The feature realizes the following level-2 (L2) requirements. Each L2 requirement refines a level-1 (L1) requirement, cited by identifier.
