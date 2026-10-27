@@ -264,6 +264,8 @@ export class FakeApi {
     ['tok-home-rivera', 'hh-rivera'],
   ]);
   /** The verified enrollment session of this browser: program, contact and draft (the HttpOnly cookie, in the fake). */
+  /** Codes sent per program and contact in the current 15-minute window (L2-071 criterion 9). */
+  private enrollCodes = new Map<string, number>();
   private enrollSession: { programId: string; contact: string; householdId: string | null; draft: FakeEnrollDraft | null; submitted: boolean } | null = null;
   /** Guardian links as texted with a sent slip: token → household, child and event. */
   private guardianLinks = new Map<string, { householdId: string; childId: string; eventId: string; expired?: boolean }>([
@@ -411,6 +413,15 @@ export class FakeApi {
   /** Closes a program's enrollment; its link stays the same. */
   closeEnrollment(programId: string): void {
     this.programs.find((x) => x.id === programId)!.enrollmentOpen = false;
+  }
+
+  /** An open application already waiting review for a young person, as if submitted earlier (L2-071 criterion 8). */
+  applied(programId: string, applicant: { firstName: string; lastName: string; dateOfBirth: string }): void {
+    this.enrollmentRequests.push({ programId, status: 'WaitingReview', position: null, appliedAs: 'Youth', seasonConsent: false, applicant });
+  }
+
+  enrollmentRequestCount(programId: string): number {
+    return this.enrollmentRequests.filter((r) => r.programId === programId).length;
   }
 
   /** The last enrollment request submitted through a link, as the server would store it (L2-071). */
@@ -3152,6 +3163,10 @@ export class FakeApi {
     if (!scope.program.enrollmentOpen) return route.fulfill({ status: 409, json: { code: 'conflict' } });
     const contact = this.enrollContact((route.request().postDataJSON() as { contact: string }).contact);
     if (!contact) return route.fulfill({ status: 422, json: { errors: { contact: 'Enter a mobile number or an email.' } } });
+    const key = `${scope.program.id}:${contact}`;
+    const sent = this.enrollCodes.get(key) ?? 0;
+    if (sent >= 3) return route.fulfill({ status: 429, json: { code: 'too-many' } });
+    this.enrollCodes.set(key, sent + 1);
     return route.fulfill({ status: 202 });
   }
 
@@ -3282,9 +3297,22 @@ export class FakeApi {
       const consent = appliedAs === 'Referrer' ? 'Confirm the family agrees to be contacted.' : !seasonConsent ? 'Agree to the privacy notice to submit.' : 'Agree to the season consent to submit.';
       return route.fulfill({ status: 422, json: { errors: { consent } } });
     }
+    const same = (a: string | null | undefined, b: string | null | undefined) => (a ?? '').trim().toLowerCase() === (b ?? '').trim().toLowerCase();
+    const children = draft.children.filter((c) => c.enroll);
+    for (const c of children) {
+      const open = this.enrollmentRequests.find(
+        (r) =>
+          r.programId === program.id &&
+          (r.status === 'WaitingReview' || r.status === 'Waitlisted') &&
+          r.applicant &&
+          same(r.applicant.firstName, c.firstName) &&
+          same(r.applicant.lastName, c.lastName) &&
+          r.applicant.dateOfBirth === c.dateOfBirth,
+      );
+      if (open) return route.fulfill({ status: 409, json: { code: 'duplicate', name: `${open.applicant!.firstName} ${open.applicant!.lastName}` } });
+    }
     let waitlisted = this.enrollmentRequests.filter((r) => r.programId === program.id && r.status === 'Waitlisted').length;
     let first: number | null = null;
-    const children = draft.children.filter((c) => c.enroll);
     const referrer =
       appliedAs === 'Referrer' ? { name: draft.referrer!.name!.trim(), role: draft.referrer!.role!.trim(), organization: draft.referrer?.organization?.trim() || null, contact: session.contact } : null;
     for (const c of children) {

@@ -55,6 +55,11 @@ public sealed class GuardianEnrollmentHandler(
             session = new EnrollmentSession(Guid.NewGuid(), tenant.OrganizationId, program.Id, contact);
             db.EnrollmentSessions.Add(session);
         }
+        if (!session.CountCode(clock.GetUtcNow()))
+        {
+            await db.SaveChangesAsync(cancellationToken);
+            return GuardianResult.Of(GuardianOutcome.TooMany);
+        }
         var code = GuardianTokens.NewCode();
         session.NewCode(GuardianTokens.Hash($"{session.Id}:{code}"), clock.GetUtcNow().AddMinutes(10));
         var text = $"Your {organization.Name} code is {code}. It expires in 10 minutes.";
@@ -182,6 +187,10 @@ public sealed class GuardianEnrollmentHandler(
                 _ => "Agree to the season consent to submit.",
             });
         }
+        if (await DuplicateAsync(program.Id, draft, cancellationToken) is { } duplicate)
+        {
+            return new GuardianResult(GuardianOutcome.Conflict, new { code = "duplicate", name = duplicate });
+        }
         var language = HouseholdRules.Languages.Contains(draft.Household.Language ?? string.Empty) ? draft.Household.Language! : "English";
         var guardianName = draft.Household.GuardianName!.Trim();
         Household household;
@@ -247,6 +256,7 @@ public sealed class GuardianEnrollmentHandler(
         };
         audit.Record(new AuditEvent(AuditAction.Created, "Enrollment", session.Id, $"{program.Name} · {who} · {status}"));
         await db.SaveChangesAsync(cancellationToken);
+        await AcknowledgeAsync(session.Contact, program.Name, cancellationToken);
         return GuardianResult.Of(GuardianOutcome.Ok, new EnrollmentSubmitDto(status, firstPosition, count, program.Name, applying.ToString(), seasonConsent));
     }
 
@@ -260,6 +270,45 @@ public sealed class GuardianEnrollmentHandler(
         return session is null
             ? (GuardianResult.Of(GuardianOutcome.VerificationRequired, new { code = "verification-required" }), null, null)
             : (null, session, program);
+    }
+
+    /// <summary>
+    /// The name of a young person in the draft who already has an open request (waiting review or waitlisted) in this program:
+    /// the same first name, last name and date of birth, trimmed and ignoring case, among this organization's children.
+    /// </summary>
+    private async Task<string?> DuplicateAsync(Guid programId, EnrollmentDraft draft, CancellationToken cancellationToken)
+    {
+        var open = await (from r in db.EnrollmentRequests.AsNoTracking()
+                          join c in db.Children.AsNoTracking() on r.ChildId equals c.Id
+                          where r.ProgramId == programId && (r.Status == EnrollmentRequestStatus.WaitingReview || r.Status == EnrollmentRequestStatus.Waitlisted)
+                          select new { c.Id, c.FirstName, c.LastName, c.DateOfBirth }).ToListAsync(cancellationToken);
+        foreach (var child in draft.Children.Where(c => c.Enroll))
+        {
+            var match = open.FirstOrDefault(o => (child.Id is { } id && o.Id == id)
+                || (Same(o.FirstName, child.FirstName) && Same(o.LastName, child.LastName) && o.DateOfBirth == child.DateOfBirth));
+            if (match is not null)
+            {
+                return $"{match.FirstName} {match.LastName}";
+            }
+        }
+        return null;
+    }
+
+    private static bool Same(string? a, string? b) => string.Equals(a?.Trim(), b?.Trim(), StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>One text or email to the contact that applied, once the submission is saved (L2-071 criterion 7).</summary>
+    private async Task AcknowledgeAsync(string contact, string programName, CancellationToken cancellationToken)
+    {
+        var organization = await db.Organizations.AsNoTracking().SingleAsync(o => o.Id == tenant.OrganizationId, cancellationToken);
+        var text = $"{organization.Name} received your application for {programName}. We’ll be in touch within a few days.";
+        if (EnrollmentContact.IsPhone(contact))
+        {
+            await sms.SendAsync(EnrollmentContact.Display(contact), text, cancellationToken);
+        }
+        else
+        {
+            await email.SendAsync(contact, $"{organization.Name} received your application", text, cancellationToken);
+        }
     }
 
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();

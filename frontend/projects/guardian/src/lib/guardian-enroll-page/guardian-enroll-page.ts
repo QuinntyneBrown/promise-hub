@@ -92,6 +92,10 @@ export class GuardianEnrollPage {
   protected readonly errors = signal<Record<string, string>>({});
   protected readonly busy = signal(false);
   protected readonly failed = signal(false);
+  /** Three codes in 15 minutes: the next waits (L2-071 criterion 9). */
+  protected readonly tooMany = signal(false);
+  /** The young person who already has an open application in this program (L2-071 criterion 8). */
+  protected readonly duplicate = signal<string | null>(null);
   protected readonly result = signal<EnrollmentSubmitted | null>(null);
   protected readonly applyingAs = signal<EnrollmentApplicant>('Guardian');
   protected reason = '';
@@ -148,9 +152,11 @@ export class GuardianEnrollPage {
   protected requestCode(): void {
     this.busy.set(true);
     this.errors.set({});
+    this.tooMany.set(false);
     this.api.requestCode(this.slug(), this.contact).subscribe((outcome) => {
       this.busy.set(false);
       if (outcome.status === 'saved') this.step.set('code');
+      else if (outcome.status === 'too-many') this.tooMany.set(true);
       else if (outcome.status === 'invalid') this.errors.set(outcome.errors);
       else this.failed.set(true);
     });
@@ -256,6 +262,7 @@ export class GuardianEnrollPage {
 
   protected submit(): void {
     this.busy.set(true);
+    this.duplicate.set(null);
     this.errors.set({});
     this.api.submit(this.slug(), this.consent).subscribe((r) => {
       this.busy.set(false);
@@ -264,6 +271,8 @@ export class GuardianEnrollPage {
         this.step.set('done');
       } else if (r.status === 'invalid') {
         this.errors.set(r.errors);
+      } else if (r.status === 'duplicate') {
+        this.duplicate.set(r.name);
       } else {
         this.failed.set(true);
       }

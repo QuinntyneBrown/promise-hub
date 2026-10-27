@@ -3,6 +3,13 @@ import { GuardianLanguage } from './guardian-text';
 /** The enrollment pages' strings in English, Spanish and French (L2-027). */
 const TEXT = {
   en: {
+    tooManyTitle: 'Too many codes',
+    tooManyText: 'Wait 15 minutes, then ask for a new one.',
+    duplicateTitle: (name: string, program: string) =>
+      `${name} already has an application for ${program}`,
+    duplicateText: (phone: string) =>
+      `We have it, and we’ll be in touch. Questions? Text or call ${phone}.`,
+    confirmationSent: (contact: string) => `We sent a confirmation to ${contact}.`,
     whoLegend: 'Who is applying?',
     asGuardian: 'I’m a parent or guardian',
     asGuardianHint: 'Enroll your own children.',
@@ -82,6 +89,13 @@ const TEXT = {
     and: 'and',
   },
   es: {
+    tooManyTitle: 'Demasiados códigos',
+    tooManyText: 'Espere 15 minutos y pida uno nuevo.',
+    duplicateTitle: (name: string, program: string) =>
+      `${name} ya tiene una solicitud para ${program}`,
+    duplicateText: (phone: string) =>
+      `La tenemos y nos comunicaremos. ¿Preguntas? Escriba o llame al ${phone}.`,
+    confirmationSent: (contact: string) => `Enviamos una confirmación a ${contact}.`,
     whoLegend: '¿Quién hace la solicitud?',
     asGuardian: 'Soy madre, padre o tutor',
     asGuardianHint: 'Inscriba a sus propios hijos.',
@@ -163,6 +177,12 @@ const TEXT = {
     and: 'y',
   },
   fr: {
+    tooManyTitle: 'Trop de codes',
+    tooManyText: 'Attendez 15 minutes, puis demandez-en un nouveau.',
+    duplicateTitle: (name: string, program: string) => `${name} a déjà une demande pour ${program}`,
+    duplicateText: (phone: string) =>
+      `Nous l’avons et nous vous contacterons. Des questions? Textez ou appelez le ${phone}.`,
+    confirmationSent: (contact: string) => `Nous avons envoyé une confirmation à ${contact}.`,
     whoLegend: 'Qui fait la demande?',
     asGuardian: 'Je suis parent ou tuteur',
     asGuardianHint: 'Inscrivez vos propres enfants.',

@@ -183,6 +183,81 @@ public sealed partial class ApplicationTests : IAsyncLifetime
         Assert.Empty(Query("SELECT Id FROM EnrollmentRequests WHERE AppliedAs = 'Youth'"));
     }
 
+    [Fact]
+    public async Task A_recorded_application_is_acknowledged_once_to_the_verified_contact_and_a_refused_one_is_not()
+    {
+        const string ack = "Harbourview Youth Collective received your application for Winter Camp 2026. We’ll be in touch within a few days.";
+        var slug = await Open();
+        await Verify(slug, "905-555-0311");
+        await SaveYouth(slug);
+
+        await _client.PostAsJsonAsync($"/g/enroll/{slug}/submit", new { consent = false });
+        Assert.DoesNotContain(Sms.Sent, s => s.Text == ack);
+        await _client.PostAsJsonAsync($"/g/enroll/{slug}/submit", new { consent = true });
+
+        Assert.Single(Sms.Sent, s => s.To == "905-555-0311" && s.Text == ack);
+    }
+
+    [Fact]
+    public async Task A_referrer_is_acknowledged_by_email()
+    {
+        var slug = await Open();
+        await Verify(slug, "rachel.ellis@bennetto.example.ca");
+        await SaveReferral(slug);
+
+        await _client.PostAsJsonAsync($"/g/enroll/{slug}/submit", new { consent = true });
+
+        var email = _factory.Services.GetRequiredService<FakeEmailSender>();
+        Assert.Single(email.Bodies, b => b.To == "rachel.ellis@bennetto.example.ca" && b.Body.Contains("received your application for Winter Camp 2026", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task A_fourth_code_within_15_minutes_is_refused_and_not_sent()
+    {
+        var slug = await Open();
+        for (var i = 0; i < 3; i++)
+        {
+            Assert.Equal(HttpStatusCode.Accepted, (await _client.PostAsJsonAsync($"/g/enroll/{slug}/code", new { contact = "905-555-0311" })).StatusCode);
+        }
+
+        var fourth = await _client.PostAsJsonAsync($"/g/enroll/{slug}/code", new { contact = "905-555-0311" });
+
+        Assert.Equal((HttpStatusCode)429, fourth.StatusCode);
+        Assert.Equal("too-many", (await fourth.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("code").GetString());
+        Assert.Equal(3, Sms.Sent.Count(s => s.To == "905-555-0311"));
+        _factory.Clock.Advance(TimeSpan.FromMinutes(15));
+        Assert.Equal(HttpStatusCode.Accepted, (await _client.PostAsJsonAsync($"/g/enroll/{slug}/code", new { contact = "905-555-0311" })).StatusCode);
+    }
+
+    [Fact]
+    public async Task A_second_application_for_the_same_young_person_with_one_open_is_refused_as_a_duplicate()
+    {
+        var slug = await Open();
+        await Verify(slug, "905-555-0311");
+        await SaveYouth(slug);
+        await _client.PostAsJsonAsync($"/g/enroll/{slug}/submit", new { consent = true });
+        var acknowledged = Sms.Sent.Count;
+
+        await Verify(slug, "rachel.ellis@bennetto.example.ca");
+        await _client.PutAsJsonAsync($"/g/enroll/{slug}/draft", new
+        {
+            applyingAs = "Referrer",
+            referrer = new { name = "Rachel Ellis", role = "Guidance counsellor", organization = "" },
+            reason = "He asked me to.",
+            household = new { guardianName = "Denise Johnson", mobile = "905-555-0310", email = "", language = "English" },
+            children = new[] { new { id = (Guid?)null, firstName = " malik ", lastName = "JOHNSON", dateOfBirth = "2012-04-18", school = "", allergies = "", medication = "", enroll = true } },
+        });
+        var duplicate = await _client.PostAsJsonAsync($"/g/enroll/{slug}/submit", new { consent = true });
+
+        Assert.Equal(HttpStatusCode.Conflict, duplicate.StatusCode);
+        var body = await duplicate.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("duplicate", body.GetProperty("code").GetString());
+        Assert.Equal("Malik Johnson", body.GetProperty("name").GetString());
+        Assert.Single(Query("SELECT r.Id FROM EnrollmentRequests r JOIN Children c ON c.Id = r.ChildId WHERE lower(c.FirstName) LIKE '%malik%'"));
+        Assert.Equal(acknowledged, Sms.Sent.Count);
+        Assert.DoesNotContain(_factory.Services.GetRequiredService<FakeEmailSender>().Bodies, b => b.Body.Contains("received your application", StringComparison.Ordinal));
+    }
+
     private async Task<string> Open()
     {
         var response = await _factory.ClientFor(Marisol).PostAsync($"/programs/{WinterCamp}/enrollment/open", null);

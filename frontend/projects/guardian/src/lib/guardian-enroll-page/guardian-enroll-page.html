@@ -41,6 +41,9 @@
     @case ('contact') {
       <h1>{{ text.enrollHeading(p?.program ?? '') }}</h1>
       <p>{{ text.intro }}</p>
+      @if (tooMany()) {
+        <ph-alert tone="danger" [title]="text.tooManyTitle" [text]="text.tooManyText" />
+      }
       <form class="stack" novalidate (ngSubmit)="requestCode()">
         <ph-radio-group
           [legend]="text.whoLegend"
@@ -327,6 +330,13 @@
     }
     @case ('review') {
       <h1>{{ text.reviewHeading }}</h1>
+      @if (duplicate(); as name) {
+        <ph-alert
+          tone="warning"
+          [title]="text.duplicateTitle(name, p?.program ?? '')"
+          [text]="text.duplicateText(p?.phone ?? '')"
+        />
+      }
       <form class="stack" novalidate (ngSubmit)="submit()">
         @if (applyingAs() === 'Guardian') {
           <ph-card [title]="text.you">
@@ -378,7 +388,7 @@
           @if (r.appliedAs === 'Referrer') {
             <p>{{ text.contactFamily(household.guardianName ?? '') }}</p>
           }
-          <p>{{ text.doneText }}</p>
+          <p>{{ text.doneText }} {{ text.confirmationSent(verifiedContact()) }}</p>
         </div>
       }
     }

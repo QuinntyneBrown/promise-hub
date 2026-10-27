@@ -33,8 +33,29 @@ public sealed class EnrollmentSession : ITenantOwned
     /// <summary>The household this contact belongs to in this organization, when it is a returning family.</summary>
     public Guid? HouseholdId { get; private set; }
 
+    /// <summary>Codes sent since <see cref="CodesSince"/>; at most three in 15 minutes (L2-071 criterion 9).</summary>
+    public int CodesSent { get; private set; }
+
+    public DateTimeOffset? CodesSince { get; private set; }
+
     public string? Draft { get; private set; }
     public DateTimeOffset? SubmittedAt { get; private set; }
+
+    /// <summary>Counts a code about to be sent; false when three were already sent in the last 15 minutes.</summary>
+    public bool CountCode(DateTimeOffset now)
+    {
+        if (CodesSince is null || now - CodesSince >= TimeSpan.FromMinutes(15))
+        {
+            CodesSince = now;
+            CodesSent = 0;
+        }
+        if (CodesSent >= 3)
+        {
+            return false;
+        }
+        CodesSent++;
+        return true;
+    }
 
     public void NewCode(string codeHash, DateTimeOffset expiresAt)
     {

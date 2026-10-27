@@ -43,6 +43,7 @@ test.describe('Apply as a young person', () => {
     await expect(enroll.heading).toHaveText('Thank you, Malik');
     await expect(enroll.text('Malik is waiting for review.')).toBeVisible();
     await expect(enroll.text('We’ll ask Denise Johnson to give consent before you start.')).toBeVisible();
+    await expect(enroll.text('We sent a confirmation to 905-555-0311.')).toBeVisible();
     expect(api.lastEnrollmentRequest()).toMatchObject({ appliedAs: 'Youth', seasonConsent: false, reason: 'I want to learn to code and help with the younger kids.' });
     await enroll.expectAccessible();
     await enroll.expectNoHorizontalScroll();
@@ -128,6 +129,49 @@ test.describe('Applications with Roster off', () => {
 
     await expect(enroll.heading).toHaveText('This page isn’t available');
     await expect(enroll.applyingAs('I’m the young person')).toHaveCount(0);
+    await enroll.expectAccessible();
+  });
+});
+
+test.describe('Duplicate applications and too many codes', () => {
+  test.use({ signedInAs: null });
+
+  test('Given Malik already has an open application, when someone applies for him again, then nothing is submitted twice and the page says so', async ({ page, api }) => {
+    const slug = api.openEnrollment('p-winter');
+    api.applied('p-winter', { firstName: 'Malik', lastName: 'Johnson', dateOfBirth: '2012-04-18' });
+    const enroll = new GuardianEnrollPage(page);
+    await enroll.open(slug);
+    await enroll.applyAs('I’m the young person');
+    await enroll.verify('905-555-0311', api.guardianCode);
+    await enroll.fillYoungPerson({ firstName: 'malik', lastName: 'Johnson', dateOfBirth: '2012-04-18', reason: 'I want to learn to code.' });
+    await enroll.next();
+    await enroll.field('Guardian’s full name').fill('Denise Johnson');
+    await enroll.field('Guardian’s mobile number').fill('905-555-0310');
+    await enroll.next();
+    await enroll.agree(/privacy notice/);
+
+    await enroll.next('Submit');
+
+    await expect(enroll.text('Malik Johnson already has an application for Winter Camp 2026')).toBeVisible();
+    await expect(enroll.text('We have it, and we’ll be in touch. Questions? Text or call 905-555-0100.')).toBeVisible();
+    expect(api.enrollmentRequestCount('p-winter')).toBe(1);
+    await enroll.expectAccessible();
+  });
+
+  test('Given three codes were sent in the last 15 minutes, when a fourth is asked for, then it is refused with when to try again', async ({ page, api }) => {
+    const slug = api.openEnrollment('p-winter');
+    const enroll = new GuardianEnrollPage(page);
+    await enroll.open(slug);
+    for (let i = 0; i < 3; i++) {
+      await enroll.sendCode('905-555-0311');
+      await enroll.useDifferentContact();
+    }
+
+    await enroll.sendCode('905-555-0311');
+
+    await expect(enroll.text('Too many codes')).toBeVisible();
+    await expect(enroll.text('Wait 15 minutes, then ask for a new one.')).toBeVisible();
+    await expect(enroll.field('Your mobile number or email')).toBeVisible();
     await enroll.expectAccessible();
   });
 });

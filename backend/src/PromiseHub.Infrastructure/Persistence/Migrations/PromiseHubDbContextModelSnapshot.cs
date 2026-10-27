@@ -683,6 +683,12 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("CodesSent")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("CodesSince")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Contact")
                         .IsRequired()
                         .HasMaxLength(320)

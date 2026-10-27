@@ -65,6 +65,15 @@ export class GuardianEnrollPage extends BasePage {
     await this.page.getByRole('button', { name: 'Continue' }).click();
   }
 
+  async sendCode(contact: string): Promise<void> {
+    await this.page.getByLabel('Your mobile number or email').fill(contact);
+    await this.page.getByRole('button', { name: 'Send me a code' }).click();
+  }
+
+  async useDifferentContact(): Promise<void> {
+    await this.page.getByRole('button', { name: 'Use a different number or email' }).click();
+  }
+
   async next(name = 'Continue'): Promise<void> {
     await this.page.getByRole('button', { name, exact: true }).click();
   }
