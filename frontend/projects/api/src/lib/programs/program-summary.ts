@@ -8,4 +8,6 @@ export interface ProgramSummary {
   capacity: number;
   enrollmentOpen: boolean;
   status: 'Active' | 'Archived';
+  /** The cohort's term, such as "2026–27" (L2-061); null when none. */
+  term: string | null;
 }

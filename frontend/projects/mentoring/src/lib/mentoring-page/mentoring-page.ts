@@ -1,13 +1,21 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MENTORING_API, LoadResult, AssignedYouth } from '@promisehub/api';
-import { PhButton, PhCard, PhEmptyState, PhPageHeader, PhSkeleton } from '@promisehub/components';
+import {
+  PhButton,
+  PhCard,
+  PhEmptyState,
+  PhList,
+  PhListItem,
+  PhPageHeader,
+  PhSkeleton,
+} from '@promisehub/components';
 import { Subject, startWith, switchMap } from 'rxjs';
 
-/** Mentoring, the mentor’s assigned youth (mock: mentoring). A mentor sees only youth assigned to them; there are none until assignments exist. */
+/** Mentoring, the mentor’s assigned youth (mock: mentoring). A mentor sees only youth assigned to them, directly or through a cohort they lead or support (L2-062 criterion 5). */
 @Component({
   selector: 'ph-mentoring-page',
-  imports: [PhButton, PhCard, PhEmptyState, PhPageHeader, PhSkeleton],
+  imports: [PhButton, PhCard, PhEmptyState, PhList, PhListItem, PhPageHeader, PhSkeleton],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './mentoring-page.html',
 })

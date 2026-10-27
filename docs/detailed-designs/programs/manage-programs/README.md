@@ -22,7 +22,7 @@ The feature is a vertical slice from the staff UI to the database.
 
 - **`ProgramsListPage`** — page component for the `programs` screen (`/programs`). It lists active programs with enrolled counts against capacity and offers the `Active` / `Archived` filter chips and the `New program` action. It renders the `empty`, `loading`, `error` and `no-results` states.
 - **`ProgramPage`** — page component for the `program` screen (`/programs/:id`). It shows the key numbers, the roster, the program's events and the enrollment link. An archived program renders read-only with `Export report` and `Restore`.
-- **`ProgramFormPage`** — page component for the `program-form` screen (`/programs/new`, `/programs/:id/edit`). Fields: name, starts, ends, schedule, capacity, ages, enrollment (`Open now` / `Closed`) and the season consent switch. On an invalid submit it renders the inline errors and the error summary and moves focus to the summary.
+- **`ProgramFormPage`** — page component for the `program-form` screen (`/programs/new`, `/programs/:id/edit`). Fields: name, starts, ends, schedule, term (prompt 54), capacity, ages, enrollment (`Open now` / `Closed`) and the season consent switch. On an invalid submit it renders the inline errors and the error summary and moves focus to the summary.
 - **`ProgramActionsMenu`** — CDK overlay menu for the `program-actions` dialog: attendance, funder report, close enrollment and `Archive at season end…`.
 - **`ArchiveProgramDialog`** — CDK dialog for the `archive-program` screen. The confirm step asks the director to type the program name exactly. When children are still enrolled, a warning states that their enrollment ends today.
 - Pages compose `page-header`, `list`, `chip`, `kpi`, `form-field`, `error-summary`, `dialog`, `menu`, `badge` and `empty-state` from `frontend/projects/components/`.
@@ -52,6 +52,9 @@ The feature is a vertical slice from the staff UI to the database.
 Decided in ADR 0008: names are at most 120 characters; archiving does not cancel future events.
 
 ## Built so far
+
+Prompt 54 added the optional term to the form, list and header ([manage-terms-and-tracks](../manage-terms-and-tracks/README.md)), and, while Mentoring is on, the Mentors card and each youth's mentor on the program page ([manage-cohorts](../manage-cohorts/README.md), [assign-mentors](../../mentoring/assign-mentors/README.md)).
+
 
 Slice 18 added program directors moving waitlisted children in from the roster review page (`enrollment` library, `/programs/:programId/roster`); the program page links to it.
 

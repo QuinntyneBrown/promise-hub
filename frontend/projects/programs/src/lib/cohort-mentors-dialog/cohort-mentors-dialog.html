@@ -1,0 +1,37 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    [title]="'Mentors for ' + data.program.name"
+    description="One lead mentor and any supporting mentors. A mentor can lead one cohort and support another."
+    icon="mentoring"
+  >
+    <div class="stack">
+      @if (failed()) {
+        <ph-alert
+          tone="danger"
+          title="That didn’t go through"
+          text="The cohort’s mentors were not changed. Try again."
+        />
+      }
+      <ph-select
+        inputId="lead"
+        label="Lead mentor"
+        name="lead"
+        [options]="leadOptions"
+        [error]="errors()['leadMentorId'] ?? null"
+        [(ngModel)]="leadMentorId"
+      />
+      <ph-checkbox-group
+        legend="Supporting mentors"
+        hint="Optional."
+        name="supporting"
+        [options]="supportingOptions"
+        [error]="errors()['supportingMentorIds'] ?? null"
+        [(ngModel)]="supportingMentorIds"
+      />
+    </div>
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Save mentors</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

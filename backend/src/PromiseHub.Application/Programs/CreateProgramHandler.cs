@@ -15,7 +15,7 @@ public sealed class CreateProgramHandler(IPromiseHubDb db, ITenantContext tenant
             return Result.Invalid(errors);
         }
         var program = new Domain.Programs.Program(Guid.NewGuid(), tenant.OrganizationId, command.Name.Trim(), command.StartsOn!.Value, command.EndsOn!.Value,
-            ProgramRules.Clean(command.Schedule), command.Capacity, ProgramRules.Clean(command.Ages), command.EnrollmentOpen, command.SeasonConsent);
+            ProgramRules.Clean(command.Schedule), command.Capacity, ProgramRules.Clean(command.Ages), command.EnrollmentOpen, command.SeasonConsent, ProgramRules.Clean(command.Term));
         db.Programs.Add(program);
         audit.Record(new AuditEvent(AuditAction.Created, "Program", program.Id, program.Name, After: command));
         await db.SaveChangesAsync(cancellationToken);

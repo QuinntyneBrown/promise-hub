@@ -1,0 +1,46 @@
+@startuml
+title UML sequence behaviour — Assigning mentors
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Program director" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "ProgramPage" as page
+  participant "AssignMentorDialog" as dlg
+  participant "MentoringApi" as mapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "MentorAssignmentEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application and Domain" #ECFDF3
+  participant "AssignYouthMentorHandler" as h
+  participant "MentoringHandler" as mh
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : opens After-School Tutoring
+page -> mapi : cohort(programId) (only while Mentoring is on — L2-062 c7)
+mapi -> ep : GET /programs/{id}/mentoring
+ep --> page : team, each youth's mentor, active mentors (c1)
+actor -> page : Mentor on Mateo's row
+page -> dlg : open
+actor -> dlg : Daniel Osei, Assign mentor
+dlg -> mapi : assignYouth(programId, childId, mentorId)
+mapi -> ep : PUT /programs/{id}/youth/{childId}/mentor (Roster, Mentoring, ManagePrograms — c6, c7)
+ep -> h : AssignAsync
+h -> db : program in caller's organization (c8), not archived (c9), child on active roster, active mentor (c3)
+alt refused
+  h --> dlg : 422 or 404
+  dlg --> actor : error beside the select
+else valid
+  h -> db : upsert YouthMentor, audit Updated (c2)
+  ep --> dlg : 204
+  page --> actor : "Mentor: Daniel Osei", toast "Mentor assigned"
+end
+== Daniel's next request ==
+mh -> db : direct assignments + rosters of cohorts on his team (c4, c5)
+mh --> actor : Mateo listed
+@enduml

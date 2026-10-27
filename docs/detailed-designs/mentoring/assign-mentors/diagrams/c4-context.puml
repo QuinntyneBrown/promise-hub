@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Assign mentors
+Person(p0, "Program director", "Assigns mentors to youth and cohorts")
+Person(p1, "Mentor", "Sees only the youth assigned")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(p0, ph, "Uses", "HTTPS")
+Rel(p1, ph, "Uses", "HTTPS")
+@enduml

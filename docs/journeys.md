@@ -27,7 +27,7 @@
 | Program director | Produce grant reports | Filter attendance, demographics, and outcomes and export funder-ready results. | [8 days](detailed-designs/reports/export-report/README.md) | 60% · [video](videos/37-produce-grant-reports/README.md) |
 | Program director | Manage waitlists | Review capacity and move eligible children into programs. | [3 days](detailed-designs/enrollment/enroll-guardian/README.md) | 95% · [video](videos/18-manage-waitlists/README.md) |
 | Program director | Monitor today's work | See sessions, missing slips, alerts, and tasks in one place. | [2 days](detailed-designs/shell/compose-navigation/README.md) | 85% · [video](videos/33-monitor-todays-work/README.md) |
-| Program director | Manage cohorts and assign mentors | Run cohorts as programs and assign mentors to youth. | [8 days](prompts/54-manage-cohorts.md) | 0% |
+| Program director | Manage cohorts and assign mentors | Run cohorts as programs and assign mentors to youth. | [8 days](detailed-designs/mentoring/assign-mentors/README.md) | 100% · [video](videos/54-manage-cohorts/README.md) |
 | Program director | Author curriculum | Build tracks, modules and lessons through draft, review and publish. | [8 days](prompts/56-author-curriculum.md) | 0% |
 | Program director | Author quizzes and assignments | Create quizzes, assignments, rubrics and attempt rules. | [6 days](prompts/60-author-quizzes-and-assignments.md) | 0% |
 | Program director | Author badges and progression | Define badges, award rules and the progression framework. | [10 days](prompts/64-author-badges-and-progression.md) | 0% |

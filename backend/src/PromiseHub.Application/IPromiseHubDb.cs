@@ -62,6 +62,8 @@ public interface IPromiseHubDb
     DbSet<ConsentPolicy> ConsentPolicies { get; }
     DbSet<DataRequest> DataRequests { get; }
     DbSet<Domain.Learning.YouthOnboarding> YouthOnboardings { get; }
+    DbSet<Domain.Mentoring.YouthMentor> YouthMentors { get; }
+    DbSet<Domain.Mentoring.CohortMentor> CohortMentors { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

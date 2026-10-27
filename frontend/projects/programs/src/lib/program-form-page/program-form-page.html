@@ -43,14 +43,25 @@
             [(ngModel)]="fields.endsOn"
           />
         </div>
-        <ph-text-field
-          inputId="schedule"
-          label="Schedule"
-          name="schedule"
-          placeholder="Mon–Thu, 4–6 pm"
-          help="Free text."
-          [(ngModel)]="fields.schedule"
-        />
+        <div class="two-col">
+          <ph-text-field
+            inputId="schedule"
+            label="Schedule"
+            name="schedule"
+            placeholder="Mon–Thu, 4–6 pm"
+            help="Free text."
+            [(ngModel)]="fields.schedule"
+          />
+          <ph-text-field
+            inputId="term"
+            label="Term (optional)"
+            name="term"
+            placeholder="2026–27"
+            help="Groups the programs that run together, such as Fall 2026."
+            [error]="errors()['term'] ?? null"
+            [(ngModel)]="fields.term"
+          />
+        </div>
         <div class="two-col">
           <ph-text-field
             inputId="capacity"

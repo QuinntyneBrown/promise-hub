@@ -547,7 +547,8 @@ def programs(S):
     def row(p):
         b = badge(p["status"], {"Enrolling": "success", "Open": "info", "Archived": ""}[p["status"]])
         wl = f' · {p["waitlist"]} waitlisted' if p["waitlist"] else ""
-        return list_item(esc(p["name"]), f'{p["when"]} · {p["enrolled"]} of {p["capacity"]} enrolled{wl}', lead=f'<span class="icon-tile" aria-hidden="true">{icon("list")}</span>', href=page("program"), end=b)
+        term = f' · {p["term"]}' if p.get("term") else ""
+        return list_item(esc(p["name"]), f'{p["when"]}{term} · {p["enrolled"]} of {p["capacity"]} enrolled{wl}', lead=f'<span class="icon-tile" aria-hidden="true">{icon("list")}</span>', href=page("program"), end=b)
     S.add("default", "All programs with enrollment against capacity.", nav="programs", user=M, main=hdr + chips([("Active", True), ("Archived", False)], "Filter programs") + ul_list([row(p) for p in PROGRAMS[:4]], label="Programs"))
     S.add("loading", "Programs loading.", nav="programs", main=page_header("Programs", "") + skeleton_list(4, "Loading programs"))
     S.add("empty", "No programs yet.", nav="programs", user=M, main=page_header("Programs", "") + card(empty("No programs yet", "Create one to start.", action=btn("New program", "primary", icon_name="plus", href=page("program-form")), icon_name="list"), cls="card--flush"))
@@ -555,26 +556,47 @@ def programs(S):
     S.add("no-results", "Archived filter with nothing archived.", nav="programs", user=M, main=hdr + chips([("Active", False), ("Archived", True)], "Filter programs") + card(empty("Nothing archived", "Archived programs appear here.", action=btn("Show active", ""), icon_name="inbox"), cls="card--flush"))
 
 
-@screen("program", "page", "Program", route="/programs/:id", reqs=[R_ENROLL, R_REPORTS], na={})
+@screen("program", "page", "Program", route="/programs/:id", reqs=[R_ENROLL, R_REPORTS, "L1-024"], na={})
 def program(S):
     p = PROGRAMS[0]
 
     def hdr(actions=True):
         act = (btn("Open enrollment", "primary", icon_name="link", data_href=dialog("open-enrollment")) + btn("Edit", "", icon_name="edit", href=page("program-form", "edit")) + icon_btn("more", "More actions", data_href=dialog("program-actions"))) if actions else ""
-        return breadcrumb([("Programs", page("programs"))], p["name"]) + page_header(esc(p["name"]), f'{p["when"]} · Harbourview Community Centre · Sep 2026–Jun 2027', act)
+        return breadcrumb([("Programs", page("programs"))], p["name"]) + page_header(esc(p["name"]), f'{p["when"]} · 2026–27 term · Sep 2026–Jun 2027', act)
     stats = kpis([("Enrolled", "48 <span class=\"text-caption\">/ 50</span>", "3 waitlisted"), ("Attendance", "89%", "this season"), ("Slips signed", "41 / 48", "RBG trip"), ("Sessions", "34", "9 remaining")])
-    roster = card(ul_list([
-        list_item("Mateo Rivera", "9 · Rivera · 31 of 34 sessions", person=CHILD["mateo"], href=page("child"), end=flag("Allergy")),
-        list_item("Sofía Rivera", "12 · Rivera · 33 of 34", person=CHILD["sofia"], href=page("child"), end=flag("Asthma")),
-        list_item("Jordan Thompson", "11 · Thompson · 30 of 34", person=CHILD["jordan"], href=page("child")),
-        list_item("Yusuf Haddad", "13 · Haddad · 34 of 34", person=CHILD["yusuf"], href=page("child"), end=flag("Medication")),
-    ], card=False), title="Roster · 48", tid="roster", cls="card--flush", footer=f'<a href="{page("roster")}">Full roster and 3 waiting review</a>')
+
+    def mentor_btn(name):
+        return btn("Mentor", "ghost", size="sm", attrs=f' aria-label="Assign a mentor to {name}" aria-haspopup="dialog"', data_href=dialog("assign-mentor"))
+
+    def roster_card(mentors=True, assigned=None):
+        assigned = assigned or {"Sofía Rivera": "Daniel Osei"}
+        rows = [("Mateo Rivera", "9 · Rivera", "mateo"), ("Sofía Rivera", "12 · Rivera", "sofia"), ("Jordan Thompson", "11 · Thompson", "jordan"), ("Yusuf Haddad", "13 · Haddad", "yusuf")]
+        items = [list_item(n, m + ((" · Mentor: " + assigned[n]) if n in assigned else " · No mentor") if mentors else m, person=CHILD[c], href=page("child"),
+                           end=mentor_btn(n) if mentors else "") for n, m, c in rows]
+        return card(ul_list(items, card=False, label="Roster"), title="Roster · 48", tid="roster", cls="card--flush", footer=f'<a href="{page("roster")}">Full roster and 3 waiting review</a>')
+
+    def mentors_card(team=True):
+        if not team:
+            return card(empty("No mentors yet", "Choose a lead mentor and any supporting mentors for this cohort.", action=btn("Assign mentors", "primary", icon_name="users", data_href=dialog("cohort-mentors")), icon_name="users"), title="Mentors", tid="mentors", cls="card--flush")
+        return card(ul_list([list_item("Daniel Osei", "Lead mentor", person=STAFF["daniel"]), list_item("Hana Kim", "Supporting mentor", person=STAFF["hana"])], card=False, label="Mentors"),
+                    title="Mentors", tid="mentors", cls="card--flush", footer=btn("Edit mentors", "ghost", size="sm", attrs=' aria-haspopup="dialog"', data_href=dialog("cohort-mentors")))
+    roster = roster_card()
     events_c = card(ul_list([event_row(EVENTS[0]), event_row(EVENTS[1])], card=False), title="Events", tid="events", cls="card--flush", footer=f'<a href="{page("events")}">All events</a> · <a href="{page("event-form")}">New event</a>')
     enroll = card(f'<div class="stack" style="gap: var(--space-3);"><p>Enrollment is open.</p>'
                   f'<div class="input-group"><label class="visually-hidden" for="enroll-link">Enrollment link</label><input class="input" id="enroll-link" type="url" readonly value="https://harbourview.promisehub.app/enroll/tutoring"><button class="btn btn--ghost btn--icon input-group__btn" type="button" aria-label="Copy enrollment link">{icon("copy")}</button></div>'
                   f'<div class="cluster">{btn("Show QR", "", icon_name="qr", data_href=dialog("open-enrollment", "success"))}{btn("Text to families", "", icon_name="send", href=page("new-message"))}{btn("Close enrollment", "ghost", data_href=dialog("close-enrollment"))}</div></div>', title="Enrollment", tid="enroll")
-    S.add("default", "After‑School Tutoring: numbers, roster with medical flags, events and the enrollment link.", nav="programs", user=M,
-          main=hdr() + stats + f'<div class="split"><div class="stack">{roster}{events_c}</div><div class="stack">{enroll}</div></div>')
+    S.add("default", "After‑School Tutoring as a cohort: its term, the placed youth with each one’s mentor, the cohort’s mentors, events and the enrollment link.", nav="programs", user=M,
+          main=hdr() + stats + f'<div class="split"><div class="stack">{roster}{events_c}</div><div class="stack">{mentors_card()}{enroll}</div></div>',
+          notes=note("Mentors and the Mentor buttons render only while Mentoring is on; the server answers 404 for the assignment endpoints when it is off.", "top: 5rem; right: 1rem;"))
+    no_mentor_roster = roster_card(assigned={"_": ""})
+    assigned_roster = roster_card(assigned={"Mateo Rivera": "Daniel Osei", "Sofía Rivera": "Daniel Osei"})
+    S.add("no-mentors", "Mentoring is on but nobody mentors this cohort yet: the Mentors card offers Assign mentors.", nav="programs", user=M,
+          main=hdr() + stats + f'<div class="split"><div class="stack">{no_mentor_roster}{events_c}</div><div class="stack">{mentors_card(False)}{enroll}</div></div>')
+    S.add("mentor-assigned", "Daniel Osei was just assigned to Mateo: the row names him and a toast confirms.", nav="programs", user=M,
+          main=hdr() + stats + f'<div class="split"><div class="stack">{assigned_roster}{events_c}</div><div class="stack">{mentors_card()}{enroll}</div></div>',
+          toast_html=toast_region(toast("success", "Mentor assigned", "Daniel Osei now mentors Mateo Rivera.")))
+    S.add("mentoring-off", "Mentoring is off for the organization: no Mentors card and no mentor on the roster rows.", nav="programs", user=M,
+          main=hdr() + stats + f'<div class="split"><div class="stack">{roster_card(mentors=False)}{events_c}</div><div class="stack">{enroll}</div></div>')
     S.add("loading", "Program loading.", nav="programs", main=breadcrumb([("Programs", page("programs"))], "Loading") + f'<div class="page-header" aria-busy="true"><div>{skeleton_header()}</div></div>{skeleton_kpis()}<div class="split">{skeleton_list(4, "Loading roster")}{skeleton_list(2, "Loading events")}</div><h1 class="visually-hidden">Program</h1>')
     S.add("empty", "A new program with no roster: open enrollment or import.", nav="programs", user=M,
           main=hdr().replace(p["name"], "Winter Camp 2026").replace(p["when"], "21–23 Dec, 8 am–5 pm").replace("Sep 2026–Jun 2027", "3 days") +

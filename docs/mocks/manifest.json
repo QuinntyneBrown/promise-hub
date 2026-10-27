@@ -215,10 +215,14 @@
       "route": "/programs/:id",
       "requirements": [
         "L1-005",
-        "L1-012"
+        "L1-012",
+        "L1-024"
       ],
       "states": [
         "default",
+        "no-mentors",
+        "mentor-assigned",
+        "mentoring-off",
         "loading",
         "empty",
         "error",
@@ -1487,6 +1491,7 @@
       ],
       "states": [
         "default",
+        "assigned",
         "loading",
         "error"
       ],
@@ -1804,6 +1809,39 @@
       "opens_from": "roster",
       "requirements": [
         "L1-005"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ]
+    },
+    {
+      "id": "assign-mentor",
+      "kind": "dialog",
+      "title": "Assign a mentor to Mateo Rivera",
+      "opens_from": "program",
+      "requirements": [
+        "L1-005",
+        "L1-024"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed",
+        "assigned"
+      ]
+    },
+    {
+      "id": "cohort-mentors",
+      "kind": "dialog",
+      "title": "Mentors for After‑School Tutoring",
+      "opens_from": "program",
+      "requirements": [
+        "L1-005",
+        "L1-024"
       ],
       "states": [
         "default",

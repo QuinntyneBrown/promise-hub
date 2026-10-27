@@ -28,7 +28,7 @@ def program_form(S):
                 + (form_summary([(k, m) for k, m in e.items()]) if e else "")
                 + field("name", "Program name", value=v["name"], error=e.get("name", ""), required=True, autofocus=not edit, help_="Shown to guardians.")
                 + f'<div class="two-col">{field("start", "Starts", type_="date", value=v["start"], required=True, error=e.get("start", ""))}{field("end", "Ends", type_="date", value=v["end"], required=True)}</div>'
-                + field("when", "Schedule", value=v["when"], placeholder="Mon–Thu, 4–6 pm", help_="Free text.")
+                + f'<div class="two-col">{field("when", "Schedule", value=v["when"], placeholder="Mon–Thu, 4–6 pm", help_="Free text.")}{field("term", "Term", value=v.get("term", ""), placeholder="2026–27", optional=True, error=e.get("term", ""), help_="Groups the programs that run together, such as Fall 2026.")}</div>'
                 + f'<div class="two-col">{field("cap", "Capacity", type_="number", value=v["cap"], inputmode="numeric", help_="Extra enrollments join the waitlist.", error=e.get("cap", ""))}{field("ages", "Ages", value=v["ages"])}</div>'
                 + fieldset("Enrollment", choice("enr", "Open now", small="Guardians can enroll on save", checked=True) + choice("enr", "Closed", small="Open later"))
                 + fieldset("Season consent", switch("consent", "Require a season consent form at enrollment", checked=True, desc="Covers regular sessions."))
@@ -42,7 +42,7 @@ def program_form(S):
           card(empty("We couldn’t load this program", "Try again.", action=btn("Try again", "primary", icon_name="refresh") + btn("Back to program", "ghost", href=page("program")), error=True, icon_name="alert-triangle"), cls="card--flush form-width--md"))
     S.add("invalid", "Submitted with a missing name, a start after the end, and a non-numeric capacity: summary plus inline errors.", nav="programs", user=M,
           main=breadcrumb([("Programs", page("programs"))], "New program") + page_header("New program") +
-          form(err={"name": "Enter a program name.", "start": "Must be before 30 Jun 2027.", "cap": "Enter a whole number."}, values=dict(name="", when="Mon–Thu, 4–6 pm", cap="fifty", start="2027-07-01", end="2027-06-30", ages="6–13")),
+          form(err={"name": "Enter a program name.", "start": "Must be before 30 Jun 2027.", "cap": "Enter a whole number.", "term": "Keep the term under 40 characters."}, values=dict(name="", when="Mon–Thu, 4–6 pm", cap="fifty", start="2027-07-01", end="2027-06-30", ages="6–13")),
           notes=note("On submit, focus moves to the error summary; each item links to its field.", "top: 5rem; right: 1rem;"))
     S.add("submitting", "Saving: the primary button is busy, fields stay as typed, nothing shifts.", nav="programs", user=M,
           main=breadcrumb([("Programs", page("programs"))], "New program") + page_header("New program") + form(busy=True, values=dict(name="Spring Break Camp 2027", when="Mon–Fri, 8 am–5 pm", cap="60", start="2027-03-15", end="2027-03-19", ages="6–13")))

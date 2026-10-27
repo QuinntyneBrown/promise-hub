@@ -7,4 +7,5 @@ export interface ProgramFields {
   ages: string;
   enrollmentOpen: boolean;
   seasonConsent: boolean;
+  term: string;
 }

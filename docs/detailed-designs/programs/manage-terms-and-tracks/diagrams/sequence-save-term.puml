@@ -1,0 +1,34 @@
+@startuml
+title UML sequence behaviour — Saving a program's term
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Program director" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "ProgramFormPage" as form
+  participant "ProgramsApi" as papi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "ProgramEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application and Domain" #ECFDF3
+  participant "UpdateProgramHandler" as h
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> form : types Term "2026–27", Save program
+form -> papi : update(id, fields)
+papi -> ep : PUT /programs/{id} (Roster on, ManagePrograms — L2-061 c5, c7)
+ep -> h : HandleAsync
+alt term over 40 characters
+  h --> papi : 422 term (c1)
+  form --> actor : error beside Term
+else valid
+  h -> db : program in caller's organization (c6), save term, audit Updated
+  ep --> papi : 204
+  form --> actor : program page header shows the term
+end
+@enduml

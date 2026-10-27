@@ -18,4 +18,5 @@ public sealed record ProgramDto(
     string? ArchivedBy,
     string? EnrollmentUrl = null,
     int PendingReviews = 0,
-    int Waitlisted = 0);
+    int Waitlisted = 0,
+    string? Term = null);

@@ -50,6 +50,10 @@ def mentoring(S):
     S.add("default", "Daniel opens Mentoring before anyone is assigned to him: a mentor sees only assigned youth, so the list is empty.", **kw,
           main=hdr + card(empty("No youth assigned yet", "A program director assigns youth to you. They appear here with their progress.", icon_name="users"), cls="card--flush"),
           notes=note("The server lists only youth assigned to this mentor; with no assignments the answer is an empty list.", "top: 5rem; right: 1rem;"))
+    S.add("assigned", "Once Marisol assigns him to Sofía and makes him lead mentor of After‑School Tutoring: Daniel sees each youth he mentors, by name.", **kw,
+          main=hdr + ul_list([list_item("Jordan Thompson", "Youth you mentor", person=CHILD["jordan"]), list_item("Mateo Rivera", "Youth you mentor", person=CHILD["mateo"]),
+                              list_item("Sofía Rivera", "Youth you mentor", person=CHILD["sofia"]), list_item("Yusuf Haddad", "Youth you mentor", person=CHILD["yusuf"])], label="Youth you mentor"),
+          notes=note("Youth assigned to him directly and the youth of every cohort he leads or supports; the dashboard of prompt 55 adds progress.", "top: 5rem; right: 1rem;"))
     S.add("loading", "Mentoring loading.", **kw, main=hdr + skeleton_list(4, "Loading your youth"))
     S.add("error", "Mentoring failed to load.", **kw, main=hdr + failed("We couldn’t load your youth"))
 

@@ -10,6 +10,25 @@ export class ProgramsPage extends BasePage {
     await expect(this.list.getByRole('listitem').first().or(this.page.getByRole('heading', { level: 2 }).first())).toBeVisible();
   }
 
+  /** Goes to Programs without waiting for it, for redirects. */
+  async visitList(): Promise<void> {
+    await super.open('/programs');
+  }
+
+  get subtitle(): Locator {
+    return this.page.getByTestId('page-subtitle');
+  }
+
+  get term(): Locator {
+    return this.page.getByLabel('Term');
+  }
+
+  async edit(): Promise<void> {
+    await this.page.getByRole('link', { name: 'Edit', exact: true }).click();
+    await expect(this.heading).toHaveText('Edit program');
+    await expect(this.page.getByLabel('Program name')).not.toHaveValue('');
+  }
+
   get heading(): Locator {
     return this.page.getByRole('heading', { level: 1 });
   }
@@ -110,5 +129,48 @@ export class ProgramsPage extends BasePage {
     await expect(this.dialog).toBeVisible();
     await this.dialog.getByRole('button', { name: 'Close enrollment' }).click();
     await expect(this.dialog).toBeHidden();
+  }
+
+  toast(title: string): Locator {
+    return this.page.getByTestId('toast').filter({ hasText: title });
+  }
+
+  async openAssignMentor(child: string): Promise<void> {
+    await this.row(child, this.roster).getByRole('button', { name: `Assign a mentor to ${child}` }).click();
+    await expect(this.dialog).toBeVisible();
+  }
+
+  async chooseMentor(name: string, label = 'Mentor'): Promise<void> {
+    await this.dialog.getByLabel(label, { exact: true }).selectOption({ label: name });
+  }
+
+  async submitDialog(label: string): Promise<void> {
+    await this.dialog.getByRole('button', { name: label }).click();
+  }
+
+  /** Back to the top, so rows scrolled under the sticky top bar or the tab bar are not read as overlapping targets. */
+  async scrollToTop(): Promise<void> {
+    await this.page.evaluate(() => window.scrollTo(0, 0));
+  }
+
+  async apiStatus(path: string): Promise<number> {
+    return this.page.evaluate(async (p) => (await fetch(p)).status, path);
+  }
+
+  get mentorsCard(): Locator {
+    return this.page.getByRole('list', { name: 'Mentors' });
+  }
+
+  get mentorsEmpty(): Locator {
+    return this.page.getByRole('heading', { name: 'No mentors yet' });
+  }
+
+  async openCohortMentors(): Promise<void> {
+    await this.page.getByRole('button', { name: /^(Assign mentors|Edit mentors)$/ }).click();
+    await expect(this.dialog).toBeVisible();
+  }
+
+  async toggleSupporting(name: string): Promise<void> {
+    await this.dialog.getByRole('group', { name: 'Supporting mentors' }).getByLabel(name).click();
   }
 }

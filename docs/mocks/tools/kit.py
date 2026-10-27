@@ -62,10 +62,10 @@ LONG_GUARDIAN = "Mary-Katherine Fitzgerald-Vanderbroucke"
 LONG_CHILD = "Alexander-Christopher Fitzgerald-Vanderbroucke III"
 
 PROGRAMS = [
-    dict(id="tutoring", name="After‑School Tutoring", when="Mon–Thu, 4–6 pm", enrolled=48, capacity=50, waitlist=3, status="Enrolling"),
-    dict(id="sports", name="Saturday Sports", when="Sat, 10 am–12 pm", enrolled=62, capacity=80, waitlist=0, status="Enrolling"),
+    dict(id="tutoring", name="After‑School Tutoring", when="Mon–Thu, 4–6 pm", enrolled=48, capacity=50, waitlist=3, status="Enrolling", term="2026–27"),
+    dict(id="sports", name="Saturday Sports", when="Sat, 10 am–12 pm", enrolled=62, capacity=80, waitlist=0, status="Enrolling", term="2026–27"),
     dict(id="mentoring", name="One-to-one Mentoring", when="Weekly, by match", enrolled=19, capacity=25, waitlist=0, status="Open"),
-    dict(id="winter-camp", name="Winter Camp 2026", when="21–23 Dec, 8 am–5 pm", enrolled=35, capacity=60, waitlist=0, status="Enrolling"),
+    dict(id="winter-camp", name="Winter Camp 2026", when="21–23 Dec, 8 am–5 pm", enrolled=35, capacity=60, waitlist=0, status="Enrolling", term="Winter 2026"),
     dict(id="summer-camp", name="Summer Camp 2026", when="Jul–Aug 2026", enrolled=112, capacity=120, waitlist=0, status="Archived"),
 ]
 

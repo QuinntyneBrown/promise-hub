@@ -51,3 +51,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0045](0045-one-invitation-for-every-role.md) | Youth, mentors and volunteers are invited with the same staff invitation; resend reissues it and an expired link can ask for a new one |
 | [0046](0046-guardian-consent-for-youth.md) | Guardian consent is a verified-link guardian page, the consent age and wording are a privacy setting, and the gate is an endpoint filter on youth work |
 | [0047](0047-youth-onboarding-and-program-placement.md) | Youth onboarding is a server-saved Learning setup behind the consent gate; placement is an active program enrollment checked by an endpoint filter |
+| [0048](0048-cohort-terms-and-mentor-assignments.md) | A cohort's term is a label on its program; mentors are assigned per youth and per cohort under the Mentoring module |

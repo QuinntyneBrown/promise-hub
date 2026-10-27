@@ -1,0 +1,24 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Assign mentors
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "ProgramPage", "Angular page", "Mentors card, Mentor buttons")
+  Component(am, "AssignMentorDialog", "CDK dialog", "assign-mentor")
+  Component(cm, "CohortMentorsDialog", "CDK dialog", "cohort-mentors")
+  Component(mp, "MentoringPage", "Angular page", "mentoring")
+  Component(mapi, "MentoringApi", "Contract + HTTP client", "cohort, assignYouth, setCohortMentors, youth")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "MentorAssignmentEndpoints", "Minimal API", "Roster and Mentoring gates")
+  Component(h, "Mentoring handlers", "Handlers", "read, assign, set team, list youth")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "YouthMentors, CohortMentors, audit")
+}
+Rel(page, mapi, "cohort")
+Rel(am, mapi, "assignYouth")
+Rel(cm, mapi, "setCohortMentors")
+Rel(mp, mapi, "youth")
+Rel(mapi, ep, "JSON/HTTPS")
+Rel(ep, h, "dispatches")
+Rel(h, db, "reads and writes")
+@enduml

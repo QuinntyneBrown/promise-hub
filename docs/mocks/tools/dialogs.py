@@ -135,6 +135,26 @@ simple("enroll-in-program", "Add a child to After‑School Tutoring", "roster", 
        lambda e: field("q", "Child’s name", value="Grace Ad", autofocus=True, error=(e or {}).get("q", "")) + ul_list([list_item("Grace Adeyemi, 11", "Adeyemi household · waiting review for this program", person=CHILD["grace"], end=btn("Choose", "", size="sm"))]) + f'<p class="hint">Not them? <a href="{dialog("add-family")}">Create a new family</a>.</p>',
        "Add to roster", icon_name="plus", invalid_err={"q": "Choose a child from the list, or create a new family."})
 
+# ------------------------------------------------------------------ Cohort mentors (prompt 54, ADR 0048)
+MENTOR_OPTIONS = ["Choose a mentor", "Daniel Osei", "Hana Kim"]
+
+ASSIGN_DESC = "After‑School Tutoring · a youth has one mentor at a time."
+simple("assign-mentor", "Assign a mentor to Mateo Rivera", "program", [R_ENROLL, "L1-024"], ASSIGN_DESC,
+       lambda e: select("mentor", "Mentor", MENTOR_OPTIONS, selected="Choose a mentor" if e else "Daniel Osei", error=(e or {}).get("mentor", ""),
+                        help_="Only active mentors of your organization are listed."),
+       "Assign mentor", icon_name="users", invalid_err={"mentor": "Choose a mentor."},
+       failed_text="Mateo’s mentor was not changed. Try again.",
+       extra_states={"assigned": ("Sofía already has a mentor: Remove mentor sits beside Cancel.",
+                                  dialog_box("Assign a mentor to Sofía Rivera", ASSIGN_DESC,
+                                             select("mentor", "Mentor", MENTOR_OPTIONS, selected="Daniel Osei", help_="Only active mentors of your organization are listed."),
+                                             footer("Assign mentor", extra=btn("Remove mentor", "ghost")), icon_name="users", form=True))})
+
+simple("cohort-mentors", "Mentors for After‑School Tutoring", "program", [R_ENROLL, "L1-024"], "One lead mentor and any supporting mentors. A mentor can lead one cohort and support another.",
+       lambda e: select("lead", "Lead mentor", MENTOR_OPTIONS, selected="Choose a mentor" if e else "Daniel Osei", error=(e or {}).get("lead", ""))
+                 + fieldset("Supporting mentors", choice("support", "Daniel Osei", type_="checkbox") + choice("support", "Hana Kim", type_="checkbox", checked=True), hint="Optional."),
+       "Save mentors", icon_name="users", invalid_err={"lead": "Choose a lead mentor."},
+       failed_text="The cohort’s mentors were not changed. Try again.")
+
 simple("remove-from-roster", "Remove Lily Chen from Summer Camp 2026?", "roster", [R_ENROLL, R_DATA], "Attendance stays in reports.",
        lambda e: fieldset("Why", choice("why", "Family withdrew", checked=True) + choice("why", "Moved to another program") + choice("why", "Added by mistake")) + switch("tell", "Text Wen Chen that Lily was removed"),
        "Remove from roster", base_state="long", icon_name="trash", danger=True, na={"invalid": "A radio group with a default."})

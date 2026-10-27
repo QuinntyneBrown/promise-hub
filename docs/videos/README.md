@@ -61,6 +61,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 51 | [Accept an invitation as a youth or mentor](51-accept-an-invitation/README.md) | ~4 min | An admin invites a youth from the child record and a mentor from Staff and roles, one password rule, the youth lands on Learning, and an expired link asks for a new one that Resend replaces |
 | 52 | [Give guardian consent for a youth](52-give-guardian-consent/README.md) | ~4 min | A youth under the consent age is held at a server-side gate and asks a guardian, the guardian consents from a verified link in Spanish, staff see the status and send a link, a withdrawal gates the youth at once, and admins set the age and wording |
 | 53 | [Complete first-run onboarding](53-complete-first-run-onboarding/README.md) | ~4 min | A youth goes through three setup steps saved on the server (name and pronouns, preferences, their program), can finish later and resume at that step, and a youth in no program sees a waiting state while lessons stay locked on the server |
+| 54 | [Manage cohorts and assign mentors](54-manage-cohorts/README.md) | ~5 min | A program director gives a cohort (a program) its term, places youth on its roster, sets its lead and supporting mentors and assigns a mentor to a youth; the mentor sees their youth, and with Mentoring off nothing about mentors is shown or served |
 
 ## Making or updating a video
 

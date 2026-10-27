@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Manage cohorts
+Person(p0, "Program director", "Places youth into cohorts")
+Person(p1, "Youth", "Learning opens once placed")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(p0, ph, "Uses", "HTTPS")
+Rel(p1, ph, "Uses", "HTTPS")
+@enduml

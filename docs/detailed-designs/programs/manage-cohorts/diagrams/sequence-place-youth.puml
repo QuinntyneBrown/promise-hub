@@ -1,0 +1,38 @@
+@startuml
+title UML sequence behaviour — Placing a youth in a cohort
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Program director" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "ProgramPage" as page
+  participant "EnrollDialog" as dlg
+  participant "ProgramsApi" as papi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "ProgramEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application and Domain" #ECFDF3
+  participant "EnrollChildHandler" as h
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : Add a child
+page -> dlg : open
+actor -> dlg : chooses Nadia Haddad
+dlg -> papi : enroll(programId, childId)
+papi -> ep : POST /programs/{id}/enrollments (Roster on, ManagePrograms — L2-061 c5, c7)
+ep -> h : HandleAsync
+h -> db : program and child in caller's organization (c6)
+alt archived, full or already enrolled
+  h --> papi : 422 reason (c2)
+  dlg --> actor : reason beside the search
+else room
+  h -> db : add Enrollment, audit Created
+  ep --> papi : 201
+  page --> actor : roster lists Nadia; her Learning opens (L2-060)
+end
+@enduml

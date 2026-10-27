@@ -146,6 +146,10 @@ public static class DependencyInjection
         services.AddScoped<Staff.YouthInvitationHandler>();
         services.AddScoped<Curriculum.CurriculumHandler>();
         services.AddScoped<Mentoring.MentoringHandler>();
+        services.AddScoped<Mentoring.ActiveMentors>();
+        services.AddScoped<Mentoring.CohortMentoringHandler>();
+        services.AddScoped<Mentoring.AssignYouthMentorHandler>();
+        services.AddScoped<Mentoring.SetCohortMentorsHandler>();
         services.AddScoped<Website.PublicWebsiteHandler>();
         return services;
     }
