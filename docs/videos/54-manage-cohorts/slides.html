@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 54 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="54" data-video-title="Manage cohorts and assign mentors" data-parts="Introduction|Cohorts|Placing|Cohort mentors|Youth mentor|Mentor view|Mentoring off|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 54</div>
+  <h1>Manage cohorts and assign mentors</h1>
+  <p class="lead">A term on each program, one lead and any supporting mentors, and one mentor per youth</p>
+</section>
+
+<section id="term" data-part="1" data-cue="Marisol, the program director at Harbourview" data-clip="clips/term-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Giving the cohort its term</h3><p><code>PUT /programs/{id}</code> with <code>term</code>, up to 40 characters.</p></div>
+</section>
+
+<section id="term-shots" data-part="1" data-cue="The header now reads the schedule, the term and the season">
+  <h2>Term on the form and the header</h2>
+  <div class="cols">
+    <img class="shot" alt="Edit program with Term 2026–27" src="shots/desktop-program-form-term.png">
+    <img class="shot" alt="After-School Tutoring header: 2026–27 term" src="shots/desktop-program-term.png">
+  </div>
+  <p class="muted small">ADR 0048 · the program's dates bound the term · audited as Updated on Program</p>
+</section>
+
+<section id="placing" data-part="2" data-cue="Placing a youth in a cohort is enrolling their child record">
+  <h2>Placing youth</h2>
+  <table class="facts">
+    <tr><th>Add a child</th><th>Answer</th></tr>
+    <tr><td>Room on the roster</td><td>201, on the roster at once</td></tr>
+    <tr><td>Already enrolled, full or archived</td><td>422 with the reason</td></tr>
+    <tr><td>Placed youth opens Learning</td><td><code>GET /learning/lessons</code> → 200 (L2-060)</td></tr>
+  </table>
+</section>
+
+<section id="team" data-part="3" data-cue="With the Mentoring module on, the program page gains a Mentors card." data-clip="clips/cohort-mentors-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Lead and supporting mentors</h3><p><code>PUT /programs/{id}/mentors</code> replaces the team.</p></div>
+</section>
+
+<section id="team-shots" data-part="3" data-cue="The card now lists Daniel as lead mentor">
+  <h2>Empty, invalid, saved</h2>
+  <div class="cols three">
+    <img class="shot" alt="Mentors card: no mentors yet" src="shots/desktop-no-mentors.png">
+    <img class="shot" alt="Mentors dialog: choose a lead mentor" src="shots/desktop-cohort-mentors-invalid.png">
+    <img class="shot" alt="Mentors card: Daniel Osei lead, Hana Kim supporting" src="shots/desktop-mentors.png">
+  </div>
+</section>
+
+<section id="youth" data-part="4" data-cue="Each roster row now says who mentors that youth" data-clip="clips/assign-mentor-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Mentor for Mateo</h3><p><code>PUT /programs/{id}/youth/{childId}/mentor</code></p></div>
+</section>
+
+<section id="youth-shots" data-part="4" data-cue="A youth has one mentor at a time">
+  <h2>Invalid, failed, assigned</h2>
+  <div class="cols three">
+    <img class="shot" alt="Assign a mentor: choose a mentor" src="shots/phone-assign-invalid.png">
+    <img class="shot" alt="Assign a mentor: that didn’t go through" src="shots/phone-assign-failed.png">
+    <img class="shot" alt="Mateo’s row: Mentor Daniel Osei, toast Mentor assigned" src="shots/phone-mentor-assigned.png">
+  </div>
+  <p class="muted small">Audited as Updated (or Deleted) on YouthMentor</p>
+</section>
+
+<section id="mentor" data-part="5" data-cue="Daniel signs in and opens Mentoring." data-clip="clips/mentor-youth-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Daniel’s youth</h3><p><code>GET /mentoring/youth</code>: direct assignments plus the rosters of his cohorts.</p></div>
+</section>
+
+<section id="off" data-part="6" data-cue="Turning Mentoring off hides it without deleting anything.">
+  <h2>Mentoring off, and errors</h2>
+  <div class="cols">
+    <img class="shot" alt="Program page with Mentoring off: no Mentors card or Mentor buttons" src="shots/desktop-mentoring-off.png">
+    <img class="shot" alt="We couldn’t load this program, with Try again" src="shots/desktop-program-error.png">
+  </div>
+</section>
+
+<section id="gates" data-part="6" data-cue="Site leads and other staff can read the assignments">
+  <h2>Who gets what</h2>
+  <table class="facts">
+    <tr><th>Caller</th><th>Answer</th></tr>
+    <tr><td>Admin, program director</td><td>Read and change</td></tr>
+    <tr><td>Site lead, youth worker, coordinator</td><td>Read; 403 on change</td></tr>
+    <tr><td>Youth, mentor, volunteer</td><td>403</td></tr>
+    <tr><td>Mentoring or Roster off</td><td>404</td></tr>
+    <tr><td>Another organization's cohort</td><td>404</td></tr>
+    <tr><td>Archived cohort</td><td>422, read only</td></tr>
+  </table>
+</section>
+
+<section id="testing" data-part="7" data-cue="The API tests save a term">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>CohortTests</code>: term saved, listed and audited; long term; placing; roles, tenancy, Roster off</li>
+    <li><code>MentorAssignmentTests</code>: read, assign, replace, remove; team rules; mentor lists; roles, tenancy, archived, both modules off</li>
+    <li><code>cohorts</code> and <code>assign-mentors</code> specs on phone and laptop, with axe</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="8" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>A cohort is a program with a term; placing a youth is enrolling them</li><li>One lead and any supporting mentors per cohort; one mentor per youth</li><li>A mentor sees their own youth and the youth of their cohorts</li></ul>
+  <p class="muted">Next: mentors use their dashboard</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
