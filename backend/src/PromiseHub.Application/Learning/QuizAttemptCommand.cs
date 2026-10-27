@@ -42,7 +42,7 @@ public sealed class QuizAttemptCommand(IPromiseHubDb db, ITenantContext tenant, 
             audit.Record(new AuditEvent(AuditAction.Created, "QuizAttempt", attempt.Id, $"{quiz.Title} attempt {attempt.Number} started by {tenant.ActorName}"));
             await db.SaveChangesAsync(cancellationToken);
         }
-        var ordered = await Ordered(attempt, cancellationToken);
+        var ordered = AttemptOrder.Apply(attempt, await Questions(quiz.Id, cancellationToken));
         return Gated<QuizAttemptDto>.Found(new QuizAttemptDto(attempt.Id, quiz.Id, quiz.Title, module.Module.Id, module.Module.Title, attempt.Number, quiz.AttemptsAllowed,
             Math.Clamp(attempt.Position, 0, Math.Max(0, ordered.Count - 1)),
             ordered.Select(q => new AttemptQuestionDto(q.Id, q.Text, q.Type.ToString(), q.Options is null ? [] : q.Options.Split('\n'))).ToList(),
@@ -139,12 +139,4 @@ public sealed class QuizAttemptCommand(IPromiseHubDb db, ITenantContext tenant, 
 
     private async Task<List<QuizQuestion>> Questions(Guid quizId, CancellationToken cancellationToken) =>
         await db.QuizQuestions.AsNoTracking().Where(q => q.QuizId == quizId).OrderBy(q => q.Position).ToListAsync(cancellationToken);
-
-    /// <summary>The quiz's current questions in the attempt's order; questions added since come last and deleted ones drop out.</summary>
-    private async Task<List<QuizQuestion>> Ordered(QuizAttempt attempt, CancellationToken cancellationToken)
-    {
-        var questions = await Questions(attempt.QuizId, cancellationToken);
-        var order = attempt.QuestionOrder.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(Guid.Parse).ToList();
-        return [.. questions.Where(q => order.Contains(q.Id)).OrderBy(q => order.IndexOf(q.Id)), .. questions.Where(q => !order.Contains(q.Id))];
-    }
 }

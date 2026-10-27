@@ -7,7 +7,7 @@ using PromiseHub.Domain.Organizations;
 namespace PromiseHub.Api.Endpoints;
 
 /// <summary>
-/// A youth's lessons (L2-068 to L2-070, ADR 0051): the Learning module, the Learn permission, then the consent gate (L2-056) and the
+/// A youth's lessons and quizzes (L2-068 to L2-070, L2-075, L2-076, ADR 0051, ADR 0055): the Learning module, the Learn permission, then the consent gate (L2-056) and the
 /// placement gate (L2-060) on every endpoint. Locks and visibility are decided by LearnerProgress in the handlers.
 /// </summary>
 public static class LearningEndpoints
@@ -37,6 +37,7 @@ public static class LearningEndpoints
             var saved = await handler.SaveAsync(id, request, ct);
             return saved.Status == Application.ResultStatus.Done ? Results.NoContent() : saved.ToHttp();
         });
+        learning.MapGet("/attempts/{id:guid}", async (Guid id, QuizResultHandler handler, CancellationToken ct) => (await handler.HandleAsync(id, ct)).ToHttp());
         learning.MapPost("/attempts/{id:guid}/submit", async (Guid id, SaveAnswersRequest request, QuizAttemptCommand handler, CancellationToken ct) =>
         {
             var submitted = await handler.SubmitAsync(id, request, ct);

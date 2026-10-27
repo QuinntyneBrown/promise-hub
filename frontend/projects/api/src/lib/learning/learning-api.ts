@@ -19,6 +19,7 @@ import type { QuizIntro } from './quiz-intro';
 import type { StartQuizResult } from './start-quiz-result';
 import type { QuizAnswer } from './quiz-answer';
 import type { AnswersOutcome } from './answers-outcome';
+import type { QuizResult } from './quiz-result';
 
 /** The signed-in youth’s own learning record (Learning module, ADR 0043). */
 export interface LearningApi {
@@ -57,6 +58,8 @@ export interface LearningApi {
     answers: QuizAnswer[],
     position: number,
   ): Observable<AnswersOutcome>;
+  /** A submitted attempt's score, pass and review as the quiz's feedback rule allows (L2-076). */
+  attempt(id: string): Observable<GatedResult<QuizResult>>;
   /** Asks the guardians of the youth's household for consent. */
   askGuardian(): Observable<ConsentRequestOutcome>;
   /** The youth's first-run setup with its defaults and their program (L2-059). */

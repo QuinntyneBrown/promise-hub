@@ -3,11 +3,19 @@ import type { ModuleId } from '../../fixtures/seed';
 import { LearnModulePage } from '../../pages/learn-module.page';
 import { LearnQuizIntroPage } from '../../pages/learn-quiz-intro.page';
 import { LearnQuizPage } from '../../pages/learn-quiz.page';
+import { LearnQuizResultPage } from '../../pages/learn-quiz-result.page';
 import { TodayPage } from '../../pages/today.page';
 
-// Acceptance test. Traces to: L2-075 criteria 1 to 9 (a quiz's rules, its lock, the module's quizzes, taking it with autosave, Learning off), L2-035.
+// Acceptance test. Traces to: L2-075 criteria 1 to 9, L2-076 criteria 1 to 7 (a quiz's rules, its lock, the module's quizzes, taking it with autosave, Learning off), L2-035.
 const SUITE: ModuleId[] = ['Roster', 'Slips', 'RollCall', 'QuickCards', 'Pickup', 'Messages', 'Incidents', 'Reports'];
 const SERVING = ['l-strengths', 'l-values', 'l-towel', 'l-line', 'l-coach'];
+/** Every answer right but the multiple answer, which misses Check on someone who is new: 75%. */
+const THREE_OF_FOUR = [
+  { questionId: 'qq-captain', choices: [1], text: null },
+  { questionId: 'qq-title', choices: [1], text: null },
+  { questionId: 'qq-towel', choices: [0], text: null },
+  { questionId: 'qq-first', choices: null, text: 'others' },
+];
 
 test.describe('Take quizzes', () => {
   test.use({ signedInAs: 'm-sofia' });
@@ -255,6 +263,119 @@ test.describe('Take quizzes', () => {
     expect(api.learningState.quizzes.attempts).toHaveLength(2);
   });
 
+  test('Given a submitted attempt with 3 of 4 right, when Sofía opens its result, then she has passed and the review marks each answer in words', async ({
+    page,
+    api,
+  }) => {
+    api.learningState.complete('m-sofia', ...SERVING);
+    api.learningState.quizzes.submitted('m-sofia', 'qz-serving', THREE_OF_FOUR);
+    const result = new LearnQuizResultPage(page);
+    const intro = new LearnQuizIntroPage(page);
+
+    await result.open('qa-1');
+
+    await result.expectOpen('Leading by Serving quiz');
+    await expect(result.outcome).toContainText('You passed, Sofía');
+    await expect(result.fact('Your score')).toContainText('75%');
+    await expect(result.fact('Your score')).toContainText('3 of 4 correct');
+    await expect(result.fact('Pass mark')).toContainText('70%');
+    await expect(result.reviewed(1)).toContainText('Packed the kit bags for everyone');
+    await expect(result.reviewed(1)).toContainText('Your answer · correct');
+    await expect(result.reviewed(3)).toContainText('Not quite');
+    await expect(result.reviewed(3)).toContainText('Correct answer · you didn’t choose it');
+    await expect(result.reviewed(4)).toContainText('others');
+    await result.expectNoHorizontalScroll();
+    await result.expectAccessible();
+
+    await result.tryAgain.click();
+
+    await expect(intro.notice).toContainText('You passed with 75%');
+    await expect(intro.tryAgainButton).toBeVisible();
+  });
+
+  test('Given an attempt that did not pass, when she tries again, then the intro offers her last attempt and attempt 2 starts', async ({ page, api }) => {
+    api.learningState.complete('m-sofia', ...SERVING);
+    api.learningState.quizzes.submitted('m-sofia', 'qz-serving', [
+      { questionId: 'qq-captain', choices: [0], text: null },
+      { questionId: 'qq-title', choices: [1], text: null },
+      { questionId: 'qq-towel', choices: [0, 1], text: null },
+      { questionId: 'qq-first', choices: null, text: 'others' },
+    ]);
+    const result = new LearnQuizResultPage(page);
+    const intro = new LearnQuizIntroPage(page);
+    const quiz = new LearnQuizPage(page);
+    await result.open('qa-1');
+    await expect(result.outcome).toContainText('You got 50%. You need 70% to pass and you have 1 attempt left.');
+    await expect(result.reviewed(1)).toContainText('Your answer · wrong');
+    await result.expectAccessible();
+
+    await result.tryAgain.click();
+    await expect(intro.notice).toContainText('Last attempt');
+    await expect(intro.fact('This attempt')).toContainText('2 of 2');
+    await intro.start();
+
+    await expect(page.getByText('Attempt 2 of 2 · Question 1 of 4')).toBeVisible();
+    await expect(quiz.option('Gave the team talk')).not.toBeChecked();
+  });
+
+  test('Given a quiz that shows the score only, when she opens her result, then there is no review of the answers', async ({ page, api }) => {
+    api.learningState.complete('m-sofia', ...SERVING);
+    api.curriculumState.assessments.quizzes.find((q) => q.id === 'qz-serving')!.feedback = 'ScoreOnly';
+    api.learningState.quizzes.submitted('m-sofia', 'qz-serving', THREE_OF_FOUR);
+    const result = new LearnQuizResultPage(page);
+
+    await result.open('qa-1');
+
+    await expect(result.fact('Your score')).toContainText('75%');
+    await expect(result.review).toContainText('This quiz shows your score only.');
+    await expect(page.getByText('Packed the kit bags for everyone')).toHaveCount(0);
+    await result.expectAccessible();
+  });
+
+  test('Given a quiz whose scores her mentor approves, when she opens her result, then it waits for her mentor and shows no score', async ({ page, api }) => {
+    api.learningState.complete('m-sofia', ...SERVING);
+    api.curriculumState.assessments.quizzes.find((q) => q.id === 'qz-serving')!.requireApproval = true;
+    api.learningState.quizzes.submitted('m-sofia', 'qz-serving', THREE_OF_FOUR);
+    const result = new LearnQuizResultPage(page);
+    const module = new LearnModulePage(page);
+
+    await result.open('qa-1');
+
+    await expect(result.awaiting).toBeVisible();
+    await expect(page.getByText('75%')).toHaveCount(0);
+    await result.expectAccessible();
+    await module.open('cm-serving');
+    await expect(module.quiz('Leading by Serving quiz')).toContainText('Waiting for your mentor');
+  });
+
+  test('Given a quiz required to finish the module, when she passes it, then the module is complete', async ({ page, api }) => {
+    api.learningState.complete('m-sofia', ...SERVING);
+    api.curriculumState.assessments.quizzes.find((q) => q.id === 'qz-serving')!.requiredToComplete = true;
+    const module = new LearnModulePage(page);
+    await module.open('cm-serving');
+    await expect(page.getByText('Pass the quiz to finish this module.')).toBeVisible();
+    await expect(page.getByText('Module complete')).toHaveCount(0);
+
+    api.learningState.quizzes.submitted('m-sofia', 'qz-serving', THREE_OF_FOUR);
+    await module.open('cm-serving');
+
+    await expect(page.getByText('Every lesson is done and you passed the quiz.')).toBeVisible();
+    await expect(module.quiz('Leading by Serving quiz')).toContainText('Passed');
+    await expect(module.quiz('Leading by Serving quiz')).toContainText('Best score 75%');
+    await module.expectAccessible();
+  });
+
+  test('Given an attempt still in progress, when its result is opened, then it is not found', async ({ page, api }) => {
+    api.learningState.complete('m-sofia', ...SERVING);
+    api.learningState.quizzes.inProgress('m-sofia', 'qz-serving', [], 0);
+    const result = new LearnQuizResultPage(page);
+
+    await result.open('qa-1');
+
+    await expect(result.notFound).toBeVisible();
+    expect(await result.apiStatus('qa-1')).toBe(404);
+  });
+
   test('Given a draft quiz, when she opens it, then it is not found', async ({ page, api }) => {
     api.learningState.complete('m-sofia', ...SERVING);
     api.curriculumState.assessments.quizzes.find((q) => q.id === 'qz-serving')!.status = 'Draft';
@@ -276,5 +397,8 @@ test.describe('Take quizzes', () => {
     await expect(page).toHaveURL(/\/$/);
     await expect(new TodayPage(page).heading).toHaveText('Welcome, Sofía');
     expect(await intro.apiStatus('qz-serving')).toBe(404);
+    await new LearnQuizResultPage(page).open('qa-1');
+    await expect(page).toHaveURL(/\/$/);
+    expect(await new LearnQuizResultPage(page).apiStatus('qa-1')).toBe(404);
   });
 });

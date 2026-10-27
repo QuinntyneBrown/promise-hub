@@ -32,6 +32,7 @@ import { StartQuizResult } from './start-quiz-result';
 import { QuizAnswer } from './quiz-answer';
 import { AnswersOutcome } from './answers-outcome';
 import { toAnswersOutcome } from './to-answers-outcome';
+import { QuizResult } from './quiz-result';
 
 @Injectable()
 export class HttpLearningApi implements LearningApi {
@@ -190,6 +191,12 @@ export class HttpLearningApi implements LearningApi {
         `${this.baseUrl}/learning/attempts/${encodeURIComponent(attemptId)}/submit`,
         { answers, position },
       ),
+    );
+  }
+
+  attempt(id: string): Observable<GatedResult<QuizResult>> {
+    return toGated(
+      this.http.get<QuizResult>(`${this.baseUrl}/learning/attempts/${encodeURIComponent(id)}`),
     );
   }
 

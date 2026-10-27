@@ -122,6 +122,8 @@ export * from './lib/learning/attempt-question';
 export * from './lib/learning/quiz-attempt-view';
 export * from './lib/learning/start-quiz-result';
 export * from './lib/learning/answers-outcome';
+export * from './lib/learning/review-question';
+export * from './lib/learning/quiz-result';
 export * from './lib/guardian/guardian-api';
 export * from './lib/guardian/guardian-api.token';
 export * from './lib/guardian/guardian-slip';

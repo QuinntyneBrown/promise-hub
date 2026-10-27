@@ -1,0 +1,138 @@
+@let r = result();
+<ph-breadcrumb
+  [items]="
+    r?.status === 'loaded'
+      ? [
+          { label: 'Learning', link: '/learning' },
+          { label: r.value.moduleTitle, link: '/learning/modules/' + r.value.moduleId },
+          { label: r.value.title, link: '/learning/quizzes/' + r.value.quizId },
+          { label: 'Result' },
+        ]
+      : [{ label: 'Learning', link: '/learning' }, { label: 'Result' }]
+  "
+/>
+@if (r === null) {
+  <ph-page-header title="Quiz result" />
+  <div class="stack" aria-busy="true" aria-label="Loading your result">
+    <ph-skeleton shape="card" />
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (r.status === 'loaded') {
+  @let q = r.value;
+  <ph-page-header
+    [title]="q.title"
+    [subtitle]="
+      attemptText(q) +
+      (q.submittedAt ? ' · submitted ' + (q.submittedAt | date: 'EEE d MMM, h:mm a') : '')
+    "
+  />
+  <div class="stack">
+    @if (q.status === 'awaiting-approval') {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="clock"
+          title="Waiting for your mentor"
+          text="Your answers are in. Your mentor checks this quiz before the score counts. You’ll see it here when they have."
+        />
+      </ph-card>
+    } @else {
+      @if (!q.canRetake) {
+        <ph-alert title="No attempts left" [text]="noneLeftText(q)" />
+      } @else if (q.passed) {
+        <ph-alert
+          tone="success"
+          [title]="name() ? 'You passed, ' + name() : 'You passed'"
+          [text]="passedText(q)"
+        />
+      } @else {
+        <ph-alert tone="warning" title="Not this time" [text]="notPassedText(q)" />
+      }
+      <div class="kpis" role="group" aria-label="Your score">
+        <ph-stat
+          label="Your score"
+          [value]="q.score + '%'"
+          [caption]="q.correct + ' of ' + q.total + ' correct'"
+        />
+        <ph-stat
+          label="Pass mark"
+          [value]="q.passMark + '%'"
+          [caption]="q.passed ? 'Passed' : 'Not passed yet'"
+        />
+        <ph-stat
+          label="Attempt"
+          [value]="
+            q.attemptsAllowed === null ? '' + q.number : q.number + ' of ' + q.attemptsAllowed
+          "
+          [caption]="q.bestScore !== null ? 'Best score ' + q.bestScore + '%' : null"
+        />
+      </div>
+      <ph-card title="Review your answers">
+        @if (q.review.length) {
+          <ol class="review">
+            @for (item of q.review; track item.questionId) {
+              <li>
+                <div class="question-head">
+                  <h3 class="question">{{ item.number + '. ' + item.text }}</h3>
+                  <ph-badge [tone]="item.right ? 'success' : 'warning'">{{
+                    item.right ? 'Correct' : 'Not quite'
+                  }}</ph-badge>
+                </div>
+                <ul class="options">
+                  @for (row of rows(item); track $index) {
+                    <ph-quiz-option
+                      [label]="row.label"
+                      [key]="row.key"
+                      [review]="row.mark"
+                      [note]="row.note"
+                    />
+                  } @empty {
+                    <ph-quiz-option label="No answer" review="wrong" note="Counted as wrong" />
+                  }
+                </ul>
+              </li>
+            }
+          </ol>
+        } @else if (q.feedback === 'ScoreOnly') {
+          <p class="note">
+            This quiz shows your score only. Your mentor can talk the answers through with you.
+          </p>
+        } @else {
+          <p class="note">You’ll see the correct answers after your last attempt.</p>
+        }
+      </ph-card>
+    }
+    <div class="actions">
+      @if (q.canRetake && q.status === 'scored') {
+        <ph-button icon="refresh" [link]="'/learning/quizzes/' + q.quizId">{{
+          q.passed ? 'Try for a better score' : 'Try again'
+        }}</ph-button>
+      }
+      <ph-button variant="primary" icon="arrow-right" [link]="'/learning/modules/' + q.moduleId"
+        >Back to the module</ph-button
+      >
+    </div>
+  </div>
+} @else if (r.status === 'not-found' || r.status === 'locked') {
+  <ph-page-header title="Quiz result" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="search"
+      title="We can’t find that result"
+      text="It may still be in progress, or it isn’t yours."
+    >
+      <ph-button link="/learning">Back to Learning</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-page-header title="Quiz result" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load your result"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}
