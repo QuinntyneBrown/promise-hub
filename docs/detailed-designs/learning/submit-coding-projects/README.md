@@ -24,11 +24,11 @@ Backend:
 - **`LearningEndpoints`** — `POST /learning/coding/{id}/submission`.
 - **`ProjectSubmissionCommand`** — Project kind only (404 otherwise), unlocked (403), code required and up to 50,000 characters, note up to 1,000 (422), once per youth (409); saves `ProjectSubmission` as Submitted with the time, adds `LessonProgress` for gating, audits Created on `ProjectSubmission` and Completed on `LessonProgress`, answers 201.
 - Domain: **`ProjectSubmission`** and **`SubmissionStatus`** (`PromiseHub.Domain/Learning/`), tenant-owned.
-- The mentor's name in the alert comes from the youth's mentor assignment when Mentoring is on (`<TO SUPPLY>` until mentor review exists; the page names “your mentor” otherwise).
+- The page and dialog name “your mentor”; naming the assigned mentor waits for mentor review (prompts 62 and 68).
 
 ## Built so far
 
-Nothing yet; prompt 57 builds this design (0%).
+Prompt 57 delivered everything above. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/LearningProjectTests.cs`, `e2e/tests/learning/project.spec.ts`.
 
 ## Requirements
 

@@ -8,7 +8,7 @@ Terms used in this document:
 
 - **coding step** — one ordered step of a coding lesson: title, instructions, code sample and its checklist label (`CodingStep`)
 - **workspace** — the youth's saved code and ticked steps for one lesson (`CodingWorkspace`)
-- **sandboxed preview** — an `iframe` with `srcdoc` and an empty `sandbox` attribute: it renders markup and styles, runs no script and reaches nothing
+- **sandboxed preview** — an `iframe` with `srcdoc` and `sandbox="allow-scripts"` (its own opaque origin) under a Content-Security-Policy of `default-src 'none'; style-src 'unsafe-inline'; img-src data:`: it renders markup and styles, runs no script the youth writes and reaches nothing
 
 Ported from Waypoint `learning-experience/complete-coding-lessons` (`L2-LEARN-008` criterion 1). Badge progress arrives with badges (prompt 66). Authoring steps and starter code is deferred (ADR 0051).
 
@@ -30,7 +30,7 @@ Backend:
 
 ## Built so far
 
-Nothing yet; prompt 57 builds this design (0%).
+Prompt 57 delivered everything above. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/LearningCodingTests.cs`, `e2e/tests/learning/coding.spec.ts`.
 
 ## Requirements
 

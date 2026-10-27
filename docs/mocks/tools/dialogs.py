@@ -449,7 +449,7 @@ simple("delete-lesson", "Delete Pick Up the Towel?", "curriculum-lesson", ["L2-0
 
 # ------------------------------------------------------------------ Complete lessons (prompt 57)
 simple("submit-project", "Submit “Build Your Event Page”?", "learn-coding-project", ["L2-070", "L1-023"],
-       "Daniel Osei, your mentor, will review it. You can’t change it while it’s under review.",
+       "Your mentor will review it. You can’t change it while it’s under review.",
        lambda e: textarea("note", "Note to your mentor", value="I used my first bit of CSS for the colours." if not e else "x" * 40 + "…", rows=3, optional=True,
                           help_="Up to 1,000 characters.", error=(e or {}).get("note", "")),
        "Submit for review", icon_name="send", invalid_err={"note": "Keep the note under 1,000 characters."},

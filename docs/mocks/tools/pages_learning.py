@@ -73,17 +73,16 @@ def video(state: str = "ready") -> str:
 # ---------------------------------------------------------------- learn-home
 @screen("learn-home", "page", "Learning", route="/learning", reqs=["L2-068", "L2-069", R_LEARN, "L1-002"])
 def learn_home(S):
-    hdr = page_header(HELLO, "You’re 4 of 9 lessons in. Keep it going.")
+    hdr = page_header("Learning", "Hi, Sofía. You’re 4 of 9 lessons in.")
 
     def body(extra: str = "") -> str:
-        cont = card(f'<div class="stack"><p class="text-overline">Continue where you left off</p>'
-                    f'<div><h2 class="card__title" id="continue">Last in Line</h2><p class="text-muted">Leading by Serving · Mark 10:35–45 · 15 min</p></div>'
+        cont = card(f'<div class="stack"><div><p class="text-body-lg"><strong>Last in Line</strong></p><p class="text-muted">Leading by Serving · Mark 10:35–45 · 15 min</p></div>'
                     f'{progress(1, 3, "Leading by Serving", show="1 of 3 lessons")}'
-                    f'<div>{btn("Continue lesson", "primary", icon_name="arrow-right", href=page("learn-lesson-scripture"))}</div></div>', tag="section").replace('<section class="card"', '<section class="card" aria-labelledby="continue"', 1)
+                    f'<div>{btn("Continue lesson", "primary", icon_name="arrow-right", href=page("learn-lesson-scripture"))}</div></div>', title="Continue where you left off", tid="continue")
         overall = card(progress(4, 9, "Your lessons", show="4 of 9 lessons"), title="Your progress", tid="progress")
         tracks = card(ul_list([
-            list_item("Leadership Foundations", "4 of 7 lessons · After‑School Tutoring", href=page("learn-track"), lead=lead_icon("book"), end=badge("In progress", "info")),
-            list_item("Digital Skills", "0 of 2 lessons · Saturday Sports", href=page("learn-track", "coding"), lead=lead_icon("code"), end=badge("Not started")),
+            list_item("Leadership Foundations", "4 of 7 lessons · After‑School Tutoring", href=page("learn-track"), end=badge("In progress", "info")),
+            list_item("Digital Skills", "0 of 2 lessons · Saturday Sports", href=page("learn-track", "coding"), end=badge("Not started")),
         ], card=False, label="Your tracks"), title="Your tracks", tid="tracks", cls="card--flush")
         return hdr + extra + f'<div class="split"><div class="stack">{cont}{overall}</div><div class="stack">{tracks}</div></div>'
 
@@ -96,7 +95,7 @@ def learn_home(S):
                                                          action=btn("Back to Today", "", href=page("today", "youth")), icon_name="star"), cls="card--flush"))
     S.add("error", "Learning failed to load; the shell stays.", **YKW, main=page_header("Learning", SUB) + failed("We couldn’t load your lessons"))
     S.add("completed", "Every published lesson done: a celebration and her tracks to revisit.", **YKW,
-          main=page_header(HELLO, "You finished every lesson that’s out so far.")
+          main=page_header("Learning", "Hi, Sofía. You finished every lesson that’s out so far.")
           + card(empty("You’re all caught up", "New lessons appear here the moment your program publishes them.", action=btn("Review Leadership Foundations", "", href=page("learn-track")), icon_name="check-circle"), cls="card--flush"))
     S.add("resume", "Sofía chose Finish later on step 2 of setup: Learning offers to pick up where she stopped, above her lessons.", **YKW,
           main=body(alert("info", "Finish setting up", "You stopped at step 2 of 3.", actions=btn("Pick up where I left off", "primary", href=page("youth-welcome", "preferences")))))
@@ -113,9 +112,9 @@ def learn_track(S):
         for i, (name, meta, st, pct) in enumerate(rows):
             if st == "Locked":
                 prev = rows[i - 1][0]
-                items.append(list_item(f"{i + 1}. {esc(name)}", f"{meta} · Unlocks after {esc(prev)}", lead=lead_icon("lock"), end=badge(st)))
+                items.append(list_item(f"{i + 1}. {esc(name)}", f"{meta} · Unlocks after {esc(prev)}", end=badge(st)))
             else:
-                items.append(list_item(f"{i + 1}. {esc(name)}", f"{meta} · {pct}%", href=page("learn-module"), lead=lead_icon("check-circle" if st == "Done" else "book"), end=badge(st, STATUS_KIND[st])))
+                items.append(list_item(f"{i + 1}. {esc(name)}", f"{meta} · {pct}%", href=page("learn-module"), end=badge(st, STATUS_KIND[st])))
         return card(ul_list(items, card=False, label="Modules, in order"), title="Modules", tid="modules", cls="card--flush")
 
     overall = card(progress(4, 7, "Leadership Foundations", show="4 of 7 lessons"), title="Track progress", tid="track-progress")
@@ -126,7 +125,7 @@ def learn_track(S):
     S.add("coding", "Her second track, Digital Skills, followed by Saturday Sports: one module of coding lessons.", **YKW,
           main=breadcrumb([("Learning", page("learn-home"))], "Digital Skills") + page_header("Digital Skills", "Using technology safely and creatively.")
           + f'<div class="stack">{track_switch("Digital Skills")}{card(progress(0, 2, "Digital Skills", show="0 of 2 lessons"), title="Track progress", tid="track-progress")}'
-          + card(ul_list([list_item("1. Web Basics", "2 lessons · 0%", href=page("learn-module", "coding"), lead=lead_icon("code"), end=badge("Not started"))], card=False, label="Modules, in order"), title="Modules", tid="modules", cls="card--flush") + '</div>')
+          + card(ul_list([list_item("1. Web Basics", "2 lessons · 0%", href=page("learn-module", "coding"), end=badge("Not started"))], card=False, label="Modules, in order"), title="Modules", tid="modules", cls="card--flush") + '</div>')
     S.add("loading", "The track loading.", **YKW, main=breadcrumb([("Learning", page("learn-home"))], "Track") + page_header("Track") + skeleton_list(3, "Loading modules"))
     S.add("empty", "A track with no published module yet.", **YKW,
           main=hdr + card(empty("No modules published yet", "Your program team is still setting up this track. Check back soon.", action=btn("Back to Learning", "", href=page("learn-home")), icon_name="list"), cls="card--flush"))
@@ -147,9 +146,9 @@ def learn_module(S):
         items = []
         for i, (t, meta, st, target) in enumerate(rows):
             if st == "Locked":
-                items.append(list_item(f"{i + 1}. {esc(t)}", f"{meta} · Unlocks after {esc(rows[i - 1][0])}", lead=lead_icon("lock"), end=badge(st)))
+                items.append(list_item(f"{i + 1}. {esc(t)}", f"{meta} · Unlocks after {esc(rows[i - 1][0])}", end=badge(st)))
             else:
-                items.append(list_item(f"{i + 1}. {esc(t)}", meta, href=page(target), lead=lead_icon("check-circle" if st == "Done" else "book"), end=badge(st, STATUS_KIND[st])))
+                items.append(list_item(f"{i + 1}. {esc(t)}", meta, href=page(target), end=badge(st, STATUS_KIND[st])))
         return card(ul_list(items, card=False, label="Lessons, in order"), title="Lessons", tid="lessons", cls="card--flush")
 
     prog = card(f'<div class="stack">{progress(1, 3, "Leading by Serving", show="1 of 3 lessons")}{anchor}'
@@ -158,17 +157,17 @@ def learn_module(S):
           main=hdr + f'<div class="split"><div class="stack">{prog}</div><div class="stack">{lessons()}</div></div>')
     done_rows = [(t, m, "Done", tg or "learn-lesson") for t, m, _s, tg in LESSONS]
     S.add("completed", "Every lesson of the module done: the next module is unlocked.", **YKW,
-          main=hdr + alert("success", "Module complete", "Speaking Up is unlocked.", actions=btn("Go to Speaking Up", "primary", icon_name="arrow-right"))
+          main=hdr + alert("success", "Module complete", "Every lesson of this module is done.")
           + f'<div class="split"><div class="stack">{card(progress(3, 3, "Leading by Serving", kind="complete", show="3 of 3 lessons"), title="Module progress", tid="module-progress")}</div><div class="stack">{lessons(done_rows)}</div></div>')
     S.add("coding", "Web Basics in Digital Skills: a coding lesson, then the project it builds to.", **YKW,
           main=crumbs("Web Basics", "Digital Skills") + page_header("Web Basics", "Module 1 of 1 · Every website is just text with tags.")
           + f'<div class="split"><div class="stack">{card(progress(0, 2, "Web Basics", show="0 of 2 lessons") + "<div>" + btn("Start: Your First Webpage", "primary", icon_name="arrow-right", href=page("learn-coding-lesson")) + "</div>", title="Module progress", tid="module-progress")}</div>'
           + '<div class="stack">' + card(ul_list([
-              list_item("1. Your First Webpage", "Coding · 20 min", href=page("learn-coding-lesson"), lead=lead_icon("code"), end=badge("Up next", "info")),
-              list_item("2. Build Your Event Page", "Project · 40 min · Unlocks after Your First Webpage", lead=lead_icon("lock"), end=badge("Locked")),
+              list_item("1. Your First Webpage", "Coding · 20 min", href=page("learn-coding-lesson"), end=badge("Up next", "info")),
+              list_item("2. Build Your Event Page", "Project · 40 min · Unlocks after Your First Webpage", end=badge("Locked")),
           ], card=False, label="Lessons, in order"), title="Lessons", tid="lessons", cls="card--flush") + '</div></div>')
     S.add("locked", "Speaking Up opened before Leading by Serving is done: the server answers 403 and the page says what unlocks it.", **YKW,
-          main=crumbs("Speaking Up") + page_header("Speaking Up") + locked_card("Finish Leading by Serving first", "This module unlocks when every lesson of Leading by Serving is done.", "Back to Leadership Foundations", page("learn-track")))
+          main=crumbs("Speaking Up") + page_header("Speaking Up") + locked_card("Finish Leading by Serving first", "This module unlocks when every lesson of Leading by Serving is done.", "Back to Learning", page("learn-home")))
     S.add("loading", "The module loading.", **YKW, main=crumbs("Module") + page_header("Module") + f'<div class="split">{skeleton_list(2, "Loading the module")}{skeleton_list(3, "Loading lessons")}</div>')
     S.add("error", "The module failed to load.", **YKW, main=crumbs("Module") + page_header("Module") + failed("We couldn’t load this module"))
     S.add("not-found", "A draft module, one of a track she doesn’t follow, or another organization’s.", **YKW, main=crumbs("Module") + page_header("Module") + not_found("module"))
@@ -205,7 +204,7 @@ def learn_lesson(S):
     S.add("completed", "Completed: the lesson is saved as done on the server and the next lesson is unlocked.", **YKW, main=body(done=True),
           toast_html=toast_region(toast("success", "Lesson complete", "Pick Up the Towel")))
     S.add("locked", "Leading Like a Coach opened before Last in Line is done: 403, and what unlocks it.", **YKW,
-          main=lesson_crumbs("Leading Like a Coach") + page_header("Leading Like a Coach") + locked_card("Finish Last in Line first", "Lessons open in order. This one unlocks when Last in Line is done.", "Back to Leading by Serving", page("learn-module")))
+          main=lesson_crumbs("Leading Like a Coach") + page_header("Leading Like a Coach") + locked_card("Finish Last in Line first", "Lessons open in order. This one unlocks when Last in Line is done.", "Back to Learning", page("learn-home")))
     S.add("loading", "The lesson loading.", **YKW, main=lesson_crumbs("Lesson") + page_header("Lesson") + f'<div class="split">{skeleton_list(4, "Loading the lesson")}{skeleton_list(2, "Loading the video")}</div>')
     S.add("error", "The lesson failed to load.", **YKW, main=lesson_crumbs("Lesson") + page_header("Lesson") + failed("We couldn’t load this lesson"))
     S.add("not-found", "A draft, deleted or another organization’s lesson.", **YKW, main=lesson_crumbs("Lesson") + page_header("Lesson") + not_found("lesson"))
@@ -216,8 +215,8 @@ def learn_lesson(S):
         na={"empty": "A lesson is published only with teaching content (L2-067 criterion 4)."})
 def learn_lesson_scripture(S):
     hdr = lesson_crumbs("Last in Line") + page_header("Last in Line", "Leading by Serving · Lesson 2 of 3 · 15 min")
-    size_ctl = lambda size: (f'<div class="text-size" role="group" aria-label="Text size">{btn("A−", "", size="sm", aria_label="Smaller text", disabled=size == "")}'
-                             f'{btn("A+", "", size="sm", aria_label="Larger text", disabled=size == "xl")}</div>')
+    size_ctl = lambda size: (f'<div class="text-size" role="group" aria-label="Text size">{btn("A−", "", size="sm", aria_label="A− smaller text", disabled=size == "")}'
+                             f'{btn("A+", "", size="sm", aria_label="A+ larger text", disabled=size == "xl")}</div>')
 
     def body(size="", bar=None, done=False) -> str:
         cls = f"reading stack{' reading--' + size if size else ''}"
@@ -233,7 +232,7 @@ def learn_lesson_scripture(S):
     S.add("busy", "Marking complete.", **YKW, main=body(bar=complete_bar(busy=True)))
     S.add("completed", "Completed: Leading Like a Coach is unlocked.", **YKW, main=body(done=True), toast_html=toast_region(toast("success", "Lesson complete", "Last in Line")))
     S.add("locked", "Opened before Pick Up the Towel is done: 403.", **YKW,
-          main=lesson_crumbs("Last in Line") + page_header("Last in Line") + locked_card("Finish Pick Up the Towel first", "Lessons open in order. This one unlocks when Pick Up the Towel is done.", "Back to Leading by Serving", page("learn-module")))
+          main=lesson_crumbs("Last in Line") + page_header("Last in Line") + locked_card("Finish Pick Up the Towel first", "Lessons open in order. This one unlocks when Pick Up the Towel is done.", "Back to Learning", page("learn-home")))
     S.add("loading", "The lesson loading.", **YKW, main=lesson_crumbs("Lesson") + page_header("Lesson") + skeleton_list(4, "Loading the lesson"))
     S.add("error", "The lesson failed to load.", **YKW, main=lesson_crumbs("Lesson") + page_header("Lesson") + failed("We couldn’t load this lesson"))
 
@@ -254,7 +253,7 @@ def code_crumbs(cur: str) -> str:
 
 
 def playground(code: str = STARTER, ran: bool = False, label: str = "Try it yourself") -> str:
-    preview = ('<iframe title="Preview of your page" sandbox="" srcdoc="&lt;h1&gt;Harbourview Youth Night&lt;/h1&gt;&lt;p&gt;Fridays at 7.&lt;/p&gt;"></iframe>'
+    preview = ('<iframe title="Preview of your page" sandbox="allow-scripts" srcdoc="&lt;h1&gt;Harbourview Youth Night&lt;/h1&gt;&lt;p&gt;Fridays at 7.&lt;/p&gt;"></iframe>'
                if ran else "Your preview appears here when you run your code.")
     return (f'<div class="field"><label class="field__label" for="code">{label}</label>'
             f'<div class="code-playground"><textarea class="code-playground__editor" id="code" name="code" spellcheck="false" rows="8" aria-label="{label}" aria-describedby="code-help">{esc(code)}</textarea>'
@@ -284,10 +283,10 @@ def learn_coding_lesson(S):
     def body(checked=(True, False, False), ran=False, code=STARTER, busy=False, extra="", done=False) -> str:
         actions = (alert("success", "Lesson complete", "Build Your Event Page is unlocked.", actions=btn("Next: Build Your Event Page", "primary", icon_name="arrow-right", href=page("learn-coding-project")))
                    if done else f'<div class="form-actions">{btn("Back to the module", "ghost", href=page("learn-module", "coding"))}{btn("Save progress", "primary", icon_name="check", busy=busy)}</div>')
-        return hdr + extra + f'<div class="stack">{steps_html()}{card(playground(code, ran), title="Your turn", tid="your-turn")}{checklist(checked)}{actions}</div>'
+        return hdr + extra + f'<div class="stack"><p class="text-muted">Every website is just text with tags. Let’s build one from scratch.</p>{steps_html()}{card(playground(code, ran), title="Your turn", tid="your-turn")}{checklist(checked)}{actions}</div>'
 
     S.add("default", "Sofía opens Your First Webpage: two steps with code samples, a playground to edit and run, and a checklist. Her code and ticks come back from the server.", **YKW, main=body(),
-          notes=note("Run renders the code in a sandboxed iframe with no scripts. Save progress stores the code and ticks; ticking every item completes the lesson.", "top: 5rem; right: 1rem;"))
+          notes=note("Run renders the code in a sandboxed iframe of its own origin under a policy that blocks every script and request. Save progress stores the code and ticks; ticking every item completes the lesson.", "top: 5rem; right: 1rem;"))
     S.add("ran", "She edited the page and ran it: the preview shows her heading.", **YKW,
           main=body(checked=(True, True, False), ran=True, code="<h1>Harbourview Youth Night</h1>\n<p>Fridays at 7.</p>"))
     S.add("busy", "Saving progress.", **YKW, main=body(checked=(True, True, True), ran=True, busy=True))
@@ -298,7 +297,7 @@ def learn_coding_lesson(S):
     S.add("failed", "The save failed: her code and ticks stay on screen to try again.", **YKW,
           main=body(checked=(True, True, False), extra=alert("danger", "We couldn’t save your progress", "Your code is still here. Try again.")))
     S.add("locked", "Opened before the lesson before it is done: 403.", **YKW,
-          main=code_crumbs("Coding lesson") + page_header("Your First Webpage") + locked_card("Finish Staying Safe Online first", "This module unlocks when Staying Safe Online is done.", "Back to Digital Skills", page("learn-track", "coding")))
+          main=code_crumbs("Coding lesson") + page_header("Your First Webpage") + locked_card("Finish Staying Safe Online first", "This module unlocks when Staying Safe Online is done.", "Back to Learning", page("learn-home")))
     S.add("loading", "The coding lesson loading.", **YKW, main=code_crumbs("Coding lesson") + page_header("Coding lesson") + skeleton_list(4, "Loading the coding lesson"))
     S.add("error", "The coding lesson failed to load.", **YKW, main=code_crumbs("Coding lesson") + page_header("Coding lesson") + failed("We couldn’t load this coding lesson"))
 
@@ -316,7 +315,7 @@ def learn_coding_project(S):
 
     def body(st="Draft", kind="", extra="", submitted=False, busy=False) -> str:
         if submitted:
-            act = alert("info", "Sent for review", "Daniel Osei will look at it. You’ll see his feedback here.")
+            act = alert("info", "Sent for review", "Your mentor will look at it. You’ll see their feedback here.")
         else:
             act = (f'<div class="form-actions">{btn("Save draft", "ghost", busy=busy)}'
                    f'{btn("Submit for review", "primary", icon_name="send", attrs=" aria-haspopup=\"dialog\"", data_href=dialog("submit-project"))}</div>')
@@ -328,6 +327,6 @@ def learn_coding_project(S):
     S.add("submitted", "Submitted: the project is Submitted, read only, and waits for her mentor.", **YKW, main=body("Submitted", "info", submitted=True),
           toast_html=toast_region(toast("success", "Sent for review", "Build Your Event Page")))
     S.add("locked", "Opened before Your First Webpage is done: 403.", **YKW,
-          main=code_crumbs("Build Your Event Page") + page_header("Build Your Event Page") + locked_card("Finish Your First Webpage first", "Lessons open in order. The project unlocks when Your First Webpage is done.", "Back to Web Basics", page("learn-module", "coding")))
+          main=code_crumbs("Build Your Event Page") + page_header("Build Your Event Page") + locked_card("Finish Your First Webpage first", "Lessons open in order. The project unlocks when Your First Webpage is done.", "Back to Learning", page("learn-home")))
     S.add("loading", "The project loading.", **YKW, main=code_crumbs("Project") + page_header("Project") + skeleton_list(3, "Loading the project"))
     S.add("error", "The project failed to load.", **YKW, main=code_crumbs("Project") + page_header("Project") + failed("We couldn’t load this project"))

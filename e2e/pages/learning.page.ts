@@ -1,7 +1,7 @@
 import { expect, type Locator } from '@playwright/test';
 import { BasePage } from './base.page';
 
-/** Learning, the youth's lessons (mock: learning). */
+/** Learning, the youth’s home: where she left off, progress and tracks (mock: learn-home). */
 export class LearningPage extends BasePage {
   async open(): Promise<void> {
     await super.open('/learning');

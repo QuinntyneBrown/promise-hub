@@ -26,7 +26,7 @@ page -> lapi : coding(id)
 lapi -> ep : GET /learning/coding/{id}
 ep --> lapi : steps, saved code or starter, ticks (L2-070 c1)
 actor -> page : edits, Run
-page -> page : render in iframe srcdoc, sandbox="" (no scripts, nothing sent — c2)
+page -> page : render in a sandboxed iframe under a script-blocking CSP (nothing runs or is sent — c2)
 actor -> page : ticks two items, Save progress
 page -> lapi : saveCoding(id, code, ticks)
 lapi -> ep : PUT /learning/coding/{id}/progress

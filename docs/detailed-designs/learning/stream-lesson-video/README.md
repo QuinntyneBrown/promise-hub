@@ -31,7 +31,7 @@ Open questions: an object-storage adapter, transcoding and adaptive bitrate (`<T
 
 ## Built so far
 
-Nothing yet; prompt 57 builds this design (0%).
+Prompt 57 delivered everything above. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/LearningVideoTests.cs`, `backend/tests/PromiseHub.Infrastructure.Tests/LocalFileStoreTests.cs`, `e2e/tests/learning/lesson-video.spec.ts`.
 
 ## Requirements
 

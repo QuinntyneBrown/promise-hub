@@ -17,8 +17,8 @@ Ported from Waypoint `learning-experience/browse-curriculum` (`L2-LEARN-001`) wi
 
 Frontend (`frontend/projects/learning/`):
 
-- **`LearningPage`** (`/learning`, mock `learn-home`) — the greeting with the name the youth goes by, Continue where you left off, Your progress and Your tracks; the consent-required and no-cohort states when the server refuses, the resume alert of an unfinished setup, empty and completed states.
-- **`TrackPage`** (`/learning/tracks/:id`, mock `learn-track`) — `ph-button-group` switches between the youth's tracks; modules in order with their status and, while locked, “Unlocks after …” and no link.
+- **`LearningPage`** (`/learning`, mock `learn-home`) — the header with the name the youth goes by in its subtitle, Continue where you left off, Your progress and Your tracks; the consent-required and no-cohort states when the server refuses, the resume alert of an unfinished setup, empty and completed states.
+- **`TrackPage`** (`/learning/tracks/:id`, mock `learn-track`) — `ph-button-group` switches between the youth's tracks when there are two or more; modules in order with their status and, while locked, “Unlocks after …” and no link.
 - **`ModulePage`** (`/learning/modules/:id`, mock `learn-module`) — progress, the anchor passage in `ph-scripture-block`, Continue, and lessons in order (done, next, locked); the locked and not-found states.
 
 API client: `home()`, `track(id)`, `module(id)`; contracts `LearningHome`, `TrackView`, `ModuleView`, `LessonItem`, results with `locked` and `not-found` outcomes.
@@ -36,7 +36,7 @@ Open questions: a youth choosing extra tracks outside their programs is not port
 
 ## Built so far
 
-Nothing yet; prompt 57 builds this design (0%).
+Prompt 57 delivered everything above. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/LearningBrowseTests.cs`, `e2e/tests/learning/browse.spec.ts`.
 
 ## Requirements
 
