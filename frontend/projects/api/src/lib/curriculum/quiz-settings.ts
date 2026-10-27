@@ -11,4 +11,6 @@ export interface QuizSettings {
   feedback: FeedbackMode;
   shuffle: boolean;
   requiredToComplete: boolean;
+  /** A mentor approves each attempt's score before it counts (L2-081). */
+  requireApproval: boolean;
 }

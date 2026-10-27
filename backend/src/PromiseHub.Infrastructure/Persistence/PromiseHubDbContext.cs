@@ -235,6 +235,8 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(a => a.Status).HasConversion<string>().HasMaxLength(20);
             e.Property(a => a.StartedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.Property(a => a.SubmittedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.Property(a => a.ApprovedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.Property(a => a.ApprovedByName).HasMaxLength(200);
             e.Ignore(a => a.Submitted);
             e.HasOne<Membership>().WithMany().HasForeignKey(a => a.MembershipId);
             e.HasOne<Domain.Curriculum.Quiz>().WithMany().HasForeignKey(a => a.QuizId);

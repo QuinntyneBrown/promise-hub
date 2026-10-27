@@ -1,0 +1,36 @@
+<ph-dialog
+  title="Approve this quiz score?"
+  [description]="item.youthName.split(' ')[0] + ' sees only the score you approve.'"
+  icon="check-circle"
+>
+  <form class="stack" (ngSubmit)="approve()">
+    @if (failed()) {
+      <ph-alert
+        tone="danger"
+        title="That didn’t go through"
+        text="The score wasn’t approved. Try again."
+      />
+    }
+    <ph-description-list [facts]="facts" />
+    <ph-text-field
+      inputId="override"
+      label="Override score"
+      type="number"
+      inputmode="numeric"
+      [optional]="true"
+      [help]="
+        'A percentage from 0 to 100. Leave it blank to approve the ' + item.score + '% auto-score.'
+      "
+      [error]="error()"
+      name="override"
+      [ngModel]="override()"
+      (ngModelChange)="override.set($event ?? '')"
+    />
+  </form>
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close()">Cancel</ph-button>
+    <ph-button variant="primary" icon="check-circle" [busy]="busy()" (click)="approve()"
+      >Approve score</ph-button
+    >
+  </ng-container>
+</ph-dialog>

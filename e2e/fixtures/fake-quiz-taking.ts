@@ -23,6 +23,8 @@ export interface FakeAttempt {
   score: number | null;
   passed: boolean | null;
   submittedAt: string | null;
+  /** The auto-score kept once a mentor approves it (ADR 0057). */
+  autoScore?: number | null;
 }
 
 /** What the quiz routes need to know about the youth's module: the quiz as she stands with it, or null when not visible. */

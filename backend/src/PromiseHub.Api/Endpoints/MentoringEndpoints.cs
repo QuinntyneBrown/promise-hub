@@ -37,6 +37,10 @@ public static class MentoringEndpoints
         });
         reviews.MapPost("/submissions/{id:guid}/grade", async (Guid id, GradeRequest request, GradeSubmissionHandler handler, CancellationToken ct) =>
             (await handler.HandleAsync(id, request, ct)).ToHttp());
+        reviews.MapGet("/quiz-approvals", (QuizApprovalHandler handler, CancellationToken ct) => handler.ListAsync(ct));
+        reviews.MapPost("/quiz-approvals/approve-all", (QuizApprovalHandler handler, CancellationToken ct) => handler.ApproveAllAsync(ct));
+        reviews.MapPost("/quiz-attempts/{id:guid}/approve", async (Guid id, ApproveQuizRequest request, QuizApprovalHandler handler, CancellationToken ct) =>
+            (await handler.ApproveAsync(id, request, ct)).ToHttp());
         return app;
     }
 }

@@ -1,0 +1,64 @@
+@let r = result();
+<ph-breadcrumb
+  [items]="[
+    { label: 'Mentoring', link: '/mentoring' },
+    { label: 'Reviews', link: '/mentoring/reviews' },
+    { label: 'Quiz approvals' },
+  ]"
+/>
+<ph-page-header
+  title="Quiz approvals"
+  subtitle="Confirm a quiz’s score, or override it, before it counts."
+>
+  @if (r?.status === 'loaded' && r!.value.items.length) {
+    <ph-button variant="primary" icon="check" hasPopup="dialog" (click)="approveAll(r!.value.items)"
+      >Approve all</ph-button
+    >
+  }
+</ph-page-header>
+@if (r === null) {
+  <div class="stack" aria-busy="true" aria-label="Loading quiz results">
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (r.status === 'loaded' && r.value.items.length === 0) {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="check-circle"
+      title="No quiz results to approve"
+      text="When one of your youth finishes a quiz that needs your approval, it appears here."
+    >
+      <ph-button link="/mentoring/reviews">Back to Reviews</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else if (r.status === 'loaded') {
+  @let items = r.value.items;
+  <div class="stack">
+    <ph-alert
+      title="Youth see only the approved score"
+      text="Quizzes are scored automatically. Override a score when a written answer deserves partial credit; the auto-score is kept too."
+    />
+    <ph-table caption="Quiz results waiting for approval" [columns]="columns" [rows]="rows(items)">
+      <ng-template #rowActions let-i>
+        @let item = items[i];
+        <ph-button
+          size="sm"
+          hasPopup="dialog"
+          [label]="'Approve ' + item.youthName + '’s ' + item.quizTitle"
+          (click)="approve(item)"
+          >Approve</ph-button
+        >
+      </ng-template>
+    </ph-table>
+  </div>
+} @else {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load quiz results"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}

@@ -61,9 +61,9 @@ public sealed class QuizCommands(IPromiseHubDb db, ITenantContext tenant, IAudit
         {
             return Result.Invalid(errors);
         }
-        var before = new { quiz.Title, quiz.LessonId, quiz.PassMark, quiz.AttemptsAllowed, Feedback = quiz.Feedback.ToString(), quiz.Shuffle, quiz.RequiredToComplete };
-        quiz.Update(title!, command.LessonId, command.PassMark, command.AttemptsAllowed, feedback, command.Shuffle, command.RequiredToComplete);
-        var after = new { Title = title, command.LessonId, command.PassMark, command.AttemptsAllowed, Feedback = feedback.ToString(), command.Shuffle, command.RequiredToComplete };
+        var before = new { quiz.Title, quiz.LessonId, quiz.PassMark, quiz.AttemptsAllowed, Feedback = quiz.Feedback.ToString(), quiz.Shuffle, quiz.RequiredToComplete, quiz.RequireApproval };
+        quiz.Update(title!, command.LessonId, command.PassMark, command.AttemptsAllowed, feedback, command.Shuffle, command.RequiredToComplete, command.RequireApproval);
+        var after = new { Title = title, command.LessonId, command.PassMark, command.AttemptsAllowed, Feedback = feedback.ToString(), command.Shuffle, command.RequiredToComplete, command.RequireApproval };
         audit.Record(new AuditEvent(AuditAction.Updated, "Quiz", id, title!, before, after));
         await db.SaveChangesAsync(cancellationToken);
         return Result.Done;

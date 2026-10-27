@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, catchError, map, of } from 'rxjs';
 import { API_BASE_URL } from '../api-base-url';
 import { toLoad, toWrite } from '../http-results';
 import { LoadResult } from '../load-result';
@@ -13,6 +13,8 @@ import { MentorYouthRecord } from './mentor-youth-record';
 import { MentoringApi } from './mentoring-api';
 import { GradeOutcome } from './grade-outcome';
 import { GradeRequest } from './grade-request';
+import { ApproveAllOutcome } from './approve-all-outcome';
+import { QuizApprovals } from './quiz-approvals';
 import { ReviewQueue } from './review-queue';
 import { SubmissionReview } from './submission-review';
 import { toGradeOutcome } from './to-grade-outcome';
@@ -61,6 +63,28 @@ export class HttpMentoringApi implements MentoringApi {
         request,
       ),
     );
+  }
+
+  quizApprovals(): Observable<LoadResult<QuizApprovals>> {
+    return toLoad(this.http.get<QuizApprovals>(`${this.baseUrl}/mentoring/quiz-approvals`));
+  }
+
+  approveQuiz(attemptId: string, override: number | null): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(
+        `${this.baseUrl}/mentoring/quiz-attempts/${encodeURIComponent(attemptId)}/approve`,
+        { override },
+      ),
+    );
+  }
+
+  approveAllQuizzes(): Observable<ApproveAllOutcome> {
+    return this.http
+      .post<{ approved: number }>(`${this.baseUrl}/mentoring/quiz-approvals/approve-all`, null)
+      .pipe(
+        map((body): ApproveAllOutcome => ({ status: 'saved', approved: body.approved })),
+        catchError(() => of<ApproveAllOutcome>({ status: 'error' })),
+      );
   }
 
   cohort(programId: string): Observable<LoadResult<CohortMentoring>> {

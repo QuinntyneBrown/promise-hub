@@ -153,6 +153,10 @@ export class CurriculumQuizPage extends BasePage {
     return this.page.getByRole('switch', { name: 'Required to complete the module' });
   }
 
+  get requireApproval(): Locator {
+    return this.page.getByRole('switch', { name: 'Mentor approves each score' });
+  }
+
   async saveSettings(): Promise<void> {
     await this.page.getByRole('button', { name: 'Save settings' }).click();
   }

@@ -44,6 +44,10 @@ public sealed class QuizAttempt : ITenantOwned
     /// <summary>The rounded percentage of questions right.</summary>
     public int? Score { get; private set; }
     public bool? Passed { get; private set; }
+    /// <summary>The auto-score kept beside an approved score (L2-081 criterion 2, ADR 0057); null until a mentor approves it.</summary>
+    public int? AutoScore { get; private set; }
+    public string? ApprovedByName { get; private set; }
+    public DateTimeOffset? ApprovedAt { get; private set; }
     public DateTimeOffset StartedAt { get; private set; }
     public DateTimeOffset? SubmittedAt { get; private set; }
 
@@ -71,5 +75,23 @@ public sealed class QuizAttempt : ITenantOwned
         Passed = Score >= passMark;
         Status = needsApproval ? AttemptStatus.AwaitingApproval : AttemptStatus.Scored;
         SubmittedAt = at;
+    }
+
+    /// <summary>
+    /// A mentor approves the score, or overrides it with 0 to 100 (L2-081, ADR 0057): the auto-score is kept, the approved score becomes the
+    /// attempt's score and pass, and it counts from now on.
+    /// </summary>
+    public void Approve(int? overrideScore, int passMark, string approvedBy, DateTimeOffset at)
+    {
+        if (Status != AttemptStatus.AwaitingApproval)
+        {
+            throw new InvalidOperationException("Only an attempt awaiting approval can be approved.");
+        }
+        AutoScore = Score;
+        Score = overrideScore ?? Score;
+        Passed = Score >= passMark;
+        ApprovedByName = approvedBy;
+        ApprovedAt = at;
+        Status = AttemptStatus.Scored;
     }
 }

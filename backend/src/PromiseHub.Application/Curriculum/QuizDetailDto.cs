@@ -15,6 +15,7 @@ public sealed record QuizDetailDto(
     string Feedback,
     bool Shuffle,
     bool RequiredToComplete,
+    bool RequireApproval,
     IReadOnlyList<QuizQuestionDto> Questions,
     IReadOnlyList<LessonOptionDto> Lessons,
     IReadOnlyList<string> Programs);

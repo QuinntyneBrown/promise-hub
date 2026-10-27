@@ -1924,6 +1924,16 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .HasMaxLength(20000)
                         .HasColumnType("TEXT");
 
+                    b.Property<long?>("ApprovedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ApprovedByName")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("AutoScore")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("Correct")
                         .HasColumnType("INTEGER");
 

@@ -143,4 +143,43 @@ export class FakeReviews {
     }
     return route.fulfill({ json: { status: s.status, points: s.points, version: s.version } });
   }
+
+  /** GET /mentoring/quiz-approvals: attempts of his youth awaiting approval, oldest first. */
+  quizApprovals(route: Route, org: string, youth: YouthAccounts): Promise<void> {
+    const items = this.quizzes.attempts
+      .filter((t) => youth.has(t.membershipId) && t.status === 'AwaitingApproval')
+      .sort((a, b) => a.submittedAt!.localeCompare(b.submittedAt!))
+      .map((t) => {
+        const q = this.assessments.quizzes.find((x) => x.id === t.quizId)!;
+        return { id: t.id, youthName: youth.get(t.membershipId), quizTitle: q.title, moduleTitle: this.moduleTitle(org, q.moduleId), number: t.number, score: t.score, correct: t.correct, total: t.total, passMark: q.passMark, submittedAt: t.submittedAt };
+      });
+    return route.fulfill({ json: { items } });
+  }
+
+  private approveAttempt(t: { quizId: string; score: number | null; passed: boolean | null; status: string; autoScore?: number | null }, override: number | null): void {
+    const q = this.assessments.quizzes.find((x) => x.id === t.quizId)!;
+    t.autoScore = t.score;
+    t.score = override ?? t.score;
+    t.passed = t.score! >= q.passMark;
+    t.status = 'Scored';
+  }
+
+  /** POST /mentoring/quiz-attempts/{id}/approve. */
+  approveQuiz(route: Route, youth: YouthAccounts, id: string): Promise<void> {
+    const t = this.quizzes.attempts.find((x) => x.id === id && youth.has(x.membershipId));
+    if (!t) return route.fulfill({ status: 404 });
+    if (t.status !== 'AwaitingApproval') return route.fulfill({ status: 409, json: { code: 'not-awaiting' } });
+    const override = (route.request().postDataJSON() as { override: number | null }).override ?? null;
+    if (override !== null && (!Number.isInteger(override) || override < 0 || override > 100))
+      return route.fulfill({ status: 422, json: { errors: { override: 'Enter a whole number from 0 to 100, or leave it blank.' } } });
+    this.approveAttempt(t, override);
+    return route.fulfill({ json: { approved: 1 } });
+  }
+
+  /** POST /mentoring/quiz-approvals/approve-all. */
+  approveAll(route: Route, youth: YouthAccounts): Promise<void> {
+    const waiting = this.quizzes.attempts.filter((t) => youth.has(t.membershipId) && t.status === 'AwaitingApproval');
+    waiting.forEach((t) => this.approveAttempt(t, null));
+    return route.fulfill({ json: { approved: waiting.length } });
+  }
 }

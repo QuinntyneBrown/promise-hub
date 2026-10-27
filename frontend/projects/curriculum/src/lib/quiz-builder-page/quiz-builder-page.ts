@@ -100,6 +100,7 @@ export class QuizBuilderPage {
     feedback: 'ShowAnswers' as string,
     shuffle: false,
     requiredToComplete: false,
+    requireApproval: false,
   };
   protected readonly feedbackOptions: RadioOption[] = [
     { value: 'ShowAnswers', label: 'Show correct answers after each attempt' },
@@ -132,6 +133,7 @@ export class QuizBuilderPage {
         feedback: q.feedback,
         shuffle: q.shuffle,
         requiredToComplete: q.requiredToComplete,
+        requireApproval: q.requireApproval,
       };
     });
   }
@@ -173,6 +175,7 @@ export class QuizBuilderPage {
         feedback: this.form.feedback as FeedbackMode,
         shuffle: this.form.shuffle,
         requiredToComplete: this.form.requiredToComplete,
+        requireApproval: this.form.requireApproval,
       })
       .subscribe((outcome) => {
         this.busy.set(false);

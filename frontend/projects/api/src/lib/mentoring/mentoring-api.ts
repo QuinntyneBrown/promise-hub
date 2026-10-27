@@ -8,6 +8,8 @@ import type { MentorDashboard } from './mentor-dashboard';
 import type { MentorYouthRecord } from './mentor-youth-record';
 import type { GradeOutcome } from './grade-outcome';
 import type { GradeRequest } from './grade-request';
+import type { ApproveAllOutcome } from './approve-all-outcome';
+import type { QuizApprovals } from './quiz-approvals';
 import type { ReviewQueue } from './review-queue';
 import type { SubmissionReview } from './submission-review';
 
@@ -27,6 +29,11 @@ export interface MentoringApi {
   /** Where the submission's file downloads from, under the caller's session. */
   submissionFileUrl(id: string): string;
   grade(id: string, request: GradeRequest): Observable<GradeOutcome>;
+  /** Quiz results of the caller's youth waiting for approval. */
+  quizApprovals(): Observable<LoadResult<QuizApprovals>>;
+  /** Approves the auto-score, or the override (0 to 100) when given; invalid carries { override }. */
+  approveQuiz(attemptId: string, override: number | null): Observable<WriteOutcome>;
+  approveAllQuizzes(): Observable<ApproveAllOutcome>;
   /** A cohort's team, each roster child's mentor and the active mentors; only while Mentoring is on. */
   cohort(programId: string): Observable<LoadResult<CohortMentoring>>;
   assignYouth(

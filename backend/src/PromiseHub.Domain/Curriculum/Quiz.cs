@@ -44,10 +44,10 @@ public sealed class Quiz : ITenantOwned
     public bool RequiredToComplete { get; private set; }
     public ContentStatus Status { get; private set; }
 
-    /// <summary>A mentor approves each attempt's score before it counts (ADR 0055); switched on by prompt 63.</summary>
+    /// <summary>A mentor approves each attempt's score before it counts (ADR 0055, L2-081); set in the quiz builder.</summary>
     public bool RequireApproval { get; private set; }
 
-    public void Update(string title, Guid? lessonId, int passMark, int? attemptsAllowed, FeedbackMode feedback, bool shuffle, bool requiredToComplete)
+    public void Update(string title, Guid? lessonId, int passMark, int? attemptsAllowed, FeedbackMode feedback, bool shuffle, bool requiredToComplete, bool requireApproval = false)
     {
         Title = title;
         LessonId = lessonId;
@@ -56,6 +56,7 @@ public sealed class Quiz : ITenantOwned
         Feedback = feedback;
         Shuffle = shuffle;
         RequiredToComplete = requiredToComplete;
+        RequireApproval = requireApproval;
     }
 
     /// <summary>Its lesson was deleted: it now belongs to the whole module.</summary>
