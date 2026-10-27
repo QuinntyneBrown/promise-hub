@@ -10,6 +10,7 @@ import type { ModuleFields } from './module-fields';
 import type { NewTrack } from './new-track';
 import type { QuestionFields } from './question-fields';
 import type { QuizDetail } from './quiz-detail';
+import type { QuizSettings } from './quiz-settings';
 
 /** Curriculum authoring for admins and program directors (Learning module, L2-066, L2-067, L2-073, L2-074). */
 export interface CurriculumApi {
@@ -35,4 +36,7 @@ export interface CurriculumApi {
   addQuestion(quizId: string, fields: QuestionFields): Observable<WriteOutcome>;
   updateQuestion(id: string, fields: QuestionFields): Observable<WriteOutcome>;
   deleteQuestion(id: string): Observable<WriteOutcome>;
+  updateQuiz(id: string, settings: QuizSettings): Observable<WriteOutcome>;
+  reorderQuestions(quizId: string, questionIds: string[]): Observable<WriteOutcome>;
+  setQuizStatus(id: string, status: ContentStatus): Observable<WriteOutcome>;
 }

@@ -251,6 +251,7 @@ export * from './lib/curriculum/quiz-question';
 export * from './lib/curriculum/question-fields';
 export * from './lib/curriculum/lesson-option';
 export * from './lib/curriculum/quiz-detail';
+export * from './lib/curriculum/quiz-settings';
 export * from './lib/curriculum/quiz-summary';
 export * from './lib/curriculum/curriculum-api';
 export * from './lib/curriculum/curriculum-api.token';

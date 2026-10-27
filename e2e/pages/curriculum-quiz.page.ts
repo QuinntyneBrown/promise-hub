@@ -124,4 +124,59 @@ export class CurriculumQuizPage extends BasePage {
   async apiStatus(path: string): Promise<number> {
     return this.page.evaluate(async (p) => (await fetch(p)).status, path);
   }
+
+  get title(): Locator {
+    return this.page.getByLabel('Quiz title');
+  }
+
+  get attachedTo(): Locator {
+    return this.page.getByLabel('Attached to');
+  }
+
+  get passMark(): Locator {
+    return this.page.getByLabel('Pass mark');
+  }
+
+  get attempts(): Locator {
+    return this.page.getByLabel('Attempts allowed');
+  }
+
+  feedback(label: string): Locator {
+    return this.page.getByRole('group', { name: 'Feedback' }).getByRole('radio', { name: label });
+  }
+
+  get shuffle(): Locator {
+    return this.page.getByRole('switch', { name: 'Shuffle question order' });
+  }
+
+  get required(): Locator {
+    return this.page.getByRole('switch', { name: 'Required to complete the module' });
+  }
+
+  async saveSettings(): Promise<void> {
+    await this.page.getByRole('button', { name: 'Save settings' }).click();
+  }
+
+  fieldError(id: string): Locator {
+    return this.page.getByTestId(`${id}-error`);
+  }
+
+  get errorSummary(): Locator {
+    return this.page.getByRole('alert').filter({ hasText: 'Fix these to continue' });
+  }
+
+  get failedAlert(): Locator {
+    return this.page.getByRole('alert').filter({ hasText: 'We couldn’t save the settings' });
+  }
+
+  async changeStatus(status: 'Draft' | 'Published'): Promise<void> {
+    await this.page.getByRole('button', { name: /^Status of / }).click();
+    await expect(this.dialog).toBeVisible();
+    await this.dialog.getByRole('radio', { name: new RegExp(`^${status}`) }).check();
+    await this.dialog.getByRole('button', { name: 'Save status' }).click();
+  }
+
+  get statusError(): Locator {
+    return this.dialog.getByRole('group', { name: 'Status' }).locator('.error');
+  }
 }

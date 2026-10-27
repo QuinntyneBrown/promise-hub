@@ -14,6 +14,9 @@
         <ph-badge [tone]="statusTone(q.status)" data-testid="quiz-status">{{
           statusLabel(q.status)
         }}</ph-badge>
+        <ph-button hasPopup="dialog" [label]="'Status of ' + q.title" (click)="changeStatus(q)"
+          >Status</ph-button
+        >
       </ph-page-header>
       <div class="split">
         <div class="stack">
@@ -36,6 +39,22 @@
                         hasPopup="dialog"
                         [label]="'Edit question ' + (i + 1)"
                         (click)="editQuestion(q, i)"
+                      />
+                      <ph-button
+                        variant="ghost"
+                        icon="arrow-up"
+                        [iconOnly]="true"
+                        [label]="'Move question ' + (i + 1) + ' up'"
+                        [disabled]="i === 0"
+                        (click)="move(q, i, -1)"
+                      />
+                      <ph-button
+                        variant="ghost"
+                        icon="arrow-down"
+                        [iconOnly]="true"
+                        [label]="'Move question ' + (i + 1) + ' down'"
+                        [disabled]="last"
+                        (click)="move(q, i, 1)"
                       />
                       <ph-button
                         variant="ghost"
@@ -68,6 +87,82 @@
             </ng-container>
           </ph-card>
         </div>
+        <form class="stack" novalidate (ngSubmit)="save(q)">
+          @if (summary().length) {
+            <ph-error-summary title="Fix these to continue" [items]="summary()" />
+          }
+          @if (failed()) {
+            <ph-alert
+              tone="danger"
+              title="We couldn’t save the settings"
+              text="Your changes are still here. Try again."
+            />
+          }
+          <ph-card title="Settings">
+            <div class="stack">
+              <ph-text-field
+                inputId="title"
+                label="Quiz title"
+                name="title"
+                [error]="errors()['title'] ?? null"
+                [(ngModel)]="form.title"
+              />
+              <ph-select
+                inputId="attach"
+                label="Attached to"
+                name="attach"
+                help="Youth meet it at the end of the module or after the lesson."
+                [options]="attachOptions(q)"
+                [error]="errors()['lessonId'] ?? null"
+                [(ngModel)]="form.lessonId"
+              />
+              <div class="two-col">
+                <ph-select
+                  inputId="passMark"
+                  label="Pass mark"
+                  name="passMark"
+                  [options]="passMarkOptions(q)"
+                  [error]="errors()['passMark'] ?? null"
+                  [(ngModel)]="form.passMark"
+                />
+                <ph-select
+                  inputId="attempts"
+                  label="Attempts allowed"
+                  name="attempts"
+                  help="The best attempt counts."
+                  [options]="attemptOptions(q)"
+                  [error]="errors()['attemptsAllowed'] ?? null"
+                  [(ngModel)]="form.attempts"
+                />
+              </div>
+              <ph-radio-group
+                legend="Feedback"
+                name="feedback"
+                [options]="feedbackOptions"
+                [error]="errors()['feedback'] ?? null"
+                [(ngModel)]="form.feedback"
+              />
+              <ph-switch
+                label="Shuffle question order"
+                name="shuffle"
+                description="Each attempt shows the questions in a new order."
+                [(ngModel)]="form.shuffle"
+              />
+              <ph-switch
+                label="Required to complete the module"
+                name="required"
+                description="Youth must pass it before the module counts as done."
+                [(ngModel)]="form.requiredToComplete"
+              />
+            </div>
+          </ph-card>
+          <div class="form-actions">
+            <ph-button variant="ghost" [link]="['/curriculum/modules', q.moduleId]"
+              >Cancel</ph-button
+            >
+            <ph-button variant="primary" type="submit" [busy]="busy()">Save settings</ph-button>
+          </div>
+        </form>
       </div>
     }
   }

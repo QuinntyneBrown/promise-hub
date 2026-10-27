@@ -15,6 +15,7 @@ import { ModuleFields } from './module-fields';
 import { NewTrack } from './new-track';
 import { QuestionFields } from './question-fields';
 import { QuizDetail } from './quiz-detail';
+import { QuizSettings } from './quiz-settings';
 
 @Injectable()
 export class HttpCurriculumApi implements CurriculumApi {
@@ -146,5 +147,23 @@ export class HttpCurriculumApi implements CurriculumApi {
 
   deleteQuestion(id: string): Observable<WriteOutcome> {
     return toWrite(this.http.delete<null>(`${this.baseUrl}/curriculum/quiz-questions/${id}`));
+  }
+
+  updateQuiz(id: string, settings: QuizSettings): Observable<WriteOutcome> {
+    return toWrite(this.http.put<null>(`${this.baseUrl}/curriculum/quizzes/${id}`, settings));
+  }
+
+  reorderQuestions(quizId: string, questionIds: string[]): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.put<null>(`${this.baseUrl}/curriculum/quizzes/${quizId}/question-order`, {
+        questionIds,
+      }),
+    );
+  }
+
+  setQuizStatus(id: string, status: ContentStatus): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.put<null>(`${this.baseUrl}/curriculum/quizzes/${id}/status`, { status }),
+    );
   }
 }

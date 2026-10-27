@@ -224,4 +224,65 @@ export class FakeAssessments {
     this.questionsOf(q.quizId).forEach((x, i) => (x.position = i + 1));
     return route.fulfill({ status: 204 });
   }
+
+  /** PUT /curriculum/quizzes/{id}: the rules, checked as QuizCommands checks them. */
+  updateQuiz(route: Route, org: string, id: string): Promise<void> {
+    const q = this.quiz(org, id);
+    if (!q) return route.fulfill({ status: 404 });
+    const b = route.request().postDataJSON() as {
+      title?: string;
+      lessonId?: string | null;
+      passMark?: number;
+      attemptsAllowed?: number | null;
+      feedback?: string;
+      shuffle?: boolean;
+      requiredToComplete?: boolean;
+    };
+    const errors: Record<string, string> = {};
+    const title = clean(b.title);
+    if (!title) errors['title'] = 'Give the quiz a title.';
+    else if (title.length > 120) errors['title'] = 'Keep the title under 120 characters.';
+    const passMark = b.passMark ?? 0;
+    if (passMark < 1 || passMark > 100) errors['passMark'] = 'Choose a pass mark from 1 to 100%.';
+    const attempts = b.attemptsAllowed ?? null;
+    if (attempts !== null && (attempts < 1 || attempts > 10)) errors['attemptsAllowed'] = 'Choose 1 to 10 attempts, or unlimited.';
+    if (!['ShowAnswers', 'ScoreOnly', 'AfterLastAttempt'].includes(b.feedback ?? '')) errors['feedback'] = 'Choose when youth see the answers.';
+    const lessonError = this.lessonError(q.moduleId, b.lessonId);
+    if (lessonError) errors['lessonId'] = lessonError;
+    if (Object.keys(errors).length) return unprocessable(route, errors);
+    Object.assign(q, {
+      title,
+      lessonId: b.lessonId ?? null,
+      passMark,
+      attemptsAllowed: attempts,
+      feedback: b.feedback as FeedbackMode,
+      shuffle: !!b.shuffle,
+      requiredToComplete: !!b.requiredToComplete,
+    });
+    return route.fulfill({ status: 204 });
+  }
+
+  /** PUT /curriculum/quizzes/{id}/question-order. */
+  reorderQuestions(route: Route, org: string, id: string): Promise<void> {
+    if (!this.quiz(org, id)) return route.fulfill({ status: 404 });
+    const { questionIds } = route.request().postDataJSON() as { questionIds?: string[] };
+    const questions = this.questionsOf(id);
+    const ids = questions.map((q) => q.id);
+    if (!questionIds || questionIds.length !== ids.length || new Set(questionIds).size !== ids.length || !questionIds.every((x) => ids.includes(x))) {
+      return unprocessable(route, { questionIds: 'Send every question of the quiz once.' });
+    }
+    questionIds.forEach((qid, i) => (questions.find((q) => q.id === qid)!.position = i + 1));
+    return route.fulfill({ status: 204 });
+  }
+
+  /** PUT /curriculum/quizzes/{id}/status. */
+  setQuizStatus(route: Route, org: string, id: string): Promise<void> {
+    const q = this.quiz(org, id);
+    if (!q) return route.fulfill({ status: 404 });
+    const { status } = route.request().postDataJSON() as { status: ContentStatus };
+    if (status !== 'Draft' && status !== 'Published') return unprocessable(route, { status: 'Choose Draft or Published.' });
+    if (status === 'Published' && !this.questionsOf(id).length) return unprocessable(route, { status: 'Add a question before publishing the quiz.' });
+    q.status = status;
+    return route.fulfill({ status: 204 });
+  }
 }

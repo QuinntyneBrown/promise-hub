@@ -6,7 +6,7 @@ using PromiseHub.Infrastructure.Persistence.Seed;
 
 namespace PromiseHub.Api.Tests;
 
-// Acceptance test. Traces to: L2-073 criteria 1 to 3, 7 and 8 (a quiz and its questions of four types).
+// Acceptance test. Traces to: L2-073 criteria 1 to 8 (a quiz, its questions of four types, its rules, order and status).
 public sealed class CurriculumQuizzesTests : IAsyncLifetime
 {
     private static readonly Guid Marisol = DatabaseSeeder.MembershipId(DatabaseSeeder.Harbourview, "marisol@harbourview.example");
@@ -182,6 +182,105 @@ public sealed class CurriculumQuizzesTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.NotFound, (await _factory.ClientFor(Marisol).GetAsync($"/curriculum/quizzes/{quiz}")).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await AddQuestion(quiz, "Off", "TrueFalse", [], [0])).StatusCode);
     }
+
+    [Fact]
+    public async Task Quiz_settings_are_saved_as_sent_and_audited_with_before_and_after()
+    {
+        var (module, lesson, _) = await Module();
+        var quiz = await Created(await Post(Marisol, "/curriculum/quizzes", new { moduleId = module, title = "Leading by Serving quiz" }));
+
+        var saved = await Put(Marisol, $"/curriculum/quizzes/{quiz}", Settings("Towel check", lesson, 80, null, "AfterLastAttempt", true, true));
+
+        Assert.Equal(HttpStatusCode.NoContent, saved.StatusCode);
+        var read = await Get(Marisol, $"/curriculum/quizzes/{quiz}");
+        Assert.Equal("Towel check", read.GetProperty("title").GetString());
+        Assert.Equal(lesson, read.GetProperty("lessonId").GetGuid());
+        Assert.Equal(80, read.GetProperty("passMark").GetInt32());
+        Assert.Equal(JsonValueKind.Null, read.GetProperty("attemptsAllowed").ValueKind);
+        Assert.Equal("AfterLastAttempt", read.GetProperty("feedback").GetString());
+        Assert.True(read.GetProperty("shuffle").GetBoolean());
+        Assert.True(read.GetProperty("requiredToComplete").GetBoolean());
+        var audit = Query("SELECT BeforeJson || ' -> ' || AfterJson FROM AuditEntries WHERE Action = 'Updated' AND RecordType = 'Quiz'");
+        Assert.Contains(audit, a => a.Contains("Leading by Serving quiz") && a.Contains("Towel check") && a.Contains("AfterLastAttempt"));
+
+        Assert.Equal(HttpStatusCode.NoContent, (await Put(Marisol, $"/curriculum/quizzes/{quiz}", Settings("Towel check", null, 70, 3, "ScoreOnly", false, false))).StatusCode);
+        Assert.Equal(3, (await Get(Marisol, $"/curriculum/quizzes/{quiz}")).GetProperty("attemptsAllowed").GetInt32());
+    }
+
+    [Fact]
+    public async Task Quiz_settings_are_refused_outside_their_ranges_and_nothing_changes()
+    {
+        var (module, _, track) = await Module();
+        var quiz = await Created(await Post(Marisol, "/curriculum/quizzes", new { moduleId = module, title = "Leading by Serving quiz" }));
+        var other = await Created(await Post(Marisol, "/curriculum/modules", new { trackId = track, title = "Speaking Up" }));
+        var foreign = await Created(await Post(Marisol, "/curriculum/lessons", new { moduleId = other, title = "Finding Your Voice" }));
+
+        Assert.Equal("Give the quiz a title.", await Error(await Put(Marisol, $"/curriculum/quizzes/{quiz}", Settings("", null, 70, 2, "ShowAnswers")), "title"));
+        Assert.Equal("Choose a pass mark from 1 to 100%.", await Error(await Put(Marisol, $"/curriculum/quizzes/{quiz}", Settings("Q", null, 0, 2, "ShowAnswers")), "passMark"));
+        Assert.Equal("Choose a pass mark from 1 to 100%.", await Error(await Put(Marisol, $"/curriculum/quizzes/{quiz}", Settings("Q", null, 101, 2, "ShowAnswers")), "passMark"));
+        Assert.Equal("Choose 1 to 10 attempts, or unlimited.", await Error(await Put(Marisol, $"/curriculum/quizzes/{quiz}", Settings("Q", null, 70, 0, "ShowAnswers")), "attemptsAllowed"));
+        Assert.Equal("Choose 1 to 10 attempts, or unlimited.", await Error(await Put(Marisol, $"/curriculum/quizzes/{quiz}", Settings("Q", null, 70, 11, "ShowAnswers")), "attemptsAllowed"));
+        Assert.Equal("Choose when youth see the answers.", await Error(await Put(Marisol, $"/curriculum/quizzes/{quiz}", Settings("Q", null, 70, 2, "Never")), "feedback"));
+        Assert.Equal("Choose a lesson of this module.", await Error(await Put(Marisol, $"/curriculum/quizzes/{quiz}", Settings("Q", foreign, 70, 2, "ShowAnswers")), "lessonId"));
+        Assert.Equal("Leading by Serving quiz", (await Get(Marisol, $"/curriculum/quizzes/{quiz}")).GetProperty("title").GetString());
+    }
+
+    [Fact]
+    public async Task Questions_are_reordered_as_a_whole_list_and_audited()
+    {
+        var quiz = await Quiz();
+        await AddQuestion(quiz, "First", "TrueFalse", [], [0]);
+        await AddQuestion(quiz, "Second", "TrueFalse", [], [0]);
+        await AddQuestion(quiz, "Third", "TrueFalse", [], [0]);
+        var ids = QuestionIds(await Get(Marisol, $"/curriculum/quizzes/{quiz}"));
+
+        Assert.Equal(HttpStatusCode.NoContent, (await Put(Marisol, $"/curriculum/quizzes/{quiz}/question-order", new { questionIds = new[] { ids[1], ids[0], ids[2] } })).StatusCode);
+
+        var texts = (await Get(Marisol, $"/curriculum/quizzes/{quiz}")).GetProperty("questions").EnumerateArray().Select(q => q.GetProperty("text").GetString());
+        Assert.Equal(["Second", "First", "Third"], texts);
+        Assert.Contains(Query("SELECT Summary FROM AuditEntries WHERE Action = 'Updated' AND RecordType = 'Quiz'"), s => s.Contains("Question order · Leading by Serving quiz"));
+        Assert.Equal("Send every question of the quiz once.", await Error(await Put(Marisol, $"/curriculum/quizzes/{quiz}/question-order", new { questionIds = new[] { ids[0], ids[0], ids[2] } }), "questionIds"));
+    }
+
+    [Fact]
+    public async Task A_quiz_publishes_only_with_a_question_and_goes_back_to_draft_audited()
+    {
+        var quiz = await Quiz();
+
+        Assert.Equal("Add a question before publishing the quiz.", await Error(await Put(Marisol, $"/curriculum/quizzes/{quiz}/status", new { status = "Published" }), "status"));
+        await AddQuestion(quiz, "First", "TrueFalse", [], [0]);
+        Assert.Equal(HttpStatusCode.NoContent, (await Put(Marisol, $"/curriculum/quizzes/{quiz}/status", new { status = "Published" })).StatusCode);
+        Assert.Equal("Published", (await Get(Marisol, $"/curriculum/quizzes/{quiz}")).GetProperty("status").GetString());
+        Assert.Contains(Query("SELECT AfterJson FROM AuditEntries WHERE Action = 'Updated' AND RecordType = 'Quiz'"), a => a.Contains("Published"));
+        Assert.Equal(HttpStatusCode.NoContent, (await Put(Marisol, $"/curriculum/quizzes/{quiz}/status", new { status = "Draft" })).StatusCode);
+        Assert.Equal("Choose Draft or Published.", await Error(await Put(Marisol, $"/curriculum/quizzes/{quiz}/status", new { status = "InReview" }), "status"));
+    }
+
+    [Fact]
+    public async Task Settings_order_and_status_are_refused_to_other_roles_other_organizations_and_with_Learning_off()
+    {
+        var quiz = await Quiz();
+        await AddQuestion(quiz, "First", "TrueFalse", [], [0]);
+        var ids = QuestionIds(await Get(Marisol, $"/curriculum/quizzes/{quiz}"));
+        foreach (var who in new[] { Jaylen, Sofia, Daniel })
+        {
+            Assert.Equal(HttpStatusCode.Forbidden, (await Put(who, $"/curriculum/quizzes/{quiz}", Settings("Taken", null, 70, 2, "ShowAnswers"))).StatusCode);
+            Assert.Equal(HttpStatusCode.Forbidden, (await Put(who, $"/curriculum/quizzes/{quiz}/question-order", new { questionIds = ids })).StatusCode);
+            Assert.Equal(HttpStatusCode.Forbidden, (await Put(who, $"/curriculum/quizzes/{quiz}/status", new { status = "Published" })).StatusCode);
+        }
+        var northgate = await ModulesOn(Grace);
+        await Put(Grace, "/settings/modules", new { on = northgate.Append("Learning").ToArray() });
+        Assert.Equal(HttpStatusCode.NotFound, (await Put(Grace, $"/curriculum/quizzes/{quiz}", Settings("Taken", null, 70, 2, "ShowAnswers"))).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await Put(Grace, $"/curriculum/quizzes/{quiz}/question-order", new { questionIds = ids })).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await Put(Grace, $"/curriculum/quizzes/{quiz}/status", new { status = "Published" })).StatusCode);
+        var on = await ModulesOn(Tom);
+        await Put(Tom, "/settings/modules", new { on = on.Where(m => m != "Learning").ToArray() });
+        Assert.Equal(HttpStatusCode.NotFound, (await Put(Marisol, $"/curriculum/quizzes/{quiz}/status", new { status = "Published" })).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await Put(Marisol, $"/curriculum/quizzes/{quiz}", Settings("Off", null, 70, 2, "ShowAnswers"))).StatusCode);
+    }
+
+    private static object Settings(string title, Guid? lessonId, int passMark, int? attemptsAllowed, string feedback, bool shuffle = false, bool requiredToComplete = false) =>
+        new { title, lessonId, passMark, attemptsAllowed, feedback, shuffle, requiredToComplete };
 
     private static object Question(string text, string type, string[] options, int[] correct, string[]? answers = null) =>
         new { text, type, options, correct, answers = answers ?? [] };
