@@ -71,6 +71,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Curriculum.CodingStep> CodingSteps => Set<Domain.Curriculum.CodingStep>();
     public DbSet<Domain.Learning.CodingWorkspace> CodingWorkspaces => Set<Domain.Learning.CodingWorkspace>();
     public DbSet<Domain.Learning.ProjectSubmission> ProjectSubmissions => Set<Domain.Learning.ProjectSubmission>();
+    public DbSet<Domain.Learning.QuizAttempt> QuizAttempts => Set<Domain.Learning.QuizAttempt>();
     public DbSet<DataRequest> DataRequests => Set<DataRequest>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
     public DbSet<Domain.Incidents.IncidentFollowUp> IncidentFollowUps => Set<Domain.Incidents.IncidentFollowUp>();
@@ -223,6 +224,18 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(p => p.SubmittedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.HasOne<Membership>().WithMany().HasForeignKey(p => p.MembershipId);
             e.HasOne<Domain.Curriculum.Lesson>().WithMany().HasForeignKey(p => p.LessonId);
+        });
+        modelBuilder.Entity<Domain.Learning.QuizAttempt>(e =>
+        {
+            e.HasIndex(a => new { a.MembershipId, a.QuizId, a.Number }).IsUnique();
+            e.Property(a => a.QuestionOrder).HasMaxLength(2000);
+            e.Property(a => a.Answers).HasMaxLength(20000);
+            e.Property(a => a.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(a => a.StartedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(a => a.SubmittedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.Ignore(a => a.Submitted);
+            e.HasOne<Membership>().WithMany().HasForeignKey(a => a.MembershipId);
+            e.HasOne<Domain.Curriculum.Quiz>().WithMany().HasForeignKey(a => a.QuizId);
         });
         modelBuilder.Entity<Domain.Learning.LessonProgress>(e =>
         {

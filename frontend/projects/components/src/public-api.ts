@@ -59,6 +59,7 @@ export * from './lib/quick-card/quick-card';
 export * from './lib/quick-card/quick-card-section';
 export * from './lib/progress-bar/progress-bar';
 export * from './lib/scripture-block/scripture-block';
+export * from './lib/quiz-option/quiz-option';
 export * from './lib/recipient-count/recipient-count';
 export * from './lib/sms-preview/sms-preview';
 export * from './lib/skeleton/skeleton';

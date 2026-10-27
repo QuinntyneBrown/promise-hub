@@ -1,0 +1,26 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Review quiz results
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(res, "QuizResultPage", "Angular page", "learn-quiz-result")
+  Component(mod, "ModulePage", "Angular page", "learn-module quizzes")
+  Component(opt, "ph-quiz-option / ph-stat", "components library", "")
+  Component(lapi, "LearningApi", "Contract + HTTP client", "LEARNING_API")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "LearningEndpoints", "Minimal API", "attempts/{id}, modules/{id}")
+  Component(rh, "QuizResultHandler", "Handler", "score, feedback rule, review")
+  Component(sc, "QuizScoring", "Service", "right or wrong per question")
+  Component(prog, "LearnerProgress", "Service", "best scores, required quizzes, module done")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Quizzes, QuizQuestions, QuizAttempts")
+}
+Rel(res, opt, "composes")
+Rel(res, lapi, "attempt")
+Rel(mod, lapi, "module")
+Rel(lapi, ep, "JSON/HTTPS")
+Rel(ep, rh, "GET")
+Rel(rh, sc, "review")
+Rel(rh, db, "reads")
+Rel(prog, db, "reads")
+@enduml

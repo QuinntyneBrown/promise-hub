@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Review quiz results
+Person(y, "Youth", "Phone or shared laptop browser")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular 22", "learning library, api client, components")
+  Container(api, "PromiseHub API", "ASP.NET Core, .NET 10", "Learning gate, Learn permission, consent and placement gates, handlers")
+  ContainerDb(db, "PromiseHub database", "SQLite via EF Core", "Tenant-filtered rows")
+  
+}
+Rel(y, web, "Uses", "HTTPS")
+Rel(web, api, "Calls", "JSON/HTTPS, session cookie")
+Rel(api, db, "Reads and writes", "EF Core")
+
+@enduml

@@ -11,7 +11,7 @@ public static class GatedExtensions
         ResultStatus.NotFound => Results.NotFound(),
         ResultStatus.Forbidden => Locked(gated.UnlockAfter),
         ResultStatus.Invalid => Results.Json(new { errors = gated.Errors }, statusCode: StatusCodes.Status422UnprocessableEntity),
-        ResultStatus.Conflict => Results.Json(new { code = "conflict" }, contentType: "application/problem+json", statusCode: StatusCodes.Status409Conflict),
+        ResultStatus.Conflict => Results.Json(new { code = gated.Code ?? "conflict" }, contentType: "application/problem+json", statusCode: StatusCodes.Status409Conflict),
         _ => Results.Ok(gated.Value),
     };
 

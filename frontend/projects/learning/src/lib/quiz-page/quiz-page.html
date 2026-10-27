@@ -1,0 +1,164 @@
+@let r = result();
+@let v = view();
+<ph-breadcrumb
+  [items]="
+    v
+      ? [
+          { label: 'Learning', link: '/learning' },
+          { label: v.moduleTitle, link: '/learning/modules/' + v.moduleId },
+          { label: v.title, link: '/learning/quizzes/' + v.quizId },
+          { label: 'Question ' + (index() + 1) },
+        ]
+      : [{ label: 'Learning', link: '/learning' }, { label: 'Quiz' }]
+  "
+/>
+@if (r === null) {
+  <ph-page-header title="Quiz" />
+  <div class="stack narrow" aria-busy="true" aria-label="Loading the question">
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (v && submittedElsewhere()) {
+  <ph-page-header [title]="v.title" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      title="This attempt is already submitted"
+      text="Answers can’t change once an attempt is submitted."
+    >
+      <ph-button variant="primary" [link]="'/learning/quizzes/' + v.quizId"
+        >Back to the quiz</ph-button
+      >
+    </ph-empty-state>
+  </ph-card>
+} @else if (v) {
+  <ph-page-header [title]="v.title" [subtitle]="subtitle(v)">
+    @switch (saveState()) {
+      @case ('saving') {
+        <ph-sync-chip>Saving…</ph-sync-chip>
+      }
+      @case ('saved') {
+        <ph-sync-chip tone="ok">Answers saved</ph-sync-chip>
+      }
+      @case ('offline') {
+        <ph-sync-chip>Not saved · you’re offline</ph-sync-chip>
+      }
+    }
+  </ph-page-header>
+  <div class="stack narrow">
+    @if (saveState() === 'offline') {
+      <ph-alert
+        tone="warning"
+        title="You’re offline"
+        text="Your answers are still here. We’ll save them when you’re back online. You can’t submit until then."
+      />
+    }
+    @if (saveFailed()) {
+      <ph-alert
+        tone="danger"
+        title="We couldn’t save your answer"
+        text="Your answer is still here. Change it or move on to try again."
+      />
+    }
+    <ph-progress-bar
+      [value]="index() + 1"
+      [max]="v.questions.length"
+      label="Quiz progress"
+      [caption]="'Question ' + (index() + 1) + ' of ' + v.questions.length"
+    />
+    @if (question(); as q) {
+      <ph-card>
+        <fieldset class="question">
+          <legend class="legend">{{ q.text }}</legend>
+          @if (hint(q); as h) {
+            <p class="hint">{{ h }}</p>
+          }
+          @if (q.type === 'ShortAnswer') {
+            <ph-text-field
+              [inputId]="'answer-' + q.id"
+              label="Your answer"
+              name="answer"
+              [maxlength]="200"
+              help="Capitals and spaces at the ends don’t matter."
+              [ngModel]="text(q)"
+              (ngModelChange)="write(q, $event)"
+            />
+          } @else {
+            <div class="options">
+              @for (option of q.options; track $index; let i = $index) {
+                <ph-quiz-option
+                  [label]="option"
+                  [key]="keys[i]"
+                  [type]="q.type === 'MultipleAnswer' ? 'checkbox' : 'radio'"
+                  [name]="'q-' + q.id"
+                  [checked]="chosen(q, i)"
+                  (checkedChange)="choose(q, i, $event)"
+                />
+              }
+            </div>
+          }
+        </fieldset>
+      </ph-card>
+    }
+    <div class="actions">
+      <ph-button variant="ghost" icon="arrow-left" [disabled]="index() === 0" (click)="move(-1)"
+        >Back</ph-button
+      >
+      @if (index() < v.questions.length - 1) {
+        <ph-button variant="primary" icon="arrow-right" (click)="move(1)">Next</ph-button>
+      } @else {
+        <ph-button
+          variant="primary"
+          icon="check"
+          [disabled]="saveState() === 'offline'"
+          (click)="submit(v)"
+          >Submit answers</ph-button
+        >
+      }
+    </div>
+  </div>
+} @else if (r.status === 'no-attempts') {
+  <ph-page-header title="Quiz" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      title="No attempts left"
+      text="You’ve used every attempt. Your best score is the one that counts."
+    >
+      <ph-button variant="primary" [link]="'/learning/quizzes/' + id()">Back to the quiz</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else if (r.status === 'locked') {
+  <ph-page-header title="Quiz" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      [title]="'Finish ' + r.unlockAfter + ' first'"
+      text="The quiz unlocks when the lessons before it are done."
+    >
+      <ph-button link="/learning">Back to Learning</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else if (r.status === 'not-found') {
+  <ph-page-header title="Quiz" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="search"
+      title="We can’t find that quiz"
+      text="It may not be published yet, or your program doesn’t follow it."
+    >
+      <ph-button link="/learning">Back to Learning</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-page-header title="Quiz" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t open the quiz"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" [link]="'/learning/quizzes/' + id()">Back to the quiz</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}

@@ -28,6 +28,15 @@ export class LearnModulePage extends BasePage {
     await this.lessonLink(title).click();
   }
 
+  /** A quiz row in the Quizzes card, by its title. */
+  quiz(title: string): Locator {
+    return this.page.getByRole('region', { name: 'Quizzes' }).getByRole('listitem').filter({ hasText: title });
+  }
+
+  async openQuiz(title: string): Promise<void> {
+    await this.page.getByRole('region', { name: 'Quizzes' }).getByRole('link', { name: new RegExp(title) }).click();
+  }
+
   get anchor(): Locator {
     return this.page.getByRole('blockquote');
   }

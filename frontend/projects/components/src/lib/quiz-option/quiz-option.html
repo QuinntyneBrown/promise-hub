@@ -1,0 +1,22 @@
+@if (review(); as mark) {
+  <div class="option" [class]="'option option--' + mark">
+    <span class="key" aria-hidden="true">{{ key() || '✎' }}</span>
+    <span class="text">{{ label() }}</span>
+    @if (note()) {
+      <span class="note">{{ note() }}</span>
+    }
+  </div>
+} @else {
+  <label class="option" [class.option--selected]="checked()">
+    <input
+      class="input"
+      [type]="type()"
+      [name]="name()"
+      [checked]="checked()"
+      [disabled]="disabled()"
+      (change)="changed($event)"
+    />
+    <span class="key" aria-hidden="true">{{ key() }}</span>
+    <span class="text">{{ label() }}</span>
+  </label>
+}

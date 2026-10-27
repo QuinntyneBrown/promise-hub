@@ -62,6 +62,7 @@ export const ICONS = {
   play: '<path d="M7 4v16l13-8z"/>',
   check: '<path d="m5 12 5 5L20 7"/>',
   inbox: '<path d="M4 4h16v16H4zM4 14h5l1 2h4l1-2h5"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
 } as const;
 
 export type IconName = keyof typeof ICONS;

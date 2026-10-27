@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PromiseHub.Application.Organizations;
 using PromiseHub.Domain.Curriculum;
+using PromiseHub.Domain.Learning;
 using PromiseHub.Domain.Programs;
 
 namespace PromiseHub.Application.Learning;
@@ -77,8 +78,20 @@ public sealed class LearnerProgress(IPromiseHubDb db, ITenantContext tenant)
         var done = (await db.LessonProgress.AsNoTracking()
             .Where(p => p.MembershipId == tenant.MembershipId && lessonIds.Contains(p.LessonId))
             .Select(p => p.LessonId).ToListAsync(cancellationToken)).ToHashSet();
+        var quizzes = (await db.Quizzes.AsNoTracking()
+            .Where(q => moduleIds.Contains(q.ModuleId) && q.Status == ContentStatus.Published).ToListAsync(cancellationToken))
+            .Where(q => q.LessonId is null || lessonIds.Contains(q.LessonId.Value)).ToList();
+        var quizIds = quizzes.Select(q => q.Id).ToList();
+        var questionCounts = (await db.QuizQuestions.AsNoTracking().Where(q => quizIds.Contains(q.QuizId)).Select(q => q.QuizId).ToListAsync(cancellationToken))
+            .GroupBy(id => id).ToDictionary(g => g.Key, g => g.Count());
+        var attempts = (await db.QuizAttempts.AsNoTracking()
+            .Where(a => a.MembershipId == tenant.MembershipId && quizIds.Contains(a.QuizId))
+            .Select(a => new { a.QuizId, a.Status, a.Score }).ToListAsync(cancellationToken)).ToLookup(a => a.QuizId);
 
-        bool ModuleDone(Guid id) => lessons.Where(l => l.ModuleId == id).All(l => done.Contains(l.Id));
+        int? Best(Guid quizId) => attempts[quizId].Where(a => a.Status == AttemptStatus.Scored).Max(a => a.Score);
+
+        bool ModuleDone(Guid id) => lessons.Where(l => l.ModuleId == id).All(l => done.Contains(l.Id))
+            && quizzes.Where(q => q.ModuleId == id && q.RequiredToComplete).All(q => Best(q.Id) is { } best && best >= q.PassMark);
 
         var result = new List<ModuleStatus>();
         var position = 0;
@@ -100,8 +113,28 @@ public sealed class LearnerProgress(IPromiseHubDb db, ITenantContext tenant)
                     firstNotDone = lesson.Title;
                 }
             }
-            result.Add(new ModuleStatus(module, position, items, locked, unlock));
+            var quizStatuses = new List<QuizStatus>();
+            foreach (var quiz in quizzes.Where(q => q.ModuleId == module.Id).OrderBy(q => q.LessonId is null ? 1 : 0)
+                         .ThenBy(q => lessons.FirstOrDefault(l => l.Id == q.LessonId)?.Position ?? 0).ThenBy(q => q.Title))
+            {
+                // A lesson quiz waits for its lesson; a whole-module quiz for every lesson of the module (ADR 0055).
+                var waitFor = quiz.LessonId is { } lid ? (done.Contains(lid) ? null : lessons.First(l => l.Id == lid).Title) : firstNotDone;
+                var quizLocked = locked || waitFor is not null;
+                var mine = attempts[quiz.Id].ToList();
+                quizStatuses.Add(new QuizStatus(quiz, questionCounts.GetValueOrDefault(quiz.Id), quizLocked, quizLocked ? (locked ? unlock : waitFor) : null, Best(quiz.Id),
+                    mine.Any(a => a.Status == AttemptStatus.InProgress), mine.Any(a => a.Status == AttemptStatus.AwaitingApproval), mine.Any(a => a.Status == AttemptStatus.Scored)));
+            }
+            result.Add(new ModuleStatus(module, position, items, locked, unlock, quizStatuses));
         }
         return new TrackStatus(track, program, result);
+    }
+
+    /// <summary>The visible quiz with its module and track, or null when it is not visible (draft, lesson not published, track not followed).</summary>
+    public async Task<(TrackStatus Track, ModuleStatus Module, QuizStatus Quiz)?> QuizAsync(Guid quizId, CancellationToken cancellationToken = default)
+    {
+        var moduleId = await db.Quizzes.AsNoTracking().Where(q => q.Id == quizId).Select(q => (Guid?)q.ModuleId).FirstOrDefaultAsync(cancellationToken);
+        var found = moduleId is { } id ? await ModuleAsync(id, cancellationToken) : null;
+        var quiz = found?.Module.Quizzes.FirstOrDefault(q => q.Quiz.Id == quizId);
+        return quiz is null ? null : (found!.Value.Track, found.Value.Module, quiz);
     }
 }

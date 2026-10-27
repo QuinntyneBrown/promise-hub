@@ -24,4 +24,5 @@ public enum AuditAction
     SignedOut,
     Withdrawn,
     Completed,
+    Submitted,
 }

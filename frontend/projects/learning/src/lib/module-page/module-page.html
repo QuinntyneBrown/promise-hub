@@ -20,7 +20,15 @@
   @let m = r.value;
   <ph-page-header [title]="m.title" [subtitle]="subtitle(m)" />
   @if (m.status === 'done') {
-    <ph-alert tone="success" title="Module complete" text="Every lesson of this module is done." />
+    <ph-alert
+      tone="success"
+      title="Module complete"
+      [text]="
+        requiredQuiz(m)
+          ? 'Every lesson is done and you passed the quiz.'
+          : 'Every lesson of this module is done.'
+      "
+    />
   }
   <div class="split">
     <div class="stack">
@@ -42,6 +50,16 @@
                 'Continue: ' + n.title
               }}</ph-button>
             </div>
+          } @else if (openRequired(m); as q) {
+            <p class="text-muted">Pass the quiz to finish this module.</p>
+            <div>
+              <ph-button
+                variant="primary"
+                icon="arrow-right"
+                [link]="'/learning/quizzes/' + q.id"
+                >{{ 'Start: ' + q.title }}</ph-button
+              >
+            </div>
           }
         </div>
       </ph-card>
@@ -60,6 +78,21 @@
           }
         </ph-list>
       </ph-card>
+      @if (m.quizzes.length) {
+        <ph-card title="Quizzes" [flush]="true">
+          <ph-list label="Quizzes">
+            @for (q of m.quizzes; track q.id) {
+              <ph-list-item
+                [title]="q.title"
+                [meta]="quizMeta(q)"
+                [link]="q.status === 'locked' ? null : '/learning/quizzes/' + q.id"
+              >
+                <ph-badge [tone]="tone[q.status]">{{ label[q.status] }}</ph-badge>
+              </ph-list-item>
+            }
+          </ph-list>
+        </ph-card>
+      }
     </div>
   </div>
 } @else if (r.status === 'locked') {

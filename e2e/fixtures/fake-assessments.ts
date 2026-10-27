@@ -16,6 +16,8 @@ export interface FakeQuiz {
   shuffle: boolean;
   requiredToComplete: boolean;
   status: ContentStatus;
+  /** A mentor approves each attempt's score before it counts (ADR 0055); switched on by prompt 63. */
+  requireApproval?: boolean;
 }
 
 export type SubmissionType = 'Text' | 'Photo' | 'Link' | 'File';
@@ -121,11 +123,45 @@ export class FakeAssessments {
     );
   }
 
+  /**
+   * The published Leading by Serving quiz youth take (L2-075): on the whole module, 70%, 2 attempts, answers after each attempt, with
+   * the four questions of the mocks: multiple choice (B), true / false (False), multiple answer (A and C) and a short answer.
+   */
+  quizJourney(): void {
+    Object.assign(this.quizzes.find((q) => q.id === 'qz-serving')!, { status: 'Published' });
+    this.questions = this.questions.filter((q) => q.quizId !== 'qz-serving');
+    this.questions.push(
+      {
+        id: 'qq-captain',
+        quizId: 'qz-serving',
+        position: 1,
+        text: 'In Pick Up the Towel, what did the captain do before the big game?',
+        type: 'MultipleChoice',
+        options: ['Gave the team talk', 'Packed the kit bags for everyone', 'Went home early', 'Picked the starting line‑up'],
+        correct: [1],
+        answers: [],
+      },
+      { id: 'qq-title', quizId: 'qz-serving', position: 2, text: 'Leading is a title someone gives you.', type: 'TrueFalse', options: ['True', 'False'], correct: [1], answers: [] },
+      {
+        id: 'qq-towel',
+        quizId: 'qz-serving',
+        position: 3,
+        text: 'Which of these are ways to “pick up the towel” this week?',
+        type: 'MultipleAnswer',
+        options: ['Help clear up after group', 'Wait until someone asks you', 'Check on someone who is new'],
+        correct: [0, 2],
+        answers: [],
+      },
+      { id: 'qq-first', quizId: 'qz-serving', position: 4, text: 'In one word, who does a servant leader put first?', type: 'ShortAnswer', options: [], correct: [], answers: ['others', 'other people'] },
+    );
+  }
+
   private quiz(org: string, id: string): FakeQuiz | undefined {
     return this.quizzes.find((q) => q.id === id && q.organizationId === org);
   }
 
-  private questionsOf(quizId: string): FakeQuestion[] {
+  /** A quiz's questions in authored order. */
+  questionsOf(quizId: string): FakeQuestion[] {
     return this.questions.filter((q) => q.quizId === quizId).sort((a, b) => a.position - b.position);
   }
 

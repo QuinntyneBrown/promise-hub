@@ -54,6 +54,26 @@ public sealed class LearningContent(PromiseHubApiFactory factory)
         return this;
     }
 
+    /// <summary>
+    /// The published Knowing Yourself quiz on the whole module (L2-073): a multiple choice (B right), a true / false (False right), a
+    /// multiple answer (A and C right) and a short answer accepting "others" or "other people", 70% to pass, 2 attempts unless given.
+    /// </summary>
+    public async Task<Guid> QuizAsync(Guid moduleId, Guid? lessonId = null, string title = "Knowing Yourself quiz", int? attempts = 2,
+        string feedback = "ShowAnswers", bool shuffle = false, bool required = false, bool publish = true)
+    {
+        var id = await Created("/curriculum/quizzes", new { moduleId, lessonId, title });
+        await Ok(await Put($"/curriculum/quizzes/{id}", new { title, lessonId, passMark = 70, attemptsAllowed = attempts, feedback, shuffle, requiredToComplete = required }));
+        await Created($"/curriculum/quizzes/{id}/questions", new { text = "What did the captain do before the big game?", type = "MultipleChoice", options = new[] { "Gave the team talk", "Packed the kit bags for everyone", "Went home early" }, correct = new[] { 1 } });
+        await Created($"/curriculum/quizzes/{id}/questions", new { text = "Leading is a title someone gives you.", type = "TrueFalse", correct = new[] { 1 } });
+        await Created($"/curriculum/quizzes/{id}/questions", new { text = "Which of these are ways to pick up the towel?", type = "MultipleAnswer", options = new[] { "Help clear up after group", "Wait until someone asks you", "Check on someone who is new" }, correct = new[] { 0, 2 } });
+        await Created($"/curriculum/quizzes/{id}/questions", new { text = "In one word, who does a servant leader put first?", type = "ShortAnswer", answers = new[] { "others", "other people" } });
+        if (publish)
+        {
+            await Ok(await Put($"/curriculum/quizzes/{id}/status", new { status = "Published" }));
+        }
+        return id;
+    }
+
     private async Task<Guid> Lesson(Guid moduleId, string title, int minutes, string? body, bool publish)
     {
         var id = await Created("/curriculum/lessons", new { moduleId, title });

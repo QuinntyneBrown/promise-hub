@@ -80,6 +80,7 @@ scripture-block|Scripture block|.scripture|display|Set a quoted passage apart fr
 video-player|Video player|.video-player|display|Play a lesson video with native, keyboard-operable controls and a failure state that keeps the lesson readable.
 code-sample|Code sample|.code-block|display|Show a read-only, scrollable example of code with an accessible name.
 code-playground|Code playground|.code-playground|form|Edit a small page of code, run it in a sandboxed preview and keep the lesson's checklist nearby.
+quiz-option|Quiz option|.quiz-option|radio|Offer one answer of a quiz question around a native radio or checkbox, and mark it correct, wrong or missed in words in the review.
 '''
 
 COMPONENTS = []
@@ -117,6 +118,7 @@ EXTRA_VARIANTS = {
  'error-page':['404','403','500','offline','maintenance'],
  'skeleton':['text','title','circle','rect','card'],
  'divider':['horizontal','vertical','label'],
+ 'quiz-option':['single','multiple','review'],
 }
 
 EXTRA_STATES = {
@@ -129,6 +131,7 @@ EXTRA_STATES = {
  'accordion':['expanded'], 'roster':['in','out','missing','absent','queued'],
  'sync-status':['queued','synced','failed'], 'signature':['empty','signed'],
  'notification-panel':['unread','read','empty'], 'wizard':['busy','invalid','failed'],
+ 'quiz-option':['selected','correct','wrong','missed'],
 }
 
 KEYBOARD = {

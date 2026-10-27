@@ -1864,6 +1864,8 @@
       ],
       "states": [
         "default",
+        "quiz",
+        "quiz-passed",
         "completed",
         "coding",
         "locked",
@@ -1967,6 +1969,85 @@
       ],
       "not_applicable": {
         "empty": "A project always starts from its starter code."
+      }
+    },
+    {
+      "id": "learn-quiz-intro",
+      "kind": "page",
+      "title": "Quiz",
+      "route": "/learning/quizzes/:id",
+      "requirements": [
+        "L2-075",
+        "L2-076",
+        "L2-068",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "in-progress",
+        "retake",
+        "exhausted",
+        "passed",
+        "locked",
+        "loading",
+        "error",
+        "not-found"
+      ],
+      "not_applicable": {
+        "empty": "A quiz is published only with a question (L2-073 criterion 6), so youth never meet an empty one."
+      }
+    },
+    {
+      "id": "learn-quiz",
+      "kind": "page",
+      "title": "Taking a quiz",
+      "route": "/learning/quizzes/:id/take",
+      "requirements": [
+        "L2-075",
+        "L2-076",
+        "L2-068",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "saving",
+        "saved",
+        "offline",
+        "short-answer",
+        "submitting",
+        "submitted",
+        "failed",
+        "loading",
+        "error",
+        "exhausted"
+      ],
+      "not_applicable": {
+        "empty": "A quiz is published only with a question (L2-073 criterion 6)."
+      }
+    },
+    {
+      "id": "learn-quiz-result",
+      "kind": "page",
+      "title": "Quiz result",
+      "route": "/learning/attempts/:id",
+      "requirements": [
+        "L2-075",
+        "L2-076",
+        "L2-068",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "failed",
+        "last-attempt",
+        "score-only",
+        "awaiting-approval",
+        "loading",
+        "error",
+        "not-found"
+      ],
+      "not_applicable": {
+        "empty": "A result exists only for a submitted attempt."
       }
     },
     {
@@ -3157,6 +3238,25 @@
         "invalid",
         "failed"
       ]
+    },
+    {
+      "id": "submit-quiz",
+      "kind": "dialog",
+      "title": "Submit your answers?",
+      "opens_from": "learn-quiz",
+      "requirements": [
+        "L2-075",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed",
+        "unanswered"
+      ],
+      "not_applicable": {
+        "invalid": "The dialog has no inputs to validate."
+      }
     },
     {
       "id": "toast",

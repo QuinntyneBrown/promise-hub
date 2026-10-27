@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import type { Route } from '@playwright/test';
 import type { FakeCurriculum, FakeLesson, FakeModule, FakeTrack } from './fake-curriculum';
 import type { FakeProgram } from './programs';
+import type { FakeQuiz } from './fake-assessments';
+import { FakeQuizTaking, type QuizPlace } from './fake-quiz-taking';
 
 interface LessonState {
   lesson: FakeLesson;
@@ -10,12 +12,20 @@ interface LessonState {
   unlockAfter: string | null;
 }
 
+interface QuizState {
+  quiz: FakeQuiz;
+  locked: boolean;
+  unlockAfter: string | null;
+  passed: boolean;
+}
+
 interface ModuleState {
   module: FakeModule;
   position: number;
   lessons: LessonState[];
   locked: boolean;
   unlockAfter: string | null;
+  quizzes: QuizState[];
 }
 
 interface TrackState {
@@ -26,8 +36,9 @@ interface TrackState {
 
 const lessonStatus = (l: LessonState) => (l.done ? 'done' : l.locked ? 'locked' : 'next');
 const moduleDone = (m: ModuleState) => m.lessons.filter((l) => l.done).length;
+const moduleComplete = (m: ModuleState) => m.lessons.every((l) => l.done) && m.quizzes.filter((q) => q.quiz.requiredToComplete).every((q) => q.passed);
 const moduleStatus = (m: ModuleState) =>
-  m.locked ? 'locked' : m.lessons.length > 0 && m.lessons.every((l) => l.done) ? 'done' : moduleDone(m) > 0 ? 'in-progress' : 'not-started';
+  m.locked ? 'locked' : m.lessons.length > 0 && moduleComplete(m) ? 'done' : moduleDone(m) > 0 ? 'in-progress' : 'not-started';
 const trackDone = (t: TrackState) => t.modules.reduce((n, m) => n + moduleDone(m), 0);
 const trackTotal = (t: TrackState) => t.modules.reduce((n, m) => n + m.lessons.length, 0);
 
@@ -40,7 +51,12 @@ export class FakeLearning {
   /** Lesson ids each youth membership has done. */
   private readonly done = new Map<string, Set<string>>();
 
-  constructor(private readonly curriculum: FakeCurriculum) {}
+  /** Quiz attempts (L2-075, L2-076); tests seed attempts through it. */
+  readonly quizzes: FakeQuizTaking;
+
+  constructor(private readonly curriculum: FakeCurriculum) {
+    this.quizzes = new FakeQuizTaking(curriculum.assessments);
+  }
 
   /** Marks lessons done for a youth, as if completed earlier. */
   complete(membershipId: string, ...lessonIds: string[]): void {
@@ -72,7 +88,13 @@ export class FakeLearning {
     const all = this.curriculum.modules.filter((m) => m.trackId === track.id);
     const published = (moduleId: string) =>
       this.curriculum.lessons.filter((l) => l.moduleId === moduleId && l.status === 'Published' && !l.deleted).sort((a, b) => a.position - b.position);
-    const complete = (moduleId: string) => published(moduleId).every((l) => done.has(l.id));
+    const published_ = (moduleId: string) => published(moduleId).map((l) => l.id);
+    const quizzesOf = (moduleId: string) =>
+      this.curriculum.assessments.quizzes
+        .filter((q) => q.moduleId === moduleId && q.status === 'Published' && (q.lessonId === null || published_(moduleId).includes(q.lessonId)))
+        .sort((a, b) => (a.lessonId === null ? 1 : 0) - (b.lessonId === null ? 1 : 0) || a.title.localeCompare(b.title));
+    const complete = (moduleId: string) =>
+      published(moduleId).every((l) => done.has(l.id)) && quizzesOf(moduleId).filter((q) => q.requiredToComplete).every((q) => this.quizzes.passed(membershipId, q));
     const modules = all
       .filter((m) => m.status === 'Published')
       .sort((a, b) => a.position - b.position)
@@ -92,12 +114,19 @@ export class FakeLearning {
           if (!isDone && firstNotDone === null) firstNotDone = lesson.title;
           return state;
         });
+        const quizzes = quizzesOf(module.id).map((quiz): QuizState => {
+          const own = quiz.lessonId ? lessons.find((l) => l.lesson.id === quiz.lessonId)! : null;
+          const waitFor = own ? (own.done ? null : own.lesson.title) : firstNotDone;
+          const quizLocked = locked || waitFor !== null;
+          return { quiz, locked: quizLocked, unlockAfter: quizLocked ? (locked ? prereq!.title : waitFor) : null, passed: this.quizzes.passed(membershipId, quiz) };
+        });
         return {
           module,
           position: i + 1,
           lessons,
           locked,
           unlockAfter: locked ? prereq!.title : null,
+          quizzes,
         };
       });
     return { track, program, modules };
@@ -217,8 +246,37 @@ export class FakeLearning {
           status: lessonStatus(l),
           unlockAfter: l.unlockAfter,
         })),
+        quizzes: m.quizzes.map((q) => ({
+          id: q.quiz.id,
+          title: q.quiz.title,
+          lessonId: q.quiz.lessonId,
+          questionCount: this.curriculum.assessments.questionsOf(q.quiz.id).length,
+          required: q.quiz.requiredToComplete,
+          status: this.quizzes.state(membershipId, q.quiz, q.locked),
+          bestScore: this.quizzes.best(membershipId, q.quiz.id)?.score ?? null,
+          unlockAfter: q.unlockAfter,
+        })),
       },
     });
+  }
+
+  /** The quiz as the youth stands with it, or null when it is not visible to her. */
+  quizPlace(membershipId: string, programs: FakeProgram[], quizId: string): QuizPlace | null {
+    for (const track of this.tracks(membershipId, programs)) {
+      for (const m of track.modules) {
+        const q = m.quizzes.find((x) => x.quiz.id === quizId);
+        if (q)
+          return {
+            quiz: q.quiz,
+            moduleId: m.module.id,
+            moduleTitle: m.module.title,
+            lessonTitle: m.lessons.find((l) => l.lesson.id === q.quiz.lessonId)?.lesson.title ?? null,
+            locked: q.locked,
+            unlockAfter: q.unlockAfter,
+          };
+      }
+    }
+    return null;
   }
 
   /** GET /learning/lessons/{id}: never the leader notes. */

@@ -151,11 +151,26 @@ def learn_module(S):
                 items.append(list_item(f"{i + 1}. {esc(t)}", meta, href=page(target), end=badge(st, STATUS_KIND[st])))
         return card(ul_list(items, card=False, label="Lessons, in order"), title="Lessons", tid="lessons", cls="card--flush")
 
+    def quizzes(st="Locked") -> str:
+        if st == "Locked":
+            item = list_item("Leading by Serving quiz", "Quiz · 4 questions · Unlocks after Leading Like a Coach", end=badge("Locked"))
+        elif st == "Passed":
+            item = list_item("Leading by Serving quiz", "Quiz · 4 questions · Best score 75%", href=page("learn-quiz-intro", "passed"), end=badge("Passed", "success"))
+        else:
+            item = list_item("Leading by Serving quiz", "Quiz · 4 questions · 70% to pass", href=page("learn-quiz-intro"), end=badge("Up next", "info"))
+        return card(ul_list([item], card=False, label="Quizzes"), title="Quizzes", tid="quizzes", cls="card--flush")
+
     prog = card(f'<div class="stack">{progress(1, 3, "Leading by Serving", show="1 of 3 lessons")}{anchor}'
                 f'<div>{btn("Continue: Last in Line", "primary", icon_name="arrow-right", href=page("learn-lesson-scripture"))}</div></div>', title="Module progress", tid="module-progress")
-    S.add("default", "Sofía opens Leading by Serving: one lesson done, the next ready, the last locked until the one before it is done.", **YKW,
-          main=hdr + f'<div class="split"><div class="stack">{prog}</div><div class="stack">{lessons()}</div></div>')
+    S.add("default", "Sofía opens Leading by Serving: one lesson done, the next ready, the last locked until the one before it is done; the module’s quiz unlocks after the last lesson.", **YKW,
+          main=hdr + f'<div class="split"><div class="stack">{prog}</div><div class="stack">{lessons()}{quizzes()}</div></div>')
     done_rows = [(t, m, "Done", tg or "learn-lesson") for t, m, _s, tg in LESSONS]
+    S.add("quiz", "Every lesson done and the quiz required to complete the module: the quiz is open and the module waits for a pass.", **YKW,
+          main=hdr + f'<div class="split"><div class="stack">{card(progress(3, 3, "Leading by Serving", kind="complete", show="3 of 3 lessons") + "<p class=\"text-muted\">Pass the quiz to finish this module.</p><div>" + btn("Start: Leading by Serving quiz", "primary", icon_name="arrow-right", href=page("learn-quiz-intro")) + "</div>", title="Module progress", tid="module-progress")}</div>'
+          f'<div class="stack">{lessons(done_rows)}{quizzes("Open")}</div></div>')
+    S.add("quiz-passed", "The quiz passed: the module is complete and the next module is unlocked.", **YKW,
+          main=hdr + alert("success", "Module complete", "Every lesson is done and you passed the quiz.")
+          + f'<div class="split"><div class="stack">{card(progress(3, 3, "Leading by Serving", kind="complete", show="3 of 3 lessons"), title="Module progress", tid="module-progress")}</div><div class="stack">{lessons(done_rows)}{quizzes("Passed")}</div></div>')
     S.add("completed", "Every lesson of the module done: the next module is unlocked.", **YKW,
           main=hdr + alert("success", "Module complete", "Every lesson of this module is done.")
           + f'<div class="split"><div class="stack">{card(progress(3, 3, "Leading by Serving", kind="complete", show="3 of 3 lessons"), title="Module progress", tid="module-progress")}</div><div class="stack">{lessons(done_rows)}</div></div>')
@@ -330,3 +345,197 @@ def learn_coding_project(S):
           main=code_crumbs("Build Your Event Page") + page_header("Build Your Event Page") + locked_card("Finish Your First Webpage first", "Lessons open in order. The project unlocks when Your First Webpage is done.", "Back to Learning", page("learn-home")))
     S.add("loading", "The project loading.", **YKW, main=code_crumbs("Project") + page_header("Project") + skeleton_list(3, "Loading the project"))
     S.add("error", "The project failed to load.", **YKW, main=code_crumbs("Project") + page_header("Project") + failed("We couldn’t load this project"))
+
+
+# ================================================================ Take quizzes (prompt 61, L2-075, L2-076)
+# Ported from Waypoint's quiz intro, quiz and quiz result mocks. The quiz is the one Marisol built in prompt 60: Leading by
+# Serving quiz, attached to the whole module, four questions, 70% to pass, 2 attempts, correct answers after each attempt.
+R_QUIZ = ["L2-075", "L2-076", "L2-068", R_LEARN]
+QUIZ = "Leading by Serving quiz"
+Q_ITEMS = [
+    ("In Pick Up the Towel, what did the captain do before the big game?", "MultipleChoice",
+     ["Gave the team talk", "Packed the kit bags for everyone", "Went home early", "Picked the starting line‑up"]),
+    ("Leading is a title someone gives you.", "TrueFalse", ["True", "False"]),
+    ("Which of these are ways to “pick up the towel” this week?", "MultipleAnswer",
+     ["Help clear up after group", "Wait until someone asks you", "Check on someone who is new"]),
+    ("In one word, who does a servant leader put first?", "ShortAnswer", []),
+]
+KEYS = "ABCDEF"
+
+
+def quiz_crumbs(cur: str = QUIZ) -> str:
+    return breadcrumb([("Learning", page("learn-home")), ("Leading by Serving", page("learn-module", "quiz"))], cur)
+
+
+def quiz_option(label: str, key: str, *, name: str = "", multi: bool = False, selected: bool = False, review: str = "", note_: str = "") -> str:
+    """One answer choice (the quiz-option component): a label wrapping a native radio or checkbox while taking the quiz, or a
+    list item in the review marked correct or wrong in words as well as colour."""
+    k = f'<span class="quiz-option__key" aria-hidden="true">{key}</span>'
+    n = f'<span class="quiz-option__note">{note_}</span>' if note_ else ""
+    if review:
+        return f'<li class="quiz-option quiz-option--{review}">{k}<span class="quiz-option__text">{esc(label)}</span>{n}</li>'
+    typ = "checkbox" if multi else "radio"
+    return (f'<label class="quiz-option{" quiz-option--selected" if selected else ""}"><input class="quiz-option__input" type="{typ}" name="{name}"{" checked" if selected else ""}>'
+            f'{k}<span class="quiz-option__text">{esc(label)}</span></label>')
+
+
+def quiz_question(n: int, answer=None, *, error: str = "") -> str:
+    text, kind, opts = Q_ITEMS[n - 1]
+    legend = f'<legend class="quiz-question__text">{esc(text)}</legend>'
+    hint = {"MultipleAnswer": "Choose every answer that fits.", "TrueFalse": "Choose one.", "MultipleChoice": "Choose one.", "ShortAnswer": ""}[kind]
+    if kind == "ShortAnswer":
+        return (f'<fieldset class="quiz-question stack">{legend}'
+                + field("answer", "Your answer", value=answer or "", help_="Capitals and spaces at the ends don’t matter.", error=error) + '</fieldset>')
+    chosen = answer if isinstance(answer, (list, tuple, set)) else ([answer] if answer is not None else [])
+    items = "".join(quiz_option(o, KEYS[i], name=f"q{n}", multi=kind == "MultipleAnswer", selected=i in chosen) for i, o in enumerate(opts))
+    return (f'<fieldset class="quiz-question stack">{legend}<p class="text-caption">{hint}</p>'
+            f'<div class="stack" style="gap: var(--space-2);">{items}</div></fieldset>')
+
+
+def saved_chip(state: str = "saved") -> str:
+    if not state:
+        return ""
+    if state == "saving":
+        return f'<span class="sync-chip" role="status">{icon("refresh")}Saving…</span>'
+    if state == "offline":
+        return f'<span class="sync-chip" role="status">{icon("wifi-off")}Not saved · you’re offline</span>'
+    return f'<span class="sync-chip sync-chip--ok" role="status">{icon("check")}Answers saved</span>'
+
+
+# ---------------------------------------------------------------- learn-quiz-intro
+@screen("learn-quiz-intro", "page", "Quiz", route="/learning/quizzes/:id", reqs=R_QUIZ,
+        na={"empty": "A quiz is published only with a question (L2-073 criterion 6), so youth never meet an empty one."})
+def learn_quiz_intro(S):
+    hdr = quiz_crumbs() + page_header(QUIZ, "Leading by Serving · Quiz · 4 questions")
+
+    def facts_(attempt="1 of 2") -> str:
+        return kpis([("Questions", "4", "One at a time"), ("Pass mark", "70%", "3 of 4 correct"),
+                     ("Attempts", "2", "Your best one counts"), ("This attempt", attempt, "Not started yet")])
+
+    rules = card(ul_list([f'<li class="list__item"><div class="list__body"><div class="list__title">{t}</div></div></li>' for t in [
+        "Answer one question at a time. Use Back and Next to move around.",
+        "Your answers save as you go, so you can stop and come back.",
+        "Once you submit, you can’t change your answers for that attempt.",
+        "You’ll see your score and the correct answers when you submit.",
+    ]], card=False, label="Before you start"), title="Before you start", tid="rules", cls="card--flush")
+
+    def body(attempt="1 of 2", action="", extra="") -> str:
+        act = action or f'<div class="form-actions">{btn("Back to the module", "ghost", href=page("learn-module", "quiz"))}{btn("Start quiz", "primary", icon_name="arrow-right", href=page("learn-quiz"))}</div>'
+        return hdr + extra + f'<div class="stack" style="max-width: var(--layout-reading-width, 48rem);">{facts_(attempt)}{rules}{act}</div>'
+
+    S.add("default", "Sofía opens the Leading by Serving quiz: its questions, pass mark, attempts and which attempt this is, then Start quiz.", **YKW, main=body(),
+          notes=note("Every number comes from the quiz’s rules on the server. Correct answers are never sent before an attempt is submitted.", "top: 5rem; right: 1rem;"))
+    S.add("in-progress", "She started earlier and stopped at question 3: Resume quiz picks up where she left off.", **YKW,
+          main=body(action=f'<div class="form-actions">{btn("Back to the module", "ghost", href=page("learn-module", "quiz"))}{btn("Resume quiz", "primary", icon_name="arrow-right", href=page("learn-quiz"))}</div>',
+                    extra=alert("info", "You’re part way through", "Attempt 1 · 2 of 4 answered. Your answers are saved.")))
+    S.add("retake", "Her first attempt scored 50%: attempt 2 of 2 is her last, and her best score so far is shown.", **YKW,
+          main=body("2 of 2", extra=alert("warning", "Last attempt", "Your best score so far is 50%. You need 70% to pass.",
+                                          actions=btn("See attempt 1", "", size="sm", href=page("learn-quiz-result", "failed")))))
+    S.add("exhausted", "Both attempts used: Start is gone, the server refuses another attempt (409) and her best score counts.", **YKW,
+          main=body("—", action=f'<div class="form-actions">{btn("Back to the module", "ghost", href=page("learn-module", "quiz"))}{btn("See your best attempt", "primary", href=page("learn-quiz-result", "last-attempt"))}</div>',
+                    extra=alert("info", "No attempts left", "You’ve used both attempts. Your best score, 75%, is the one that counts.")))
+    S.add("passed", "She passed on attempt 1 and has one attempt left: she can see her result or try again for a better score.", **YKW,
+          main=body("2 of 2", action=f'<div class="form-actions">{btn("See your result", "", href=page("learn-quiz-result"))}{btn("Try again", "primary", icon_name="refresh", href=page("learn-quiz"))}</div>',
+                    extra=alert("success", "You passed with 75%", "Your best score counts. Trying again can only raise it.")))
+    S.add("locked", "Opened before every lesson of the module is done: 403, and what unlocks it.", **YKW,
+          main=quiz_crumbs() + page_header(QUIZ) + locked_card("Finish Leading Like a Coach first", "The quiz unlocks when the lessons before it are done.", "Back to Learning", page("learn-home")))
+    S.add("loading", "The quiz loading.", **YKW, main=quiz_crumbs("Quiz") + page_header("Quiz") + skeleton_kpis(4) + skeleton_list(4, "Loading the quiz"))
+    S.add("error", "The quiz failed to load.", **YKW, main=quiz_crumbs("Quiz") + page_header("Quiz") + failed("We couldn’t load this quiz"))
+    S.add("not-found", "A draft quiz, one of a track she doesn’t follow, or another organization’s.", **YKW, main=quiz_crumbs("Quiz") + page_header("Quiz") + not_found("quiz"))
+
+
+# ---------------------------------------------------------------- learn-quiz
+@screen("learn-quiz", "page", "Taking a quiz", route="/learning/quizzes/:id/take", reqs=R_QUIZ,
+        na={"empty": "A quiz is published only with a question (L2-073 criterion 6)."})
+def learn_quiz(S):
+    def body(n=2, answer=1, chip="saved", extra="", submit_busy=False, last=False, error="") -> str:
+        head_ = (quiz_crumbs(f"Question {n}") + page_header(QUIZ, f"Attempt 1 of 2 · Question {n} of 4", actions=saved_chip(chip)))
+        bar = progress(n, 4, "Quiz progress", show=f"Question {n} of 4")
+        nav_ = btn("Back", "ghost", icon_name="arrow-left", disabled=n == 1)
+        nxt = (btn("Submit answers", "primary", icon_name="check", busy=submit_busy, attrs=' aria-haspopup="dialog"', data_href=dialog("submit-quiz"))
+               if last else btn("Next", "primary", icon_name="arrow-right"))
+        q = card(quiz_question(n, answer, error=error), tid=f"q{n}")
+        return head_ + extra + f'<div class="stack" style="max-width: var(--layout-reading-width, 48rem);">{bar}{q}<div class="form-actions">{nav_}{nxt}</div></div>'
+
+    S.add("default", "Question 2 of 4, True / false: Sofía chose False and it saved. Back and Next move between questions.", **YKW, main=body(),
+          notes=note("Every choice saves on the server with her place in the quiz; reloading or coming back later opens the same question with her answers.", "top: 5rem; right: 1rem;"))
+    S.add("saving", "Question 3, multiple answer: she ticked two answers and the save is on its way.", **YKW, main=body(3, [0, 2], "saving"))
+    S.add("saved", "Question 1, multiple choice, with her answer saved.", **YKW, main=body(1, 1, "saved"))
+    S.add("offline", "The connection dropped: her answer stays on screen, the chip says it isn’t saved and it saves again when she’s back online.", **YKW,
+          main=body(3, [0, 2], "offline", extra=alert("warning", "You’re offline", "Your answers are still here. We’ll save them when you’re back online. You can’t submit until then.")))
+    S.add("short-answer", "Question 4, short answer: the last question, with Submit answers.", **YKW, main=body(4, "others", last=True))
+    S.add("submitting", "Submit answers confirmed: the attempt is being scored and the button can’t be pressed twice.", **YKW, main=body(4, "others", last=True, submit_busy=True))
+    S.add("submitted", "The attempt was already submitted (another tab): answers can’t change; she goes to her result.", **YKW,
+          main=quiz_crumbs("Submitted") + page_header(QUIZ) + card(empty("This attempt is already submitted", "Answers can’t change once an attempt is submitted.",
+                                                                          action=btn("Back to the quiz", "primary", href=page("learn-quiz-intro", "passed")), icon_name="lock"), cls="card--flush"))
+    S.add("failed", "A save failed for a reason other than the connection: her answer stays on screen and the next change tries again. A failed submit shows in submit-quiz/failed.", **YKW,
+          main=body(2, 1, "", extra=alert("danger", "We couldn’t save your answer", "Your answer is still here. Change it or move on to try again.")))
+    S.add("loading", "The attempt loading.", **YKW, main=quiz_crumbs("Quiz") + page_header("Quiz") + skeleton_list(4, "Loading the question"))
+    S.add("error", "The attempt failed to start.", **YKW, main=quiz_crumbs("Quiz") + page_header("Quiz") + failed("We couldn’t open the quiz"))
+    S.add("exhausted", "Starting another attempt with none left: 409, and her best attempt.", **YKW,
+          main=quiz_crumbs("Quiz") + page_header(QUIZ) + card(empty("No attempts left", "You’ve used every attempt. Your best score is the one that counts.",
+                                                                     action=btn("Back to the quiz", "primary", href=page("learn-quiz-intro", "exhausted")), icon_name="lock"), cls="card--flush"))
+
+
+# ---------------------------------------------------------------- learn-quiz-result
+REVIEW_PASS = [  # (question, rows of (key, text, kind, note))
+    (1, [("B", "Packed the kit bags for everyone", "correct", "Your answer · correct")]),
+    (2, [("B", "False", "correct", "Your answer · correct")]),
+    (3, [("A", "Help clear up after group", "correct", "Your answer · correct"), ("C", "Check on someone who is new", "missed", "Correct answer · you didn’t choose it")]),
+    (4, [("", "others", "correct", "Your answer · correct")]),
+]
+REVIEW_FAIL = [
+    (1, [("A", "Gave the team talk", "wrong", "Your answer · wrong"), ("B", "Packed the kit bags for everyone", "missed", "Correct answer")]),
+    (2, [("B", "False", "correct", "Your answer · correct")]),
+    (3, [("A", "Help clear up after group", "correct", "Your answer · correct"), ("B", "Wait until someone asks you", "wrong", "Your answer · wrong"), ("C", "Check on someone who is new", "missed", "Correct answer · you didn’t choose it")]),
+    (4, [("", "others", "correct", "Your answer · correct")]),
+]
+
+
+def review(rows) -> str:
+    out = []
+    for n, opts in rows:
+        text = Q_ITEMS[n - 1][0]
+        right = all(k in ("correct",) for _k, _t, k, _n in opts)
+        items = "".join(quiz_option(t, key or "✎", review=kind, note_=nt) for key, t, kind, nt in opts)
+        out.append(f'<li class="quiz-review__item"><div class="cluster cluster--between"><h3 class="quiz-review__question">{n}. {esc(text)}</h3>'
+                   f'{badge("Correct", "success") if right else badge("Not quite", "warning")}</div><ul class="stack quiz-review__options" style="gap: var(--space-2);">{items}</ul></li>')
+    return card(f'<ol class="stack quiz-review">{"".join(out)}</ol>', title="Review your answers", tid="review")
+
+
+@screen("learn-quiz-result", "page", "Quiz result", route="/learning/attempts/:id", reqs=R_QUIZ,
+        na={"empty": "A result exists only for a submitted attempt."})
+def learn_quiz_result(S):
+    hdr = lambda sub="Attempt 1 of 2 · submitted Tue 27 Oct, 4:12 pm": quiz_crumbs("Result") + page_header(QUIZ, sub)
+
+    def scores(score, passed, attempt="1 of 2", best="") -> str:
+        return kpis([("Your score", score, "3 of 4 correct" if score == "75%" else "2 of 4 correct"),
+                     ("Pass mark", "70%", "Passed" if passed else "Not passed yet"),
+                     ("Attempt", attempt, best or f"Best score {score}")])
+
+    def actions(retake=True, label="Try again") -> str:
+        r = btn(label, "", icon_name="refresh", href=page("learn-quiz-intro", "retake")) if retake else ""
+        return f'<div class="form-actions">{r}{btn("Back to the module", "primary", icon_name="arrow-right", href=page("learn-module", "quiz-passed"))}</div>'
+
+    S.add("default", "Passed: 75% against a 70% pass mark, and the review marks each correct answer and the one she missed.", **YKW,
+          main=hdr() + alert("success", "You passed, Sofía", "75% on your first attempt. Your best score counts, so trying again can only raise it.")
+          + f'<div class="stack">{scores("75%", True)}{review(REVIEW_PASS)}{actions(label="Try for a better score")}</div>',
+          toast_html=toast_region(toast("success", "Quiz submitted", "75% · passed")),
+          notes=note("Scored on the server against the quiz’s answers; the attempt is locked once submitted.", "top: 5rem; right: 1rem;"))
+    S.add("failed", "Not passed: 50%, one attempt left; the review shows what to look at again and Try again starts attempt 2.", **YKW,
+          main=hdr() + alert("warning", "Not this time", "You got 50%. You need 70% to pass and you have 1 attempt left.")
+          + f'<div class="stack">{scores("50%", False)}{review(REVIEW_FAIL)}{actions()}</div>')
+    S.add("last-attempt", "Both attempts used: no Try again; her best attempt (75%) counts.", **YKW,
+          main=hdr("Attempt 2 of 2 · submitted Tue 27 Oct, 4:30 pm") + alert("info", "No attempts left", "You’ve used both attempts. Your best score, 75%, is the one that counts.")
+          + f'<div class="stack">{scores("75%", True, "2 of 2", "Best score 75%")}{review(REVIEW_PASS)}{actions(retake=False)}</div>')
+    S.add("score-only", "A quiz set to show the score only: the score and pass, no answers.", **YKW,
+          main=hdr() + alert("success", "You passed, Sofía", "75% on your first attempt.")
+          + f'<div class="stack">{scores("75%", True)}{card("<p class=\"text-muted\">This quiz shows your score only. Your mentor can talk the answers through with you.</p>", title="Review your answers", tid="review")}{actions(label="Try for a better score")}</div>')
+    S.add("awaiting-approval", "A quiz whose scores a mentor approves before they count: submitted, the score held back until Daniel approves it.", **YKW,
+          main=hdr() + f'<div class="stack">{card(empty("Waiting for your mentor", "Your answers are in. Your mentor checks this quiz before the score counts. You’ll see it here when they have.", icon_name="clock"), cls="card--flush")}{actions(retake=False)}</div>',
+          toast_html=toast_region(toast("success", "Quiz submitted", "Waiting for your mentor")))
+    S.add("loading", "The result loading.", **YKW, main=quiz_crumbs("Result") + page_header("Quiz result") + skeleton_kpis(3) + skeleton_list(4, "Loading your answers"))
+    S.add("error", "The result failed to load.", **YKW, main=quiz_crumbs("Result") + page_header("Quiz result") + failed("We couldn’t load your result"))
+    S.add("not-found", "Another youth’s attempt, one still in progress, or another organization’s: not found.", **YKW,
+          main=quiz_crumbs("Result") + page_header("Quiz result") + card(empty("We can’t find that result", "It may still be in progress, or it isn’t yours.",
+                                                                           action=btn("Back to Learning", "", href=page("learn-home")), icon_name="search"), cls="card--flush"))

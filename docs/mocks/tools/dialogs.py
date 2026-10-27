@@ -585,3 +585,14 @@ simple("submit-project", "Submit “Build Your Event Page”?", "learn-coding-pr
                           help_="Up to 1,000 characters.", error=(e or {}).get("note", "")),
        "Submit for review", icon_name="send", invalid_err={"note": "Keep the note under 1,000 characters."},
        failed_text="Your project was not sent. Try again.")
+
+# ------------------------------------------------------------------ Take quizzes (prompt 61)
+simple("submit-quiz", "Submit your answers?", "learn-quiz", ["L2-075", "L1-023"],
+       "Leading by Serving quiz · Attempt 1 of 2",
+       lambda e: alert("warning", "You can’t change them after this", "You’ve answered all 4 questions. Once you submit, this attempt is scored and locked."),
+       "Submit answers", icon_name="check", base_state="short-answer", form=False, cancel="Keep reviewing",
+       failed_text="Your quiz was not submitted. Your answers are saved; try again.",
+       extra_states={"unanswered": ("Two questions left blank: the dialog says which, and she can still submit.",
+                                    dialog_box("Submit your answers?", "Leading by Serving quiz · Attempt 1 of 2",
+                                               alert("warning", "2 questions have no answer", "Questions 2 and 3 are blank and will count as wrong. Once you submit, this attempt is scored and locked."),
+                                               footer("Submit anyway", cancel="Go back"), icon_name="check"))})

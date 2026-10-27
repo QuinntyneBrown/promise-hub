@@ -7,7 +7,7 @@ using PromiseHub.Domain.Organizations;
 namespace PromiseHub.Api.Endpoints;
 
 /// <summary>
-/// A youth's lessons (L2-068 to L2-070, ADR 0051): the Learning module, the Learn permission, then the consent gate (L2-056) and the
+/// A youth's lessons and quizzes (L2-068 to L2-070, L2-075, L2-076, ADR 0051, ADR 0055): the Learning module, the Learn permission, then the consent gate (L2-056) and the
 /// placement gate (L2-060) on every endpoint. Locks and visibility are decided by LearnerProgress in the handlers.
 /// </summary>
 public static class LearningEndpoints
@@ -29,6 +29,19 @@ public static class LearningEndpoints
             return submitted.Status == Application.ResultStatus.Done
                 ? Results.Created($"/learning/coding/{id}/submission", new { id = submitted.Value })
                 : submitted.ToHttp();
+        });
+        learning.MapGet("/quizzes/{id:guid}", async (Guid id, QuizIntroHandler handler, CancellationToken ct) => (await handler.HandleAsync(id, ct)).ToHttp());
+        learning.MapPost("/quizzes/{id:guid}/attempts", async (Guid id, QuizAttemptCommand handler, CancellationToken ct) => (await handler.StartAsync(id, ct)).ToHttp());
+        learning.MapPut("/attempts/{id:guid}/answers", async (Guid id, SaveAnswersRequest request, QuizAttemptCommand handler, CancellationToken ct) =>
+        {
+            var saved = await handler.SaveAsync(id, request, ct);
+            return saved.Status == Application.ResultStatus.Done ? Results.NoContent() : saved.ToHttp();
+        });
+        learning.MapGet("/attempts/{id:guid}", async (Guid id, QuizResultHandler handler, CancellationToken ct) => (await handler.HandleAsync(id, ct)).ToHttp());
+        learning.MapPost("/attempts/{id:guid}/submit", async (Guid id, SaveAnswersRequest request, QuizAttemptCommand handler, CancellationToken ct) =>
+        {
+            var submitted = await handler.SubmitAsync(id, request, ct);
+            return submitted.Status == Application.ResultStatus.Done ? Results.Ok(new { id = submitted.Value }) : submitted.ToHttp();
         });
         // Streamed under the youth's session cookie with range requests, so the player can seek (ADR 0051).
         learning.MapGet("/lessons/{id:guid}/video", async (Guid id, LessonVideoStream handler, CancellationToken ct) =>
