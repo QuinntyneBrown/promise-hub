@@ -1,0 +1,67 @@
+@startuml
+title Class structure — Author quizzes
+skinparam classAttributeIconSize 0
+class Quiz <<entity>> {
+  Id : Guid
+  OrganizationId : Guid
+  ModuleId : Guid
+  LessonId : Guid?
+  Title : string
+  PassMark : int
+  AttemptsAllowed : int?
+  Feedback : FeedbackMode
+  Shuffle : bool
+  RequiredToComplete : bool
+  Status : ContentStatus
+}
+class QuizQuestion <<entity>> {
+  Id : Guid
+  OrganizationId : Guid
+  QuizId : Guid
+  Position : int
+  Text : string
+  Type : QuestionType
+  Options : string?
+  Correct : string?
+  Answers : string?
+}
+enum QuestionType {
+  MultipleChoice
+  TrueFalse
+  MultipleAnswer
+  ShortAnswer
+}
+enum FeedbackMode {
+  ShowAnswers
+  ScoreOnly
+  AfterLastAttempt
+}
+class CurriculumModule <<entity>>
+class Lesson <<entity>>
+class QuizCommands {
+  CreateAsync(command) : Result
+  UpdateAsync(id, settings) : Result
+  SetStatusAsync(id, status) : Result
+  ReorderAsync(id, questionIds) : Result
+}
+class QuestionCommands {
+  AddAsync(quizId, fields) : Result
+  UpdateAsync(id, fields) : Result
+  DeleteAsync(id) : Result
+}
+class QuestionRules {
+  Check(fields) : Result?
+}
+class QuizHandler {
+  HandleAsync(id) : QuizDetailDto?
+}
+CurriculumModule "1" *-- "many" Quiz
+Quiz "1" *-- "many" QuizQuestion : ordered by Position
+Quiz --> "0..1" Lesson : attached to
+Quiz --> FeedbackMode
+QuizQuestion --> QuestionType
+QuizCommands --> Quiz
+QuestionCommands --> QuizQuestion
+QuestionCommands ..> QuestionRules
+QuizHandler --> Quiz
+@enduml

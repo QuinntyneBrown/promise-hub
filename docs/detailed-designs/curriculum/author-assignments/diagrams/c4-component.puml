@@ -1,0 +1,27 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Author assignments
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(module, "ModuleEditorPage", "Angular page", "New assignment")
+  Component(builder, "AssignmentBuilderPage", "Angular page", "curriculum-assignment; keeps the rubric until Save")
+  Component(dlg, "NewAssessmentDialog / RubricCriterionDialog / CurriculumStatusDialog", "CDK dialogs", "create, criterion, publish")
+  Component(capi, "CurriculumApi", "Contract + HTTP client", "CURRICULUM_API")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "CurriculumEndpoints", "Minimal API", "Learning gate, AuthorCurriculum")
+  Component(read, "AssignmentHandler", "Handler", "assignment with rubric")
+  Component(cmd, "AssignmentCommands", "Handler", "create, save with rubric and total, status")
+  Component(rules, "AssessmentRules", "Rules", "attachment")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Assignments, RubricCriteria")
+}
+Rel(module, capi, "createAssignment")
+Rel(builder, capi, "assignment, updateAssignment")
+Rel(dlg, capi, "setAssignmentStatus")
+Rel(capi, ep, "JSON/HTTPS")
+Rel(ep, read, "GET")
+Rel(ep, cmd, "POST / PUT")
+Rel(cmd, rules, "validates")
+Rel(read, db, "reads")
+Rel(cmd, db, "writes + audit")
+@enduml

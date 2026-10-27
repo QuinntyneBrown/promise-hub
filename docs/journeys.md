@@ -29,7 +29,7 @@
 | Program director | Monitor today's work | See sessions, missing slips, alerts, and tasks in one place. | [2 days](detailed-designs/shell/compose-navigation/README.md) | 85% · [video](videos/33-monitor-todays-work/README.md) |
 | Program director | Manage cohorts and assign mentors | Run cohorts as programs and assign mentors to youth. | [8 days](detailed-designs/mentoring/assign-mentors/README.md) | 100% · [video](videos/54-manage-cohorts/README.md) |
 | Program director | Author curriculum | Build tracks, modules and lessons through draft, review and publish. | [9 days](detailed-designs/curriculum/author-tracks-and-modules/README.md) | 100% · [video](videos/56-author-curriculum/README.md) |
-| Program director | Author quizzes and assignments | Create quizzes, assignments, rubrics and attempt rules. | [6 days](prompts/60-author-quizzes-and-assignments.md) | 0% |
+| Program director | Author quizzes and assignments | Create quizzes, assignments, rubrics and attempt rules. | [7 days](detailed-designs/curriculum/author-quizzes/README.md) | 0% |
 | Program director | Author badges and progression | Define badges, award rules and the progression framework. | [10 days](prompts/64-author-badges-and-progression.md) | 0% |
 | Program director | Schedule sessions and RSVP | Schedule cohort sessions as events and collect RSVPs. | [11 days](prompts/70-schedule-sessions-and-rsvp.md) | 0% |
 | Program director | Announce and message | Send announcements and direct messages. | [11 days](prompts/74-announce-and-message.md) | 0% |

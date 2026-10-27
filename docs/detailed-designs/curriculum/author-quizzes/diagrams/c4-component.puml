@@ -1,0 +1,27 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Author quizzes
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(module, "ModuleEditorPage", "Angular page", "Quizzes and assignments, New quiz")
+  Component(builder, "QuizBuilderPage", "Angular page", "curriculum-quiz")
+  Component(dlg, "NewAssessmentDialog / QuizQuestionDialog / DeleteQuestionDialog / CurriculumStatusDialog", "CDK dialogs", "create, question, delete, publish")
+  Component(capi, "CurriculumApi", "Contract + HTTP client", "CURRICULUM_API")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "CurriculumEndpoints", "Minimal API", "Learning gate, AuthorCurriculum")
+  Component(read, "QuizHandler", "Handler", "quiz with correct answers, authors only")
+  Component(cmd, "QuizCommands / QuestionCommands", "Handlers", "create, settings, questions, order, status")
+  Component(rules, "QuestionRules / AssessmentRules", "Rules", "per-type checks, attachment")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Quizzes, QuizQuestions")
+}
+Rel(module, capi, "createQuiz, module")
+Rel(builder, capi, "quiz, updateQuiz, reorderQuestions")
+Rel(dlg, capi, "addQuestion, updateQuestion, deleteQuestion, setQuizStatus")
+Rel(capi, ep, "JSON/HTTPS")
+Rel(ep, read, "GET")
+Rel(ep, cmd, "POST / PUT / DELETE")
+Rel(cmd, rules, "validates")
+Rel(read, db, "reads")
+Rel(cmd, db, "writes + audit")
+@enduml

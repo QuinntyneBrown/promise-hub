@@ -1,0 +1,49 @@
+@startuml
+title UML sequence behaviour — Building and publishing a quiz
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Program director (Marisol)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "QuizBuilderPage" as page
+  participant "QuizQuestionDialog" as dlg
+  participant "CurriculumApi" as capi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "CurriculumEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "QuestionCommands / QuizCommands" as cmd
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : Add question
+page -> dlg : open (quiz id)
+actor -> dlg : text, type, options, correct answer
+dlg -> capi : addQuestion(quizId, fields)
+capi -> ep : POST /curriculum/quizzes/{id}/questions (Learning on, AuthorCurriculum — L2-073 c7)
+ep -> cmd : AddAsync
+cmd -> db : quiz of the caller's organization only (c8)
+alt fields do not fit the type
+  cmd --> ep : 422 one message per field (c2)
+else
+  cmd -> db : save last + audit Created on QuizQuestion (c2)
+  ep --> capi : 201
+end
+actor -> page : Save settings
+page -> capi : updateQuiz(id, settings)
+capi -> ep : PUT /curriculum/quizzes/{id}
+ep -> cmd : UpdateAsync — pass mark, attempts, feedback, attachment (c5)
+actor -> page : Status, Published
+page -> capi : setQuizStatus(id, Published)
+capi -> ep : PUT /curriculum/quizzes/{id}/status
+ep -> cmd : SetStatusAsync
+alt no questions
+  cmd --> ep : 422 "Add a question before publishing the quiz." (c6)
+else
+  cmd -> db : Status = Published + audit (c6)
+end
+@enduml

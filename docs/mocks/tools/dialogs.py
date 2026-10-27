@@ -462,7 +462,7 @@ simple("track-cohorts", "Cohorts following Leadership Foundations", "curriculum-
 STATUS_MODULE = fieldset("Status", choice("status", "Draft", small="Only authors see it") + choice("status", "In review", small="Ready for another author to check", checked=False)
                          + choice("status", "Published", small="Youth in the cohorts below see it", checked=True))
 STATUS_COHORTS = facts([("Visible to", "After‑School Tutoring and Saturday Sports, once its track is published")])
-simple("curriculum-status", "Status of Leading by Serving", "curriculum-module", ["L2-066", "L2-067", R_CURRIC],
+simple("curriculum-status", "Status of Leading by Serving", "curriculum-module", ["L2-066", "L2-067", "L2-073", "L2-074", R_CURRIC],
        "Publishing makes the module visible to youth in the cohorts that follow Leadership Foundations.",
        lambda e: (fieldset("Status", choice("status", "Draft", small="Only authors see it") + choice("status", "In review", small="Ready for another author to check")
                            + choice("status", "Published", small="Youth in the cohorts below see it", checked=True, invalid=True),
@@ -474,6 +474,19 @@ simple("curriculum-status", "Status of Leading by Serving", "curriculum-module",
                       dialog_box("Status of Pick Up the Towel", "Publishing makes the lesson live for youth in the cohorts that follow Leadership Foundations, once its module is published.",
                                  fieldset("Status", choice("status", "Draft", small="Only authors see it", checked=True) + choice("status", "Published", small="Youth in the cohorts below see it"))
                                  + STATUS_COHORTS, footer("Save status"), icon_name="eye", form=True)),
+           "quiz": ("The same dialog for a quiz: Draft or Published; publishing needs a question.",
+                    dialog_box("Status of Leading by Serving quiz", "Publishing makes it visible to youth in the cohorts that follow the track, once the track and module are published.",
+                               fieldset("Status", choice("status", "Draft", small="Only authors see it", checked=True) + choice("status", "Published", small="Youth in the cohorts below see it"))
+                               + STATUS_COHORTS, footer("Save status"), icon_name="eye", form=True)),
+           "quiz-invalid": ("Publishing a quiz with no questions is refused.",
+                            dialog_box("Status of Leading by Serving quiz", "Publishing makes it visible to youth in the cohorts that follow the track, once the track and module are published.",
+                                       fieldset("Status", choice("status", "Draft", small="Only authors see it") + choice("status", "Published", small="Youth in the cohorts below see it", checked=True, invalid=True),
+                                                fid="status", error="Add a question before publishing the quiz.")
+                                       + STATUS_COHORTS, footer("Save status"), icon_name="eye", form=True)),
+           "assignment": ("The same dialog for an assignment: publishing assigns it to youth in the cohorts that follow the track; it needs a task, a way to submit and a rubric.",
+                          dialog_box("Status of Serve someone this week", "Publishing assigns it to youth in the cohorts that follow the track, once the track and module are published.",
+                                     fieldset("Status", choice("status", "Draft", small="Only authors see it", checked=True) + choice("status", "Published", small="Youth in the cohorts below are assigned it"))
+                                     + STATUS_COHORTS, footer("Save status"), icon_name="eye", form=True)),
            "track": ("The same dialog for a track: Draft or Published; nothing in a draft track reaches youth.",
                      dialog_box("Status of Digital Skills", "Nothing in a draft track reaches youth, whatever its modules say.",
                                 fieldset("Status", choice("status", "Draft", small="Only authors see it", checked=True) + choice("status", "Published", small="Published modules reach the cohorts that follow it"))
@@ -483,6 +496,87 @@ simple("curriculum-status", "Status of Leading by Serving", "curriculum-module",
 simple("delete-lesson", "Delete Pick Up the Towel?", "curriculum-lesson", ["L2-067", R_CURRIC],
        "Youth stop seeing it at once. Their progress is kept in the archive, and the lesson can be restored by support.",
        lambda e: "", "Delete lesson", icon_name="trash", danger=True, failed_text="The lesson was not deleted. Try again.")
+
+# ------------------------------------------------------------------ Quizzes and assignments (prompt 60, L2-073, L2-074)
+ATTACH_TO = ["The whole module", "Lesson 1 · Pick Up the Towel", "Lesson 2 · Last in Line", "Lesson 3 · Leading Like a Coach"]
+
+
+def new_assessment_body(kind):
+    def body(e):
+        e = e or {}
+        return (field("title", f"{kind} title", value="" if e else ("Leading by Serving quiz" if kind == "Quiz" else "Serve someone this week"),
+                      required=True, autofocus=True, error=e.get("title", ""))
+                + select("attach", "Attached to", ATTACH_TO, selected=ATTACH_TO[0] if kind == "Quiz" else ATTACH_TO[1],
+                         help_="The whole module, or one of its lessons."))
+    return body
+
+
+simple("new-assessment", "New quiz", "curriculum-module", ["L2-073", "L2-074", R_CURRIC], "Added to Leading by Serving as a draft; you build it next.",
+       new_assessment_body("Quiz"), "Create and build", icon_name="clipboard", invalid_err={"title": "Give the quiz a title."},
+       failed_text="The quiz was not created. Try again.",
+       extra_states={"assignment": ("The same dialog for an assignment.",
+                                    dialog_box("New assignment", "Added to Leading by Serving as a draft; you write the task and rubric next.",
+                                               new_assessment_body("Assignment")(None), footer("Create and build"), icon_name="clipboard", form=True))})
+
+
+def options_body(texts, correct, *, multiple=False, err=None):
+    err = err or {}
+    letters = "ABCDEF"
+    fields_ = "".join(field(f"option-{letters[i].lower()}", f"Option {letters[i]}", value=t) for i, t in enumerate(texts))
+    fields_ += btn("Add option", "ghost", size="sm", icon_name="plus")
+    marks = "".join(choice("correct", f"{letters[i]} · {esc(t)}", type_="checkbox" if multiple else "radio", checked=i in correct, invalid="correct" in err)
+                    for i, t in enumerate(texts))
+    return (fieldset("Options", fields_, hint="2 to 6 options.", fid="options", error=err.get("options", ""))
+            + fieldset("Correct answers" if multiple else "Correct answer", marks, fid="correct", error=err.get("correct", "")))
+
+
+MC = ["Packed the kit bags for everyone", "Went home early", "Asked the coach for help", "Chose the starting team"]
+
+
+def question_body(e):
+    e = e or {}
+    return (textarea("text", "Question", value="" if "text" in e else "In Pick Up the Towel, what did the captain do before the big game?", rows=2, error=e.get("text", ""))
+            + select("type", "Question type", ["Multiple choice", "True / false", "Multiple answer", "Short answer"], selected="Multiple choice")
+            + options_body(MC, set() if e else {0}, err=e))
+
+
+def question_box(title, body, primary="Add question"):
+    return dialog_box(title, "Write the question, pick its type and mark the correct answer.", body, footer(primary), icon_name="list", form=True, scroll=True)
+
+
+simple("quiz-question", "Add question", "curriculum-quiz", ["L2-073", R_CURRIC], "Write the question, pick its type and mark the correct answer.",
+       question_body, "Add question", icon_name="list", invalid_err={"text": "Write the question.", "correct": "Mark the correct answer."},
+       failed_text="The question was not saved. Try again.",
+       extra_states={
+           "true-false": ("A true or false question: no options to write, one correct answer.",
+                          question_box("Add question", textarea("text", "Question", value="Leading is a title someone gives you.", rows=2)
+                                       + select("type", "Question type", ["Multiple choice", "True / false", "Multiple answer", "Short answer"], selected="True / false")
+                                       + fieldset("Correct answer", choice("correct", "True") + choice("correct", "False", checked=True), fid="correct"))),
+           "multiple-answer": ("A multiple-answer question: every correct option is ticked.",
+                               question_box("Add question", textarea("text", "Question", value="Which of these are ways to “pick up the towel” this week?", rows=2)
+                                            + select("type", "Question type", ["Multiple choice", "True / false", "Multiple answer", "Short answer"], selected="Multiple answer")
+                                            + options_body(["Help clear up after group", "Wait to be asked", "Check on someone who is new"], {0, 2}, multiple=True))),
+           "short-answer": ("A short-answer question: the answers it accepts, one per line, matched ignoring case.",
+                            question_box("Add question", textarea("text", "Question", value="In one word, who does a servant leader put first?", rows=2)
+                                         + select("type", "Question type", ["Multiple choice", "True / false", "Multiple answer", "Short answer"], selected="Short answer")
+                                         + textarea("answers", "Accepted answers", value="others\nother people", rows=3, help_="One per line, up to 10. Matched ignoring capitals and spaces at either end."))),
+           "edit": ("Editing question 1: the same dialog filled in, saved in place.",
+                    question_box("Edit question 1", question_body(None), "Save question")),
+       })
+
+simple("delete-question", "Delete question 1?", "curriculum-quiz", ["L2-073", R_CURRIC],
+       "“In Pick Up the Towel, what did the captain do before the big game?” is removed and the questions after it move up.",
+       lambda e: "", "Delete question", icon_name="trash", danger=True, failed_text="The question was not deleted. Try again.")
+
+simple("rubric-criterion", "Add criterion", "curriculum-assignment", ["L2-074", R_CURRIC], "Mentors award up to these points for it. Saved with the assignment.",
+       lambda e: (field("criterion", "Criterion", value="" if e else "Named one thing they noticed", required=True, autofocus=True, error=(e or {}).get("criterion", ""))
+                  + field("points", "Points", type_="number", inputmode="numeric", value="0" if e else "5", error=(e or {}).get("points", ""), help_="1 to 100.")),
+       "Add criterion", icon_name="list", invalid_err={"criterion": "Describe the criterion.", "points": "Give it 1 to 100 points."},
+       na={"busy": "Nothing is sent until the assignment is saved.", "failed": "Nothing is sent until the assignment is saved."},
+       extra_states={"edit": ("Editing criterion 1.", dialog_box("Edit criterion 1", "Mentors award up to these points for it. Saved with the assignment.",
+                                                               field("criterion", "Criterion", value="Chose someone and served without being asked", required=True, autofocus=True)
+                                                               + field("points", "Points", type_="number", inputmode="numeric", value="10", help_="1 to 100."),
+                                                               footer("Save criterion"), icon_name="list", form=True))})
 
 # ------------------------------------------------------------------ Complete lessons (prompt 57)
 simple("submit-project", "Submit “Build Your Event Page”?", "learn-coding-project", ["L2-070", "L1-023"],
