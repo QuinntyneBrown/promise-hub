@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 55 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="55" data-video-title="Use the mentor dashboard" data-parts="Introduction|Dashboard|Server scope|My youth|Youth record|Not assigned|Cohort|States|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 55</div>
+  <h1>Use the mentor dashboard</h1>
+  <p class="lead">A mentor's own youth and cohorts, each youth's record, and nothing that is not theirs</p>
+</section>
+
+<section id="dashboard" data-part="1" data-cue="Daniel Osei is a mentor at Harbourview." data-clip="clips/dashboard-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Daniel's dashboard</h3><p><code>GET /mentoring/dashboard</code>: youth, cohorts, checked in this week, recent activity.</p></div>
+</section>
+
+<section id="dashboard-shot" data-part="1" data-cue="Beside them are his cohorts">
+  <h2>Six youth, two cohorts, recent activity</h2>
+  <img class="shot" alt="Mentoring dashboard: 6 youth, 2 cohorts, 4 checked in this week" src="shots/desktop-dashboard.png">
+</section>
+
+<section id="scope" data-part="2" data-cue="Every number and every row is computed on the server">
+  <h2>One mentor scope</h2>
+  <table class="facts">
+    <tr><th>Source</th><th>Counts</th></tr>
+    <tr><td>Assigned directly (<code>YouthMentor</code>)</td><td>Always, even in an archived cohort</td></tr>
+    <tr><td>Cohort he leads or supports (<code>CohortMentor</code>)</td><td>Its active roster, while not archived</td></tr>
+    <tr><td>Ended enrollment</td><td>Drops off</td></tr>
+    <tr><td>Roll Call off</td><td><code>checkedInThisWeek</code> and <code>recentActivity</code> are null</td></tr>
+  </table>
+  <p class="muted small"><code>MentorScope</code> serves every Mentoring read · ADR 0049</p>
+</section>
+
+<section id="rollcall-off" data-part="2" data-cue="The attendance comes from Roll Call">
+  <h2>Roll Call off</h2>
+  <img class="shot" alt="Dashboard with Roll Call off: two numbers, no recent activity" src="shots/desktop-rollcall-off.png">
+</section>
+
+<section id="my-youth" data-part="3" data-cue="View all opens My youth, the whole list.">
+  <h2>Search by name</h2>
+  <div class="cols">
+    <img class="shot" alt="My youth filtered to Emily and Kevin Tran" src="shots/desktop-my-youth-search.png">
+    <img class="shot" alt="No youth match zed, with Clear search" src="shots/desktop-no-results.png">
+  </div>
+</section>
+
+<section id="record" data-part="4" data-cue="On his phone, Daniel opens Mateo." data-clip="clips/record-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Mateo's record</h3><p><code>GET /mentoring/youth/{childId}</code>, audited as Viewed on Child.</p></div>
+</section>
+
+<section id="record-shots" data-part="4" data-cue="What the record never holds is just as important">
+  <h2>What a mentor sees, and never sees</h2>
+  <div class="cols">
+    <img class="shot" alt="Mateo Rivera: age, school, programs, mentor" src="shots/phone-record.png">
+    <img class="shot" alt="Recent attendance and guardians to call" src="shots/phone-record-contacts.png">
+  </div>
+  <p class="muted small">Never sent: date of birth, allergies, medication, conditions, doctor, health card, notes, pickups</p>
+</section>
+
+<section id="forbidden" data-part="5" data-cue="Daniel then opens a link to Amara Okonkwo">
+  <h2>Not his youth</h2>
+  <div class="cols">
+    <img class="shot" alt="This youth isn’t assigned to you" src="shots/phone-record-forbidden.png">
+    <table class="facts">
+      <tr><th>Request</th><th>Answer</th></tr>
+      <tr><td>A youth not in his scope</td><td>403, audited as AccessDenied</td></tr>
+      <tr><td>Another organization's child</td><td>404</td></tr>
+      <tr><td>Unknown id</td><td>404</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="cohort" data-part="6" data-cue="From My cohorts, Daniel opens After-School Tutoring." data-clip="clips/cohort-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>A cohort he supports</h3><p><code>GET /mentoring/cohorts/{programId}</code>: team and roster.</p></div>
+</section>
+
+<section id="cohort-shot" data-part="6" data-cue="A cohort he neither leads nor supports">
+  <h2>Members and mentors</h2>
+  <img class="shot" alt="After-School Tutoring: four members, Hana Kim lead, Daniel Osei supporting" src="shots/desktop-cohort.png">
+</section>
+
+<section id="states" data-part="7" data-cue="Hana Kim has no assignments yet" data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Empty, failed, Roll Call off</h3><p>Hana's empty state, Try again, and no attendance with Roll Call off.</p></div>
+</section>
+
+<section id="gates" data-part="7" data-cue="Turn Mentoring off">
+  <h2>Who gets what</h2>
+  <div class="cols">
+    <table class="facts">
+      <tr><th>Caller</th><th>Answer</th></tr>
+      <tr><td>Mentor</td><td>Their own scope only</td></tr>
+      <tr><td>Staff, youth, volunteer</td><td>403</td></tr>
+      <tr><td>Removed mentor</td><td>401</td></tr>
+      <tr><td>Mentoring off</td><td>404, routes go to Today</td></tr>
+    </table>
+    <img class="shot" alt="We couldn’t load your dashboard, with Try again" src="shots/desktop-error.png">
+  </div>
+</section>
+
+<section id="testing" data-part="8" data-cue="The API tests build Daniel's assignments">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>MentorDashboardTests</code>: youth once each, cohorts and roles, attendance on and off, archived, roles, tenancy, Mentoring off, removed mentor</li>
+    <li><code>MentorYouthRecordTests</code>: fields, goes-by name, nothing restricted, 403 audited, 404s, roles</li>
+    <li><code>MentorCohortTests</code>: team and roster, not on the team, archived, tenancy, roles</li>
+    <li>Four <code>e2e/tests/mentoring</code> specs on phone and laptop, with axe and no sideways scroll</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="9" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Mentoring opens on a dashboard of a mentor's own youth and cohorts</li><li>One server-side scope decides what every mentor page returns</li><li>The mentor's record is built field by field; nothing medical is in it</li></ul>
+  <p class="muted">Next: mentors grade and assess</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
