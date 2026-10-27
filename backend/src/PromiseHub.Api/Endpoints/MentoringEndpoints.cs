@@ -8,7 +8,7 @@ namespace PromiseHub.Api.Endpoints;
 
 /// <summary>
 /// The mentor's own pages (L2-063 to L2-065, ADR 0049): Mentoring on, Mentor role only, every read scoped by <see cref="MentorScope"/>.
-/// Reviews, grading and quiz approval also need Learning (L2-080, L2-081, ADR 0057).
+/// Reviews, grading, quiz approval and shared reflections also need Learning (L2-080, L2-081, L2-089, ADR 0057, ADR 0060).
 /// </summary>
 public static class MentoringEndpoints
 {
@@ -47,6 +47,11 @@ public static class MentoringEndpoints
         });
         reviews.MapPost("/submissions/{id:guid}/grade", async (Guid id, GradeRequest request, GradeSubmissionHandler handler, CancellationToken ct) =>
             (await handler.HandleAsync(id, request, ct)).ToHttp());
+        reviews.MapGet("/youth/{childId:guid}/reflections", async (Guid childId, SharedReflectionsHandler handler, CancellationToken ct) =>
+        {
+            var (result, shared) = await handler.HandleAsync(childId, ct);
+            return shared is not null ? Results.Ok(shared) : result.ToHttp();
+        });
         reviews.MapGet("/quiz-approvals", (QuizApprovalHandler handler, CancellationToken ct) => handler.ListAsync(ct));
         reviews.MapPost("/quiz-approvals/approve-all", (QuizApprovalHandler handler, CancellationToken ct) => handler.ApproveAllAsync(ct));
         reviews.MapPost("/quiz-attempts/{id:guid}/approve", async (Guid id, ApproveQuizRequest request, QuizApprovalHandler handler, CancellationToken ct) =>

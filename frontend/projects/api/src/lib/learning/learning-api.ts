@@ -27,6 +27,9 @@ import type { SubmitOutcome } from './submit-outcome';
 import type { Journey } from './journey';
 import type { LearnerBadges } from './learner-badges';
 import type { LearnerProgressView } from './learner-progress-view';
+import type { ReflectionEditor } from './reflection-editor';
+import type { SaveReflection } from './save-reflection';
+import type { ReflectionSaveResult } from './reflection-save-result';
 
 /** The signed-in youth’s own learning record (Learning module, ADR 0043). */
 export interface LearningApi {
@@ -45,6 +48,10 @@ export interface LearningApi {
   module(id: string): Observable<GatedResult<ModuleView>>;
   /** One lesson; locked until the one before it is done (L2-069). */
   lesson(id: string): Observable<GatedResult<LessonView>>;
+  /** Her reflection on a lesson she can open, with its prompts and her mentor's name (L2-089 criterion 1). */
+  reflection(lessonId: string): Observable<GatedResult<ReflectionEditor>>;
+  /** Saves her reflection, private or shared with her mentor (L2-089 criteria 2 and 3). */
+  saveReflection(lessonId: string, reflection: SaveReflection): Observable<ReflectionSaveResult>;
   /** Marks a reading or scripture lesson done (L2-069 criterion 4). */
   completeLesson(id: string): Observable<GatedResult<LessonCompletion>>;
   /** Where a lesson's video streams from, for the video player (ADR 0051). */

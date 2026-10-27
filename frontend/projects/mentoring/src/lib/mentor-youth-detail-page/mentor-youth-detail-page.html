@@ -37,6 +37,38 @@
           }
         </ph-card>
       }
+      @if (reflections(); as shared) {
+        @if (shared.status === 'loaded') {
+          <ph-card title="Shared reflections" [flush]="true">
+            @if (shared.value.reflections.length) {
+              <ph-list label="Shared reflections, newest first">
+                @for (s of shared.value.reflections; track s.lessonId) {
+                  <ph-list-item
+                    [title]="s.lessonTitle"
+                    [meta]="reflectionMeta(s)"
+                    [text]="s.text"
+                    [caption]="s.action ? 'One thing I’ll do this week: ' + s.action : null"
+                  />
+                }
+              </ph-list>
+            } @else {
+              <ph-empty-state
+                icon="book"
+                title="No shared reflections yet"
+                [text]="
+                  'When ' +
+                  (y.preferredName ?? y.name) +
+                  ' shares a reflection on a lesson, it appears here.'
+                "
+              />
+            }
+            <div phCardFooter>
+              Only reflections {{ y.preferredName ?? y.name }} chose to share. Private reflections
+              and drafts never reach you.
+            </div>
+          </ph-card>
+        }
+      }
     </div>
     <div class="stack">
       <ph-card title="Guardian contacts" [flush]="true">

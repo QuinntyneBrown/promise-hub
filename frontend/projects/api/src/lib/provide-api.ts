@@ -56,6 +56,8 @@ import { HttpLearningApi } from './learning/http-learning-api';
 import { LEARNING_API } from './learning/learning-api.token';
 import { DRAFT_STORE } from './drafts/draft-store.token';
 import { LocalDraftStore } from './drafts/local-draft-store';
+import { REFLECTION_DRAFT_STORE } from './drafts/reflection-draft-store.token';
+import { LocalReflectionDraftStore } from './drafts/local-reflection-draft-store';
 import { HttpCurriculumApi } from './curriculum/http-curriculum-api';
 import { CURRICULUM_API } from './curriculum/curriculum-api.token';
 import { HttpMentoringApi } from './mentoring/http-mentoring-api';
@@ -107,6 +109,7 @@ export function provideApi(): EnvironmentProviders {
     { provide: INVITATION_API, useClass: HttpInvitationApi },
     { provide: LEARNING_API, useClass: HttpLearningApi },
     { provide: DRAFT_STORE, useClass: LocalDraftStore },
+    { provide: REFLECTION_DRAFT_STORE, useClass: LocalReflectionDraftStore },
     { provide: CURRICULUM_API, useClass: HttpCurriculumApi },
     { provide: MENTORING_API, useClass: HttpMentoringApi },
     { provide: WEBSITE_API, useClass: HttpWebsiteApi },

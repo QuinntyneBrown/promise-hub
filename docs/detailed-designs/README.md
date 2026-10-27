@@ -79,10 +79,11 @@ One folder per subsystem, one folder per vertically sliced feature, each with a 
 | learning | review-quiz-results | L2-076 |
 | learning | submit-assignments | L2-077, L2-074, L2-031 |
 | learning | track-and-revise-submissions | L2-078, L2-077 |
-| learning | protect-unsaved-work | L2-079 |
+| learning | protect-unsaved-work | L2-079, L2-089 |
 | learning | view-learning-journey | L2-087, L2-068, L2-086 |
 | learning | view-badges | L2-087, L2-085 |
 | learning | review-personal-progress | L2-088, L2-082 |
+| learning | write-reflections | L2-089, L2-079, L2-065 |
 | curriculum | open-curriculum (journey 64 adds more; see [curriculum](curriculum/README.md)) | L2-005, L2-007 |
 | curriculum | author-tracks-and-modules | L2-066, L2-012, L2-007 |
 | curriculum | author-lessons | L2-067 |

@@ -10,6 +10,7 @@ export { ProgressPage } from './lib/progress-page/progress-page';
 export { QuizIntroPage } from './lib/quiz-intro-page/quiz-intro-page';
 export { QuizPage } from './lib/quiz-page/quiz-page';
 export { QuizResultPage } from './lib/quiz-result-page/quiz-result-page';
+export { ReflectionPage } from './lib/reflection-page/reflection-page';
 export { SubmissionPage } from './lib/submission-page/submission-page';
 export { SubmitPage } from './lib/submit-page/submit-page';
 export { TrackPage } from './lib/track-page/track-page';

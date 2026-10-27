@@ -79,6 +79,7 @@ public interface IPromiseHubDb
     DbSet<Domain.Learning.QuizAttempt> QuizAttempts { get; }
     DbSet<Domain.Learning.AssignmentSubmission> AssignmentSubmissions { get; }
     DbSet<Domain.Learning.SubmissionEvent> SubmissionEvents { get; }
+    DbSet<Domain.Learning.Reflection> Reflections { get; }
     DbSet<Domain.Mentoring.Competency> Competencies { get; }
     DbSet<Domain.Mentoring.CompetencyAssessment> CompetencyAssessments { get; }
     DbSet<Domain.Curriculum.Badge> Badges { get; }

@@ -4,6 +4,7 @@ import { FakeBadges } from './fake-badges';
 import { FakeCurriculum } from './fake-curriculum';
 import { FakeProgression } from './fake-progression';
 import { FakeJourney } from './fake-journey';
+import { FakeReflections } from './fake-reflections';
 import { FakeLearning } from './fake-learning';
 import { FakeReviews, type YouthAccounts } from './fake-reviews';
 import { type FakeEvent, type FakeProgram, NOW, seedEvents, seedPrograms } from './programs';
@@ -577,6 +578,8 @@ export class FakeApi {
 
   /** A youth's lessons and progress (L2-068 to L2-070); tests mark lessons done with learningState.complete. */
   readonly learningState = new FakeLearning(this.curriculumState);
+  /** Youth reflections (L2-089); tests seed and read them through it. */
+  readonly reflectionsState = new FakeReflections();
 
   /** Badges and their awards (L2-084, L2-085); tests read and change it, such as clear. */
   readonly badges = new FakeBadges(this.curriculumState, () => this.reviews.competencies, () => memberships);
@@ -618,6 +621,9 @@ export class FakeApi {
     ['GET', /^\/api\/learning\/tracks\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.track(route, m.id, programs, p['id']!))],
     ['GET', /^\/api\/learning\/modules\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.module(route, m.id, programs, p['id']!))],
     ['GET', /^\/api\/learning\/lessons\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.lesson(route, m.id, programs, p['id']!))],
+    ['GET', /^\/api\/learning\/lessons\/(?<id>[^/]+)\/reflection$/, (route, p) => this.youthWork(route, (m, programs) => this.reflectionEditor(route, m, programs, p['id']!))],
+    ['PUT', /^\/api\/learning\/lessons\/(?<id>[^/]+)\/reflection$/, (route, p) =>
+      this.youthWork(route, (m, programs) => this.reflectionsState.save(route, m.organizationId, m.id, this.learningState.findLesson(this.learningState.tracks(m.id, programs), p['id']!)))],
     ['GET', /^\/api\/learning\/lessons\/(?<id>[^/]+)\/video$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.video(route, m.id, programs, p['id']!))],
     ['GET', /^\/api\/learning\/coding\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.coding(route, m.id, programs, p['id']!))],
     ['PUT', /^\/api\/learning\/coding\/(?<id>[^/]+)\/progress$/, (route, p) => this.youthWork(route, (m, programs) => this.afterLearning(m, this.learningState.saveCoding(route, m.id, programs, p['id']!)))],
@@ -694,6 +700,7 @@ export class FakeApi {
     ['POST', /^\/api\/mentoring\/quiz-attempts\/(?<id>[^/]+)\/approve$/, (route, p) => this.mentorReviews(route, (_m, youth) => this.afterReview(youth, this.reviews.approveQuiz(route, youth, p['id']!)))],
     ['POST', /^\/api\/mentoring\/submissions\/(?<id>[^/]+)\/grade$/, (route, p) => this.mentorReviews(route, (m, youth) => this.afterReview(youth, this.reviews.grade(route, youth, p['id']!, m.personName)))],
     ['GET', /^\/api\/mentoring\/youth\/(?<id>[^/]+)$/, (route, p) => this.mentorYouthRecord(route, p['id']!)],
+    ['GET', /^\/api\/mentoring\/youth\/(?<id>[^/]+)\/reflections$/, (route, p) => this.mentorReflections(route, p['id']!)],
     ['GET', /^\/api\/mentoring\/youth\/(?<id>[^/]+)\/competencies$/, (route, p) => this.mentorCompetencies(route, p['id']!, false)],
     ['PUT', /^\/api\/mentoring\/youth\/(?<id>[^/]+)\/competencies$/, (route, p) => this.mentorCompetencies(route, p['id']!, true)],
     ['GET', /^\/api\/mentoring\/cohorts\/(?<id>[^/]+)$/, (route, p) => this.mentorCohort(route, p['id']!)],
@@ -995,6 +1002,12 @@ export class FakeApi {
   private assignmentBrief(route: Route, m: Membership, programs: FakeProgram[], id: string): Promise<void> {
     const place = this.learningState.assignmentPlace(m.id, programs, id);
     return this.learningState.work.brief(route, m.id, place, place ? this.youthMentorName(m, place.trackId) : null);
+  }
+
+  /** GET /learning/lessons/{id}/reflection: the lesson she can see, with her mentor's name (L2-089 criterion 1). */
+  private reflectionEditor(route: Route, m: Membership, programs: FakeProgram[], id: string): Promise<void> {
+    const found = this.learningState.findLesson(this.learningState.tracks(m.id, programs), id);
+    return this.reflectionsState.editor(route, m.id, found, found ? this.youthMentorName(m, found.track.track.id) : null);
   }
 
   /** Her child's marked attendance, or null while Roll Call is off (L2-088 criteria 3 and 4). */
@@ -1303,6 +1316,27 @@ export class FakeApi {
   }
 
   /** GET and PUT /mentoring/youth/{childId}/competencies (L2-082): Mentoring on; 404 outside the organization, 403 (audited) outside the scope. */
+  /** GET /mentoring/youth/{childId}/reflections (L2-089 criteria 5 and 6): Mentoring and Learning on, a youth in the mentor's scope. */
+  private async mentorReflections(route: Route, childId: string): Promise<void> {
+    const m = await this.participantModuleCaller(route, 'Mentoring', can.mentorYouth);
+    if (!m) return;
+    if (!this.modules.get(m.organizationId)!.includes('Learning')) return route.fulfill({ status: 404 });
+    const child = this.households.filter((h) => h.organizationId === m.organizationId).flatMap((h) => h.children).find((c) => c.id === childId);
+    if (!child) return route.fulfill({ status: 404 });
+    if (!this.mentorScope(m).youth.some((c) => c.id === childId)) {
+      this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'AccessDenied', record: 'Child', summary: 'Shared reflections outside the mentor’s youth', device: null });
+      return route.fulfill({ status: 403, json: { code: 'forbidden' } });
+    }
+    const name = `${child.firstName} ${child.lastName}`;
+    this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'Viewed', record: 'Child', summary: `${name} · shared reflections`, device: null });
+    const youth = [...this.youthLinks].filter(([id, c]) => c === childId && memberships.some((x) => x.id === id && x.organizationId === m.organizationId)).map(([id]) => id);
+    return this.reflectionsState.shared(route, childId, name, youth, (id) => {
+      const lesson = this.curriculumState.lessons.find((l) => l.id === id);
+      const module = lesson ? this.curriculumState.modules.find((x) => x.id === lesson.moduleId) : undefined;
+      return lesson && module ? { title: lesson.title, moduleTitle: module.title } : null;
+    });
+  }
+
   private async mentorCompetencies(route: Route, childId: string, save: boolean): Promise<void> {
     const m = await this.participantModuleCaller(route, 'Mentoring', can.mentorYouth);
     if (!m) return;

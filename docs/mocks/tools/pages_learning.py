@@ -227,7 +227,8 @@ def learn_lesson(S):
     def body(vstate="ready", bar=None, done=False) -> str:
         learn = card(ul_list([f'<li class="list__item"><div class="list__body"><div class="list__title">{o}</div></div></li>' for o in ["Notice what needs doing", "Serve without being asked"]], card=False, label="What you’ll learn"), title="What you’ll learn", tid="objectives", cls="card--flush")
         teach = card(f'<p class="text-caption">Reading: The captain and the kit bags</p><div class="reading">{esc(TOWEL_BODY)}</div>', title="The lesson", tid="teaching")
-        reflect = card('<p class="text-muted">Who picked up the towel for you this week? Hold that thought for your reflection.</p>', title="Think it over", tid="reflect")
+        reflect = card('<div class="stack"><p class="text-muted">Who picked up the towel for you this week? Hold that thought for your reflection.</p>'
+                       + f'<div>{btn("Write your reflection", "", icon_name="edit", href=page("learn-reflection"))}</div></div>', title="Think it over", tid="reflect")
         return (hdr + f'<div class="split"><div class="stack">{teach}{reflect}{bar if bar is not None else complete_bar(done=done)}</div>'
                 f'<div class="stack">{video(vstate)}{learn}</div></div>')
 

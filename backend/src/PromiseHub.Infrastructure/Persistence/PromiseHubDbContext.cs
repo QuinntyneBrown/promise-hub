@@ -70,6 +70,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Learning.LessonProgress> LessonProgress => Set<Domain.Learning.LessonProgress>();
     public DbSet<Domain.Curriculum.CodingStep> CodingSteps => Set<Domain.Curriculum.CodingStep>();
     public DbSet<Domain.Learning.CodingWorkspace> CodingWorkspaces => Set<Domain.Learning.CodingWorkspace>();
+    public DbSet<Domain.Learning.Reflection> Reflections => Set<Domain.Learning.Reflection>();
     public DbSet<Domain.Learning.ProjectSubmission> ProjectSubmissions => Set<Domain.Learning.ProjectSubmission>();
     public DbSet<Domain.Learning.QuizAttempt> QuizAttempts => Set<Domain.Learning.QuizAttempt>();
     public DbSet<Domain.Learning.AssignmentSubmission> AssignmentSubmissions => Set<Domain.Learning.AssignmentSubmission>();
@@ -316,6 +317,17 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(x => x.Note).HasMaxLength(Domain.Learning.AssignmentSubmission.MaximumFeedback);
             e.Property(x => x.At).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.HasOne<Domain.Learning.AssignmentSubmission>().WithMany().HasForeignKey(x => x.SubmissionId);
+        });
+        modelBuilder.Entity<Domain.Learning.Reflection>(e =>
+        {
+            e.HasIndex(r => new { r.MembershipId, r.LessonId }).IsUnique();
+            e.Property(r => r.Mood).HasConversion<string>().HasMaxLength(20);
+            e.Property(r => r.Text).HasMaxLength(Domain.Learning.Reflection.MaximumText);
+            e.Property(r => r.Action).HasMaxLength(Domain.Learning.Reflection.MaximumAction);
+            e.Property(r => r.CreatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(r => r.SavedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.HasOne<Membership>().WithMany().HasForeignKey(r => r.MembershipId);
+            e.HasOne<Domain.Curriculum.Lesson>().WithMany().HasForeignKey(r => r.LessonId);
         });
         modelBuilder.Entity<Domain.Learning.LessonProgress>(e =>
         {

@@ -41,6 +41,10 @@ import { toSubmitOutcome } from './to-submit-outcome';
 import { Journey } from './journey';
 import { LearnerBadges } from './learner-badges';
 import { LearnerProgressView } from './learner-progress-view';
+import { Reflection } from './reflection';
+import { ReflectionEditor } from './reflection-editor';
+import { ReflectionSaveResult } from './reflection-save-result';
+import { SaveReflection } from './save-reflection';
 
 @Injectable()
 export class HttpLearningApi implements LearningApi {
@@ -117,6 +121,41 @@ export class HttpLearningApi implements LearningApi {
     return toGated(
       this.http.get<CodingView>(`${this.baseUrl}/learning/coding/${encodeURIComponent(id)}`),
     );
+  }
+
+  reflection(lessonId: string): Observable<GatedResult<ReflectionEditor>> {
+    return toGated(
+      this.http.get<ReflectionEditor>(
+        `${this.baseUrl}/learning/lessons/${encodeURIComponent(lessonId)}/reflection`,
+      ),
+    );
+  }
+
+  saveReflection(lessonId: string, reflection: SaveReflection): Observable<ReflectionSaveResult> {
+    return this.http
+      .put<Reflection>(
+        `${this.baseUrl}/learning/lessons/${encodeURIComponent(lessonId)}/reflection`,
+        reflection,
+      )
+      .pipe(
+        map((value): ReflectionSaveResult => ({ status: 'loaded', value })),
+        catchError((error: HttpErrorResponse) =>
+          of<ReflectionSaveResult>(
+            error.status === 422
+              ? { status: 'invalid', errors: error.error?.errors ?? {} }
+              : error.status === 403 && error.error?.code === 'locked'
+                ? { status: 'locked', unlockAfter: error.error?.unlockAfter ?? null }
+                : {
+                    status:
+                      error.status === 404
+                        ? 'not-found'
+                        : error.status === 403
+                          ? 'forbidden'
+                          : 'error',
+                  },
+          ),
+        ),
+      );
   }
 
   saveCoding(id: string, answers: CodingAnswers): Observable<CodingSaveResult> {

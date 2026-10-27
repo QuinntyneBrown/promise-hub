@@ -10,6 +10,7 @@ import { ProgressPage } from './progress-page/progress-page';
 import { QuizIntroPage } from './quiz-intro-page/quiz-intro-page';
 import { QuizPage } from './quiz-page/quiz-page';
 import { QuizResultPage } from './quiz-result-page/quiz-result-page';
+import { ReflectionPage } from './reflection-page/reflection-page';
 import { SubmissionPage } from './submission-page/submission-page';
 import { SubmitPage } from './submit-page/submit-page';
 import { TrackPage } from './track-page/track-page';
@@ -25,6 +26,12 @@ export const routes: Routes = [
   { path: 'tracks/:id', component: TrackPage, title: 'Track · PromiseHub' },
   { path: 'modules/:id', component: ModulePage, title: 'Module · PromiseHub' },
   { path: 'lessons/:id', component: LessonPage, title: 'Lesson · PromiseHub' },
+  {
+    path: 'lessons/:id/reflection',
+    component: ReflectionPage,
+    canDeactivate: [unsavedChangesGuard],
+    title: 'Your reflection · PromiseHub',
+  },
   { path: 'coding/:id', component: CodingPage, title: 'Coding lesson · PromiseHub' },
   { path: 'quizzes/:id', component: QuizIntroPage, title: 'Quiz · PromiseHub' },
   { path: 'quizzes/:id/take', component: QuizPage, title: 'Taking a quiz · PromiseHub' },

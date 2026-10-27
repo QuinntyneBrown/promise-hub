@@ -6,6 +6,9 @@ import {
   MentorAttendance,
   MentorGuardianContact,
   MentorYouthRecord,
+  SESSION_API,
+  SharedReflection,
+  SharedReflections,
 } from '@promisehub/api';
 import {
   CallContact,
@@ -26,7 +29,7 @@ import {
   TableColumn,
   formatDateTime,
 } from '@promisehub/components';
-import { Subject, startWith, switchMap } from 'rxjs';
+import { EMPTY, Subject, catchError, combineLatest, filter, map, startWith, switchMap } from 'rxjs';
 
 const STATUS: Record<MentorAttendance['status'], TableCell> = {
   CheckedIn: { text: 'Checked in', tone: 'success' },
@@ -36,7 +39,8 @@ const STATUS: Record<MentorAttendance['status'], TableCell> = {
 
 /**
  * A youth’s record for their mentor (mock: mentor-youth-detail, L2-064). The API sends only what a mentor may see, so the page has
- * nothing to hide; a youth outside the mentor’s scope shows the forbidden state.
+ * nothing to hide; a youth outside the mentor’s scope shows the forbidden state. While Learning is on, the reflections she shared are
+ * listed newest first (L2-089 criterion 5); while it is off nothing about them is fetched or shown.
  */
 @Component({
   selector: 'ph-mentor-youth-detail-page',
@@ -84,6 +88,27 @@ export class MentorYouthDetailPage {
     ),
     { initialValue: null },
   );
+
+  /** The reflections she shared, only while Learning is on; null while off or loading. */
+  protected readonly reflections = toSignal<LoadResult<SharedReflections> | null>(
+    combineLatest([
+      inject(SESSION_API)
+        .current()
+        .pipe(
+          map((session) => session.modules.includes('Learning')),
+          catchError(() => EMPTY),
+        ),
+      toObservable(this.childId),
+    ]).pipe(
+      filter(([learning]) => learning),
+      switchMap(([, id]) => this.api.sharedReflections(id)),
+    ),
+    { initialValue: null },
+  );
+
+  protected reflectionMeta(r: SharedReflection): string {
+    return `${r.moduleTitle} · Feeling ${r.mood.toLowerCase()} · ${formatDateTime(r.savedAt)}`;
+  }
 
   protected subtitle(r: MentorYouthRecord): string {
     return [r.age !== null ? `Age ${r.age}` : null, r.school].filter(Boolean).join(' · ');

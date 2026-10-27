@@ -1,0 +1,59 @@
+@startuml
+title Class structure — Write reflections
+skinparam classAttributeIconSize 0
+class ReflectionPage {
+  #mood : signal<string>
+  #text : signal<string>
+  #action : signal<string>
+  #shared : signal<boolean>
+  +canLeave() : Observable<boolean> | boolean
+  #save() : void
+  #saveDraft() : void
+}
+class LeaveReflectionDialog
+interface LearningApi {
+  +reflection(lessonId) : Observable<GatedResult>
+  +saveReflection(lessonId, body) : Observable<SaveReflectionOutcome>
+}
+interface MentoringApi {
+  +sharedReflections(childId) : Observable<LoadResult>
+}
+interface ReflectionDraftStore {
+  +load(membershipId, lessonId)
+  +save(membershipId, lessonId, draft)
+  +clear(membershipId, lessonId)
+}
+class ReflectionHandler {
+  +GetAsync(lessonId, ct) : Gated<ReflectionEditorDto>
+  +SaveAsync(lessonId, request, ct) : Gated<ReflectionDto>
+}
+class SharedReflectionsHandler {
+  +HandleAsync(childId, ct) : (Result, SharedReflectionsDto)
+}
+class Reflection {
+  +Id : Guid
+  +OrganizationId : Guid
+  +MembershipId : Guid
+  +LessonId : Guid
+  +Mood : ReflectionMood
+  +Text : string
+  +Action : string?
+  +Shared : bool
+  +SavedAt : DateTimeOffset
+  +Save(mood, text, action, shared, now)
+}
+enum ReflectionMood {
+  Hopeful
+  Thoughtful
+  Unsure
+  Challenged
+}
+ReflectionPage ..> LearningApi : LEARNING_API
+ReflectionPage ..> ReflectionDraftStore : REFLECTION_DRAFT_STORE
+ReflectionPage ..> LeaveReflectionDialog : PhDialogs
+LearningApi ..> ReflectionHandler : /learning/lessons/{id}/reflection
+MentoringApi ..> SharedReflectionsHandler : /mentoring/youth/{childId}/reflections
+ReflectionHandler --> Reflection : creates, saves
+SharedReflectionsHandler --> Reflection : reads shared
+Reflection --> ReflectionMood
+@enduml

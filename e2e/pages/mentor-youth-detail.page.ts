@@ -39,6 +39,19 @@ export class MentorYouthDetailPage extends BasePage {
     return this.page.getByText('Medical details stay with staff on site');
   }
 
+  /** The Shared reflections card's rows (L2-089 criterion 5). */
+  get sharedReflections(): Locator {
+    return this.page.getByRole('list', { name: 'Shared reflections, newest first' }).getByRole('listitem');
+  }
+
+  get sharedReflectionsCard(): Locator {
+    return this.page.getByRole('region', { name: 'Shared reflections' });
+  }
+
+  get noSharedReflections(): Locator {
+    return this.page.getByRole('heading', { name: 'No shared reflections yet' });
+  }
+
   get forbidden(): Locator {
     return this.page.getByRole('heading', { name: 'This youth isn’t assigned to you' });
   }

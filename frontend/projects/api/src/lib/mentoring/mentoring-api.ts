@@ -1,3 +1,4 @@
+import type { SharedReflections } from './shared-reflections';
 import type { Observable } from 'rxjs';
 import type { LoadResult } from '../load-result';
 import type { WriteOutcome } from '../write-outcome';
@@ -36,6 +37,8 @@ export interface MentoringApi {
   /** Approves the auto-score, or the override (0 to 100) when given; invalid carries { override }. */
   approveQuiz(attemptId: string, override: number | null): Observable<WriteOutcome>;
   approveAllQuizzes(): Observable<ApproveAllOutcome>;
+  /** The reflections one of the caller's youth shared, newest first; forbidden when the youth is not theirs (L2-089 criterion 5). */
+  sharedReflections(childId: string): Observable<LoadResult<SharedReflections>>;
   /** One of the caller's youth's competencies; forbidden when the youth is not theirs. */
   competencies(childId: string): Observable<LoadResult<CompetencySheet>>;
   /** Saves every competency's level and note; only changed ones become new assessments. */

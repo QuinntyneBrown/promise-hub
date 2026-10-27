@@ -1,0 +1,49 @@
+@startuml
+title UML sequence behaviour — A mentor reads shared reflections
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Mentor (Daniel)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "MentorYouthDetailPage" as page
+  participant "MentoringApi" as mapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "MentoringEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "SharedReflectionsHandler" as h
+  participant "MentorScope" as scope
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : open Sofía's record
+alt Learning on
+  page -> mapi : sharedReflections(childId)
+  mapi -> ep : GET /mentoring/youth/{childId}/reflections
+  alt Mentoring or Learning off
+    ep --> page : 404
+  else not a Mentor
+    ep --> page : 403 (L2-089 c6)
+  else
+    ep -> h : HandleAsync
+    alt child of another organization
+      h --> page : 404
+    else outside his scope
+      h -> scope : CanSeeYouthAsync
+      h -> db : audit AccessDenied
+      h --> page : 403
+    else
+      h -> db : shared reflections of her youth memberships, newest first (c5)
+      h -> db : audit Viewed on Child
+      h --> page : 200
+      page --> actor : Shared reflections, or No shared reflections yet
+    end
+  end
+else Learning off
+  page --> actor : no reflections card, nothing fetched
+end
+@enduml

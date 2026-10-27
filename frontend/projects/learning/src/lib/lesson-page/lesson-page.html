@@ -70,6 +70,11 @@
     @for (p of l.prompts; track $index) {
       <p class="prompt">{{ p }}</p>
     }
+    <div>
+      <ph-button icon="edit" [link]="['/learning/lessons', l.id, 'reflection']"
+        >Write your reflection</ph-button
+      >
+    </div>
   </ng-template>
   @if (l.kind === 'Scripture') {
     <div class="stack narrow">

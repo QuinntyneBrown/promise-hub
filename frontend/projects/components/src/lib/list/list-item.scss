@@ -23,6 +23,12 @@
   font: var(--text-body-sm);
   color: var(--color-fg-muted);
 }
+.text {
+  margin: var(--space-2) 0 0;
+  font: var(--text-body);
+  color: var(--color-fg-default);
+  white-space: pre-line;
+}
 .caption {
   display: block;
   margin-top: var(--space-1);

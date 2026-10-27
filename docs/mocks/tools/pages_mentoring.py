@@ -127,6 +127,20 @@ def mentor_youth_detail(S):
           main=head.replace("Mateo Rivera", "Sofía Rivera").replace("Age 9 · Bennetto Elementary, Grade 4", "Age 12 · Bennetto Elementary, Grade 7")
           + body.replace(facts([("Programs", "After‑School Tutoring"), ("Mentor", "Daniel Osei"), ("Goes by", "Not set"), ("Pronouns", "Not set")]),
                          facts([("Programs", "After‑School Tutoring"), ("Mentor", "Hana Kim"), ("Goes by", "Sofía"), ("Pronouns", "she/her")])))
+    sofia_head = head.replace("Mateo Rivera", "Sofía Rivera").replace("Age 9 · Bennetto Elementary, Grade 4", "Age 12 · Bennetto Elementary, Grade 7")
+    shared = card(ul_list([
+        list_item("Pick Up the Towel", "Leading by Serving · Feeling thoughtful · Thu 5 Nov, 4:12 pm")
+        .replace("</div></div>", '</div><p class="list__text">My little brother Mateo cleared the table after dinner on Tuesday without anyone asking, so Mom could sit down. '
+                 'I noticed I usually wait to be asked. I want to be the one who notices first.</p><div class="list__meta">One thing I’ll do this week: Pack my own lunch on Thursday so Mom has one less thing to do.</div></div>', 1),
+    ], card=False, label="Shared reflections, newest first"), title="Shared reflections", tid="reflections", cls="card--flush",
+        footer="Only reflections Sofía chose to share. Private reflections and drafts never reach you.")
+    S.add("reflections", "Sofía shared her Pick Up the Towel reflection: Daniel reads it on her record, newest first, with her mood and the one thing she’ll do. The read is audited.", **KW,
+          main=sofia_head + f'<div class="split"><div class="stack">{about}{shared}</div><div class="stack">{contacts}{restricted}</div></div>',
+          notes=note("GET /mentoring/youth/{childId}/reflections answers only saved reflections she shared; the card is not shown while Learning is off.", "top: 5rem; right: 1rem;"))
+    S.add("no-reflections", "Sofía hasn’t shared a reflection: the card says so without hinting at private ones.", **KW,
+          main=sofia_head + f'<div class="split"><div class="stack">{about}' + card(empty("No shared reflections yet", "When Sofía shares a reflection on a lesson, it appears here.", icon_name="book", heading="h3"),
+                                                                                    title="Shared reflections", tid="reflections", cls="card--flush")
+          + f'</div><div class="stack">{contacts}{restricted}</div></div>')
     S.add("rollcall-off", "Roll Call is off: the attendance card is gone.", **KW,
           main=head + f'<div class="split"><div class="stack">{about}</div><div class="stack">{contacts}{restricted}</div></div>')
     S.add("loading", "The record loading.", **KW, main=back + page_header("Youth record") + f'<div class="split"><div class="stack">{skeleton_list(4, "Loading the record")}</div><div class="stack">{skeleton_list(2, "Loading contacts")}</div></div>')

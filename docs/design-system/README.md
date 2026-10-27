@@ -67,7 +67,7 @@ Edit tokens and shared component CSS first. Edit catalogue metadata and generato
 | [Divider](components/divider.html) | Separate alternatives with text or draw a decorative rule. |
 | [Container, grid and stack](components/container-grid-stack.html) | Compose consistent pages through shared columns, gutters and vertical rhythm. |
 | [Table](components/table.html) | Compare records through captioned columns with reachable row actions. |
-| [List](components/list.html) | Scan related records with one clear primary link per item. |
+| [List](components/list.html) | Scan related records with one clear primary link per item. A row may carry a paragraph of text (.list__text) under its meta, as for a youth's shared reflection. |
 | [Description list](components/description-list.html) | Present labelled facts, such as contact details and approved pickups. |
 | [Avatar](components/avatar.html) | Identify a person by initials or image alongside their written name. |
 | [Badge](components/badge.html) | Express a named status, role or meaningful count without relying on colour alone. |

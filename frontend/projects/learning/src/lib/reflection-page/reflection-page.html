@@ -1,0 +1,151 @@
+@let r = result();
+<ph-breadcrumb
+  [items]="
+    r?.status === 'loaded'
+      ? [
+          { label: 'Learning', link: '/learning' },
+          { label: r.value.moduleTitle, link: '/learning/modules/' + r.value.moduleId },
+          { label: r.value.lessonTitle, link: '/learning/lessons/' + r.value.lessonId },
+          { label: 'Your reflection' },
+        ]
+      : [{ label: 'Learning', link: '/learning' }, { label: 'Your reflection' }]
+  "
+/>
+@if (r === null) {
+  <ph-page-header title="Your reflection" />
+  <div class="stack form" aria-busy="true" aria-label="Loading your reflection">
+    <ph-skeleton shape="card" />
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (r.status === 'loaded') {
+  @let v = r.value;
+  <ph-page-header
+    [title]="'Reflect on ' + v.lessonTitle"
+    subtitle="Take your time. Only you see it unless you choose to share it."
+  />
+  <div class="stack form">
+    @if (summary().length) {
+      <ph-error-summary title="Fix these to continue" [items]="summary()" />
+    }
+    @if (failed()) {
+      <ph-alert
+        tone="danger"
+        title="We couldn’t save your reflection"
+        text="Everything is still here. Check your connection and try again."
+      />
+    }
+    @if (restored(); as when) {
+      <ph-alert title="We restored your draft" [text]="'Saved on this device on ' + when + '.'">
+        <ph-button variant="ghost" size="sm" (click)="startOver(v)">Start over</ph-button>
+      </ph-alert>
+    }
+    @if (saved(); as s) {
+      <ph-alert
+        tone="success"
+        [title]="s.shared ? 'Reflection saved and shared' : 'Reflection saved'"
+        [text]="savedText(v, s)"
+      />
+    }
+    @if (v.prompts.length) {
+      <ph-card title="Think about it" [flush]="true">
+        <ph-list label="From the lesson">
+          @for (p of v.prompts; track $index) {
+            <ph-list-item [title]="p" />
+          }
+        </ph-list>
+      </ph-card>
+    }
+    <ph-card title="Your words">
+      <div class="stack">
+        <div id="mood">
+          <ph-radio-group
+            legend="How are you feeling about this lesson?"
+            [options]="moods"
+            [error]="errors()['mood'] ?? null"
+            [ngModel]="mood()"
+            (ngModelChange)="mood.set($event)"
+          />
+        </div>
+        <ph-textarea
+          inputId="reflection"
+          label="Your reflection"
+          [rows]="6"
+          help="A few honest sentences is plenty. A draft can be unfinished."
+          [count]="text().length.toLocaleString('en-US') + ' / 5,000'"
+          [error]="errors()['text'] ?? null"
+          [ngModel]="text()"
+          (ngModelChange)="text.set($event)"
+        />
+        <ph-textarea
+          inputId="action"
+          label="One thing I’ll do this week"
+          [optional]="true"
+          [rows]="2"
+          [count]="action().length.toLocaleString('en-US') + ' / 1,000'"
+          [error]="errors()['action'] ?? null"
+          [ngModel]="action()"
+          (ngModelChange)="action.set($event)"
+        />
+      </div>
+    </ph-card>
+    <ph-card title="Who can see it">
+      <ph-switch
+        [label]="shareLabel(v)"
+        [description]="shareText(v)"
+        [ngModel]="shared()"
+        (ngModelChange)="shared.set($event)"
+      />
+    </ph-card>
+    <div class="actions">
+      <ph-button variant="ghost" icon="check" (click)="saveDraft(v)">Save draft</ph-button>
+      <ph-button variant="primary" icon="check-circle" [busy]="saving()" (click)="save(v)"
+        >Save reflection</ph-button
+      >
+    </div>
+  </div>
+} @else if (r.status === 'locked') {
+  <ph-page-header title="Your reflection" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      [title]="'Finish ' + r.unlockAfter + ' first'"
+      text="You can reflect on a lesson once it’s open for you."
+    >
+      <ph-button link="/learning">Back to Learning</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else if (r.status === 'not-found') {
+  <ph-page-header title="Your reflection" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="search"
+      title="We can’t find that lesson"
+      text="It may not be published yet, or your program doesn’t follow it."
+    >
+      <ph-button link="/learning">Back to Learning</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else if (r.status === 'forbidden') {
+  <ph-page-header title="Your reflection" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      title="Learning isn’t open for you yet"
+      text="Your reflections appear once Learning opens for you. Learning says what’s needed."
+    >
+      <ph-button variant="primary" link="/learning">Back to Learning</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-page-header title="Your reflection" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load your reflection"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}

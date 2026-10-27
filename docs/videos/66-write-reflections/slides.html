@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 66 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="66" data-video-title="Write reflections" data-parts="Introduction|Writing|One per lesson|Sharing|Mentor|Leaving|Phone|States|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 66</div>
+  <h1>Write reflections</h1>
+  <p class="lead">Private by default, shared with her mentor only when she chooses</p>
+</section>
+
+<section id="write" data-part="1" data-cue="Sofía Rivera is twelve and in After-School Tutoring at Harbourview." data-clip="clips/write-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Your reflection</h3><p>From the lesson: how she feels, her words and one thing she'll do.</p></div>
+</section>
+
+<section id="write-shots" data-part="1" data-cue="She chooses how she feels, Thoughtful.">
+  <h2>Saved privately</h2>
+  <div class="cols">
+    <img class="shot" alt="The reflection form with Thoughtful chosen, her words and one thing she'll do" src="shots/desktop-reflection.png">
+    <img class="shot" alt="Reflection saved: only you can see it" src="shots/desktop-private.png">
+  </div>
+</section>
+
+<section id="one" data-part="2" data-cue="The server keeps one reflection for each youth and lesson">
+  <h2>One reflection per lesson</h2>
+  <table class="facts">
+    <tr><th>Rule</th><th>On the server</th></tr>
+    <tr><td>Kept</td><td>One per youth membership and lesson, replaced on each save</td></tr>
+    <tr><td>Required</td><td>A mood and her words (up to 5,000 characters)</td></tr>
+    <tr><td>Optional</td><td>One thing she'll do this week (up to 1,000)</td></tr>
+    <tr><td>Audited</td><td>Created or Updated with Shared before and after, never her words</td></tr>
+  </table>
+  <p class="muted small">PUT /learning/lessons/{id}/reflection · ADR 0060</p>
+</section>
+
+<section id="share" data-part="3" data-cue="The switch names her mentor, Daniel Osei" data-clip="clips/share-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Sharing</h3><p>On, saved: Daniel Osei can read it.</p></div>
+</section>
+
+<section id="mentor" data-part="4" data-cue="Daniel opens Sofía's record from My youth." data-clip="clips/mentor-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Shared reflections</h3><p>Only what she shared, newest first, on her record.</p></div>
+</section>
+
+<section id="gates" data-part="4" data-cue="A mentor who does not mentor her is refused">
+  <h2>Who reads a reflection</h2>
+  <div class="cols">
+    <table class="facts">
+      <tr><th>Caller</th><th>Answer</th></tr>
+      <tr><td>Sofía</td><td>Her own, private or shared</td></tr>
+      <tr><td>Her mentor</td><td>Only the shared ones, audited</td></tr>
+      <tr><td>Another mentor</td><td>403, audited</td></tr>
+      <tr><td>Admins, directors, staff, guardians</td><td>No endpoint answers</td></tr>
+      <tr><td>Another organization</td><td>404</td></tr>
+    </table>
+    <img class="shot" alt="Daniel's view: Shared reflections on Sofía's record" src="shots/desktop-mentor.png">
+  </div>
+</section>
+
+<section id="leave" data-part="5" data-cue="If Sofía starts writing and then taps away" data-clip="clips/leave-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Leave without saving?</h3><p>Save draft and leave, then the draft restored.</p></div>
+</section>
+
+<section id="leave-shots" data-part="5" data-cue="When she comes back, the page says we restored your draft">
+  <h2>Drafts stay on the device</h2>
+  <div class="cols">
+    <img class="shot" alt="The leave dialog: Leave without saving, Keep editing, Save draft and leave" src="shots/desktop-leave.png">
+    <img class="shot" alt="We restored your draft, with Start over" src="shots/desktop-restored.png">
+  </div>
+</section>
+
+<section id="phone" data-part="6" data-cue="On a phone the reflection fits one column" data-clip="clips/phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>One column</h3><p>Her reflection, then Daniel's card.</p></div>
+</section>
+
+<section id="states" data-part="7" data-cue="Saving with no mood and no words" data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Refused and off</h3><p>Invalid, failed, not reached, not open yet, Learning off.</p></div>
+</section>
+
+<section id="states-shots" data-part="7" data-cue="Another organization's lessons are never found">
+  <h2>Every state says what to do</h2>
+  <div class="cols">
+    <img class="shot" alt="Fix these to continue: choose how you're feeling, write your reflection" src="shots/desktop-invalid.png">
+    <img class="shot" alt="Finish Last in Line first" src="shots/desktop-locked.png">
+  </div>
+</section>
+
+<section id="testing" data-part="8" data-cue="The API tests cover the editor">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>LearningReflectionsTests</code>: editor, save and replace, checks, audit without words, gates, tenancy, Learning off</li>
+    <li><code>MentorReflectionsTests</code>: shared only, newest first, another mentor, other roles, modules off</li>
+    <li><code>reflection.spec.ts</code>, <code>shared-reflections.spec.ts</code> on phone and laptop, with axe</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="9" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>One reflection per youth and lesson, private until she shares it</li><li>Only her mentor reads what she shares</li><li>Drafts stay on her device</li></ul>
+  <p class="muted">Next: mentors record check-ins</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

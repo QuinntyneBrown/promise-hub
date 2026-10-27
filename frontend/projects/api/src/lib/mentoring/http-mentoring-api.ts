@@ -1,3 +1,4 @@
+import { SharedReflections } from './shared-reflections';
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, of } from 'rxjs';
@@ -87,6 +88,14 @@ export class HttpMentoringApi implements MentoringApi {
         map((body): ApproveAllOutcome => ({ status: 'saved', approved: body.approved })),
         catchError(() => of<ApproveAllOutcome>({ status: 'error' })),
       );
+  }
+
+  sharedReflections(childId: string): Observable<LoadResult<SharedReflections>> {
+    return toLoad(
+      this.http.get<SharedReflections>(
+        `${this.baseUrl}/mentoring/youth/${encodeURIComponent(childId)}/reflections`,
+      ),
+    );
   }
 
   competencies(childId: string): Observable<LoadResult<CompetencySheet>> {

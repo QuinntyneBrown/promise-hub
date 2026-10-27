@@ -73,6 +73,7 @@ recordings it plays (`clips/`, recorded from `clips/clips.mjs`) and the generate
 | 63 | [Grade and assess](63-grade-and-assess/README.md) | ~5 min | A mentor works a review queue of their youth's work, grades a submission against its rubric and approves it, sends it back or keeps a draft, approves or overrides quiz results, and records competency levels; a stale grade is refused, never silently applied |
 | 64 | [Author badges and progression](64-author-badges-and-progression/README.md) | ~5 min | A program director defines badges earned by one rule or by hand, the server awards automatic badges once after each learning event, she awards a badge by hand with her name recorded, and she authors the progression framework of stages and the competencies mentors assess |
 | 65 | [View journey and progress](65-view-journey-and-progress/README.md) | ~5 min | A youth sees her roadmap through the tracks her programs follow, her weekly streak, her progression stage from her mentor's assessments, the badges she has earned and those still to unlock with how far she is, and her own quizzes, attendance (while Roll Call is on) and competencies |
+| 66 | [Write reflections](66-write-reflections/README.md) | ~4 min | A youth writes a reflection on a lesson with how she feels, her words and one thing she'll do, private unless she shares it with her mentor; her mentor reads only what she shared on her record; leaving with unsaved words asks first and keeps a draft on the device |
 
 ## Making or updating a video
 

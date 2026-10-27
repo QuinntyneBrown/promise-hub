@@ -22,4 +22,4 @@ Prompt 49 built the foundation only ([read-own-record](read-own-record/README.md
 | [`view-learning-journey`](view-learning-journey/README.md) | 65 View journey and progress | `learning-experience` L2-LEARN-009 |
 | [`view-badges`](view-badges/README.md) | 65 View journey and progress | `learning-experience` L2-LEARN-009 |
 | [`review-personal-progress`](review-personal-progress/README.md) | 65 View journey and progress | `learning-experience` L2-LEARN-010 |
-| `write-reflections` | 66 Write reflections | L1-LEARN-006 |
+| [`write-reflections`](write-reflections/README.md) | 66 Write reflections | `learning-experience` L2-LEARN-003 |
