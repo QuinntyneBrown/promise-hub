@@ -31,6 +31,10 @@ Backend (`PromiseHub.Application/Learning/`):
 
 Open questions: none. Decisions are recorded in ADR 0059.
 
+## Built so far
+
+Prompt 65 delivered everything above in slices 1 and 2: `GET /learning/journey` with the roadmap, current module, streak, stages and badge strip, and `JourneyPage` linked from Learning's Your journey card. The fake API (`e2e/fixtures/fake-journey.ts`) computes the same answers from the other fakes. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/LearningJourneyTests.cs`, `e2e/tests/learning/journey.spec.ts`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

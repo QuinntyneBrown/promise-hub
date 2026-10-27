@@ -27,6 +27,10 @@ Backend (`PromiseHub.Application/Learning/`):
 
 Open questions: none. Decisions are recorded in ADR 0059.
 
+## Built so far
+
+Prompt 65 delivered everything above in slice 3: `GET /learning/progress` and `ProgressPage` with its three tabs, linked from the journey and Learning. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/LearningProgressTests.cs`, `e2e/tests/learning/progress.spec.ts`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

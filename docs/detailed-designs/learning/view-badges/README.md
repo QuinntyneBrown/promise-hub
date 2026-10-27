@@ -27,6 +27,10 @@ Backend (`PromiseHub.Application/Learning/`):
 
 Open questions: none. Decisions are recorded in ADR 0059.
 
+## Built so far
+
+Prompt 65 delivered everything above in slice 2: `GET /learning/badges` and `BadgesPage`, with `PhAchievementBadges` and `achievementIcon` added to the components library (the curriculum pages now use the shared `achievementIcon`). In the fake API a program's start date stands in for the enrollment date of Joined. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/LearningBadgesTests.cs`, `e2e/tests/learning/badges.spec.ts`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |
