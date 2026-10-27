@@ -105,6 +105,78 @@ simple("add-walk-in", "Add a walk-in to tonight", "check-in", [R_ROLL, R_ENROLL]
        lambda e: field("name", "Child’s name", value="Nikolai Petrov", required=True, error=(e or {}).get("name", "")) + field("g", "Guardian’s name and phone", value="Elena Petrova · 289-555-0150", error=(e or {}).get("g", ""), required=True, help_="Reachable tonight.") + textarea("med", "Allergies or medical, as the guardian told you", rows=2, placeholder="None that we know of"),
        "Check in for tonight", base_state="no-results", icon_name="plus", invalid_err={"g": "Enter a guardian name and phone number."})
 
+# ------------------------------------------------------------------ Household check-in and check-out at a family event (prompt 82)
+from pages_family_events import LANGS, child_row, DROP_IN_URL  # noqa: E402
+
+_R_FAMILY = ["L1-007", "L1-009", "L1-005"]
+
+
+def _hh_checkin(e=None):
+    e = e or {}
+    other = bool(e)
+    extra = ""
+    if other:
+        extra = (f'<div class="two-col">{field("other", "Their name", value="", error=e.get("other", ""), autofocus=True)}'
+                 f'{field("rel", "How they know the children", value="Neighbour")}</div>')
+    return (f'<div class="cluster">{avatar(dict(name="Tran household", initials="T", color="mint"), "lg")}<div><div class="section-title">Tran household</div><div class="text-muted">Kevin, 8 and Emily, 10 · Linh Tran 289-555-0119 · no medical notes</div></div></div>'
+            + fieldset("Adult here with them", choice("adult", "Linh Tran <small>Mother · registered them</small>", checked=not other)
+                       + choice("adult", "Someone else <small>Name them; Linh is texted</small>", checked=other), fid="adult") + extra
+            + fieldset("Who came", choice("kid", "Kevin, 8", type_="checkbox", checked=True, attrs=' name="kid-kevin"') + choice("kid", "Emily, 10", type_="checkbox", checked=True, attrs=' name="kid-emily"'))
+            + fieldset("Arrived", choice("arr", "Now, 5:41 pm", checked=True) + choice("arr", "Earlier", small="Pick a time"))
+            + f'<p class="hint"><a href="{page("quick-card")}">Kevin’s Quick Card</a> · <a href="{page("quick-card")}">Emily’s Quick Card</a></p>')
+
+
+simple("household-check-in", "Check in the Tran household", "event-check-in", _R_FAMILY, "The adult present is recorded with the check-in.",
+       _hh_checkin, "Check in household", icon_name="users", invalid_err={"other": "Enter the adult’s name."})
+
+
+def _hh_checkout(e=None):
+    e = e or {}
+    return (fieldset("Leaving with", choice("who", "Luis Rivera <small>Uncle · came with them at 5:38 pm</small>", checked=not e)
+                     + choice("who", "Carmen Rivera <small>Mother · approved</small>")
+                     + choice("who", "Rosa Alvarez <small>Grandmother · approved · ask for ID</small>")
+                     + choice("who", "Someone else <small>Needs Carmen’s okay by phone</small>"), error=e.get("who", ""), fid="who")
+            + fieldset("Who is leaving", choice("kid", "Mateo, 9", type_="checkbox", checked=True, attrs=' name="kid-mateo"') + choice("kid", "Sofía, 12", type_="checkbox", checked=True, attrs=' name="kid-sofia"'))
+            + field("time", "Time", type_="time", value="19:05", attrs=' style="max-width: 10rem;"'))
+
+
+simple("household-check-out", "Check out the Rivera household", "event-check-in", _R_FAMILY, "Here since 5:38 pm with Luis Rivera · Mateo, 9 and Sofía, 12.",
+       _hh_checkout, "Check out", icon_name="check", invalid_err={"who": "Choose who the children are leaving with."},
+       confirm_body=fieldset("Leaving with", choice("who", "Someone else <small>Needs Carmen’s okay by phone</small>", checked=True))
+       + alert("warning", "Not the adult who came", "Luis Rivera brought Mateo and Sofía. Call Carmen Rivera before they leave.",
+               actions=f'<a class="btn btn--primary btn--sm" href="tel:+19055550142">{icon("phone")}Call Carmen 905-555-0142</a>')
+       + field("other", "Their name", value="Daniel Rivera") + switch("ok", "Carmen confirmed by phone at 7:05 pm") + switch("idok", "I checked photo ID"))
+
+
+def _register_body(e=None):
+    e = e or {}
+    kids = child_row(1, "Zofia", "5", age_err=e.get("age-1", "")) + child_row(2, "Jakub", "" if e else "9", age_err=e.get("age-2", ""))
+    return (field("adult", "Adult’s name", value="Piotr Kowalski", required=True, error=e.get("adult", ""), autofocus=True)
+            + field("mobile", "Mobile", type_="tel", value="" if e else "289-555-0231", required=True, inputmode="tel", error=e.get("mobile", ""), help_="A link to finish their details is texted after tonight.")
+            + select("lang", "Language for texts", LANGS, selected="Polski")
+            + fieldset("Children", f'<div class="stack">{kids}{btn("Add another child", "ghost", icon_name="plus", size="sm")}</div>')
+            + textarea("med", "Allergies or medical, as told at the door", rows=2, placeholder="None that we know of")
+            + switch("consent", "They agree to first aid and an emergency call if needed", checked=True))
+
+
+simple("register-drop-in", "Register a household at the door", "event-check-in", ["L1-005", "L1-007", "L1-013"], "Tonight’s event. They are checked in the moment you save.",
+       _register_body, "Register and check in", base_state="no-results", icon_name="plus",
+       invalid_err={"mobile": "Enter a mobile number we can text.", "age-2": "Enter Jakub’s age."},
+       success_body='<p>Kowalski household is here: Zofia and Jakub checked in with Piotr at 6:02 pm.</p><p class="text-muted">A link to finish their details was texted to 289-555-0231. The office sees them under Families, flagged “Registered at an event”.</p>')
+
+simple("drop-in-link", "Share the drop-in link", "event", ["L1-005", "L1-010", "L1-025"], "Households register themselves and appear on the check-in list at once.",
+       lambda e: f'<div class="input-group"><label class="visually-hidden" for="drop-link">Drop-in link</label><input class="input" id="drop-link" type="url" readonly value="https://{DROP_IN_URL}"><button class="btn btn--ghost btn--icon input-group__btn" type="button" aria-label="Copy link">{icon("copy")}</button></div>'
+                 + f'<div class="center">{qr("QR code for the drop-in link", "sm")}</div><p class="hint center">On the public page while Public website is on; otherwise only this link and the QR code work.</p>'
+                 + f'<div class="center">{btn("Print poster", "ghost", icon_name="file")}</div>',
+       "Text to 112 families", base_state="family", icon_name="link", cancel="Close", na={"invalid": "The dialog has no inputs to validate."},
+       failed_text="The text didn’t go out. The link and QR code still work.")
+
+simple("end-family-event", "End Harvest Family Night?", "event-check-in", ["L1-007", "L1-012"], "4 households are not checked out: Thompson, Haddad, Chen and Okonkwo.",
+       lambda e: fieldset("The 4 still here", choice("left", "Check out with the adult who came, at 7:30 pm", small="Everyone left together", checked=True)
+                          + choice("left", "Leave as is", small="Check each household out later")),
+       "End event", icon_name="check-circle", na={"invalid": "A radio group with a default."})
+
+
 # ------------------------------------------------------------------ Enrollment and roster
 simple("open-enrollment", "Open enrollment for After‑School Tutoring", "program", [R_ENROLL, "L1-004"], "One link and a QR code for all families.",
        lambda e: f'<div class="two-col">{field("cap", "Places", type_="number", value="50", inputmode="numeric", error=(e or {}).get("cap", ""))}{field("close", "Close on", type_="date", value="2026-09-30", optional=True, help_="Leave empty to keep it open.")}</div>'

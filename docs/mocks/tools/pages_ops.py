@@ -61,13 +61,23 @@ def program_form(S):
 @screen("event-form", "page", "Event form", route="/events/new", reqs=[R_SLIPS, R_ROLL], na={"empty": "A form has no collection to be empty of."})
 def event_form(S):
     def form(err=None, busy=False, v=None, edit=False):
-        v = v or dict(name="", prog="After‑School Tutoring", start="", end="", place="", notes="")
+        v = dict(dict(name="", prog="After‑School Tutoring", start="", end="", place="", notes="", audience="Children", ages_from="", ages_to=""), **(v or {}))
         e = err or {}
+        fam = v["audience"] != "Children"
+        AGE_ATTRS = ' min="0" max="18"'
+        aud = fieldset("Who it’s for", choice("aud", "Children", small="Roster from the program", checked=v["audience"] == "Children")
+                       + choice("aud", "Children with guardian", small="An adult stays for the whole event", checked=v["audience"] == "Children with guardian")
+                       + choice("aud", "All ages", small="Households register; no roster", checked=v["audience"] == "All ages"), fid="aud")
+        ages = fieldset("Ages", f'<div class="two-col">{field("ages_from", "Youngest", type_="number", value=v["ages_from"], inputmode="numeric", error=e.get("ages_from", ""), attrs=AGE_ATTRS)}{field("ages_to", "Oldest", type_="number", value=v["ages_to"], inputmode="numeric", error=e.get("ages_to", ""), attrs=AGE_ATTRS)}</div>',
+                        hint="Leave both empty for all ages." if fam else "Leave both empty to use the program’s ages.", fid="ages")
         return (f'<form class="card stack form-width--md" action="#" method="post" novalidate>'
                 + (form_summary([(k, m) for k, m in e.items()]) if e else "")
                 + field("name", "Event name", value=v["name"], error=e.get("name", ""), required=True, autofocus=not edit, placeholder="Fall field trip: Royal Botanical Gardens")
-                + select("prog", "Program", ["After‑School Tutoring", "Saturday Sports", "One-to-one Mentoring", "Winter Camp 2026"], selected=v["prog"], help_="Roster comes from the program.")
-                + f'<div class="two-col">{field("start", "Starts", type_="datetime-local", value=v["start"], required=True, error=e.get("start", ""))}{field("end", "Ends", type_="datetime-local", value=v["end"], required=True)}</div>'
+                + aud
+                + select("prog", "Program", ["No program (family event)", "After‑School Tutoring", "Saturday Sports", "One-to-one Mentoring", "Winter Camp 2026"], selected=v["prog"],
+                         help_="Households register themselves; enrolled families are invited too." if fam else "Roster comes from the program.", optional=fam)
+                + ages
+                + f'<div class="two-col">{field("start", "Starts", type_="datetime-local", value=v["start"], required=True, error=e.get("start", ""))}{field("end", "Ends", type_="datetime-local", value=v["end"], required=True, error=e.get("end", ""))}</div>'
                 + field("place", "Where", value=v["place"], help_="For trips, include the bus stop.")
                 + fieldset("Permission slip", choice("slip", "Not needed", small="Season consent covers it", checked=not v["name"].lower().startswith("fall")) + choice("slip", "Required", small="Write it next", checked=v["name"].lower().startswith("fall")), error=e.get("slip", ""), fid="slip")
                 + fieldset("Attendance", switch("noshow", "Text guardians if not checked in 15 min after start", checked=True, desc="Delay: Settings › Notifications."))
@@ -87,6 +97,15 @@ def event_form(S):
           toast_html=toast_region(toast("success", "Event created", "Swim trip: Jimmy Thompson Pool · Sat 28 Nov")))
     S.add("edit", "Editing the field trip.", nav="events", main=breadcrumb([("Events", page("events")), ("Fall field trip", page("event"))], "Edit") + page_header("Edit event", "Fall field trip: Royal Botanical Gardens") +
           form(v=dict(name="Fall field trip: Royal Botanical Gardens", prog="After‑School Tutoring", start="2026-11-14T09:00", end="2026-11-14T15:00", place="Royal Botanical Gardens, Burlington · bus from the centre, leaves 8:45 am sharp", notes="Lunch provided for 6 families on request. 4 volunteers confirmed."), edit=True))
+    S.add("family", "Creating an all-ages family night: no program, households register themselves, no slip; the ages are left open.", nav="events", user=M,
+          main=breadcrumb([("Events", page("events"))], "New event") + page_header("New event") +
+          form(v=dict(name="Harvest Family Night", prog="No program (family event)", audience="All ages", start="2026-11-13T17:30", end="2026-11-13T19:30",
+                      place="Harbourview Community Centre gym, 47 Simcoe St E · doors open 5:15 pm", notes="Dinner is nut-free. 60 households at most. Jaylen runs the door.")),
+          notes=note("Children with guardian and All ages need no program: the roster is the households that register. Season consent doesn’t apply; the registration carries the event consent. A split by age at different times is two events.", "top: 5rem; right: 1rem;"))
+    S.add("family-invalid", "A family swim for ages 4 to 12 saved with the ages reversed and no end time: errors inline and in a summary.", nav="events", user=M,
+          main=breadcrumb([("Events", page("events"))], "New event") + page_header("New event") +
+          form(err={"ages_to": "Oldest must be at least the youngest age, 12.", "end": "Enter when it ends."},
+               v=dict(name="Family Swim: Jimmy Thompson Pool", prog="No program (family event)", audience="Children with guardian", ages_from="12", ages_to="4", start="2026-11-21T13:00", end="", place="Jimmy Thompson Memorial Pool", notes="")))
 
 
 # ------------------------------------------------------------------ Slips list
@@ -172,23 +191,32 @@ def messages(S):
 
 @screen("new-message", "page", "New message", route="/messages/new", reqs=[R_NOTIFY, R_COST, "L1-019"], na={"empty": "A form has no collection to be empty of.", "loading": "The compose form is static; recipient counts load inline."})
 def new_message(S):
-    def form(err=None, busy=False, body="Reminder: RBG trip is Sat 14 Nov. Bus leaves 8:45 am sharp. Pack a nut-free lunch and a rain jacket.", count=48, none=False, over=False):
+    def form(err=None, busy=False, body="Reminder: RBG trip is Sat 14 Nov. Bus leaves 8:45 am sharp. Pack a nut-free lunch and a rain jacket.", count=48, none=False, over=False, event=False):
         e = err or {}
         n = 0 if none else count
         chars = len(body) + 20
         segs = max(1, -(-chars // 153)) if chars > 160 else 1
-        rc = (f'<div class="recipient-count" role="status"><strong>{n}</strong> guardians · {n and n - 4 or 0} by text, {n and 4 or 0} by email · about {n * segs} SMS segments</div>')
-        audience = card(select("prog", "Program", ["All programs", "After‑School Tutoring", "Saturday Sports", "Winter Camp 2026"], selected="After‑School Tutoring")
-                        + f'<div class="two-col">{select("ages", "Ages", ["All ages", "6–9", "10–13"], selected="All ages")}{select("lang", "Language", ["All languages", "English", "Spanish", "French"], selected="All languages")}</div>'
-                        + fieldset("Also narrow to", choice("f", "Guardians who haven’t signed the RBG slip", small="7 households", type_="checkbox", attrs=' name="f1"') + choice("f", "Children absent today", small="2 households", type_="checkbox", attrs=' name="f2"'))
-                        + rc, title="Who", tid="who")
+        who = "households" if event else "guardians"
+        to = fieldset("To", choice("to", "A program", small="Enrolled households", checked=not event) + choice("to", "An event", small="Everyone registered, enrolled or not", checked=event), fid="to")
+        if event:
+            rc = (f'<div class="recipient-count" role="status"><strong>{n}</strong> households · {n and n - 2 or 0} by text, {n and 2 or 0} by email · about {n * segs} SMS segments</div>')
+            audience = card(to + select("ev", "Event", ["Harvest Family Night · Fri 13 Nov", "Family Swim · Sat 21 Nov", "Fall field trip · Sat 14 Nov"], selected="Harvest Family Night · Fri 13 Nov", help_="Registered households, including those who registered online or at the door.")
+                            + fieldset("Narrow to", choice("f", "Everyone registered", small="23 households", type_="checkbox", checked=True, attrs=' name="f1"') + choice("f", "Here now", small="12 households", type_="checkbox", attrs=' name="f2"') + choice("f", "Registered online or at the door", small="2 households, no enrollment", type_="checkbox", attrs=' name="f3"'))
+                            + select("lang", "Language", ["All languages", "English", "Spanish", "French", "Polish", "Dari"], selected="All languages")
+                            + rc, title="Who", tid="who")
+        else:
+            rc = (f'<div class="recipient-count" role="status"><strong>{n}</strong> guardians · {n and n - 4 or 0} by text, {n and 4 or 0} by email · about {n * segs} SMS segments</div>')
+            audience = card(to + select("prog", "Program", ["All programs", "After‑School Tutoring", "Saturday Sports", "Winter Camp 2026"], selected="After‑School Tutoring")
+                            + f'<div class="two-col">{select("ages", "Ages", ["All ages", "6–9", "10–13"], selected="All ages")}{select("lang", "Language", ["All languages", "English", "Spanish", "French"], selected="All languages")}</div>'
+                            + fieldset("Also narrow to", choice("f", "Guardians who haven’t signed the RBG slip", small="7 households", type_="checkbox", attrs=' name="f1"') + choice("f", "Children absent today", small="2 households", type_="checkbox", attrs=' name="f2"'))
+                            + rc, title="Who", tid="who")
         msg = card(textarea("body", "Message", value=body, rows=5, error=e.get("body", ""), help_="Machine-translated per household language.", count=f"{chars} / 480")
                    + fieldset("Send by", choice("ch", "Text, email for households without a mobile", small="Uses SMS segments", checked=True) + choice("ch", "Email only", small="Free") + choice("ch", "Text only", small="Skips 4 households"), fid="ch")
                    + fieldset("When", choice("when", "Now", checked=True) + choice("when", "Schedule", small="Pick a time")), title="What", tid="what")
-        prev = f'<aside class="stack" aria-label="Preview"><div class="card"><h2 class="card__title">Carmen Rivera’s view</h2>{sms("Harbourview Youth: " + body, segments=segs, chars=chars, over=over)}<p class="hint" style="margin-top: var(--space-3);">Tap to review the Spanish version.</p></div></aside>'
+        prev = f'<aside class="stack" aria-label="Preview"><div class="card"><h2 class="card__title">{"Fatima Rahimi" if event else "Carmen Rivera"}’s view</h2>{sms("Harbourview Youth: " + body, segments=segs, chars=chars, over=over)}<p class="hint" style="margin-top: var(--space-3);">Tap to review the {"Dari" if event else "Spanish"} version.</p></div></aside>'
         return (f'<form class="stack" action="#" method="post" novalidate>' + (form_summary([(k, m) for k, m in e.items()]) if e else "") +
                 f'<div class="split" style="margin-top: 0;"><div class="stack">{audience}{msg}</div>{prev}</div>' +
-                f'<div class="form-actions cluster">{btn("Save draft", "")}{btn("Cancel", "ghost", href=page("messages"))}{btn(f"Send to {n} guardians", "primary", type_="submit", busy=busy, disabled=none)}</div></form>')
+                f'<div class="form-actions cluster">{btn("Save draft", "")}{btn("Cancel", "ghost", href=page("messages"))}{btn(f"Send to {n} {who}", "primary", type_="submit", busy=busy, disabled=none)}</div></form>')
     S.add("default", "Composing a reminder to the tutoring program with a live recipient count, SMS cost and a phone preview.", nav="messages", user=M, main=breadcrumb([("Messages", page("messages"))], "New message") + page_header("New message") + form())
     S.add("error", "Recipient count couldn’t be computed; the form stays editable.", nav="messages", user=M, main=breadcrumb([("Messages", page("messages"))], "New message") + page_header("New message") +
           alert("danger", "We couldn’t count recipients", "Try again; Send stays off until counted.", actions=btn("Try again", "primary", size="sm", icon_name="refresh")) + form(none=True).replace('<strong>0</strong> guardians · 0 by text, 0 by email · about 0 SMS segments', '<strong>—</strong> guardians · count unavailable'))
@@ -200,6 +228,10 @@ def new_message(S):
           toast_html=toast_region(toast("success", "Message sent", "48 guardians · 44 text, 4 email")))
     S.add("no-results", "Filters that match nobody: the count is zero and Send is disabled with a reason.", nav="messages", user=M, main=breadcrumb([("Messages", page("messages"))], "New message") + page_header("New message") +
           form(none=True).replace('<div class="recipient-count" role="status">', '<div class="recipient-count" role="status" aria-describedby="none-why">').replace('about 0 SMS segments</div>', 'about 0 SMS segments</div><p class="field__error" id="none-why">Nobody matches. Loosen a filter.</p>'))
+    S.add("family", "A message to every household registered for Harvest Family Night, enrolled or drop-in, with the count by channel and a drop-in household’s preview.", nav="messages", user=M,
+          main=breadcrumb([("Messages", page("messages"))], "New message") + page_header("New message") +
+          form(event=True, count=23, body="Harvest Family Night is this Friday 13 Nov, 5:30 pm. Gym doors on Simcoe St. Dinner is nut-free. Show your text link at the door."),
+          notes=note("An event audience reaches every registered household, including those with no enrollment; they are texted in their own language and can opt out like any other.", "top: 5rem; right: 1rem;"))
     S.add("over-cap", "The organization is at its monthly SMS cap: text is disabled, email still works.", nav="messages", user=M, main=breadcrumb([("Messages", page("messages"))], "New message") + page_header("New message") +
           alert("warning", "You’ve used all 2,000 SMS segments this month", "Texts resume 1 December. Email still sends.", actions=f'<a class="btn btn--sm" href="{page("billing")}">Raise the cap</a>') +
           form(over=True).replace('<label class="choice"><input type="radio" name="ch" checked>', '<label class="choice"><input type="radio" name="ch" disabled>').replace('<label class="choice"><input type="radio" name="ch"><span class="choice__text">Email only<small>Free</small>', '<label class="choice"><input type="radio" name="ch" checked><span class="choice__text">Email only<small>Free</small>'))
@@ -303,6 +335,18 @@ def reports(S):
     lang = card('<ul class="progress-chart">' + "".join(f'<li><span class="progress-row__label">{n}</span><div class="progress" role="progressbar" aria-valuenow="{v}" aria-valuemin="0" aria-valuemax="112" aria-label="{n}: {v} households"><div class="progress__bar" style="--value: {round(100 * v / 112)}%;"></div></div><span class="progress-row__label">{v}</span></li>' for n, v in [("English", 82), ("Spanish", 21), ("French", 9)]) + "</ul>", title="Households by language", tid="lang")
     S.add("default", "The director’s report page: headline numbers, demographics table, attendance and language charts, one-click export.", nav="reports", user=M, main=hdr + filters + numbers + f'<div class="split"><div class="stack">{demo}</div><div class="stack">{att}{lang}</div></div>',
           notes=note("Every number here comes from registration, slips and check-in; nothing is retyped. Export produces CSV or the funder’s spreadsheet template.", "top: 5rem; right: 1rem;"))
+    fam_filters = (f'<div class="toolbar">{select("rp-range", "Period", ["This season (Sep 2026– )", "Last 30 days", "Last season (2025–26)", "Custom…"], visually_hidden_label=True)}'
+                   f'{select("rp-prog", "Program or event", ["All programs", "After‑School Tutoring", "Saturday Sports", "Winter Camp 2026", "Harvest Family Night · Fri 13 Nov", "Family Swim · Sat 21 Nov"], selected="Harvest Family Night · Fri 13 Nov", visually_hidden_label=True)}'
+                   f'{select("rp-funder", "Funder template", ["Standard", "Ontario Trillium Foundation", "United Way Halton & Hamilton", "City of Hamilton"], visually_hidden_label=True)}</div>')
+    fam_numbers = kpis([("Households registered", "23", "of 60 places"), ("Households came", "21", "91.3% of registered"), ("Adults present", "25", "recorded at the door"), ("Children present", "29", "2 registered at the door")])
+    fam_demo = card(table("Attendees by age band", ["Age band", "#Registered", "#Present"], [["0–5", "6", "5"], ["6–12", "19", "18"], ["13–18", "6", "6"], ["Adults", "27", "25"], ["<strong>Total</strong>", "<strong>58</strong>", "<strong>54</strong>"]], cls="table-wrap--flush table-wrap--fit") +
+                    '<p class="hint" style="padding: var(--space-3) var(--space-4);">Bands are the organization’s report bands; a child with no age on file counts under “not said” in exports.</p>', title="Who came", tid="demo", cls="card--flush")
+    fam_how = card('<ul class="progress-chart">' + "".join(f'<li><span class="progress-row__label">{n}</span><div class="progress" role="progressbar" aria-valuenow="{v}" aria-valuemin="0" aria-valuemax="23" aria-label="{n}: {v} households"><div class="progress__bar" style="--value: {round(100 * v / 23)}%;"></div></div><span class="progress-row__label">{v}</span></li>' for n, v in [("Enrolled households", 19), ("Registered online", 2), ("Registered at the door", 2)]) + "</ul>" +
+                   '<p class="hint" style="margin-top: var(--space-3);">Drop-in households stay under Families, flagged until the office completes them.</p>', title="Households by how they registered", tid="how")
+    fam_lang = card('<ul class="progress-chart">' + "".join(f'<li><span class="progress-row__label">{n}</span><div class="progress" role="progressbar" aria-valuenow="{v}" aria-valuemin="0" aria-valuemax="23" aria-label="{n}: {v} households"><div class="progress__bar" style="--value: {round(100 * v / 23)}%;"></div></div><span class="progress-row__label">{v}</span></li>' for n, v in [("English", 14), ("Spanish", 4), ("French", 2), ("Polish", 1), ("Dari", 1), ("Other", 1)]) + "</ul>", title="Households by language", tid="lang")
+    S.add("family", "Harvest Family Night as a report: households registered and present, adults recorded at the door, attendees by age band, how households registered, and the same export.", nav="reports", user=M,
+          main=hdr + fam_filters + fam_numbers + f'<div class="split"><div class="stack">{fam_demo}</div><div class="stack">{fam_how}{fam_lang}</div></div>',
+          notes=note("A family event counts households and adults as well as children; drop-in attendees are in every number. Exports mask counts under 5.", "top: 5rem; right: 1rem;"))
     S.add("forbidden", "A youth worker opening Reports.", nav="reports", user=STAFF["aisha"], main=f'<div class="error-page">{empty("Reports are for directors and site leads", "Ask a program director for the numbers you need.", action=btn("Go to Today", "primary", href=page("today")), icon_name="lock", heading="h1")}</div>')
     S.add("loading", "Reports computing.", nav="reports", main=page_header("Reports", "") + skeleton_kpis() + f'<div class="split">{skeleton_list(4, "Loading demographics")}{skeleton_list(3, "Loading attendance")}</div>')
     S.add("empty", "No attendance recorded yet, so there is nothing to report.", nav="reports", user=M, main=page_header("Reports", "") + card(empty("No data to report yet", "Record attendance first.", action=btn("Open check-in", "primary", href=page("check-in", "empty")), icon_name="chart"), cls="card--flush"))

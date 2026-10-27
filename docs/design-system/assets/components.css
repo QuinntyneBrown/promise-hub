@@ -1538,6 +1538,11 @@ fieldset:has(input[aria-invalid="true"]) .chip-group label.chip:not(:has(input:c
 .roster__action { flex: none; }
 .roster__action .btn { min-width: var(--layout-action-wide); }
 @media (max-width: 39.99rem) { .roster__item { padding-inline: var(--space-3); } .roster__action .btn { min-width: var(--layout-action-narrow); } }
+/* Household rows (family events): the children of the household under the adult present, each a link to a Quick Card */
+.roster__children { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-3); margin-top: var(--space-1); font: var(--text-body-sm); }
+.roster__child { color: var(--color-fg-default); text-decoration: underline; text-underline-offset: 0.15em; }
+.roster__child:hover { color: var(--color-fg-accent); }
+.roster__name .badge { margin-inline-start: var(--space-1); }
 .roster-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--layout-gutter); }
 .roster-summary .card { padding: var(--space-3) var(--space-4); }
 .roster-summary .stat__value { font: var(--text-h3); }

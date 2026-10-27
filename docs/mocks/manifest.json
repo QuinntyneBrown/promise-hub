@@ -39,6 +39,7 @@
         "partial",
         "single-module",
         "offline",
+        "family-night",
         "youth",
         "youth-learning-off",
         "mentor",
@@ -84,7 +85,8 @@
         "error",
         "offline",
         "forbidden",
-        "edge"
+        "edge",
+        "drop-in"
       ]
     },
     {
@@ -122,7 +124,8 @@
         "error",
         "partial",
         "upcoming",
-        "cancelled"
+        "cancelled",
+        "family"
       ]
     },
     {
@@ -285,7 +288,9 @@
         "invalid",
         "submitting",
         "success",
-        "edit"
+        "edit",
+        "family",
+        "family-invalid"
       ],
       "not_applicable": {
         "empty": "A form has no collection to be empty of."
@@ -365,6 +370,7 @@
         "submitting",
         "success",
         "no-results",
+        "family",
         "over-cap"
       ],
       "not_applicable": {
@@ -461,6 +467,7 @@
       ],
       "states": [
         "default",
+        "family",
         "forbidden",
         "loading",
         "empty",
@@ -2421,6 +2428,54 @@
       ]
     },
     {
+      "id": "event-check-in",
+      "kind": "page",
+      "title": "Household check-in",
+      "route": "/events/:id/check-in",
+      "requirements": [
+        "L1-007",
+        "L1-009",
+        "L1-005",
+        "L1-014"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "no-results",
+        "with-guardian",
+        "offline",
+        "long",
+        "complete"
+      ]
+    },
+    {
+      "id": "drop-in",
+      "kind": "page",
+      "title": "Drop-in registration",
+      "route": "/site/harbourview/events/harvest-family-night/register",
+      "requirements": [
+        "L1-005",
+        "L1-013",
+        "L1-025",
+        "L1-010"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "submitting",
+        "success",
+        "loading",
+        "error",
+        "closed",
+        "not-found"
+      ],
+      "not_applicable": {
+        "empty": "A registration form has no collection to be empty of."
+      }
+    },
+    {
       "id": "check-in-sheet",
       "kind": "dialog",
       "title": "Check in Kevin Tran",
@@ -2521,6 +2576,96 @@
         "invalid",
         "failed"
       ]
+    },
+    {
+      "id": "household-check-in",
+      "kind": "dialog",
+      "title": "Check in the Tran household",
+      "opens_from": "event-check-in",
+      "requirements": [
+        "L1-007",
+        "L1-009",
+        "L1-005"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ]
+    },
+    {
+      "id": "household-check-out",
+      "kind": "dialog",
+      "title": "Check out the Rivera household",
+      "opens_from": "event-check-in",
+      "requirements": [
+        "L1-007",
+        "L1-009",
+        "L1-005"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed",
+        "confirm"
+      ]
+    },
+    {
+      "id": "register-drop-in",
+      "kind": "dialog",
+      "title": "Register a household at the door",
+      "opens_from": "event-check-in",
+      "requirements": [
+        "L1-005",
+        "L1-007",
+        "L1-013"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed",
+        "success"
+      ]
+    },
+    {
+      "id": "drop-in-link",
+      "kind": "dialog",
+      "title": "Share the drop-in link",
+      "opens_from": "event",
+      "requirements": [
+        "L1-005",
+        "L1-010",
+        "L1-025"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "invalid": "The dialog has no inputs to validate."
+      }
+    },
+    {
+      "id": "end-family-event",
+      "kind": "dialog",
+      "title": "End Harvest Family Night?",
+      "opens_from": "event-check-in",
+      "requirements": [
+        "L1-007",
+        "L1-012"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "invalid": "A radio group with a default."
+      }
     },
     {
       "id": "open-enrollment",
@@ -3919,6 +4064,7 @@
         "warning",
         "danger",
         "stacked",
+        "drop-in",
         "es"
       ]
     }

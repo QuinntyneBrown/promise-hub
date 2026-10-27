@@ -56,6 +56,9 @@ GUARDIANS = {
     "nour": dict(name="Nour Haddad", initials="NH", color="sage", phone="905-555-0163", email="nour.haddad@example.com", lang="French"),
     "chidi": dict(name="Chidi Okonkwo", initials="CO", color="rose", phone="905-555-0188", email="c.okonkwo@example.com", lang="English"),
     "elena": dict(name="Elena Petrova", initials="EP", color="sun", phone="289-555-0150", email="elena.petrova@example.com", lang="English"),
+    # Drop-in households (prompt 82): registered for a family event at the door or from the public page, no enrollment.
+    "piotr": dict(name="Piotr Kowalski", initials="PK", color="sky", phone="289-555-0231", email="", lang="Polish"),
+    "fatima": dict(name="Fatima Rahimi", initials="FR", color="lilac", phone="905-555-0244", email="fatima.rahimi@example.com", lang="Dari"),
 }
 
 LONG_GUARDIAN = "Mary-Katherine Fitzgerald-Vanderbroucke"
@@ -75,6 +78,11 @@ EVENTS = [
     dict(id="sports-sat", name="Saturday Sports", program="Saturday Sports", when="Sat 7 Nov, 10:00 am–12:00 pm", place="Bennetto School gym", roster=62, signed=62, cleared=62, slip=False),
     dict(id="winter-camp-day1", name="Winter Camp · Day 1", program="Winter Camp 2026", when="Mon 21 Dec, 8:00 am–5:00 pm", place="Harbourview Community Centre", roster=35, signed=12, cleared=12, slip=True),
     dict(id="swim-trip", name="Swim trip: Jimmy Thompson Pool", program="Saturday Sports", when="Sat 28 Nov, 10:00 am–1:00 pm", place="Bus leaves from the centre at 9:30 am", roster=62, signed=0, cleared=0, slip=True),
+    # Family and all-ages events (prompt 82): households register instead of a program roster; appended last so EVENTS[0..4] keep their meaning.
+    dict(id="family-night", name="Harvest Family Night", program="Family event", when="Fri 13 Nov, 5:30–7:30 pm", place="Harbourview Community Centre gym, 47 Simcoe St E", roster=0, signed=0, cleared=0, slip=False,
+         audience="All ages", ages="All ages", households=23, children=31, adults=27),
+    dict(id="family-swim", name="Family Swim: Jimmy Thompson Pool", program="Family event", when="Sat 21 Nov, 1:00–3:00 pm", place="Jimmy Thompson Memorial Pool", roster=0, signed=0, cleared=0, slip=False,
+         audience="Children with guardian", ages="4–12", households=14, children=19, adults=15),
 ]
 
 

@@ -99,6 +99,23 @@ def today(S):
           main=offline_banner() + main_default(), checkin_badge=15,
           notes=note("Offline banner stays until the connection returns; queued actions sync in order and a toast confirms.", "top: 5.5rem; right: 1rem;"))
 
+    fam = card('<div class="stack">' + progress(23, 60, "Registered: 23 of 60 households", kind="success", show="23 of 60 households registered") +
+               f'<div class="cluster cluster--snug">{status("31 children", "")}{status("27 adults", "")}{status("1 registered online today", "success")}</div>'
+               f'<div class="cluster">{btn("Open household check-in", "primary", icon_name="users", href=page("event-check-in"))}{btn("Share drop-in link", "", icon_name="link", data_href=dialog("drop-in-link"))}</div></div>',
+               title='Harvest Family Night <span class="text-muted nowrap" style="font: var(--text-body-sm);">5:30–7:30 pm · Gym</span>', tid="fam")
+    fam_up = card(ul_list([
+        list_item("Fall field trip: Royal Botanical Gardens", "Sat 14 Nov, 9:00 am · bus leaves 8:45 am", lead=f'<span class="icon-tile" aria-hidden="true">{icon("bus")}</span>', href=page("event")),
+        list_item("Family Swim: Jimmy Thompson Pool", "Sat 21 Nov, 1:00 pm · ages 4–12, with guardian · 14 households", lead=f'<span class="icon-tile" aria-hidden="true">{icon("users")}</span>', href=page("event", "family")),
+    ], card=False), title="Coming up", tid="up", cls="card--flush", footer=f'<a href="{page("events")}">All events</a>')
+    fam_tasks = card(ul_list([
+        list_item("1 household registered online today", "Rahimi · Sami and Yasmin · nothing to do until the door", lead=f'<span class="icon-tile" aria-hidden="true">{icon("users")}</span>', href=page("event", "family")),
+        list_item("3 enrollments to review", "Applications, referrals and enrollments", lead=f'<span class="icon-tile" aria-hidden="true">{icon("users")}</span>', href=page("applications")),
+    ], card=False), title="Waiting for you", tid="tasks", cls="card--flush")
+    S.add("family-night", "Friday 13 November, the afternoon of Harvest Family Night: the family event is the day’s session, counted in households rather than a roster.", nav="today",
+          main=page_header("Good afternoon, Jaylen", "Friday 13 November 2026 · Harbourview Community Centre", btn("Open household check-in", "primary", icon_name="users", href=page("event-check-in"))) +
+          kpis([("Active children", "184", "+6 this month"), ("Households", "114", "2 registered at events"), ("Tonight", "23", "households registered"), ("Sessions this week", "9", "7 attendance recorded")]) +
+          f'<div class="split"><div class="stack">{fam_tasks}{fam}</div><div class="stack">{fam_up}</div></div>')
+
     # Participant roles (ADR 0043): a welcome and one card per module that is on and serves the role.
     def participant(name, cards):
         return page_header(f"Welcome, {name}", f"{TODAY} · {ORG}") + (
@@ -280,16 +297,31 @@ def quick_card(S):
               "EpiPen in backpack front pocket. Use it, call 911, then Carmen.", "Two EpiPens, red pouch, front pocket. Use one, call 911, then the guardian; second dose after 5 min.").replace(
               "Peanuts (anaphylaxis); tree nuts (hives)", "Peanuts, tree nuts, sesame, shellfish (anaphylaxis); latex (contact rash); grass pollen (seasonal)").replace(
               "Carmen Rivera · mother", f"{LONG_GUARDIAN} · mother"))
+    z = dict(name="Zofia Kowalski", initials="ZK", color="sky")
+    S.add("drop-in", "A drop-in child at a family event: registered at the door tonight, the adult who came is the contact and the pickup, medical is as told at the door.", nav="check-in",
+          main=f'<div class="quick-card page-start"><div class="quick-card__head">{avatar(z, "lg")}<div><h1 class="quick-card__name">Zofia Kowalski</h1><p class="text-muted">5 years · Harvest Family Night · Kowalski household</p>'
+               f'<span class="sync-chip sync-chip--ok">{icon("check")}Here with Piotr Kowalski since 6:02 pm</span></div></div>'
+               + alert("info", "Registered at the door tonight", "Medical is as Piotr told us at the door. The office completes her record tomorrow.")
+               + f'<section class="quick-card__section card" aria-labelledby="qc-med"><h2 id="qc-med">Medical</h2>{facts([("Allergies", "None that we know of, as told at the door"), ("Medication", "None reported"), ("Health card", "Not on file")])}</section>'
+               + '<section class="quick-card__section" aria-labelledby="qc-call"><h2 id="qc-call">Call</h2><ol class="call-list">'
+               f'<li class="call-list__item">{avatar(GUARDIANS["piotr"])}<div class="call-list__body"><div class="call-list__name">Piotr Kowalski · father</div><div class="call-list__meta">Here tonight · Polish · text in English</div></div><a class="btn btn--primary" href="tel:+12895550231">{icon("phone")}289-555-0231</a></li></ol></section>'
+               + f'<section class="quick-card__section card" aria-labelledby="qc-pick"><h2 id="qc-pick">Leaves with</h2><p>Piotr Kowalski, who brought her. Anyone else needs his okay by phone.</p><p class="hint">No approved-pickup list yet: the household was registered tonight. <a href="{page("household")}">Household</a></p></section>'
+               + f'<section class="quick-card__section card" aria-labelledby="qc-other"><h2 id="qc-other">Also good to know</h2>{facts([("Language at home", "Polish"), ("Also here", "Jakub Kowalski, 9"), ("Registered", "At the door by Jaylen Okafor, 6:02 pm")])}</section></div>',
+          notes=note("Quick Cards cover every child on the night, enrolled or drop-in. A drop-in card shows what was told at the door and names the adult present as the contact and the pickup.", "top: 5rem; right: 1rem;"))
 
 
 # ------------------------------------------------------------------ Events
 def event_row(e: dict, kind="page", href_state="default") -> str:
-    if e["slip"]:
-        b = badge(f'{e["roster"] - e["signed"]} unsigned', "warning") if e["signed"] < e["roster"] else badge("All signed", "success")
+    if e.get("audience"):
+        b = badge("All ages" if e["audience"] == "All ages" else "With guardian", "")
+        ic, count = "users", f'{e["households"]} households'
     else:
-        b = badge("No slip needed", "")
-    ic = "bus" if "trip" in e["name"].lower() else ("sun" if "Camp" in e["name"] else "calendar")
-    return list_item(esc(e["name"]), f'{esc(e["when"])} · {esc(e["program"])} · {e["roster"]} on roster', lead=f'<span class="icon-tile" aria-hidden="true">{icon(ic)}</span>',
+        if e["slip"]:
+            b = badge(f'{e["roster"] - e["signed"]} unsigned', "warning") if e["signed"] < e["roster"] else badge("All signed", "success")
+        else:
+            b = badge("No slip needed", "")
+        ic, count = ("bus" if "trip" in e["name"].lower() else ("sun" if "Camp" in e["name"] else "calendar")), f'{e["roster"]} on roster'
+    return list_item(esc(e["name"]), f'{esc(e["when"])} · {esc(e["program"])} · {count}', lead=f'<span class="icon-tile" aria-hidden="true">{icon(ic)}</span>',
                      href=rel(kind, "page", "event", href_state), end=b)
 
 
@@ -297,13 +329,13 @@ def events_toolbar(q=""):
     return (f'<div class="toolbar"><form role="search" class="input-group" style="flex: 1 1 14rem;"><label class="visually-hidden" for="ev-q">Search events</label>'
             f'<input class="input" id="ev-q" type="search" placeholder="Search events" value="{esc(q)}"><span class="input-group__btn btn btn--ghost btn--icon" aria-hidden="true">{icon("search")}</span></form>'
             + chips([("Upcoming", True), ("Needs slips", False), ("Past", False)], "Filter events")
-            + select("ev-prog", "Program", ["All programs", "After‑School Tutoring", "Saturday Sports", "Winter Camp 2026"], visually_hidden_label=True).replace('class="field"', 'class="field toolbar__end"') + "</div>")
+            + select("ev-prog", "Program", ["All programs", "Family events", "After‑School Tutoring", "Saturday Sports", "Winter Camp 2026"], visually_hidden_label=True).replace('class="field"', 'class="field toolbar__end"') + "</div>")
 
 
 @screen("events", "page", "Events", route="/events", reqs=[R_SLIPS, R_ROLL], na={})
 def events(S):
-    hdr = page_header("Events", "23 upcoming · 2 need slips · 30 unsigned", btn("New event", "primary", icon_name="plus", href=page("event-form")))
-    rows = [event_row(EVENTS[0], href_state="default"), event_row(EVENTS[2], href_state="upcoming"), event_row(EVENTS[1]), event_row(EVENTS[4], href_state="upcoming"), event_row(EVENTS[3], href_state="upcoming")]
+    hdr = page_header("Events", "25 upcoming · 2 family events · 2 need slips · 30 unsigned", btn("New event", "primary", icon_name="plus", href=page("event-form")))
+    rows = [event_row(EVENTS[0], href_state="default"), event_row(EVENTS[2], href_state="upcoming"), event_row(EVENTS[5], href_state="family"), event_row(EVENTS[1]), event_row(EVENTS[6], href_state="family"), event_row(EVENTS[4], href_state="upcoming"), event_row(EVENTS[3], href_state="upcoming")]
     S.add("default", "Upcoming events with slip status at a glance.", nav="events", main=hdr + events_toolbar() + ul_list(rows, label="Upcoming events") + f'<div class="list-more">{btn("Show 18 more", "ghost")}</div>')
     S.add("loading", "Events loading.", nav="events", main=page_header("Events", "") + skeleton_list(6, "Loading events"))
     S.add("empty", "No events yet: explain that events hang off programs and offer to create one.", nav="events",
@@ -361,6 +393,21 @@ def event(S):
           main=breadcrumb([("Events", page("events"))], "Saturday Sports") + page_header("Saturday Sports <span class=\"badge badge--danger\">Cancelled</span>", "Sat 31 Oct · cancelled by Priya Raman on Fri 30 Oct, 2:14 pm") +
           alert("info", "62 guardians told by text and email", "Delivered to 61 · 1 bounced (Bola Adeyemi)", actions=f'<a class="btn btn--sm" href="{page("message")}">See delivery</a>') +
           f'<div class="split">{card(facts([("When", "Saturday 31 October 2026, 10:00 am–12:00 pm"), ("Where", "Bennetto School gym"), ("Reason", "Gym closed for voting")]), title="Details", tid="details")}</div>')
+    fam = EVENTS[5]
+    fam_hdr = breadcrumb([("Events", page("events"))], fam["name"]) + page_header(esc(fam["name"]), f'Fri 13 Nov, 5:30–7:30 pm · Family event · {badge("All ages", "")} · 23 households registered',
+                                                                                  btn("Share drop-in link", "", icon_name="link", data_href=dialog("drop-in-link")) + btn("Edit", "", icon_name="edit", href=page("event-form", "family")) + icon_btn("more", "More actions", data_href=dialog("event-actions")))
+    regs = "".join([list_item("Rahimi household", "Registered online today, 2:10 pm · Sami, 7 and Yasmin, 14 · Fatima Rahimi", person=GUARDIANS["fatima"], href=page("household"), end=badge("Online", "")),
+                    list_item("Tran household", "Registered Mon 2 Nov · Kevin, 8 and Emily, 10 · Linh Tran", person=GUARDIANS["linh"], href=page("household")),
+                    list_item("Rivera household", "Registered Mon 2 Nov · Mateo, 9 and Sofía, 12 · Carmen Rivera", person=GUARDIANS["carmen"], href=page("household")),
+                    list_item("Haddad household", "Registered Sun 1 Nov · Yusuf, 13 · Nour Haddad", person=GUARDIANS["nour"], href=page("household"))])
+    hh_card = card(f'<div class="stack" style="gap: var(--space-3);">{progress(23, 60, "Registered: 23 of 60 households", kind="success", show="23 of 60 households")}<p class="text-muted">31 children · 27 adults · 1 registered online today</p><ul class="list">{regs}</ul></div>',
+                   title="Households", tid="hh", footer=f'<a href="{page("event-check-in", "empty")}">Show 19 more</a> · <a href="{page("drop-in")}">Preview the registration page</a>')
+    fam_day = card(f'<p class="text-muted">Household check-in opens Fri 13 Nov, 5:00 pm. Each check-in records the adult who came.</p><div class="cluster" style="margin-top: var(--space-3);">{btn("Open household check-in", "primary", icon_name="users", href=page("event-check-in"))}{btn("Message 23 households", "", icon_name="send", href=page("new-message", "family"))}</div>', title="Day of", tid="dayof")
+    fam_details = card(facts([("When", "Friday 13 November 2026, 5:30–7:30 pm · doors open 5:15"), ("Where", "Harbourview Community Centre gym, 47 Simcoe St E"), ("Who", "All ages · children come with an adult who stays"),
+                              ("Staff", "Jaylen Okafor (door), Marisol Delgado, 6 volunteers"), ("Bring", "Nothing · dinner provided, nut-free"), ("Cost", "Free"), ("Consent", "No permission slip; the registration carries first aid and emergency-call consent")]), title="Details", tid="details")
+    S.add("family", "An all-ages family night a week out: who has registered (enrolled families and drop-ins alike), the drop-in link to share, and household check-in instead of a roster.", nav="events",
+          main=fam_hdr + f'<div class="split">{hh_card}<div class="stack">{fam_day}{fam_details}</div></div>',
+          notes=note("A family event has no program roster and no slip: households register from the public page or at the door, and the check-in list is households, each with the adult present.", "top: 5rem; right: 1rem;"))
 
 
 # ------------------------------------------------------------------ Families
