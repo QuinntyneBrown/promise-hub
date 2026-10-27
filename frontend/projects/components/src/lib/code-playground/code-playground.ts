@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, input, model, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, model, signal } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { PhButton } from '../button/button';
 
 let nextId = 0;
@@ -23,16 +24,23 @@ export class PhCodePlayground {
   /** Read only, as once a project is submitted. */
   readonly readonly = input(false);
 
+  private readonly sanitizer = inject(DomSanitizer);
   protected readonly id = `ph-code-${nextId++}`;
   /** What the preview shows; null until Run. */
-  protected readonly preview = signal<string | null>(null);
+  protected readonly preview = signal<SafeHtml | null>(null);
 
   protected edit(event: Event): void {
     this.code.set((event.target as HTMLTextAreaElement).value);
   }
 
+  /**
+   * Angular's HTML sanitizer would strip the policy and the youth's styles from `srcdoc`, so the document is trusted as written:
+   * it renders only inside the sandboxed frame of its own origin, where the policy blocks every script and request (ADR 0051).
+   */
   protected run(): void {
-    this.preview.set(PhCodePlayground.document(this.code()));
+    this.preview.set(
+      this.sanitizer.bypassSecurityTrustHtml(PhCodePlayground.document(this.code())),
+    );
   }
 
   /** The preview document: the youth's markup under a policy that allows inline styles and data images only. */

@@ -46,6 +46,16 @@ test.describe('Coding lessons', () => {
     await expect(coding.preview.locator('#out')).toHaveText('not run');
   });
 
+  test('Given her code styles the page, when she runs it, then the preview shows her styles', async ({ page }) => {
+    const coding = new LearnCodingPage(page);
+    await coding.open('l-webpage');
+
+    await coding.write('<style>h1 { color: rgb(200, 30, 60); }</style><h1>Bold and bright</h1>');
+    await coding.run();
+
+    await expect(coding.preview.getByRole('heading', { name: 'Bold and bright' })).toHaveCSS('color', 'rgb(200, 30, 60)');
+  });
+
   test('Given two items ticked, when she saves, then her code and ticks come back after a reload and the lesson stays in progress', async ({ page }) => {
     const coding = new LearnCodingPage(page);
     await coding.open('l-webpage');
