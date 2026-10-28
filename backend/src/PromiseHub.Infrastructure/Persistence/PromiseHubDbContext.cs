@@ -79,6 +79,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Mentoring.CompetencyAssessment> CompetencyAssessments => Set<Domain.Mentoring.CompetencyAssessment>();
     public DbSet<Domain.Mentoring.MentorCheckIn> MentorCheckIns => Set<Domain.Mentoring.MentorCheckIn>();
     public DbSet<Domain.Mentoring.AtRiskFlag> AtRiskFlags => Set<Domain.Mentoring.AtRiskFlag>();
+    public DbSet<Domain.Mentoring.AssignedWork> AssignedWork => Set<Domain.Mentoring.AssignedWork>();
     public DbSet<Domain.Curriculum.Badge> Badges => Set<Domain.Curriculum.Badge>();
     public DbSet<Domain.Curriculum.BadgeAward> BadgeAwards => Set<Domain.Curriculum.BadgeAward>();
     public DbSet<Domain.Curriculum.ProgressionStage> ProgressionStages => Set<Domain.Curriculum.ProgressionStage>();
@@ -319,6 +320,16 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.HasOne<Domain.Households.Child>().WithMany().HasForeignKey(f => f.ChildId);
             e.HasOne<Membership>().WithMany().HasForeignKey(f => f.RaisedByMembershipId);
             e.HasOne<Membership>().WithMany().HasForeignKey(f => f.ResolvedByMembershipId);
+        });
+        modelBuilder.Entity<Domain.Mentoring.AssignedWork>(e =>
+        {
+            e.HasIndex(w => new { w.OrganizationId, w.ChildId, w.Kind, w.ItemId }).IsUnique();
+            e.Property(w => w.Kind).HasConversion<string>().HasMaxLength(20);
+            e.Property(w => w.Message).HasMaxLength(Domain.Mentoring.AssignedWork.MaximumMessage);
+            e.Property(w => w.AssignedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.HasOne<Domain.Households.Child>().WithMany().HasForeignKey(w => w.ChildId);
+            e.HasOne<Domain.Programs.Program>().WithMany().HasForeignKey(w => w.ProgramId);
+            e.HasOne<Membership>().WithMany().HasForeignKey(w => w.AssignedByMembershipId);
         });
         modelBuilder.Entity<Domain.Curriculum.Badge>(e =>
         {

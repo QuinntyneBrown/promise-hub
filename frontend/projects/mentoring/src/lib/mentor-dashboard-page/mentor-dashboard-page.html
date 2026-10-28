@@ -13,6 +13,9 @@
 } @else {
   <ph-page-header title="Mentoring" [subtitle]="subtitle()">
     @if (r?.status === 'loaded') {
+      @if (learningOn()) {
+        <ph-button variant="primary" icon="plus" (click)="assign()">Assign work</ph-button>
+      }
       @if (reviewsWaiting(); as waiting) {
         <ph-button icon="check" link="/mentoring/reviews">Reviews · {{ waiting }}</ph-button>
       } @else if (reviewsWaiting() === 0) {

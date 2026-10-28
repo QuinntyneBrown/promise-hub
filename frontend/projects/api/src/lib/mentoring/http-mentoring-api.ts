@@ -29,6 +29,11 @@ import { RaiseAtRiskFlag } from './raise-at-risk-flag';
 import { FlagOutcome } from './flag-outcome';
 import { toFlagOutcome } from './to-flag-outcome';
 import { ResolveAtRiskFlag } from './resolve-at-risk-flag';
+import { AssignWorkOptions } from './assign-work-options';
+import { AssignWork } from './assign-work';
+import { AssignWorkOutcome } from './assign-work-outcome';
+import { AssignedWorkResult } from './assigned-work-result';
+import { toAssignWorkOutcome } from './to-assign-work-outcome';
 
 @Injectable()
 export class HttpMentoringApi implements MentoringApi {
@@ -105,6 +110,16 @@ export class HttpMentoringApi implements MentoringApi {
         `${this.baseUrl}/mentoring/flags/${encodeURIComponent(id)}/resolve`,
         body,
       ),
+    );
+  }
+
+  assignOptions(): Observable<LoadResult<AssignWorkOptions>> {
+    return toLoad(this.http.get<AssignWorkOptions>(`${this.baseUrl}/mentoring/assign-work`));
+  }
+
+  assignWork(body: AssignWork): Observable<AssignWorkOutcome> {
+    return toAssignWorkOutcome(
+      this.http.post<AssignedWorkResult>(`${this.baseUrl}/mentoring/assigned-work`, body),
     );
   }
 

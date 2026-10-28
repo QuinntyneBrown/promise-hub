@@ -22,6 +22,9 @@ import type { AtRiskFlags } from './at-risk-flags';
 import type { RaiseAtRiskFlag } from './raise-at-risk-flag';
 import type { FlagOutcome } from './flag-outcome';
 import type { ResolveAtRiskFlag } from './resolve-at-risk-flag';
+import type { AssignWorkOptions } from './assign-work-options';
+import type { AssignWork } from './assign-work';
+import type { AssignWorkOutcome } from './assign-work-outcome';
 
 /** Mentoring (ADR 0043, ADR 0048): the calling mentor’s youth, and a cohort’s mentors set by program directors. */
 export interface MentoringApi {
@@ -56,6 +59,10 @@ export interface MentoringApi {
   raiseFlag(body: RaiseAtRiskFlag): Observable<FlagOutcome>;
   /** Resolves an open flag with an outcome; invalid carries one message per field, already-resolved a flag resolved meanwhile. */
   resolveFlag(id: string, body: ResolveAtRiskFlag): Observable<FlagOutcome>;
+  /** What the caller may assign and to whom; not-found while Learning or Mentoring is off (L2-092 criteria 1 and 6). */
+  assignOptions(): Observable<LoadResult<AssignWorkOptions>>;
+  /** Assigns one item to chosen youth or a cohort; invalid carries one message per field (L2-092 criteria 2 and 3). */
+  assignWork(body: AssignWork): Observable<AssignWorkOutcome>;
   /** One of the caller's youth's competencies; forbidden when the youth is not theirs. */
   competencies(childId: string): Observable<LoadResult<CompetencySheet>>;
   /** Saves every competency's level and note; only changed ones become new assessments. */

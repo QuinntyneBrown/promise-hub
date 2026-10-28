@@ -11,6 +11,19 @@ export class MentoringPage extends BasePage {
     await expect(this.page.getByRole('heading', { level: 1, name: 'Mentoring' })).toBeVisible();
   }
 
+  /** Assign work, offered while Learning is on (L2-092). */
+  get assignWorkButton(): Locator {
+    return this.page.getByRole('button', { name: 'Assign work' });
+  }
+
+  async assignWork(): Promise<void> {
+    await this.assignWorkButton.click();
+  }
+
+  toast(text: string): Locator {
+    return this.page.getByRole('status').filter({ hasText: text });
+  }
+
   async openFlags(): Promise<void> {
     await this.page.getByRole('link', { name: 'At-risk flags' }).click();
   }

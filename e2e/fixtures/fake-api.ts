@@ -9,6 +9,7 @@ import { FakeLearning } from './fake-learning';
 import { FakeReviews, type YouthAccounts } from './fake-reviews';
 import { FakeMentorCheckIns, type FakeMentorCheckIn, TODAY } from './fake-mentor-check-ins';
 import { FakeAtRiskFlags } from './fake-at-risk-flags';
+import { FakeAssignedWorkStore, type Recipient } from './fake-assigned-work';
 import { type FakeEvent, type FakeProgram, NOW, seedEvents, seedPrograms } from './programs';
 import { type Membership, type ModuleId, moduleCatalog, memberships, organizations, seededMfaCode, seededPassword } from './seed';
 
@@ -587,6 +588,8 @@ export class FakeApi {
   readonly mentorCheckIns = new FakeMentorCheckIns();
   /** At-risk flags (L2-091). */
   readonly atRiskFlags = new FakeAtRiskFlags();
+  /** Work mentors assigned (L2-092); tests read and seed it. */
+  readonly assignedWork = new FakeAssignedWorkStore(this.curriculumState);
 
   /** Badges and their awards (L2-084, L2-085); tests read and change it, such as clear. */
   readonly badges = new FakeBadges(this.curriculumState, () => this.reviews.competencies, () => memberships);
@@ -708,6 +711,8 @@ export class FakeApi {
     ['POST', /^\/api\/mentoring\/submissions\/(?<id>[^/]+)\/grade$/, (route, p) => this.mentorReviews(route, (m, youth) => this.afterReview(youth, this.reviews.grade(route, youth, p['id']!, m.personName)))],
     ['GET', /^\/api\/mentoring\/check-ins$/, (route) => this.mentorCheckInHistory(route)],
     ['POST', /^\/api\/mentoring\/check-ins$/, (route) => this.logMentorCheckIn(route)],
+    ['GET', /^\/api\/mentoring\/assign-work$/, (route) => this.assignWorkOptions(route)],
+    ['POST', /^\/api\/mentoring\/assigned-work$/, (route) => this.assignWork(route)],
     ['GET', /^\/api\/mentoring\/flags$/, (route) => this.listAtRiskFlags(route)],
     ['POST', /^\/api\/mentoring\/flags$/, (route) => this.raiseAtRiskFlag(route)],
     ['POST', /^\/api\/mentoring\/flags\/(?<id>[^/]+)\/resolve$/, (route, p) => this.resolveAtRiskFlag(route, p['id']!)],
@@ -1436,6 +1441,79 @@ export class FakeApi {
     await this.atRiskFlags.resolve(route, flag, m.personName);
     if (wasOpen && flag.status === 'Resolved') {
       this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'Updated', record: 'AtRiskFlag', summary: `At-risk flag on ${flag.youthName} resolved by ${m.personName}`, device: null });
+    }
+  }
+
+  /** The caller when a mentor with Mentoring and Learning on (L2-092 criterion 6); otherwise answers 401, 403 or 404. */
+  private async mentorLearning(route: Route): Promise<Membership | null> {
+    const m = await this.participantModuleCaller(route, 'Mentoring', can.mentorYouth);
+    if (!m) return null;
+    if (!this.modules.get(m.organizationId)!.includes('Learning')) {
+      await route.fulfill({ status: 404 });
+      return null;
+    }
+    return m;
+  }
+
+  /** The active programs a child is on in the organization. */
+  private activeProgramsOf(org: string, childId: string): FakeProgram[] {
+    return this.programs.filter((p) => p.organizationId === org && p.status === 'Active' && p.roster.includes(childId));
+  }
+
+  /** GET /mentoring/assign-work (L2-092 criterion 1): the published work of the tracks his youth follow, his youth and his cohorts. */
+  private async assignWorkOptions(route: Route): Promise<void> {
+    const m = await this.mentorLearning(route);
+    if (!m) return;
+    const scope = this.mentorScope(m);
+    const tracksOf = (childId: string) =>
+      [...new Set(this.activeProgramsOf(m.organizationId, childId).map((p) => this.assignedWork.trackOf(p)).filter((t): t is string => !!t))];
+    const items = this.assignedWork.items([...new Set(scope.youth.flatMap((c) => tracksOf(c.id)))]).filter((i) => i.published);
+    const published = new Set(items.map((i) => i.trackId));
+    return route.fulfill({
+      json: {
+        items: items.map((i) => ({ id: i.id, kind: i.kind, title: i.title, moduleTitle: i.moduleTitle, trackId: i.trackId, trackName: i.trackName })),
+        youth: scope.youth.map((c) => ({
+          id: c.id,
+          name: `${c.firstName} ${c.lastName}`,
+          cohorts: this.activeProgramsOf(m.organizationId, c.id).map((p) => p.name).sort().join(', '),
+          trackIds: tracksOf(c.id).filter((t) => published.has(t)),
+          atRisk: this.atRiskFlags.rows.some((f) => f.organizationId === m.organizationId && f.childId === c.id && f.status === 'Open'),
+        })),
+        cohorts: scope.cohorts
+          .filter((c) => c.program.roster.length > 0)
+          .sort((a, b) => a.program.name.localeCompare(b.program.name))
+          .map((c) => ({ id: c.program.id, name: c.program.name, youthCount: c.program.roster.length, trackId: this.assignedWork.trackOf(c.program) })),
+      },
+    });
+  }
+
+  /** POST /mentoring/assigned-work (L2-092 criteria 2 to 4 and 7): 404 outside the organization, 403 outside his scope, audited without the message. */
+  private async assignWork(route: Route): Promise<void> {
+    const m = await this.mentorLearning(route);
+    if (!m) return;
+    const b = route.request().postDataJSON() as { itemId?: string | null; childIds?: string[] | null; programId?: string | null };
+    const item = b.itemId ? this.assignedWork.item(m.organizationId, b.itemId) : null;
+    if (b.itemId && !item) return route.fulfill({ status: 404 });
+    const children = this.households.filter((h) => h.organizationId === m.organizationId).flatMap((h) => h.children);
+    const ids = [...new Set(b.childIds ?? [])];
+    if (ids.some((id) => !children.some((c) => c.id === id))) return route.fulfill({ status: 404 });
+    const program = b.programId ? this.programs.find((p) => p.id === b.programId && p.organizationId === m.organizationId) : null;
+    if (b.programId && !program) return route.fulfill({ status: 404 });
+    const scope = this.mentorScope(m);
+    const outside = ids.find((id) => !scope.youth.some((c) => c.id === id));
+    if (outside || (program && !scope.cohorts.some((c) => c.program.id === program.id))) {
+      this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'AccessDenied', record: outside ? 'Child' : 'Program', summary: 'Assigning work outside the mentor’s scope', device: null });
+      return route.fulfill({ status: 403, json: { code: 'forbidden' } });
+    }
+    const chosen: Recipient[] = ids.map((id) => {
+      const c = children.find((x) => x.id === id)!;
+      const trackIds = this.activeProgramsOf(m.organizationId, id).map((p) => this.assignedWork.trackOf(p)).filter((t): t is string => !!t);
+      return { id, name: `${c.firstName} ${c.lastName}`, trackIds };
+    });
+    const cohort = program ? { program, roster: program.roster } : null;
+    const count = await this.assignedWork.assign(route, m.organizationId, m.personName, item ?? null, chosen, cohort);
+    if (count > 0) {
+      this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'Created', record: 'AssignedWork', summary: `${m.personName} assigned ${item!.title} to ${count} youth`, device: null });
     }
   }
 

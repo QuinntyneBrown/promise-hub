@@ -1,0 +1,118 @@
+<ph-dialog
+  title="Assign work"
+  description="Pick a lesson, quiz or assignment, who it’s for and when it’s due."
+  icon="plus"
+>
+  @if (options() === null) {
+    <div class="stack" aria-busy="true" aria-label="Loading what you can assign">
+      <ph-skeleton shape="card" />
+    </div>
+  } @else if (nothing()) {
+    <ph-empty-state
+      icon="book"
+      title="Nothing to assign yet"
+      text="When a track your cohorts follow publishes lessons, quizzes or assignments, you can assign them here."
+    />
+  } @else if (!loaded()) {
+    <ph-alert
+      tone="danger"
+      title="We couldn’t load what you can assign"
+      text="Check your connection and try again."
+    />
+  } @else {
+    <form class="stack" (ngSubmit)="save()">
+      @if (summary().length) {
+        <ph-error-summary title="Fix these to continue" [items]="summary()" />
+      }
+      @if (failed()) {
+        <ph-alert
+          tone="danger"
+          title="That didn’t go through"
+          text="Nothing was assigned. Everything is still here; try again."
+        />
+      }
+      <ph-radio-group
+        legend="What are you assigning?"
+        name="kind"
+        [options]="kinds"
+        [ngModel]="kind()"
+        (ngModelChange)="chooseKind($event)"
+      />
+      <ph-select
+        inputId="assign-item"
+        [label]="kind()"
+        name="item"
+        help="Published work of the tracks your youth follow."
+        [options]="items()"
+        [error]="errors()['itemId'] ?? null"
+        [ngModel]="itemId()"
+        (ngModelChange)="itemId.set($event ?? '')"
+      />
+      <div id="assign-who">
+        <ph-radio-group
+          legend="Who is it for?"
+          name="who"
+          [options]="whoOptions"
+          [error]="errors()['who'] ?? null"
+          [ngModel]="who()"
+          (ngModelChange)="who.set($event)"
+        />
+      </div>
+      @if (who() === 'cohort') {
+        <ph-select
+          inputId="assign-cohort"
+          label="Cohort"
+          name="cohort"
+          [options]="cohorts()"
+          [error]="errors()['programId'] ?? null"
+          [ngModel]="programId()"
+          (ngModelChange)="programId.set($event ?? '')"
+        />
+      } @else if (who() === 'youth') {
+        <div id="assign-youth">
+          <ph-checkbox-group
+            legend="Your youth"
+            name="youth"
+            [hint]="chosenHint()"
+            [options]="youth()"
+            [error]="errors()['childIds'] ?? null"
+            [ngModel]="childIds()"
+            (ngModelChange)="childIds.set($event ?? [])"
+          />
+        </div>
+      }
+      <ph-text-field
+        inputId="assign-due"
+        label="Due date"
+        name="due"
+        type="date"
+        help="They see it on their Learning home with this date."
+        [error]="errors()['dueOn'] ?? null"
+        [ngModel]="dueOn()"
+        (ngModelChange)="dueOn.set($event ?? '')"
+      />
+      <ph-textarea
+        inputId="assign-message"
+        label="Message"
+        name="message"
+        [rows]="3"
+        [optional]="true"
+        help="Shown with the work on their Learning home."
+        [count]="count(message())"
+        [error]="errors()['message'] ?? null"
+        [ngModel]="message()"
+        (ngModelChange)="message.set($event ?? '')"
+      />
+    </form>
+  }
+  <ng-container ngProjectAs="[phDialogFooter]">
+    @if (nothing()) {
+      <ph-button (click)="ref.close()">Close</ph-button>
+    } @else {
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      @if (loaded()) {
+        <ph-button variant="primary" icon="plus" [busy]="busy()" (click)="save()">Assign</ph-button>
+      }
+    }
+  </ng-container>
+</ph-dialog>
