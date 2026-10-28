@@ -99,6 +99,8 @@ export * from './lib/messaging/announcement-audience';
 export * from './lib/messaging/announcement-row';
 export * from './lib/messaging/announcement-list';
 export * from './lib/messaging/compose-announcement';
+export * from './lib/messaging/my-announcement';
+export * from './lib/messaging/my-announcements';
 export * from './lib/messaging/announcements-api';
 export * from './lib/messaging/announcements-api.token';
 export * from './lib/slips/slip';

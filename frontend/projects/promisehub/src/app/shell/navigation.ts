@@ -127,6 +127,14 @@ export const NAVIGATION: Section[] = [
     module: 'Mentoring',
     roles: ['Admin', 'ProgramDirector'],
   },
+  {
+    label: 'Announcements',
+    link: '/announcements',
+    icon: 'messages',
+    placement: 'overflow',
+    module: 'Messages',
+    roles: ['Youth', 'Mentor'],
+  },
   { label: 'Settings', link: '/settings', icon: 'settings', placement: 'overflow' },
   {
     label: 'Notifications',

@@ -8,6 +8,7 @@ import { WriteOutcome } from '../write-outcome';
 import { AnnouncementList } from './announcement-list';
 import { AnnouncementsApi } from './announcements-api';
 import { ComposeAnnouncement } from './compose-announcement';
+import { MyAnnouncements } from './my-announcements';
 
 @Injectable()
 export class HttpAnnouncementsApi implements AnnouncementsApi {
@@ -20,5 +21,13 @@ export class HttpAnnouncementsApi implements AnnouncementsApi {
 
   compose(request: ComposeAnnouncement): Observable<WriteOutcome> {
     return toWrite(this.http.post<{ id: string }>(`${this.baseUrl}/announcements`, request));
+  }
+
+  mine(): Observable<LoadResult<MyAnnouncements>> {
+    return toLoad(this.http.get<MyAnnouncements>(`${this.baseUrl}/announcements/mine`));
+  }
+
+  markAllRead(): Observable<WriteOutcome> {
+    return toWrite(this.http.post<null>(`${this.baseUrl}/announcements/mine/read`, null));
   }
 }

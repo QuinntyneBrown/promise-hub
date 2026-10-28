@@ -48,16 +48,15 @@ public sealed class AnnouncementRecipients(IPromiseHubDb db)
         var member = await db.Memberships.AsNoTracking().FirstOrDefaultAsync(m => m.Id == membershipId, cancellationToken);
         List<Guid> programs;
         AnnouncementAudience[] audiences;
+        // An announcement for all programs reaches every mentor, but only youth with an enrolled child (as MembersAsync counts them).
+        bool allPrograms;
         if (member is { Role: Role.Youth })
         {
             audiences = YouthAudiences;
             programs = member.ChildId is { } childId
                 ? await db.Enrollments.AsNoTracking().Where(e => e.ChildId == childId && e.EndedAt == null).Select(e => e.ProgramId).ToListAsync(cancellationToken)
                 : [];
-            if (member.ChildId is null)
-            {
-                return [];
-            }
+            allPrograms = programs.Count > 0;
         }
         else if (member is { Role: Role.Mentor })
         {
@@ -66,13 +65,14 @@ public sealed class AnnouncementRecipients(IPromiseHubDb db)
             var children = await db.YouthMentors.AsNoTracking().Where(y => y.MentorMembershipId == membershipId).Select(y => y.ChildId).ToListAsync(cancellationToken);
             var ofYouth = await db.Enrollments.AsNoTracking().Where(e => children.Contains(e.ChildId) && e.EndedAt == null).Select(e => e.ProgramId).ToListAsync(cancellationToken);
             programs = [.. team.Concat(ofYouth).Distinct()];
+            allPrograms = true;
         }
         else
         {
             return [];
         }
         return await db.Announcements.AsNoTracking()
-            .Where(a => a.SendAt <= now && audiences.Contains(a.Audience) && (a.ProgramId == null || programs.Contains(a.ProgramId.Value)))
+            .Where(a => a.SendAt <= now && audiences.Contains(a.Audience) && ((a.ProgramId == null && allPrograms) || (a.ProgramId != null && programs.Contains(a.ProgramId.Value))))
             .ToListAsync(cancellationToken);
     }
 

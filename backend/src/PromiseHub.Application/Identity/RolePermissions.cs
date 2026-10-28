@@ -45,6 +45,7 @@ public static class RolePermissions
         Permission.CorrectAttendance => role is Role.Admin or Role.ProgramDirector,
         // Volunteers mark Present or Absent only (L2-100, ADR 0066).
         Permission.QualifyAttendance => role is Role.Admin or Role.ProgramDirector or Role.SiteLead or Role.YouthWorker or Role.Mentor,
+        Permission.ReadAnnouncements => role is Role.Youth or Role.Mentor,
         _ => false,
     };
 }

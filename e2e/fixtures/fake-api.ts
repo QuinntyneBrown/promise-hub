@@ -57,7 +57,7 @@ const can = {
  * What a participant role (Youth, Mentor, Volunteer) may call: mirrors the API's fallback policy, which closes every staff
  * endpoint to them unless it opts in (ADR 0043). Volunteers also open their assigned sessions.
  */
-const PARTICIPANT_PATHS = [/^\/api\/me(\/|$)/, /^\/api\/notifications(\/|$)/, /^\/api\/auth\//, /^\/api\/learning\//, /^\/api\/mentoring\//, /^\/api\/curriculum(\/|$)/, /^\/api\/schedule(\/|$)/];
+const PARTICIPANT_PATHS = [/^\/api\/me(\/|$)/, /^\/api\/announcements\/mine(\/|$)/, /^\/api\/conversations(\/|$)/, /^\/api\/realtime$/, /^\/api\/notifications(\/|$)/, /^\/api\/auth\//, /^\/api\/learning\//, /^\/api\/mentoring\//, /^\/api\/curriculum(\/|$)/, /^\/api\/schedule(\/|$)/];
 /** Volunteers and mentors run sessions without the staff app (ADR 0043, ADR 0065): the session endpoints that need RunSessions. */
 const RUNNER_PATHS = [/^\/api\/attendance$/, /^\/api\/sessions\/(today|mine)$/, /^\/api\/sessions\/[^/]+\/(roster|check-ins|absences|end|notes|walk-ins)$/];
 
@@ -949,6 +949,8 @@ export class FakeApi {
     ['POST', /^\/api\/slips\/(?<id>[^/]+)\/send-now$/, (route, p) => this.slipTransition(route, p['id']!, 'send-now')],
     ['POST', /^\/api\/slips\/(?<id>[^/]+)\/cancel-send$/, (route, p) => this.slipTransition(route, p['id']!, 'cancel')],
     ['PUT', /^\/api\/slips\/(?<id>[^/]+)$/, (route, p) => this.editSlip(route, p['id']!)],
+    ['GET', /^\/api\/announcements\/mine$/, (route) => this.myAnnouncements(route)],
+    ['POST', /^\/api\/announcements\/mine\/read$/, (route) => this.readMyAnnouncements(route)],
     ['GET', /^\/api\/announcements$/, (route) => this.listAnnouncements(route)],
     ['POST', /^\/api\/announcements$/, (route) => this.composeAnnouncement(route)],
     ['GET', /^\/api\/messages$/, (route) => this.listMessages(route)],
@@ -3917,6 +3919,30 @@ export class FakeApi {
       ids.push(...active.filter((x) => x.role === 'Mentor' && (!a.programId || named.has(x.id))).map((x) => x.id));
     }
     return [...new Set(ids)];
+  }
+
+  /** The announcements a youth or mentor reads (L2-105 criterion 5): sent by now, and they are among its members. */
+  private announcementsFor(m: Membership): FakeAnnouncement[] {
+    return this.announcements.rows
+      .filter((a) => a.organizationId === m.organizationId && a.sendAt <= NOW.toISOString() && this.announcementMembers(a).includes(m.id))
+      .sort((a, z) => z.sendAt.localeCompare(a.sendAt));
+  }
+
+  /** GET /announcements/mine: Messages on, youth and mentors (ReadAnnouncements). */
+  private async myAnnouncements(route: Route): Promise<void> {
+    const m = await this.participantModuleCaller(route, 'Messages', (x) => x.role === 'Youth' || x.role === 'Mentor');
+    if (!m) return;
+    const announcements = this.announcementsFor(m).map((a) => this.announcements.item(a, m.id));
+    return route.fulfill({ json: { unread: announcements.filter((a) => !a.read).length, announcements } });
+  }
+
+  /** POST /announcements/mine/read: every announcement she reads, read for her alone (L2-105 criterion 6). */
+  private async readMyAnnouncements(route: Route): Promise<void> {
+    const m = await this.participantModuleCaller(route, 'Messages', (x) => x.role === 'Youth' || x.role === 'Mentor');
+    if (!m) return;
+    if (this.announcements.failMarkRead) return route.fulfill({ status: 500 });
+    this.announcementsFor(m).forEach((a) => this.announcements.reads.add(`${a.id}:${m.id}`));
+    return route.fulfill({ status: 204 });
   }
 
   /** GET /announcements: Messages on, Send messages (L2-105 criterion 7). */

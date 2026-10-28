@@ -46,4 +46,7 @@ public enum Permission
 
     /// <summary>Marks a check-in late or an absence excused (L2-095); every role that runs sessions but volunteers (L2-100, ADR 0066).</summary>
     QualifyAttendance,
+
+    /// <summary>Reads the announcements aimed at her role and programs and marks them read (L2-105, ADR 0068): youth and mentors.</summary>
+    ReadAnnouncements,
 }

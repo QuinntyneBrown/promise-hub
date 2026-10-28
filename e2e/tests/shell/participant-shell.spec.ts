@@ -4,7 +4,7 @@ import { ShellPage } from '../../pages/shell.page';
 import { TodayPage } from '../../pages/today.page';
 
 // L2-038 criteria 6 to 9: the shell for youth, mentors and volunteers is composed from their own sections whose module is on.
-// L2-101 criterion 1: Schedule is a volunteer section while Roll Call is on.
+// L2-101 criterion 1: Schedule is a volunteer section while Roll Call is on. L2-105 criterion 5: Announcements serves youth and mentors while Messages is on.
 // L2-005 criterion 8: a module that is off disappears from their navigation. L2-094 criterion 1: Schedule is a youth section while Roster is on.
 const SUITE: ModuleId[] = ['Roster', 'Slips', 'RollCall', 'QuickCards', 'Pickup', 'Messages', 'Incidents', 'Reports'];
 
@@ -23,7 +23,7 @@ test.describe('A youth', () => {
     await expect(shell.search).toBeHidden();
     expect(await today.yourWork()).toEqual(['Learning']);
     await shell.openMenu();
-    expect(await shell.menuLabels()).toEqual(['Today', 'Learning', 'Schedule', 'Notifications', 'Your account']);
+    expect(await shell.menuLabels()).toEqual(['Today', 'Learning', 'Schedule', 'Announcements', 'Notifications', 'Your account']);
     await shell.expectAccessible();
     await shell.closeMenuWithEscape();
     await shell.expectNoHorizontalScroll();
@@ -39,7 +39,7 @@ test.describe('A youth', () => {
     expect(await shell.visibleNavigationLabels()).toEqual(['Today', 'Schedule', 'More']);
     await expect(today.nothingToDo).toBeVisible();
     await shell.openMenu();
-    expect(await shell.menuLabels()).toEqual(['Today', 'Schedule', 'Notifications', 'Your account']);
+    expect(await shell.menuLabels()).toEqual(['Today', 'Schedule', 'Announcements', 'Notifications', 'Your account']);
     await shell.closeMenuWithEscape();
     await today.expectAccessible();
   });

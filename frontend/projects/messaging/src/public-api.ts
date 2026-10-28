@@ -1,1 +1,1 @@
-export { routes } from './lib/messaging.routes';
+export { announcementRoutes, routes } from './lib/messaging.routes';
