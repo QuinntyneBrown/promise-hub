@@ -1420,6 +1420,29 @@ export class FakeApi {
     await this.atRiskFlags.raise(route, m.organizationId, { id: m.id, name: m.personName }, child);
     if (this.atRiskFlags.rows.length > before) {
       this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'Created', record: 'AtRiskFlag', summary: `At-risk flag on ${child!.name} by ${m.personName}`, device: null });
+      this.notifyFlag(m.organizationId, m.personName, child!.name, this.atRiskFlags.rows.at(-1)!.severity);
+    }
+  }
+
+  /** A flag a mentor raised earlier, with the notifications admins and program directors got (L2-091 criterion 3). */
+  seedRaisedFlag(row: Parameters<FakeAtRiskFlags['seed']>[0]): void {
+    this.atRiskFlags.seed(row);
+    this.notifyFlag(row.organizationId ?? 'org-harbourview', row.raisedBy, row.youthName, row.severity);
+  }
+
+  /** Notifies every admin and program director of the organization of a new flag, without the reason. Mirrors backend NotificationWriter. */
+  private notifyFlag(organizationId: string, raisedBy: string, youthName: string, severity: string): void {
+    for (const r of memberships.filter((x) => x.organizationId === organizationId && can.reviewAtRiskFlags(x))) {
+      this.notifications.push({
+        id: `n-${this.nextId++}`,
+        organizationId,
+        membershipId: r.id,
+        kind: 'mentoring',
+        text: `${raisedBy} flagged ${youthName} as at risk (${severity}).`,
+        link: '/mentoring/flags',
+        createdAt: new Date(NOW.getTime() + this.nextId * 1000).toISOString(),
+        readAt: null,
+      });
     }
   }
 
@@ -4816,7 +4839,7 @@ export class FakeApi {
     const on = this.modules.get(m.organizationId)!;
     return this.notifications
       .filter((n) => n.membershipId === m.id && n.organizationId === m.organizationId)
-      .filter((n) => (n.kind === 'incidents' ? on.includes('Incidents') : true))
+      .filter((n) => (n.kind === 'incidents' ? on.includes('Incidents') : n.kind === 'mentoring' ? on.includes('Mentoring') : true))
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
 

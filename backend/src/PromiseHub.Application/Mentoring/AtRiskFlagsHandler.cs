@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PromiseHub.Application.Audit;
 using PromiseHub.Application.Identity;
+using PromiseHub.Application.Notifications;
 using PromiseHub.Application.Organizations;
 using PromiseHub.Domain.Audit;
 using PromiseHub.Domain.Mentoring;
@@ -9,10 +10,12 @@ namespace PromiseHub.Application.Mentoring;
 
 /// <summary>
 /// At-risk flags (L2-091, ADR 0062): a mentor raises one on a youth in his scope (404 outside the organization, 403 audited outside his scope,
-/// 422 by field, 409 when the youth already has an open flag), audited as Created without the reason. A mentor reads the flags on youth in his
+/// 422 by field, 409 when the youth already has an open flag), audited as Created without the reason, and every admin and program director is
+/// notified. A mentor reads the flags on youth in his
 /// scope; admins and program directors read every flag of the organization.
 /// </summary>
-public sealed class AtRiskFlagsHandler(IPromiseHubDb db, ITenantContext tenant, MentorScope scope, IAuditWriter audit, TimeProvider clock)
+public sealed class AtRiskFlagsHandler(IPromiseHubDb db, ITenantContext tenant, MentorScope scope, IAuditWriter audit, NotificationWriter notifications,
+    TimeProvider clock)
 {
     public const string Resolved = "Resolved";
 
@@ -81,6 +84,8 @@ public sealed class AtRiskFlagsHandler(IPromiseHubDb db, ITenantContext tenant, 
         db.AtRiskFlags.Add(flag);
         audit.Record(new AuditEvent(AuditAction.Created, nameof(AtRiskFlag), flag.Id, $"At-risk flag on {child.FullName} by {tenant.ActorName}",
             After: new { Severity = severity.ToString() }));
+        await notifications.NotifyAsync(Permission.ReviewAtRiskFlags, "mentoring", $"{tenant.ActorName} flagged {child.FullName} as at risk ({severity}).",
+            "/mentoring/flags", cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return new(Result.Created(flag.Id), (await ToDtosAsync([flag], cancellationToken))[0]);
     }

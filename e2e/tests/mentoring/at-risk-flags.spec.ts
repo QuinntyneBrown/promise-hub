@@ -3,7 +3,10 @@ import type { FakeApi } from '../../fixtures/fake-api';
 import type { ModuleId } from '../../fixtures/seed';
 import { AtRiskFlagsPage } from '../../pages/mentor-flags.page';
 import { MentoringPage } from '../../pages/mentoring.page';
+import { NotificationsPage } from '../../pages/notifications.page';
 import { RaiseFlagDialog } from '../../pages/raise-flag.page';
+import { ShellPage } from '../../pages/shell.page';
+import { TodayPage } from '../../pages/today.page';
 
 // Acceptance test. Traces to: L2-091 criteria 1, 2, 4, 8 and 9 (a mentor raises an at-risk flag with a severity and a reason, field errors,
 // one open flag per youth, his open flags most serious first, the empty, failed and forbidden states, Mentoring off), L2-065, L2-035, L2-036.
@@ -211,5 +214,74 @@ test.describe('At-risk flags for other roles and with Mentoring off', () => {
       expect(await flags.apiStatus()).toBe(404);
       expect(await new RaiseFlagDialog(page).apiStatus()).toBe(404);
     });
+  });
+});
+
+// Acceptance test. Traces to: L2-091 criteria 3 and 4 (admins and program directors are notified of a new flag, read every flag of the
+// organization from More or the notification, and cannot raise one; nothing while Mentoring is off), L2-040.
+test.describe('At-risk flags for a program director', () => {
+  test.use({ signedInAs: 'm-marisol' });
+
+  test.beforeEach(({ api }) => {
+    api.setModules('org-harbourview', ALL);
+  });
+
+  test('Given Daniel raised a flag on Mateo, when Marisol opens her notification, then At-risk flags lists every flag and she cannot raise one', async ({ page, api }) => {
+    api.seedRaisedFlag({ childId: 'c-mateo', youthName: 'Mateo Rivera', raisedById: 'm-daniel', raisedBy: 'Daniel Osei', severity: 'Medium', reason: REASON });
+    api.atRiskFlags.seed({ childId: 'c-amara', youthName: 'Amara Okonkwo', raisedById: 'm-hana', raisedBy: 'Hana Kim', severity: 'High', reason: 'Not at the last two Saturdays.' });
+    const notifications = new NotificationsPage(page);
+    const flags = new AtRiskFlagsPage(page);
+    await notifications.open();
+
+    await notifications.openItem('Daniel Osei flagged Mateo Rivera as at risk (Medium).');
+
+    await flags.expectOpen();
+    await expect(flags.items).toHaveCount(2);
+    await expect(flags.items.nth(0)).toContainText('Amara Okonkwo');
+    await expect(flags.items.nth(1)).toContainText('Mateo Rivera');
+    await expect(flags.raiseButton).toHaveCount(0);
+    await expect(flags.viewRecord('Mateo Rivera')).toHaveCount(0);
+    await flags.expectNoHorizontalScroll();
+    await flags.expectAccessible();
+  });
+
+  test('Given Mentoring is on, when Marisol opens More, then At-risk flags is listed and leads to the page', async ({ page }) => {
+    const shell = new ShellPage(page);
+    await new TodayPage(page).open();
+
+    await shell.openMenu();
+    expect(await shell.menuLabels()).toContain('At-risk flags');
+    await shell.goToFromMenu('At-risk flags');
+
+    await new AtRiskFlagsPage(page).expectOpen();
+  });
+
+  test('Given Mentoring is off, when Marisol opens More and her notifications, then neither mentions at-risk flags', async ({ page, api }) => {
+    api.seedRaisedFlag({ childId: 'c-mateo', youthName: 'Mateo Rivera', raisedById: 'm-daniel', raisedBy: 'Daniel Osei', severity: 'Medium', reason: REASON });
+    api.setModules('org-harbourview', ALL.filter((m) => m !== 'Mentoring'));
+    const shell = new ShellPage(page);
+    const notifications = new NotificationsPage(page);
+    await new TodayPage(page).open();
+
+    await shell.openMenu();
+    expect(await shell.menuLabels()).not.toContain('At-risk flags');
+    await shell.closeMenuWithEscape();
+    await notifications.open();
+
+    await expect(page.getByText('flagged Mateo Rivera as at risk')).toHaveCount(0);
+  });
+});
+
+test.describe('At-risk flags in the menu of a site lead', () => {
+  test.use({ signedInAs: 'm-jaylen' });
+
+  test('Given Mentoring is on, when Jaylen opens More, then At-risk flags is absent', async ({ page, api }) => {
+    api.setModules('org-harbourview', ALL);
+    const shell = new ShellPage(page);
+    await new TodayPage(page).open();
+
+    await shell.openMenu();
+
+    expect(await shell.menuLabels()).not.toContain('At-risk flags');
   });
 });

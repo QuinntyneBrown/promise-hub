@@ -15,6 +15,7 @@ public sealed class NotificationsHandler(IPromiseHubDb db, ITenantContext tenant
     {
         ["incidents"] = ModuleId.Incidents,
         ["learning"] = ModuleId.Learning,
+        ["mentoring"] = ModuleId.Mentoring,
         ["requests"] = ModuleId.Roster,
         ["staff"] = ModuleId.Roster,
     };

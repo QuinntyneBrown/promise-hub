@@ -101,6 +101,14 @@ export const NAVIGATION: Section[] = [
     module: 'Learning',
     roles: ['Admin', 'ProgramDirector'],
   },
+  {
+    label: 'At-risk flags',
+    link: '/mentoring/flags',
+    icon: 'flag',
+    placement: 'overflow',
+    module: 'Mentoring',
+    roles: ['Admin', 'ProgramDirector'],
+  },
   { label: 'Settings', link: '/settings', icon: 'settings', placement: 'overflow' },
   {
     label: 'Notifications',

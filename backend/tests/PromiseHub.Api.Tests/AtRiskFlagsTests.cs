@@ -5,9 +5,9 @@ using PromiseHub.Infrastructure.Persistence.Seed;
 
 namespace PromiseHub.Api.Tests;
 
-// Acceptance test. Traces to: L2-091 criteria 1, 2, 4, 6 and 8 (a mentor raises an at-risk flag on one of his youth with a severity and a
-// reason, field-by-field errors, one open flag per youth, his open flags most serious first, audited without the reason, scope, roles,
-// tenancy and Mentoring off), L2-065, L2-007, L2-032.
+// Acceptance test. Traces to: L2-091 criteria 1, 2, 3, 4, 6 and 8 (a mentor raises an at-risk flag on one of his youth with a severity and a
+// reason, field-by-field errors, one open flag per youth, admins and program directors notified and reading every flag, his open flags most
+// serious first, audited without the reason, scope, roles, tenancy and Mentoring off), L2-065, L2-040, L2-007, L2-032.
 public sealed class AtRiskFlagsTests : IAsyncLifetime
 {
     private static readonly Guid Marisol = DatabaseSeeder.MembershipId(DatabaseSeeder.Harbourview, "marisol@harbourview.example");
@@ -111,6 +111,61 @@ public sealed class AtRiskFlagsTests : IAsyncLifetime
         Assert.Single(_db.Query("SELECT Id FROM AtRiskFlags"));
     }
 
+    // ---- criteria 3 and 4: admins and program directors are notified and read every flag
+
+    [Fact]
+    public async Task Raising_a_flag_notifies_every_admin_and_program_director_without_the_reason()
+    {
+        await Raise(Daniel, Body(Mateo));
+
+        foreach (var reader in new[] { Marisol, Tom })
+        {
+            var notice = Assert.Single(await Notifications(reader), n => n.GetProperty("kind").GetString() == "mentoring");
+            Assert.Equal("Daniel Osei flagged Mateo Rivera as at risk (Medium).", notice.GetProperty("text").GetString());
+            Assert.Equal("/mentoring/flags", notice.GetProperty("link").GetString());
+        }
+        Assert.DoesNotContain(await Notifications(Jaylen), n => n.GetProperty("kind").GetString() == "mentoring");
+        Assert.Empty(_db.Query("SELECT Id FROM Notifications WHERE Text LIKE '%nobody is home%'"));
+    }
+
+    [Fact]
+    public async Task Flag_notifications_hide_while_Mentoring_is_off_and_come_back_when_it_is_on()
+    {
+        await Raise(Daniel, Body(Mateo));
+        Assert.True((await _factory.ClientFor(Tom).PutAsJsonAsync("/settings/modules", new { on = new[] { "Roster", "RollCall" } })).IsSuccessStatusCode);
+        Assert.DoesNotContain(await Notifications(Marisol), n => n.GetProperty("kind").GetString() == "mentoring");
+
+        Assert.True((await _factory.ClientFor(Tom).PutAsJsonAsync("/settings/modules", new { on = new[] { "Roster", "RollCall", "Mentoring" } })).IsSuccessStatusCode);
+        Assert.Contains(await Notifications(Marisol), n => n.GetProperty("kind").GetString() == "mentoring");
+    }
+
+    [Fact]
+    public async Task Admins_and_program_directors_read_every_flag_of_the_organization_and_cannot_raise()
+    {
+        await Mentors(lead: Hana, supporting: Daniel);
+        await Raise(Daniel, Body(Mateo) with { severity = "Low" });
+        await Raise(Hana, Body(Sofia) with { severity = "High" });
+        Assert.Equal(HttpStatusCode.NoContent, (await _factory.ClientFor(Marisol).DeleteAsync($"/programs/{Tutoring}/youth/{Mateo}/mentor")).StatusCode);
+
+        foreach (var reader in new[] { Marisol, Tom })
+        {
+            var flags = await Flags(reader, "");
+            Assert.Equal(["Sofía Rivera", "Mateo Rivera"], flags.GetProperty("items").EnumerateArray().Select(i => i.GetProperty("youthName").GetString()));
+            Assert.False(flags.GetProperty("canRaise").GetBoolean());
+            Assert.Empty(flags.GetProperty("youth").EnumerateArray());
+        }
+    }
+
+    [Fact]
+    public async Task Northgate_admin_with_Mentoring_on_never_reads_Harbourview_flags_or_their_notifications()
+    {
+        await Raise(Daniel, Body(Mateo));
+        Assert.True((await _factory.ClientFor(Grace).PutAsJsonAsync("/settings/modules", new { on = new[] { "Roster", "RollCall", "QuickCards", "Mentoring" } })).IsSuccessStatusCode);
+
+        Assert.Empty((await Flags(Grace, "")).GetProperty("items").EnumerateArray());
+        Assert.DoesNotContain(await Notifications(Grace), n => n.GetProperty("kind").GetString() == "mentoring");
+    }
+
     // ---- criterion 8: scope, tenancy, roles and the module
 
     [Fact]
@@ -163,6 +218,9 @@ public sealed class AtRiskFlagsTests : IAsyncLifetime
         Assert.True(response.IsSuccessStatusCode, $"flags answered {response.StatusCode}");
         return await response.Content.ReadFromJsonAsync<JsonElement>();
     }
+
+    private async Task<List<JsonElement>> Notifications(Guid membership) =>
+        [.. (await (await _factory.ClientFor(membership).GetAsync("/notifications")).Content.ReadFromJsonAsync<JsonElement>()).GetProperty("items").EnumerateArray()];
 
     private sealed record FlagBody(Guid childId, string severity, string reason);
 
