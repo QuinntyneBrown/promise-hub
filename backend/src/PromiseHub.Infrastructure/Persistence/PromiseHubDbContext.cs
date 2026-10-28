@@ -816,6 +816,8 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.HasIndex(u => u.Email).IsUnique();
             e.Ignore(u => u.RecoveryCodesLeft);
             e.Property(u => u.RecoveryCodes).HasMaxLength(1000);
+            e.Property(u => u.Theme).HasMaxLength(16).HasDefaultValue("system");
+            e.Property(u => u.TextSize).HasMaxLength(16).HasDefaultValue("default");
         });
         modelBuilder.Entity<PasswordReset>(e =>
         {

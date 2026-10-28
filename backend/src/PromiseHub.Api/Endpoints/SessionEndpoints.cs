@@ -43,6 +43,9 @@ public static class SessionEndpoints
             }
             return result.ToHttp();
         });
+        app.MapGet("/me/display", (DisplayPreferencesHandler handler, CancellationToken ct) => handler.GetAsync(ct));
+        app.MapPut("/me/display", async (SaveDisplayPreferencesRequest request, DisplayPreferencesHandler handler, CancellationToken ct) =>
+            (await handler.SaveAsync(request, ct)).ToHttp());
         app.MapGet("/me/organizations", (SwitchOrganizationHandler handler, CancellationToken ct) => handler.ListAsync(ct));
         app.MapPost("/me/organization", async (SwitchOrganizationCommand command, SwitchOrganizationHandler handler, HttpContext http, CancellationToken ct) =>
         {

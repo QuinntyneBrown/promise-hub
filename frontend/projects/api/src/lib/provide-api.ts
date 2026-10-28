@@ -59,6 +59,8 @@ import { HttpPlatformApi } from './platform/http-platform-api';
 import { PLATFORM_API } from './platform/platform-api.token';
 import { ACCOUNT_API } from './account/account-api.token';
 import { HttpAccountApi } from './account/http-account-api';
+import { DISPLAY_API } from './display/display-api.token';
+import { HttpDisplayApi } from './display/http-display-api';
 import { HttpSearchApi } from './search/http-search-api';
 import { HttpSetupApi } from './setup/http-setup-api';
 import { SETUP_API } from './setup/setup-api.token';
@@ -115,6 +117,7 @@ export function provideApi(): EnvironmentProviders {
     { provide: TODAY_API, useClass: HttpTodayApi },
     { provide: SEARCH_API, useClass: HttpSearchApi },
     { provide: ACCOUNT_API, useClass: HttpAccountApi },
+    { provide: DISPLAY_API, useClass: HttpDisplayApi },
     { provide: AUDIT_API, useClass: HttpAuditApi },
     { provide: PLATFORM_API, useClass: HttpPlatformApi },
     { provide: PRIVACY_API, useClass: HttpPrivacyApi },

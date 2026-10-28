@@ -27,6 +27,22 @@ public sealed class StaffUser
     /// <summary>Runs the PromiseHub service itself: lists, adds and suspends organizations (L2-003). Not tenant-owned.</summary>
     public bool IsPlatformAdmin { get; private set; }
 
+    /// <summary>System, light or dark (L2-120); System follows the device. Belongs to the person, so it follows them to every organization.</summary>
+    public string Theme { get; private set; } = DisplayOptions.Themes[0];
+
+    /// <summary>Default, large or larger (L2-119).</summary>
+    public string TextSize { get; private set; } = DisplayOptions.TextSizes[0];
+
+    /// <summary>Turns off motion whatever the device says (L2-119).</summary>
+    public bool ReduceMotion { get; private set; }
+
+    public void ChangeDisplay(string theme, string textSize, bool reduceMotion)
+    {
+        Theme = theme;
+        TextSize = textSize;
+        ReduceMotion = reduceMotion;
+    }
+
     public void MakePlatformAdmin() => IsPlatformAdmin = true;
 
     public int RecoveryCodesLeft => string.IsNullOrEmpty(RecoveryCodes) ? 0 : RecoveryCodes.Split(';').Length;

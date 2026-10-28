@@ -14,6 +14,8 @@
   border: var(--border-width-hairline) solid var(--color-border-default);
   border-radius: var(--radius-full);
   box-shadow: var(--shadow-2);
+  /* Its links and search also follow the bar's own width in rem, so a larger text size (L2-119) hides them before they overflow. */
+  container-type: inline-size;
 }
 .topbar__brand {
   flex: none;
@@ -148,6 +150,28 @@
     display: block;
     flex: 0 1 var(--layout-topbar-search-width);
     min-width: var(--layout-search-min);
+  }
+}
+/* 18rem is under the bar's inner width on a 360px phone; the others are just under its inner width at a 768px, a 1024px and a 1280px viewport at the default text size: only a larger text size
+   (data-text-size, L2-119) narrows the bar in rem below them, and then the links move into More and the search hides. */
+@container (max-width: 18rem) {
+  .topbar__brand-name {
+    display: none;
+  }
+}
+@container (max-width: 41.9rem) {
+  .nav-link:not(.nav-link--more) {
+    display: none;
+  }
+}
+@container (max-width: 56.8rem) {
+  .nav-link--wide {
+    display: none;
+  }
+}
+@container (max-width: 72.8rem) {
+  .topbar__search {
+    display: none;
   }
 }
 

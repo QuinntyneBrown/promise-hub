@@ -1,0 +1,69 @@
+<ph-breadcrumb [items]="crumbs" />
+<ph-page-header
+  title="Display"
+  subtitle="Your choices follow you to every device you sign in on."
+/>
+@switch (state()) {
+  @case ('loading') {
+    <div aria-busy="true" aria-label="Loading your display settings">
+      <ph-skeleton shape="card" />
+    </div>
+  }
+  @case ('error') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load your display settings"
+        text="Check your connection and try again."
+      >
+        <ph-button variant="primary" (click)="load()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @default {
+    @if (choice(); as c) {
+      <form class="stack" novalidate (ngSubmit)="save()">
+        @if (failed()) {
+          <ph-alert
+            tone="danger"
+            title="That didn’t go through"
+            text="Your display settings weren’t saved. Try again."
+          />
+        }
+        <ph-card>
+          <ph-radio-group
+            legend="Theme"
+            name="theme"
+            [options]="themes"
+            [ngModel]="c.theme"
+            (ngModelChange)="pick({ theme: $event })"
+          />
+        </ph-card>
+        <ph-card>
+          <ph-radio-group
+            legend="Text size"
+            name="textSize"
+            [options]="sizes"
+            [ngModel]="c.textSize"
+            (ngModelChange)="pick({ textSize: $event })"
+          />
+        </ph-card>
+        <ph-card title="Motion">
+          <ph-switch
+            label="Reduce motion"
+            description="Turns off animations and smooth scrolling."
+            name="reduceMotion"
+            [ngModel]="c.reduceMotion"
+            (ngModelChange)="pick({ reduceMotion: $event })"
+          />
+        </ph-card>
+        <p class="muted">Changes show at once. Save to keep them.</p>
+        <div class="actions">
+          <ph-button variant="ghost" link="/account">Cancel</ph-button>
+          <ph-button variant="primary" type="submit" [busy]="saving()">Save changes</ph-button>
+        </div>
+      </form>
+    }
+  }
+}

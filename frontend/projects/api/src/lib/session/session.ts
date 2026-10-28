@@ -1,4 +1,5 @@
 import type { ModuleId } from '../modules/module-id';
+import type { DisplayPreferences } from '../display/display-preferences';
 import type { Role } from './role';
 
 /** The signed-in person and the organization of their active membership (GET /me). */
@@ -12,4 +13,6 @@ export interface Session {
   modules: ModuleId[];
   /** The active membership; what this device keeps, such as drafts, is kept under it. */
   membershipId: string;
+  /** The person's display preferences, applied by the shell once per session (L2-119, L2-120). */
+  display: DisplayPreferences;
 }

@@ -1,5 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { ACCOUNT_API, Account, LoadResult, ROLE_LABELS, Role } from '@promisehub/api';
+import { toSignal } from '@angular/core/rxjs-interop';
+import {
+  ACCOUNT_API,
+  Account,
+  DisplayPreferences,
+  LoadResult,
+  ROLE_LABELS,
+  Role,
+  SESSION_API,
+} from '@promisehub/api';
 import {
   Fact,
   PhBadge,
@@ -29,7 +38,20 @@ export class AccountPage {
   private readonly dialogs = inject(PhDialogs);
   private readonly toasts = inject(ToastService);
 
+  private readonly session = toSignal(inject(SESSION_API).current());
+
   protected readonly result = signal<LoadResult<Account> | null>(null);
+
+  /** The saved display in words, such as “System theme · Default text · Motion on”. */
+  protected readonly displaySummary = computed(() => {
+    const d: DisplayPreferences = this.session()?.display ?? {
+      theme: 'system',
+      textSize: 'default',
+      reduceMotion: false,
+    };
+    const word = (v: string) => v.charAt(0).toUpperCase() + v.slice(1);
+    return `${word(d.theme)} theme · ${word(d.textSize)} text · Motion ${d.reduceMotion ? 'reduced' : 'on'}`;
+  });
   protected readonly account = computed(() => {
     const r = this.result();
     return r?.status === 'loaded' ? r.value : null;

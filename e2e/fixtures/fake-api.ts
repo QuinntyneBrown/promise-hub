@@ -54,6 +54,13 @@ import {
 } from "./seed";
 
 /** Mirrors backend RolePermissions. */
+/** A person's display preferences (L2-119, L2-120). Mirrors backend DisplayPreferencesDto. */
+interface FakeDisplay {
+  theme: "system" | "light" | "dark";
+  textSize: "default" | "large" | "larger";
+  reduceMotion: boolean;
+}
+
 /** A youth's answer for a session (L2-094). */
 interface FakeRsvp {
   eventId: string;
@@ -664,6 +671,8 @@ export class FakeApi {
   private recoveryCodes = new Map<string, number>();
   /** Saved profiles by membership (L2-117); a membership without one shows its seeded name. */
   private readonly profiles = new Map<string, { name: string; mobile: string | null }>();
+  /** Display preferences by person (email), as saved on Display (L2-119, L2-120). */
+  private readonly displays = new Map<string, FakeDisplay>();
   /** Passwords changed by their owner (L2-118), by email; everyone else signs in with the seeded one. */
   private readonly passwords = new Map<string, string>();
   signedOutOthers = false;
@@ -2166,6 +2175,8 @@ export class FakeApi {
     ["GET", /^\/api\/me\/account$/, (route) => this.account(route)],
     ["PUT", /^\/api\/me\/profile$/, (route) => this.saveProfile(route)],
     ["POST", /^\/api\/me\/password$/, (route) => this.changePassword(route)],
+    ["GET", /^\/api\/me\/display$/, (route) => this.getDisplay(route)],
+    ["PUT", /^\/api\/me\/display$/, (route) => this.saveDisplay(route)],
     [
       "POST",
       /^\/api\/me\/recovery-codes$/,
@@ -3006,6 +3017,7 @@ export class FakeApi {
         plan: organization.plan,
         modules: this.modules.get(organization.id),
         membershipId: membership.id,
+        display: this.displayOf(membership.email),
       },
     });
   }
@@ -5324,6 +5336,38 @@ export class FakeApi {
       record: "Membership",
       summary: `${name} updated their profile`,
       device: null,
+    });
+    return route.fulfill({ status: 204 });
+  }
+
+  /** A person's display preferences; System, Default and motion on until saved (L2-119, L2-120). */
+  displayOf(email: string): FakeDisplay {
+    return this.displays.get(email) ?? { theme: "system", textSize: "default", reduceMotion: false };
+  }
+
+  /** Mirrors backend DisplayPreferencesHandler: the caller's own, by person. */
+  private async getDisplay(route: Route): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    return route.fulfill({ json: this.displayOf(m.email) });
+  }
+
+  /** Mirrors backend DisplayPreferencesHandler: only the known values; not audited. */
+  private async saveDisplay(route: Route): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    const b = route.request().postDataJSON() as FakeDisplay;
+    const errors: Record<string, string> = {};
+    if (!["system", "light", "dark"].includes(b.theme))
+      errors["theme"] = "Choose System, Light or Dark.";
+    if (!["default", "large", "larger"].includes(b.textSize))
+      errors["textSize"] = "Choose Default, Large or Larger.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
+    this.displays.set(m.email, {
+      theme: b.theme,
+      textSize: b.textSize,
+      reduceMotion: !!b.reduceMotion,
     });
     return route.fulfill({ status: 204 });
   }
