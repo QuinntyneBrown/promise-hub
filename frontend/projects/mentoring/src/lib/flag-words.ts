@@ -18,7 +18,7 @@ export function raisedLine(f: AtRiskFlag): string {
   return `Raised by ${f.raisedBy} · ${formatDay(f.raisedAt)}`;
 }
 
-/** How a flag was resolved, as the dialog and the resolved list say it (Waypoint's resolution reasons). */
+/** How a flag was resolved, as the dialog and the resolved list say it. */
 export const OUTCOME_LABEL: Record<string, string> = {
   Reconnected: 'Reconnected, back on track',
   HandedToDirector: 'Handed to the program director',

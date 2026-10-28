@@ -46,7 +46,7 @@ Open questions: none. Deferred: Waypoint's automatic signals (inactivity, missed
 
 ## Built so far
 
-Nothing yet; prompt 68 builds it in four slices.
+Prompt 68 delivered everything above in four slices: raising a flag and the mentor's list (`POST` and `GET /mentoring/flags`, `AtRiskFlagsPage`, `RaiseFlagDialog`, reached from the dashboard's At-risk flags; `ph-list-item` gained actions under its text, `phListActions`); admins and program directors notified in app and reading every flag, with At-risk flags in More (`ReviewAtRiskFlags`, kind `mentoring`); resolving with an outcome and the Resolved tab (`POST /mentoring/flags/{id}/resolve`, `ResolveFlagDialog`; the note shows after the outcome line); and Report an incident on open flags for admins and program directors while the Incident log is on. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/AtRiskFlagsTests.cs`, `e2e/tests/mentoring/at-risk-flags.spec.ts`.
 
 ## Requirements
 

@@ -38,8 +38,8 @@ def flag_item(f: dict, *, director: bool = False, incidents: bool = True) -> str
     sev = badge(f["severity"], SEVERITY_KIND[f["severity"]])
     extra = ""
     if resolved:
-        extra = (f'<span class="list__meta">{esc(f["outcome"])} · Resolved by {esc(f["resolved_by"])} · {esc(f["resolved_when"])}</span>'
-                 + (f'<p class="list__text">{esc(f["note"])}</p>' if f.get("note") else ""))
+        line = f'{f["outcome"]} · Resolved by {f["resolved_by"]} · {f["resolved_when"]}' + (f' · Note: {f["note"]}' if f.get("note") else "")
+        extra = f'<span class="list__meta">{esc(line)}</span>'
         actions = ""
     else:
         buttons = [btn("Resolve", "", icon_name="check", data_href=dialog("resolve-flag"))]
@@ -62,7 +62,7 @@ def crumbs() -> str:
 
 
 SUB = "Youth you’re worried about. Program directors are told when you raise a flag."
-SUB_DIRECTOR = "Every open at-risk flag at Harbourview. Mentors raise them; you can resolve them or report an incident."
+SUB_DIRECTOR = "Every at-risk flag at your organization. Mentors raise them; you can resolve them or report an incident."
 
 
 def hdr(sub: str = SUB, *, raise_: bool = True, director: bool = False) -> str:

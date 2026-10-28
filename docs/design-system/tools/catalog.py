@@ -32,7 +32,7 @@ tooltip|Tooltip||tooltip|Clarify an icon control on focus and hover without carr
 divider|Divider|.divider|display|Separate alternatives with text or draw a decorative rule.
 container-grid-stack|Container, grid and stack|.two-col|display|Compose consistent pages through shared columns, gutters and vertical rhythm.
 table|Table|.table|table|Compare records through captioned columns with reachable row actions.
-list|List|.list|display|Scan related records with one clear primary link per item. A row may carry a paragraph of text (.list__text) under its meta, as for a youth's shared reflection.
+list|List|.list|display|Scan related records with one clear primary link per item. A row may carry a paragraph of text (.list__text) under its meta, as for a youth's shared reflection, and a cluster of buttons under it for a row without a link, as on an at-risk flag.
 description-list|Description list|.facts|display|Present labelled facts, such as contact details and approved pickups.
 avatar|Avatar|.avatar|display|Identify a person by initials or image alongside their written name.
 badge|Badge|.badge|display|Express a named status, role or meaningful count without relying on colour alone.
