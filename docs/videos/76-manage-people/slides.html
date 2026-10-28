@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 76 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="76" data-video-title="Manage people" data-parts="Introduction|Directory|Filters|Record|Role|Lifecycle|Youth|Phone|States|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 76</div>
+  <h1>Manage people</h1>
+  <p class="lead">Every account in one directory, roles checked on the server, and deactivation that deletes nothing</p>
+</section>
+
+<section id="directory" data-part="1" data-cue="Tom Nguyen is the admin at Harbourview Youth Collective." data-clip="clips/directory-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>People</h3><p>The directory, a filter and a search.</p></div>
+</section>
+
+<section id="directory-shot" data-part="1" data-cue="Each row shows the role">
+  <h2>Every account of Harbourview</h2>
+  <img class="shot" alt="People: ten accounts with role, programs, mentor, status and last sign-in, Showing 1–10 of 10" src="shots/desktop-people.png">
+  <p class="muted small">GET /people · 25 to a page · removed accounts not listed · L2-112</p>
+</section>
+
+<section id="filters" data-part="2" data-cue="Search looks at names and emails.">
+  <h2>Filtered on the server</h2>
+  <div class="cols">
+    <img class="shot" alt="Role Mentor: Daniel Osei and Hana Kim" src="shots/desktop-mentors.png">
+    <img class="shot" alt="No one matches Petrov, with Clear search and Invite staff" src="shots/desktop-no-results.png">
+  </div>
+  <p class="muted small">q, role, status, programId, page · an unknown role or status answers 422</p>
+</section>
+
+<section id="record" data-part="3" data-cue="A name opens the record." data-clip="clips/record-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Sofía, then Leo</h3><p>The record and Change role.</p></div>
+</section>
+
+<section id="record-shot" data-part="3" data-cue="A youth account's role is fixed by its child record">
+  <h2>Sofía Rivera’s record</h2>
+  <img class="shot" alt="Sofía’s record: account, youth record with her child record, programs, mentor and Learning" src="shots/desktop-sofia.png">
+  <p class="muted small">GET /people/{id} · mentoring and learning only while their module is on · L2-113</p>
+</section>
+
+<section id="role" data-part="4" data-cue="Leo Martins volunteers on Thursday nights">
+  <h2>Change role</h2>
+  <div class="cols">
+    <img class="shot" alt="Change role for Leo Martins with Youth worker chosen and the warning about every family’s records" src="shots/desktop-change-role.png">
+    <img class="shot" alt="Leo is now a youth worker; the history records Volunteer to YouthWorker" src="shots/desktop-role-changed.png">
+  </div>
+  <p class="muted small">PUT /staff/{id}/role · never Youth · Mentor only while Mentoring is on · audited before and after</p>
+</section>
+
+<section id="lifecycle" data-part="5" data-cue="When someone leaves, Tom deactivates the account." data-clip="clips/lifecycle-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Deactivate, find, reactivate</h3><p>Nothing deleted.</p></div>
+</section>
+
+<section id="lifecycle-shots" data-part="5" data-cue="Leo's next request answers that the account is inactive">
+  <h2>Off, then on again</h2>
+  <div class="cols three">
+    <img class="shot" alt="Deactivate Leo Martins? with Cancel focused" src="shots/desktop-deactivate.png">
+    <img class="shot" alt="Leo deactivated: when and by whom, Reactivate" src="shots/desktop-deactivated.png">
+    <img class="shot" alt="Leo reactivated, both changes in the history" src="shots/desktop-reactivated.png">
+  </div>
+  <p class="muted small">POST /people/{id}/deactivate and /reactivate · next request 401 account-deactivated · ADR 0070</p>
+</section>
+
+<section id="youth" data-part="6" data-cue="A youth account is tied to a child record.">
+  <h2>A youth account follows its child</h2>
+  <img class="shot" alt="Nadia’s record: the child record was deleted, Reactivate disabled" src="shots/desktop-child-deleted.png">
+  <p class="muted small">Deleting a household deactivates its youth accounts · reactivating answers 422</p>
+</section>
+
+<section id="phone" data-part="7" data-cue="On a phone the filters stack" data-clip="clips/phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>One column</h3><p>The directory and a record.</p></div>
+</section>
+
+<section id="phone-shots" data-part="7" data-cue="Here are the directory and Sofía's record on the phone.">
+  <h2>On a phone</h2>
+  <div class="cols">
+    <img class="shot" alt="People on a phone" src="shots/phone-people.png">
+    <img class="shot" alt="Sofía’s record on a phone" src="shots/phone-sofia.png">
+  </div>
+</section>
+
+<section id="states" data-part="8" data-cue="People administration belongs to no module" data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>States</h3><p>Mentoring off, only you, failed, forbidden.</p></div>
+</section>
+
+<section id="states-shots" data-part="8" data-cue="A brand-new organization says it is just you so far.">
+  <h2>Off, empty, refused</h2>
+  <div class="cols three">
+    <img class="shot" alt="Mentoring off: no Mentor column" src="shots/desktop-mentoring-off.png">
+    <img class="shot" alt="It’s just you so far, with Invite staff" src="shots/desktop-empty.png">
+    <img class="shot" alt="Marisol: Only admins manage people" src="shots/desktop-forbidden.png">
+  </div>
+  <p class="muted small">No mentoring field while Mentoring is off · a failed load offers Try again (in the clip) · 403 for other roles</p>
+</section>
+
+<section id="testing" data-part="9" data-cue="The API tests cover the directory">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>PeopleDirectoryTests</code> and <code>PersonRecordTests</code>: filters, pages, module fields, tenancy</li>
+    <li><code>PersonRoleChangeTests</code>: the role rules and the audit</li>
+    <li><code>AccountLifecycleTests</code> and <code>DeactivatedSignInTests</code>: sessions, sign-in, the child record</li>
+    <li><code>people</code> and <code>person</code> specs with axe, on a laptop and a phone</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="10" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Every account in one directory, filtered on the server</li><li>Role changes checked and audited; a youth’s follows her child</li><li>Deactivation ends access, keeps records and can be undone</li></ul>
+  <p class="muted">Next: reset a password</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
