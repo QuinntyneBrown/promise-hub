@@ -111,9 +111,10 @@ def today(S):
     S.add("youth-learning-off", "The same youth while Learning is off: Learning is gone from the bar, the tab bar and the menu, and Today says there is nothing to do.", nav="today", role="youth",
           user=YOUTH["sofia"], unread=0, modules=["today", "schedule"], main=participant("Sofía", []),
           notes=note("Opening /learning while Learning is off redirects here to Today.", "top: 5rem; right: 1rem;"))
-    S.add("mentor", "Daniel (Mentor) signs in: Today and Mentoring only; a mentor sees only the youth assigned to them.", nav="today", role="mentor",
-          user=STAFF["daniel"], unread=0, modules=["today", "mentor-dashboard"],
-          main=participant("Daniel", [list_item("Mentoring", "The youth assigned to you", href=page("mentor-dashboard"))]))
+    S.add("mentor", "Daniel (Mentor) signs in: Today, Mentoring and Check-in; a mentor sees only the youth assigned to them and takes attendance for his cohorts’ sessions.", nav="today", role="mentor",
+          user=STAFF["daniel"], unread=0, modules=["today", "mentor-dashboard", "check-in"],
+          main=participant("Daniel", [list_item("Mentoring", "The youth assigned to you", href=page("mentor-dashboard")),
+                                      list_item("Check-in", "Take attendance for your cohorts’ sessions today", href=page("check-in", "mentor"))]))
     S.add("volunteer", "Leo (Volunteer) signs in: Today and Check-in for the sessions he is assigned to.", nav="today", role="volunteer",
           user=STAFF["leo"], unread=0, modules=["today", "check-in"],
           main=participant("Leo", [list_item("Tutoring night", "Today, 4:00–6:00 pm · Harbourview Community Centre, Room 2 · you are assigned", href=page("check-in"))]))
@@ -144,9 +145,9 @@ def roster_rows(kind="page", offline=False):
         roster_row(CHILD["emily"], "none", "Not yet here · Grade 5", kind),
         roster_row(CHILD["yusuf"], "in", "Checked in 4:01 pm · medication at noon, done", kind),
         roster_row(CHILD["amara"], "absent", "Absent · guardian texted 4:15 pm", kind),
-        roster_row(CHILD["deshawn"], "in", "Checked in 4:08 pm · Grade 4", kind),
+        roster_row(CHILD["deshawn"], "in", "Late · checked in 4:21 pm · Grade 4", kind),
         roster_row(CHILD["lily"], "none", "Not yet here · Grade 3", kind),
-        roster_row(CHILD["omar"], "absent", "Absent · guardian texted 4:15 pm", kind),
+        roster_row(CHILD["omar"], "absent", "Excused · guardian told us this morning", kind),
     ]
     return rows
 
@@ -157,9 +158,10 @@ def checkin_header(kind="page", sync: str = ""):
                        btn("Session notes", "", icon_name="edit", data_href=rel(kind, "dialog", "session-notes")) + btn("End session", "", icon_name="check-circle", data_href=rel(kind, "dialog", "end-session")))
 
 
-def checkin_summary(i=31, a=2, n=15, c=48):
-    return (f'<div class="roster-summary" role="group" aria-label="Session totals">{stat("Checked in", str(i))}{stat("Absent", str(a))}{stat("Not yet", str(n))}'
-            f'<div class="card stat"><span class="stat__label">Cleared</span><span class="stat__value">{c}<span class="text-caption"> / {c}</span></span></div></div>')
+def checkin_summary(i=31, a=2, n=15, c=48, late=1, excused=1, cleared=True):
+    clr = f'<div class="card stat"><span class="stat__label">Cleared</span><span class="stat__value">{c}<span class="text-caption"> / {c}</span></span></div>' if cleared else stat("On roster", str(c))
+    return (f'<div class="roster-summary" role="group" aria-label="Session totals">{stat("Checked in", str(i), f"{late} late" if late else "")}{stat("Absent", str(a), f"{excused} excused" if excused else "")}{stat("Not yet", str(n))}'
+            f'{clr}</div>')
 
 
 def checkin_filters(current="all"):
@@ -168,7 +170,7 @@ def checkin_filters(current="all"):
             + chips([("All 48", current == "all"), ("Not yet 15", current == "not-yet"), ("Checked in 31", current == "in"), ("Absent 2", current == "absent")], "Filter roster") + "</div>")
 
 
-@screen("check-in", "page", "Check-in", route="/check-in", reqs=[R_ROLL, R_PICKUP, R_MOBILE], na={})
+@screen("check-in", "page", "Check-in", route="/check-in", reqs=[R_ROLL, R_PICKUP, R_MOBILE, "L2-095", "L2-096", "L2-098", "L2-099"], na={})
 def check_in(S):
     kind = "page"
     body = checkin_header() + checkin_summary() + checkin_filters() + f'<div class="card card--flush"><ul class="roster" aria-label="Roster for Tutoring night">{"".join(roster_rows())}</ul></div>' + \
@@ -214,8 +216,26 @@ def check_in(S):
     S.add("complete", "Session ended: all 46 present children are signed out and attendance has rolled into the program totals.", nav="check-in",
           main=page_header("Tutoring night", "Today, 4:00–6:00 pm · ended 6:04 pm") +
           card(f'<div class="stack">{icon("check-circle", "icon--lg")}<h2 class="empty__title">Session recorded</h2><p class="text-muted measure">46 present, 2 absent. Attendance saved.</p>'
-               f'<div class="cluster">{btn("Back to Today", "primary", href=page("today"))}{btn("View attendance", "", href=page("attendance"))}{btn("Report an incident", "ghost", icon_name="flag", href=page("new-incident"))}</div></div>', cls="card--success"),
+               f'<div class="cluster">{btn("Back to Today", "primary", href=page("today"))}{btn("View attendance", "", href=page("attendance-history"))}{btn("Report an incident", "ghost", icon_name="flag", href=page("new-incident"))}</div></div>', cls="card--success"),
           toast_html=toast_region(toast("success", "Session ended", "46 present · 2 absent · attendance saved")))
+    DANIEL = STAFF["daniel"]
+    MKW = dict(nav="check-in", role="mentor", user=DANIEL, unread=0, modules=["today", "mentor-dashboard", "check-in"])
+    cohort = (f'<div class="card card--flush"><ul class="roster" aria-label="Roster for Tutoring night">'
+              + roster_row(dict(CHILD["jordan"], flag=""), "in", "Late · checked in 4:21 pm · Grade 6", kind)
+              + roster_row(dict(CHILD["mateo"], flag=""), "in", "Checked in 4:02 pm · Grade 4", kind)
+              + roster_row(dict(CHILD["sofia"], flag=""), "absent", "Excused · Grade 7", kind)
+              + roster_row(dict(CHILD["yusuf"], flag=""), "none", "Not yet here · Grade 8", kind) + "</ul></div>")
+    mhdr = page_header("Tutoring night", "Today, 4:00–6:00 pm · Room 2 · 4 on roster · After‑School Tutoring",
+                       btn("Session notes", "", icon_name="edit", data_href=rel(kind, "dialog", "session-notes")))
+    mfoot = lambda rest: (f'<div class="cluster" style="margin-top: var(--space-3);">{btn("Mark the rest present", "", icon_name="check", aria_label="Mark the rest present, 1 not yet here") if rest else ""}'
+                          f'{btn("Add walk-in", "ghost")}{btn("Attendance history", "ghost", icon_name="chart", href=page("attendance-history", "mentor"))}</div>')
+    S.add("mentor", "Daniel takes attendance for his cohort’s session: the same roster, Late and Excused beside Checked in and Absent, and, under the roster, Mark the rest present for everyone not yet marked and Attendance history.", **MKW,
+          main=mhdr + checkin_summary(2, 1, 1, 4, late=1, excused=1, cleared=False) + cohort + mfoot(True),
+          notes=note("A mentor runs the sessions of the cohorts he leads or supports (ADR 0065). Mentors don’t see medical flags. Each mark saves at once and queues on the phone without signal.", "top: 5rem; right: 1rem;"))
+    allin = cohort.replace(roster_row(dict(CHILD["yusuf"], flag=""), "none", "Not yet here · Grade 8", kind), roster_row(dict(CHILD["yusuf"], flag=""), "in", "Checked in 4:30 pm · Grade 8", kind))
+    S.add("all-marked", "Mark the rest present: Yusuf, the one not yet here, is checked in and a toast says how many.", **MKW,
+          main=mhdr + checkin_summary(3, 1, 0, 4, late=1, excused=1, cleared=False) + allin + mfoot(False),
+          toast_html=toast_region(toast("success", "1 marked present", "Everyone on the roster is marked.")))
     S.add("long", "A camp day with 212 children: search and filters first, the list virtualizes, nothing breaks.", nav="check-in", user=J,
           main=page_header("Summer Camp · Week 3, Monday", "Mon 20 Jul, 8:00 am–5:00 pm · 212 on roster", btn("End session", "", icon_name="check-circle", data_href=dialog("end-session"))) +
           f'<div class="roster-summary" role="group" aria-label="Session totals">{stat("Checked in", "1,187".split(",")[0] + "87")}{stat("Absent", "9")}{stat("Not yet", "16")}{stat("Cleared", "212")}</div>' +
@@ -503,7 +523,7 @@ def child(S):
     ], card=False), title="Programs", tid="prog", cls="card--flush")
     att = card(f'<div class="stack" style="gap: var(--space-3);"><p class="text-muted">39 of 43 sessions this season · 91%</p><div class="dots" role="img" aria-label="Last 30 sessions: 27 present, 2 absent, 1 excused">'
                + "".join(f'<span class="dots__dot dots__dot--{k}"></span>' for k in ["present"] * 9 + ["absent"] + ["present"] * 8 + ["excused"] + ["present"] * 6 + ["absent"] + ["present"] * 4)
-               + f'</div><div class="cluster cluster--snug">{status("Present", "success")}{status("Absent", "danger")}{status("Excused", "warning")}</div></div>', title="Attendance", tid="att", footer=f'<a href="{page("attendance")}">Attendance history</a>')
+               + f'</div><div class="cluster cluster--snug">{status("Present", "success")}{status("Absent", "danger")}{status("Excused", "warning")}</div></div>', title="Attendance", tid="att", footer=f'<a href="{page("attendance-history", "by-youth")}">Attendance history</a>')
     slips = card(ul_list([
         list_item("Fall field trip: Royal Botanical Gardens", "Signed by Carmen Rivera · Today, 3:41 pm", lead=f'<span class="icon-tile" aria-hidden="true">{icon("bus")}</span>', href=page("event"), end=badge("Signed", "success")),
         list_item("Season consent 2026–27", "Signed by Carmen Rivera · Tue 2 Sep", lead=f'<span class="icon-tile" aria-hidden="true">{icon("clipboard")}</span>', href=page("slip-sign", "success"), end=badge("Signed", "success")),

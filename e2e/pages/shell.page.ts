@@ -24,6 +24,11 @@ export class ShellPage extends BasePage {
     return (await items.allInnerTexts()).map((t) => t.trim());
   }
 
+  /** Follows a primary navigation link, within the app, as a person tapping it would. */
+  async openSection(label: string): Promise<void> {
+    await this.primaryNavigation.getByRole('link', { name: label, exact: true }).first().click();
+  }
+
   async openMenu(): Promise<void> {
     await this.primaryNavigation.getByRole('button', { name: 'More' }).click();
     await expect(this.menu).toBeVisible();

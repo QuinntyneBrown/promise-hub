@@ -1,0 +1,45 @@
+@startuml
+title UML sequence behaviour — A mentor marks a youth late
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Mentor (Daniel)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "CheckInPage" as page
+  participant "CheckInSheetDialog" as sheet
+  participant "AttendanceApi" as aapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "AttendanceEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "CheckInHandler" as h
+  participant "AttendanceWriter" as w
+  participant "SessionAccess" as acc
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : More for Yusuf
+page -> sheet : open
+actor -> sheet : Late
+sheet --> page : check-in, late
+page -> page : row says Late, totals update (L2-095 c1)
+page -> aapi : checkIn(session, child, null, action, late)
+aapi -> ep : POST /sessions/{id}/check-ins {late: true}
+ep -> ep : Roll Call on, RunSessions
+ep -> h : HandleAsync
+h -> w : ApplyAsync(CheckedInLate)
+w -> acc : AllowsAsync(event)
+acc -> db : the mentor's CohortMentor rows and SessionStaff
+alt not on the team
+  w --> page : 403
+else repeated action id
+  w --> page : 200 (nothing changes)
+else
+  w -> db : record Present, Late; event; audit Updated (L2-095 c4)
+  w --> page : 200 saved
+end
+@enduml

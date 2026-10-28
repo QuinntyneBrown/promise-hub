@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Sync attendance reliably
+Person(m, "Mentor", "Runs his cohorts' sessions")
+Person(s, "Site lead", "Runs any session")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(m, ph, "Syncs queued marks", "HTTPS")
+Rel(s, ph, "Syncs queued marks", "HTTPS")
+@enduml

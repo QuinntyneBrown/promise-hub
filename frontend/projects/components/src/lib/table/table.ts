@@ -33,7 +33,13 @@ export class PhTable {
     return cell === null ? '' : typeof cell === 'string' ? cell : cell.text;
   }
 
-  protected badge(cell: TableCell): Exclude<TableCell, string | null> | null {
-    return cell !== null && typeof cell === 'object' ? cell : null;
+  protected badge(cell: TableCell): { text: string; tone: ReturnType<PhBadge['tone']> } | null {
+    return cell !== null && typeof cell === 'object' && 'tone' in cell ? cell : null;
+  }
+
+  protected tagged(
+    cell: TableCell,
+  ): { text: string; badge: { text: string; tone: ReturnType<PhBadge['tone']> } } | null {
+    return cell !== null && typeof cell === 'object' && 'badge' in cell ? cell : null;
   }
 }

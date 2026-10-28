@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 71 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="71" data-video-title="Take attendance for cohort sessions" data-parts="Introduction|Mentor|One system|Offline|History|Access|Correct|Phone|States|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 71</div>
+  <h1>Take attendance for cohort sessions</h1>
+  <p class="lead">Present, late, excused or absent in Roll Call, online or offline, with history, rates and audited corrections</p>
+</section>
+
+<section id="mentor" data-part="1" data-cue="Daniel Osei is a mentor at Harbourview Youth Collective" data-clip="clips/mentor-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Daniel takes attendance</h3><p>Late, excused, then Mark the rest present.</p></div>
+</section>
+
+<section id="mentor-shots" data-part="1" data-cue="The rows say Late, checked in at four thirty">
+  <h2>Late and excused</h2>
+  <div class="cols">
+    <img class="shot" alt="The check-in sheet for Jordan Thompson with Late chosen" src="shots/desktop-sheet-late.png">
+    <img class="shot" alt="Tutoring night with Jordan late and Sofía excused, and the totals saying 1 late and 1 excused" src="shots/desktop-mentor-roster.png">
+  </div>
+</section>
+
+<section id="system" data-part="2" data-cue="Late and excused are not a second set of statuses.">
+  <h2>One attendance system</h2>
+  <table class="facts">
+    <tr><th>Mark</th><th>In Roll Call</th></tr>
+    <tr><td>Present</td><td>Checked in (or signed out)</td></tr>
+    <tr><td>Late</td><td>Checked in, late flag kept through sign-out</td></tr>
+    <tr><td>Excused</td><td>Absent, excused flag; no no-show text</td></tr>
+    <tr><td>Absent</td><td>Absent</td></tr>
+    <tr><td>Mentors</td><td>Run their team’s cohorts’ sessions; no medical, Quick Cards or sign-out</td></tr>
+  </table>
+  <p class="muted small">POST /sessions/{id}/check-ins {late} · /absences {excused} · L2-095 · ADR 0065</p>
+</section>
+
+<section id="offline" data-part="3" data-cue="On a phone in a church basement, the signal drops." data-clip="clips/offline-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Without signal</h3><p>Marks wait on the phone and sync in order.</p></div>
+</section>
+
+<section id="offline-shots" data-part="3" data-cue="A mark sent twice counts once">
+  <h2>Queued, then synced</h2>
+  <div class="cols">
+    <img class="shot" alt="The roster offline with Sofía excused and Yusuf late, each waiting to sync" src="shots/phone-offline.png">
+    <img class="shot" alt="The roster after the signal returned, with the toast 2 check-ins synced" src="shots/phone-synced.png">
+  </div>
+  <p class="muted small">Once per client action id · refused marks leave the queue · L2-096, L2-098, L2-099</p>
+</section>
+
+<section id="history" data-part="4" data-cue="Marisol Delgado is the program director." data-clip="clips/history-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Attendance history</h3><p>By session, then by youth.</p></div>
+</section>
+
+<section id="history-shots" data-part="4" data-cue="By youth lists each youth">
+  <h2>Sessions and youth, with rates</h2>
+  <div class="cols">
+    <img class="shot" alt="After-School Tutoring by session with the rate, sessions recorded, below 70% and the unrecorded warning" src="shots/desktop-history.png">
+    <img class="shot" alt="After-School Tutoring by youth with attended of marked and Below 70% flags" src="shots/desktop-by-youth.png">
+  </div>
+  <p class="muted small">GET /attendance?programId= · L2-097</p>
+</section>
+
+<section id="access" data-part="5" data-cue="Admins, program directors and site leads choose any active cohort.">
+  <h2>Who sees what</h2>
+  <table class="facts">
+    <tr><th>Who</th><th>History</th><th>Correct</th></tr>
+    <tr><td>Admin, program director</td><td>Every active cohort</td><td>Yes</td></tr>
+    <tr><td>Site lead</td><td>Every active cohort</td><td>No (403)</td></tr>
+    <tr><td>Mentor</td><td>His team’s cohorts; another is 403, audited</td><td>No (403)</td></tr>
+    <tr><td>Youth worker, coordinator, youth</td><td>403</td><td>403</td></tr>
+    <tr><td>Another organization</td><td>404</td><td>404</td></tr>
+  </table>
+</section>
+
+<section id="correct" data-part="6" data-cue="On Wednesday, Yusuf was marked absent" data-clip="clips/correct-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Correct a mark</h3><p>Absent to Excused, with why.</p></div>
+</section>
+
+<section id="correct-shots" data-part="6" data-cue="Corrections work on a session that has ended">
+  <h2>Audited with a reason</h2>
+  <div class="cols">
+    <img class="shot" alt="The correct-attendance dialog with Yusuf Haddad, Excused and the reason" src="shots/desktop-correct.png">
+    <img class="shot" alt="The history after the correction with the toast Attendance corrected" src="shots/desktop-corrected.png">
+  </div>
+  <p class="muted small">PUT /sessions/{id}/attendance/{childId} · before, after and reason in the audit log</p>
+</section>
+
+<section id="phone" data-part="7" data-cue="On a phone, the roster, the totals and the history" data-clip="clips/phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>One column</h3><p>Jaylen’s roster and the history.</p></div>
+</section>
+
+<section id="states" data-part="8" data-cue="Saving a correction without a reason asks for one" data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Refused and failed</h3><p>Invalid, failed, empty, error, forbidden, Roll Call off.</p></div>
+</section>
+
+<section id="states-shots" data-part="8" data-cue="And with Roll Call off">
+  <h2>Empty, error, forbidden</h2>
+  <div class="cols">
+    <img class="shot" alt="Saturday Sports saying No attendance recorded yet, with Open check-in" src="shots/desktop-history-empty.png">
+    <img class="shot" alt="The history saying We couldn’t load attendance, with Try again" src="shots/desktop-history-error.png">
+  </div>
+</section>
+
+<section id="testing" data-part="9" data-cue="The API tests cover late and excused">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>LateAndExcusedTests</code> and <code>MentorRollCallTests</code>: flags, counts, sign-out, replay, mentor scope, tenancy, Roll Call off</li>
+    <li><code>AttendanceHistoryTests</code> and <code>CorrectAttendanceTests</code>: statuses, rates, youth, roles, every check, audit</li>
+    <li><code>late-and-excused</code>, <code>mentor-attendance</code>, <code>offline-attendance</code> and <code>attendance-history</code> specs on phone and laptop, with axe</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="10" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Late is a check-in after the start; excused is an accepted absence, in the one Roll Call</li><li>Mentors take attendance for their cohorts’ sessions, online or offline</li><li>History shows sessions and youth with rates; corrections are audited with a reason</li></ul>
+  <p class="muted">Next: the volunteer portal</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

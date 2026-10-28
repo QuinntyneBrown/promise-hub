@@ -46,6 +46,11 @@ tbody tr:last-child td {
   white-space: nowrap;
 }
 
+.num {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
 .actions {
   text-align: end;
   white-space: nowrap;

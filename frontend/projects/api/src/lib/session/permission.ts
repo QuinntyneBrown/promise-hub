@@ -14,4 +14,6 @@ export type Permission =
   | 'managePickups'
   | 'manageStaff'
   | 'inviteStaff'
-  | 'assignStaff';
+  | 'assignStaff'
+  | 'reviewAttendance'
+  | 'correctAttendance';

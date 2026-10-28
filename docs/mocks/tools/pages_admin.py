@@ -239,7 +239,7 @@ def server_error(S):
     S.add("default", "500: not the user’s fault, a reference code, retry.", nav="", main=error_page("Something went wrong on our side", "Try again in a minute. Nothing was lost.", "alert-triangle", btn("Try again", "primary", icon_name="refresh") + btn("Go to Today", "", href=page("today")), extra='<p class="text-caption">Reference: 7f3c-21a9-4b0e</p>'))
 
 
-@screen("offline", "page", "Offline", route="/offline", reqs=["L1-014", R_ROLL], na={"loading": "Static page.", "empty": "Static page.", "error": "This page is the error."})
+@screen("offline", "page", "Offline", route="/offline", reqs=["L1-014", R_ROLL, "L2-099"], na={"loading": "Static page.", "empty": "Static page.", "error": "This page is the error."})
 def offline(S):
     S.add("default", "Offline with nothing cached for this page; what still works.", nav="", main=error_page("You’re offline", "This page isn’t saved on your phone. Check-in and Quick Cards still work.", "wifi-off", btn("Open check-in", "primary", href=page("check-in", "offline")) + btn("Try again", "", icon_name="refresh")))
 

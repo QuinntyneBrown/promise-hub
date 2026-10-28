@@ -332,25 +332,6 @@ def reports(S):
           toast_html=toast_region(toast("success", "Export ready", "harbourview-otf-2026-27-season.xlsx", action="Download")))
 
 
-# ------------------------------------------------------------------ Attendance history
-@screen("attendance", "page", "Attendance", route="/programs/:id/attendance", reqs=[R_ROLL, R_REPORTS], na={})
-def attendance(S):
-    hdr = breadcrumb([("Programs", page("programs")), ("After‑School Tutoring", page("program"))], "Attendance") + page_header("Attendance", "After‑School Tutoring · 34 sessions · 89% average · last recorded Today, 6:04 pm", btn("Export", "", icon_name="download", data_href=dialog("export-data")))
-    filters = f'<div class="toolbar">{select("at-view", "View", ["By session", "By child"], visually_hidden_label=True)}{select("at-month", "Month", ["November 2026", "October 2026", "September 2026"], visually_hidden_label=True)}</div>'
-    rows = [[f'<a href="{page("check-in", "complete")}">Thu 5 Nov</a>', "Tutoring night", "46", "2", "0", badge("Recorded", "success")], [f'<a href="{page("check-in", "complete")}">Wed 4 Nov</a>', "Tutoring night", "44", "3", "1", badge("Recorded", "success")], [f'<a href="{page("check-in", "complete")}">Tue 3 Nov</a>', "Tutoring night", "47", "1", "0", badge("Recorded", "success")],
-            [f'<a href="{page("check-in", "complete")}">Mon 2 Nov</a>', "Tutoring night", "41", "6", "1", badge("Recorded", "success")], [f'<a href="{page("check-in", "default")}">Thu 29 Oct</a>', "Tutoring night", "—", "—", "—", badge("Missing", "danger")]]
-    S.add("default", "Attendance by session with present, absent and excused counts; one session was never recorded.", nav="programs", user=M, main=hdr + filters +
-          alert("warning", "Thu 29 Oct has no attendance", "Record it or mark it cancelled.", actions=btn("Record now", "primary", size="sm", href=page("check-in")) + btn("Mark cancelled", "ghost", size="sm", data_href=dialog("end-session"))) +
-          table("Sessions", ["Date", "Session", "#Present", "#Absent", "#Excused", "Status"], rows, hide_sm={1, 4}, cls="table-wrap--fit"))
-    S.add("loading", "Attendance loading.", nav="programs", main=breadcrumb([("Programs", page("programs")), ("After‑School Tutoring", page("program"))], "Attendance") + page_header("Attendance", "After‑School Tutoring") + skeleton_list(6, "Loading sessions"))
-    S.add("empty", "No sessions recorded yet.", nav="programs", user=M, main=breadcrumb([("Programs", page("programs")), ("Winter Camp 2026", page("program", "empty"))], "Attendance") + page_header("Attendance · Winter Camp 2026", "") + card(empty("No sessions yet", "First check-in is 21 December.", action=btn("Back to program", "", href=page("program", "empty")), icon_name="clipboard"), cls="card--flush"))
-    S.add("error", "Attendance failed to load.", nav="programs", main=breadcrumb([("Programs", page("programs")), ("After‑School Tutoring", page("program"))], "Attendance") + page_header("Attendance", "After‑School Tutoring") + card(empty("We couldn’t load attendance", "Try again.", action=btn("Try again", "primary", icon_name="refresh"), error=True, icon_name="alert-triangle"), cls="card--flush"))
-    S.add("no-results", "A month with no sessions.", nav="programs", user=M, main=hdr + filters.replace('<option selected>November 2026</option>', '<option>November 2026</option>').replace('<option>September 2026</option>', '<option selected>August 2026</option>') + card(empty("No sessions in August 2026", "Runs September to June.", action=btn("Show November", ""), icon_name="calendar"), cls="card--flush"))
-    S.add("long", "By child: 48 rows with a 30-session strip each.", nav="programs", user=M, main=hdr + filters.replace('<option selected>By session</option>', '<option>By session</option>').replace('<option>By child</option>', '<option selected>By child</option>') +
-          table("Attendance by child", ["Child", "Rate", "Last 30 sessions", "#Absent", "Actions"], [[f'<a href="{page("child")}">{esc(c["name"])}</a>', f'{96 - i * 3}%', '<div class="dots" role="img" aria-label="Attendance strip">' + "".join('<span class="dots__dot dots__dot--present"></span>' if (j * 7 + i) % 11 else '<span class="dots__dot dots__dot--absent"></span>' for j in range(30)) + "</div>", str(i), f'<div class="row-actions">{btn("Message guardian", "ghost", size="sm", href=page("new-message"))}</div>'] for i, c in enumerate(CHILDREN[:8])]) +
-          f'<nav class="cluster cluster--between" aria-label="Pagination"><span class="text-caption">Showing 1–25 of 48</span><div class="cluster cluster--snug">{btn("Previous", "", disabled=True)}{btn("Next", "", icon_name="arrow-right")}</div></nav>')
-
-
 # ------------------------------------------------------------------ Import roster
 @screen("import-roster", "page", "Import roster", route="/import", reqs=[R_INTEG, R_TTV, R_ENROLL], na={"empty": "The import wizard starts empty by design; the default state is that screen."})
 def import_roster(S):

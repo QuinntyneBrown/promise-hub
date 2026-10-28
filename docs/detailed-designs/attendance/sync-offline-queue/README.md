@@ -19,7 +19,7 @@ The feature belongs to the `attendance` subsystem and the Roll Call and Quick Ca
 
 ## Built so far
 
-Slice 25 delivered `OfflineStore` (saved rosters, Quick Cards and the action queue in `localStorage`), the `offline` load status and `queued` write outcome, `AttendanceApi.queued()` and `sync()`, the offline notice, sync chip, waiting-to-sync rows and disabled sign-out on `CheckInPage`, the saved chip on `QuickCardPage`, the nothing-saved state, and `AttendanceRecord.HasConflict` with the conflict badge (ADR 0023). The service worker, the offline-queue dialog and the stale warning are not built yet.
+Slice 25 delivered `OfflineStore` (saved rosters, Quick Cards and the action queue in `localStorage`), the `offline` load status and `queued` write outcome, `AttendanceApi.queued()` and `sync()`, the offline notice, sync chip, waiting-to-sync rows and disabled sign-out on `CheckInPage`, the saved chip on `QuickCardPage`, the nothing-saved state, and `AttendanceRecord.HasConflict` with the conflict badge (ADR 0023). The service worker, the offline-queue dialog and the stale warning are not built yet. Prompt 71 carries the late and excused flags through the queue and opens it to mentors (`sync-offline-attendance`, `sync-attendance-reliably`, `show-offline-sync-state`, ADR 0065).
 
 ## Description
 

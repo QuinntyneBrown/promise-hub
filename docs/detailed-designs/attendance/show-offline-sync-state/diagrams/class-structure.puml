@@ -1,0 +1,15 @@
+@startuml
+title Class structure — Show offline sync state
+skinparam classAttributeIconSize 0
+class CheckInPage {
+  #savedAt : signal<string | null>
+  #queue : signal<QueuedAttendance[]>
+  #savedText() : string
+  #sync() : void
+}
+class HttpAttendanceApi {
+  +roster(sessionId) : Observable<LoadResult<SessionRoster>>
+  +queued() : QueuedAttendance[]
+}
+CheckInPage ..> HttpAttendanceApi
+@enduml

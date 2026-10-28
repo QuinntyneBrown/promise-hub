@@ -18,6 +18,8 @@ Local terms:
 
 The feature belongs to the `attendance` subsystem and the Roll Call module. Sign-out with pickup confirmation also depends on the Pickup module. `<TO SUPPLY>`: the sign-out behaviour when Roll Call is on and Pickup is off (time only, or a free-text name).
 
+Prompt 71 extends this slice without changing its rules: a check-in may be marked late and an absence excused, mentors run the sessions of the cohorts on their mentor team, and Mark the rest present checks in everyone not yet here (`record-attendance`, ADR 0065). The history and audited corrections are in `review-attendance`.
+
 ## Description
 
 The feature is a vertical slice from the check-in screen on a phone to the `AttendanceRecord` table.

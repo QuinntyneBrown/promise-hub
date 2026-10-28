@@ -14,7 +14,7 @@
     <thead>
       <tr>
         @for (c of columns(); track c.key) {
-          <th scope="col">{{ c.label }}</th>
+          <th scope="col" [class.num]="c.numeric">{{ c.label }}</th>
         }
         @if (rowActions()) {
           <th scope="col">{{ actionsLabel() }}</th>
@@ -25,9 +25,11 @@
       @for (row of rows(); track $index) {
         <tr>
           @for (c of columns(); track c.key) {
-            <td>
+            <td [class.num]="c.numeric">
               @if (badge(row[c.key] ?? null); as b) {
                 <ph-badge [tone]="b.tone">{{ b.text }}</ph-badge>
+              } @else if (tagged(row[c.key] ?? null); as t) {
+                {{ t.text }} <ph-badge [tone]="t.badge.tone">{{ t.badge.text }}</ph-badge>
               } @else {
                 {{ text(row[c.key] ?? null) }}
               }

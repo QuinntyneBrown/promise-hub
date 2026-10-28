@@ -1,0 +1,18 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Show offline sync state
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "CheckInPage", "Angular page", "offline banner, sync chip")
+  Component(aapi, "HttpAttendanceApi", "HTTP client", "saved roster with savedAt")
+  Component(store, "OfflineStore", "Service", "saved rosters, queue")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "AttendanceEndpoints", "Minimal API", "GET /sessions/{id}/roster")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "AttendanceRecords, AttendanceEvents, Events, Enrollments, CohortMentors, AuditEntries")
+}
+Rel(page, aapi, "roster(), queued(), sync()")
+Rel(aapi, store, "read, save")
+Rel(aapi, ep, "JSON/HTTPS")
+Rel(ep, db, "reads")
+@enduml

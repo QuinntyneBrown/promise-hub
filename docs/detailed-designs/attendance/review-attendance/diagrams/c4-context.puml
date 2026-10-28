@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Review attendance
+Person(d, "Program director", "Reviews and corrects")
+Person(m, "Mentor", "Reviews his cohorts")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(d, ph, "Reads history, corrects marks", "HTTPS")
+Rel(m, ph, "Reads his cohorts' history", "HTTPS")
+@enduml

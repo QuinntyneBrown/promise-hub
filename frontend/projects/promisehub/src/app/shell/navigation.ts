@@ -59,7 +59,7 @@ export const NAVIGATION: Section[] = [
     placement: 'primary',
     tab: true,
     module: 'RollCall',
-    roles: [...STAFF, 'Volunteer'],
+    roles: [...STAFF, 'Mentor', 'Volunteer'],
   },
   {
     label: 'Families',

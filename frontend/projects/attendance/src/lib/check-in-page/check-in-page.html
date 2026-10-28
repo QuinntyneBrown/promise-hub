@@ -93,8 +93,18 @@
         </ph-card>
       }
       <div class="kpis" role="group" aria-label="Session totals">
-        <ph-stat label="Checked in" [value]="'' + t.checkedIn" data-testid="total-Checked in" />
-        <ph-stat label="Absent" [value]="'' + t.absent" data-testid="total-Absent" />
+        <ph-stat
+          label="Checked in"
+          [value]="'' + t.checkedIn"
+          [caption]="t.late ? t.late + ' late' : null"
+          data-testid="total-Checked in"
+        />
+        <ph-stat
+          label="Absent"
+          [value]="'' + t.absent"
+          [caption]="t.excused ? t.excused + ' excused' : null"
+          data-testid="total-Absent"
+        />
         <ph-stat label="Not yet" [value]="'' + t.notYet" data-testid="total-Not yet" />
         <ph-stat label="On roster" [value]="'' + t.all" />
       </div>
@@ -249,9 +259,21 @@
             </ph-roster-item>
           }
         </ph-roster>
-        @if (live()) {
+        @if (live() || reviews()) {
           <div class="footer-action">
-            <ph-button variant="ghost" (click)="addWalkIn()">Add walk-in</ph-button>
+            @if (notYet().length) {
+              <ph-button
+                [label]="'Mark the rest present, ' + notYet().length + ' not yet here'"
+                (click)="markRestPresent()"
+                >Mark the rest present</ph-button
+              >
+            }
+            @if (live()) {
+              <ph-button variant="ghost" (click)="addWalkIn()">Add walk-in</ph-button>
+            }
+            @if (reviews()) {
+              <ph-button variant="ghost" link="/check-in/history">Attendance history</ph-button>
+            }
           </div>
         }
       }

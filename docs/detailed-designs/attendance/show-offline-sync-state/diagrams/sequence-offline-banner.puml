@@ -1,0 +1,35 @@
+@startuml
+title UML sequence behaviour — The banner shows and clears
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Site lead (Jaylen)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "CheckInPage" as page
+  participant "HttpAttendanceApi" as aapi
+  participant "OfflineStore" as store
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "AttendanceEndpoints" as ep
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : open check-in (no signal)
+page -> aapi : roster(id)
+aapi -> ep : GET roster
+ep --> aapi : network failure
+aapi -> store : read saved roster
+aapi --> page : roster with savedAt
+page -> actor : "You're offline", "n queued" (L2-099 c1, c2)
+== signal returns ==
+page -> aapi : sync()
+aapi --> page : n sent
+page -> aapi : roster(id)
+aapi -> ep : GET roster
+ep -> db : records
+ep --> page : roster, no savedAt
+page -> actor : banner and chip gone, toast (L2-099 c3)
+@enduml

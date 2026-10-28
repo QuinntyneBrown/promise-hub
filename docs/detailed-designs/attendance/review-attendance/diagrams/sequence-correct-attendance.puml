@@ -1,0 +1,37 @@
+@startuml
+title UML sequence behaviour — A director corrects a mark
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Program director (Marisol)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "AttendanceHistoryPage" as page
+  participant "CorrectAttendanceDialog" as dlg
+  participant "AttendanceApi" as aapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "AttendanceEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "CorrectAttendanceHandler" as h
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : Correct on Wed 4 Nov
+page -> dlg : open
+actor -> dlg : Yusuf, Excused, reason
+dlg -> aapi : correct(session, child, {status, reason})
+aapi -> ep : PUT /sessions/{id}/attendance/{childId}
+ep -> ep : Roll Call on, CorrectAttendance (L2-097 c6)
+ep -> h : HandleAsync
+alt invalid
+  h --> dlg : 422 field by field (L2-097 c5)
+else
+  h -> db : record corrected, event Corrected, audit before, after, reason (L2-097 c4)
+  h --> dlg : 204
+  dlg --> page : reload, toast Attendance corrected
+end
+@enduml

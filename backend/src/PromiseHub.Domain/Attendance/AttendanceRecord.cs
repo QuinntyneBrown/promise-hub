@@ -42,8 +42,14 @@ public sealed class AttendanceRecord : ITenantOwned
     /// </summary>
     public bool HasConflict { get; private set; }
 
-    /// <summary>Checks the child in; allowed from not-yet or absent, which clears the absence.</summary>
-    public void CheckIn(DateTimeOffset at, string actor)
+    /// <summary>The check-in came after the start (L2-095, ADR 0065); kept through sign-out so the history still counts it late.</summary>
+    public bool Late { get; private set; }
+
+    /// <summary>The absence is one the organization accepts (L2-095, ADR 0065).</summary>
+    public bool Excused { get; private set; }
+
+    /// <summary>Checks the child in, late or not; allowed from not-yet or absent, which clears the absence.</summary>
+    public void CheckIn(DateTimeOffset at, string actor, bool late = false)
     {
         if (Status == AttendanceStatus.Absent && MarkedAbsentAt > at)
         {
@@ -52,14 +58,49 @@ public sealed class AttendanceRecord : ITenantOwned
         Status = AttendanceStatus.Present;
         CheckedInAt = at;
         MarkedAbsentAt = null;
+        Late = late;
+        Excused = false;
         UpdatedBy = actor;
     }
 
-    public void MarkAbsent(DateTimeOffset at, string actor)
+    public void MarkAbsent(DateTimeOffset at, string actor, bool excused = false)
     {
         Status = AttendanceStatus.Absent;
+        Late = false;
+        Excused = excused;
         CheckedInAt = null;
         MarkedAbsentAt = at;
+        UpdatedBy = actor;
+    }
+
+    /// <summary>
+    /// Sets the mark an admin or program director decided on after the fact (L2-097, ADR 0065). A child corrected to present or late
+    /// who had no check-in time is taken to have arrived at the start; a signed-out child stays signed out.
+    /// </summary>
+    public void Correct(AttendanceMark mark, DateTimeOffset sessionStart, DateTimeOffset at, string actor)
+    {
+        if (mark is AttendanceMark.Present or AttendanceMark.Late)
+        {
+            if (Status != AttendanceStatus.SignedOut)
+            {
+                Status = AttendanceStatus.Present;
+            }
+            CheckedInAt ??= sessionStart;
+            MarkedAbsentAt = null;
+            Late = mark == AttendanceMark.Late;
+            Excused = false;
+        }
+        else
+        {
+            Status = AttendanceStatus.Absent;
+            CheckedInAt = null;
+            SignedOutAt = null;
+            CollectedBy = null;
+            CollectorGuardianId = null;
+            MarkedAbsentAt ??= at;
+            Late = false;
+            Excused = mark == AttendanceMark.Excused;
+        }
         UpdatedBy = actor;
     }
 

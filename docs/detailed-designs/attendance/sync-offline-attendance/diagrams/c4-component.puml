@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Sync offline attendance
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "CheckInPage", "Angular page", "sync chip, waiting to sync")
+  Component(aapi, "HttpAttendanceApi", "HTTP client", "queues on status 0, sync()")
+  Component(store, "OfflineStore", "Service", "local storage queue")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "AttendanceEndpoints", "Minimal API", "POST check-ins, POST absences")
+  Component(w, "AttendanceWriter", "Service", "once per client action id")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "AttendanceRecords, AttendanceEvents, Events, Enrollments, CohortMentors, AuditEntries")
+}
+Rel(page, aapi, "checkIn, markAbsent, sync")
+Rel(aapi, store, "enqueue, remove")
+Rel(aapi, ep, "JSON/HTTPS")
+Rel(ep, w, "applies")
+Rel(w, db, "reads and writes")
+@enduml

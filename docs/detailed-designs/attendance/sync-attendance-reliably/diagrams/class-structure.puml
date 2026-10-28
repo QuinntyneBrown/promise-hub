@@ -1,0 +1,18 @@
+@startuml
+title Class structure — Sync attendance reliably
+skinparam classAttributeIconSize 0
+class AttendanceWriter {
+  +ApplyAsync(eventId, childId, clientActionId, kind, at, change) : Result
+}
+class AttendanceEvent {
+  +RecordId : Guid
+  +Kind : AttendanceEventKind
+  +ClientActionId : Guid
+  +OccurredAt : DateTimeOffset
+}
+class OfflineStore {
+  +remove(clientActionId) : void
+  +clear() : void
+}
+AttendanceWriter ..> AttendanceEvent : looks up ClientActionId, appends
+@enduml

@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Record attendance
+Person(m, "Mentor", "Runs his cohorts' sessions")
+Person(s, "Site lead", "Runs any session")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular 22", "attendance library, api client, components")
+  Container(api, "PromiseHub API", "ASP.NET Core, .NET 10", "Roll Call gate, RunSessions, SessionAccess, attendance handlers, audit")
+  ContainerDb(db, "PromiseHub database", "SQLite via EF Core", "Tenant-filtered AttendanceRecords, AttendanceEvents, Events, Enrollments, CohortMentors, AuditEntries")
+}
+Rel(m, web, "Uses", "HTTPS")
+Rel(s, web, "Uses", "HTTPS")
+Rel(web, api, "Calls", "JSON/HTTPS")
+Rel(api, db, "Reads and writes", "EF Core")
+@enduml

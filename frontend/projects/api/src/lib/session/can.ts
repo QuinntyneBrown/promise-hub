@@ -10,7 +10,7 @@ const GRANTS: Record<Permission, Role[]> = {
   managePrograms: ['Admin', 'ProgramDirector'],
   manageEvents: ['Admin', 'ProgramDirector', 'SiteLead'],
   cancelEvents: ['Admin', 'ProgramDirector'],
-  runSessions: ['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker', 'Volunteer'],
+  runSessions: ['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker', 'Volunteer', 'Mentor'],
   sendMessages: ['Admin', 'ProgramDirector', 'SiteLead'],
   manageSlips: ['Admin', 'ProgramDirector', 'SiteLead'],
   managePickups: ['Admin', 'ProgramDirector', 'SiteLead'],
@@ -18,6 +18,8 @@ const GRANTS: Record<Permission, Role[]> = {
   inviteStaff: ['Admin', 'VolunteerCoordinator'],
   assignStaff: ['Admin', 'ProgramDirector', 'SiteLead', 'VolunteerCoordinator'],
   reviewEnrollments: ['Admin', 'ProgramDirector'],
+  reviewAttendance: ['Admin', 'ProgramDirector', 'SiteLead', 'Mentor'],
+  correctAttendance: ['Admin', 'ProgramDirector'],
 };
 
 /** Whether a role holds a permission, to hide actions it lacks. The server enforces the same map on every request. */

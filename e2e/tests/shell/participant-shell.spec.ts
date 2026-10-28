@@ -47,7 +47,8 @@ test.describe('A youth', () => {
 test.describe('A mentor', () => {
   test.use({ signedInAs: 'm-daniel' });
 
-  test('Given Mentoring is on, when Daniel signs in, then he sees Today and Mentoring', async ({ page, api }) => {
+  // L2-095 criterion 2: mentors take attendance in Roll Call, so Check-in serves them while it is on.
+  test('Given Mentoring and Roll Call are on, when Daniel signs in, then he sees Today, Mentoring and Check-in', async ({ page, api }) => {
     api.setModules('org-harbourview', [...SUITE, 'Learning', 'Mentoring']);
     const shell = new ShellPage(page);
     const today = new TodayPage(page);
@@ -55,8 +56,8 @@ test.describe('A mentor', () => {
     await today.open();
 
     await expect(today.heading).toHaveText('Welcome, Daniel');
-    expect(await shell.visibleNavigationLabels()).toEqual(['Today', 'Mentoring', 'More']);
-    expect(await today.yourWork()).toEqual(['Mentoring']);
+    expect(await shell.visibleNavigationLabels()).toEqual(['Today', 'Mentoring', 'Check-in', 'More']);
+    expect(await today.yourWork()).toEqual(['Mentoring', 'Check-in']);
     await today.expectAccessible();
   });
 });

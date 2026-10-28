@@ -32,7 +32,7 @@ const can = {
   managePrograms: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
   manageEvents: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
   cancelEvents: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
-  runSessions: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker', 'Volunteer'].includes(m.role),
+  runSessions: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker', 'Volunteer', 'Mentor'].includes(m.role),
   runAnySession: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
   sendMessages: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
   manageSlips: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
@@ -47,6 +47,8 @@ const can = {
   mentorYouth: (m: Membership) => m.role === 'Mentor',
   reviewAtRiskFlags: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
   authorCurriculum: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
+  reviewAttendance: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead', 'Mentor'].includes(m.role),
+  correctAttendance: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
 };
 
 /**
@@ -54,7 +56,8 @@ const can = {
  * endpoint to them unless it opts in (ADR 0043). Volunteers also open their assigned sessions.
  */
 const PARTICIPANT_PATHS = [/^\/api\/me(\/|$)/, /^\/api\/notifications(\/|$)/, /^\/api\/auth\//, /^\/api\/learning\//, /^\/api\/mentoring\//, /^\/api\/curriculum(\/|$)/, /^\/api\/schedule(\/|$)/];
-const VOLUNTEER_PATHS = [/^\/api\/sessions\/today$/, /^\/api\/sessions\/[^/]+\/roster$/];
+/** Volunteers and mentors run sessions without the staff app (ADR 0043, ADR 0065): the session endpoints that need RunSessions. */
+const RUNNER_PATHS = [/^\/api\/attendance$/, /^\/api\/sessions\/today$/, /^\/api\/sessions\/[^/]+\/(roster|check-ins|absences|end|notes|walk-ins)$/];
 
 type ImportField = 'ChildName' | 'DateOfBirth' | 'School' | 'GuardianName' | 'GuardianPhone' | 'GuardianEmail' | 'Allergies' | 'Language' | 'Notes' | 'Skip';
 
@@ -184,6 +187,10 @@ function titleOf(body: string): string {
 interface FakeAttendance {
   status: 'NotYet' | 'Present' | 'Absent' | 'SignedOut';
   checkedInAt: string | null;
+  /** A check-in after the start, kept through sign-out (L2-095). */
+  late?: boolean;
+  /** An absence the organization accepts (L2-095). */
+  excused?: boolean;
   signedOutAt?: string | null;
   collectedBy?: string | null;
 }
@@ -829,6 +836,8 @@ export class FakeApi {
     ['PUT', /^\/api\/events\/(?<id>[^/]+)$/, (route, p) => this.saveEvent(route, p['id']!)],
     ['POST', /^\/api\/events\/(?<id>[^/]+)\/cancel$/, (route, p) => this.cancelEvent(route, p['id']!)],
     ['GET', /^\/api\/sessions\/today$/, (route) => this.todaySessions(route)],
+    ['GET', /^\/api\/attendance$/, (route) => this.attendanceHistory(route)],
+    ['PUT', /^\/api\/sessions\/(?<id>[^/]+)\/attendance\/(?<childId>[^/]+)$/, (route, p) => this.correctAttendance(route, p['id']!, p['childId']!)],
     ['GET', /^\/api\/sessions\/(?<id>[^/]+)\/roster$/, (route, p) => this.sessionRoster(route, p['id']!)],
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/check-ins$/, (route, p) => this.attend(route, p['id']!, 'Present')],
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/absences$/, (route, p) => this.attend(route, p['id']!, 'Absent')],
@@ -952,6 +961,11 @@ export class FakeApi {
     return this.sessionRecords(eventId).get(childId)?.status ?? 'NotYet';
   }
 
+  /** The fake's attendance record of this child at this session, with its late and excused flags (L2-095). */
+  attendanceRecord(eventId: string, childId: string): FakeAttendance | undefined {
+    return this.sessionRecords(eventId).get(childId);
+  }
+
   private async handle(route: Route): Promise<void> {
     if (this.offline) return route.abort('internetdisconnected');
     const url = new URL(route.request().url());
@@ -974,7 +988,7 @@ export class FakeApi {
       return route.fulfill({ status: 403, json: { code: 'suspended' } });
     }
     if (caller && !can.useStaffApp(caller) && !url.pathname.startsWith('/api/website/')) {
-      const allowed = PARTICIPANT_PATHS.some((p) => p.test(url.pathname)) || (caller.role === 'Volunteer' && VOLUNTEER_PATHS.some((p) => p.test(url.pathname)));
+      const allowed = PARTICIPANT_PATHS.some((p) => p.test(url.pathname)) || (can.runSessions(caller) && RUNNER_PATHS.some((p) => p.test(url.pathname)));
       if (!allowed) return route.fulfill({ status: 403, json: { code: 'forbidden' } });
     }
     for (const [method, pattern, handler] of this.routes) {
@@ -1655,8 +1669,96 @@ export class FakeApi {
   }
 
   /** Records a child's attendance at a session, as Roll Call would. */
-  recordAttendance(eventId: string, childId: string, status: 'Present' | 'Absent' | 'SignedOut', at: string | null): void {
-    this.sessionRecords(eventId).set(childId, { status, checkedInAt: status === 'Absent' ? null : at, signedOutAt: status === 'SignedOut' ? at : null });
+  recordAttendance(eventId: string, childId: string, status: 'Present' | 'Absent' | 'SignedOut', at: string | null, flags: { late?: boolean; excused?: boolean } = {}): void {
+    this.sessionRecords(eventId).set(childId, {
+      status,
+      checkedInAt: status === 'Absent' ? null : at,
+      signedOutAt: status === 'SignedOut' ? at : null,
+      late: status !== 'Absent' && !!flags.late,
+      excused: status === 'Absent' && !!flags.excused,
+    });
+  }
+
+  /** PUT /sessions/{id}/attendance/{childId} (L2-097 criteria 4 to 6): admins and program directors correct a mark with a reason. Mirrors CorrectAttendanceHandler. */
+  private async correctAttendance(route: Route, id: string, childId: string): Promise<void> {
+    const m = await this.rollCallCaller(route);
+    if (!m) return;
+    if (!can.correctAttendance(m)) return this.forbidden(route);
+    const e = this.ownEvent(m, id);
+    if (!e) return route.fulfill({ status: 404 });
+    const b = route.request().postDataJSON() as { status?: string | null; reason?: string | null };
+    const errors: Record<string, string> = {};
+    if (!['Present', 'Late', 'Excused', 'Absent'].includes(b.status ?? '')) errors['status'] = 'Choose a mark.';
+    const reason = (b.reason ?? '').trim();
+    if (!reason) errors['reason'] = 'Say why you’re correcting it.';
+    else if (reason.length > 500) errors['reason'] = 'Keep it to 500 characters.';
+    if (e.status === 'Cancelled') errors['session'] = 'This session is cancelled.';
+    else if (e.startsAt > NOW.toISOString()) errors['session'] = 'This session hasn’t started yet.';
+    const records = this.sessionRecords(e.id);
+    const program = this.programs.find((p) => p.id === e.programId)!;
+    const child = this.households.flatMap((h) => h.children).find((c) => c.id === childId);
+    if (!child || (!records.has(childId) && !program.roster.includes(childId))) errors['childId'] = `${child ? `${child.firstName} ${child.lastName}` : 'This child'} is not on this cohort’s roster.`;
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    const r = records.get(childId);
+    const here = b.status === 'Present' || b.status === 'Late';
+    records.set(childId, here
+      ? { ...(r ?? { checkedInAt: null }), status: r?.status === 'SignedOut' ? 'SignedOut' : 'Present', checkedInAt: r?.checkedInAt ?? e.startsAt, late: b.status === 'Late', excused: false }
+      : { status: 'Absent', checkedInAt: null, late: false, excused: b.status === 'Excused' });
+    this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'Updated', record: 'Attendance', summary: `Correction · ${child!.firstName} ${child!.lastName} · ${e.name} · ${b.status} · ${reason}`, device: null });
+    return route.fulfill({ status: 204 });
+  }
+
+  /** GET /attendance (L2-097): a cohort's sessions that have started and each youth on its roster, with rates. Mirrors AttendanceHistoryHandler. */
+  private async attendanceHistory(route: Route): Promise<void> {
+    const m = await this.rollCallCaller(route);
+    if (!m) return;
+    if (!can.reviewAttendance(m)) return this.forbidden(route);
+    const active = this.programs.filter((p) => p.organizationId === m.organizationId && p.status !== 'Archived');
+    const mine = m.role === 'Mentor' ? active.filter((p) => { const t = this.cohortMentors.get(p.id); return !!t && (t.lead === m.id || t.supporting.includes(m.id)); }) : active;
+    const cohorts = mine.map((p) => ({ id: p.id, name: p.name })).sort((a, b) => a.name.localeCompare(b.name));
+    const canCorrect = can.correctAttendance(m);
+    const chosen = new URL(route.request().url()).searchParams.get('programId') || cohorts[0]?.id;
+    if (!chosen) return route.fulfill({ json: { cohorts, programId: null, programName: null, schedule: null, rate: null, sessionsRecorded: 0, sessionsHeld: 0, belowThreshold: 0, canCorrect, sessions: [], youth: [] } });
+    const program = this.programs.find((p) => p.id === chosen && p.organizationId === m.organizationId);
+    if (!program) return route.fulfill({ status: 404 });
+    if (!cohorts.some((c) => c.id === chosen)) {
+      if (m.role === 'Mentor') {
+        this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'AccessDenied', record: 'Program', summary: `${program.name} · attendance history, not on the mentor’s team`, device: null });
+        return this.forbidden(route);
+      }
+      return route.fulfill({ status: 404 });
+    }
+    type Mark = 'Present' | 'Late' | 'Excused' | 'Absent';
+    const markOf = (r: FakeAttendance | undefined): Mark | null =>
+      !r ? null : r.status === 'Present' || r.status === 'SignedOut' ? (r.late ? 'Late' : 'Present') : r.status === 'Absent' ? (r.excused ? 'Excused' : 'Absent') : null;
+    const rate = (attended: number, marked: number) => (marked ? Math.round((100 * attended) / marked) : null);
+    const attended = (k: Mark) => k === 'Present' || k === 'Late';
+    const now = NOW.toISOString();
+    const events = this.events.filter((e) => e.programId === chosen && e.status !== 'Cancelled' && e.startsAt <= now).sort((a, b) => b.startsAt.localeCompare(a.startsAt));
+    const children = this.households.flatMap((h) => h.children);
+    const marks = events.flatMap((e) => [...this.sessionRecords(e.id)].filter(([id]) => children.some((c) => c.id === id)).map(([childId, r]) => ({ eventId: e.id, childId, mark: markOf(r) })).filter((x): x is { eventId: string; childId: string; mark: Mark } => x.mark !== null));
+    const count = (list: Mark[], k: Mark) => list.filter((x) => x === k).length;
+    const sessions = events.map((e) => {
+      const list = marks.filter((x) => x.eventId === e.id).map((x) => x.mark);
+      const status = e.status !== 'Ended' && now < e.endsAt ? 'InProgress' : !list.length ? 'NotRecorded' : e.status === 'Ended' || list.length >= program.roster.length ? 'Recorded' : 'NeedsReview';
+      return { eventId: e.id, name: e.name, startsAt: e.startsAt, present: count(list, 'Present'), late: count(list, 'Late'), excused: count(list, 'Excused'), absent: count(list, 'Absent'), rate: rate(list.filter(attended).length, list.length), status };
+    });
+    const youth = program.roster
+      .map((id) => children.find((c) => c.id === id)!)
+      .map((c) => {
+        const list = marks.filter((x) => x.childId === c.id).map((x) => x.mark);
+        const a = list.filter(attended).length;
+        return { childId: c.id, name: `${c.firstName} ${c.lastName}`, attended: a, marked: list.length, late: count(list, 'Late'), excused: count(list, 'Excused'), absent: count(list, 'Absent'), rate: rate(a, list.length), belowThreshold: list.length > 0 && a < 0.7 * list.length };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+    return route.fulfill({
+      json: {
+        cohorts, programId: program.id, programName: program.name, schedule: program.schedule,
+        rate: rate(marks.filter((x) => attended(x.mark)).length, marks.length),
+        sessionsRecorded: sessions.filter((x) => x.present + x.late + x.excused + x.absent > 0).length,
+        sessionsHeld: sessions.length, belowThreshold: youth.filter((y) => y.belowThreshold).length, canCorrect, sessions, youth,
+      },
+    });
   }
 
   /** Each child's one mentor (L2-062): child id to mentor membership id. */
@@ -2693,9 +2795,14 @@ export class FakeApi {
     return route.fulfill({ status: 204 });
   }
 
-  /** Roles that run sessions without running any session (youth workers) open only the ones they are assigned to. */
+  /** Roles that run sessions without running any session (youth workers, volunteers) open only the ones they are assigned to; a mentor also the sessions of the cohorts on his team (ADR 0065). */
   private mayRun(m: Membership, eventId: string): boolean {
-    return !can.runSessions(m) || can.runAnySession(m) || (this.sessionStaff.get(eventId) ?? []).includes(m.id);
+    if (!can.runSessions(m) || can.runAnySession(m) || (this.sessionStaff.get(eventId) ?? []).includes(m.id)) return true;
+    if (m.role !== 'Mentor') return false;
+    const e = this.events.find((x) => x.id === eventId);
+    const team = e && this.cohortMentors.get(e.programId);
+    const program = e && this.programs.find((p) => p.id === e.programId);
+    return !!team && program?.status !== 'Archived' && (team.lead === m.id || team.supporting.includes(m.id));
   }
 
   private ownEvent(m: Membership, id: string): FakeEvent | undefined {
@@ -2937,6 +3044,8 @@ export class FakeApi {
     const ids = [...p.roster, ...walkIns.map((w) => w.id)];
     const checkedIn = ids.filter((id) => ['Present', 'SignedOut'].includes(records.get(id)?.status ?? '')).length;
     const absent = ids.filter((id) => records.get(id)?.status === 'Absent').length;
+    const late = ids.filter((id) => ['Present', 'SignedOut'].includes(records.get(id)?.status ?? '') && records.get(id)?.late).length;
+    const excused = ids.filter((id) => records.get(id)?.status === 'Absent' && records.get(id)?.excused).length;
     return {
       id: e.id,
       name: e.name,
@@ -2949,6 +3058,8 @@ export class FakeApi {
       checkedIn,
       absent,
       notYet: ids.length - checkedIn - absent,
+      late,
+      excused,
       status: e.status,
       endedAt: e.endedAt ?? null,
       endedBy: e.endedBy ?? null,
@@ -2994,6 +3105,8 @@ export class FakeApi {
         signedOutAt: records.get(child.id)?.signedOutAt ?? null,
         collectedBy: records.get(child.id)?.collectedBy ?? null,
         conflict: this.conflicts.has(`${e.id}:${child.id}`),
+        late: records.get(child.id)?.late ?? false,
+        excused: records.get(child.id)?.excused ?? false,
         noShow: this.noShows.get(`${e.id}:${child.id}`)?.state ?? null,
         noShowAt: this.noShows.get(`${e.id}:${child.id}`)?.at ?? null,
       }));
@@ -3012,6 +3125,8 @@ export class FakeApi {
         walkIn: true,
         signedOutAt: records.get(w.id)?.signedOutAt ?? null,
         collectedBy: records.get(w.id)?.collectedBy ?? null,
+        late: records.get(w.id)?.late ?? false,
+        excused: records.get(w.id)?.excused ?? false,
       }));
     return route.fulfill({ json: { session: this.sessionSummary(e), children: [...children, ...walkIns].sort((a, b) => a.name.localeCompare(b.name)) } });
   }
@@ -3067,7 +3182,7 @@ export class FakeApi {
     const e = this.ownEvent(m, id);
     if (!e) return route.fulfill({ status: 404 });
     if (!this.mayRun(m, e.id)) return this.forbidden(route);
-    const b = route.request().postDataJSON() as { childId: string; arrivedAt?: string | null; clientActionId: string };
+    const b = route.request().postDataJSON() as { childId: string; arrivedAt?: string | null; clientActionId: string; late?: boolean; excused?: boolean };
     if (this.actions.has(b.clientActionId)) return route.fulfill({ json: { status: 'saved' } });
     if (e.status === 'Cancelled') return route.fulfill({ status: 422, json: { errors: { session: 'This session is cancelled.' } } });
     if (e.status === 'Ended') return route.fulfill({ status: 422, json: { errors: { session: 'This session has ended.' } } });
@@ -3076,7 +3191,12 @@ export class FakeApi {
       return route.fulfill({ status: 422, json: { errors: { childId: 'This child is not on tonight’s roster. Add a walk-in instead.' } } });
     }
     this.actions.add(b.clientActionId);
-    this.sessionRecords(e.id).set(b.childId, { status, checkedInAt: status === 'Present' ? (b.arrivedAt ?? NOW.toISOString()) : null });
+    this.sessionRecords(e.id).set(b.childId, {
+      status,
+      checkedInAt: status === 'Present' ? (b.arrivedAt ?? NOW.toISOString()) : null,
+      late: status === 'Present' && !!b.late,
+      excused: status === 'Absent' && !!b.excused,
+    });
     return route.fulfill({ json: { status: 'saved' } });
   }
 

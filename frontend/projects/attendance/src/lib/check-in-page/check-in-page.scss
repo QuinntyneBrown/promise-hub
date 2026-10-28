@@ -11,5 +11,8 @@
   margin-bottom: var(--space-4);
 }
 .footer-action {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
   margin-top: var(--space-3);
 }

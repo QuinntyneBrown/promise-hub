@@ -17,6 +17,7 @@ import {
   RosterEntry,
   SESSION_API,
   SLIPS_API,
+  PARTICIPANT_ROLES,
   SessionSummary,
   SlipClearance,
   can,
@@ -41,7 +42,7 @@ import {
   formatTime,
   formatWhen,
 } from '@promisehub/components';
-import { EMPTY, Observable, catchError } from 'rxjs';
+import { EMPTY, Observable, catchError, forkJoin } from 'rxjs';
 import { AddWalkInDialog } from '../add-walk-in-dialog/add-walk-in-dialog';
 import { SignOutDialog, SignOutData, SignOutResult } from '../sign-out-dialog/sign-out-dialog';
 import {
@@ -111,19 +112,46 @@ export class CheckInPage {
   protected readonly filter = signal<Filter>('all');
   protected readonly query = signal('');
   protected readonly canRun = computed(() => !!this.me() && can(this.me()!.role, 'runSessions'));
+  /** Attendance history is for those who review attendance: admins, directors, site leads and mentors (L2-097). */
+  protected readonly reviews = computed(
+    () => !!this.me() && can(this.me()!.role, 'reviewAttendance'),
+  );
   /** Check-in actions are offered only while the session is open; an ended session is read-only. */
   protected readonly live = computed(() => this.canRun() && this.session()?.status === 'Scheduled');
   protected readonly incidents = computed(() => !!this.me()?.modules.includes('Incidents'));
-  /** Names open the Quick Card only while that module is on. */
-  protected readonly quickCards = computed(() => !!this.me()?.modules.includes('QuickCards'));
-  /** Sign out is offered only while the Pickup module is on. */
-  protected readonly pickup = computed(() => !!this.me()?.modules.includes('Pickup'));
+  /** Mentors and volunteers run sessions without the staff app: no Quick Cards or approved pickups (ADR 0065). */
+  protected readonly staff = computed(
+    () => !!this.me() && !PARTICIPANT_ROLES.includes(this.me()!.role),
+  );
+  /** Names open the Quick Card only while that module is on, and only for staff. */
+  protected readonly quickCards = computed(
+    () => this.staff() && !!this.me()?.modules.includes('QuickCards'),
+  );
+  /** Sign out is offered only while the Pickup module is on, and only to staff. */
+  protected readonly pickup = computed(
+    () => this.staff() && !!this.me()?.modules.includes('Pickup'),
+  );
+  /** Who is still to be marked while the session is open (L2-095 criterion 3). */
+  protected readonly notYet = computed(() =>
+    this.live() ? this.entries().filter((e) => e.status === 'NotYet') : [],
+  );
 
   protected readonly totals = computed(() => {
     const list = this.entries();
     const checkedIn = list.filter((e) => e.status === 'Present' || e.status === 'SignedOut').length;
     const absent = list.filter((e) => e.status === 'Absent').length;
-    return { all: list.length, checkedIn, absent, notYet: list.length - checkedIn - absent };
+    const late = list.filter(
+      (e) => (e.status === 'Present' || e.status === 'SignedOut') && e.late,
+    ).length;
+    const excused = list.filter((e) => e.status === 'Absent' && e.excused).length;
+    return {
+      all: list.length,
+      checkedIn,
+      absent,
+      late,
+      excused,
+      notYet: list.length - checkedIn - absent,
+    };
   });
   protected readonly visible = computed(() => {
     const q = this.query().trim().toLowerCase();
@@ -238,11 +266,14 @@ export class CheckInPage {
   protected meta(e: RosterEntry): string {
     const status =
       e.status === 'Present' && e.checkedInAt
-        ? `Checked in ${formatTime(new Date(e.checkedInAt))}`
+        ? `${e.late ? 'Late · checked' : 'Checked'} in ${formatTime(new Date(e.checkedInAt))}`
         : e.status === 'Absent'
-          ? 'Absent'
+          ? e.excused
+            ? 'Excused'
+            : 'Absent'
           : e.status === 'SignedOut'
             ? [
+                e.late ? 'Late' : null,
                 e.signedOutAt ? `Signed out ${formatTime(new Date(e.signedOutAt))}` : 'Signed out',
                 e.collectedBy,
               ]
@@ -314,15 +345,50 @@ export class CheckInPage {
   }
 
   /** One tap: the row and totals change now; the server confirms or the change is undone. */
-  protected checkIn(entry: RosterEntry, arrivedAt: string | null = null): void {
-    this.apply(entry, 'Present', arrivedAt ?? new Date().toISOString(), (session, action) =>
-      this.api.checkIn(session, entry.id, arrivedAt, action),
+  protected checkIn(entry: RosterEntry, arrivedAt: string | null = null, late = false): void {
+    this.apply(
+      entry,
+      {
+        status: 'Present',
+        checkedInAt: arrivedAt ?? new Date().toISOString(),
+        late,
+        excused: false,
+      },
+      (session, action) => this.api.checkIn(session, entry.id, arrivedAt, action, late),
     );
   }
 
-  protected markAbsent(entry: RosterEntry): void {
-    this.apply(entry, 'Absent', null, (session, action) =>
-      this.api.markAbsent(session, entry.id, action),
+  /** Checks in everyone not yet here, one action each, then says how many in one toast (L2-095 criterion 3). */
+  protected markRestPresent(): void {
+    const session = this.session();
+    const rest = this.notYet();
+    if (!session || !rest.length) return;
+    const at = new Date().toISOString();
+    for (const e of rest) this.patch(e.id, { status: 'Present', checkedInAt: at, late: false });
+    forkJoin(
+      rest.map((e) => this.api.checkIn(session.id, e.id, null, crypto.randomUUID())),
+    ).subscribe((outcomes) => {
+      const failed = rest.filter((_, i) => !['saved', 'queued'].includes(outcomes[i]!.status));
+      for (const e of failed) this.patch(e.id, { status: e.status, checkedInAt: e.checkedInAt });
+      this.queue.set(this.api.queued());
+      const done = rest.length - failed.length;
+      if (done)
+        this.toasts.show({
+          tone: 'success',
+          title: `${done} marked present`,
+          text: failed.length
+            ? `${failed.length} could not be checked in. Try again.`
+            : 'Everyone on the roster is marked.',
+        });
+      else this.toasts.show({ tone: 'danger', title: 'No one was checked in', text: 'Try again.' });
+    });
+  }
+
+  protected markAbsent(entry: RosterEntry, excused = false): void {
+    this.apply(
+      entry,
+      { status: 'Absent', checkedInAt: null, late: false, excused },
+      (session, action) => this.api.markAbsent(session, entry.id, action, excused),
     );
   }
 
@@ -330,8 +396,8 @@ export class CheckInPage {
     this.dialogs
       .open<CheckInSheetResult, RosterEntry, CheckInSheetDialog>(CheckInSheetDialog, entry)
       .closed.subscribe((result) => {
-        if (result?.kind === 'check-in') this.checkIn(entry, result.arrivedAt);
-        if (result?.kind === 'absent') this.markAbsent(entry);
+        if (result?.kind === 'check-in') this.checkIn(entry, result.arrivedAt, result.late);
+        if (result?.kind === 'absent') this.markAbsent(entry, result.excused);
       });
   }
 
@@ -377,14 +443,19 @@ export class CheckInPage {
 
   private apply(
     entry: RosterEntry,
-    status: AttendanceStatus,
-    checkedInAt: string | null,
+    mark: Pick<RosterEntry, 'status' | 'checkedInAt' | 'late' | 'excused'>,
     send: (sessionId: string, actionId: string) => Observable<{ status: string }>,
   ): void {
     const session = this.session();
     if (!session) return;
-    const previous = { status: entry.status, checkedInAt: entry.checkedInAt };
-    this.patch(entry.id, { status, checkedInAt });
+    const status: AttendanceStatus = mark.status;
+    const previous = {
+      status: entry.status,
+      checkedInAt: entry.checkedInAt,
+      late: entry.late,
+      excused: entry.excused,
+    };
+    this.patch(entry.id, mark);
     send(session.id, crypto.randomUUID()).subscribe((outcome) => {
       if (outcome.status === 'queued') {
         this.queue.set(this.api.queued());
@@ -398,11 +469,14 @@ export class CheckInPage {
           const t = this.totals();
           this.toasts.show({
             tone: 'success',
-            title: `${entry.name} checked in`,
+            title: `${entry.name} checked in${mark.late ? ' late' : ''}`,
             text: `${t.checkedIn} of ${t.all} now here`,
           });
         } else {
-          this.toasts.show({ tone: 'info', title: `${entry.name} marked absent` });
+          this.toasts.show({
+            tone: 'info',
+            title: `${entry.name} marked ${mark.excused ? 'excused' : 'absent'}`,
+          });
         }
       } else {
         this.patch(entry.id, previous);

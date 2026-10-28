@@ -1,0 +1,24 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Review attendance
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "AttendanceHistoryPage", "Angular page", "/check-in/history")
+  Component(dlg, "CorrectAttendanceDialog", "CDK Dialog", "mark and reason")
+  Component(aapi, "AttendanceApi", "Contract + HTTP client", "ATTENDANCE_API")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "AttendanceEndpoints", "Minimal API", "GET /attendance, PUT /sessions/{id}/attendance/{childId}")
+  Component(hh, "AttendanceHistoryHandler", "Handler", "cohorts, sessions, youth, rates")
+  Component(ch, "CorrectAttendanceHandler", "Handler", "validates, corrects, audits")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "AttendanceRecords, AttendanceEvents, Events, Enrollments, CohortMentors, AuditEntries")
+}
+Rel(page, dlg, "opens")
+Rel(page, aapi, "history(programId)")
+Rel(dlg, aapi, "correct()")
+Rel(aapi, ep, "JSON/HTTPS")
+Rel(ep, hh, "calls")
+Rel(ep, ch, "calls")
+Rel(hh, db, "reads")
+Rel(ch, db, "reads and writes")
+@enduml

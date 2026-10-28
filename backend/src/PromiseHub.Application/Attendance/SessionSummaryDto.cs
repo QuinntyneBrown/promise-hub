@@ -15,4 +15,6 @@ public sealed record SessionSummaryDto(
     string Status,
     DateTimeOffset? EndedAt = null,
     string? EndedBy = null,
-    string? Notes = null);
+    string? Notes = null,
+    int Late = 0,
+    int Excused = 0);

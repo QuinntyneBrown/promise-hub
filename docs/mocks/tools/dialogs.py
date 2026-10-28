@@ -74,9 +74,9 @@ def simple(sid, title, opens_from, reqs, desc, body_fn, primary, *, icon_name=""
 
 
 # ------------------------------------------------------------------ Check-in and pickup
-simple("check-in-sheet", "Check in Kevin Tran", "check-in", [R_ROLL, "L1-008"], "Grade 3 · not yet here · no medical notes",
+simple("check-in-sheet", "Check in Kevin Tran", "check-in", [R_ROLL, "L1-008", "L2-095"], "Grade 3 · not yet here · no medical notes",
        lambda e: f'<div class="cluster">{avatar(CHILD["kevin"], "lg")}<div><div class="section-title">Kevin Tran</div><div class="text-muted">8 · Tran household · Linh Tran 289-555-0119</div></div></div>'
-                 + fieldset("Arrived", choice("arr", "Now, 4:14 pm", checked=True) + choice("arr", "Earlier", small="Pick a time") + choice("arr", "Mark absent instead", small="Guardian is texted"))
+                 + fieldset("Arrived", choice("arr", "Now, 4:14 pm", checked=True) + choice("arr", "Earlier", small="Pick a time") + choice("arr", "Late", small="Arrived after the start; counts as here") + choice("arr", "Excused", small="Not coming, and the reason is accepted") + choice("arr", "Mark absent instead", small="Guardian is texted"))
                  + f'<p class="hint"><a href="{page("quick-card", "empty")}">Open Kevin’s Quick Card</a></p>',
        "Check in", icon_name="clipboard", na={"invalid": "Arrival is a radio group with a default; nothing can be invalid."})
 
@@ -239,7 +239,7 @@ simple("household-actions", "More actions for the Rivera household", "household"
 simple("child-actions", "More actions for Mateo Rivera", "child", [R_ENROLL, R_DATA], "",
        lambda e: ('<ul class="menu menu--static" role="menu" aria-label="Child actions">'
                   f'<li role="none"><button class="menu__item" role="menuitem" type="button" data-href="{dialog("enroll-in-program")}">{icon("plus")}Enroll in another program</button></li>'
-                  f'<li role="none"><a class="menu__item" role="menuitem" href="{page("attendance", "long")}">{icon("chart")}Attendance history</a></li>'
+                  f'<li role="none"><a class="menu__item" role="menuitem" href="{page("attendance-history", "by-youth")}">{icon("chart")}Attendance history</a></li>'
                   f'<li role="none"><button class="menu__item" role="menuitem" type="button" data-href="{dialog("export-data")}">{icon("download")}Export record</button></li>'
                   '<li role="none" class="menu__divider" aria-hidden="true"></li>'
                   f'<li role="none"><button class="menu__item menu__item--danger" role="menuitem" type="button" data-href="{dialog("remove-from-roster")}">{icon("x-circle")}Remove from a roster…</button></li></ul>'),
@@ -247,7 +247,7 @@ simple("child-actions", "More actions for Mateo Rivera", "child", [R_ENROLL, R_D
 
 simple("program-actions", "More actions for After‑School Tutoring", "program", [R_ENROLL, R_REPORTS], "",
        lambda e: ('<ul class="menu menu--static" role="menu" aria-label="Program actions">'
-                  f'<li role="none"><a class="menu__item" role="menuitem" href="{page("attendance")}">{icon("chart")}Attendance</a></li>'
+                  f'<li role="none"><a class="menu__item" role="menuitem" href="{page("attendance-history")}">{icon("chart")}Attendance</a></li>'
                   f'<li role="none"><a class="menu__item" role="menuitem" href="{page("reports")}">{icon("download")}Report for a funder</a></li>'
                   f'<li role="none"><button class="menu__item" role="menuitem" type="button" data-href="{dialog("close-enrollment")}">{icon("lock")}Close enrollment</button></li>'
                   '<li role="none" class="menu__divider" aria-hidden="true"></li>'
@@ -352,7 +352,7 @@ simple("sign-out-all", "Sign out everywhere?", "account", [R_SEC], "Every other 
 # ------------------------------------------------------------------ Shell: main menu, account menu, session expired, offline queue
 @screen("main-menu", "dialog", "Main menu", opens_from="today", reqs=["L1-014"], na={"busy": "A menu has no submit.", "invalid": "A menu has no inputs."})
 def main_menu(S):
-    staff_links = [("today", "Today", "home"), ("check-in", "Check-in", "clipboard"), ("quick-card", "Quick Cards", "heart-pulse"), ("families", "Families", "users"), ("events", "Events", "calendar"), ("slips", "Slips", "clipboard"), ("programs", "Programs", "list"), ("messages", "Messages", "message"), ("reports", "Reports", "chart"), ("incidents", "Incidents", "flag"), ("attendance", "Attendance", "table"), ("settings", "Settings", "settings"), ("notifications", "Notifications", "bell"), ("account", "Your account", "user")]
+    staff_links = [("today", "Today", "home"), ("check-in", "Check-in", "clipboard"), ("quick-card", "Quick Cards", "heart-pulse"), ("families", "Families", "users"), ("events", "Events", "calendar"), ("slips", "Slips", "clipboard"), ("programs", "Programs", "list"), ("messages", "Messages", "message"), ("reports", "Reports", "chart"), ("incidents", "Incidents", "flag"), ("attendance-history", "Attendance", "table"), ("settings", "Settings", "settings"), ("notifications", "Notifications", "bell"), ("account", "Your account", "user")]
     director_links = staff_links[:10] + [("applications", "Applications", "inbox"), ("curriculum-tracks", "Curriculum", "star")] + staff_links[10:]
     tail = [("notifications", "Notifications", "bell"), ("account", "Your account", "user")]
 
@@ -366,8 +366,8 @@ def main_menu(S):
     S.add("director", "The same menu for the program director, from Programs; Applications shows while Roster is on and Curriculum while Learning is on.", **over("programs", overlays=drawer(STAFF["marisol"], "programs", director_links)))
     S.add("youth", "A youth’s menu: Today, Learning, Schedule (while Roster is on), notifications and account only; no staff sections, no Settings.",
           **over("today", "youth", overlays=drawer(YOUTH["sofia"], "today", [("today", "Today", "home"), ("learn-home", "Learning", "star"), ("youth-schedule", "Schedule", "calendar")] + tail)))
-    S.add("mentor", "A mentor’s menu: Today, Mentoring, notifications and account.",
-          **over("today", "mentor", overlays=drawer(STAFF["daniel"], "today", [("today", "Today", "home"), ("mentor-dashboard", "Mentoring", "users")] + tail)))
+    S.add("mentor", "A mentor’s menu: Today, Mentoring, Check-in, notifications and account.",
+          **over("today", "mentor", overlays=drawer(STAFF["daniel"], "today", [("today", "Today", "home"), ("mentor-dashboard", "Mentoring", "users"), ("check-in", "Check-in", "clipboard")] + tail)))
     S.add("volunteer", "A volunteer’s menu: Today, Check-in for their assigned sessions, notifications and account.",
           **over("today", "volunteer", overlays=drawer(STAFF["leo"], "today", [("today", "Today", "home"), ("check-in", "Check-in", "clipboard")] + tail)))
 
@@ -398,7 +398,7 @@ def session_expired(S):
     S.add("failed", "No connection; the report is still safe.", **over("new-incident", "error", overlays=box(alert_html=alert("danger", "Couldn’t reach PromiseHub", "Try again when you have signal."))))
 
 
-@screen("offline-queue", "dialog", "Waiting to sync", opens_from="check-in", reqs=["L1-014", R_ROLL], na={"invalid": "No inputs."})
+@screen("offline-queue", "dialog", "Waiting to sync", opens_from="check-in", reqs=["L1-014", R_ROLL, "L2-096", "L2-098", "L2-099"], na={"invalid": "No inputs."})
 def offline_queue(S):
     def box(busy=False, alert_html="", rows=None):
         rows = rows if rows is not None else [list_item("Jordan Thompson checked in", "4:05 pm · waiting", person=CHILD["jordan"], end=badge("Queued", "warning")), list_item("Kevin Tran checked in", "4:16 pm · waiting", person=CHILD["kevin"], end=badge("Queued", "warning"))]
@@ -926,3 +926,38 @@ def rsvp(S):
           **over("youth-schedule", "default", overlays=rsvp_box(alert_html=failed_alert("That didn’t go through", "Your RSVP wasn’t sent. Everything is still here; try again."))))
     S.add("closed", "The session started or was cancelled while the dialog was open: the server answers 409 and closing reloads the schedule.",
           **over("youth-schedule", "default", overlays=rsvp_box(alert_html=alert("warning", "RSVPs are closed for this session", "It has started or was cancelled. Close to see your schedule."))))
+
+
+# ---------------------------------------------------------------- correct attendance (prompt 71, L2-097)
+from pages_attendance import R_HISTORY  # noqa: E402
+
+CORRECT_REASON = "Nour Haddad emailed on Wednesday morning that Yusuf had a dentist appointment."
+
+
+def correct_body(err=None) -> str:
+    err = err or {}
+    summary = form_summary(list(err.items())) if err else ""
+    youth = select("youth", "Youth", ["Jordan Thompson · Present", "Mateo Rivera · Present", "Sofía Rivera · Present", "Yusuf Haddad · Absent"],
+                   selected="Yusuf Haddad · Absent", attrs=" required")
+    status_ = fieldset("Mark as", "".join(choice("status", s, small=d, checked=(s == "Excused")) for s, d in
+                                          [("Present", "Here on time"), ("Late", "Here, after the start"), ("Excused", "Not here, reason accepted"), ("Absent", "Not here")]), fid="status")
+    reason_value = "" if "reason" in err else CORRECT_REASON
+    reason = textarea("reason", "Why are you correcting it?", value=reason_value, rows=3, error=err.get("reason", ""), count=f"{len(reason_value)} / 500",
+                      help_="Kept with the change in the audit log.")
+    return summary + youth + status_ + reason
+
+
+def correct_box(err=None, *, busy=False, alert_html="") -> str:
+    return dialog_box("Correct attendance", "Tutoring night · Wed 4 Nov · After‑School Tutoring", correct_body(err), footer("Save correction", busy=busy),
+                      icon_name="edit", alert_html=alert_html, form=True, scroll=True)
+
+
+@screen("correct-attendance", "dialog", "Correct attendance", opens_from="attendance-history", reqs=R_HISTORY)
+def correct_attendance(S):
+    S.add("default", "Marisol corrects Yusuf on Wed 4 Nov from Absent to Excused, with why. The session has ended; corrections are for admins and program directors and are audited.",
+          **over("attendance-history", "default", overlays=correct_box()))
+    S.add("invalid", "Saved with no reason: the error sits beside Why and in a summary.",
+          **over("attendance-history", "default", overlays=correct_box({"reason": "Say why you’re correcting it."})))
+    S.add("busy", "Saving: Save correction is busy and cannot be pressed twice; Cancel still works.", **over("attendance-history", "default", overlays=correct_box(busy=True)))
+    S.add("failed", "The save failed: the choice and the reason stay to try again.",
+          **over("attendance-history", "default", overlays=correct_box(alert_html=failed_alert("That didn’t go through", "The correction wasn’t saved. Everything is still here; try again."))))

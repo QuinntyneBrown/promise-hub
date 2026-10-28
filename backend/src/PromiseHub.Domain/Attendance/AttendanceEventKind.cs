@@ -5,4 +5,7 @@ public enum AttendanceEventKind
     CheckedIn,
     MarkedAbsent,
     SignedOut,
+    CheckedInLate,
+    MarkedExcused,
+    Corrected,
 }

@@ -1,0 +1,45 @@
+@startuml
+title Class structure — Record attendance
+skinparam classAttributeIconSize 0
+class CheckInPage {
+  #totals : computed
+  #checkIn(entry, arrivedAt, late) : void
+  #markAbsent(entry, excused) : void
+  #markRestPresent() : void
+}
+class CheckInSheetDialog {
+  #arrived : string
+  #submit() : void
+}
+interface AttendanceApi {
+  +checkIn(sessionId, childId, arrivedAt, clientActionId, late) : Observable<WriteOutcome>
+  +markAbsent(sessionId, childId, clientActionId, excused) : Observable<WriteOutcome>
+}
+class AttendanceWriter {
+  +ApplyAsync(eventId, childId, clientActionId, kind, at, change) : Result
+}
+class SessionAccess {
+  +AllowsAsync(eventId) : bool
+  +AssignedAsync() : HashSet<Guid>?
+}
+class AttendanceRecord {
+  +Status : AttendanceStatus
+  +Late : bool
+  +Excused : bool
+  +CheckIn(at, actor, late) : void
+  +MarkAbsent(at, actor, excused) : void
+}
+enum AttendanceEventKind {
+  CheckedIn
+  CheckedInLate
+  MarkedAbsent
+  MarkedExcused
+  SignedOut
+  Corrected
+}
+CheckInPage --> CheckInSheetDialog : opens
+CheckInPage ..> AttendanceApi
+AttendanceWriter ..> SessionAccess : asks
+AttendanceWriter ..> AttendanceRecord : changes
+AttendanceWriter ..> AttendanceEventKind : appends
+@enduml

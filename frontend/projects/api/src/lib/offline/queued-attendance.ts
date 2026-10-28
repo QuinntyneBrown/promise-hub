@@ -5,6 +5,9 @@ export interface QueuedAttendance {
   childId: string;
   childName: string;
   kind: 'check-in' | 'absent';
+  /** A late check-in or an excused absence (L2-096). */
+  late?: boolean;
+  excused?: boolean;
   /** When it happened on the device; sent as the arrival time for a check-in. */
   at: string;
 }
