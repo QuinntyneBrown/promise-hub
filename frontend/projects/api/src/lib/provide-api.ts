@@ -40,6 +40,8 @@ import { HttpModulesApi } from './modules/http-modules-api';
 import { HttpStaffApi } from './staff/http-staff-api';
 import { STAFF_API } from './staff/staff-api.token';
 import { HttpNotificationSettingsApi } from './notifications/http-notification-settings-api';
+import { HttpNotificationPreferencesApi } from './notifications/http-notification-preferences-api';
+import { NOTIFICATION_PREFERENCES_API } from './notifications/notification-preferences-api.token';
 import { HttpNotificationsApi } from './notifications/http-notifications-api';
 import { NOTIFICATION_SETTINGS_API } from './notifications/notification-settings-api.token';
 import { NOTIFICATIONS_API } from './notifications/notifications-api.token';
@@ -118,6 +120,7 @@ export function provideApi(): EnvironmentProviders {
     { provide: REPORTS_API, useClass: HttpReportsApi },
     { provide: NOTIFICATIONS_API, useClass: HttpNotificationsApi },
     { provide: NOTIFICATION_SETTINGS_API, useClass: HttpNotificationSettingsApi },
+    { provide: NOTIFICATION_PREFERENCES_API, useClass: HttpNotificationPreferencesApi },
     { provide: INVITATION_API, useClass: HttpInvitationApi },
     { provide: LEARNING_API, useClass: HttpLearningApi },
     { provide: DRAFT_STORE, useClass: LocalDraftStore },

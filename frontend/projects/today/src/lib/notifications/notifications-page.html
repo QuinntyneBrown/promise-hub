@@ -5,6 +5,7 @@
     @if (l.unread) {
       <ph-button (click)="markAllRead()">Mark all read</ph-button>
     }
+    <ph-button variant="ghost" icon="settings" link="/account/notifications">Settings</ph-button>
   </ph-page-header>
   @if (l.items.length) {
     <ph-card [flush]="true">

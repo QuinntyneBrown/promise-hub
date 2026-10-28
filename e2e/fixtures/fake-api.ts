@@ -75,6 +75,63 @@ const NOTIFICATION_MODULES: Record<string, ModuleId[]> = {
   staff: ["Roster"],
 };
 
+/** The kinds a member may choose, in order, with who receives each (L2-111). Mirrors backend NotificationKinds. */
+const NOTIFICATION_KINDS: {
+  key: string;
+  name: string;
+  hint: string;
+  receives: (m: Membership) => boolean;
+}[] = [
+  {
+    key: "learning",
+    name: "Grades and badges",
+    hint: "When your work is graded, a quiz score is approved or you earn a badge.",
+    receives: (m) => m.role === "Youth",
+  },
+  {
+    key: "assignments",
+    name: "Assigned work",
+    hint: "When your mentor assigns you a lesson, quiz or assignment.",
+    receives: (m) => m.role === "Youth",
+  },
+  {
+    key: "messages",
+    name: "Messages",
+    hint: "When someone writes to you in a conversation.",
+    receives: (m) => m.role === "Youth" || m.role === "Mentor",
+  },
+  {
+    key: "announcements",
+    name: "Announcements",
+    hint: "When an announcement for your programs is posted.",
+    receives: (m) => m.role === "Youth" || m.role === "Mentor",
+  },
+  {
+    key: "incidents",
+    name: "Incidents to review",
+    hint: "When an incident is reported.",
+    receives: (m) => m.role === "Admin" || m.role === "ProgramDirector",
+  },
+  {
+    key: "mentoring",
+    name: "At-risk flags",
+    hint: "When a mentor flags a youth as at risk.",
+    receives: (m) => m.role === "Admin" || m.role === "ProgramDirector",
+  },
+  {
+    key: "requests",
+    name: "Family data requests",
+    hint: "When a household asks for a copy or deletion of its data.",
+    receives: (m) => m.role === "Admin" || m.role === "ProgramDirector",
+  },
+  {
+    key: "staff",
+    name: "Staff invitations",
+    hint: "When someone asks for a new invitation link.",
+    receives: (m) => m.role === "Admin",
+  },
+];
+
 const can = {
   writeHouseholds: (m: Membership) =>
     ["Admin", "ProgramDirector"].includes(m.role),
@@ -2215,6 +2272,16 @@ export class FakeApi {
       (route, p) => this.downloadExport(route, p["id"]!),
     ],
     ["GET", /^\/api\/notifications$/, (route) => this.listNotifications(route)],
+    [
+      "GET",
+      /^\/api\/notifications\/preferences$/,
+      (route) => this.getNotificationPreferences(route),
+    ],
+    [
+      "PUT",
+      /^\/api\/notifications\/preferences$/,
+      (route) => this.saveNotificationPreferences(route),
+    ],
     [
       "POST",
       /^\/api\/notifications\/read-all$/,
@@ -11377,7 +11444,10 @@ export class FakeApi {
     text: string,
     link: string,
   ): void {
-    for (const membershipId of [...new Set(membershipIds)]) {
+    const to = [...new Set(membershipIds)].filter(
+      (id) => this.notificationPreferences.get(`${id}:${kind}`) !== false,
+    );
+    for (const membershipId of to) {
       this.notifications.push({
         id: `n-${this.nextId++}`,
         organizationId,
@@ -11390,7 +11460,7 @@ export class FakeApi {
       });
     }
     // The save tells each recipient's open streams, as the backend NotificationEvents does (L2-110).
-    this.publish([...new Set(membershipIds)], "notification", {});
+    if (to.length) this.publish(to, "notification", {});
   }
 
   /** She reads every notice on another device: her open streams are told (L2-110 criterion 3). */
@@ -11399,6 +11469,66 @@ export class FakeApi {
     for (const n of this.visibleNotifications(m))
       n.readAt ??= NOW.toISOString();
     this.publish([membershipId], "notification", {});
+  }
+
+  /** Each member's choices by `membershipId:kind`; a missing entry is on (L2-111). */
+  private readonly notificationPreferences = new Map<string, boolean>();
+
+  private offeredKinds(m: Membership) {
+    const on = this.modules.get(m.organizationId)!;
+    return NOTIFICATION_KINDS.filter(
+      (k) =>
+        k.receives(m) &&
+        NOTIFICATION_MODULES[k.key]!.every((x) => on.includes(x)),
+    );
+  }
+
+  /** GET /notifications/preferences: the caller's own choices. Mirrors backend NotificationPreferencesHandler. */
+  private async getNotificationPreferences(route: Route): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    const kinds = this.offeredKinds(m).map((k) => ({
+      key: k.key,
+      name: k.name,
+      hint: k.hint,
+      inApp: this.notificationPreferences.get(`${m.id}:${k.key}`) ?? true,
+    }));
+    return route.fulfill({ json: { kinds } });
+  }
+
+  /** PUT /notifications/preferences: a kind not offered is refused with 422; saving is audited. */
+  private async saveNotificationPreferences(route: Route): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    const offered = this.offeredKinds(m).map((k) => k.key);
+    const b = route.request().postDataJSON() as {
+      kinds?: { key: string; inApp: boolean }[];
+    };
+    const choices = b.kinds ?? [];
+    if (choices.some((c) => !offered.includes(c.key)))
+      return route.fulfill({
+        status: 422,
+        json: {
+          errors: { kinds: "Choose only the notifications offered to you." },
+        },
+      });
+    for (const c of choices)
+      this.notificationPreferences.set(`${m.id}:${c.key}`, c.inApp);
+    const off = offered.filter(
+      (k) => this.notificationPreferences.get(`${m.id}:${k}`) === false,
+    );
+    this.auditEntries.push({
+      organizationId: m.organizationId,
+      when: NOW.toISOString(),
+      who: m.personName,
+      action: "Updated",
+      record: "NotificationPreferences",
+      summary: off.length
+        ? `${m.personName} turned off ${off.join(", ")}`
+        : `${m.personName} gets every notification`,
+      device: null,
+    });
+    return route.fulfill({ status: 204 });
   }
 
   /** A notice someone already has, as a producer would have added it. */
