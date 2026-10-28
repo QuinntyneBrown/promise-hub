@@ -41,8 +41,10 @@ export class CheckInPage extends BasePage {
     return this.page.getByRole('button', { name: /^Mark the rest present, \d+ not yet here$/ });
   }
 
+  /** Marks the rest present from under the roster, then returns to the top of the page as a person reading the totals would. */
   async markRestPresent(): Promise<void> {
     await this.markRestPresentButton.click();
+    await this.page.evaluate(() => window.scrollTo({ top: 0 }));
   }
 
   /** Chooses Late or Excused in the open check-in sheet and saves it. */
