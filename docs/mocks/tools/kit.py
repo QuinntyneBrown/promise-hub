@@ -541,7 +541,7 @@ def topbar(current: str, user: dict, *, unread: int = 2, kind: str = "page", men
         if modules is not None and cur not in modules:
             continue
         a = ' aria-current="page"' if cur == current else ""
-        md = " nav-link--md" if sid in ("programs", "messages", "reports") else ""
+        md = " nav-link--md" if sid in ("programs", "messages", "reports", "conversations") else ""
         links.append(f'<a class="nav-link{md}" href="{rel(kind, "page", sid)}"{a}>{esc(label)}</a>')
     for sid, label, _ic, cur in ([] if participant else NAV_SECONDARY):
         a = ' aria-current="page"' if cur == current else ""

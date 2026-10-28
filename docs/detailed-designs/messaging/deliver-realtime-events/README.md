@@ -17,10 +17,14 @@ Ported from Waypoint `non-functional/deliver-realtime-events` (`L2-NFR-005`). Wa
 - **`IRealtimeEvents`** and **`RealtimeEvent`** (`PromiseHub.Application/Messaging/`) — the port handlers publish to after saving: an organization id, the recipient membership ids and the event.
 - **`RealtimeHub`** (`PromiseHub.Infrastructure/Messaging/`) — a singleton holding one bounded channel per subscriber; `Publish` writes only to subscribers whose organization and membership match, so another tenant's members never receive an event.
 - **`RealtimeEndpoints`** (`PromiseHub.Api/Endpoints/`) — `GET /realtime` with `AllowAnyMember()`; the tenant and membership come from the session, never from the request; anonymous answers 401. It writes `event:`/`data:` lines as events arrive and a keep-alive comment every 25 seconds, and removes the subscriber when the client goes.
-- **`RealtimeEvents`** with `REALTIME_EVENTS` (`frontend/projects/api/src/lib/realtime/`) — an `Observable` over `EventSource(apiBase + '/realtime', { withCredentials: true })` emitting `open` on every (re)connection and each named event; pages subscribe only while open, so nothing is opened elsewhere.
+- **`RealtimeEvents`** with `REALTIME_EVENTS` and `EventSourceRealtimeEvents` (`frontend/projects/api/src/lib/realtime/`) — an `Observable` over `EventSource(apiBase + '/realtime', { withCredentials: true })` emitting `open` on every (re)connection and each named event; pages subscribe only while open, so nothing is opened elsewhere.
 - **`ConversationPage`**, **`ConversationsPage`** and **`YouthAnnouncementsPage`** refetch on `open` and on their events, so a dropped connection loses nothing and the server's answer replaces the list, never adding a message twice.
 
 Open questions: none. Deferred: notifications (prompt 75), presence and typing indicators, scale-out across several API instances (a single instance holds the subscribers; a shared broker would replace `RealtimeHub` behind the same port).
+
+## Built so far
+
+Prompt 74 delivered everything above: `IRealtimeEvents`, `RealtimeEvent`, `RealtimeHub` and `RealtimeSubscription`, `RealtimeEndpoints`, `REALTIME_EVENTS` with `EventSourceRealtimeEvents`, and the quiet refetch on the conversation, conversations and announcements pages. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/RealtimeTests.cs` and `e2e/tests/messaging/realtime.spec.ts` (the fake API answers the stream as a long poll, so every response ends with a reconnection).
 
 ## Requirements
 

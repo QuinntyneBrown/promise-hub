@@ -35,6 +35,10 @@ Backend:
 
 Open questions: none. Deferred: drafts, a recipient estimate while composing, editing or cancelling a scheduled announcement, an event at a scheduled announcement's time (its recipients see it on their next fetch).
 
+## Built so far
+
+Prompt 74 delivered everything above: `Announcement`, `AnnouncementAudience` and `AnnouncementRead` with the migration `AnnouncementsAndDirectMessages`, `AnnouncementRecipients`, `ComposeAnnouncementHandler` (with `MessageWriter.Queue`'s new `dueAt`), `ListAnnouncementsHandler`, `MyAnnouncementsHandler` and `RoleWords`, the `ReadAnnouncements` permission, `AnnouncementEndpoints`, `AnnouncementsApi`, `AnnouncementsPage`, `ComposeAnnouncementDialog` and `YouthAnnouncementsPage`, and Announcements in the youth and mentor menu. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/AnnouncementsTests.cs`, `MyAnnouncementsTests.cs`, `e2e/tests/messaging/announcements.spec.ts` and `youth-announcements.spec.ts`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

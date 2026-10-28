@@ -31,6 +31,10 @@ Backend:
 
 Open questions: none. Deferred: a mentor's broadcast to a group, attachments, editing and deleting (never offered, by L2-108).
 
+## Built so far
+
+Prompt 74 delivered everything above: `DirectMessage` (migration `AnnouncementsAndDirectMessages`), `ConversationAccess` and `ConversationScope`, `ConversationsHandler`, `ConversationHandler`, `SendDirectMessageHandler` with `SendDirectMessageOutcome`, `ConversationEndpoints`, `ConversationsApi`, `ph-message-thread` (`PhMessageThread`, `ThreadMessage`), `ConversationsPage` and `ConversationPage`, and Messages in the youth and mentor navigation. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/ConversationsTests.cs` and `e2e/tests/messaging/conversations.spec.ts`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

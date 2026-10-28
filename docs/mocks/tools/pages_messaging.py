@@ -77,7 +77,7 @@ def ann_hdr() -> str:
 
 
 def ann_body(rows=ANNOUNCEMENTS) -> str:
-    return ann_hdr() + kpis([("Sent this month", "3", "1 scheduled"), ("Read in the app", "4 of 5", "80% of youth and mentors")]) + card(ul_list([ann_item(a) for a in rows], card=False, label="Announcements, newest first"), cls="card--flush")
+    return ann_hdr() + kpis([("Sent", "3", "1 scheduled"), ("Read in the app", "4 of 5", "80% of youth and mentors")]) + card(ul_list([ann_item(a) for a in rows], card=False, label="Announcements, newest first"), cls="card--flush")
 
 
 @screen("announcements", "page", "Announcements", route="/messages/announcements", reqs=R_ANN)
@@ -94,7 +94,7 @@ def announcements(S):
     S.add("loading", "Loading: numbers and rows as skeletons.", **SKW, main=ann_hdr() + skeleton_kpis(2) + skeleton_list(4, "Loading announcements"))
     S.add("error", "The list failed to load; the header and New announcement stay.", **SKW, main=ann_hdr() + failed("We couldn’t load announcements"))
     S.add("forbidden", "Aisha (Youth worker) opens /messages/announcements: sending announcements needs Send messages; the server answers 403.", nav="messages", user=STAFF["aisha"],
-          main=page_header("Announcements", "") + forbidden("Announcements are sent by directors and site leads", "Ask Marisol Delgado if families need to hear something."))
+          main=page_header("Announcements", "") + forbidden("Announcements are sent by directors and site leads", "Ask your program director if families need to hear something."))
 
 
 # ------------------------------------------------------------------ compose dialog
@@ -142,7 +142,7 @@ def feed_item(f: dict, *, read: bool = False) -> str:
 
 
 def feed_hdr(action: bool = True) -> str:
-    return page_header("Announcements", "News from Harbourview Youth Collective and your programs.", btn("Mark all read", "", icon_name="check") if action else "")
+    return page_header("Announcements", "News from your organization and your programs.", btn("Mark all read", "", icon_name="check") if action else "")
 
 
 @screen("youth-announcements", "page", "Your announcements", route="/announcements", reqs=R_FEED)
@@ -157,7 +157,7 @@ def youth_announcements(S):
     S.add("mentor", "Daniel reads his: the mentor huddle is meant for mentors, the trip for youth and guardians is not his.", **(MKW | {"nav": "announcements"}),
           main=feed_hdr() + ul_list([feed_item(dict(title=ANNOUNCEMENTS[3]["title"], body=ANNOUNCEMENTS[3]["body"], who="Marisol Delgado · Program director", when="Fri 30 Oct", new=True, scope="All programs"))], label="Announcements, newest first"))
     S.add("empty", "Nothing aimed at her yet.", **kw,
-          main=feed_hdr(False) + card(empty("No announcements yet", "News from Harbourview and your programs shows up here.", icon_name="message"), cls="card--flush"))
+          main=feed_hdr(False) + card(empty("No announcements yet", "News from your organization and your programs shows up here.", icon_name="message"), cls="card--flush"))
     S.add("loading", "Loading: skeleton rows.", **kw, main=feed_hdr(False) + skeleton_list(3, "Loading announcements"))
     S.add("error", "The list failed to load.", **kw, main=feed_hdr(False) + failed("We couldn’t load your announcements"))
     S.add("mark-failed", "Mark all read failed: nothing changed and the New badges stay.", **kw,
@@ -189,8 +189,8 @@ def conversations(S):
     S.add("supervisor", "Marisol (Program director) reads every mentor and youth conversation of Harbourview, read only, for safeguarding.", **SKW,
           main=breadcrumb([("Messages", page("messages"))], "Mentor conversations")
           + page_header("Mentor conversations", "Every conversation between a mentor and a youth, kept for safeguarding. You can read them; only the mentor and the youth write.")
-          + ul_list([convo_item(SOFIA, "Sofía: Ok! Is it still in Room 2?", "3:58 pm", sub="with Daniel Osei", href=page("conversation", "supervisor")),
-                     convo_item(NADIA, "Daniel: Good luck with the interview tomorrow.", "Tue", sub="with Daniel Osei")], label="Conversations"))
+          + ul_list([convo_item(SOFIA, "With Daniel Osei · Ok! Is it still in Room 2?", "3:58 pm", href=page("conversation", "supervisor")),
+                     convo_item(NADIA, "With Daniel Osei · Good luck with the interview tomorrow.", "Tue")], label="Conversations"))
     S.add("empty", "Hana mentors nobody with a youth account yet: an empty state that says how conversations start.", **(MKW | {"user": HANA}),
           main=convo_hdr("Talk with the youth you mentor. Program directors can read these conversations.")
           + card(empty("No conversations yet", "When a youth you mentor has a youth account, you can message them here.", icon_name="message"), cls="card--flush"))
@@ -220,10 +220,10 @@ def composer(*, value: str = "", busy: bool = False, error: str = "", disabled: 
 
 
 def convo_page(person: dict, sub: str, body: str, *, back: str = "conversations", back_state: str = "default") -> str:
-    return (f'<p><a href="{page(back, back_state)}">← Messages</a></p>'
-            + f'<div class="cluster">{avatar(person, "md")}<div><h1>{esc(person["name"])}</h1><p class="text-muted">{esc(sub)}</p></div></div>'
+    return (breadcrumb([("Messages", page(back, back_state))], person["name"])
+            + page_header(esc(person["name"]))
             + f'<section class="card thread" aria-label="Conversation with {esc(person["name"])}">{body}</section>'
-            + f'<p class="hint">{icon("lock", "icon--sm")} Messages are kept for safeguarding. Program directors can read this conversation.</p>')
+            + '<p class="text-caption">Messages are kept for safeguarding. Program directors can read this conversation.</p>')
 
 
 @screen("conversation", "page", "Conversation", route="/conversations/:youthId", reqs=R_TALK)
@@ -245,16 +245,16 @@ def conversation(S):
           main=convo_page(SOFIA, sub, thread(THREAD) + composer(value="Of course…", error="Keep it to 2,000 characters.")))
     S.add("empty", "Daniel and Nadia have not written yet: the empty thread says who can read it and the composer is ready.", **MKW,
           main=convo_page(NADIA, "Age 18 · Saturday Sports",
-                          empty("Say hi to Nadia", "Start the conversation. Messages stay between you and Nadia, and program directors can read them.", icon_name="message", heading="h2") + composer()))
+                          empty("Say hi to Nadia", "Start the conversation. Program directors can read it.", icon_name="message", heading="h2") + composer()))
     S.add("blocked", "Sofía is 12 and no guardian has consented yet: the server refuses messages both ways, the composer is disabled and the page says why.", **MKW,
-          main=convo_page(SOFIA, sub, alert("warning", "Waiting for a guardian’s consent", "Sofía is under 18, so messaging opens once her guardian consents. Ask Marisol Delgado to send the consent link.") + composer(disabled=True)))
+          main=convo_page(SOFIA, sub, alert("warning", "Waiting for a guardian’s consent", "Messaging opens once Sofía’s guardian consents. Ask your program director to send the consent link.") + composer(disabled=True)))
     S.add("supervisor", "Marisol reads the conversation, read only: no composer, and her opening it is recorded in the audit log.", **SKW,
-          main=(f'<p><a href="{page("conversations", "supervisor")}">← Mentor conversations</a></p>'
-                + f'<div class="cluster">{avatar(SOFIA, "md")}<div><h1>Sofía Rivera and Daniel Osei</h1><p class="text-muted">Mentor and youth · read only</p></div></div>'
+          main=(breadcrumb([("Mentor conversations", page("conversations", "supervisor"))], "Sofía Rivera and Daniel Osei")
+                + page_header("Sofía Rivera and Daniel Osei", "Mentor and youth · read only")
                 + f'<section class="card thread" aria-label="Conversation between Daniel Osei and Sofía Rivera">{thread([(t if t[1] is None else (t[0], t[1], t[2].replace("You", "Daniel"))) for t in THREAD])}</section>'
-                + f'<p class="hint">{icon("lock", "icon--sm")} You’re reading this for safeguarding; opening it is recorded in the audit log.</p>'))
+                + '<p class="text-caption">You’re reading this for safeguarding; opening it is recorded in the audit log.</p>'))
     S.add("loading", "Loading: the header and skeleton bubbles.", **MKW,
           main=convo_page(SOFIA, sub, '<div aria-busy="true" aria-label="Loading messages" class="stack"><span class="skeleton skeleton--text" style="width: 60%;"></span><span class="skeleton skeleton--text" style="width: 45%; align-self: flex-end;"></span><span class="skeleton skeleton--text" style="width: 55%;"></span></div>'))
     S.add("error", "The conversation failed to load.", **MKW, main=convo_page(SOFIA, sub, failed("We couldn’t load this conversation")))
     S.add("forbidden", "Hana opens Sofía’s conversation: Sofía isn’t one of her youth; the server answers 403.", **(MKW | {"user": HANA}),
-          main=page_header("Messages", "") + forbidden("This isn’t one of your conversations", "You can message the youth you mentor."))
+          main=page_header("Messages", "") + forbidden("This isn’t one of your conversations", "You can message the youth you mentor, or your mentor."))

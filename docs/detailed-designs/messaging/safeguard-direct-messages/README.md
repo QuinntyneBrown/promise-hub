@@ -23,6 +23,10 @@ Ported from Waypoint `consent-and-safeguarding/enforce-minor-safeguards` (`L2-CO
 
 Open questions: none. Deferred: notifying a supervisor of keywords, retention periods specific to messages (the organization's retention applies), media consent.
 
+## Built so far
+
+Prompt 74 delivered everything above: the consent block, the participant check, reassignment, the read-only supervisor view with its audited opening, `Permission.SuperviseConversations` and Mentor conversations in the menu of admins and program directors. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/ConversationSafeguardsTests.cs` and `e2e/tests/messaging/conversations.spec.ts`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |
