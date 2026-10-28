@@ -2,7 +2,7 @@ using PromiseHub.Domain.Attendance;
 
 namespace PromiseHub.Application.Attendance;
 
-/// <summary>How a record counts in the history: Waypoint's four marks read from Roll Call's check-in model (ADR 0065).</summary>
+/// <summary>How a record counts in the history: the four marks read from Roll Call's check-in model (ADR 0065).</summary>
 public static class AttendanceMarks
 {
     public static AttendanceMark? Of(AttendanceRecord record) => record.Status switch
