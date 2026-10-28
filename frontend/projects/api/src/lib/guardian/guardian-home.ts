@@ -12,6 +12,8 @@ export interface GuardianHome {
     pickups: { id: string; name: string; relationship: string }[] | null;
     name: string;
     firstName: string;
+    /** The active programs the child is enrolled in (L2-102 criterion 1). */
+    programs: string[];
     enrollments: {
       program: string;
       status: 'Enrolled' | 'WaitingReview' | 'Waitlisted' | 'Declined';

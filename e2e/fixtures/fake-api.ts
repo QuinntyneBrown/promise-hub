@@ -576,6 +576,11 @@ export class FakeApi {
     }
   }
 
+  /** Changes a household's language, as the guardian's Update your details would (L2-027). */
+  setHouseholdLanguage(householdId: string, language: 'English' | 'Spanish' | 'French'): void {
+    this.households.find((h) => h.id === householdId)!.language = language;
+  }
+
   /** Trusts this browser for a household, as a verified code would. */
   trustGuardianDevice(householdId: string): void {
     this.trustedHouseholds.add(householdId);
@@ -4591,6 +4596,7 @@ export class FakeApi {
           pickups: this.modules.get(org.id)!.includes('Pickup') ? this.activePickups(c.id).map((x) => ({ id: x.id, name: x.name, relationship: x.relationship })) : null,
           name: `${c.firstName} ${c.lastName}`,
           firstName: c.firstName,
+          programs: this.programs.filter((x) => x.status === 'Active' && x.roster.includes(c.id)).map((x) => x.name).sort(),
           enrollments: [...fromRequests, ...onRoster]
             .map((e) => ({ program: e.program.name, status: e.status, position: e.position, note: e.note, startsOn: e.program.startsOn, schedule: e.program.schedule }))
             .sort((a, z) => a.program.localeCompare(z.program)),

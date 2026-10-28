@@ -66,7 +66,8 @@ public sealed class GuardianHomeHandler(IPromiseHubDb db, GuardianAccess access,
                     .OrderBy(e => e.Program).ToList();
                 return new GuardianHomeChildDto(child.FullName, child.FirstName, enrollments, child.Id,
                     pickupsOn ? [.. pickups.Where(p => p.ChildId == child.Id).Select(p => new GuardianHomePickupDto(p.Id, p.Name, p.Relationship))] : null,
-                    child.Allergies, child.Medication);
+                    child.Allergies, child.Medication,
+                    [.. rosters.Where(e => e.ChildId == child.Id).Select(e => programs[e.ProgramId]).Where(p => p.Status == Domain.Programs.ProgramStatus.Active).Select(p => p.Name).Distinct().Order(StringComparer.Ordinal)]);
             })],
             noShows,
             [.. waiting.OrderBy(r => r.RequestedAt).Select(r => new GuardianHomePickupRequestDto(r.Id, children.First(c => c.Id == r.ChildId).FirstName, r.CollectorName, eventNames.GetValueOrDefault(r.EventId, ""), r.RequestedAt))],
