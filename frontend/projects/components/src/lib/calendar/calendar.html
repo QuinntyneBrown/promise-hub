@@ -74,6 +74,7 @@
     @if (e.cancelled) {
       <span class="status">Cancelled · </span>
     }
-    <span class="time">{{ e.time }}</span> <span class="name">{{ e.label }}</span>
+    <span class="time">{{ e.time }}</span
+    >{{ ' ' }}<span class="name">{{ e.label }}</span>
   </a>
 </ng-template>

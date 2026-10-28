@@ -62,7 +62,7 @@
                 }
               </div>
               @if (e.rsvps.responses.length) {
-                <ph-list label="RSVPs, newest first">
+                <ph-list label="RSVPs, newest first" [inset]="true">
                   @for (r of e.rsvps.responses; track r.childId) {
                     <ph-list-item
                       [title]="r.childName"
