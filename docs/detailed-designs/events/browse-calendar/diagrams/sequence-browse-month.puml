@@ -1,0 +1,35 @@
+@startuml
+title UML sequence behaviour — Browsing a month
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Staff member" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "EventsCalendarPage" as page
+  participant "PhCalendar" as cal
+  participant "EventsApi" as eapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "EventEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "EventCalendarHandler" as h
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : Calendar (/events/calendar)
+page -> eapi : calendar("", "")
+eapi -> ep : GET /events/calendar
+ep -> ep : Roster on, UseStaffApp (L2-093 c4)
+ep -> h : HandleAsync
+h -> db : the organization's time zone; its events (tenant filter, L2-001)
+h -> h : no month: the organization's current month; keep events whose local day is in it
+h --> page : month 2026-11, today, events with their day (L2-093 c3)
+page -> cal : entries
+cal -> actor : weeks Monday first, today marked, cancelled struck through
+actor -> page : Next month
+page -> eapi : calendar("2026-12", "")
+@enduml

@@ -122,7 +122,9 @@
         "error",
         "partial",
         "upcoming",
-        "cancelled"
+        "cancelled",
+        "rsvps",
+        "no-rsvps"
       ]
     },
     {
@@ -285,6 +287,9 @@
         "invalid",
         "submitting",
         "success",
+        "weekly",
+        "weekly-invalid",
+        "weekly-created",
         "edit"
       ],
       "not_applicable": {
@@ -2437,6 +2442,52 @@
       ]
     },
     {
+      "id": "events-calendar",
+      "kind": "page",
+      "title": "Events calendar",
+      "route": "/events/calendar",
+      "requirements": [
+        "L2-093",
+        "L2-012",
+        "L2-007",
+        "L2-005",
+        "L2-001",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "filtered",
+        "loading",
+        "empty",
+        "error"
+      ]
+    },
+    {
+      "id": "youth-schedule",
+      "kind": "page",
+      "title": "Your schedule",
+      "route": "/schedule",
+      "requirements": [
+        "L2-094",
+        "L2-093",
+        "L2-012",
+        "L2-056",
+        "L2-007",
+        "L2-032",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "sent",
+        "cancelled",
+        "loading",
+        "empty",
+        "error"
+      ]
+    },
+    {
       "id": "applications",
       "kind": "page",
       "title": "Applications",
@@ -3980,6 +4031,30 @@
         "busy",
         "failed",
         "nothing-to-assign"
+      ]
+    },
+    {
+      "id": "rsvp",
+      "kind": "dialog",
+      "title": "RSVP",
+      "opens_from": "youth-schedule",
+      "requirements": [
+        "L2-094",
+        "L2-093",
+        "L2-012",
+        "L2-056",
+        "L2-007",
+        "L2-032",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "empty",
+        "invalid",
+        "busy",
+        "failed",
+        "closed"
       ]
     },
     {

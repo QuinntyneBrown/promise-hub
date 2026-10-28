@@ -889,3 +889,40 @@ def assign_work(S):
     S.add("nothing-to-assign", "None of the tracks his youth follow has published work yet: the dialog says so and offers only Close.",
           **over("mentor-dashboard", "default", overlays=dialog_box("Assign work", "Pick a lesson, quiz or assignment, who it’s for and when it’s due.", card(empty("Nothing to assign yet", "When a track your cohorts follow publishes lessons, quizzes or assignments, you can assign them here.", icon_name="list"), cls="card--flush"),
                                                                     btn("Close", "", attrs=" autofocus"), icon_name="plus")))
+
+
+# ---------------------------------------------------------------- RSVP (prompt 70, L2-094)
+from pages_schedule import R_RSVP  # noqa: E402
+
+RSVP_ANSWERS = [("Yes, I’ll be there", "Going"), ("Maybe", "Not sure yet"), ("Can’t make it", "Staff will know not to wait for you")]
+RSVP_NOTE = "Can I bring my inhaler on the bus?"
+
+
+def rsvp_body(err=None, *, blank: bool = False) -> str:
+    err = err or {}
+    summary = form_summary(list(err.items())) if err else ""
+    session = facts([("Session", "Fall field trip: Royal Botanical Gardens"), ("When", "Sat 14 Nov, 9:00 am–3:00 pm"), ("Where", "Royal Botanical Gardens · bus leaves 8:45 am")])
+    answer = fieldset("Will you be there?", "".join(choice("response", a, small=hint, checked=(i == 0 and not blank and "response" not in err), invalid="response" in err)
+                                                for i, (a, hint) in enumerate(RSVP_ANSWERS)), error=err.get("response", ""), fid="response")
+    value = "" if blank else RSVP_NOTE
+    note_ = textarea("note", "Note for staff", value=value, rows=3, optional=True, count=f"{len(value)} / 500",
+                     help_="Staff running the session can read it.", error=err.get("note", ""))
+    return summary + session + answer + note_
+
+
+def rsvp_box(err=None, *, busy=False, alert_html="", blank=False) -> str:
+    return dialog_box("RSVP", "Let staff know if you’ll be there. You can change it until the session starts.",
+                      rsvp_body(err, blank=blank), footer("Send RSVP", busy=busy), icon_name="calendar", alert_html=alert_html, form=True, scroll=True)
+
+
+@screen("rsvp", "dialog", "RSVP", opens_from="youth-schedule", reqs=R_RSVP)
+def rsvp(S):
+    S.add("default", "Sofía answers for the field trip: Yes, I’ll be there, with a note for staff.", **over("youth-schedule", "default", overlays=rsvp_box()))
+    S.add("empty", "Just opened on a session she hasn’t answered: nothing chosen yet; focus on the first answer.", **over("youth-schedule", "default", overlays=rsvp_box(blank=True)))
+    S.add("invalid", "Send with no answer: the error beside the choices and in a summary.",
+          **over("youth-schedule", "default", overlays=rsvp_box({"response": "Choose whether you’re going."}, blank=True)))
+    S.add("busy", "Sending: Send RSVP is busy and cannot be pressed twice; Cancel still works.", **over("youth-schedule", "default", overlays=rsvp_box(busy=True)))
+    S.add("failed", "The send failed: her answer and note stay to try again.",
+          **over("youth-schedule", "default", overlays=rsvp_box(alert_html=failed_alert("That didn’t go through", "Your RSVP wasn’t sent. Everything is still here; try again."))))
+    S.add("closed", "The session started or was cancelled while the dialog was open: the server answers 409 and closing reloads the schedule.",
+          **over("youth-schedule", "default", overlays=rsvp_box(alert_html=alert("warning", "RSVPs are closed for this session", "It has started or was cancelled. Close to see your schedule."))))

@@ -1,0 +1,47 @@
+@startuml
+title Class structure — RSVP to a session
+skinparam classAttributeIconSize 0
+class YouthSchedulePage {
+  #result : signal<LoadResult<YouthSchedule>>
+  #rsvp(session) : void
+}
+class RsvpDialog {
+  #response : string
+  #note : string
+  #send() : void
+}
+interface ScheduleApi {
+  +schedule() : Observable<LoadResult<YouthSchedule>>
+  +rsvp(eventId, body) : Observable<RsvpOutcome>
+}
+class YouthScheduleHandler {
+  +HandleAsync() : YouthScheduleDto
+}
+class RsvpHandler {
+  +HandleAsync(eventId, request) : Result<RsvpDto>
+}
+class EventRsvp {
+  +Id, OrganizationId, EventId, ChildId : Guid
+  +Response : RsvpResponse
+  +Note : string?
+  +AnsweredAt : DateTimeOffset
+  +MaximumNote : int = 500
+  +Answer(response, note, at) : void
+}
+enum RsvpResponse {
+  Going
+  Maybe
+  CantMake
+}
+class EventRsvpsDto <<record>> {
+  +Going, Maybe, CantMake, NoReply : int
+  +Responses : IReadOnlyList<EventRsvpDto>
+}
+YouthSchedulePage --> RsvpDialog : opens
+YouthSchedulePage ..> ScheduleApi
+RsvpDialog ..> ScheduleApi
+RsvpHandler ..> EventRsvp : creates or updates
+EventRsvp --> RsvpResponse
+YouthScheduleHandler ..> EventRsvp : reads
+EventRsvpsDto ..> EventRsvp : summarises
+@enduml

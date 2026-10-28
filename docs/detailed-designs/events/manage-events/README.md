@@ -55,6 +55,10 @@ Undecided details: the retention of a deleted event's audit entries `<TO SUPPLY>
 
 Slice 05 delivered `EventsListPage` (`EventsPage`, with upcoming, needs-slips and past filters, a program select and search), `EventPage` (slip state, details, cancelled state), `EventFormPage` for new and edit, `EventActionsDialog` and `CancelEventDialog` (keep as cancelled), `EVENTS_API`, the endpoints above and the draft `PermissionSlip` (ADR 0008). Messaging guardians on cancellation, the slip tabs and the day-of card arrive with Messages and Slips.
 
+## Related designs
+
+Prompt 70 extends events without a second calendar: Repeat weekly on a new event creates a weekly series of events (`schedule-sessions`), `GET /events/calendar` and the Calendar page show a month of them (`browse-calendar`), and `GET /events/{id}` answers the RSVPs of youth on the roster, shown in an RSVPs card on the event page (`rsvp-to-session`). Editing and cancelling still act on one event. ADR 0064 records the decisions.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

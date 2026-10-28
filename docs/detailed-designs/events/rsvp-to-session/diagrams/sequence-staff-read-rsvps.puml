@@ -1,0 +1,30 @@
+@startuml
+title UML sequence behaviour — Staff read the RSVPs
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Program director (Marisol)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "EventPage" as page
+  participant "EventsApi" as eapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "EventEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "GetEventHandler" as h
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : open Tutoring night
+page -> eapi : get(id)
+eapi -> ep : GET /events/{id}
+ep -> h : HandleAsync
+h -> db : the event, its RSVPs, the active roster and its youth accounts
+h -> h : counts; no reply = roster youth with an account and no answer
+h --> page : rsvps with going, maybe, cantMake, noReply and responses (L2-094 c4)
+page -> actor : RSVPs card with the counts and each note
+@enduml

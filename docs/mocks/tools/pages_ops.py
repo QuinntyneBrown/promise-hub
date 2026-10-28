@@ -60,14 +60,19 @@ def program_form(S):
 # ------------------------------------------------------------------ Event form
 @screen("event-form", "page", "Event form", route="/events/new", reqs=[R_SLIPS, R_ROLL], na={"empty": "A form has no collection to be empty of."})
 def event_form(S):
-    def form(err=None, busy=False, v=None, edit=False):
+    def form(err=None, busy=False, v=None, edit=False, weekly=False):
         v = v or dict(name="", prog="After‑School Tutoring", start="", end="", place="", notes="")
+        repeat_desc = ("Every Thursday at this time, through Thu 24 Jun 2027, the program’s last day · 33 sessions." if weekly
+                       else "Off: one session. Turn it on to repeat it every week until the program ends.")
+        repeat = "" if edit else switch("weekly", "Repeat weekly", checked=weekly, desc=repeat_desc)
+        repeat_err = f'<div class="field__error" id="weekly-error">{esc(e_w)}</div>' if (e_w := (err or {}).get("weekly", "")) else ""
         e = err or {}
         return (f'<form class="card stack form-width--md" action="#" method="post" novalidate>'
                 + (form_summary([(k, m) for k, m in e.items()]) if e else "")
                 + field("name", "Event name", value=v["name"], error=e.get("name", ""), required=True, autofocus=not edit, placeholder="Fall field trip: Royal Botanical Gardens")
                 + select("prog", "Program", ["After‑School Tutoring", "Saturday Sports", "One-to-one Mentoring", "Winter Camp 2026"], selected=v["prog"], help_="Roster comes from the program.")
                 + f'<div class="two-col">{field("start", "Starts", type_="datetime-local", value=v["start"], required=True, error=e.get("start", ""))}{field("end", "Ends", type_="datetime-local", value=v["end"], required=True)}</div>'
+                + repeat + repeat_err
                 + field("place", "Where", value=v["place"], help_="For trips, include the bus stop.")
                 + fieldset("Permission slip", choice("slip", "Not needed", small="Season consent covers it", checked=not v["name"].lower().startswith("fall")) + choice("slip", "Required", small="Write it next", checked=v["name"].lower().startswith("fall")), error=e.get("slip", ""), fid="slip")
                 + fieldset("Attendance", switch("noshow", "Text guardians if not checked in 15 min after start", checked=True, desc="Delay: Settings › Notifications."))
@@ -85,6 +90,16 @@ def event_form(S):
           card(f'<div class="stack"><h1 class="empty__title">Swim trip is on the calendar</h1><p class="text-muted measure">Sat 28 Nov, 10:00 am–1:00 pm · 62 children. Permission slip needed.</p>'
                f'<div class="cluster">{btn("Write the slip", "primary", icon_name="clipboard", href=page("slip-editor"))}{btn("Open the event", "", href=page("event", "empty"))}</div></div>', cls="card--success form-width--md page-start"),
           toast_html=toast_region(toast("success", "Event created", "Swim trip: Jimmy Thompson Pool · Sat 28 Nov")))
+    weekly_v = dict(name="Tutoring night", prog="After‑School Tutoring", start="2026-11-12T16:00", end="2026-11-12T18:00", place="Harbourview Community Centre, Room 2", notes="")
+    S.add("weekly", "Scheduling Tutoring night every Thursday: Repeat weekly is on and says how many sessions it makes, through the program’s last day.", nav="events", user=STAFF["marisol"],
+          main=breadcrumb([("Events", page("events"))], "New event") + page_header("New event") + form(v=weekly_v, weekly=True))
+    S.add("weekly-invalid", "Repeat weekly with a start after the program ends: the error says when the program ends.", nav="events", user=STAFF["marisol"],
+          main=breadcrumb([("Events", page("events"))], "New event") + page_header("New event") +
+          form(err={"start": "Start on or before the program’s last day, Thu 24 Jun 2027."}, v=dict(weekly_v, start="2027-07-01T16:00", end="2027-07-01T18:00"), weekly=True))
+    S.add("weekly-created", "33 weekly sessions created: the first one opens and a toast says how many were scheduled.", nav="events", user=STAFF["marisol"],
+          main=breadcrumb([("Events", page("events"))], "Tutoring night") + page_header("Tutoring night", "Thu 12 Nov, 4:00–6:00 pm · After‑School Tutoring · 48 on roster") +
+          card(facts([("When", "Thursday 12 November 2026, 4:00–6:00 pm"), ("Repeats", "Weekly · 33 sessions, through Thu 24 Jun 2027")]), title="Details", tid="details"),
+          toast_html=toast_region(toast("success", "Event created", "Tutoring night · 33 weekly sessions")))
     S.add("edit", "Editing the field trip.", nav="events", main=breadcrumb([("Events", page("events")), ("Fall field trip", page("event"))], "Edit") + page_header("Edit event", "Fall field trip: Royal Botanical Gardens") +
           form(v=dict(name="Fall field trip: Royal Botanical Gardens", prog="After‑School Tutoring", start="2026-11-14T09:00", end="2026-11-14T15:00", place="Royal Botanical Gardens, Burlington · bus from the centre, leaves 8:45 am sharp", notes="Lunch provided for 6 families on request. 4 volunteers confirmed."), edit=True))
 

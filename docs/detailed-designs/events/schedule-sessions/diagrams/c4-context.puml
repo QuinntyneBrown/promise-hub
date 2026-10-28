@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Schedule sessions
+Person(d, "Program director", "Schedules a cohort's sessions, weekly ones in one go")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(d, ph, "Creates an event that repeats weekly", "HTTPS")
+@enduml

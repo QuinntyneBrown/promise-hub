@@ -1,0 +1,41 @@
+@startuml
+title Class structure — Schedule sessions
+skinparam classAttributeIconSize 0
+class EventFormPage {
+  #repeatsWeekly : boolean
+  #submit() : void
+}
+interface EventsApi {
+  +create(fields : EventFields) : Observable<WriteOutcome>
+}
+class SaveEventCommand <<record>> {
+  +Name, ProgramId, StartsAt, EndsAt, Place
+  +RequiresSlip, NoShowAlert, StaffNotes
+  +RepeatsWeekly : bool
+}
+class CreateEventHandler {
+  +HandleAsync(command) : Result
+}
+class EventRules {
+  +CheckAsync(db, command) : Dictionary
+}
+class WeeklySeries {
+  +MaximumSessions : int = 60
+  +Starts(start, lastDay, zone) : IReadOnlyList<DateTimeOffset>
+}
+class Event {
+  +Id, OrganizationId, ProgramId : Guid
+  +SeriesId : Guid?
+  +StartsAt, EndsAt : DateTimeOffset
+  +JoinSeries(seriesId) : void
+}
+class Program {
+  +EndsOn : DateOnly
+}
+EventFormPage ..> EventsApi
+EventsApi ..> SaveEventCommand : JSON
+CreateEventHandler --> EventRules
+CreateEventHandler --> WeeklySeries
+CreateEventHandler ..> Event : creates
+Event --> Program : ProgramId
+@enduml
