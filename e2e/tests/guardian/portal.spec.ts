@@ -78,6 +78,43 @@ test.describe('Use the guardian portal', () => {
     await child.expectAccessible();
   });
 
+  test('Given Sofía’s marked sessions, lessons and badges, when Carmen opens Sofía, then attendance and Learning progress show, read only', async ({ page, api }) => {
+    api.curriculumState.youthJourney();
+    api.learningState.completeOn('m-sofia', '2026-11-03T16:00:00Z', 'l-strengths', 'l-values', 'l-towel');
+    api.recordAttendance('e-tutoring-yesterday', 'c-sofia', 'Absent', null, { excused: true });
+    api.recordAttendance('e-tutoring-today', 'c-sofia', 'Present', '2026-11-05T21:10:00Z', { late: true });
+    const child = new GuardianChildPage(page);
+
+    await child.open('tok-home-rivera', 'c-sofia');
+
+    await expect(child.attendance).toContainText('50%');
+    await expect(child.attendance).toContainText('1 of 2 sessions');
+    await expect(child.attendanceRow('Wed 4 Nov')).toContainText('Excused');
+    await expect(child.attendanceRow('Thu 5 Nov')).toContainText('Late');
+    await expect(child.learning).toContainText('3 of');
+    await expect(child.module('Knowing Yourself')).toContainText('Complete');
+    await expect(child.module('Leading by Serving')).toContainText('In progress');
+    await expect(child.badges.getByRole('listitem').first()).toBeVisible();
+    await expect(child.learning).toContainText('stay between Sofía and their mentor');
+    expect(await child.controlCount()).toBe(0);
+    await child.expectAccessible();
+    await child.expectNoHorizontalScroll();
+  });
+
+  test('Given Mateo has no youth account, or Learning and Roll Call are off, when the page opens, then there is no Learning or Attendance section', async ({ page, api }) => {
+    const child = new GuardianChildPage(page);
+
+    await child.open('tok-home-rivera', 'c-mateo');
+    await expect(child.learning).toHaveCount(0);
+    await expect(child.attendance).toBeVisible();
+
+    api.setModules('org-harbourview', ['Roster', 'Slips', 'Messages']);
+    await child.open('tok-home-rivera', 'c-sofia');
+    await expect(child.learning).toHaveCount(0);
+    await expect(child.attendance).toHaveCount(0);
+    await expect(child.schedule).toBeVisible();
+  });
+
   test('Given another family’s child, an expired link or Roster off, when the page opens, then it is not shown', async ({ page, api }) => {
     const child = new GuardianChildPage(page);
 

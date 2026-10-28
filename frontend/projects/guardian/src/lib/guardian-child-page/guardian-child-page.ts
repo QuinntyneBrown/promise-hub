@@ -13,6 +13,8 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { GUARDIAN_API, GuardianChild, GuardianPageResult } from '@promisehub/api';
 import {
+  AchievementBadgeItem,
+  PhAchievementBadges,
   PhAlert,
   PhBadge,
   PhButton,
@@ -21,7 +23,9 @@ import {
   PhGuardianShell,
   PhList,
   PhListItem,
+  PhProgressBar,
   PhSkeleton,
+  PhStat,
   PhTextField,
 } from '@promisehub/components';
 import { guardianText, timeRange } from '../guardian-text';
@@ -46,6 +50,7 @@ interface Row {
   imports: [
     FormsModule,
     RouterLink,
+    PhAchievementBadges,
     PhAlert,
     PhBadge,
     PhButton,
@@ -54,7 +59,9 @@ interface Row {
     PhGuardianShell,
     PhList,
     PhListItem,
+    PhProgressBar,
     PhSkeleton,
+    PhStat,
     PhTextField,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -158,6 +165,44 @@ export class GuardianChildPage {
       });
     }
     return rows;
+  }
+
+  protected percent(part: number, whole: number): string {
+    const value = whole ? Math.round((100 * part) / whole) : 0;
+    return this.language() === 'en' ? `${value}%` : `${value} %`;
+  }
+
+  protected day(at: string): string {
+    return shortDate(at, this.language());
+  }
+
+  protected markTone(status: 'Present' | 'Late' | 'Excused' | 'Absent'): Tone {
+    return status === 'Present'
+      ? 'success'
+      : status === 'Late'
+        ? 'info'
+        : status === 'Absent'
+          ? 'warning'
+          : 'neutral';
+  }
+
+  protected moduleTone(done: number, total: number): Tone {
+    return total && done === total ? 'success' : done ? 'info' : 'neutral';
+  }
+
+  protected moduleState(done: number, total: number): string {
+    const p = this.p();
+    return total && done === total ? p.complete : done ? p.inProgress : p.notStarted;
+  }
+
+  protected earnedBadges(badges: { name: string; icon: string }[]): AchievementBadgeItem[] {
+    return badges.map((b) => ({
+      key: b.name,
+      icon: b.icon,
+      name: b.name,
+      caption: '',
+      locked: false,
+    }));
   }
 
   protected requestCode(): void {

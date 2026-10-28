@@ -4669,8 +4669,41 @@ export class FakeApi {
         schedule: coming.map((e) => ({ eventId: e.id, name: e.name, program: programs.find((x) => x.id === e.programId)!.name, startsAt: e.startsAt, endsAt: e.endsAt, place: e.place,
           status: e.status === 'Cancelled' ? 'Cancelled' : 'Scheduled', today: hamiltonDay(e.startsAt) === today })),
         consents: { participation, slips },
+        attendance: this.modules.get(org.id)!.includes('RollCall') ? this.guardianAttendance(org.id, child.id) : null,
+        learning: this.modules.get(org.id)!.includes('Learning') ? this.guardianLearning(org.id, child.id) : null,
       },
     });
+  }
+
+  /** A child's marks for the guardian page: counts and the five most recent sessions (L2-102 criterion 3). */
+  private guardianAttendance(organizationId: string, childId: string) {
+    const rows = this.events
+      .filter((e) => e.organizationId === organizationId)
+      .flatMap((e) => {
+        const r = this.attendance.get(e.id)?.get(childId);
+        if (!r || r.status === 'NotYet') return [];
+        const status = r.status === 'Absent' ? (r.excused ? 'Excused' : 'Absent') : r.late ? 'Late' : 'Present';
+        return [{ eventId: e.id, name: e.name, startsAt: e.startsAt, status }];
+      })
+      .sort((a, z) => z.startsAt.localeCompare(a.startsAt));
+    const count = (s: string) => rows.filter((r) => r.status === s).length;
+    return { present: count('Present'), late: count('Late'), excused: count('Excused'), absent: count('Absent'), recent: rows.slice(0, 5) };
+  }
+
+  /** The youth's own progress for her guardian, from the same fakes her journey reads; null without a youth account (L2-102 criterion 4). */
+  private guardianLearning(organizationId: string, childId: string) {
+    const m = memberships.find((x) => x.organizationId === organizationId && this.youthLinks.get(x.id) === childId && !this.removedMembers.has(x.id));
+    if (!m) return null;
+    const programs = this.placementsOf(m);
+    const tracks = this.learningState.tracks(m.id, programs);
+    const badges = this.journey.badgesOf(m, programs);
+    return {
+      completedLessons: tracks.reduce((n, t) => n + t.modules.reduce((k, x) => k + x.lessons.filter((l) => l.done).length, 0), 0),
+      totalLessons: tracks.reduce((n, t) => n + t.modules.reduce((k, x) => k + x.lessons.length, 0), 0),
+      modules: tracks.flatMap((t) => t.modules.map((x) => ({ title: x.module.title, track: t.track.name, done: x.lessons.filter((l) => l.done).length, total: x.lessons.length }))),
+      badges: badges.earned.map((b) => ({ name: b.name, icon: b.icon })),
+      badgeCount: badges.earned.length + badges.locked.length,
+    };
   }
 
   /** The household's unanswered no-show texts, one per session, with the children's first names. */

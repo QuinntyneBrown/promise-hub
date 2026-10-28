@@ -22,6 +22,10 @@ public sealed partial class GuardianPortalTests : IAsyncLifetime
     private static readonly Guid FieldTrip = DatabaseSeeder.EventId(DatabaseSeeder.Harbourview, "Fall field trip: Royal Botanical Gardens");
     private static readonly Guid Tom = DatabaseSeeder.MembershipId(DatabaseSeeder.Harbourview, "tom@harbourview.example");
     private static readonly Guid Marisol = DatabaseSeeder.MembershipId(DatabaseSeeder.Harbourview, "marisol@harbourview.example");
+    private static readonly Guid Jaylen = DatabaseSeeder.MembershipId(DatabaseSeeder.Harbourview, "jaylen@harbourview.example");
+    private static readonly Guid Haddad = DatabaseSeeder.HouseholdId(DatabaseSeeder.Harbourview, "Haddad");
+    private static readonly Guid Tonight = DatabaseSeeder.EventId(DatabaseSeeder.Harbourview, "Tutoring night");
+    private static readonly Guid LastNight = DatabaseSeeder.EventId(DatabaseSeeder.Harbourview, "Tutoring night", "past");
 
     private readonly PromiseHubApiFactory _factory = new();
 
@@ -107,6 +111,72 @@ public sealed partial class GuardianPortalTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Gone, (await guardian.GetAsync($"/g/home/not-a-token/children/{Sofia}")).StatusCode);
         await _factory.ClientFor(Tom).PutAsJsonAsync("/settings/modules", new { on = Array.Empty<string>() });
         Assert.Equal(HttpStatusCode.NotFound, (await guardian.GetAsync($"/g/home/{token}/children/{Sofia}")).StatusCode);
+    }
+
+    [Fact]
+    public async Task Attendance_counts_her_marks_and_lists_the_most_recent_sessions_while_Roll_Call_is_on()
+    {
+        var (guardian, token) = await Verified();
+        await Mark(LastNight, "absences", Sofia, excused: true);
+        await Mark(Tonight, "check-ins", Sofia, late: true);
+        await Mark(Tonight, "check-ins", Mateo);
+
+        var attendance = (await guardian.GetFromJsonAsync<JsonElement>($"/g/home/{token}/children/{Sofia}")).GetProperty("attendance");
+
+        Assert.Equal(0, attendance.GetProperty("present").GetInt32());
+        Assert.Equal(1, attendance.GetProperty("late").GetInt32());
+        Assert.Equal(1, attendance.GetProperty("excused").GetInt32());
+        Assert.Equal(0, attendance.GetProperty("absent").GetInt32());
+        var recent = attendance.GetProperty("recent").EnumerateArray().ToList();
+        Assert.Equal([Tonight, LastNight], recent.Select(r => r.GetProperty("eventId").GetGuid()));
+        Assert.Equal(["Late", "Excused"], recent.Select(r => r.GetProperty("status").GetString()));
+
+        await _factory.ClientFor(Tom).PutAsJsonAsync("/settings/modules", new { on = new[] { "Roster", "Slips", "Messages", "Learning" } });
+
+        Assert.Equal(JsonValueKind.Null, (await guardian.GetFromJsonAsync<JsonElement>($"/g/home/{token}/children/{Sofia}")).GetProperty("attendance").ValueKind);
+    }
+
+    [Fact]
+    public async Task Learning_shows_the_youths_own_progress_by_module_and_her_badges_and_never_her_work()
+    {
+        var content = await new LearningContent(_factory).BuildAsync();
+        Assert.Equal(HttpStatusCode.OK, (await _factory.ClientFor(LearningContent.Nadia).PostAsync($"/learning/lessons/{content.Strengths}/complete", null)).StatusCode);
+        await _factory.ClientFor(LearningContent.Nadia).PutAsJsonAsync($"/learning/lessons/{content.Strengths}/reflection", new { mood = "Unsure", text = "I am good at listening, and I want to say it out loud more often in our group.", action = (string?)null, shared = false });
+        var (guardian, token) = await Verified(Haddad, contact: "905-555-0128");
+
+        var response = await guardian.GetAsync($"/g/home/{token}/children/{LearningContent.NadiaChild}");
+        var raw = await response.Content.ReadAsStringAsync();
+        var learning = JsonDocument.Parse(raw).RootElement.GetProperty("learning");
+        var journey = await _factory.ClientFor(LearningContent.Nadia).GetFromJsonAsync<JsonElement>("/learning/journey");
+
+        Assert.Equal(1, learning.GetProperty("completedLessons").GetInt32());
+        Assert.Equal(journey.GetProperty("totalLessons").GetInt32(), learning.GetProperty("totalLessons").GetInt32());
+        var modules = learning.GetProperty("modules").EnumerateArray().ToList();
+        Assert.Equal(["Knowing Yourself", "Leading by Serving"], modules.Select(m => m.GetProperty("title").GetString()));
+        Assert.Equal(1, modules[0].GetProperty("done").GetInt32());
+        Assert.Equal(2, modules[0].GetProperty("total").GetInt32());
+        Assert.Empty(learning.GetProperty("badges").EnumerateArray());
+        Assert.DoesNotContain("Everyone is good at something", raw, StringComparison.Ordinal);
+        Assert.DoesNotContain("I am good at listening", raw, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task A_child_without_a_youth_account_or_with_Learning_off_has_no_learning()
+    {
+        var (guardian, token) = await Verified();
+
+        Assert.Equal(JsonValueKind.Null, (await guardian.GetFromJsonAsync<JsonElement>($"/g/home/{token}/children/{Mateo}")).GetProperty("learning").ValueKind);
+        Assert.Equal(JsonValueKind.Object, (await guardian.GetFromJsonAsync<JsonElement>($"/g/home/{token}/children/{Sofia}")).GetProperty("learning").ValueKind);
+
+        await _factory.ClientFor(Tom).PutAsJsonAsync("/settings/modules", new { on = new[] { "Roster", "Slips", "RollCall", "Messages" } });
+
+        Assert.Equal(JsonValueKind.Null, (await guardian.GetFromJsonAsync<JsonElement>($"/g/home/{token}/children/{Sofia}")).GetProperty("learning").ValueKind);
+    }
+
+    private async Task Mark(Guid session, string what, Guid child, bool late = false, bool excused = false)
+    {
+        var response = await _factory.ClientFor(Jaylen).PostAsJsonAsync($"/sessions/{session}/{what}", new { childId = child, arrivedAt = (string?)null, clientActionId = Guid.NewGuid(), late, excused });
+        Assert.True(response.IsSuccessStatusCode, $"{what} answered {response.StatusCode}");
     }
 
     private async Task GiveConsent(HttpClient guardian)

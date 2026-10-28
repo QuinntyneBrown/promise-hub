@@ -14,6 +14,14 @@ namespace PromiseHub.Application.Learning;
 /// </summary>
 public sealed class LearnerProgress(IPromiseHubDb db, ITenantContext tenant)
 {
+    private Guid? _membership;
+
+    /// <summary>The youth whose progress is read: the caller, unless a guardian's page reads it for the youth's membership (ADR 0067).</summary>
+    private Guid MembershipId => _membership ?? tenant.MembershipId;
+
+    /// <summary>The same reads for another youth membership of the caller's organization, as the guardian portal shows them (L2-102 criterion 4).</summary>
+    public LearnerProgress ForMembership(Guid membershipId) => new(db, tenant) { _membership = membershipId };
+
     public async Task<IReadOnlyList<TrackStatus>> TracksAsync(CancellationToken cancellationToken = default)
     {
         var followed = await FollowedAsync(cancellationToken);
@@ -52,7 +60,7 @@ public sealed class LearnerProgress(IPromiseHubDb db, ITenantContext tenant)
     private async Task<List<(Track Track, string Program)>> FollowedAsync(CancellationToken cancellationToken)
     {
         var childId = await db.Memberships.AsNoTracking()
-            .Where(m => m.Id == tenant.MembershipId && m.OrganizationId == tenant.OrganizationId)
+            .Where(m => m.Id == MembershipId && m.OrganizationId == tenant.OrganizationId)
             .Select(m => m.ChildId).FirstOrDefaultAsync(cancellationToken);
         if (childId is not { } child)
         {
@@ -76,7 +84,7 @@ public sealed class LearnerProgress(IPromiseHubDb db, ITenantContext tenant)
             .ToListAsync(cancellationToken);
         var lessonIds = lessons.Select(l => l.Id).ToList();
         var done = (await db.LessonProgress.AsNoTracking()
-            .Where(p => p.MembershipId == tenant.MembershipId && lessonIds.Contains(p.LessonId))
+            .Where(p => p.MembershipId == MembershipId && lessonIds.Contains(p.LessonId))
             .Select(p => p.LessonId).ToListAsync(cancellationToken)).ToHashSet();
         var quizzes = (await db.Quizzes.AsNoTracking()
             .Where(q => moduleIds.Contains(q.ModuleId) && q.Status == ContentStatus.Published).ToListAsync(cancellationToken))
@@ -85,7 +93,7 @@ public sealed class LearnerProgress(IPromiseHubDb db, ITenantContext tenant)
         var questionCounts = (await db.QuizQuestions.AsNoTracking().Where(q => quizIds.Contains(q.QuizId)).Select(q => q.QuizId).ToListAsync(cancellationToken))
             .GroupBy(id => id).ToDictionary(g => g.Key, g => g.Count());
         var attempts = (await db.QuizAttempts.AsNoTracking()
-            .Where(a => a.MembershipId == tenant.MembershipId && quizIds.Contains(a.QuizId))
+            .Where(a => a.MembershipId == MembershipId && quizIds.Contains(a.QuizId))
             .Select(a => new { a.QuizId, a.Status, a.Score }).ToListAsync(cancellationToken)).ToLookup(a => a.QuizId);
 
         var assignments = (await db.Assignments.AsNoTracking()
@@ -93,7 +101,7 @@ public sealed class LearnerProgress(IPromiseHubDb db, ITenantContext tenant)
             .Where(a => a.LessonId is null || lessonIds.Contains(a.LessonId.Value)).ToList();
         var assignmentIds = assignments.Select(a => a.Id).ToList();
         var submissions = (await db.AssignmentSubmissions.AsNoTracking()
-            .Where(x => x.MembershipId == tenant.MembershipId && assignmentIds.Contains(x.AssignmentId))
+            .Where(x => x.MembershipId == MembershipId && assignmentIds.Contains(x.AssignmentId))
             .Select(x => new { x.Id, x.AssignmentId, x.Status }).ToListAsync(cancellationToken)).ToDictionary(x => x.AssignmentId);
 
         int? Best(Guid quizId) => attempts[quizId].Where(a => a.Status == AttemptStatus.Scored).Max(a => a.Score);

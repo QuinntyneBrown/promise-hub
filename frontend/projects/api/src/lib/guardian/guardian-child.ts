@@ -41,4 +41,26 @@ export interface GuardianChild {
         }[]
       | null;
   };
+  /** Null while Roll Call is off. */
+  attendance: {
+    present: number;
+    late: number;
+    excused: number;
+    absent: number;
+    /** The five most recent marked sessions, newest first. */
+    recent: {
+      eventId: string;
+      name: string;
+      startsAt: string;
+      status: 'Present' | 'Late' | 'Excused' | 'Absent';
+    }[];
+  } | null;
+  /** Null while Learning is off or when the child has no youth account. Never lesson content, answers or reflections. */
+  learning: {
+    completedLessons: number;
+    totalLessons: number;
+    modules: { title: string; track: string; done: number; total: number }[];
+    badges: { name: string; icon: string }[];
+    badgeCount: number;
+  } | null;
 }

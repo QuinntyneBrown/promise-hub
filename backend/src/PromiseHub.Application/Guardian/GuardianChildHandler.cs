@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using PromiseHub.Application.Events;
+using PromiseHub.Application.Learning;
 using PromiseHub.Application.Organizations;
+using PromiseHub.Domain.Attendance;
 using PromiseHub.Domain.Events;
 using PromiseHub.Domain.Organizations;
 using PromiseHub.Domain.Slips;
@@ -11,7 +13,8 @@ namespace PromiseHub.Application.Guardian;
 /// A child's page on the guardian portal (L2-102, L2-104, ADR 0067): the household and the tenant come from the link; the child id only selects
 /// among that household's children. Read only: the schedule of the next 28 days and the consents on record.
 /// </summary>
-public sealed class GuardianChildHandler(IPromiseHubDb db, GuardianAccess access, IModuleGate modules, ConsentGate consent, TimeProvider clock)
+public sealed class GuardianChildHandler(IPromiseHubDb db, GuardianAccess access, IModuleGate modules, ConsentGate consent, LearnerProgress progress, LearnerBadges badges,
+    TimeProvider clock)
 {
     public static readonly TimeSpan Window = TimeSpan.FromDays(28);
 
@@ -49,7 +52,31 @@ public sealed class GuardianChildHandler(IPromiseHubDb db, GuardianAccess access
         var consents = new GuardianConsentsDto(await ParticipationAsync(child.Id, cancellationToken),
             await modules.IsOnAsync(ModuleId.Slips, cancellationToken) ? await SlipsAsync(child.Id, programIds, now, cancellationToken) : null);
         return GuardianResult.Of(GuardianOutcome.Ok, new GuardianChildDto(GuardianLanguage.Code(scope.Household.Language), scope.Organization.Name, scope.Organization.Phone,
-            child.FullName, child.FirstName, [.. programs.Values.Order(StringComparer.Ordinal)], schedule, consents));
+            child.FullName, child.FirstName, [.. programs.Values.Order(StringComparer.Ordinal)], schedule, consents,
+            await modules.IsOnAsync(ModuleId.RollCall, cancellationToken) ? await AttendanceAsync(child.Id, cancellationToken) : null,
+            await modules.IsOnAsync(ModuleId.Learning, cancellationToken) && await YouthAsync(child.Id, cancellationToken) is { } youth ? await LearningAsync(youth, cancellationToken) : null));
+    }
+
+    private async Task<GuardianAttendanceDto> AttendanceAsync(Guid childId, CancellationToken cancellationToken)
+    {
+        var rows = (await (from r in db.AttendanceRecords.AsNoTracking()
+                           join e in db.Events.AsNoTracking() on r.EventId equals e.Id
+                           where r.ChildId == childId && r.Status != AttendanceStatus.NotYet
+                           select new { e.Id, e.Name, e.StartsAt, r.Status, r.Late, r.Excused }).ToListAsync(cancellationToken))
+            .Select(r => new GuardianAttendanceRowDto(r.Id, r.Name, r.StartsAt, r.Status == AttendanceStatus.Absent ? (r.Excused ? "Excused" : "Absent") : (r.Late ? "Late" : "Present")))
+            .OrderByDescending(r => r.StartsAt)
+            .ToList();
+        return new GuardianAttendanceDto(rows.Count(r => r.Status == "Present"), rows.Count(r => r.Status == "Late"), rows.Count(r => r.Status == "Excused"),
+            rows.Count(r => r.Status == "Absent"), [.. rows.Take(5)]);
+    }
+
+    private async Task<GuardianLearningDto> LearningAsync(Guid youth, CancellationToken cancellationToken)
+    {
+        var tracks = await progress.ForMembership(youth).TracksAsync(cancellationToken);
+        var earned = await badges.ForMembership(youth).ReadAsync(tracks, cancellationToken);
+        return new GuardianLearningDto(tracks.Sum(t => t.Done), tracks.Sum(t => t.Total),
+            [.. tracks.SelectMany(t => t.Modules.Select(m => new GuardianModuleDto(m.Module.Title, t.Track.Name, m.Done, m.Lessons.Count)))],
+            [.. earned.Earned.Select(b => new GuardianBadgeDto(b.Name, b.Icon))], earned.Earned.Count + earned.Locked.Count);
     }
 
     /// <summary>The child's youth account, active, if one links the child.</summary>

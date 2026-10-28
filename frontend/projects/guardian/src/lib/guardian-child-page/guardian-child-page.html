@@ -145,6 +145,86 @@
             <p>{{ p().nothingToSign }}</p>
           </ph-card>
         }
+        @if (child.attendance; as a) {
+          <section class="stack" aria-labelledby="attendance-heading">
+            <h2 id="attendance-heading">{{ p().attendance }}</h2>
+            @let marked = a.present + a.late + a.excused + a.absent;
+            @if (marked) {
+              <div class="kpis">
+                <ph-stat
+                  [label]="p().attendance"
+                  [value]="percent(a.present + a.late, marked)"
+                  [caption]="p().attendanceCaption(a.present + a.late, marked)"
+                />
+              </div>
+              <ph-card [flush]="true">
+                <ph-list [label]="p().attendance">
+                  @for (row of a.recent; track row.eventId) {
+                    <ph-list-item [title]="row.name" [meta]="day(row.startsAt)">
+                      <ph-badge [tone]="markTone(row.status)">{{ p().marks[row.status] }}</ph-badge>
+                    </ph-list-item>
+                  }
+                </ph-list>
+              </ph-card>
+            } @else {
+              <ph-card>
+                <p>{{ p().noSessions }}</p>
+              </ph-card>
+            }
+          </section>
+        }
+        @if (child.learning; as l) {
+          <section class="stack" aria-labelledby="learning-heading">
+            <h2 id="learning-heading">Learning</h2>
+            @if (l.completedLessons || l.badges.length) {
+              <div class="kpis">
+                <ph-stat
+                  [label]="p().overall"
+                  [value]="percent(l.completedLessons, l.totalLessons)"
+                  [caption]="p().overallCaption(l.completedLessons, l.totalLessons)"
+                />
+                <ph-stat
+                  [label]="p().badges"
+                  [value]="'' + l.badges.length"
+                  [caption]="p().badgesCaption(l.badgeCount)"
+                />
+              </div>
+            } @else {
+              <ph-card>
+                <p>{{ p().noLessons(child.firstName) }}</p>
+              </ph-card>
+            }
+            @if (l.modules.length) {
+              <ph-card [title]="p().modules" [flush]="true">
+                <ph-list [label]="p().modules">
+                  @for (m of l.modules; track m.track + m.title) {
+                    <ph-list-item [title]="m.title">
+                      <ph-progress-bar
+                        phListActions
+                        [value]="m.done"
+                        [max]="m.total"
+                        [label]="p().moduleLabel(m.title, m.done, m.total)"
+                        [caption]="p().ofLessons(m.done, m.total)"
+                      />
+                      <ph-badge [tone]="moduleTone(m.done, m.total)">{{
+                        moduleState(m.done, m.total)
+                      }}</ph-badge>
+                    </ph-list-item>
+                  }
+                </ph-list>
+              </ph-card>
+            }
+            @if (l.badges.length) {
+              <ph-card [title]="p().earned(child.firstName)">
+                <ph-achievement-badges
+                  [label]="p().earned(child.firstName)"
+                  [badges]="earnedBadges(l.badges)"
+                />
+              </ph-card>
+            }
+            <p class="text-muted">{{ p().private(child.firstName) }}</p>
+          </section>
+        }
       }
     }
   }
