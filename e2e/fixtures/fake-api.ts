@@ -14,6 +14,15 @@ import { type FakeEvent, type FakeProgram, NOW, seedEvents, seedPrograms, weekly
 import { type Membership, type ModuleId, moduleCatalog, memberships, organizations, seededMfaCode, seededPassword } from './seed';
 
 /** Mirrors backend RolePermissions. */
+/** A youth's answer for a session (L2-094). */
+interface FakeRsvp {
+  eventId: string;
+  childId: string;
+  response: 'Going' | 'Maybe' | 'CantMake';
+  note: string | null;
+  answeredAt: string;
+}
+
 const can = {
   writeHouseholds: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
   deleteHouseholds: (m: Membership) => m.role === 'Admin',
@@ -34,6 +43,7 @@ const can = {
   readSmallCounts: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
   useStaffApp: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker', 'VolunteerCoordinator'].includes(m.role),
   learn: (m: Membership) => m.role === 'Youth',
+  respondToSessions: (m: Membership) => m.role === 'Youth',
   mentorYouth: (m: Membership) => m.role === 'Mentor',
   reviewAtRiskFlags: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
   authorCurriculum: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
@@ -43,7 +53,7 @@ const can = {
  * What a participant role (Youth, Mentor, Volunteer) may call: mirrors the API's fallback policy, which closes every staff
  * endpoint to them unless it opts in (ADR 0043). Volunteers also open their assigned sessions.
  */
-const PARTICIPANT_PATHS = [/^\/api\/me(\/|$)/, /^\/api\/notifications(\/|$)/, /^\/api\/auth\//, /^\/api\/learning\//, /^\/api\/mentoring\//, /^\/api\/curriculum(\/|$)/];
+const PARTICIPANT_PATHS = [/^\/api\/me(\/|$)/, /^\/api\/notifications(\/|$)/, /^\/api\/auth\//, /^\/api\/learning\//, /^\/api\/mentoring\//, /^\/api\/curriculum(\/|$)/, /^\/api\/schedule(\/|$)/];
 const VOLUNTEER_PATHS = [/^\/api\/sessions\/today$/, /^\/api\/sessions\/[^/]+\/roster$/];
 
 type ImportField = 'ChildName' | 'DateOfBirth' | 'School' | 'GuardianName' | 'GuardianPhone' | 'GuardianEmail' | 'Allergies' | 'Language' | 'Notes' | 'Skip';
@@ -221,6 +231,8 @@ export class FakeApi {
   private households: FakeHousehold[] = seedHouseholds();
   private programs: FakeProgram[] = seedPrograms();
   private events: FakeEvent[] = seedEvents();
+  /** Youth's RSVPs (L2-094): one per event and child. */
+  private readonly rsvps: FakeRsvp[] = [];
   /** Attendance by session, then by child or walk-in id. */
   private attendance = new Map<string, Map<string, FakeAttendance>>();
   private walkIns: FakeWalkIn[] = [];
@@ -602,6 +614,24 @@ export class FakeApi {
     this.modules.set(organizationId, on);
   }
 
+  /** A weekly series of sessions for a program, from the first start through the program's last day, as Repeat weekly would make. */
+  addWeeklySessions(programId: string, name: string, first: string, place: string): void {
+    const program = this.programs.find((p) => p.id === programId)!;
+    const seriesId = `series-${this.nextId++}`;
+    for (const startsAt of weeklyStarts(first, program.endsOn).slice(0, 60)) {
+      this.events.push({
+        id: `e-weekly-${this.nextId++}`, organizationId: program.organizationId, programId, name, startsAt,
+        endsAt: new Date(new Date(startsAt).getTime() + 2 * 3_600_000).toISOString(), place, requiresSlip: false, noShowAlert: true, staffNotes: null,
+        status: 'Scheduled', slipStatus: 'NotNeeded', cancelledAt: null, cancelledBy: null, cancellationMessage: null, guardiansTold: false, seriesId,
+      });
+    }
+  }
+
+  /** A youth's answer saved earlier, as if she had sent it. */
+  seedRsvp(row: Omit<FakeRsvp, 'answeredAt'> & { answeredAt?: string }): void {
+    this.rsvps.push({ answeredAt: NOW.toISOString(), ...row });
+  }
+
   /** Cancels a session, as a director cancelling it without telling guardians would. */
   cancelSession(eventId: string): void {
     Object.assign(this.events.find((e) => e.id === eventId)!, { status: 'Cancelled', cancelledAt: NOW.toISOString(), cancelledBy: 'Marisol Delgado' });
@@ -792,6 +822,8 @@ export class FakeApi {
     ['DELETE', /^\/api\/programs\/(?<id>[^/]+)\/enrollments\/(?<child>[^/]+)$/, (route, p) => this.unenroll(route, p['id']!, p['child']!)],
     ['GET', /^\/api\/events$/, (route) => this.listEvents(route)],
     ['GET', /^\/api\/events\/calendar$/, (route) => this.eventCalendar(route)],
+    ['GET', /^\/api\/schedule$/, (route) => this.youthSchedule(route)],
+    ['PUT', /^\/api\/schedule\/(?<id>[^/]+)\/rsvp$/, (route, p) => this.rsvp(route, p['id']!)],
     ['POST', /^\/api\/events$/, (route) => this.saveEvent(route, null)],
     ['GET', /^\/api\/events\/(?<id>[^/]+)$/, (route, p) => this.getEvent(route, p['id']!)],
     ['PUT', /^\/api\/events\/(?<id>[^/]+)$/, (route, p) => this.saveEvent(route, p['id']!)],
@@ -2715,6 +2747,64 @@ export class FakeApi {
         return { id: e.id, name: e.name, programId: s.programId, programName: s.programName, day, startsAt: e.startsAt, endsAt: e.endsAt, place: e.place, status: e.status };
       });
     return route.fulfill({ json: { month, today, events } });
+  }
+
+  /** The caller for the youth's schedule (L2-094): Roster on, a youth, and guardian consent in force when she needs it (L2-056). */
+  private async scheduleCaller(route: Route): Promise<Membership | null> {
+    const m = await this.participantModuleCaller(route, 'Roster', can.respondToSessions);
+    if (!m) return null;
+    const childId = this.youthLinks.get(m.id);
+    if (childId && this.consentRequired(m.organizationId, childId) && this.consentStatusName(childId) !== 'Given') {
+      await route.fulfill({ status: 403, json: { code: 'consent-required', consentAge: this.consentPolicyOf(m.organizationId).consentAge } });
+      return null;
+    }
+    return m;
+  }
+
+  /** GET /schedule: her sessions in the next 28 days that have not started, with her answers. Mirrors YouthScheduleHandler. */
+  private async youthSchedule(route: Route): Promise<void> {
+    const m = await this.scheduleCaller(route);
+    if (!m) return;
+    const childId = this.youthLinks.get(m.id);
+    const programs = this.placementsOf(m);
+    const now = NOW.toISOString();
+    const until = new Date(NOW.getTime() + 28 * 86_400_000).toISOString();
+    const sessions = this.events
+      .filter((e) => programs.some((p) => p.id === e.programId) && e.startsAt > now && e.startsAt <= until)
+      .sort((a, b) => a.startsAt.localeCompare(b.startsAt) || a.name.localeCompare(b.name))
+      .map((e) => {
+        const answer = this.rsvps.find((r) => r.eventId === e.id && r.childId === childId);
+        return {
+          eventId: e.id, name: e.name, programName: programs.find((p) => p.id === e.programId)!.name, day: hamiltonDay(e.startsAt),
+          startsAt: e.startsAt, endsAt: e.endsAt, place: e.place, status: e.status, response: answer?.response ?? null, note: answer?.note ?? null,
+        };
+      });
+    return route.fulfill({ json: { sessions } });
+  }
+
+  /** PUT /schedule/{eventId}/rsvp. Mirrors RsvpHandler. */
+  private async rsvp(route: Route, eventId: string): Promise<void> {
+    const m = await this.scheduleCaller(route);
+    if (!m) return;
+    const e = this.ownEvent(m, eventId);
+    if (!e) return route.fulfill({ status: 404 });
+    const childId = this.youthLinks.get(m.id);
+    if (!childId || !this.placementsOf(m).some((p) => p.id === e.programId)) {
+      this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'AccessDenied', record: 'Event', summary: `${m.personName} tried to RSVP to ${e.name}`, device: null });
+      return this.forbidden(route);
+    }
+    if (e.status !== 'Scheduled' || e.startsAt <= NOW.toISOString()) return route.fulfill({ status: 409, json: { code: 'rsvp-closed' } });
+    const b = route.request().postDataJSON() as { response?: string | null; note?: string | null };
+    const errors: Record<string, string> = {};
+    if (!['Going', 'Maybe', 'CantMake'].includes(b.response ?? '')) errors['response'] = 'Choose whether you’re going.';
+    const note = b.note?.trim() || null;
+    if (note && note.length > 500) errors['note'] = 'Keep it to 500 characters.';
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    const response = b.response as FakeRsvp['response'];
+    const existing = this.rsvps.find((r) => r.eventId === e.id && r.childId === childId);
+    if (existing) Object.assign(existing, { response, note, answeredAt: NOW.toISOString() });
+    else this.rsvps.push({ eventId: e.id, childId, response, note, answeredAt: NOW.toISOString() });
+    return route.fulfill({ json: { response, note } });
   }
 
   private async getEvent(route: Route, id: string): Promise<void> {

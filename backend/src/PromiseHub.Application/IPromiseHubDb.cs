@@ -26,6 +26,7 @@ public interface IPromiseHubDb
     DbSet<Domain.Programs.Program> Programs { get; }
     DbSet<Domain.Programs.Enrollment> Enrollments { get; }
     DbSet<Event> Events { get; }
+    DbSet<Domain.Events.EventRsvp> EventRsvps { get; }
     DbSet<PermissionSlip> PermissionSlips { get; }
     DbSet<AttendanceRecord> AttendanceRecords { get; }
     DbSet<AttendanceEvent> AttendanceEvents { get; }

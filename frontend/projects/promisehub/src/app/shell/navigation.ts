@@ -35,6 +35,15 @@ export const NAVIGATION: Section[] = [
     roles: ['Youth'],
   },
   {
+    label: 'Schedule',
+    link: '/schedule',
+    icon: 'events',
+    placement: 'primary',
+    tab: true,
+    module: 'Roster',
+    roles: ['Youth'],
+  },
+  {
     label: 'Mentoring',
     link: '/mentoring',
     icon: 'mentoring',

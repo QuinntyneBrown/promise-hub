@@ -1,1 +1,1 @@
-export { routes } from './lib/events.routes';
+export { routes, scheduleRoutes } from './lib/events.routes';

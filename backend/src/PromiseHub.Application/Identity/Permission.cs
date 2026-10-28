@@ -34,4 +34,7 @@ public enum Permission
 
     /// <summary>Reads and resolves every at-risk flag of the organization and is notified of new ones (L2-091, ADR 0062).</summary>
     ReviewAtRiskFlags,
+
+    /// <summary>Reads her own schedule and RSVPs to its sessions (L2-094, ADR 0064).</summary>
+    RespondToSessions,
 }

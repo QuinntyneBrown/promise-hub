@@ -38,6 +38,8 @@ public static class DependencyInjection
         services.AddScoped<GetEventHandler>();
         services.AddScoped<CreateEventHandler>();
         services.AddScoped<EventCalendarHandler>();
+        services.AddScoped<YouthScheduleHandler>();
+        services.AddScoped<RsvpHandler>();
         services.AddScoped<UpdateEventHandler>();
         services.AddScoped<CancelEventHandler>();
         services.AddScoped<SessionReader>();
