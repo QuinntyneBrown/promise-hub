@@ -127,7 +127,7 @@ LEO_HISTORY = [("Deactivated", "Tom Nguyen · Today, 4:20 pm"), ("Joined as Volu
 
 
 def youth_cards(*, learning: bool = True, mentoring: bool = True) -> str:
-    out = card(facts([("Child record", f'<a href="{page("child")}">Sofía Rivera</a> · 12 · Rivera household'), ("Programs", "After‑School Tutoring"), ("Guardian consent", "In force · Carmen Rivera")]),
+    out = card(facts([("Child record", f'<a href="{page("child")}">Sofía Rivera</a> · 12 · Rivera household'), ("Programs", "After‑School Tutoring")]),
                title="Youth record", tid="youth")
     if mentoring:
         out += card(facts([("Mentor", "Daniel Osei")]), title="Mentoring", tid="mentoring")
@@ -147,7 +147,7 @@ def leo(*, status_: str = "Active", hist=LEO_HISTORY[1:]) -> str:
     extra = [("Deactivated", "Today, 4:20 pm by Tom Nguyen")] if deact else []
     return (record_hdr(STAFF["leo"], "Volunteer", status_, actions=acts("Leo", deactivated=deact))
             + f'<div class="split"><div class="stack">{account("leo@harbourview.example", "Volunteer", status_, "Yesterday", extra)}'
-            + card(facts([("Sessions", "Tutoring night, Saturday Sports")]), title="Assigned sessions", tid="sessions") + "</div>"
+            + "</div>"
             + f'<div class="stack">{history(hist)}</div></div>')
 
 
@@ -156,7 +156,7 @@ def person(S):
     S.add("default", "Sofía Rivera’s record: her account, the child record her youth account follows, her program, her mentor, her Learning progress and the account’s history. Her role is fixed, so only Deactivate is offered.", **KW,
           main=sofia(),
           notes=note("GET /people/{id} answers only a Harbourview account. The Mentoring card and the Learning card are sent only while their module is on.", "top: 5rem; right: 1rem;"))
-    S.add("staff", "Leo Martins (Volunteer): Change role and Deactivate, his assigned sessions and history.", **KW, main=leo())
+    S.add("staff", "Leo Martins (Volunteer): Change role and Deactivate, his account and its history.", **KW, main=leo())
     S.add("mentoring-off", "Mentoring is off: no Mentoring card (the API sends no mentor).", **KW, main=sofia(mentoring=False))
     S.add("learning-off", "Learning is off: no Learning card (the API sends no learning fields).", **KW, main=sofia(learning=False))
     S.add("deactivated", "Tom deactivated Leo: he is signed out everywhere and can’t sign in; his records stay; Reactivate turns him back on.", **KW,

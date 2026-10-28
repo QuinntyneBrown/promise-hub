@@ -1,0 +1,14 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — View a person record
+Person(admin, "Admin")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular", "administration library")
+  Container(api, "PromiseHub API", "ASP.NET Core", "people endpoints")
+  ContainerDb(db, "PromiseHub database", "EF Core", "Memberships, AuditEntries")
+}
+Rel(admin, web, "uses")
+Rel(web, api, "JSON over HTTPS")
+Rel(api, db, "reads and writes")
+@enduml

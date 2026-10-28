@@ -1,0 +1,28 @@
+@startuml
+title UML sequence behaviour — Tom opens Sofía's record
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Admin (Tom)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "PersonPage" as page
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "PeopleHandler" as h
+  participant "IModuleGate" as gate
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : opens /people/{id}
+page -> h : GET /people/{id}
+h -> db : membership in Harbourview, not removed? else 404 (L2-114 c3)
+h -> db : child, household, programs, audit entries (L2-113 c1)
+h -> gate : Mentoring on?
+h -> db : her mentor (only while on)
+h -> gate : Learning on?
+h -> db : lessons done, badges (only while on, youth)
+h --> page : record; absent fields are not shown (L2-113 c1)
+@enduml

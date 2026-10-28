@@ -26,6 +26,9 @@ One folder per subsystem, one folder per vertically sliced feature, each with a 
 | staff | invite-and-onboard-staff | L2-009 |
 | staff | issue-invitations | L2-051 |
 | staff | manage-pending-invitations | L2-052, L2-054 |
+| staff | search-people | L2-112, L2-114 |
+| staff | view-person-record | L2-113, L2-114 |
+| staff | manage-account-lifecycle | L2-113, L2-114 |
 | households | maintain-household | L2-011 |
 | enrollment | enroll-guardian | L2-013 |
 | imports | import-roster | L2-010 |

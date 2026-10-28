@@ -1,0 +1,32 @@
+@startuml
+title UML sequence behaviour — Tom filters to mentors
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Admin (Tom)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "PeoplePage" as page
+  participant "PeopleApi" as papi
+end box
+box "Backend — PromiseHub.Api / Application" #ECFDF3
+  participant "PeopleEndpoints" as ep
+  participant "PeopleHandler" as h
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : opens /people
+page -> papi : list({ page: 1 })
+papi -> ep : GET /people
+ep -> ep : ManageStaff? else 403 (L2-114 c2)
+ep -> h : ListAsync
+h -> db : Harbourview memberships not removed, by name, 25 (L2-112 c1)
+h --> page : rows, total, roles, programs; mentoring only while Mentoring is on (L2-112 c4)
+actor -> page : Role = Mentor
+page -> papi : list({ role: Mentor, page: 1 })
+papi -> ep : GET /people?role=Mentor
+h -> db : filtered on the server (L2-112 c2)
+h --> page : Daniel Osei, Hana Kim; Showing 1–2 of 2
+@enduml

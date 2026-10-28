@@ -1,0 +1,41 @@
+@startuml
+title Class structure — View a person record
+class PersonRecordDto {
+  Id : Guid
+  Name : string
+  Email : string
+  Role : string
+  Status : string
+  DeactivatedAt : DateTimeOffset?
+  DeactivatedBy : string?
+  LastSignedInAt : DateTimeOffset?
+  IsYou : bool
+  Programs : string[]
+}
+class PersonChildDto {
+  Id : Guid
+  Name : string
+  Age : int
+  Household : string
+  Deleted : bool
+}
+class PersonMentoringDto {
+  Mentor : string?
+  Youth : string[]
+}
+class PersonLearningDto {
+  LessonsDone : int
+  LessonsTotal : int
+  Badges : string[]
+}
+class PersonHistoryDto {
+  At : DateTimeOffset
+  Action : string
+  Summary : string
+  By : string
+}
+PersonRecordDto o-- "0..1" PersonChildDto : Child
+PersonRecordDto o-- "0..1" PersonMentoringDto : Mentoring (Mentoring on)
+PersonRecordDto o-- "0..1" PersonLearningDto : Learning (Learning on, youth)
+PersonRecordDto *-- "0..10" PersonHistoryDto : History
+@enduml
