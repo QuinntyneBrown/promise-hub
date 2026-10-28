@@ -27,7 +27,28 @@ public sealed class Membership : ITenantOwned
     /// <summary>The child record a Youth membership links to (L2-045); null for every other role and until an admin links one.</summary>
     public Guid? ChildId { get; private set; }
 
+    /// <summary>Set while an admin has turned this account off (ADR 0070); reversible, unlike <see cref="RemovedAt"/>.</summary>
+    public DateTimeOffset? DeactivatedAt { get; private set; }
+
+    /// <summary>Who turned it off, or why when no one did ("with her child record").</summary>
+    public string? DeactivatedBy { get; private set; }
+
+    /// <summary>Not removed and not deactivated: the membership can start or continue a session.</summary>
+    public bool IsActive => RemovedAt is null && DeactivatedAt is null;
+
     public void SetMobile(string mobile) => Mobile = mobile;
+
+    public void Deactivate(DateTimeOffset now, string by)
+    {
+        DeactivatedAt = now;
+        DeactivatedBy = by;
+    }
+
+    public void Reactivate()
+    {
+        DeactivatedAt = null;
+        DeactivatedBy = null;
+    }
 
     public void LinkChild(Guid childId) => ChildId = childId;
 

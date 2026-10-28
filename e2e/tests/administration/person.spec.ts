@@ -1,5 +1,6 @@
 import { test, expect } from '../../fixtures/test';
 import { PeoplePage } from '../../pages/people.page';
+import { AccountDeactivatedPage } from '../../pages/account-deactivated.page';
 import { PersonPage } from '../../pages/person.page';
 
 // Acceptance Test
@@ -25,6 +26,7 @@ test.describe('A person record for an admin', () => {
     await expect(person.fact('mentor')).toContainText('Daniel Osei');
     await expect(person.card('Learning')).toContainText('lessons');
     await expect(person.action('Change role')).toHaveCount(0);
+    await expect(person.action('Deactivate')).toBeVisible();
     await person.expectAccessible();
     await person.expectNoHorizontalScroll();
 
@@ -69,6 +71,63 @@ test.describe('A person record for an admin', () => {
     await expect(person.roleOption('Site lead')).toBeChecked();
   });
 
+  test('Given Leo leaves, when Tom deactivates him and later reactivates him, then the record, the directory and the history follow', async ({ page }) => {
+    const person = new PersonPage(page);
+    const people = new PeoplePage(page);
+    await person.open('m-leo');
+    await person.deactivate();
+    await expect(person.dialog).toContainText('They’re signed out everywhere and can’t sign in.');
+    await expect(person.dialog.getByRole('button', { name: 'Cancel' })).toBeFocused();
+    await person.expectAccessible();
+    await person.confirmDeactivate();
+
+    await expect(person.toast).toContainText('Leo Martins deactivated');
+    await expect(person.fact('status')).toContainText('Deactivated');
+    await expect(person.fact('deactivated')).toContainText('by Tom Nguyen');
+    await expect(person.action('Deactivate')).toHaveCount(0);
+    await person.expectAccessible();
+
+    await person.backToPeople();
+    await people.filterStatus('Deactivated');
+    await expect.poll(() => people.names()).toEqual(['Leo Martins']);
+    await people.openPerson('Leo Martins');
+
+    await person.reactivate();
+    await expect(person.toast.filter({ hasText: 'Leo Martins reactivated' })).toBeVisible();
+    await expect(person.fact('status')).toContainText('Active');
+    await expect(person.history).toContainText('reactivated by Tom Nguyen');
+  });
+
+  test('Given Sofía, when Tom opens Deactivate, then the dialog says her child record and progress stay; and when it fails, nothing changes', async ({
+    page,
+    api,
+  }) => {
+    const person = new PersonPage(page);
+    await person.open('m-sofia');
+    await person.deactivate();
+    await expect(person.dialog).toContainText('Their child record, Learning progress and consents stay');
+
+    api.failNext('/api/people/m-sofia/deactivate', 500);
+    await person.confirmDeactivate();
+    await expect(person.dialog).toContainText('Sofía’s account is still on. Try again.');
+    await person.expectAccessible();
+  });
+
+  test('Given Nadia’s household was deleted, when Tom opens her record, then it says why her account stays off and Reactivate is disabled', async ({
+    page,
+    api,
+  }) => {
+    api.deleteChildRecordOf('m-nadia');
+    const person = new PersonPage(page);
+    await person.open('m-nadia');
+
+    await expect(person.main).toContainText('The child record was deleted');
+    await expect(person.fact('status')).toContainText('Deactivated');
+    await expect(person.action('Reactivate')).toBeDisabled();
+    await expect(page.getByRole('link', { name: 'Open child record' })).toHaveCount(0);
+    await person.expectAccessible();
+  });
+
   test('Given Mentoring and Learning are off, when Tom opens Sofía, then neither card shows', async ({ page, api }) => {
     api.setModules('org-harbourview', ['Roster', 'Slips', 'RollCall', 'QuickCards', 'Pickup', 'Messages', 'Incidents', 'Reports']);
     const person = new PersonPage(page);
@@ -108,5 +167,16 @@ test.describe('A person record for anyone else', () => {
 
     await expect(person.heading).toHaveText('Only admins manage people');
     await person.expectAccessible();
+  });
+});
+
+test.describe('A deactivated account', () => {
+  test.use({ signedInAs: 'm-leo' });
+
+  test('Given Tom deactivated Leo, when Leo uses the app again, then he is told the account is inactive', async ({ page, api }) => {
+    api.deactivatePerson('m-leo');
+    await page.goto('/');
+
+    await new AccountDeactivatedPage(page).expectShown();
   });
 });

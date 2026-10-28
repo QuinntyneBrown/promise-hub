@@ -21,6 +21,7 @@ import {
   formatDateTime,
 } from '@promisehub/components';
 import { ChangeRoleDialog } from '../change-role-dialog/change-role-dialog';
+import { DeactivatePersonDialog } from '../deactivate-person-dialog/deactivate-person-dialog';
 
 /**
  * A person's record (mock: person): the account, a youth's child record and programs, her mentor while Mentoring is on, her
@@ -58,6 +59,8 @@ export class PersonPage {
     return r?.status === 'loaded' ? r.value : null;
   });
   protected readonly roleLabel = ROLE_LABELS;
+  protected readonly busy = signal(false);
+  protected readonly failed = signal<string | null>(null);
   protected readonly crumbs = computed<BreadcrumbItem[]>(() => [
     { label: 'People', link: '/people' },
     { label: this.person()?.name ?? 'Person' },
@@ -133,6 +136,34 @@ export class PersonPage {
       .closed.subscribe((done) =>
         this.done(done, `${p.name}’s role changed`, 'It applies on their next action.'),
       );
+  }
+
+  protected deactivate(p: PersonRecord): void {
+    this.dialogs
+      .open<boolean, { id: string; name: string; youth: boolean }, DeactivatePersonDialog>(
+        DeactivatePersonDialog,
+        { id: p.id, name: p.name, youth: p.role === 'Youth' },
+      )
+      .closed.subscribe((done) =>
+        this.done(
+          done,
+          `${p.name} deactivated`,
+          'Signed out and can’t sign in. Nothing was deleted.',
+        ),
+      );
+  }
+
+  protected reactivate(p: PersonRecord): void {
+    this.busy.set(true);
+    this.failed.set(null);
+    this.api.reactivate(p.id).subscribe((outcome) => {
+      this.busy.set(false);
+      if (outcome.status === 'saved')
+        this.done(true, `${p.name} reactivated`, 'They can sign in again.');
+      else if (outcome.status === 'invalid')
+        this.failed.set(Object.values(outcome.errors)[0] ?? 'Nothing changed.');
+      else this.failed.set(`${p.name}’s account is still off. Try again.`);
+    });
   }
 
   private done(done: boolean | undefined, title: string, text: string): void {

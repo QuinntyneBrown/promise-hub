@@ -116,6 +116,9 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(m => m.Role).HasConversion<string>().HasMaxLength(40);
             e.Property(m => m.Mobile).HasMaxLength(30);
             e.Property(m => m.RemovedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.Property(m => m.DeactivatedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.Property(m => m.DeactivatedBy).HasMaxLength(200);
+            e.Ignore(m => m.IsActive);
         });
         modelBuilder.Entity<Domain.Notifications.NotificationSettings>(e => e.HasIndex(s => s.OrganizationId).IsUnique());
         modelBuilder.Entity<PrivacySettings>(e => e.HasIndex(s => s.OrganizationId).IsUnique());

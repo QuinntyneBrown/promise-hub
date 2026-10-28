@@ -17,6 +17,10 @@ public static class PeopleEndpoints
         });
         people.MapGet("/{id:guid}", async (Guid id, PeopleHandler handler, CancellationToken ct) =>
             await handler.GetAsync(id, ct) is { } person ? Results.Ok(person) : Results.NotFound());
+        people.MapPost("/{id:guid}/deactivate", async (Guid id, AccountLifecycleHandler handler, CancellationToken ct) =>
+            (await handler.DeactivateAsync(id, ct)).ToHttp());
+        people.MapPost("/{id:guid}/reactivate", async (Guid id, AccountLifecycleHandler handler, CancellationToken ct) =>
+            (await handler.ReactivateAsync(id, ct)).ToHttp());
         return app;
     }
 }

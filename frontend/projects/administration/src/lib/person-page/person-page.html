@@ -18,11 +18,40 @@
       @if (!p.isYou && p.role !== 'Youth') {
         <ph-button icon="account" hasPopup="dialog" (click)="changeRole(p)">Change role</ph-button>
       }
+      @if (!p.isYou) {
+        @if (p.status === 'Deactivated') {
+          <ph-button
+            variant="primary"
+            icon="refresh"
+            [disabled]="!!p.child?.deleted"
+            [busy]="busy()"
+            (click)="reactivate(p)"
+            >Reactivate</ph-button
+          >
+        } @else {
+          <ph-button variant="danger" icon="lock" hasPopup="dialog" (click)="deactivate(p)"
+            >Deactivate</ph-button
+          >
+        }
+      }
     </ph-page-header>
     <div class="badges">
       <ph-badge [tone]="p.role === 'Admin' ? 'success' : 'info'">{{ roleLabel[p.role] }}</ph-badge>
       <ph-badge [tone]="p.status === 'Active' ? 'success' : 'neutral'">{{ p.status }}</ph-badge>
     </div>
+    @if (p.child?.deleted) {
+      <ph-alert
+        title="The child record was deleted"
+        [text]="
+          'A youth account follows its child record, so ' +
+          p.name.split(' ')[0] +
+          '’s stays off. Nothing else was removed.'
+        "
+      />
+    }
+    @if (failed(); as text) {
+      <ph-alert tone="danger" title="That didn’t go through" [text]="text" />
+    }
     @if (p.isYou) {
       <ph-alert
         title="This is you"

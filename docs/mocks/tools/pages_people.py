@@ -160,12 +160,12 @@ def person(S):
     S.add("mentoring-off", "Mentoring is off: no Mentoring card (the API sends no mentor).", **KW, main=sofia(mentoring=False))
     S.add("learning-off", "Learning is off: no Learning card (the API sends no learning fields).", **KW, main=sofia(learning=False))
     S.add("deactivated", "Tom deactivated Leo: he is signed out everywhere and can’t sign in; his records stay; Reactivate turns him back on.", **KW,
-          main=leo(status_="Deactivated", hist=LEO_HISTORY), toast_html=toast_region(toast("success", "Leo Martins deactivated", "He’s signed out and can’t sign in. Nothing was deleted.")))
+          main=leo(status_="Deactivated", hist=LEO_HISTORY), toast_html=toast_region(toast("success", "Leo Martins deactivated", "Signed out and can’t sign in. Nothing was deleted.")))
     S.add("success", "Reactivated: Leo can sign in again with his old role; the history says who did it.", **KW,
-          main=leo(hist=[("Reactivated", "Tom Nguyen · Today, 4:25 pm")] + LEO_HISTORY), toast_html=toast_region(toast("success", "Leo Martins reactivated", "He can sign in again.")))
+          main=leo(hist=[("Reactivated", "Tom Nguyen · Today, 4:25 pm")] + LEO_HISTORY), toast_html=toast_region(toast("success", "Leo Martins reactivated", "They can sign in again.")))
     S.add("child-deleted", "Nadia’s household was deleted, so her youth account was deactivated with her child record and can’t be reactivated.", **KW,
           main=record_hdr(YOUTH["nadia"], "Youth", "Deactivated", actions=acts("Nadia", deactivated=True, youth=True, blocked=True))
-          + alert("info", "Her child record was deleted", "A youth account follows its child record, so Nadia’s stays off. Nothing else was removed.")
+          + alert("info", "The child record was deleted", "A youth account follows its child record, so Nadia’s stays off. Nothing else was removed.")
           + f'<div class="split"><div class="stack">{account("nadia@harbourview.example", "Youth", "Deactivated", "Tue 3 Nov", [("Deactivated", "Today, 2:10 pm with her child record")])}</div>'
           + f'<div class="stack">{history([("Deactivated with her child record", "Tom Nguyen deleted the Haddad household · Today, 2:10 pm"), ("Joined as Youth", "Accepted Tom Nguyen’s invitation · Tue 8 Sep")])}</div></div>')
     S.add("you", "Tom opens his own record: no Change role or Deactivate; another admin does that.", **KW,

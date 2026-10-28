@@ -48,7 +48,11 @@ public sealed class PeopleHandler(IPromiseHubDb db, ITenantContext tenant, IModu
         }
         if (query.Status == "Deactivated")
         {
-            members = members.Where(m => false);
+            members = members.Where(m => m.DeactivatedAt != null);
+        }
+        else if (query.Status == "Active")
+        {
+            members = members.Where(m => m.DeactivatedAt == null);
         }
         if (!string.IsNullOrWhiteSpace(query.Q))
         {
@@ -68,7 +72,7 @@ public sealed class PeopleHandler(IPromiseHubDb db, ITenantContext tenant, IModu
         var page = Math.Max(1, query.Page);
         var slice = ordered.Skip((page - 1) * PageSize).Take(PageSize).ToList();
         var details = await PersonDetails.LoadAsync(db, slice, mentoring, cancellationToken);
-        var items = slice.Select(m => new PersonRowDto(m.Id, m.PersonName, m.Email, m.Role.ToString(), "Active", details.Programs(m),
+        var items = slice.Select(m => new PersonRowDto(m.Id, m.PersonName, m.Email, m.Role.ToString(), Status(m), details.Programs(m),
             details.LastSignedIn(m), m.Id == tenant.MembershipId, mentoring ? details.Mentoring(m) : null)).ToList();
         var programs = await db.Programs.AsNoTracking().Where(p => p.Status == ProgramStatus.Active).OrderBy(p => p.Name)
             .Select(p => new ProgramOptionDto(p.Id, p.Name)).ToListAsync(cancellationToken);
@@ -111,8 +115,10 @@ public sealed class PeopleHandler(IPromiseHubDb db, ITenantContext tenant, IModu
             var earned = await badges.ForMembership(member.Id).ReadAsync(tracks, cancellationToken);
             learning = new PersonLearningDto(tracks.Sum(t => t.Done), tracks.Sum(t => t.Total), [.. earned.Earned.Select(b => b.Name)]);
         }
-        return new PersonRecordDto(member.Id, member.PersonName, member.Email, member.Role.ToString(), "Active", null, null,
+        return new PersonRecordDto(member.Id, member.PersonName, member.Email, member.Role.ToString(), Status(member), member.DeactivatedAt, member.DeactivatedBy,
             details.LastSignedIn(member), member.Id == tenant.MembershipId, child, details.Programs(member), history,
             mentoring ? details.Mentoring(member) : null, learning);
     }
+
+    private static string Status(Membership m) => m.DeactivatedAt is null ? "Active" : "Deactivated";
 }

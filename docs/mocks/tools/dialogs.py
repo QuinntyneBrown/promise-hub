@@ -355,11 +355,11 @@ def change_role(S):
 def deactivate_person(S):
     def box(title, desc, body, *, busy=False, alert_html="", base="staff"):
         return over("person", base, overlays=dialog_box(title, desc, body, footer("Deactivate", busy=busy, danger=True, autofocus_cancel=True), icon_name="lock", danger=True, alert_html=alert_html, form=True))
-    leo_t, leo_d = "Deactivate Leo Martins?", "He’s signed out everywhere and can’t sign in. His attendance, sessions and history stay, and you can reactivate him any time."
+    leo_t, leo_d = "Deactivate Leo Martins?", "They’re signed out everywhere and can’t sign in. Their attendance, sessions and history stay, and you can reactivate them any time."
     leo_b = "<p>Turn off an account when someone leaves. To end access for good, remove them in Staff and roles.</p>"
     S.add("default", "Confirm before turning Leo’s account off; Cancel has focus.", **box(leo_t, leo_d, leo_b))
     S.add("youth", "Sofía’s youth account: her child record, progress and consents stay.", **box("Deactivate Sofía Rivera?",
-          "She’s signed out everywhere and can’t sign in. Her child record, Learning progress and consents stay, and you can reactivate her while her child record exists.", "", base="default"))
+          "They’re signed out everywhere and can’t sign in. Their child record, Learning progress and consents stay, and you can reactivate them while the child record exists.", "", base="default"))
     S.add("busy", "Deactivating: the button is busy.", **box(leo_t, leo_d, leo_b, busy=True))
     S.add("failed", "It failed: nothing changed.", **box(leo_t, leo_d, leo_b, alert_html=failed_alert("That didn’t go through", "Leo’s account is still on. Try again.")))
 

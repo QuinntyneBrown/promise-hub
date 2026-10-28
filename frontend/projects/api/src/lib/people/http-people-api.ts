@@ -2,8 +2,9 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { API_BASE_URL } from '../api-base-url';
-import { toLoad } from '../http-results';
+import { toLoad, toWrite } from '../http-results';
 import { LoadResult } from '../load-result';
+import { WriteOutcome } from '../write-outcome';
 import { PeopleApi } from './people-api';
 import { PeoplePage } from './people-page';
 import { PeopleQuery } from './people-query';
@@ -24,5 +25,13 @@ export class HttpPeopleApi implements PeopleApi {
 
   get(id: string): Observable<LoadResult<PersonRecord>> {
     return toLoad(this.http.get<PersonRecord>(`${this.baseUrl}/people/${id}`));
+  }
+
+  deactivate(id: string): Observable<WriteOutcome> {
+    return toWrite(this.http.post<null>(`${this.baseUrl}/people/${id}/deactivate`, null));
+  }
+
+  reactivate(id: string): Observable<WriteOutcome> {
+    return toWrite(this.http.post<null>(`${this.baseUrl}/people/${id}/reactivate`, null));
   }
 }

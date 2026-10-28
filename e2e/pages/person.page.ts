@@ -69,4 +69,17 @@ export class PersonPage extends BasePage {
   async confirmRole(): Promise<void> {
     await this.dialog.getByRole('button', { name: 'Change role' }).click();
   }
+
+  async deactivate(): Promise<void> {
+    await this.action('Deactivate').click();
+    await expect(this.dialog).toBeVisible();
+  }
+
+  async confirmDeactivate(): Promise<void> {
+    await this.dialog.getByRole('button', { name: 'Deactivate' }).click();
+  }
+
+  async reactivate(): Promise<void> {
+    await this.action('Reactivate').click();
+  }
 }

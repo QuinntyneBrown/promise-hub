@@ -2436,6 +2436,16 @@ export class FakeApi {
       /^\/api\/people\/(?<id>[^/]+)$/,
       (route, p) => this.getPerson(route, p["id"]!),
     ],
+    [
+      "POST",
+      /^\/api\/people\/(?<id>[^/]+)\/deactivate$/,
+      (route, p) => this.deactivatePersonRoute(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/people\/(?<id>[^/]+)\/reactivate$/,
+      (route, p) => this.reactivatePersonRoute(route, p["id"]!),
+    ],
     ["GET", /^\/api\/coverage$/, (route) => this.coverage(route)],
     [
       "PUT",
@@ -4592,6 +4602,23 @@ export class FakeApi {
     for (const m of memberships)
       if (m.organizationId === keep.organizationId && m.id !== keep.id)
         this.removedMembers.add(m.id);
+  }
+
+  /** Deactivated accounts with when and by whom (ADR 0070); the session treats them like removed memberships. */
+  private deactivatedMembers = new Map<string, { at: string; by: string }>();
+  /** Youth accounts whose child record was deleted with its household. */
+  private deletedChildRecords = new Set<string>();
+
+  /** An admin deactivated this account, as POST /people/{id}/deactivate would. */
+  deactivatePerson(id: string, by = "Tom Nguyen"): void {
+    this.deactivatedMembers.set(id, { at: "2026-11-05T21:20:00Z", by });
+    this.removedMemberships.add(id);
+  }
+
+  /** The youth account's household was deleted: the account is deactivated with its child record and stays off. */
+  deleteChildRecordOf(id: string): void {
+    this.deletedChildRecords.add(id);
+    this.deactivatePerson(id, "with the child record");
   }
 
   /** Assigns a mentor to a child, as a program director would from a cohort's roster. */
@@ -7398,7 +7425,7 @@ export class FakeApi {
       .map((x) => ({
         x,
         role: this.roleOverrides.get(x.id) ?? x.role,
-        status: "Active",
+        status: this.deactivatedMembers.has(x.id) ? "Deactivated" : "Active",
         facts: this.personFacts(x, mentoring),
       }))
       .filter((p) => !role || p.role === role)
@@ -7475,6 +7502,60 @@ export class FakeApi {
     };
   }
 
+  /** Mirrors backend AccountLifecycleHandler.DeactivateAsync (L2-113 criterion 4). */
+  private async deactivatePersonRoute(route: Route, id: string): Promise<void> {
+    const m = await this.adminCaller(route);
+    if (!m) return;
+    const x = this.staffOf(m).find((p) => p.id === id);
+    if (!x) return route.fulfill({ status: 404 });
+    if (x.id === m.id)
+      return route.fulfill({
+        status: 422,
+        json: {
+          errors: {
+            member: "You can’t deactivate your own account. Ask another admin.",
+          },
+        },
+      });
+    if (!this.deactivatedMembers.has(id)) {
+      this.deactivatePerson(id, m.personName);
+      this.recordPersonHistory(
+        id,
+        "Deactivated",
+        `${x.personName}’s account deactivated by ${m.personName}`,
+        m.personName,
+      );
+    }
+    return route.fulfill({ status: 204 });
+  }
+
+  /** Mirrors backend AccountLifecycleHandler.ReactivateAsync (L2-113 criteria 5 and 6). */
+  private async reactivatePersonRoute(route: Route, id: string): Promise<void> {
+    const m = await this.adminCaller(route);
+    if (!m) return;
+    const x = this.staffOf(m).find((p) => p.id === id);
+    if (!x) return route.fulfill({ status: 404 });
+    if (this.deletedChildRecords.has(id))
+      return route.fulfill({
+        status: 422,
+        json: {
+          errors: {
+            member: `${x.personName.split(" ")[0]}’s child record was deleted, so the account stays off.`,
+          },
+        },
+      });
+    if (this.deactivatedMembers.delete(id)) {
+      this.removedMemberships.delete(id);
+      this.recordPersonHistory(
+        id,
+        "Reactivated",
+        `${x.personName}’s account reactivated by ${m.personName}`,
+        m.personName,
+      );
+    }
+    return route.fulfill({ status: 204 });
+  }
+
   /** Mirrors backend PeopleHandler.GetAsync (L2-113, L2-114): admins only, this organization's current accounts only. */
   private async getPerson(route: Route, id: string): Promise<void> {
     const m = await this.adminCaller(route);
@@ -7499,9 +7580,9 @@ export class FakeApi {
         name: x.personName,
         email: x.email,
         role,
-        status: "Active",
-        deactivatedAt: null,
-        deactivatedBy: null,
+        status: this.deactivatedMembers.has(x.id) ? "Deactivated" : "Active",
+        deactivatedAt: this.deactivatedMembers.get(x.id)?.at ?? null,
+        deactivatedBy: this.deactivatedMembers.get(x.id)?.by ?? null,
         lastSignedInAt: this.lastSignIns.get(x.email) ?? null,
         isYou: x.id === m.id,
         child:
@@ -7512,7 +7593,7 @@ export class FakeApi {
                 age: ageOf(child.dateOfBirth),
                 household: household.name,
                 householdId: household.id,
-                deleted: false,
+                deleted: this.deletedChildRecords.has(x.id),
               }
             : null,
         programs: facts.programs,

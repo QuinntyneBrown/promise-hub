@@ -14,7 +14,7 @@ public sealed class SwitchOrganizationHandler(IPromiseHubDb db, TenantContext te
     {
         var email = await EmailAsync(cancellationToken);
         var rows = await db.Memberships.IgnoreQueryFilters().AsNoTracking()
-            .Where(m => m.Email == email && m.RemovedAt == null)
+            .Where(m => m.Email == email && m.RemovedAt == null && m.DeactivatedAt == null)
             .Join(db.Organizations, m => m.OrganizationId, o => o.Id, (m, o) => new { m.Id, o.Name, m.Role })
             .ToListAsync(cancellationToken);
         return new MyOrganizationsDto([.. rows.OrderBy(r => r.Name).Select(r => new MyOrganizationDto(r.Id, r.Name, r.Role.ToString(), r.Id == tenant.MembershipId))]);
@@ -25,7 +25,7 @@ public sealed class SwitchOrganizationHandler(IPromiseHubDb db, TenantContext te
     {
         var email = await EmailAsync(cancellationToken);
         var target = await db.Memberships.IgnoreQueryFilters().AsNoTracking()
-            .FirstOrDefaultAsync(m => m.Id == command.MembershipId && m.Email == email && m.RemovedAt == null, cancellationToken);
+            .FirstOrDefaultAsync(m => m.Id == command.MembershipId && m.Email == email && m.RemovedAt == null && m.DeactivatedAt == null, cancellationToken);
         if (target is null)
         {
             return null;

@@ -5,7 +5,7 @@ using PromiseHub.Domain.Audit;
 namespace PromiseHub.Application.Households;
 
 /// <summary>Soft-deletes a household with its guardians and children once its name is typed; they are purged after the retention period.</summary>
-public sealed class DeleteHouseholdHandler(IPromiseHubDb db, IAuditWriter audit, TimeProvider clock)
+public sealed class DeleteHouseholdHandler(IPromiseHubDb db, IAuditWriter audit, TimeProvider clock, Staff.AccountLifecycleHandler accounts)
 {
     public async Task<Result> HandleAsync(Guid id, DeleteHouseholdCommand command, CancellationToken cancellationToken = default)
     {
@@ -24,10 +24,13 @@ public sealed class DeleteHouseholdHandler(IPromiseHubDb db, IAuditWriter audit,
         {
             guardian.SoftDelete(now);
         }
-        foreach (var child in await db.Children.Where(c => c.HouseholdId == id).ToListAsync(cancellationToken))
+        var children = await db.Children.Where(c => c.HouseholdId == id).ToListAsync(cancellationToken);
+        foreach (var child in children)
         {
             child.SoftDelete(now);
         }
+        // A youth account follows its child record (ADR 0070).
+        await accounts.DeactivateYouthOfAsync([.. children.Select(c => c.Id)], cancellationToken);
         audit.Record(new AuditEvent(AuditAction.Deleted, "Household", household.Id, $"{household.Name} household · {command.Reason}",
             Before: new { household.Name }, After: new { household.DeletedAt, household.PurgeAfter, command.Reason }));
         await db.SaveChangesAsync(cancellationToken);
