@@ -837,6 +837,7 @@ export class FakeApi {
     ['POST', /^\/api\/events\/(?<id>[^/]+)\/cancel$/, (route, p) => this.cancelEvent(route, p['id']!)],
     ['GET', /^\/api\/sessions\/today$/, (route) => this.todaySessions(route)],
     ['GET', /^\/api\/attendance$/, (route) => this.attendanceHistory(route)],
+    ['PUT', /^\/api\/sessions\/(?<id>[^/]+)\/attendance\/(?<childId>[^/]+)$/, (route, p) => this.correctAttendance(route, p['id']!, p['childId']!)],
     ['GET', /^\/api\/sessions\/(?<id>[^/]+)\/roster$/, (route, p) => this.sessionRoster(route, p['id']!)],
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/check-ins$/, (route, p) => this.attend(route, p['id']!, 'Present')],
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/absences$/, (route, p) => this.attend(route, p['id']!, 'Absent')],
@@ -1676,6 +1677,35 @@ export class FakeApi {
       late: status !== 'Absent' && !!flags.late,
       excused: status === 'Absent' && !!flags.excused,
     });
+  }
+
+  /** PUT /sessions/{id}/attendance/{childId} (L2-097 criteria 4 to 6): admins and program directors correct a mark with a reason. Mirrors CorrectAttendanceHandler. */
+  private async correctAttendance(route: Route, id: string, childId: string): Promise<void> {
+    const m = await this.rollCallCaller(route);
+    if (!m) return;
+    if (!can.correctAttendance(m)) return this.forbidden(route);
+    const e = this.ownEvent(m, id);
+    if (!e) return route.fulfill({ status: 404 });
+    const b = route.request().postDataJSON() as { status?: string | null; reason?: string | null };
+    const errors: Record<string, string> = {};
+    if (!['Present', 'Late', 'Excused', 'Absent'].includes(b.status ?? '')) errors['status'] = 'Choose a mark.';
+    const reason = (b.reason ?? '').trim();
+    if (!reason) errors['reason'] = 'Say why you’re correcting it.';
+    else if (reason.length > 500) errors['reason'] = 'Keep it to 500 characters.';
+    if (e.status === 'Cancelled') errors['session'] = 'This session is cancelled.';
+    else if (e.startsAt > NOW.toISOString()) errors['session'] = 'This session hasn’t started yet.';
+    const records = this.sessionRecords(e.id);
+    const program = this.programs.find((p) => p.id === e.programId)!;
+    const child = this.households.flatMap((h) => h.children).find((c) => c.id === childId);
+    if (!child || (!records.has(childId) && !program.roster.includes(childId))) errors['childId'] = `${child ? `${child.firstName} ${child.lastName}` : 'This child'} is not on this cohort’s roster.`;
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    const r = records.get(childId);
+    const here = b.status === 'Present' || b.status === 'Late';
+    records.set(childId, here
+      ? { ...(r ?? { checkedInAt: null }), status: r?.status === 'SignedOut' ? 'SignedOut' : 'Present', checkedInAt: r?.checkedInAt ?? e.startsAt, late: b.status === 'Late', excused: false }
+      : { status: 'Absent', checkedInAt: null, late: false, excused: b.status === 'Excused' });
+    this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'Updated', record: 'Attendance', summary: `Correction · ${child!.firstName} ${child!.lastName} · ${e.name} · ${b.status} · ${reason}`, device: null });
+    return route.fulfill({ status: 204 });
   }
 
   /** GET /attendance (L2-097): a cohort's sessions that have started and each youth on its roster, with rates. Mirrors AttendanceHistoryHandler. */

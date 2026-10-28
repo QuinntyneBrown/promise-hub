@@ -9,6 +9,8 @@ export * from './lib/attendance/roster-entry';
 export * from './lib/attendance/session-roster';
 export * from './lib/attendance/session-summary';
 export * from './lib/attendance/attendance-history';
+export * from './lib/attendance/attendance-correction';
+export * from './lib/attendance/attendance-mark-name';
 export * from './lib/attendance/cohort-option';
 export * from './lib/attendance/session-attendance-row';
 export * from './lib/attendance/session-attendance-status';

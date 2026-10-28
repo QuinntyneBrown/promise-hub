@@ -14,6 +14,7 @@ import {
   PhBreadcrumb,
   PhButton,
   PhCard,
+  PhDialogs,
   PhEmptyState,
   PhErrorPage,
   PhPageHeader,
@@ -25,8 +26,12 @@ import {
   TabItem,
   TableCell,
   TableColumn,
+  ToastService,
   formatDay,
 } from '@promisehub/components';
+import { CorrectAttendanceDialog } from '../correct-attendance-dialog/correct-attendance-dialog';
+import { CorrectAttendanceDialogData } from '../correct-attendance-dialog/correct-attendance-dialog-data';
+import { CorrectAttendanceResult } from '../correct-attendance-dialog/correct-attendance-result';
 import { Subject, combineLatest, map, startWith, switchMap } from 'rxjs';
 
 const STATUS: Record<
@@ -66,6 +71,8 @@ const STATUS: Record<
 export class AttendanceHistoryPage {
   private readonly api = inject(ATTENDANCE_API);
   private readonly router = inject(Router);
+  private readonly dialogs = inject(PhDialogs);
+  private readonly toasts = inject(ToastService);
   private readonly refresh$ = new Subject<void>();
 
   /** The cohort in the address (`?programId=`); without it, the first the caller may choose. */
@@ -164,6 +171,24 @@ export class AttendanceHistoryPage {
       absent: `${y.absent}`,
       rate: this.rate(y.rate),
     }));
+  }
+
+  /** Opens the correction for a session; on save, reloads and says what changed (L2-097 criterion 4). */
+  protected correct(h: AttendanceHistory, session: SessionAttendanceRow): void {
+    this.dialogs
+      .open<CorrectAttendanceResult, CorrectAttendanceDialogData, CorrectAttendanceDialog>(
+        CorrectAttendanceDialog,
+        { session, programName: h.programName ?? '' },
+      )
+      .closed.subscribe((result) => {
+        if (!result) return;
+        this.toasts.show({
+          tone: 'success',
+          title: 'Attendance corrected',
+          text: `${result.name} · ${formatDay(session.startsAt)} · ${result.mark}. The change is in the audit log.`,
+        });
+        this.reload();
+      });
   }
 
   protected reload(): void {

@@ -8,6 +8,7 @@ import { OfflineStore } from '../offline/offline-store';
 import { QueuedAttendance } from '../offline/queued-attendance';
 import { WriteOutcome } from '../write-outcome';
 import { AttendanceApi } from './attendance-api';
+import { AttendanceCorrection } from './attendance-correction';
 import { AttendanceHistory } from './attendance-history';
 import { NewWalkIn } from './new-walk-in';
 import { PickupOptions } from './pickup-options';
@@ -176,6 +177,19 @@ export class HttpAttendanceApi implements AttendanceApi {
   history(programId?: string | null): Observable<LoadResult<AttendanceHistory>> {
     const query = programId ? `?programId=${encodeURIComponent(programId)}` : '';
     return toLoad(this.http.get<AttendanceHistory>(`${this.baseUrl}/attendance${query}`));
+  }
+
+  correct(
+    sessionId: string,
+    childId: string,
+    correction: AttendanceCorrection,
+  ): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.put<null>(
+        `${this.baseUrl}/sessions/${sessionId}/attendance/${childId}`,
+        correction,
+      ),
+    );
   }
 
   pickups(childId: string): Observable<LoadResult<PickupOptions>> {

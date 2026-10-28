@@ -36,6 +36,9 @@ public static class AttendanceEndpoints
             var (status, summary) = await handler.EndAsync(id, command, ct);
             return summary is not null ? Results.Ok(summary) : new Application.Result(status).ToHttp();
         }).RequirePermission(Permission.RunSessions);
+        // Corrections after the fact (L2-097): admins and program directors, audited with a reason.
+        sessions.MapPut("/{id:guid}/attendance/{childId:guid}", async (Guid id, Guid childId, CorrectAttendanceRequest request, CorrectAttendanceHandler handler, CancellationToken ct) =>
+            (await handler.HandleAsync(id, childId, request, ct)).ToHttp()).RequirePermission(Permission.CorrectAttendance);
         sessions.MapPut("/{id:guid}/notes", async (Guid id, SessionNotesCommand command, EndSessionHandler handler, CancellationToken ct) =>
             (await handler.SaveNotesAsync(id, command, ct)).ToHttp()).RequirePermission(Permission.RunSessions);
         sessions.MapPost("/{id:guid}/walk-ins", async (Guid id, AddWalkInCommand command, AddWalkInHandler handler, CancellationToken ct) =>

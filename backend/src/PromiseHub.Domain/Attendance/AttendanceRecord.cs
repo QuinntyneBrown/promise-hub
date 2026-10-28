@@ -73,6 +73,37 @@ public sealed class AttendanceRecord : ITenantOwned
         UpdatedBy = actor;
     }
 
+    /// <summary>
+    /// Sets the mark an admin or program director decided on after the fact (L2-097, ADR 0065). A child corrected to present or late
+    /// who had no check-in time is taken to have arrived at the start; a signed-out child stays signed out.
+    /// </summary>
+    public void Correct(AttendanceMark mark, DateTimeOffset sessionStart, DateTimeOffset at, string actor)
+    {
+        if (mark is AttendanceMark.Present or AttendanceMark.Late)
+        {
+            if (Status != AttendanceStatus.SignedOut)
+            {
+                Status = AttendanceStatus.Present;
+            }
+            CheckedInAt ??= sessionStart;
+            MarkedAbsentAt = null;
+            Late = mark == AttendanceMark.Late;
+            Excused = false;
+        }
+        else
+        {
+            Status = AttendanceStatus.Absent;
+            CheckedInAt = null;
+            SignedOutAt = null;
+            CollectedBy = null;
+            CollectorGuardianId = null;
+            MarkedAbsentAt ??= at;
+            Late = false;
+            Excused = mark == AttendanceMark.Excused;
+        }
+        UpdatedBy = actor;
+    }
+
     /// <summary>Signs a checked-in child out to the adult who collected them (L2-017 criterion 3).</summary>
     public void SignOut(DateTimeOffset at, string collectedBy, Guid? guardianId, bool confirmedByPhone, bool idChecked, string actor)
     {

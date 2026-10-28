@@ -4,7 +4,7 @@ import { CheckInPage } from '../../pages/check-in.page';
 import type { FakeApi } from '../../fixtures/fake-api';
 
 // Acceptance Test
-// Traces to: L2-097 criteria 1, 2, 3, 6 and 7
+// Traces to: L2-097 criteria 1 to 7
 // Description: a cohort's attendance by session and by youth with rates, for directors, site leads and mentors.
 
 /** Last night's Tutoring night: Mateo present, Jordan late, Sofía excused, Yusuf absent; tonight Mateo is in. */
@@ -30,8 +30,8 @@ test.describe('Review attendance as a program director', () => {
     await expect(history.stat('Attendance rate')).toHaveText('60%');
     await expect(history.stat('Sessions recorded')).toHaveText('2 of 2');
     await expect(history.stat('Below 70%')).toHaveText('2');
-    expect(await history.row(history.sessions, 'Wed 4 Nov')).toEqual(['Wed 4 Nov', 'Tutoring night', '1', '1', '1', '1', '50%', 'Recorded']);
-    expect(await history.row(history.sessions, 'Thu 5 Nov')).toEqual(['Thu 5 Nov', 'Tutoring night', '1', '0', '0', '0', '100%', 'In progress']);
+    expect(await history.row(history.sessions, 'Wed 4 Nov')).toEqual(['Wed 4 Nov', 'Tutoring night', '1', '1', '1', '1', '50%', 'Recorded', 'Correct']);
+    expect(await history.row(history.sessions, 'Thu 5 Nov')).toEqual(['Thu 5 Nov', 'Tutoring night', '1', '0', '0', '0', '100%', 'In progress', 'Correct']);
     await history.expectAccessible();
     await history.expectNoHorizontalScroll();
 
@@ -46,7 +46,7 @@ test.describe('Review attendance as a program director', () => {
     const history = new AttendanceHistoryPage(page);
     await history.open();
 
-    expect(await history.row(history.sessions, 'Wed 4 Nov')).toEqual(['Wed 4 Nov', 'Tutoring night', '0', '0', '0', '0', '—', 'Not recorded']);
+    expect(await history.row(history.sessions, 'Wed 4 Nov')).toEqual(['Wed 4 Nov', 'Tutoring night', '0', '0', '0', '0', '—', 'Not recorded', 'Correct']);
     await expect(history.unrecorded).toContainText('Wed 4 Nov has no attendance');
   });
 
@@ -79,6 +79,53 @@ test.describe('Review attendance as a program director', () => {
     await page.goto('/check-in/history');
 
     await expect(page).toHaveURL(/\/$/);
+  });
+});
+
+test.describe('Correct attendance as a program director', () => {
+  test.use({ signedInAs: 'm-marisol' });
+
+  test('Given Yusuf was marked absent last night, when Marisol corrects him to Excused with a reason, then the session recounts and a toast says it is in the audit log', async ({ page, api }) => {
+    markedSessions(api);
+    const history = new AttendanceHistoryPage(page);
+    await history.open();
+
+    await history.openCorrect('Wed 4 Nov');
+    await expect(history.dialog.getByLabel('Youth')).toContainText('Yusuf Haddad · Absent');
+    await history.expectAccessible();
+    await history.correct({ youth: 'Yusuf Haddad · Absent', mark: 'Excused', reason: 'Nour Haddad emailed on Wednesday morning that Yusuf had a dentist appointment.' });
+
+    await expect(history.dialog).toBeHidden();
+    await expect(page.getByTestId('toast').filter({ hasText: 'Attendance corrected' })).toContainText('Yusuf Haddad · Wed 4 Nov · Excused. The change is in the audit log.');
+    await expect.poll(() => history.row(history.sessions, 'Wed 4 Nov')).toEqual(['Wed 4 Nov', 'Tutoring night', '1', '1', '2', '0', '50%', 'Recorded', 'Correct']);
+    expect(api.attendanceRecord('e-tutoring-yesterday', 'c-yusuf')).toMatchObject({ status: 'Absent', excused: true });
+  });
+
+  test('Given the correction dialog, when Marisol saves without a reason, then it asks why beside the field and in a summary', async ({ page, api }) => {
+    markedSessions(api);
+    const history = new AttendanceHistoryPage(page);
+    await history.open();
+    await history.openCorrect('Wed 4 Nov');
+
+    await history.correct({ youth: 'Yusuf Haddad · Absent', mark: 'Excused', reason: '' });
+
+    await expect(history.dialog.getByTestId('correct-reason-error')).toHaveText('Say why you’re correcting it.');
+    await expect(history.dialog.getByRole('link', { name: 'Say why you’re correcting it.' })).toBeVisible();
+    await history.expectAccessible();
+  });
+
+  test('Given the server fails, when Marisol saves a correction, then her choice and reason stay to try again', async ({ page, api }) => {
+    markedSessions(api);
+    api.failNext('/api/sessions/e-tutoring-yesterday/attendance/c-yusuf', 500);
+    const history = new AttendanceHistoryPage(page);
+    await history.open();
+    await history.openCorrect('Wed 4 Nov');
+
+    await history.correct({ youth: 'Yusuf Haddad · Absent', mark: 'Excused', reason: 'Dentist.' });
+
+    await expect(history.dialog.getByText('That didn’t go through')).toBeVisible();
+    await expect(history.dialog.getByLabel('Why are you correcting it?')).toHaveValue('Dentist.');
+    expect(api.attendanceRecord('e-tutoring-yesterday', 'c-yusuf')?.excused).toBe(false);
   });
 });
 

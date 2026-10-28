@@ -123,7 +123,25 @@
               caption="Attendance by session, newest first"
               [columns]="sessionColumns"
               [rows]="sessionRows(h)"
-            />
+            >
+              @if (h.canCorrect) {
+                <ng-template #rowActions let-i>
+                  <ph-button
+                    variant="ghost"
+                    size="sm"
+                    hasPopup="dialog"
+                    [label]="
+                      'Correct attendance for ' +
+                      h.sessions[i]!.name +
+                      ', ' +
+                      day(h.sessions[i]!.startsAt)
+                    "
+                    (click)="correct(h, h.sessions[i]!)"
+                    >Correct</ph-button
+                  >
+                </ng-template>
+              }
+            </ph-table>
           }
         </div>
       }
