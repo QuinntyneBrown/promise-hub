@@ -7,7 +7,8 @@ namespace PromiseHub.Api.Tests;
 
 // Acceptance test. Traces to: L2-092 criteria 1 to 4 and 7 (a mentor is offered the published lessons, quizzes and assignments of the tracks
 // his youth follow, his youth and his cohorts; assigns one to chosen youth or a whole cohort he is on with a due date and a message, field-by-field errors, every youth
-// following the item's track, one row per youth and item, audited without the message; scope, roles and tenancy), L2-065, L2-007, L2-032.
+// following the item's track, one row per youth and item, audited without the message; Learning or Mentoring off; scope, roles and tenancy),
+// L2-065, L2-007, L2-032.
 public sealed class AssignWorkTests : IAsyncLifetime
 {
     private static readonly Guid Marisol = LearningContent.Marisol;
@@ -154,6 +155,24 @@ public sealed class AssignWorkTests : IAsyncLifetime
 
         Assert.Equal("Kevin Tran doesn’t follow the track this lesson is in.", errors.GetProperty("childIds").GetString());
         Assert.Empty(_work.Query("SELECT Id FROM AssignedWork"));
+    }
+
+    // ---- criterion 6: assigning needs Mentoring and Learning
+
+    [Fact]
+    public async Task With_Learning_or_Mentoring_off_both_endpoints_answer_404_and_every_assignment_is_kept()
+    {
+        Assert.Equal(HttpStatusCode.Created, (await Assign(Daniel, Body([Nadia]))).StatusCode);
+
+        foreach (var on in new[] { new[] { "Roster", "RollCall", "Mentoring" }, new[] { "Roster", "RollCall", "Learning" } })
+        {
+            Assert.True((await _factory.ClientFor(Tom).PutAsJsonAsync("/settings/modules", new { on })).IsSuccessStatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, (await _factory.ClientFor(Daniel).GetAsync("/mentoring/assign-work")).StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, (await Assign(Daniel, Body([Nadia]))).StatusCode);
+        }
+        Assert.True((await _factory.ClientFor(Tom).PutAsJsonAsync("/settings/modules", new { on = new[] { "Roster", "RollCall", "Learning", "Mentoring" } })).IsSuccessStatusCode);
+        Assert.Single(_work.Query("SELECT Id FROM AssignedWork"));
+        Assert.Single((await Options(Daniel)).GetProperty("youth").EnumerateArray());
     }
 
     // ---- criterion 7: scope, tenancy and roles

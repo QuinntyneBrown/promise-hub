@@ -3,9 +3,9 @@ import type { ModuleId } from '../../fixtures/seed';
 import { AssignWorkDialog } from '../../pages/assign-work.page';
 import { MentoringPage } from '../../pages/mentoring.page';
 
-// Acceptance test. Traces to: L2-092 criteria 1 to 3, 7 and 8 (a mentor assigns a published lesson, quiz or assignment to chosen youth or a
+// Acceptance test. Traces to: L2-092 criteria 1 to 3 and 6 to 8 (a mentor assigns a published lesson, quiz or assignment to chosen youth or a
 // whole cohort with a due date and a message; field errors, every youth following the track, the failed and nothing-to-assign states,
-// another role refused, a phone), L2-065, L2-007, L2-035, L2-036.
+// Learning or Mentoring off, another role refused, a phone), L2-065, L2-007, L2-035, L2-036.
 const ALL: ModuleId[] = ['Roster', 'Slips', 'RollCall', 'QuickCards', 'Pickup', 'Messages', 'Incidents', 'Reports', 'Learning', 'Mentoring'];
 const MESSAGE = 'Read this before Tutoring night next week. Come ready to share one way you served someone.';
 const LINE = 'Last in Line · Leading by Serving';
@@ -122,6 +122,41 @@ test.describe('Assign work as a mentor', () => {
 
     await dialog.expectNoHorizontalScroll();
     await dialog.expectAccessible();
+  });
+});
+
+test.describe('Assign work with a module off', () => {
+  test.use({ signedInAs: 'm-daniel' });
+
+  test.beforeEach(({ api }) => {
+    api.curriculumState.youthJourney();
+    api.setCohortTeam('p-tutoring', 'm-hana', ['m-daniel']);
+  });
+
+  test('Given Learning is off, when Daniel opens Mentoring, then Assign work is not offered and the endpoints answer 404', async ({ page, api }) => {
+    api.setModules('org-harbourview', ALL.filter((m) => m !== 'Learning'));
+    const dashboard = new MentoringPage(page);
+    const dialog = new AssignWorkDialog(page);
+
+    await dashboard.open();
+
+    await dashboard.expectOpen();
+    await expect(page.getByRole('link', { name: 'At-risk flags' })).toBeVisible();
+    await expect(dashboard.assignWorkButton).toHaveCount(0);
+    expect(await dialog.apiStatus()).toBe(404);
+    expect(await dialog.assignStatus({ kind: 'Lesson', itemId: 'l-line', childIds: ['c-mateo'], dueOn: '2026-11-13' })).toBe(404);
+    await dashboard.expectAccessible();
+  });
+
+  test('Given Mentoring is off, when Daniel opens /mentoring, then Today opens and the endpoints answer 404', async ({ page, api }) => {
+    api.setModules('org-harbourview', ALL.filter((m) => m !== 'Mentoring'));
+    const dialog = new AssignWorkDialog(page);
+
+    await page.goto('/mentoring');
+
+    await expect(page).toHaveURL(/\/$/);
+    expect(await dialog.apiStatus()).toBe(404);
+    expect(await dialog.assignStatus({ kind: 'Lesson', itemId: 'l-line', childIds: ['c-mateo'], dueOn: '2026-11-13' })).toBe(404);
   });
 });
 
