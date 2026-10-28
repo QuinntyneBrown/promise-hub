@@ -50,6 +50,40 @@
       }
       <div class="split">
         <div class="stack">
+          <ph-card title="RSVPs">
+            <div class="stack">
+              <div class="kpis">
+                @for (c of rsvpCounts(e); track c.label) {
+                  <ph-stat
+                    [label]="c.label"
+                    [value]="'' + c.value"
+                    [attr.data-testid]="'rsvp-count-' + c.label"
+                  />
+                }
+              </div>
+              @if (e.rsvps.responses.length) {
+                <ph-list label="RSVPs, newest first">
+                  @for (r of e.rsvps.responses; track r.childId) {
+                    <ph-list-item
+                      [title]="r.childName"
+                      [avatar]="r.childName"
+                      [meta]="answered(r)"
+                      [text]="r.note"
+                    >
+                      <ph-badge [tone]="rsvpBadge(r.response).tone">{{
+                        rsvpBadge(r.response).label
+                      }}</ph-badge>
+                    </ph-list-item>
+                  }
+                </ph-list>
+              } @else {
+                <p>
+                  Nobody has replied yet. Youth on the roster who sign in can RSVP from their
+                  schedule.
+                </p>
+              }
+            </div>
+          </ph-card>
           <ph-card title="Permission slip">
             <div class="stack">
               <div>

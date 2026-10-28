@@ -24,6 +24,19 @@ export class EventsPage extends BasePage {
     return this.page.getByRole('region', { name: 'Details' });
   }
 
+  get rsvps(): Locator {
+    return this.page.getByRole('region', { name: 'RSVPs' });
+  }
+
+  /** The RSVP count shown for an answer ("Going", "Maybe", "Can’t make it", "No reply"). */
+  rsvpCount(label: string): Locator {
+    return this.rsvps.getByTestId(`rsvp-count-${label}`).getByTestId('stat-value');
+  }
+
+  rsvpAnswer(name: string): Locator {
+    return this.rsvps.getByRole('listitem').filter({ has: this.page.getByText(name, { exact: true }) });
+  }
+
   get slipCard(): Locator {
     return this.page.getByRole('region', { name: 'Permission slip' });
   }

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { EVENTS_API, EventDetail, LoadResult, SESSION_API, can } from '@promisehub/api';
+import { EVENTS_API, EventDetail, EventRsvp, LoadResult, SESSION_API, can } from '@promisehub/api';
 import {
   Fact,
   PhAlert,
@@ -11,13 +11,18 @@ import {
   PhDescriptionList,
   PhDialogs,
   PhEmptyState,
+  PhList,
+  PhListItem,
   PhPageHeader,
+  PhStat,
   formatDate,
+  formatDateTime,
   formatWhen,
 } from '@promisehub/components';
 import { EMPTY, Subject, catchError, startWith, switchMap } from 'rxjs';
 import { CancelEventDialog } from '../cancel-event-dialog/cancel-event-dialog';
 import { EventAction, EventActionsDialog } from '../event-actions-dialog/event-actions-dialog';
+import { rsvpBadge } from '../rsvp-words';
 import { slipBadge } from '../slip-label';
 
 /** An event (mock: event): details, the slip's state and, when cancelled, who cancelled it. */
@@ -31,7 +36,10 @@ import { slipBadge } from '../slip-label';
     PhCard,
     PhDescriptionList,
     PhEmptyState,
+    PhList,
+    PhListItem,
     PhPageHeader,
+    PhStat,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './event-page.html',
@@ -67,6 +75,21 @@ export class EventPage {
     { initialValue: null },
   );
   protected readonly badge = slipBadge;
+  protected readonly rsvpBadge = rsvpBadge;
+
+  /** The RSVP counts in the order the card shows them (L2-094 criterion 4). */
+  protected rsvpCounts(e: EventDetail): { label: string; value: number }[] {
+    return [
+      { label: 'Going', value: e.rsvps.going },
+      { label: 'Maybe', value: e.rsvps.maybe },
+      { label: 'Can’t make it', value: e.rsvps.cantMake },
+      { label: 'No reply', value: e.rsvps.noReply },
+    ];
+  }
+
+  protected answered(r: EventRsvp): string {
+    return `Answered ${formatDateTime(r.answeredAt)}`;
+  }
 
   protected reload(): void {
     this.refresh$.next();

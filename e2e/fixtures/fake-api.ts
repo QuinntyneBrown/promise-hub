@@ -2815,7 +2815,29 @@ export class FakeApi {
     const { organizationId: _, ...rest } = e;
     const { seriesId, ...detail } = rest;
     const seriesSize = seriesId ? this.events.filter((x) => x.seriesId === seriesId).length : null;
-    return route.fulfill({ json: { ...detail, programName: this.eventSummary(e).programName, rosterSize: this.eventSummary(e).rosterSize, seriesSize } });
+    return route.fulfill({ json: { ...detail, programName: this.eventSummary(e).programName, rosterSize: this.eventSummary(e).rosterSize, seriesSize, rsvps: this.rsvpSummary(e) } });
+  }
+
+  /** A session's RSVPs for staff (L2-094 criterion 4). Mirrors EventRsvpSummary. */
+  private rsvpSummary(e: FakeEvent) {
+    const answers = this.rsvps.filter((r) => r.eventId === e.id);
+    const roster = this.programs.find((p) => p.id === e.programId)?.roster ?? [];
+    const signIn = [...this.youthLinks.entries()]
+      .filter(([membershipId, childId]) => roster.includes(childId) && memberships.some((m) => m.id === membershipId && m.organizationId === e.organizationId))
+      .map(([, childId]) => childId);
+    const nameOf = (childId: string) => {
+      const c = this.households.flatMap((h) => h.children).find((x) => x.id === childId);
+      return c ? `${c.firstName} ${c.lastName}` : '';
+    };
+    return {
+      going: answers.filter((a) => a.response === 'Going').length,
+      maybe: answers.filter((a) => a.response === 'Maybe').length,
+      cantMake: answers.filter((a) => a.response === 'CantMake').length,
+      noReply: signIn.filter((id) => !answers.some((a) => a.childId === id)).length,
+      responses: [...answers]
+        .sort((a, b) => b.answeredAt.localeCompare(a.answeredAt))
+        .map((a) => ({ childId: a.childId, childName: nameOf(a.childId), response: a.response, note: a.note, answeredAt: a.answeredAt })),
+    };
   }
 
   private async saveEvent(route: Route, id: string | null): Promise<void> {

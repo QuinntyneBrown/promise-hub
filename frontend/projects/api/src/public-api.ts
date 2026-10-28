@@ -18,6 +18,8 @@ export * from './lib/events/event-calendar';
 export * from './lib/events/event-detail';
 export * from './lib/events/event-fields';
 export * from './lib/events/event-list';
+export * from './lib/events/event-rsvp';
+export * from './lib/events/event-rsvps';
 export * from './lib/events/event-summary';
 export * from './lib/events/events-api';
 export * from './lib/events/events-api.token';
