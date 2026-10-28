@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
+  AssignedWorkResult,
   LoadResult,
   MENTORING_API,
   MentorActivity,
@@ -13,6 +14,7 @@ import {
   PhBadge,
   PhButton,
   PhCard,
+  PhDialogs,
   PhEmptyState,
   PhList,
   PhListItem,
@@ -21,10 +23,12 @@ import {
   PhStat,
   PhTimeline,
   TimelineEntry,
+  ToastService,
   formatDateTime,
   formatDay,
 } from '@promisehub/components';
 import { EMPTY, Subject, catchError, filter, map, of, startWith, switchMap } from 'rxjs';
+import { AssignWorkDialog } from '../assign-work-dialog/assign-work-dialog';
 
 const SHOWN = 5;
 const VERBS: Record<MentorActivity['kind'], string> = {
@@ -56,6 +60,8 @@ const VERBS: Record<MentorActivity['kind'], string> = {
 })
 export class MentorDashboardPage {
   private readonly api = inject(MENTORING_API);
+  private readonly dialogs = inject(PhDialogs);
+  private readonly toasts = inject(ToastService);
   private readonly refresh$ = new Subject<void>();
 
   private readonly session = toSignal(
@@ -69,6 +75,11 @@ export class MentorDashboardPage {
       ? `Welcome back, ${first}. Here’s how your youth are doing.`
       : 'Here’s how your youth are doing.';
   });
+
+  /** Assign work and Reviews need Learning content (L2-092 criterion 6, L2-080). */
+  protected readonly learningOn = computed(
+    () => this.session()?.modules.includes('Learning') ?? false,
+  );
 
   /** How many reviews wait, or null while Learning is off or before it loads (L2-080 criterion 1). */
   protected readonly reviewsWaiting = toSignal(
@@ -119,6 +130,20 @@ export class MentorDashboardPage {
       text: `${VERBS[a.kind]} ${a.session}`,
       meta: formatDateTime(a.at),
     }));
+  }
+
+  /** Opens Assign work; once assigned, a toast says to how many youth and when it is due (L2-092 criterion 2). */
+  protected assign(): void {
+    this.dialogs
+      .open<AssignedWorkResult, undefined, AssignWorkDialog>(AssignWorkDialog)
+      .closed.subscribe((assigned) => {
+        if (!assigned) return;
+        this.toasts.show({
+          tone: 'success',
+          title: 'Work assigned',
+          text: `${assigned.title} · ${assigned.count} youth · Due ${formatDay(assigned.dueOn)}`,
+        });
+      });
   }
 
   protected reload(): void {

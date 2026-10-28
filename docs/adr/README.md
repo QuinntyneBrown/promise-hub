@@ -66,3 +66,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0060](0060-a-reflection-is-one-row-per-youth-and-lesson-shared-only-with-her-mentor.md) | A reflection is one row per youth and lesson, private unless she shares it, read only by her and her mentor; drafts stay on the device |
 | [0061](0061-a-mentor-check-in-is-read-only-by-the-mentor-who-wrote-it.md) | A mentor check-in belongs to the mentor who wrote it, private notes never leave him, and follow-ups come from the latest one |
 | [0062](0062-an-at-risk-flag-is-raised-by-a-mentor-read-by-directors-and-resolved-with-an-outcome.md) | An at-risk flag is raised by a mentor with a severity, read and resolved by directors too, and is not an incident |
+| [0063](0063-assigned-work-is-one-row-per-youth-and-item-shown-on-the-learning-home-until-done.md) | Assigned work is one row per youth and item, shown on her Learning home until she has done it |

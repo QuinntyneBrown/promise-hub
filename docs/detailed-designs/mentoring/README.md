@@ -16,4 +16,4 @@ Prompt 49 built the foundation only ([list-assigned-youth](list-assigned-youth/R
 | [`protect-concurrent-updates`](../platform/protect-concurrent-updates/README.md) | 63 Grade and assess | `non-functional` L2-NFR-006 |
 | [`record-mentor-check-ins`](record-mentor-check-ins/README.md) | 67 Record mentor check-ins | `mentoring` L2-MENTOR-006 |
 | [`manage-at-risk-flags`](manage-at-risk-flags/README.md) | 68 Flag at-risk youth | `mentoring` L2-MENTOR-007 |
-| `assign-work` | 69 Assign work | L1-MENTOR-008 |
+| [`assign-work`](assign-work/README.md) | 69 Assign work | `mentoring` L2-MENTOR-008 |

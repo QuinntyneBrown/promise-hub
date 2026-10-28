@@ -27,7 +27,7 @@ Backend:
 
 - **`LearningEndpoints`** — `GET /learning/home`, `GET /learning/tracks/{id}`, `GET /learning/modules/{id}`, each with `RequireModule(Learning)`, `RequirePermission(Learn)`, `RequireGuardianConsent()` and `RequirePlacement()`.
 - **`LearnerProgress`** (`PromiseHub.Application/Learning/`) — the youth's visible tracks, and per track the ordered module and lesson statuses with locks and unlock-after names, computed from the caller's membership and organization only.
-- **`LearningHomeHandler`**, **`TrackViewHandler`**, **`ModuleViewHandler`** — project the statuses into `LearningHomeDto`, `TrackViewDto` and `ModuleViewDto`; a locked module answers 403 `{ code: "locked", unlockAfter }`, invisible content 404.
+- **`LearningHomeHandler`**, **`TrackViewHandler`**, **`ModuleViewHandler`** — project the statuses into `LearningHomeDto`, `TrackViewDto` and `ModuleViewDto`; a locked module answers 403 `{ code: "locked", unlockAfter }`, invisible content 404. While Mentoring is on, `LearningHomeDto.Assigned` also lists the work a mentor assigned her that she has not done (`mentoring/assign-work`, L2-092).
 - Domain: **`LessonProgress`** (`PromiseHub.Domain/Learning/`), tenant-owned, one row per membership and lesson.
 
 Leader guide notes are never projected. `GET /learning/home` replaces the placeholder `GET /learning/lessons` (ADR 0051).

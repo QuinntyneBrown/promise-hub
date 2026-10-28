@@ -71,11 +71,12 @@ def video(state: str = "ready") -> str:
 
 
 # ---------------------------------------------------------------- learn-home
-@screen("learn-home", "page", "Learning", route="/learning", reqs=["L2-068", "L2-069", R_LEARN, "L1-002"])
+@screen("learn-home", "page", "Learning", route="/learning", reqs=["L2-068", "L2-069", "L2-092", R_LEARN, "L1-002"])
 def learn_home(S):
+    from pages_assign import assigned_card
     hdr = page_header("Learning", "Hi, Sofía. You’re 4 of 9 lessons in.")
 
-    def body(extra: str = "") -> str:
+    def body(extra: str = "", *, assigned: bool = True) -> str:
         cont = card(f'<div class="stack"><div><p class="text-body-lg"><strong>Last in Line</strong></p><p class="text-muted">Leading by Serving · Mark 10:35–45 · 15 min</p></div>'
                     f'{progress(1, 3, "Leading by Serving", show="1 of 3 lessons")}'
                     f'<div>{btn("Continue lesson", "primary", icon_name="arrow-right", href=page("learn-lesson-scripture"))}</div></div>', title="Continue where you left off", tid="continue")
@@ -89,10 +90,13 @@ def learn_home(S):
             list_item("Badges", "What you’ve earned and what’s next", href=page("learn-badges")),
             list_item("Your progress", "Quizzes, attendance and competencies", href=page("learn-progress")),
         ], card=False, label="Your journey"), title="Your journey", tid="journey", cls="card--flush")
-        return hdr + extra + f'<div class="split"><div class="stack">{cont}{overall}</div><div class="stack">{tracks}{journey}</div></div>'
+        work = assigned_card() if assigned else ""
+        return hdr + extra + f'<div class="split"><div class="stack">{work}{cont}{overall}</div><div class="stack">{tracks}{journey}</div></div>'
 
-    S.add("default", "Sofía opens Learning: where she left off, her overall progress and the two tracks her programs follow.", **YKW, main=body(),
-          notes=note("Everything here comes from the server: only published lessons of tracks her programs follow, with progress saved on the server.", "top: 5rem; right: 1rem;"))
+    S.add("default", "Sofía opens Learning: the work her mentor assigned her, soonest due first, then where she left off, her overall progress and the two tracks her programs follow.", **YKW, main=body(),
+          notes=note("Everything here comes from the server: only published lessons of tracks her programs follow, with progress saved on the server. Assigned to you lists work a mentor assigned her that she hasn’t finished; done work drops off.", "top: 5rem; right: 1rem;"))
+    S.add("nothing-assigned", "No mentor has assigned her anything, or she finished it all: no Assigned to you card, nothing else changes.", **YKW, main=body(assigned=False))
+    S.add("mentoring-off", "Mentoring is off for Harbourview: no Assigned to you card and nothing mentions a mentor; the assigned work is kept for when it comes back.", **YKW, main=body(assigned=False))
     S.add("loading", "Learning loading: skeletons in the same layout.", **YKW,
           main=page_header("Learning", SUB) + f'<div class="split">{skeleton_list(2, "Loading your next lesson")}{skeleton_list(2, "Loading your tracks")}</div>')
     S.add("empty", "No track is published for her programs yet: the page says what will appear.", **YKW,

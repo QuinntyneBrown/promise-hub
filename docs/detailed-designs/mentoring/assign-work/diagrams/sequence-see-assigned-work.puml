@@ -1,0 +1,36 @@
+@startuml
+title UML sequence behaviour — The youth sees assigned work
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Youth (Sofía)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "LearningPage" as page
+  participant "LearningApi" as lapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "LearningEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "LearningHomeHandler" as h
+  participant "LearnerProgress" as lp
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : opens Learning
+page -> lapi : home()
+lapi -> ep : GET /learning/home
+ep -> h : HandleAsync
+h -> lp : TracksAsync (visible items and what she has done)
+alt Mentoring on
+  h -> db : her AssignedWork rows
+  h -> h : keep visible, not done; soonest due first (L2-092 c5)
+else Mentoring off
+  h -> h : no assigned work (c6)
+end
+h --> page : progress, next lesson, tracks, assigned
+page --> actor : Assigned to you with Due in n days, Due today or Overdue
+@enduml

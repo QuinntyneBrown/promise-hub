@@ -1,0 +1,71 @@
+@startuml
+title Class structure — Assign work
+skinparam classAttributeIconSize 0
+class MentorDashboardPage {
+  #assign() : void
+}
+class AssignWorkDialog {
+  #kind, itemId, who, programId, dueOn, message : signal<string>
+  #childIds : signal<string[]>
+  #save() : void
+}
+class LearningPage {
+  #home : signal<LearningHome>
+}
+interface MentoringApi {
+  +assignOptions() : Observable<LoadResult<AssignWorkOptions>>
+  +assignWork(body) : Observable<WriteOutcome>
+}
+interface LearningApi {
+  +home() : Observable<LoadResult<LearningHome>>
+}
+class AssignWorkHandler {
+  +OptionsAsync(ct) : AssignWorkOptionsDto
+  +AssignAsync(request, ct) : (Result, AssignedWorkResultDto?)
+}
+class LearningHomeHandler {
+  +HandleAsync(ct) : LearningHomeDto
+}
+class MentorScope {
+  +CohortsAsync(ct)
+  +YouthIdsAsync(ct)
+}
+class LearnerProgress {
+  +TracksAsync(ct)
+}
+class AssignedWork <<entity>> {
+  +Id : Guid
+  +OrganizationId : Guid
+  +ChildId : Guid
+  +Kind : AssignedWorkKind
+  +ItemId : Guid
+  +ProgramId : Guid?
+  +DueOn : DateOnly
+  +Message : string?
+  +AssignedByMembershipId : Guid
+  +AssignedAt : DateTimeOffset
+  +Reassign(dueOn, message, by, at)
+}
+enum AssignedWorkKind {
+  Lesson
+  Quiz
+  Assignment
+}
+class AssignWorkRequest <<record>>
+class AssignWorkOptionsDto <<record>>
+class AssignedWorkResultDto <<record>>
+class AssignedWorkItemDto <<record>>
+class LearningHomeDto <<record>>
+MentorDashboardPage ..> AssignWorkDialog : opens
+AssignWorkDialog --> MentoringApi
+LearningPage --> LearningApi
+AssignWorkHandler --> MentorScope
+AssignWorkHandler ..> AssignWorkRequest
+AssignWorkHandler ..> AssignWorkOptionsDto
+AssignWorkHandler ..> AssignedWorkResultDto
+AssignWorkHandler o-- AssignedWork : persists
+LearningHomeHandler --> LearnerProgress
+LearningHomeHandler ..> LearningHomeDto
+LearningHomeDto *-- AssignedWorkItemDto
+AssignedWork --> AssignedWorkKind
+@enduml

@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Assign work
+Person(m, "Mentor", "Assigns lessons, quizzes and assignments to his youth or a cohort")
+Person(y, "Youth", "Sees assigned work on her Learning home")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(m, ph, "Assigns work with a due date and a message", "HTTPS")
+Rel(y, ph, "Reads Assigned to you and opens the work", "HTTPS")
+@enduml

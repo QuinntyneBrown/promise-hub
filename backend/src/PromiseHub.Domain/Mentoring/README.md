@@ -9,3 +9,4 @@ Domain types for the Mentoring module: mentor assignments, mentor check-ins, at-
 - `MentorCheckIn`, `MentorCheckInKind`, `MentorCheckInEngagement` — a mentor's record of one conversation with a youth, read only by its author (prompt 67, ADR 0061).
 
 - `AtRiskFlag`, `AtRiskFlagSeverity`, `AtRiskFlagOutcome` — a mentor's worry about one of his youth, open until a mentor of the youth, an admin or a program director resolves it with an outcome (prompt 68, ADR 0062).
+- `AssignedWork`, `AssignedWorkKind` — a lesson, quiz or assignment a mentor assigned to one youth with a due date and an optional message, one row per youth and item (prompt 69, ADR 0063).

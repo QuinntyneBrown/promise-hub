@@ -17,3 +17,4 @@ export { MentorCheckInDialog } from './lib/mentor-check-in-dialog/mentor-check-i
 export { AtRiskFlagsPage } from './lib/at-risk-flags-page/at-risk-flags-page';
 export { RaiseFlagDialog } from './lib/raise-flag-dialog/raise-flag-dialog';
 export { ResolveFlagDialog } from './lib/resolve-flag-dialog/resolve-flag-dialog';
+export { AssignWorkDialog } from './lib/assign-work-dialog/assign-work-dialog';

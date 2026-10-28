@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Assign work
+Person(m, "Mentor", "Phone or laptop browser")
+Person(y, "Youth", "Phone browser")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular 22", "mentoring and learning libraries, api client, components")
+  Container(api, "PromiseHub API", "ASP.NET Core, .NET 10", "Mentoring and Learning gates, MentorYouth, MentorScope, LearnerProgress, handlers, audit")
+  ContainerDb(db, "PromiseHub database", "SQLite via EF Core", "Tenant-filtered AssignedWork, curriculum, enrollments and AuditEntries")
+}
+Rel(m, web, "Uses", "HTTPS")
+Rel(y, web, "Uses", "HTTPS")
+Rel(web, api, "Calls", "JSON/HTTPS")
+Rel(api, db, "Reads and writes", "EF Core")
+@enduml

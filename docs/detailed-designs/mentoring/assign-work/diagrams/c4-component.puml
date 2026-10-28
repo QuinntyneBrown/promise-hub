@@ -1,0 +1,35 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Assign work
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(dash, "MentorDashboardPage", "Angular page", "Assign work while Learning is on")
+  Component(dlg, "AssignWorkDialog", "CDK Dialog", "what, who, due date, message")
+  Component(home, "LearningPage", "Angular page", "Assigned to you card")
+  Component(mapi, "MentoringApi", "Contract + HTTP client", "MENTORING_API")
+  Component(lapi, "LearningApi", "Contract + HTTP client", "LEARNING_API")
+  Component(lib, "Components library", "Angular", "ph-dialog, ph-radio-group, ph-select, ph-checkbox-group, ph-text-field, ph-textarea, ph-list, ph-badge")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "MentoringEndpoints", "Minimal API", "GET /mentoring/assign-work, POST /mentoring/assigned-work")
+  Component(lep, "LearningEndpoints", "Minimal API", "GET /learning/home")
+  Component(h, "AssignWorkHandler", "Handler", "options, scope, validation, save, audit")
+  Component(lh, "LearningHomeHandler", "Handler", "the youth's assigned work while Mentoring is on")
+  Component(scope, "MentorScope", "Service", "the mentor's youth and cohorts")
+  Component(lp, "LearnerProgress", "Service", "what the youth may open and has done")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "AssignedWork, Lessons, Quizzes, Assignments, Programs, Enrollments, AuditEntries")
+}
+Rel(dash, dlg, "opens")
+Rel(dlg, mapi, "loads options, assigns")
+Rel(home, lapi, "loads home")
+Rel(dlg, lib, "composes")
+Rel(home, lib, "composes")
+Rel(mapi, ep, "JSON/HTTPS")
+Rel(lapi, lep, "JSON/HTTPS")
+Rel(ep, h, "calls")
+Rel(lep, lh, "calls")
+Rel(h, scope, "uses")
+Rel(lh, lp, "uses")
+Rel(h, db, "reads and writes")
+Rel(lh, db, "reads")
+@enduml

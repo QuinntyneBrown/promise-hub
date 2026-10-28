@@ -23,6 +23,7 @@ import {
 import { Router } from '@angular/router';
 import { Subject, startWith, switchMap } from 'rxjs';
 import { lessonLink } from '../lesson-link';
+import { assignedLink, assignedMeta, dueLabel, dueTone } from '../assigned-words';
 
 /**
  * Learning home (mock: learn-home, L2-068 criterion 1): where the youth left off, their progress and their tracks. A youth under
@@ -52,6 +53,10 @@ export class LearningPage {
   private readonly router = inject(Router);
   private readonly refresh$ = new Subject<void>();
   protected readonly lessonLink = lessonLink;
+  protected readonly assignedLink = assignedLink;
+  protected readonly assignedMeta = assignedMeta;
+  protected readonly dueLabel = dueLabel;
+  protected readonly dueTone = dueTone;
 
   /** Null while loading. */
   protected readonly result = toSignal(

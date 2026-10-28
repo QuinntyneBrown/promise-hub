@@ -2246,6 +2246,58 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.ToTable("YouthOnboardings");
                 });
 
+            modelBuilder.Entity("PromiseHub.Domain.Mentoring.AssignedWork", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("AssignedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("AssignedByMembershipId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ChildId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("DueOn")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Message")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ProgramId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedByMembershipId");
+
+                    b.HasIndex("ChildId");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("ProgramId");
+
+                    b.HasIndex("OrganizationId", "ChildId", "Kind", "ItemId")
+                        .IsUnique();
+
+                    b.ToTable("AssignedWork");
+                });
+
             modelBuilder.Entity("PromiseHub.Domain.Mentoring.AtRiskFlag", b =>
                 {
                     b.Property<Guid>("Id")
@@ -4052,6 +4104,31 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Mentoring.AssignedWork", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Organizations.Membership", null)
+                        .WithMany()
+                        .HasForeignKey("AssignedByMembershipId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Households.Child", null)
+                        .WithMany()
+                        .HasForeignKey("ChildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Programs.Program", null)
+                        .WithMany()
+                        .HasForeignKey("ProgramId");
                 });
 
             modelBuilder.Entity("PromiseHub.Domain.Mentoring.AtRiskFlag", b =>

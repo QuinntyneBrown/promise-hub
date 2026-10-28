@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 69 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="69" data-video-title="Assign work" data-parts="Introduction|Cohort|Chosen youth|Server checks|Youth sees|Who assigns|Phone|States|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 69</div>
+  <h1>Assign work</h1>
+  <p class="lead">A lesson, quiz or assignment for chosen youth or a whole cohort, due by a date</p>
+</section>
+
+<section id="cohort" data-part="1" data-cue="Daniel Osei mentors at Harbourview Youth Collective." data-clip="clips/assign-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Assign to a cohort</h3><p>Last in Line for After-School Tutoring, due Fri 13 Nov.</p></div>
+</section>
+
+<section id="cohort-shots" data-part="1" data-cue="When he assigns it, a toast says Last in Line went to four youth">
+  <h2>Assigned to four youth</h2>
+  <div class="cols">
+    <img class="shot" alt="The Assign work dialog: Last in Line, A whole cohort, After-School Tutoring, due 13 Nov, with a message" src="shots/desktop-dialog.png">
+    <img class="shot" alt="The Mentoring dashboard with the Work assigned toast" src="shots/desktop-assigned.png">
+  </div>
+</section>
+
+<section id="chosen" data-part="2" data-cue="He can also pick youth one by one." data-clip="clips/chosen-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Youth I choose</h3><p>The quiz for Mateo and Yusuf, who is at risk.</p></div>
+</section>
+
+<section id="checks" data-part="3" data-cue="The server offers only published lessons, quizzes and assignments">
+  <h2>What the server checks</h2>
+  <table class="facts">
+    <tr><th>Field</th><th>Rule</th></tr>
+    <tr><td>Item</td><td>A published lesson, quiz or assignment of a track his youth follow</td></tr>
+    <tr><td>Who</td><td>Chosen youth in his scope, or one cohort he is on</td></tr>
+    <tr><td>Due date</td><td>Required, not in the past</td></tr>
+    <tr><td>Message</td><td>Optional, up to 500 characters</td></tr>
+    <tr><td>Track</td><td>Every youth follows the item’s track (422 names who)</td></tr>
+    <tr><td>Audit</td><td>Created once, with the kind, count and due date; never the message</td></tr>
+  </table>
+  <p class="muted small">GET /mentoring/assign-work · POST /mentoring/assigned-work · L2-092 · ADR 0063</p>
+</section>
+
+<section id="youth" data-part="4" data-cue="Sofía Rivera opens Learning." data-clip="clips/youth-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Assigned to you</h3><p>Soonest due first; it opens the lesson.</p></div>
+</section>
+
+<section id="youth-shots" data-part="4" data-cue="When she completes a lesson, takes a quiz or hands in an assignment">
+  <h2>Until she has done it</h2>
+  <div class="cols">
+    <img class="shot" alt="Sofía’s Learning home: Assigned to you with Serve someone this week overdue and Last in Line due in 8 days" src="shots/desktop-learning.png">
+    <img class="shot" alt="The Last in Line lesson, opened from Assigned to you" src="shots/desktop-lesson.png">
+  </div>
+</section>
+
+<section id="who" data-part="5" data-cue="Only a mentor assigns work">
+  <h2>Who can assign</h2>
+  <table class="facts">
+    <tr><th>Caller</th><th>Answer</th></tr>
+    <tr><td>Daniel, a mentor</td><td>His youth and his cohorts</td></tr>
+    <tr><td>A youth or cohort outside his scope</td><td>403, audited</td></tr>
+    <tr><td>Admins, program directors, other staff, guardians, youth</td><td>403</td></tr>
+    <tr><td>Another organization</td><td>404</td></tr>
+    <tr><td>Learning off</td><td>No Assign work; 404</td></tr>
+    <tr><td>Mentoring off</td><td>404; no Assigned to you; nothing deleted</td></tr>
+  </table>
+</section>
+
+<section id="off" data-part="5" data-cue="Assigning needs Learning content, so with Learning off">
+  <h2>Modules off</h2>
+  <div class="cols">
+    <img class="shot" alt="The Mentoring dashboard with Learning off: no Assign work" src="shots/desktop-learning-off.png">
+    <img class="shot" alt="Sofía’s Learning home with Mentoring off: no Assigned to you" src="shots/desktop-mentoring-off.png">
+  </div>
+</section>
+
+<section id="phone" data-part="6" data-cue="On a phone, the dialog rises as a bottom sheet" data-clip="clips/phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>One column</h3><p>The dialog as a bottom sheet, then Sofía’s assigned work.</p></div>
+</section>
+
+<section id="states" data-part="7" data-cue="Assigning with nothing chosen" data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Refused and failed</h3><p>Invalid, outside the track, failed, error, nothing to assign.</p></div>
+</section>
+
+<section id="testing" data-part="8" data-cue="The API tests cover the options">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>AssignWorkTests</code>: options, chosen youth, cohort, checks, track, again, audit, scope, roles, tenancy, modules off</li>
+    <li><code>LearningAssignedWorkTests</code>: her list, what drops off, only her own, Mentoring off</li>
+    <li><code>assign-work.spec.ts</code> and <code>assigned-work.spec.ts</code> on phone and laptop, with axe</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="9" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Assign a lesson, quiz or assignment to chosen youth or a whole cohort</li><li>Each youth sees it on her Learning home until she has done it</li><li>Assigning needs both Mentoring and Learning</li></ul>
+  <p class="muted">Next: schedule sessions and RSVP</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

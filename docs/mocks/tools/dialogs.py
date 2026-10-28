@@ -830,3 +830,62 @@ def resolve_flag(S):
     S.add("busy", "Resolving: Resolve flag is busy; Cancel still works.", **over("mentor-flags", "default", overlays=resolve_flag_box(busy=True)))
     S.add("failed", "The save failed: the choice and note stay to try again.",
           **over("mentor-flags", "default", overlays=resolve_flag_box(alert_html=failed_alert("That didn’t go through", "The flag wasn’t resolved. Everything is still here; try again."))))
+
+
+# ---------------------------------------------------------------- assign work (prompt 69, L2-092)
+from pages_assign import R_ASSIGN, KINDS as WORK_KINDS  # noqa: E402
+
+ASSIGN_MESSAGE = "Read this before Tutoring night next week. Come ready to share one way you served someone."
+WORK_ITEMS = ["Choose a lesson", "Pick Up the Towel · Leading by Serving", "Last in Line · Leading by Serving", "Leading Like a Coach · Leading by Serving",
+              "Who Am I? · Knowing Yourself", "My Strengths · Knowing Yourself"]
+ASSIGN_YOUTH = [("Emily Tran", "Saturday Sports", ""), ("Jordan Thompson", "After‑School Tutoring", ""), ("Kevin Tran", "Saturday Sports", ""),
+                ("Mateo Rivera", "After‑School Tutoring", ""), ("Sofía Rivera", "After‑School Tutoring", ""), ("Yusuf Haddad", "After‑School Tutoring", "At risk")]
+
+
+def assign_body(err=None, *, blank: bool = False, chosen: bool = False) -> str:
+    err = err or {}
+    summary = form_summary(list(err.items())) if err else ""
+    kind = fieldset("What are you assigning?", "".join(choice("kind", k, small=d, checked=(k == "Lesson")) for k, d in WORK_KINDS), fid="kind")
+    item = select("item", "Lesson", WORK_ITEMS, selected="Choose a lesson" if (blank or "item" in err) else "Last in Line · Leading by Serving",
+                  error=err.get("item", ""), help_="Published work of the tracks your youth follow.", attrs=" required")
+    who_cohort = not chosen and not blank and "who" not in err
+    who = fieldset("Who is it for?", choice("who", "A whole cohort", small="Everyone on its roster today", checked=who_cohort, invalid="who" in err)
+                   + choice("who", "Youth I choose", small="One or more of your youth", checked=chosen, invalid="who" in err), error=err.get("who", ""), fid="who")
+    if chosen:
+        boxes = "".join(choice("youth", n, small=c + (" · " + flag_ if flag_ else ""), type_="checkbox", checked=n in ("Mateo Rivera", "Yusuf Haddad"))
+                        for n, c, flag_ in ASSIGN_YOUTH)
+        target = fieldset("Your youth", boxes, fid="youth", hint="2 chosen")
+    elif who_cohort:
+        target = select("cohort", "Cohort", ["After‑School Tutoring · 4 youth", "Saturday Sports · 2 youth"], selected="After‑School Tutoring · 4 youth")
+    else:
+        target = ""
+    due = field("due", "Due date", type_="date", value="" if (blank or "due" in err) else "2026-11-13", error=err.get("due", ""), required=True,
+                help_="They see it on their Learning home with this date.")
+    msg_value = "" if blank else ASSIGN_MESSAGE
+    msg = textarea("message", "Message", value=msg_value, rows=3, optional=True, count=f"{len(msg_value)} / 500", help_="Shown with the work on their Learning home.")
+    return summary + kind + item + who + target + due + msg
+
+
+def assign_box(err=None, *, busy=False, alert_html="", blank=False, chosen=False) -> str:
+    return dialog_box("Assign work", "Pick a lesson, quiz or assignment, who it’s for and when it’s due.",
+                      assign_body(err, blank=blank, chosen=chosen), footer("Assign", busy=busy), icon_name="plus", alert_html=alert_html, form=True, scroll=True)
+
+
+@screen("assign-work", "dialog", "Assign work", opens_from="mentor-dashboard", reqs=R_ASSIGN)
+def assign_work(S):
+    S.add("default", "Assign Last in Line to the whole After‑School Tutoring cohort, due Fri 13 Nov, with a message.",
+          **over("mentor-dashboard", "default", overlays=assign_box()),
+          notes=note("GET /mentoring/assign-work answers the published lessons, quizzes and assignments of the tracks his cohorts and youth follow, his youth and his cohorts. Choosing Quiz or Assignment swaps the list.", "top: 5rem; right: 1rem;"))
+    S.add("chosen-youth", "Youth I choose: a checkbox for each of his youth with their cohort; Yusuf is marked at risk. Mateo and Yusuf are chosen.",
+          **over("mentor-dashboard", "default", overlays=assign_box(chosen=True)))
+    S.add("empty", "Just opened: Lesson is chosen and nothing else; focus on Lesson.", **over("mentor-dashboard", "default", overlays=assign_box(blank=True)))
+    S.add("invalid", "Assign with nothing chosen: errors beside the fields and in a summary.",
+          **over("mentor-dashboard", "default", overlays=assign_box({"item": "Choose what to assign.", "who": "Choose who it’s for.", "due": "Choose a due date."})))
+    S.add("not-followed", "Kevin is chosen but doesn’t follow Leadership Foundations: the server answers 422 and says who.",
+          **over("mentor-dashboard", "default", overlays=assign_box({"youth": "Kevin Tran doesn’t follow the track this lesson is in."}, chosen=True)))
+    S.add("busy", "Assigning: Assign is busy and cannot be pressed twice; Cancel still works.", **over("mentor-dashboard", "default", overlays=assign_box(busy=True)))
+    S.add("failed", "The save failed: everything he chose stays to try again.",
+          **over("mentor-dashboard", "default", overlays=assign_box(alert_html=failed_alert("That didn’t go through", "Nothing was assigned. Everything is still here; try again."))))
+    S.add("nothing-to-assign", "None of the tracks his youth follow has published work yet: the dialog says so and offers only Close.",
+          **over("mentor-dashboard", "default", overlays=dialog_box("Assign work", "Pick a lesson, quiz or assignment, who it’s for and when it’s due.", card(empty("Nothing to assign yet", "When a track your cohorts follow publishes lessons, quizzes or assignments, you can assign them here.", icon_name="list"), cls="card--flush"),
+                                                                    btn("Close", "", attrs=" autofocus"), icon_name="plus")))
