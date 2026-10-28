@@ -23,6 +23,7 @@
     [type]="type()"
     [disabled]="disabled()"
     [attr.aria-busy]="busy() || null"
+    [attr.aria-current]="current() ? 'page' : null"
     [attr.aria-label]="label()"
     [attr.aria-haspopup]="hasPopup()"
     [attr.aria-expanded]="expanded()"

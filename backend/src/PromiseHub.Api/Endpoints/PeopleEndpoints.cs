@@ -1,0 +1,20 @@
+using PromiseHub.Api.Authorization;
+using PromiseHub.Application.Identity;
+using PromiseHub.Application.Staff;
+
+namespace PromiseHub.Api.Endpoints;
+
+/// <summary>People administration (L2-112 to L2-114, ADR 0070): admins only; always part of the product, not a module.</summary>
+public static class PeopleEndpoints
+{
+    public static IEndpointRouteBuilder MapPeopleEndpoints(this IEndpointRouteBuilder app)
+    {
+        var people = app.MapGroup("/people").RequirePermission(Permission.ManageStaff);
+        people.MapGet("", async (string? q, string? role, string? status, Guid? programId, int? page, PeopleHandler handler, CancellationToken ct) =>
+        {
+            var result = await handler.ListAsync(new PeopleQuery(q, role, status, programId, page ?? 1), ct);
+            return result.Page is { } list ? Results.Ok(list) : Results.Json(new { errors = result.Errors }, statusCode: StatusCodes.Status422UnprocessableEntity);
+        });
+        return app;
+    }
+}

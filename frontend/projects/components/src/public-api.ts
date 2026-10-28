@@ -31,6 +31,7 @@ export * from './lib/list/list';
 export * from './lib/list/list-item';
 export * from './lib/navigation/nav-item';
 export * from './lib/page-header/page-header';
+export * from './lib/pagination/pagination';
 export * from './lib/quick-card-alert/quick-card-alert';
 export * from './lib/radio-group/radio-group';
 export * from './lib/radio-group/radio-option';

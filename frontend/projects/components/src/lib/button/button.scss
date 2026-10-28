@@ -117,3 +117,10 @@
   min-width: 0;
   white-space: normal;
 }
+
+/* The current page among page buttons (design system: pagination, numbered). */
+.btn[aria-current='page'] {
+  background: var(--color-accent-subtle);
+  border-color: var(--color-accent);
+  color: var(--color-fg-accent);
+}

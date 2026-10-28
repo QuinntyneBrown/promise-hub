@@ -56,17 +56,13 @@
   @if (l) {
     @if (l.entries.length) {
       <ph-table caption="Audit log" [columns]="columns" [rows]="rows()" />
-      <nav class="pager" aria-label="Pagination">
-        <span class="muted">{{ range(l) }}</span>
-        <div class="pager__buttons">
-          <ph-button [disabled]="l.page === 1" (click)="set({ page: l.page - 1 })"
-            >Previous</ph-button
-          >
-          <ph-button [disabled]="l.page * l.pageSize >= l.total" (click)="set({ page: l.page + 1 })"
-            >Next</ph-button
-          >
-        </div>
-      </nav>
+      <ph-pagination
+        [page]="l.page"
+        [pageSize]="l.pageSize"
+        [total]="l.total"
+        [numbered]="false"
+        (pageChange)="set({ page: $event })"
+      />
     } @else if (filter().q || filter().action) {
       <ph-card [flush]="true">
         <ph-empty-state

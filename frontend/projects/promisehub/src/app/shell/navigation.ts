@@ -153,6 +153,13 @@ export const NAVIGATION: Section[] = [
     module: 'Messages',
     roles: ['Youth', 'Mentor'],
   },
+  {
+    label: 'People',
+    link: '/people',
+    icon: 'families',
+    placement: 'overflow',
+    roles: ['Admin'],
+  },
   { label: 'Settings', link: '/settings', icon: 'settings', placement: 'overflow' },
   {
     label: 'Notifications',

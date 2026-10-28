@@ -7,6 +7,7 @@ import {
   PhCard,
   PhEmptyState,
   PhPageHeader,
+  PhPagination,
   PhSelect,
   PhSkeleton,
   PhTable,
@@ -26,6 +27,7 @@ import { debounceTime, startWith, switchMap } from 'rxjs';
     PhCard,
     PhEmptyState,
     PhPageHeader,
+    PhPagination,
     PhSelect,
     PhSkeleton,
     PhTable,
@@ -92,10 +94,5 @@ export class AuditLogPage {
 
   protected set(change: Partial<AuditFilter>): void {
     this.filter.update((f) => ({ ...f, ...change, page: change.page ?? 1 }));
-  }
-
-  protected range(l: AuditLog): string {
-    const from = (l.page - 1) * l.pageSize + 1;
-    return `Showing ${from}–${from + l.entries.length - 1} of ${l.total.toLocaleString('en-US')}`;
   }
 }

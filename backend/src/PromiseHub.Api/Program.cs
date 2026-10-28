@@ -78,6 +78,7 @@ app.MapApplicationEndpoints();
 app.MapIncidentEndpoints();
 app.MapSmsWebhookEndpoints();
 app.MapStaffEndpoints();
+app.MapPeopleEndpoints();
 app.MapInvitationEndpoints();
 app.MapSettingsEndpoints();
 app.MapParticipantModuleEndpoints();

@@ -6,6 +6,7 @@ import {
   contentChild,
   input,
 } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { PhBadge } from '../badge/badge';
 import { TableCell } from './table-cell';
 import { TableColumn } from './table-column';
@@ -13,7 +14,7 @@ import { TableColumn } from './table-column';
 /** Table (design system: table): rows of records under labelled columns, scrolling sideways on a phone. */
 @Component({
   selector: 'ph-table',
-  imports: [NgTemplateOutlet, PhBadge],
+  imports: [NgTemplateOutlet, RouterLink, PhBadge],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './table.html',
   styleUrl: './table.scss',
@@ -35,6 +36,12 @@ export class PhTable {
 
   protected badge(cell: TableCell): { text: string; tone: ReturnType<PhBadge['tone']> } | null {
     return cell !== null && typeof cell === 'object' && 'tone' in cell ? cell : null;
+  }
+
+  protected linked(
+    cell: TableCell,
+  ): { text: string; link: string | unknown[]; suffix?: string } | null {
+    return cell !== null && typeof cell === 'object' && 'link' in cell ? cell : null;
   }
 
   protected tagged(

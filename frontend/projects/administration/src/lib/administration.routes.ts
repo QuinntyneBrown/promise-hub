@@ -3,6 +3,7 @@ import { AuditLogPage } from './audit-log-page/audit-log-page';
 import { BillingPage } from './billing-page/billing-page';
 import { CoveragePage } from './coverage-page/coverage-page';
 import { OrganizationsPage } from './organizations-page/organizations-page';
+import { PeoplePage } from './people-page/people-page';
 import { StaffPage } from './staff-page/staff-page';
 
 /** Mounted by the app at /settings/staff; staff access is always part of the product. */
@@ -28,4 +29,9 @@ export const auditRoutes: Routes = [
 /** Mounted by the app at /admin/organizations; the only screen that spans tenants, for platform admins. */
 export const organizationsRoutes: Routes = [
   { path: '', component: OrganizationsPage, title: 'Organizations · PromiseHub' },
+];
+
+/** Mounted by the app at /people; people administration is always on and admins only (L2-112, ADR 0070). */
+export const peopleRoutes: Routes = [
+  { path: '', component: PeoplePage, title: 'People · PromiseHub' },
 ];

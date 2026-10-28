@@ -1,0 +1,112 @@
+@let r = result();
+@let l = list();
+@if (r?.status === 'forbidden') {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      title="Only admins manage people"
+      text="Ask an admin to change a role or an account."
+      [headingLevel]="1"
+    >
+      <ph-button link="/">Back to Today</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-page-header title="People" [subtitle]="l ? summary(l) : ''">
+    <ph-button variant="primary" icon="plus" hasPopup="dialog" (click)="invite()"
+      >Invite staff</ph-button
+    >
+  </ph-page-header>
+  @if (l && onlyYou(l)) {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="families"
+        title="It’s just you so far"
+        text="Invite the people who run your programs. Youth are invited from their child’s record."
+      >
+        <ph-button variant="primary" icon="plus" hasPopup="dialog" (click)="invite()"
+          >Invite staff</ph-button
+        >
+      </ph-empty-state>
+    </ph-card>
+  } @else {
+    <div class="toolbar">
+      <ph-text-field
+        class="search"
+        inputId="pp-q"
+        type="search"
+        label="Search people"
+        [labelHidden]="true"
+        placeholder="Name or email"
+        name="q"
+        [ngModel]="filter().q"
+        (ngModelChange)="set({ q: $event })"
+      />
+      <ph-select
+        inputId="pp-role"
+        label="Role"
+        [options]="roleOptions()"
+        name="role"
+        [ngModel]="filter().role"
+        (ngModelChange)="set({ role: $event })"
+      />
+      <ph-select
+        inputId="pp-status"
+        label="Status"
+        [options]="statusOptions"
+        name="status"
+        [ngModel]="filter().status"
+        (ngModelChange)="set({ status: $event })"
+      />
+      <ph-select
+        inputId="pp-program"
+        label="Program"
+        [options]="programOptions()"
+        name="program"
+        [ngModel]="filter().programId"
+        (ngModelChange)="set({ programId: $event })"
+      />
+    </div>
+    @if (l) {
+      @if (l.items.length) {
+        <ph-table caption="People" [columns]="columns()" [rows]="rows()" />
+        <ph-pagination
+          [page]="l.page"
+          [pageSize]="l.pageSize"
+          [total]="l.total"
+          (pageChange)="set({ page: $event })"
+        />
+      } @else {
+        <ph-card [flush]="true">
+          <ph-empty-state
+            icon="search"
+            [title]="
+              filter().q ? 'No one matches “' + filter().q + '”' : 'No one matches these filters'
+            "
+            text="Clear the search or filters, or invite someone new."
+          >
+            <ph-button (click)="set({ q: '', role: '', status: '', programId: '' })"
+              >Clear search</ph-button
+            >
+            <ph-button variant="primary" icon="plus" hasPopup="dialog" (click)="invite()"
+              >Invite staff</ph-button
+            >
+          </ph-empty-state>
+        </ph-card>
+      }
+    } @else if (r === null) {
+      <div aria-busy="true" aria-label="Loading people"><ph-skeleton shape="card" /></div>
+    } @else {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="warning"
+          tone="error"
+          title="We couldn’t load people"
+          text="Check your connection and try again."
+        >
+          <ph-button variant="primary" (click)="retry()">Try again</ph-button>
+        </ph-empty-state>
+      </ph-card>
+    }
+  }
+}

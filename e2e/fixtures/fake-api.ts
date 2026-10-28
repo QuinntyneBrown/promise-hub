@@ -2430,6 +2430,7 @@ export class FakeApi {
       (route, p) => this.addPickup(route, p["id"]!),
     ],
     ["GET", /^\/api\/staff$/, (route) => this.listStaff(route)],
+    ["GET", /^\/api\/people$/, (route) => this.listPeople(route)],
     ["GET", /^\/api\/coverage$/, (route) => this.coverage(route)],
     [
       "PUT",
@@ -4565,6 +4566,28 @@ export class FakeApi {
     string,
     { lead: string; supporting: string[] }
   >();
+
+  /** More accounts at Harbourview, as accepted invitations would add them: Youth worker 01 to n (L2-112 paging). */
+  addPeople(count: number): void {
+    for (let i = 1; i <= count; i++) {
+      const n = String(i).padStart(2, "0");
+      memberships.push({
+        id: `m-worker-${n}`,
+        organizationId: "org-harbourview",
+        personName: `Worker ${n}`,
+        email: `worker${n}@harbourview.example`,
+        role: "YouthWorker",
+      });
+    }
+  }
+
+  /** Removes every other account of the person's organization, as a brand-new organization would have only its founder. */
+  leaveOnly(membershipId: string): void {
+    const keep = memberships.find((m) => m.id === membershipId)!;
+    for (const m of memberships)
+      if (m.organizationId === keep.organizationId && m.id !== keep.id)
+        this.removedMembers.add(m.id);
+  }
 
   /** Assigns a mentor to a child, as a program director would from a cohort's roster. */
   assignYouthMentor(childId: string, mentorId: string): void {
@@ -7290,6 +7313,128 @@ export class FakeApi {
       });
     this.sessionStaff.set(e.id, [...b.membershipIds]);
     return route.fulfill({ status: 204 });
+  }
+
+  /** The last successful sign-in by email (as SignInAttempts would hold them), for the people directory (L2-112). */
+  private lastSignIns = new Map<string, string>([
+    ["tom@harbourview.example", "2026-11-05T14:02:00Z"],
+    ["sofia@harbourview.example", "2026-11-05T21:10:00Z"],
+    ["daniel@harbourview.example", "2026-11-05T21:05:00Z"],
+    ["jaylen@harbourview.example", "2026-11-05T20:55:00Z"],
+    ["marisol@harbourview.example", "2026-11-05T14:15:00Z"],
+    ["aisha@harbourview.example", "2026-11-05T20:40:00Z"],
+  ]);
+
+  /** Mirrors backend PersonDetails: a youth's child's programs or a mentor's cohorts, and mentoring while Mentoring is on. */
+  private personFacts(x: Membership, mentoring: boolean) {
+    const childId = this.youthLinks.get(x.id);
+    const programs = this.programs
+      .filter((p) => p.organizationId === x.organizationId)
+      .filter(
+        (p) =>
+          (childId !== undefined && p.roster.includes(childId)) ||
+          (mentoring &&
+            (this.cohortMentors.get(p.id)?.lead === x.id ||
+              !!this.cohortMentors.get(p.id)?.supporting.includes(x.id))),
+      )
+      .map((p) => p.name)
+      .sort();
+    const childName = (id: string) =>
+      this.households.flatMap((h) => h.children).find((c) => c.id === id);
+    const mentorId = childId ? this.youthMentors.get(childId) : undefined;
+    return {
+      programs,
+      mentoring: mentoring
+        ? {
+            mentor: mentorId
+              ? (memberships.find((m) => m.id === mentorId)?.personName ?? null)
+              : null,
+            youth: [...this.youthMentors]
+              .filter(([, mentor]) => mentor === x.id)
+              .map(([c]) => {
+                const child = childName(c);
+                return child ? `${child.firstName} ${child.lastName}` : "";
+              })
+              .filter(Boolean)
+              .sort(),
+          }
+        : undefined,
+    };
+  }
+
+  /** Mirrors backend PeopleHandler.ListAsync (L2-112, L2-114): admins only, filtered on the server, 25 to a page. */
+  private async listPeople(route: Route): Promise<void> {
+    const m = await this.adminCaller(route);
+    if (!m) return;
+    const url = new URL(route.request().url());
+    const q = (url.searchParams.get("q") ?? "").trim().toLowerCase();
+    const role = url.searchParams.get("role") ?? "";
+    const status = url.searchParams.get("status") ?? "";
+    const programId = url.searchParams.get("programId") ?? "";
+    const page = Math.max(1, Number(url.searchParams.get("page") ?? 1) || 1);
+    const mentoring = this.modules.get(m.organizationId)!.includes("Mentoring");
+    const roles = [
+      "Admin",
+      "ProgramDirector",
+      "SiteLead",
+      "YouthWorker",
+      "VolunteerCoordinator",
+      "Youth",
+      "Mentor",
+      "Volunteer",
+    ].filter((r) => mentoring || r !== "Mentor");
+    const errors: Record<string, string> = {};
+    if (role && !roles.includes(role)) errors["role"] = "Choose a role.";
+    if (status && status !== "Active" && status !== "Deactivated")
+      errors["status"] = "Choose Active or Deactivated.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
+    const all = this.staffOf(m)
+      .map((x) => ({
+        x,
+        role: this.roleOverrides.get(x.id) ?? x.role,
+        status: "Active",
+        facts: this.personFacts(x, mentoring),
+      }))
+      .filter((p) => !role || p.role === role)
+      .filter((p) => !status || p.status === status)
+      .filter(
+        (p) =>
+          !q ||
+          p.x.personName.toLowerCase().includes(q) ||
+          p.x.email.toLowerCase().includes(q),
+      )
+      .filter(
+        (p) =>
+          !programId ||
+          p.facts.programs.includes(
+            this.programs.find((pr) => pr.id === programId)?.name ?? "\u0000",
+          ),
+      )
+      .sort((a, z) => a.x.personName.localeCompare(z.x.personName));
+    return route.fulfill({
+      json: {
+        items: all.slice((page - 1) * 25, page * 25).map((p) => ({
+          id: p.x.id,
+          name: p.x.personName,
+          email: p.x.email,
+          role: p.role,
+          status: p.status,
+          programs: p.facts.programs,
+          lastSignedInAt: this.lastSignIns.get(p.x.email) ?? null,
+          isYou: p.x.id === m.id,
+          ...(p.facts.mentoring ? { mentoring: p.facts.mentoring } : {}),
+        })),
+        total: all.length,
+        page,
+        pageSize: 25,
+        roles,
+        programs: this.programs
+          .filter((p) => p.organizationId === m.organizationId && p.status === "Active")
+          .map((p) => ({ id: p.id, name: p.name }))
+          .sort((a, z) => a.name.localeCompare(z.name)),
+      },
+    });
   }
 
   private async listStaff(route: Route): Promise<void> {
