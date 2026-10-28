@@ -73,6 +73,8 @@ Domain entities in `PromiseHub.Domain/Messaging/`: `Message` (aggregate root), `
 - Whether a reply to a text is matched to a message by provider conversation id or by the most recent message to that household is `<TO SUPPLY>`.
 - The translation service behind the composer help text "Machine-translated per household language" is `<TO SUPPLY>`; the design assumes the sender writes one body and the renderer produces the Spanish and French copies.
 
+Announcements (prompt 74, L2-105) reuse this pipeline for their guardian copy: `ComposeAnnouncementHandler` calls `MessageWriter.Queue` with `MessageSource.Messages`, `ChannelChoice.TextWithEmailFallback`, the households of the program's enrolled children and a `dueAt` (the announcement's send time), so a scheduled announcement's deliveries wait for the send job like any other and the SMS cap applies unchanged. `MessageWriter.Queue` gained the optional `dueAt` parameter; it defaults to now. See publish-announcements.
+
 ## Requirements
 
 The feature realizes the following level-2 (L2) requirement and enforces the cross-cutting ones listed with it.

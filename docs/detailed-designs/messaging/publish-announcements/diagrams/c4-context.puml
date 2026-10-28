@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Publish announcements
+Person(dir, "Program director", "Marisol: sends announcements")
+Person(youth, "Youth", "Sofía: reads hers in the app")
+Person(mentor, "Mentor", "Daniel: reads his in the app")
+Person(g, "Guardian", "Carmen: gets a text or an email")
+System_Ext(sms, "SMS and email providers", "Deliver guardian copies")
+System(ph, "PromiseHub", "Youth-serving organization platform; Messages module")
+Rel(dir, ph, "composes and tracks")
+Rel(youth, ph, "reads, marks read")
+Rel(mentor, ph, "reads, marks read")
+Rel(ph, sms, "guardian copy via Messages")
+Rel(sms, g, "text or email")
+@enduml

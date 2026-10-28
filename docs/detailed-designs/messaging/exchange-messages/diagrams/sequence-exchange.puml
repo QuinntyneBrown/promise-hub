@@ -1,0 +1,44 @@
+@startuml
+title UML sequence behaviour — Daniel writes to Sofía; she reads and replies
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Mentor (Daniel), youth (Sofía)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "ConversationPage" as page
+  participant "ConversationsApi" as capi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "ConversationEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "SendDirectMessageHandler" as sh
+  participant "ConversationHandler" as gh
+  participant "ConversationAccess" as acc
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : Daniel opens Sofía's conversation
+page -> capi : get(youthId)
+capi -> ep : GET /conversations/{youthId}
+ep -> gh : HandleAsync
+gh -> acc : ForAsync(youthId): youth of this organization (else 404), Daniel her mentor (else 403) (L2-106 c6)
+gh -> db : messages oldest first; ReadAt on those sent to Daniel (L2-106 c2)
+gh --> page : names, canSend, blocked, messages
+actor -> page : "Of course, tell her to come at 4." Send
+page -> capi : send(youthId, body)
+capi -> ep : POST /conversations/{youthId}/messages
+ep -> sh : HandleAsync
+sh -> acc : participant? consent in force? (L2-108 c1)
+alt blocked
+  sh --> page : 409 blocked: consent
+else
+  sh -> sh : 1 to 2,000 characters (L2-106 c4)
+  sh -> db : DirectMessage; audit Created DirectMessage without the words (L2-106 c3)
+  sh -> ep : conversation event to Sofía and Daniel (L2-107 c3)
+  sh --> page : 201 message
+end
+@enduml

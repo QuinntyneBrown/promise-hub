@@ -1,0 +1,49 @@
+@startuml
+title Class structure — Exchange messages
+hide empty members
+package "PromiseHub.Domain.Messaging" {
+  class DirectMessage {
+    +Id : Guid
+    +OrganizationId : Guid
+    +YouthMembershipId : Guid
+    +MentorMembershipId : Guid
+    +SenderMembershipId : Guid
+    +Body : string
+    +SentAt : DateTimeOffset
+    +ReadAt : DateTimeOffset?
+    +MarkRead(at)
+  }
+}
+package "PromiseHub.Application.Messaging" {
+  class ConversationAccess {
+    +ForAsync(Guid youthId) : ConversationScope?
+  }
+  class ConversationScope {
+    +Youth : Membership
+    +Mentor : Membership
+    +IsParticipant : bool
+    +IsSupervisor : bool
+    +Blocked : string?
+  }
+  class ConversationsHandler {
+    +HandleAsync() : IReadOnlyList<ConversationRowDto>
+  }
+  class ConversationHandler {
+    +HandleAsync(Guid youthId) : Result
+  }
+  class SendDirectMessageHandler {
+    +HandleAsync(Guid youthId, SendDirectMessageRequest) : Result
+  }
+  class ConversationDto
+  class DirectMessageDto
+  interface IRealtimeEvents
+}
+ConversationAccess ..> ConversationScope : creates
+ConversationsHandler --> ConversationAccess
+ConversationHandler --> ConversationAccess
+SendDirectMessageHandler --> ConversationAccess
+SendDirectMessageHandler --> IRealtimeEvents
+SendDirectMessageHandler ..> DirectMessage : creates
+ConversationHandler ..> ConversationDto
+ConversationDto o-- DirectMessageDto
+@enduml

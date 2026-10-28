@@ -1,0 +1,14 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Safeguard direct messages
+Person(mentor, "Mentor", "Daniel")
+Person(youth, "Youth (minor)", "Sofía, 12")
+Person(dir, "Program director", "Marisol: reads for safeguarding")
+Person(g, "Guardian", "Carmen: consents from her consent link")
+System(ph, "PromiseHub", "Youth-serving organization platform; Messages module")
+Rel(mentor, ph, "messages only his youth")
+Rel(youth, ph, "messages only her mentor")
+Rel(dir, ph, "reads every conversation, read only")
+Rel(g, ph, "gives or withdraws consent (L2-055)")
+@enduml

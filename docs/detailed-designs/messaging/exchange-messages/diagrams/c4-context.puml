@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Exchange messages
+Person(mentor, "Mentor", "Daniel")
+Person(youth, "Youth", "Sofía, Nadia")
+System(ph, "PromiseHub", "Youth-serving organization platform; Messages module")
+Rel(mentor, ph, "writes and reads his conversations")
+Rel(youth, ph, "writes and reads hers")
+@enduml

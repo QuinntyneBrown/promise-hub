@@ -1,0 +1,64 @@
+@startuml
+title Class structure — Publish announcements
+hide empty members
+package "PromiseHub.Domain.Messaging" {
+  class Announcement {
+    +Id : Guid
+    +OrganizationId : Guid
+    +Title : string
+    +Body : string
+    +ProgramId : Guid?
+    +Audience : AnnouncementAudience
+    +SendAt : DateTimeOffset
+    +CreatedAt : DateTimeOffset
+    +CreatedBy : string
+    +CreatedByRole : Role
+    +GuardianMessageId : Guid?
+    +ReachesYouth : bool
+    +ReachesMentors : bool
+    +ReachesGuardians : bool
+  }
+  enum AnnouncementAudience {
+    Youth
+    YouthAndGuardians
+    Guardians
+    Mentors
+    Everyone
+  }
+  class AnnouncementRead {
+    +Id : Guid
+    +OrganizationId : Guid
+    +AnnouncementId : Guid
+    +MembershipId : Guid
+    +ReadAt : DateTimeOffset
+  }
+  class Message
+}
+package "PromiseHub.Application.Messaging" {
+  class ComposeAnnouncementHandler {
+    +HandleAsync(ComposeAnnouncementRequest) : Result
+  }
+  class ListAnnouncementsHandler {
+    +HandleAsync() : AnnouncementListDto
+  }
+  class MyAnnouncementsHandler {
+    +GetAsync() : MyAnnouncementsDto
+    +MarkAllReadAsync() : void
+  }
+  class AnnouncementRecipients {
+    +MembersAsync(Announcement) : IReadOnlyList<Guid>
+    +VisibleToAsync(Guid membershipId) : IQueryable<Announcement>
+  }
+  class MessageWriter
+  interface IRealtimeEvents
+}
+Announcement --> AnnouncementAudience
+AnnouncementRead --> Announcement : AnnouncementId
+Announcement ..> Message : GuardianMessageId
+ComposeAnnouncementHandler --> AnnouncementRecipients
+ComposeAnnouncementHandler --> MessageWriter
+ComposeAnnouncementHandler --> IRealtimeEvents
+ListAnnouncementsHandler --> AnnouncementRecipients
+MyAnnouncementsHandler --> AnnouncementRecipients
+MyAnnouncementsHandler ..> AnnouncementRead : creates
+@enduml

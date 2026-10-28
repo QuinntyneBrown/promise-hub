@@ -1,0 +1,38 @@
+@startuml
+title UML sequence behaviour — A minor without consent; a supervisor reads
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Mentor (Daniel), director (Marisol)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "ConversationPage" as page
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "ConversationEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "SendDirectMessageHandler" as sh
+  participant "ConversationAccess" as acc
+  participant "ConsentGate" as gate
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : Daniel writes to Sofía (12)
+page -> ep : POST /conversations/{youthId}/messages
+ep -> sh : HandleAsync
+sh -> acc : ForAsync(youthId)
+acc -> db : youth membership of this organization; YouthMentor of her child
+acc -> gate : GatedAsync(Sofía)
+gate --> acc : consent needed, none in force
+sh --> page : 409 blocked: consent (L2-108 c1)
+page -> actor : Waiting for a guardian's consent; composer disabled
+actor -> page : Marisol opens the conversation
+page -> ep : GET /conversations/{youthId}
+ep -> acc : supervisor (SuperviseConversations)
+acc -> db : audit Viewed Conversation (L2-108 c4)
+ep --> page : messages, canSend false
+page -> actor : read only, no composer
+@enduml
