@@ -14,7 +14,11 @@
 } @else {
   <ph-breadcrumb [items]="crumbs()" />
   @if (p) {
-    <ph-page-header [title]="p.name" />
+    <ph-page-header [title]="p.name">
+      @if (!p.isYou && p.role !== 'Youth') {
+        <ph-button icon="account" hasPopup="dialog" (click)="changeRole(p)">Change role</ph-button>
+      }
+    </ph-page-header>
     <div class="badges">
       <ph-badge [tone]="p.role === 'Admin' ? 'success' : 'info'">{{ roleLabel[p.role] }}</ph-badge>
       <ph-badge [tone]="p.status === 'Active' ? 'success' : 'neutral'">{{ p.status }}</ph-badge>

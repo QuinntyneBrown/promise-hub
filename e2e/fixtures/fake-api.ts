@@ -7758,9 +7758,29 @@ export class FakeApi {
         status: 422,
         json: { errors: { role: "You can’t change your own role." } },
       });
-    this.roleOverrides.set(
+    const role = (route.request().postDataJSON() as { role: string }).role;
+    const before = this.roleOverrides.get(id) ?? target.role;
+    // Mirrors backend StaffAccessHandler.ChangeRoleAsync (L2-113 criterion 3, ADR 0070).
+    const refusal =
+      before === "Youth"
+        ? "A youth account’s role follows its child record."
+        : role === "Youth"
+          ? "Invite youth from their child record."
+          : role === "Mentor" &&
+              !this.modules.get(m.organizationId)!.includes("Mentoring")
+            ? "Turn on Mentoring to make someone a mentor."
+            : null;
+    if (refusal)
+      return route.fulfill({
+        status: 422,
+        json: { errors: { role: refusal } },
+      });
+    this.roleOverrides.set(id, role);
+    this.recordPersonHistory(
       id,
-      (route.request().postDataJSON() as { role: string }).role,
+      "RoleChanged",
+      `${target.personName} · ${before} → ${role} by ${m.personName}`,
+      m.personName,
     );
     return route.fulfill({ status: 204 });
   }

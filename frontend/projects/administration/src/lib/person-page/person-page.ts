@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { LoadResult, PEOPLE_API, PersonRecord, ROLE_LABELS } from '@promisehub/api';
+import { LoadResult, PEOPLE_API, PersonRecord, ROLE_LABELS, Role } from '@promisehub/api';
 import {
   BreadcrumbItem,
   Fact,
@@ -15,9 +15,12 @@ import {
   PhListItem,
   PhPageHeader,
   PhProgressBar,
+  PhDialogs,
   PhSkeleton,
+  ToastService,
   formatDateTime,
 } from '@promisehub/components';
+import { ChangeRoleDialog } from '../change-role-dialog/change-role-dialog';
 
 /**
  * A person's record (mock: person): the account, a youth's child record and programs, her mentor while Mentoring is on, her
@@ -46,6 +49,8 @@ import {
 export class PersonPage {
   private readonly api = inject(PEOPLE_API);
   private readonly id = inject(ActivatedRoute).snapshot.paramMap.get('id')!;
+  private readonly dialogs = inject(PhDialogs);
+  private readonly toasts = inject(ToastService);
 
   protected readonly result = signal<LoadResult<PersonRecord> | null>(null);
   protected readonly person = computed(() => {
@@ -115,6 +120,24 @@ export class PersonPage {
 
   protected load(): void {
     this.result.set(null);
+    this.api.get(this.id).subscribe((r) => this.result.set(r));
+  }
+
+  protected changeRole(p: PersonRecord): void {
+    this.dialogs
+      .open<boolean, { id: string; name: string; role: Role }, ChangeRoleDialog>(ChangeRoleDialog, {
+        id: p.id,
+        name: p.name,
+        role: p.role,
+      })
+      .closed.subscribe((done) =>
+        this.done(done, `${p.name}’s role changed`, 'It applies on their next action.'),
+      );
+  }
+
+  private done(done: boolean | undefined, title: string, text: string): void {
+    if (!done) return;
+    this.toasts.show({ tone: 'success', title, text });
     this.api.get(this.id).subscribe((r) => this.result.set(r));
   }
 

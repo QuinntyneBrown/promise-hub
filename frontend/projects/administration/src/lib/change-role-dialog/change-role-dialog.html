@@ -1,7 +1,7 @@
 <form novalidate (ngSubmit)="submit()">
   <ph-dialog
     [title]="'Change role for ' + data.name"
-    description="It applies the next time they do anything."
+    description="It applies the next time they do anything. The change is recorded in the audit log."
   >
     @if (failed()) {
       <ph-alert
@@ -13,10 +13,18 @@
     <ph-radio-group
       legend="Role"
       name="role"
-      [options]="roles"
+      [options]="roles()"
       [error]="errors()['role'] ?? null"
-      [(ngModel)]="role"
+      [ngModel]="role()"
+      (ngModelChange)="role.set($event)"
     />
+    @if (widens()) {
+      <ph-alert
+        tone="warning"
+        title="This gives access to every family’s records"
+        text="Staff roles see children, guardians and attendance across the organization."
+      />
+    }
     <ng-container ngProjectAs="[phDialogFooter]">
       <ph-button (click)="ref.close()">Cancel</ph-button>
       <ph-button variant="primary" type="submit" [busy]="busy()">Change role</ph-button>
