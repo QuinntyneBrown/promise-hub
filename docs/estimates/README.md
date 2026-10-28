@@ -18,7 +18,7 @@
 | [messaging](messaging.md) | 14 days | 46% |
 | [notifications](notifications.md) | 8 days | 60% |
 | [slips](slips.md) | 17 days | 70% |
-| [guardian](guardian.md) | 24 days | 94% |
+| [guardian](guardian.md) | 24 days | 90% |
 | [incidents](incidents.md) | 6 days | 70% |
 | [reports](reports.md) | 10 days | 52% |
 | [imports](imports.md) | 5 days | 70% |
