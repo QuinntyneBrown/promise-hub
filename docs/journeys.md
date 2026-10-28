@@ -68,7 +68,7 @@
 | Mentor | Flag at-risk youth | Raise, act on and resolve at-risk concerns. | [5 days](detailed-designs/mentoring/manage-at-risk-flags/README.md) | 100% · [video](videos/68-flag-at-risk-youth/README.md) |
 | Mentor | Assign work | Assign a lesson, quiz or assignment to youth or a cohort with a due date. | [4 days](detailed-designs/mentoring/assign-work/README.md) | 100% · [video](videos/69-assign-work/README.md) |
 | Mentor | Take attendance for cohort sessions | Record cohort session attendance in Roll Call, including offline. | [9 days](detailed-designs/attendance/record-attendance/README.md) | 100% · [video](videos/71-take-attendance-for-cohort-sessions/README.md) |
-| Volunteer | Use the volunteer portal | See assigned sessions and today's schedule and take attendance. | [7 days](detailed-designs/attendance/view-todays-session/README.md) | 0% |
+| Volunteer | Use the volunteer portal | See assigned sessions and today's schedule and take attendance. | [7 days](detailed-designs/attendance/view-todays-session/README.md) | 100% · [video](videos/72-use-the-volunteer-portal/README.md) |
 | Visitor | Explore the public website | Browse programs and open cohorts, and apply, volunteer or donate. | [22 days](prompts/81-explore-the-public-website.md) | 0% |
 | Staff | Sign in securely | Access authorized work with credentials and required verification. | [5 days](detailed-designs/identity/sign-in/README.md) | 80% · [video](videos/02-sign-in-securely/README.md) |
 | Staff | Search records | Find permitted children, families, and events across enabled modules. | [4 days](detailed-designs/search/search-organization/README.md) | 75% · [video](videos/34-search-records/README.md) |

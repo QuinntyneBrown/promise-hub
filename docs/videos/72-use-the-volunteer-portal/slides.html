@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 72 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="72" data-video-title="Use the volunteer portal" data-parts="Introduction|Today|Attendance|Permissions|Schedule|Phone|States|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 72</div>
+  <h1>Use the volunteer portal</h1>
+  <p class="lead">Today’s assigned session, the next four weeks, and present or absent for his own sessions only</p>
+</section>
+
+<section id="today" data-part="1" data-cue="Leo Martins volunteers at Harbourview Youth Collective." data-clip="clips/today-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Leo’s Today</h3><p>His session, then Take attendance.</p></div>
+</section>
+
+<section id="today-shot" data-part="1" data-cue="There are no youth names on Today">
+  <h2>Your session today</h2>
+  <img class="shot" alt="Leo’s Today: Tutoring night, Your session today, 4 youth on the roster, 0 of 4 checked in, Take attendance, and Your work with Your schedule" src="shots/desktop-today.png">
+</section>
+
+<section id="attendance" data-part="2" data-cue="Take attendance opens Tutoring night's roster.">
+  <h2>Names, present or absent</h2>
+  <div class="cols">
+    <img class="shot" alt="The check-in sheet for Yusuf Haddad offering Now, Earlier and Mark absent instead" src="shots/desktop-sheet.png">
+    <img class="shot" alt="Tutoring night with three checked in and Sofía absent, and the toast 2 marked present" src="shots/desktop-all-marked.png">
+  </div>
+</section>
+
+<section id="permissions" data-part="3" data-cue="Late and excused are for staff and mentors.">
+  <h2>Within volunteer permissions</h2>
+  <table class="facts">
+    <tr><th>Leo can</th><th>Leo cannot</th></tr>
+    <tr><td>Open the sessions he is assigned to</td><td>Open any other session (403) or another organization’s (404)</td></tr>
+    <tr><td>Check in, mark absent, mark the rest present</td><td>Mark late or excused (403, nothing recorded)</td></tr>
+    <tr><td>See names and totals</td><td>See medical flags, Quick Cards, pickups or history</td></tr>
+  </table>
+  <p class="muted small">QualifyAttendance · SessionAccess · L2-100 · ADR 0066</p>
+</section>
+
+<section id="schedule" data-part="4" data-cue="Schedule lists the sessions Leo is assigned to in the next four weeks" data-clip="clips/schedule-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Your schedule</h3><p>Today, then Assigned, by day.</p></div>
+</section>
+
+<section id="schedule-shot" data-part="4" data-cue="The list comes from a new endpoint">
+  <h2>GET /sessions/mine</h2>
+  <img class="shot" alt="Your schedule: Thursday 5 November Tutoring night marked Today with Take attendance, Saturday 7 November Saturday Sports marked Assigned" src="shots/desktop-schedule.png">
+  <p class="muted small">His own assignments · not ended · within 28 days · L2-101</p>
+</section>
+
+<section id="phone" data-part="5" data-cue="On a phone, Today, Schedule and the roster each fit one column" data-clip="clips/phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>One column</h3><p>Today, Schedule, the roster.</p></div>
+</section>
+
+<section id="phone-shots" data-part="5" data-cue="Leo opens Schedule from the tab bar">
+  <h2>On a phone</h2>
+  <div class="cols three">
+    <img class="shot" alt="Leo’s Today on a phone" src="shots/phone-today.png">
+    <img class="shot" alt="Leo’s schedule on a phone with the tab bar Today, Check-in, Schedule, More" src="shots/phone-schedule.png">
+    <img class="shot" alt="Tutoring night’s roster on a phone" src="shots/phone-check-in.png">
+  </div>
+</section>
+
+<section id="states" data-part="6" data-cue="On a day with no session" data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Empty, failed and refused</h3><p>No session, error, cancelled, empty, forbidden, Roll Call off.</p></div>
+</section>
+
+<section id="states-shots" data-part="6" data-cue="If he opens a session he is not assigned to">
+  <h2>Empty, cancelled, forbidden</h2>
+  <div class="cols three">
+    <img class="shot" alt="Today saying No session today with See your schedule" src="shots/desktop-today-empty.png">
+    <img class="shot" alt="The schedule with Saturday Sports marked Cancelled" src="shots/desktop-schedule-cancelled.png">
+    <img class="shot" alt="A session Leo is not assigned to: You’re not assigned to this session" src="shots/desktop-forbidden.png">
+  </div>
+</section>
+
+<section id="testing" data-part="7" data-cue="The API tests cover the schedule's window">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>VolunteerScheduleTests</code>: window, order, roster size, status, today, cancelled, empty, roles, Roll Call off, tenancy</li>
+    <li><code>VolunteerAttendanceTests</code>: present and absent, late and excused refused, other sessions, history, corrections, tenancy</li>
+    <li><code>volunteer-portal.spec.ts</code> on phone and laptop against the fake API, with axe on every state</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="8" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>The volunteer portal is the PromiseHub shell for the Volunteer role</li><li>Today shows his session; Schedule shows the next four weeks</li><li>Present or absent, for his own sessions only</li></ul>
+  <p class="muted">Next: the guardian portal</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
