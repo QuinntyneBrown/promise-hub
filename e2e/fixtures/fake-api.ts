@@ -7,7 +7,7 @@ import { FakeJourney } from './fake-journey';
 import { FakeReflections } from './fake-reflections';
 import { FakeLearning } from './fake-learning';
 import { FakeReviews, type YouthAccounts } from './fake-reviews';
-import { FakeMentorCheckIns } from './fake-mentor-check-ins';
+import { FakeMentorCheckIns, type FakeMentorCheckIn, TODAY } from './fake-mentor-check-ins';
 import { type FakeEvent, type FakeProgram, NOW, seedEvents, seedPrograms } from './programs';
 import { type Membership, type ModuleId, moduleCatalog, memberships, organizations, seededMfaCode, seededPassword } from './seed';
 
@@ -1258,7 +1258,7 @@ export class FakeApi {
       .map(({ program, isLead }) => ({ programId: program.id, name: program.name, term: program.term, role: isLead ? 'Lead' : 'Supporting', youthCount: program.roster.length }))
       .sort((a, b) => a.name.localeCompare(b.name));
     if (!this.modules.get(m.organizationId)!.includes('RollCall')) {
-      return route.fulfill({ json: { youth, cohorts, checkedInThisWeek: null, recentActivity: null } });
+      return route.fulfill({ json: { youth, cohorts, checkedInThisWeek: null, recentActivity: null, followUps: this.mentorFollowUps(m, scope.youth.map((c) => c.id)) } });
     }
     const now = NOW.getTime();
     const changes = this.mentorAttendance(m, scope.youth.map((c) => c.id)).filter((a) => now - Date.parse(a.startsAt) <= 14 * 86400000);
@@ -1267,7 +1267,20 @@ export class FakeApi {
       .map(({ childId, youthName, kind, session, at }) => ({ childId, youthName, kind, session, at }))
       .sort((a, b) => b.at.localeCompare(a.at))
       .slice(0, 5);
-    return route.fulfill({ json: { youth, cohorts, checkedInThisWeek: week.size, recentActivity } });
+    return route.fulfill({ json: { youth, cohorts, checkedInThisWeek: week.size, recentActivity, followUps: this.mentorFollowUps(m, scope.youth.map((c) => c.id)) } });
+  }
+
+  /** His latest mentor check-in of each youth, when it has a follow-up date, soonest first; overdue before today (L2-090 criterion 6). */
+  private mentorFollowUps(m: Membership, childIds: string[]): { childId: string; youthName: string; followUpOn: string; overdue: boolean }[] {
+    const latest = new Map<string, FakeMentorCheckIn>();
+    for (const r of this.mentorCheckIns.rows.filter((x) => x.organizationId === m.organizationId && x.mentorId === m.id && childIds.includes(x.childId))) {
+      const seen = latest.get(r.childId);
+      if (!seen || r.date > seen.date || (r.date === seen.date && r.createdAt > seen.createdAt)) latest.set(r.childId, r);
+    }
+    return [...latest.values()]
+      .filter((r) => r.followUpOn)
+      .sort((a, b) => a.followUpOn!.localeCompare(b.followUpOn!) || a.youthName.localeCompare(b.youthName))
+      .map((r) => ({ childId: r.childId, youthName: r.youthName, followUpOn: r.followUpOn!, overdue: r.followUpOn! < TODAY }));
   }
 
   /** Attendance of these children at sessions of the mentor's organization that have started, as activity rows. */

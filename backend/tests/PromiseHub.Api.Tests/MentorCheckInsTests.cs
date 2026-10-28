@@ -5,7 +5,7 @@ using PromiseHub.Infrastructure.Persistence.Seed;
 
 namespace PromiseHub.Api.Tests;
 
-// Acceptance test. Traces to: L2-090 criteria 1, 2, 3, 4, 7 and 8 (logging a mentor check-in for one of his youth, field-by-field errors,
+// Acceptance test. Traces to: L2-090 criteria 1, 2, 3, 4, 6, 7 and 8 (logging a mentor check-in for one of his youth, field-by-field errors,
 // private by default, audited without its words, his own history newest first with filters, scope, roles, tenancy and Mentoring off),
 // L2-065, L2-007, L2-032.
 // Today at Harbourview (America/Toronto) is Thu 5 Nov 2026.
@@ -21,6 +21,8 @@ public sealed class MentorCheckInsTests : IAsyncLifetime
     private static readonly Guid Tutoring = DatabaseSeeder.ProgramId(DatabaseSeeder.Harbourview, "After-School Tutoring");
     private static readonly Guid Mateo = DatabaseSeeder.ChildId(DatabaseSeeder.Harbourview, "Mateo Rivera");
     private static readonly Guid Sofia = DatabaseSeeder.ChildId(DatabaseSeeder.Harbourview, "Sofía Rivera");
+    private static readonly Guid Yusuf = DatabaseSeeder.ChildId(DatabaseSeeder.Harbourview, "Yusuf Haddad");
+    private static readonly Guid Jordan = DatabaseSeeder.ChildId(DatabaseSeeder.Harbourview, "Jordan Thompson");
     private static readonly Guid Amara = DatabaseSeeder.ChildId(DatabaseSeeder.Harbourview, "Amara Okonkwo");
     private static readonly Guid Lucia = DatabaseSeeder.ChildId(DatabaseSeeder.Northgate, "Lucía Rivera");
     private const string Topics = "Fractions homework and the spelling bee on Friday.";
@@ -186,6 +188,33 @@ public sealed class MentorCheckInsTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.NotFound, (await _factory.ClientFor(Daniel).GetAsync("/mentoring/check-ins")).StatusCode);
         Assert.True((await _factory.ClientFor(Tom).PutAsJsonAsync("/settings/modules", new { on = new[] { "Roster", "RollCall", "Mentoring" } })).IsSuccessStatusCode);
         Assert.Single((await History(Daniel, "")).GetProperty("items").EnumerateArray());
+    }
+
+    // ---- criterion 6: follow-ups on the dashboard from his latest check-in of each youth
+
+    [Fact]
+    public async Task The_dashboard_lists_the_follow_up_of_his_latest_check_in_per_youth_soonest_first_with_overdue_ones_marked()
+    {
+        await Mentors(lead: Hana, supporting: Daniel);
+        await Log(Daniel, Body(Mateo) with { date = "2026-10-29", followUpOn = "2026-11-03" });
+        _factory.Clock.Advance(TimeSpan.FromMinutes(1));
+        await Log(Daniel, Body(Mateo) with { date = "2026-11-04", followUpOn = "2026-11-12" });
+        await Log(Daniel, Body(Sofia) with { date = "2026-11-02", followUpOn = "2026-11-10" });
+        await Log(Daniel, Body(Yusuf) with { date = "2026-10-30", followUpOn = "2026-11-03" });
+        await Log(Daniel, Body(Jordan) with { date = "2026-10-20", followUpOn = "2026-10-27" });
+        _factory.Clock.Advance(TimeSpan.FromMinutes(1));
+        await Log(Daniel, Body(Jordan) with { date = "2026-11-01", followUpOn = null });
+        await Log(Hana, Body(Sofia) with { date = "2026-11-05", followUpOn = "2026-11-06" });
+
+        var dashboard = await (await _factory.ClientFor(Daniel).GetAsync("/mentoring/dashboard")).Content.ReadFromJsonAsync<JsonElement>();
+
+        var followUps = dashboard.GetProperty("followUps").EnumerateArray().ToList();
+        Assert.Equal(["Yusuf Haddad", "Sofía Rivera", "Mateo Rivera"], followUps.Select(f => f.GetProperty("youthName").GetString()));
+        Assert.Equal(["2026-11-03", "2026-11-10", "2026-11-12"], followUps.Select(f => f.GetProperty("followUpOn").GetString()));
+        Assert.Equal([true, false, false], followUps.Select(f => f.GetProperty("overdue").GetBoolean()));
+        Assert.Equal(Yusuf, followUps[0].GetProperty("childId").GetGuid());
+        var hanas = await (await _factory.ClientFor(Hana).GetAsync("/mentoring/dashboard")).Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(["2026-11-06"], hanas.GetProperty("followUps").EnumerateArray().Select(f => f.GetProperty("followUpOn").GetString()));
     }
 
     private async Task Mentors(Guid lead, Guid supporting) =>

@@ -355,6 +355,7 @@ export * from './lib/mentoring/mentor-check-in';
 export * from './lib/mentoring/log-mentor-check-in';
 export * from './lib/mentoring/mentor-check-in-filter';
 export * from './lib/mentoring/mentor-check-in-history';
+export * from './lib/mentoring/mentor-follow-up';
 export * from './lib/mentoring/mentoring-api';
 export * from './lib/mentoring/mentoring-api.token';
 export * from './lib/website/public-site';
