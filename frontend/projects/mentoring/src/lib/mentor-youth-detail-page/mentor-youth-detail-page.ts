@@ -4,6 +4,8 @@ import {
   LoadResult,
   MENTORING_API,
   MentorAttendance,
+  MentorCheckIn,
+  MentorCheckInHistory,
   MentorGuardianContact,
   MentorYouthRecord,
   SESSION_API,
@@ -14,10 +16,12 @@ import {
   CallContact,
   Fact,
   PhAlert,
+  PhBadge,
   PhBreadcrumb,
   PhButton,
   PhCallList,
   PhCard,
+  PhDialogs,
   PhDescriptionList,
   PhEmptyState,
   PhList,
@@ -27,8 +31,13 @@ import {
   PhTable,
   TableCell,
   TableColumn,
+  ToastService,
   formatDateTime,
+  formatDay,
 } from '@promisehub/components';
+import { MentorCheckInDialog } from '../mentor-check-in-dialog/mentor-check-in-dialog';
+import { MentorCheckInDialogData } from '../mentor-check-in-dialog-data';
+import { KIND_LABEL, checkInCaption, checkInMeta } from '../check-in-words';
 import { EMPTY, Subject, catchError, combineLatest, filter, map, startWith, switchMap } from 'rxjs';
 
 const STATUS: Record<MentorAttendance['status'], TableCell> = {
@@ -46,6 +55,7 @@ const STATUS: Record<MentorAttendance['status'], TableCell> = {
   selector: 'ph-mentor-youth-detail-page',
   imports: [
     PhAlert,
+    PhBadge,
     PhBreadcrumb,
     PhButton,
     PhCallList,
@@ -64,6 +74,8 @@ const STATUS: Record<MentorAttendance['status'], TableCell> = {
 export class MentorYouthDetailPage {
   private readonly api = inject(MENTORING_API);
   private readonly refresh$ = new Subject<void>();
+  private readonly dialogs = inject(PhDialogs);
+  private readonly toasts = inject(ToastService);
 
   /** Route parameter. */
   readonly childId = input.required<string>();
@@ -106,6 +118,31 @@ export class MentorYouthDetailPage {
     { initialValue: null },
   );
 
+  private readonly checkIns$ = new Subject<void>();
+  protected readonly checkInMeta = checkInMeta;
+  protected readonly checkInCaption = checkInCaption;
+
+  /** His mentor check-ins with this youth, newest first (L2-090 criterion 5); null while loading. */
+  protected readonly checkIns = toSignal<LoadResult<MentorCheckInHistory> | null>(
+    toObservable(this.childId).pipe(
+      switchMap((id) =>
+        this.checkIns$.pipe(
+          startWith(undefined),
+          switchMap(() => this.api.checkIns({ childId: id })),
+        ),
+      ),
+    ),
+    { initialValue: null },
+  );
+
+  protected kindAndDate(c: MentorCheckIn): string {
+    return `${KIND_LABEL[c.kind]} · ${formatDay(c.date)}`;
+  }
+
+  protected firstName(y: MentorYouthRecord): string {
+    return y.preferredName ?? y.name.split(' ')[0] ?? y.name;
+  }
+
   protected reflectionMeta(r: SharedReflection): string {
     return `${r.moduleTitle} · Feeling ${r.mood.toLowerCase()} · ${formatDateTime(r.savedAt)}`;
   }
@@ -144,6 +181,20 @@ export class MentorYouthDetailPage {
       when: formatDateTime(a.at),
       status: STATUS[a.status],
     }));
+  }
+
+  /** Opens the mentor check-in dialog with this youth fixed (L2-090 criterion 1). */
+  protected logCheckIn(y: MentorYouthRecord): void {
+    this.dialogs
+      .open<string, MentorCheckInDialogData, MentorCheckInDialog>(MentorCheckInDialog, {
+        youth: [],
+        fixed: { id: y.id, name: y.name },
+      })
+      .closed.subscribe((name) => {
+        if (name === undefined) return;
+        this.toasts.show({ tone: 'success', title: 'Mentor check-in saved', text: name });
+        this.checkIns$.next();
+      });
   }
 
   protected reload(): void {

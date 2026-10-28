@@ -148,6 +148,8 @@ public static class DependencyInjection
         services.AddScoped<Learning.JourneyHandler>();
         services.AddScoped<Learning.ReflectionHandler>();
         services.AddScoped<Mentoring.SharedReflectionsHandler>();
+        services.AddScoped<Mentoring.OrganizationToday>();
+        services.AddScoped<Mentoring.MentorCheckInsHandler>();
         services.AddScoped<Learning.LearnerBadges>();
         services.AddScoped<Learning.BadgesViewHandler>();
         services.AddScoped<Learning.ProgressViewHandler>();

@@ -7,6 +7,7 @@ import { FakeJourney } from './fake-journey';
 import { FakeReflections } from './fake-reflections';
 import { FakeLearning } from './fake-learning';
 import { FakeReviews, type YouthAccounts } from './fake-reviews';
+import { FakeMentorCheckIns } from './fake-mentor-check-ins';
 import { type FakeEvent, type FakeProgram, NOW, seedEvents, seedPrograms } from './programs';
 import { type Membership, type ModuleId, moduleCatalog, memberships, organizations, seededMfaCode, seededPassword } from './seed';
 
@@ -580,6 +581,8 @@ export class FakeApi {
   readonly learningState = new FakeLearning(this.curriculumState);
   /** Youth reflections (L2-089); tests seed and read them through it. */
   readonly reflectionsState = new FakeReflections();
+  /** Mentor check-ins (L2-090). */
+  readonly mentorCheckIns = new FakeMentorCheckIns();
 
   /** Badges and their awards (L2-084, L2-085); tests read and change it, such as clear. */
   readonly badges = new FakeBadges(this.curriculumState, () => this.reviews.competencies, () => memberships);
@@ -699,6 +702,8 @@ export class FakeApi {
     ['POST', /^\/api\/mentoring\/quiz-approvals\/approve-all$/, (route) => this.mentorReviews(route, (_m, youth) => this.afterReview(youth, this.reviews.approveAll(route, youth)))],
     ['POST', /^\/api\/mentoring\/quiz-attempts\/(?<id>[^/]+)\/approve$/, (route, p) => this.mentorReviews(route, (_m, youth) => this.afterReview(youth, this.reviews.approveQuiz(route, youth, p['id']!)))],
     ['POST', /^\/api\/mentoring\/submissions\/(?<id>[^/]+)\/grade$/, (route, p) => this.mentorReviews(route, (m, youth) => this.afterReview(youth, this.reviews.grade(route, youth, p['id']!, m.personName)))],
+    ['GET', /^\/api\/mentoring\/check-ins$/, (route) => this.mentorCheckInHistory(route)],
+    ['POST', /^\/api\/mentoring\/check-ins$/, (route) => this.logMentorCheckIn(route)],
     ['GET', /^\/api\/mentoring\/youth\/(?<id>[^/]+)$/, (route, p) => this.mentorYouthRecord(route, p['id']!)],
     ['GET', /^\/api\/mentoring\/youth\/(?<id>[^/]+)\/reflections$/, (route, p) => this.mentorReflections(route, p['id']!)],
     ['GET', /^\/api\/mentoring\/youth\/(?<id>[^/]+)\/competencies$/, (route, p) => this.mentorCompetencies(route, p['id']!, false)],
@@ -1313,6 +1318,58 @@ export class FakeApi {
     return route.fulfill({
       json: { id: child.id, name: row.name, preferredName: done?.preferredName ?? null, pronouns: done?.pronouns ?? null, age: row.age, school: child.school, programs: row.programs, mentor, guardians, recentAttendance },
     });
+  }
+
+  /** A child of the mentor's organization in his scope; 404 outside the organization, 403 (audited) outside the scope (L2-090 criterion 8). */
+  private async mentorCheckInChild(route: Route, m: Membership, childId: string): Promise<{ id: string; name: string } | null | undefined> {
+    const child = this.households.filter((h) => h.organizationId === m.organizationId).flatMap((h) => h.children).find((c) => c.id === childId);
+    if (!child) {
+      await route.fulfill({ status: 404 });
+      return undefined;
+    }
+    if (!this.mentorScope(m).youth.some((c) => c.id === childId)) {
+      this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'AccessDenied', record: 'Child', summary: 'Mentor check-in outside the mentor’s youth', device: null });
+      await route.fulfill({ status: 403, json: { code: 'forbidden' } });
+      return undefined;
+    }
+    return { id: child.id, name: `${child.firstName} ${child.lastName}` };
+  }
+
+  /** GET /mentoring/check-ins (L2-090 criterion 4): his own check-ins of youth in his scope, newest first, filtered by youth or kind. */
+  private async mentorCheckInHistory(route: Route): Promise<void> {
+    const m = await this.participantModuleCaller(route, 'Mentoring', can.mentorYouth);
+    if (!m) return;
+    const url = new URL(route.request().url());
+    const childId = url.searchParams.get('childId');
+    const kind = url.searchParams.get('kind');
+    if (childId && (await this.mentorCheckInChild(route, m, childId)) === undefined) return;
+    const youth = this.mentorScope(m).youth.map((c) => ({ id: c.id, name: `${c.firstName} ${c.lastName}` }));
+    const ids = new Set(youth.map((y) => y.id));
+    const items = this.mentorCheckIns.rows
+      .filter((r) => r.organizationId === m.organizationId && r.mentorId === m.id && ids.has(r.childId))
+      .filter((r) => !childId || r.childId === childId)
+      .filter((r) => !kind || r.kind === kind)
+      .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt))
+      .map((r) => this.mentorCheckIns.view(r));
+    return route.fulfill({ json: { items, youth: [...youth].sort((a, b) => a.name.localeCompare(b.name)) } });
+  }
+
+  /** POST /mentoring/check-ins (L2-090 criteria 1 to 3, 7 and 8): audited as Created without its words. */
+  private async logMentorCheckIn(route: Route): Promise<void> {
+    const m = await this.participantModuleCaller(route, 'Mentoring', can.mentorYouth);
+    if (!m) return;
+    const childId = (route.request().postDataJSON() as { childId?: string | null }).childId;
+    let child: { id: string; name: string } | null = null;
+    if (childId) {
+      const found = await this.mentorCheckInChild(route, m, childId);
+      if (found === undefined) return;
+      child = found;
+    }
+    const before = this.mentorCheckIns.rows.length;
+    await this.mentorCheckIns.log(route, m.organizationId, m.id, child);
+    if (this.mentorCheckIns.rows.length > before) {
+      this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'Created', record: 'MentorCheckIn', summary: `Mentor check-in with ${child!.name} by ${m.personName}`, device: null });
+    }
   }
 
   /** GET and PUT /mentoring/youth/{childId}/competencies (L2-082): Mentoring on; 404 outside the organization, 403 (audited) outside the scope. */

@@ -15,6 +15,7 @@
 } @else if (r.status === 'loaded') {
   @let y = r.value;
   <ph-page-header [title]="y.name" [subtitle]="subtitle(y)">
+    <ph-button icon="plus" (click)="logCheckIn(y)">Log a mentor check-in</ph-button>
     <ph-button icon="sparkle" [link]="['/mentoring/youth', y.id, 'competencies']"
       >Competencies</ph-button
     >
@@ -24,6 +25,43 @@
       <ph-card title="About">
         <ph-description-list [facts]="about(y)" />
       </ph-card>
+      @if (checkIns(); as ci) {
+        @if (ci.status === 'loaded') {
+          <ph-card title="Mentor check-ins" [flush]="true">
+            @if (ci.value.items.length) {
+              <ph-list [label]="'Mentor check-ins with ' + firstName(y) + ', newest first'">
+                @for (c of ci.value.items; track c.id) {
+                  <ph-list-item
+                    [title]="kindAndDate(c)"
+                    [meta]="checkInMeta(c, false)"
+                    [text]="c.topics"
+                    [caption]="checkInCaption(c)"
+                  >
+                    <ph-badge [tone]="c.shared ? 'success' : 'neutral'">{{
+                      c.shared ? 'Shared' : 'Private'
+                    }}</ph-badge>
+                  </ph-list-item>
+                }
+              </ph-list>
+            } @else {
+              <ph-empty-state
+                icon="messages"
+                title="No mentor check-ins yet"
+                [text]="
+                  'Log how your conversations with ' + firstName(y) + ' go. Only you can read them.'
+                "
+              >
+                <ph-button icon="plus" (click)="logCheckIn(y)">Log a mentor check-in</ph-button>
+              </ph-empty-state>
+            }
+            @if (ci.value.items.length) {
+              <ph-button phCardFooter variant="ghost" link="/mentoring/check-ins"
+                >All mentor check-ins</ph-button
+              >
+            }
+          </ph-card>
+        }
+      }
       @if (y.recentAttendance; as attendance) {
         <ph-card title="Recent attendance" [flush]="true">
           @if (attendance.length) {

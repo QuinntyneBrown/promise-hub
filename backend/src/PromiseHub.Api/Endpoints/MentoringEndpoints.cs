@@ -37,6 +37,16 @@ public static class MentoringEndpoints
             var (result, sheet) = await handler.SaveAsync(childId, request, ct);
             return sheet is not null ? Results.Ok(sheet) : result.ToHttp();
         });
+        mentoring.MapGet("/check-ins", async (Guid? childId, string? kind, MentorCheckInsHandler handler, CancellationToken ct) =>
+        {
+            var (result, history) = await handler.HistoryAsync(childId, kind, ct);
+            return history is not null ? Results.Ok(history) : result.ToHttp();
+        });
+        mentoring.MapPost("/check-ins", async (LogMentorCheckInRequest request, MentorCheckInsHandler handler, CancellationToken ct) =>
+        {
+            var (result, checkIn) = await handler.LogAsync(request, ct);
+            return checkIn is not null ? Results.Created($"/mentoring/check-ins/{checkIn.Id}", checkIn) : result.ToHttp();
+        });
         var reviews = mentoring.MapGroup("").RequireModule(ModuleId.Learning);
         reviews.MapGet("/reviews", (ReviewQueueHandler handler, CancellationToken ct) => handler.HandleAsync(ct));
         reviews.MapGet("/submissions/{id:guid}", async (Guid id, SubmissionReviewHandler handler, CancellationToken ct) => (await handler.HandleAsync(id, ct)).ToHttp());
