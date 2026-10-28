@@ -1,0 +1,14 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Read guardian announcements
+Person(g, "Guardian", "Carmen Rivera")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular 22", "guardian library (GuardianAnnouncementsPage), api client, components")
+  Container(api, "PromiseHub API", "ASP.NET Core, .NET 10", "GuardianAccess, Roster and Messages gates")
+  ContainerDb(db, "PromiseHub database", "SQLite via EF Core", "Tenant-filtered tables")
+}
+Rel(g, web, "Uses", "HTTPS")
+Rel(web, api, "Calls", "JSON/HTTPS, device cookie")
+Rel(api, db, "Reads and writes", "EF Core")
+@enduml

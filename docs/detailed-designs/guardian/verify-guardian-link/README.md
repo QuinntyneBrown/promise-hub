@@ -16,6 +16,8 @@ Terms used in this document:
 
 ## Built so far
 
+Slice 73 adds the guardian portal's pages under the household link, `/g/home/{token}/children/{childId}` and `/g/home/{token}/announcements` (ADR 0067): each resolves the link through `GuardianAccess` exactly like the family page (401 until the device verifies, 410 for a revoked link), and the child id only selects among the link's household's children, so another household's or organization's child answers 404.
+
 Slice 28 reuses the code check for the family page's corrections; a mobile changed by the guardian revokes the household's links and devices.
 
 Slice 15 added the enrollment identify flow: a code to the contact the guardian types, the same 10-minute expiry and 15-minute lock, and an HttpOnly cookie per program's enrollment session (ADR 0018).

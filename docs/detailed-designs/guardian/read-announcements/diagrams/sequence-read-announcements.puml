@@ -1,0 +1,44 @@
+@startuml
+title UML sequence behaviour — A guardian reads announcements and marks them read
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Guardian (Carmen)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "GuardianAnnouncementsPage" as page
+  
+  participant "GuardianApi" as gapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "GuardianEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "GuardianAnnouncementsHandler" as h
+  
+  
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : Read announcements
+page -> gapi : announcements(token)
+gapi -> ep : GET /g/home/{token}/announcements
+ep -> h : GetAsync
+h -> db : link, household, organization, trusted device
+alt Messages or Roster off
+  h --> page : 404, "This page isn't available" (L2-103 c5)
+else
+  h -> db : Deliveries of the household with SentAt, of Messages-module messages (L2-103 c1, c4)
+  h --> page : newest first, read flags, unread count
+  page -> actor : list with New badges
+  actor -> page : Mark all read
+  page -> gapi : markAnnouncementsRead(token)
+  gapi -> ep : POST /g/home/{token}/announcements/read
+  ep -> h : MarkReadAsync
+  h -> db : ReadAt on every unread delivery of the household (L2-103 c3)
+  h --> page : 204
+  page -> actor : all caught up
+end
+@enduml

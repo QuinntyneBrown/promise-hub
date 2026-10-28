@@ -1,0 +1,48 @@
+@startuml
+title UML sequence behaviour — A guardian opens a child's page
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Guardian (Carmen)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "GuardianChildPage" as page
+  
+  participant "GuardianApi" as gapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "GuardianEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "GuardianChildHandler" as h
+  participant "LearnerProgress" as lp
+  
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : opens Sofía from Your children
+page -> gapi : child(token, childId)
+gapi -> ep : GET /g/home/{token}/children/{childId}
+ep -> h : GetAsync
+h -> db : link by token hash; household, organization, trusted device
+alt revoked or unknown link
+  h --> page : 410, "This link has expired" (L2-102 c6)
+else Roster off, or the child is not the household's
+  h --> page : 404, "This page isn't available" (L2-102 c6)
+else device not verified
+  h --> page : 401, code check (L2-026)
+else
+  h -> db : programs, events in the next 28 days (L2-102 c2)
+  h -> db : participation consent, sent slips and signatures (L2-104 c1, c2)
+  opt Roll Call on
+    h -> db : marked attendance (L2-102 c3)
+  end
+  opt Learning on and a youth account
+    h -> lp : ForMembership(youth).TracksAsync, badges (L2-102 c4)
+  end
+  h --> page : GuardianChildDto in the household's language
+  page -> actor : Schedule, Consents, Attendance, Learning (read only)
+end
+@enduml

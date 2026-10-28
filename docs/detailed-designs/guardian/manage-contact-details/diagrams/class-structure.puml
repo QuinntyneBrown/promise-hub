@@ -1,0 +1,31 @@
+@startuml
+title Class structure — Manage guardian consents and contact
+skinparam classAttributeIconSize 0
+class GuardianConsentsDto {
+  +Participation : GuardianParticipationDto?
+  +Slips : IReadOnlyList<GuardianSlipConsentDto>?
+}
+class GuardianParticipationDto {
+  +Status : string
+  +SignedBy : string?
+  +Relationship : string?
+  +SignedAt : DateTimeOffset?
+  +Reference : string?
+  +WithdrawnAt : DateTimeOffset?
+  +WithdrawnBy : string?
+}
+class GuardianSlipConsentDto {
+  +EventId : Guid
+  +Event : string
+  +StartsAt : DateTimeOffset
+  +SignBy : DateOnly
+  +Status : string
+  +SignedBy : string?
+  +At : DateTimeOffset?
+}
+class GuardianHomeHandler {
+  +UpdateHouseholdAsync(request, body) : GuardianResult
+}
+GuardianConsentsDto *-- GuardianParticipationDto
+GuardianConsentsDto *-- GuardianSlipConsentDto
+@enduml

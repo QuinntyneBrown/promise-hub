@@ -1,7 +1,7 @@
 # Estimates
 
-- Overall effort: 406 days
-- Complete: 80%
+- Overall effort: 415 days
+- Complete: 78%
 
 | Subsystem | Effort | Complete |
 |---|---|---|
@@ -18,7 +18,7 @@
 | [messaging](messaging.md) | 14 days | 46% |
 | [notifications](notifications.md) | 8 days | 60% |
 | [slips](slips.md) | 17 days | 70% |
-| [guardian](guardian.md) | 15 days | 91% |
+| [guardian](guardian.md) | 24 days | 57% |
 | [incidents](incidents.md) | 6 days | 70% |
 | [reports](reports.md) | 10 days | 52% |
 | [imports](imports.md) | 5 days | 70% |

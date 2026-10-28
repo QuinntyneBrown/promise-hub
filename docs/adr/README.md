@@ -70,3 +70,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0064](0064-weekly-sessions-are-a-series-of-events-and-an-rsvp-is-one-row-per-event-and-youth.md) | Weekly sessions are a series of events, and an RSVP is one row per event and youth |
 | [0065](0065-late-and-excused-fold-into-roll-call-and-mentors-run-their-cohorts-sessions.md) | Late and excused fold into Roll Call's check-in model, mentors run their cohorts' sessions, and corrections are audited |
 | [0066](0066-the-volunteer-portal-is-the-shell-for-the-volunteer-role-with-present-and-absent-only.md) | The volunteer portal is the shell composed for the Volunteer role, with its own schedule endpoint and Present or Absent only |
+| [0067](0067-the-guardian-portal-is-the-household-link-with-read-only-child-pages-and-messages-as-announcements.md) | The guardian portal is the household link, with read-only child pages and Messages as announcements |

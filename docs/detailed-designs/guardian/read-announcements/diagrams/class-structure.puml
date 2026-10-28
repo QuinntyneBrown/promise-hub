@@ -1,0 +1,42 @@
+@startuml
+title Class structure — Read guardian announcements
+skinparam classAttributeIconSize 0
+class GuardianAnnouncementsPage {
+  +token : input<string>
+  #result : Signal<GuardianPageResult<GuardianAnnouncements> | null>
+  #markAllRead() : void
+}
+interface GuardianApi {
+  +announcements(token) : Observable<GuardianPageResult<GuardianAnnouncements>>
+  +markAnnouncementsRead(token) : Observable<WriteOutcome>
+}
+class GuardianAnnouncementsHandler {
+  +GetAsync(request) : GuardianResult
+  +MarkReadAsync(request) : GuardianResult
+  +UnreadAsync(householdId) : int?
+}
+class GuardianAnnouncementsDto {
+  +Language : string
+  +Organization : string
+  +Unread : int
+  +Announcements : IReadOnlyList<GuardianAnnouncementDto>
+}
+class GuardianAnnouncementDto {
+  +Id : Guid
+  +Title : string
+  +Body : string
+  +From : string
+  +SentAt : DateTimeOffset
+  +Read : bool
+}
+class Delivery {
+  +HouseholdId : Guid
+  +SentAt : DateTimeOffset?
+  +ReadAt : DateTimeOffset?
+  +MarkRead(at) : void
+}
+GuardianAnnouncementsPage ..> GuardianApi
+GuardianAnnouncementsHandler ..> GuardianAnnouncementsDto : answers
+GuardianAnnouncementsDto *-- GuardianAnnouncementDto
+GuardianAnnouncementsHandler ..> Delivery
+@enduml
