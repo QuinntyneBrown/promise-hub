@@ -22,7 +22,7 @@ Open questions: none.
 
 ## Built so far
 
-<TO SUPPLY: filled in when the slices land.>
+Prompt 71 delivered the flags in the queue and their replay with the late and excused slice, and proved them for a mentor offline. Acceptance tests: `e2e/tests/attendance/offline-attendance.spec.ts`.
 
 ## Requirements
 

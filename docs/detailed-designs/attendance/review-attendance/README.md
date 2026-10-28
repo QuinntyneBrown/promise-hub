@@ -35,7 +35,7 @@ Open questions: none. Deferred: date ranges, export, badge streaks.
 
 ## Built so far
 
-<TO SUPPLY: filled in when the slices land.>
+Prompt 71 delivered everything above in two slices: the history (`GET /attendance`, `ReviewAttendance`, `AttendanceHistoryHandler`, `AttendanceHistoryPage` with ph-table's new numeric columns and qualifying badge), then corrections (`PUT /sessions/{id}/attendance/{childId}`, `CorrectAttendance`, `CorrectAttendanceHandler`, `AttendanceRecord.Correct`, `CorrectAttendanceDialog`). A session with nothing marked can also be corrected, to fill it in after the fact. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/AttendanceHistoryTests.cs`, `backend/tests/PromiseHub.Api.Tests/CorrectAttendanceTests.cs` and `e2e/tests/attendance/attendance-history.spec.ts`.
 
 ## Requirements
 

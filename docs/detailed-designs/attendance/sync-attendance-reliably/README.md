@@ -21,7 +21,7 @@ Open questions: none.
 
 ## Built so far
 
-<TO SUPPLY: filled in when the slices land.>
+Prompt 71 proved a late check-in sent twice applies once and a refused queued mark leaves the queue. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/LateAndExcusedTests.cs`, `e2e/tests/attendance/offline-attendance.spec.ts`; the shared-device rule stays covered by the sign-out tests (L2-048).
 
 ## Requirements
 

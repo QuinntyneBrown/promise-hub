@@ -38,7 +38,7 @@ Open questions: none. Deferred: volunteers' Present/Absent subset (prompt 72), a
 
 ## Built so far
 
-<TO SUPPLY: filled in when the slices land.>
+Prompt 71 delivered everything above in two slices: late and excused (`late` and `excused` on the check-in and absence endpoints, `AttendanceRecord.Late` and `Excused`, the `CheckedInLate` and `MarkedExcused` kinds, the roster's and summary's counts, the sheet's Late and Excused, the totals' captions; migration `AttendanceLateExcused`), then mentors running their cohorts' sessions (`RunSessions` for Mentor, `SessionAccess` by mentor team, Check-in in the mentor's navigation and Today, no Quick Card links or sign-out for participant roles) with Mark the rest present. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/LateAndExcusedTests.cs`, `backend/tests/PromiseHub.Api.Tests/MentorRollCallTests.cs`, `e2e/tests/attendance/late-and-excused.spec.ts`, `e2e/tests/attendance/mentor-attendance.spec.ts` and the mentor navigation in `e2e/tests/shell/participant-shell.spec.ts`.
 
 ## Requirements
 

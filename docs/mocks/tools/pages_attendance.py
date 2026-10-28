@@ -44,12 +44,11 @@ def session_rows(*, correct: bool, corrected: bool = False) -> list[list[str]]:
             e = 1
         marked = p + l + e + a
         recorded = marked > 0
-        date = f'<a href="{page("check-in", "complete" if i else "default")}">{esc(day)}</a>'
+        date = esc(day)
         cells = [date, esc(name), str(p) if recorded else "—", str(l) if recorded else "—", str(e) if recorded else "—", str(a) if recorded else "—",
                  rate(p + l, marked), badge(*st)]
         if correct:
-            cells.append(f'<div class="row-actions">{btn("Correct", "ghost", size="sm", data_href=dialog("correct-attendance"), aria_label=f"Correct attendance for {name}, {day}")}</div>'
-                         if recorded else "")
+            cells.append(f'<div class="row-actions">{btn("Correct", "ghost", size="sm", data_href=dialog("correct-attendance"), aria_label=f"Correct attendance for {name}, {day}")}</div>')
         rows.append(cells)
     return rows
 
@@ -87,7 +86,7 @@ def hdr(sub: str = "After‑School Tutoring · Mon–Thu, 4–6 pm · 4 youth") 
 
 @screen("attendance-history", "page", "Attendance history", route="/check-in/history", reqs=R_HISTORY, na={})
 def attendance_history(S):
-    S.add("default", "Marisol’s After‑School Tutoring by session, newest first: present, late, excused and absent, the rate, Recorded, In progress or Not recorded, and Correct on each recorded session.", **DIRECTOR,
+    S.add("default", "Marisol’s After‑School Tutoring by session, newest first: present, late, excused and absent, the rate, Recorded, In progress or Not recorded, and Correct on each session (an unrecorded one can be filled in after the fact).", **DIRECTOR,
           main=hdr() + toolbar() + view_tabs() + numbers() + alert("warning", "Thu 29 Oct has no attendance", "Nobody took attendance at that session.") + sessions_table(),
           notes=note("GET /attendance?programId= answers the cohort’s sessions that have started, newest first, and each youth on its roster. Rate is present or late of those marked.", "top: 5rem; right: 1rem;"))
     S.add("by-youth", "By youth: each youth on the roster with sessions attended of marked, late, excused, absent and the rate; Sofía and Yusuf are below 70% and flagged.", **DIRECTOR,

@@ -21,7 +21,7 @@ Open questions: none.
 
 ## Built so far
 
-<TO SUPPLY: filled in when the slices land.>
+Prompt 71 proved the banner, the sync chip and their clearing for late and excused marks made by a mentor. Acceptance tests: `e2e/tests/attendance/offline-attendance.spec.ts` and `e2e/tests/attendance/offline.spec.ts`.
 
 ## Requirements
 
