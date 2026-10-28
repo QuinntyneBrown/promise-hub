@@ -24,11 +24,14 @@ Ported from Waypoint `authentication/set-secure-password` (`L2-AUTH-008`). Chang
 
 Prompt 51 delivered everything above: `PasswordPolicy` on both paths and the rule in both help texts. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/PasswordPolicyTests.cs`, `e2e/tests/account/password-policy.spec.ts`.
 
+Prompt 77 (`L2-116`, ADR 0071) applies the same rule to youth and mentors resetting their own password, with their own email, and confirms the request log keeps only route templates, so neither a reset token nor a password is logged.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |
 |-------|--------------|-------------|
 | `L2-053` | `L1-016` | One password rule applies wherever a password is set, and passwords are stored only as adaptive hashes. |
+| `L2-116` | `L1-016` | Whoever resets, the same policy applies with their own email, and neither the link's token nor the password is ever written anywhere but the email. |
 | `L2-044` | `L1-003` | A staff member who forgot their password gets a link by email, chooses a new password and carries on signed in. |
 
 ## Diagrams

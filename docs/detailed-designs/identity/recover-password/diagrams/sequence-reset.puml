@@ -1,0 +1,33 @@
+@startuml
+title UML sequence — Set a new password and land on the role home (L2-115 criteria 5 to 8)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Sofía (Youth)" as sofia
+box "Frontend — Angular app (account, api, components)" #E0F2FE
+participant ResetPasswordPage as page
+participant AuthApi as client
+participant ToastService as toast
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant AuthEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant PasswordResetHandler as handler
+end box
+sofia -> page : opens the emailed link
+page -> client : checkReset(token)
+client -> api : GET /auth/reset-password/{token}
+api -> handler : CheckAsync: newest, unused, under an hour, account current
+api --> page : email, or 410 This link has expired (c7)
+sofia -> page : new password twice
+page -> client : resetPassword(token, password, repeat)
+client -> api : POST /auth/reset-password
+api -> handler : ResetAsync
+handler -> handler : PasswordPolicy.Check (L2-116), repeat matches
+handler -> handler : new hash, link used, session version + 1, audit in her first organization (c8)
+api --> client : session cookie
+page -> client : GET /me (SESSION_API)
+page -> toast : Password updated
+page -> sofia : roleHome: Learning, Mentoring, or Today while the module is off (c5, c6)
+@enduml

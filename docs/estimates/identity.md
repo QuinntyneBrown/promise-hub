@@ -9,9 +9,10 @@
 | recover-access | 3 days | 90% |
 | recover-expired-session | 1 day | 100% |
 | recover-locked-account | 1 day | 100% |
+| recover-password | 3 days | 0% |
 | replace-expired-invitation | 1 day | 100% |
 | revoke-sessions | 1 day | 100% |
 | scope-data-by-role | 2 days | 100% |
-| set-secure-password | 1 day | 100% |
+| set-secure-password | 1 day | 50% |
 | sign-in | 6 days | 70% |
 | sign-in-as-youth-or-mentor | 1 day | 100% |

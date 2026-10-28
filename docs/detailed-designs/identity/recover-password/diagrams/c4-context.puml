@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — Recover a password as a youth or mentor
+Person(youth, "Youth or mentor", "Sofía Rivera, Daniel Osei: an account in one or more organizations")
+System(ph, "PromiseHub", "Web app and API; owns accounts, links and sessions")
+System_Ext(mail, "Email provider", "Delivers the reset link")
+Rel(youth, ph, "Asks for a link, opens it, chooses a new password", "HTTPS")
+Rel(ph, mail, "Sends the link, at most three an hour per address")
+Rel(mail, youth, "Delivers the email")
+@enduml

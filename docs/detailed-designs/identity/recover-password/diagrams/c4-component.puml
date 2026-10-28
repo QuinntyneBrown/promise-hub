@@ -1,0 +1,26 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Recover a password as a youth or mentor
+Container_Boundary(web, "Angular app") {
+  Component(forgot, "ForgotPasswordPage", "account", "Email field, masked address, Resend the email")
+  Component(reset, "ResetPasswordPage", "account", "Checks the link, sets the password, opens the role home with a toast")
+  Component(authApi, "AUTH_API / AuthApi", "api", "forgotPassword, checkReset, resetPassword")
+  Component(home, "roleHome", "api", "Learning, Mentoring or Today by role and modules")
+  Component(toast, "ToastService", "components", "Sent again, Password updated")
+}
+Container_Boundary(api, "API") {
+  Component(endpoints, "AuthEndpoints", "PromiseHub.Api", "202, 410, 422 or a session cookie")
+  Component(handler, "PasswordResetHandler", "PromiseHub.Application/Identity", "Throttle, newest-link rule, policy, sign-out, audit")
+  Component(policy, "PasswordPolicy", "PromiseHub.Application/Identity", "One rule (L2-053)")
+  Component(entity, "PasswordReset", "PromiseHub.Domain/Identity", "Token hash, expiry, use")
+}
+Rel(forgot, authApi, "forgotPassword")
+Rel(reset, authApi, "checkReset, resetPassword")
+Rel(reset, home, "where to land")
+Rel(forgot, toast, "Sent again")
+Rel(reset, toast, "Password updated")
+Rel(authApi, endpoints, "HTTP")
+Rel(endpoints, handler, "RequestAsync, CheckAsync, ResetAsync")
+Rel(handler, policy, "Check")
+Rel(handler, entity, "creates, finds the newest, uses")
+@enduml

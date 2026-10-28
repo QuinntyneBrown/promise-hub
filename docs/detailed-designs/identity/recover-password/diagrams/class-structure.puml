@@ -1,0 +1,48 @@
+@startuml
+title UML class structure — Recover a password as a youth or mentor
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+class PasswordReset {
+  +{static} Lifetime : TimeSpan = 1 h
+  +{static} PerHour : int = 3
+  +Id : Guid
+  +UserId : Guid
+  +TokenHash : string
+  +CreatedAt : DateTimeOffset
+  +ExpiresAt : DateTimeOffset
+  +UsedAt : DateTimeOffset?
+  +Usable(now) : bool
+  +Use(now)
+}
+class StaffUser {
+  +Email : string
+  +SessionVersion : int
+  +ChangePassword(hash)
+  +EndOtherSessions()
+}
+class Membership {
+  +OrganizationId : Guid
+  +Role : Role
+  +RemovedAt : DateTimeOffset?
+  +DeactivatedAt : DateTimeOffset?
+}
+class PasswordResetHandler {
+  +RequestAsync(ForgotPasswordCommand)
+  +CheckAsync(token) : string?
+  +ResetAsync(ResetPasswordCommand) : ResetPasswordResult
+  -FindAsync(token) : PasswordReset?
+}
+class ActiveMembership <<static>> {
+  +ForAsync(db, email) : Membership?
+}
+class PasswordPolicy <<static>> {
+  +Check(password, email) : string?
+}
+PasswordReset "0..*" --> "1" StaffUser : for
+StaffUser "1" -- "0..*" Membership : by email
+PasswordResetHandler ..> PasswordReset : creates, finds newest
+PasswordResetHandler ..> ActiveMembership : account must be current
+PasswordResetHandler ..> PasswordPolicy
+PasswordResetHandler ..> StaffUser : new hash, other sessions end
+@enduml
