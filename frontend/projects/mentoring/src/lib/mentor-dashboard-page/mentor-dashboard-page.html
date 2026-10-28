@@ -18,6 +18,7 @@
       } @else if (reviewsWaiting() === 0) {
         <ph-button icon="check" link="/mentoring/reviews">Reviews</ph-button>
       }
+      <ph-button icon="messages" link="/mentoring/check-ins">Mentor check-ins</ph-button>
       <ph-button icon="families" link="/mentoring/youth">My youth</ph-button>
     }
   </ph-page-header>
@@ -85,6 +86,31 @@
         </ph-card>
       </div>
       <div class="stack">
+        <ph-card title="Follow-ups" [flush]="true">
+          @if (d.followUps.length) {
+            <ph-list label="Follow-ups, soonest first">
+              @for (f of d.followUps; track f.childId) {
+                <ph-list-item
+                  [title]="f.youthName"
+                  [meta]="followUpMeta(f)"
+                  [avatar]="f.youthName"
+                  avatarTint="peach"
+                  [link]="['/mentoring/youth', f.childId]"
+                >
+                  @if (f.overdue) {
+                    <ph-badge tone="warning">Overdue</ph-badge>
+                  }
+                </ph-list-item>
+              }
+            </ph-list>
+          } @else {
+            <ph-empty-state
+              icon="events"
+              title="No follow-ups planned"
+              text="When you set a follow-up date on a mentor check-in, it shows here."
+            />
+          }
+        </ph-card>
         @if (d.cohorts.length) {
           <ph-card title="My cohorts" [flush]="true">
             <ph-list label="Your cohorts">
@@ -108,7 +134,7 @@
             <ph-timeline
               label="Recent activity"
               [entries]="entries(activity)"
-              empty="No check-ins in the last two weeks."
+              empty="No attendance in the last two weeks."
             />
           </ph-card>
         }

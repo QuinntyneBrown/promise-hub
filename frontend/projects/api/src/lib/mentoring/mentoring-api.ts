@@ -15,6 +15,9 @@ import type { CompetencySheet } from './competency-sheet';
 import type { QuizApprovals } from './quiz-approvals';
 import type { ReviewQueue } from './review-queue';
 import type { SubmissionReview } from './submission-review';
+import type { LogMentorCheckIn } from './log-mentor-check-in';
+import type { MentorCheckInFilter } from './mentor-check-in-filter';
+import type { MentorCheckInHistory } from './mentor-check-in-history';
 
 /** Mentoring (ADR 0043, ADR 0048): the calling mentor’s youth, and a cohort’s mentors set by program directors. */
 export interface MentoringApi {
@@ -39,6 +42,10 @@ export interface MentoringApi {
   approveAllQuizzes(): Observable<ApproveAllOutcome>;
   /** The reflections one of the caller's youth shared, newest first; forbidden when the youth is not theirs (L2-089 criterion 5). */
   sharedReflections(childId: string): Observable<LoadResult<SharedReflections>>;
+  /** The caller's mentor check-ins of his youth, newest first; forbidden for a youth who is not his (L2-090 criterion 4). */
+  checkIns(filter?: MentorCheckInFilter): Observable<LoadResult<MentorCheckInHistory>>;
+  /** Logs a mentor check-in for one of the caller's youth; invalid carries one message per field (L2-090). */
+  logCheckIn(body: LogMentorCheckIn): Observable<WriteOutcome>;
   /** One of the caller's youth's competencies; forbidden when the youth is not theirs. */
   competencies(childId: string): Observable<LoadResult<CompetencySheet>>;
   /** Saves every competency's level and note; only changed ones become new assessments. */

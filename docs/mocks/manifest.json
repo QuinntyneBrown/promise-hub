@@ -1578,6 +1578,7 @@
         "error",
         "rollcall-off",
         "learning-off",
+        "no-follow-ups",
         "forbidden"
       ]
     },
@@ -1618,6 +1619,8 @@
         "onboarded",
         "reflections",
         "no-reflections",
+        "check-ins",
+        "no-check-ins",
         "rollcall-off",
         "loading",
         "error",
@@ -2374,6 +2377,31 @@
         "not-found",
         "loading",
         "error"
+      ]
+    },
+    {
+      "id": "mentor-check-in-history",
+      "kind": "page",
+      "title": "Mentor check-ins",
+      "route": "/mentoring/check-ins",
+      "requirements": [
+        "L2-090",
+        "L2-065",
+        "L2-007",
+        "L2-032",
+        "L1-024",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "filtered",
+        "no-results",
+        "empty",
+        "saved",
+        "loading",
+        "error",
+        "forbidden"
       ]
     },
     {
@@ -3823,6 +3851,30 @@
       "not_applicable": {
         "invalid": "The dialog has no inputs to validate."
       }
+    },
+    {
+      "id": "mentor-check-in",
+      "kind": "dialog",
+      "title": "Log a mentor check-in",
+      "opens_from": "mentor-check-in-history",
+      "requirements": [
+        "L2-090",
+        "L2-065",
+        "L2-007",
+        "L2-032",
+        "L1-024",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "empty",
+        "from-record",
+        "shared",
+        "invalid",
+        "busy",
+        "failed"
+      ]
     },
     {
       "id": "toast",

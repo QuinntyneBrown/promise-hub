@@ -82,6 +82,7 @@ public interface IPromiseHubDb
     DbSet<Domain.Learning.Reflection> Reflections { get; }
     DbSet<Domain.Mentoring.Competency> Competencies { get; }
     DbSet<Domain.Mentoring.CompetencyAssessment> CompetencyAssessments { get; }
+    DbSet<Domain.Mentoring.MentorCheckIn> MentorCheckIns { get; }
     DbSet<Domain.Curriculum.Badge> Badges { get; }
     DbSet<Domain.Curriculum.BadgeAward> BadgeAwards { get; }
     DbSet<Domain.Curriculum.ProgressionStage> ProgressionStages { get; }

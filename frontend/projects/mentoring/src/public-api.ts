@@ -12,3 +12,5 @@ export { QuizApprovalsPage } from './lib/quiz-approvals-page/quiz-approvals-page
 export { ApproveQuizDialog } from './lib/approve-quiz-dialog/approve-quiz-dialog';
 export { ApproveAllQuizzesDialog } from './lib/approve-all-quizzes-dialog/approve-all-quizzes-dialog';
 export { CompetenciesPage } from './lib/competencies-page/competencies-page';
+export { MentorCheckInsPage } from './lib/mentor-check-ins-page/mentor-check-ins-page';
+export { MentorCheckInDialog } from './lib/mentor-check-in-dialog/mentor-check-in-dialog';

@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 67 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="67" data-video-title="Record mentor check-ins" data-parts="Introduction|Logging|Server checks|Private notes|History|Follow-ups|Who reads|Phone|States|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 67</div>
+  <h1>Record mentor check-ins</h1>
+  <p class="lead">One conversation at a time, read only by the mentor who wrote it</p>
+</section>
+
+<section id="log" data-part="1" data-cue="Daniel Osei mentors Mateo Rivera at Harbourview Youth Collective." data-clip="clips/log-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Log a mentor check-in</h3><p>From Mateo's record: how they met, how it went, what's next.</p></div>
+</section>
+
+<section id="log-shots" data-part="1" data-cue="He sets a follow-up for next Thursday">
+  <h2>Saved on his record</h2>
+  <div class="cols">
+    <img class="shot" alt="The Log a mentor check-in dialog filled in for Mateo" src="shots/desktop-dialog.png">
+    <img class="shot" alt="Mateo's record with the Mentor check-ins card" src="shots/desktop-record.png">
+  </div>
+</section>
+
+<section id="checks" data-part="2" data-cue="The server keeps each mentor check-in on the child">
+  <h2>What the server checks</h2>
+  <table class="facts">
+    <tr><th>Field</th><th>Rule</th></tr>
+    <tr><td>Youth</td><td>Required, in his scope (403 audited), his organization (404)</td></tr>
+    <tr><td>Date</td><td>Required, not after the organization's today</td></tr>
+    <tr><td>How you met · How it went</td><td>1:1, Call, Session · Struggling to Thriving</td></tr>
+    <tr><td>Topics, action items, private notes</td><td>Optional, up to 2,000 characters</td></tr>
+    <tr><td>Next follow-up</td><td>Optional, not before the date</td></tr>
+    <tr><td>Audit</td><td>Created, with shared, guardian informed, follow-up; never the words</td></tr>
+  </table>
+  <p class="muted small">POST /mentoring/check-ins · L2-090 · ADR 0061</p>
+</section>
+
+<section id="private" data-part="3" data-cue="Private notes are Daniel's alone">
+  <h2>Private notes and sharing</h2>
+  <ul>
+    <li>Private notes never leave the mentor who wrote them</li>
+    <li>Sharing starts off: a private mentor note</li>
+    <li>On: marked Shared in his history</li>
+    <li>The youth and guardian view arrives with the guardian portal</li>
+  </ul>
+</section>
+
+<section id="history" data-part="4" data-cue="From his dashboard, Mentor check-ins opens his history" data-clip="clips/history-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Mentor check-ins</h3><p>Newest first, filtered by youth or type.</p></div>
+</section>
+
+<section id="history-shots" data-part="4" data-cue="Logging from the history, he chooses the youth himself.">
+  <h2>His history</h2>
+  <div class="cols">
+    <img class="shot" alt="Mentor check-ins filtered to Mateo" src="shots/desktop-filtered.png">
+    <img class="shot" alt="The shared session with Sofía tops the list" src="shots/desktop-saved.png">
+  </div>
+</section>
+
+<section id="follow-ups" data-part="5" data-cue="His dashboard now has a Follow-ups card.">
+  <h2>Follow-ups</h2>
+  <div class="cols">
+    <img class="shot" alt="The Mentoring dashboard with Follow-ups: Jordan overdue, Yusuf, Mateo" src="shots/desktop-dashboard.png">
+    <ul>
+      <li>His latest check-in with each youth</li>
+      <li>Soonest first</li>
+      <li>Overdue before today</li>
+      <li>Each row opens the record</li>
+    </ul>
+  </div>
+</section>
+
+<section id="who" data-part="6" data-cue="Daniel sees only the check-ins he wrote">
+  <h2>Who reads a mentor check-in</h2>
+  <table class="facts">
+    <tr><th>Caller</th><th>Answer</th></tr>
+    <tr><td>Daniel, the author</td><td>His own, for youth in his scope</td></tr>
+    <tr><td>Another mentor of the youth</td><td>Never listed</td></tr>
+    <tr><td>A youth outside his scope</td><td>403, audited</td></tr>
+    <tr><td>Admins, directors, staff, youth, guardians</td><td>403</td></tr>
+    <tr><td>Another organization</td><td>404</td></tr>
+    <tr><td>Mentoring off</td><td>404, the page goes to Today, nothing deleted</td></tr>
+  </table>
+</section>
+
+<section id="phone" data-part="7" data-cue="On a phone, the Follow-ups card and the history fit one column" data-clip="clips/phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>One column</h3><p>Follow-ups, the history, and the dialog as a bottom sheet.</p></div>
+</section>
+
+<section id="states" data-part="8" data-cue="A date in the future and a follow-up before it" data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Refused and failed</h3><p>Invalid, failed, empty, error, Mentoring off.</p></div>
+</section>
+
+<section id="states-shots" data-part="8" data-cue="A mentor with no check-ins yet sees one calm empty state">
+  <h2>Every state says what to do</h2>
+  <div class="cols">
+    <img class="shot" alt="Fix these to continue: the date can't be in the future, the follow-up can't be before the check-in" src="shots/desktop-invalid.png">
+    <img class="shot" alt="No mentor check-ins yet, with Log a mentor check-in" src="shots/desktop-empty.png">
+  </div>
+</section>
+
+<section id="testing" data-part="9" data-cue="The API tests cover logging">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>MentorCheckInsTests</code>: logging, checks, audit without words, history and filters, another mentor, scope, follow-ups, roles, tenancy, Mentoring off</li>
+    <li><code>mentor-check-in.spec.ts</code>, <code>mentor-check-in-history.spec.ts</code>, <code>mentor-follow-ups.spec.ts</code> on phone and laptop, with axe</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="10" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>A mentor check-in is read only by the mentor who wrote it</li><li>Private notes never leave him</li><li>Follow-ups come from his latest check-in with each youth</li></ul>
+  <p class="muted">Next: flag youth who are at risk</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

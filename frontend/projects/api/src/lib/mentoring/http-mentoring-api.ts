@@ -21,6 +21,9 @@ import { QuizApprovals } from './quiz-approvals';
 import { ReviewQueue } from './review-queue';
 import { SubmissionReview } from './submission-review';
 import { toGradeOutcome } from './to-grade-outcome';
+import { LogMentorCheckIn } from './log-mentor-check-in';
+import { MentorCheckInFilter } from './mentor-check-in-filter';
+import { MentorCheckInHistory } from './mentor-check-in-history';
 
 @Injectable()
 export class HttpMentoringApi implements MentoringApi {
@@ -66,6 +69,19 @@ export class HttpMentoringApi implements MentoringApi {
         request,
       ),
     );
+  }
+
+  checkIns(filter: MentorCheckInFilter = {}): Observable<LoadResult<MentorCheckInHistory>> {
+    const params: Record<string, string> = {};
+    if (filter.childId) params['childId'] = filter.childId;
+    if (filter.kind) params['kind'] = filter.kind;
+    return toLoad(
+      this.http.get<MentorCheckInHistory>(`${this.baseUrl}/mentoring/check-ins`, { params }),
+    );
+  }
+
+  logCheckIn(body: LogMentorCheckIn): Observable<WriteOutcome> {
+    return toWrite(this.http.post<{ id: string }>(`${this.baseUrl}/mentoring/check-ins`, body));
   }
 
   quizApprovals(): Observable<LoadResult<QuizApprovals>> {

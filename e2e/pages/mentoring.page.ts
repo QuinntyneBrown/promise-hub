@@ -11,6 +11,23 @@ export class MentoringPage extends BasePage {
     await expect(this.page.getByRole('heading', { level: 1, name: 'Mentoring' })).toBeVisible();
   }
 
+  async openCheckIns(): Promise<void> {
+    await this.page.getByRole('link', { name: 'Mentor check-ins' }).click();
+  }
+
+  /** The Follow-ups card's rows, soonest first (L2-090 criterion 6). */
+  get followUps(): Locator {
+    return this.page.getByRole('list', { name: 'Follow-ups, soonest first' }).getByRole('listitem');
+  }
+
+  get noFollowUps(): Locator {
+    return this.page.getByRole('heading', { name: 'No follow-ups planned' });
+  }
+
+  async openFollowUp(name: string): Promise<void> {
+    await this.followUps.getByRole('link', { name }).click();
+  }
+
   get emptyState(): Locator {
     return this.page.getByRole('heading', { name: 'No youth assigned yet' });
   }

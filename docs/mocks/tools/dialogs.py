@@ -711,3 +711,54 @@ simple("progression-competency", "Add competency to Explorer", "curriculum-progr
 simple("remove-competency", "Remove Works with others?", "curriculum-progression", ["L2-086", "L2-082", "L2-032", R_CURRIC],
        "Mentors stop assessing it. The assessments they already made are kept.",
        lambda e: "", "Remove competency", icon_name="trash", danger=True, failed_text="The competency was not removed. Try again.")
+
+
+# ------------------------------------------------------------------ Record mentor check-ins (prompt 67, L2-090)
+from pages_checkins import KINDS, HOW, R_CHECKIN  # noqa: E402
+
+CI_TOPICS = "Fractions homework and the spelling bee on Friday. He wants to read his word list to Carmen tonight."
+CI_ACTIONS = "Practise ten spelling words each night."
+CI_PRIVATE = "Carmen mentioned money is tight this month; check whether the program fee waiver applies."
+
+
+def checkin_body(err=None, *, fixed: bool = False, shared: bool = False, blank: bool = False) -> str:
+    err = err or {}
+    summary = form_summary(list(err.items())) if err else ""
+    youth = (facts([("Youth", "Mateo Rivera")]) if fixed else
+             select("youth", "Youth", ["Choose a youth", "Emily Tran", "Jordan Thompson", "Kevin Tran", "Mateo Rivera", "Sofía Rivera", "Yusuf Haddad"],
+                    selected="Choose a youth" if (blank or "youth" in err) else "Mateo Rivera", error=err.get("youth", ""), attrs=" required"))
+    when = field("date", "Date", type_="date", value="2026-11-06" if "date" in err else "2026-11-05", required=True, error=err.get("date", ""))
+    kind = fieldset("How you met", "".join(choice("kind", k, checked=(k == "1:1" and not blank), invalid="kind" in err) for k in KINDS), error=err.get("kind", ""), fid="kind")
+    how = fieldset("How it went", "".join(choice("how", h, small=s, checked=(h == "Engaged" and not blank), invalid="how" in err) for h, s in HOW), error=err.get("how", ""), fid="how")
+    topics = textarea("topics", "What you talked about", value="" if blank else CI_TOPICS, rows=3, optional=True, count=f"{0 if blank else len(CI_TOPICS)} / 2,000")
+    actions = textarea("actions", "Action items", value="" if blank else CI_ACTIONS, rows=2, optional=True, count=f"{0 if blank else len(CI_ACTIONS)} / 2,000")
+    private = textarea("private-notes", "Private notes", value="" if blank else CI_PRIVATE, rows=2, optional=True,
+                       help_="Only you can read these, even when the check-in is shared.")
+    follow = field("follow-up", "Next follow-up", type_="date", value="2026-11-01" if "follow-up" in err else ("" if blank else "2026-11-12"), optional=True,
+                   error=err.get("follow-up", ""), help_="It shows on your Mentoring dashboard.")
+    share_desc = ("On: marked shared for the youth and their guardian. Your private notes stay yours." if shared
+                  else "Off: a private mentor note. Only you can read it.")
+    share = switch("shared", "Share with the youth and guardian", checked=shared, desc=share_desc)
+    informed = choice("guardian-informed", "Guardian was informed", type_="checkbox", checked=shared)
+    return (summary + youth + when + kind + how + topics + actions + private + follow + share + informed)
+
+
+def checkin_box(err=None, *, busy=False, alert_html="", fixed=False, shared=False, blank=False) -> str:
+    return dialog_box("Log a mentor check-in", "A conversation with one of your youth. Only you can read it unless you share it.",
+                      checkin_body(err, fixed=fixed, shared=shared, blank=blank), footer("Save check-in", busy=busy), icon_name="message",
+                      alert_html=alert_html, form=True, scroll=True)
+
+
+@screen("mentor-check-in", "dialog", "Log a mentor check-in", opens_from="mentor-check-in-history", reqs=R_CHECKIN)
+def mentor_check_in(S):
+    S.add("default", "Log a mentor check-in from the history: youth, date (today), how they met, how it went, what they talked about, action items, private notes, a follow-up date. Sharing is off.",
+          **over("mentor-check-in-history", "default", overlays=checkin_box()))
+    S.add("empty", "Just opened: nothing chosen yet but today’s date; focus on Youth.", **over("mentor-check-in-history", "default", overlays=checkin_box(blank=True)))
+    S.add("from-record", "Opened from Mateo’s record: the youth is fixed, everything else as usual.", **over("mentor-youth-detail", "check-ins", overlays=checkin_box(fixed=True)))
+    S.add("shared", "Sharing on: the switch says the private notes stay his; Guardian was informed ticked.", **over("mentor-check-in-history", "default", overlays=checkin_box(shared=True)))
+    S.add("invalid", "Save with no youth, a future date and a follow-up before the check-in: errors beside the fields and in a summary.",
+          **over("mentor-check-in-history", "default", overlays=checkin_box({"youth": "Choose a youth.", "date": "The date can’t be in the future.",
+                                                                            "follow-up": "The follow-up can’t be before the check-in."})))
+    S.add("busy", "Saving: Save check-in is busy and cannot be pressed twice; Cancel still works.", **over("mentor-check-in-history", "default", overlays=checkin_box(busy=True)))
+    S.add("failed", "The save failed: everything he wrote stays to try again.",
+          **over("mentor-check-in-history", "default", overlays=checkin_box(alert_html=failed_alert("That didn’t go through", "The mentor check-in wasn’t saved. Everything is still here; try again."))))

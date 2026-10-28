@@ -1,0 +1,127 @@
+<ph-dialog
+  title="Log a mentor check-in"
+  description="A conversation with one of your youth. Only you can read it unless you share it."
+  icon="messages"
+>
+  <form class="stack" (ngSubmit)="save()">
+    @if (summary().length) {
+      <ph-error-summary title="Fix these to continue" [items]="summary()" />
+    }
+    @if (failed()) {
+      <ph-alert
+        tone="danger"
+        title="That didn’t go through"
+        text="The mentor check-in wasn’t saved. Everything is still here; try again."
+      />
+    }
+    @if (data.fixed) {
+      <ph-description-list [facts]="fixedFacts" />
+    } @else {
+      <ph-select
+        inputId="check-in-youth"
+        label="Youth"
+        name="youth"
+        [options]="youthOptions"
+        [error]="errors()['childId'] ?? null"
+        [ngModel]="childId()"
+        (ngModelChange)="childId.set($event ?? '')"
+      />
+    }
+    <ph-text-field
+      inputId="check-in-date"
+      label="Date"
+      type="date"
+      name="date"
+      [error]="errors()['date'] ?? null"
+      [ngModel]="date()"
+      (ngModelChange)="date.set($event ?? '')"
+    />
+    <div id="check-in-kind">
+      <ph-radio-group
+        legend="How you met"
+        name="kind"
+        [options]="kinds"
+        [error]="errors()['kind'] ?? null"
+        [ngModel]="kind()"
+        (ngModelChange)="kind.set($event)"
+      />
+    </div>
+    <div id="check-in-engagement">
+      <ph-radio-group
+        legend="How it went"
+        name="engagement"
+        [options]="engagements"
+        [error]="errors()['engagement'] ?? null"
+        [ngModel]="engagement()"
+        (ngModelChange)="engagement.set($event)"
+      />
+    </div>
+    <ph-textarea
+      inputId="check-in-topics"
+      label="What you talked about"
+      name="topics"
+      [optional]="true"
+      [rows]="3"
+      [count]="count(topics())"
+      [error]="errors()['topics'] ?? null"
+      [ngModel]="topics()"
+      (ngModelChange)="topics.set($event ?? '')"
+    />
+    <ph-textarea
+      inputId="check-in-actions"
+      label="Action items"
+      name="actionItems"
+      [optional]="true"
+      [rows]="2"
+      [count]="count(actionItems())"
+      [error]="errors()['actionItems'] ?? null"
+      [ngModel]="actionItems()"
+      (ngModelChange)="actionItems.set($event ?? '')"
+    />
+    <ph-textarea
+      inputId="check-in-private-notes"
+      label="Private notes"
+      name="privateNotes"
+      [optional]="true"
+      [rows]="2"
+      help="Only you can read these, even when the check-in is shared."
+      [error]="errors()['privateNotes'] ?? null"
+      [ngModel]="privateNotes()"
+      (ngModelChange)="privateNotes.set($event ?? '')"
+    />
+    <ph-text-field
+      inputId="check-in-follow-up"
+      label="Next follow-up"
+      type="date"
+      name="followUpOn"
+      [optional]="true"
+      help="It shows on your Mentoring dashboard."
+      [error]="errors()['followUpOn'] ?? null"
+      [ngModel]="followUpOn()"
+      (ngModelChange)="followUpOn.set($event ?? '')"
+    />
+    <ph-switch
+      label="Share with the youth and guardian"
+      name="shared"
+      [description]="
+        shared()
+          ? 'On: marked shared for the youth and their guardian. Your private notes stay yours.'
+          : 'Off: a private mentor note. Only you can read it.'
+      "
+      [ngModel]="shared()"
+      (ngModelChange)="shared.set($event)"
+    />
+    <ph-checkbox
+      label="Guardian was informed"
+      name="guardianInformed"
+      [ngModel]="guardianInformed()"
+      (ngModelChange)="guardianInformed.set($event)"
+    />
+  </form>
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close()">Cancel</ph-button>
+    <ph-button variant="primary" icon="check" [busy]="busy()" (click)="save()"
+      >Save check-in</ph-button
+    >
+  </ng-container>
+</ph-dialog>

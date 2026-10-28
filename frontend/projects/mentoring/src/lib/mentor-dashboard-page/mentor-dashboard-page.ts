@@ -5,10 +5,12 @@ import {
   MENTORING_API,
   MentorActivity,
   MentorDashboard,
+  MentorFollowUp,
   MentoredYouth,
   SESSION_API,
 } from '@promisehub/api';
 import {
+  PhBadge,
   PhButton,
   PhCard,
   PhEmptyState,
@@ -20,6 +22,7 @@ import {
   PhTimeline,
   TimelineEntry,
   formatDateTime,
+  formatDay,
 } from '@promisehub/components';
 import { EMPTY, Subject, catchError, filter, map, of, startWith, switchMap } from 'rxjs';
 
@@ -37,6 +40,7 @@ const VERBS: Record<MentorActivity['kind'], string> = {
 @Component({
   selector: 'ph-mentor-dashboard-page',
   imports: [
+    PhBadge,
     PhButton,
     PhCard,
     PhEmptyState,
@@ -98,6 +102,10 @@ export class MentorDashboardPage {
     return [y.age !== null ? `Age ${y.age}` : null, y.programs.join(', ') || null]
       .filter(Boolean)
       .join(' · ');
+  }
+
+  protected followUpMeta(f: MentorFollowUp): string {
+    return `${f.overdue ? 'Overdue · ' : ''}${formatDay(f.followUpOn)}`;
   }
 
   protected leads(d: MentorDashboard): number {

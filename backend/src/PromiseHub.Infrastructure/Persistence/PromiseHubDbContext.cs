@@ -77,6 +77,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Learning.SubmissionEvent> SubmissionEvents => Set<Domain.Learning.SubmissionEvent>();
     public DbSet<Domain.Mentoring.Competency> Competencies => Set<Domain.Mentoring.Competency>();
     public DbSet<Domain.Mentoring.CompetencyAssessment> CompetencyAssessments => Set<Domain.Mentoring.CompetencyAssessment>();
+    public DbSet<Domain.Mentoring.MentorCheckIn> MentorCheckIns => Set<Domain.Mentoring.MentorCheckIn>();
     public DbSet<Domain.Curriculum.Badge> Badges => Set<Domain.Curriculum.Badge>();
     public DbSet<Domain.Curriculum.BadgeAward> BadgeAwards => Set<Domain.Curriculum.BadgeAward>();
     public DbSet<Domain.Curriculum.ProgressionStage> ProgressionStages => Set<Domain.Curriculum.ProgressionStage>();
@@ -290,6 +291,18 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.HasOne<Domain.Households.Child>().WithMany().HasForeignKey(a => a.ChildId);
             e.HasOne<Domain.Mentoring.Competency>().WithMany().HasForeignKey(a => a.CompetencyId);
             e.HasOne<Membership>().WithMany().HasForeignKey(a => a.AssessorMembershipId);
+        });
+        modelBuilder.Entity<Domain.Mentoring.MentorCheckIn>(e =>
+        {
+            e.HasIndex(c => new { c.OrganizationId, c.MentorMembershipId, c.ChildId });
+            e.Property(c => c.Kind).HasConversion<string>().HasMaxLength(20);
+            e.Property(c => c.Engagement).HasConversion<string>().HasMaxLength(20);
+            e.Property(c => c.Topics).HasMaxLength(Domain.Mentoring.MentorCheckIn.MaximumText);
+            e.Property(c => c.ActionItems).HasMaxLength(Domain.Mentoring.MentorCheckIn.MaximumText);
+            e.Property(c => c.PrivateNotes).HasMaxLength(Domain.Mentoring.MentorCheckIn.MaximumText);
+            e.Property(c => c.CreatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.HasOne<Domain.Households.Child>().WithMany().HasForeignKey(c => c.ChildId);
+            e.HasOne<Membership>().WithMany().HasForeignKey(c => c.MentorMembershipId);
         });
         modelBuilder.Entity<Domain.Curriculum.Badge>(e =>
         {

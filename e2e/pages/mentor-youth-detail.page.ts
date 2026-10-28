@@ -73,6 +73,24 @@ export class MentorYouthDetailPage extends BasePage {
     return this.page.evaluate(async (id) => (await fetch(`/api/mentoring/youth/${id}`)).status, childId);
   }
 
+  /** The Mentor check-ins card's rows (L2-090 criterion 5). */
+  get checkIns(): Locator {
+    return this.page.getByRole('list', { name: /^Mentor check-ins with .+, newest first$/ }).getByRole('listitem');
+  }
+
+  get noCheckIns(): Locator {
+    return this.page.getByRole('heading', { name: 'No mentor check-ins yet' });
+  }
+
+  async openAllCheckIns(): Promise<void> {
+    await this.page.getByRole('link', { name: 'All mentor check-ins' }).click();
+  }
+
+  /** Opens the Log a mentor check-in dialog with this youth fixed (L2-090 criterion 1). */
+  async logCheckIn(): Promise<void> {
+    await this.page.getByRole('button', { name: 'Log a mentor check-in' }).first().click();
+  }
+
   async openCompetencies(): Promise<void> {
     await this.page.getByRole('link', { name: 'Competencies' }).click();
   }

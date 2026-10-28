@@ -1,0 +1,35 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Record mentor check-ins
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(hist, "MentorCheckInsPage", "Angular page", "/mentoring/check-ins")
+  Component(dlg, "MentorCheckInDialog", "CDK Dialog", "log a mentor check-in")
+  Component(rec, "MentorYouthDetailPage", "Angular page", "Mentor check-ins card")
+  Component(dash, "MentorDashboardPage", "Angular page", "Follow-ups card")
+  Component(mapi, "MentoringApi", "Contract + HTTP client", "MENTORING_API")
+  Component(lib, "Components library", "Angular", "ph-dialog, ph-select, ph-text-field, ph-radio-group, ph-textarea, ph-switch, ph-checkbox, ph-list")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "MentoringEndpoints", "Minimal API", "GET and POST /mentoring/check-ins, GET /mentoring/dashboard")
+  Component(h, "MentorCheckInsHandler", "Handler", "scope, validation, save, audit, history")
+  Component(dh, "MentorDashboardHandler", "Handler", "follow-ups from the latest check-in per youth")
+  Component(scope, "MentorScope", "Service", "the mentor's youth")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "MentorCheckIns, Children, Organizations, AuditEntries")
+}
+Rel(hist, dlg, "opens")
+Rel(rec, dlg, "opens with the youth fixed")
+Rel(hist, mapi, "loads history")
+Rel(rec, mapi, "loads the youth's check-ins")
+Rel(dash, mapi, "loads the dashboard")
+Rel(dlg, mapi, "saves")
+Rel(hist, lib, "composes")
+Rel(dlg, lib, "composes")
+Rel(mapi, ep, "JSON/HTTPS")
+Rel(ep, h, "calls")
+Rel(ep, dh, "calls")
+Rel(h, scope, "uses")
+Rel(dh, scope, "uses")
+Rel(h, db, "reads and writes")
+Rel(dh, db, "reads")
+@enduml

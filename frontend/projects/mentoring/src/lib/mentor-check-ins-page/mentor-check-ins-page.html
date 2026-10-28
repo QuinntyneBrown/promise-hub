@@ -1,0 +1,104 @@
+@let r = result();
+<ph-breadcrumb
+  [items]="[{ label: 'Mentoring', link: '/mentoring' }, { label: 'Mentor check-ins' }]"
+/>
+@if (r?.status === 'forbidden') {
+  <ph-page-header title="Mentor check-ins" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      title="Mentoring is for mentors"
+      text="Program directors assign mentors from a cohort’s page in Programs."
+    >
+      <ph-button link="/">Back to Today</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-page-header
+    title="Mentor check-ins"
+    subtitle="Every 1:1, call and session you’ve logged, newest first. Only you can read them."
+  >
+    @if (r?.status === 'loaded') {
+      <ph-button variant="primary" icon="plus" (click)="log()">Log a mentor check-in</ph-button>
+    }
+  </ph-page-header>
+  @if (r === null) {
+    <div class="stack" aria-busy="true" aria-label="Loading your mentor check-ins">
+      <ph-skeleton shape="card" />
+      <ph-skeleton shape="card" />
+    </div>
+  } @else if (r.status === 'loaded') {
+    @let h = r.value;
+    @if (h.items.length === 0 && !filtered()) {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="messages"
+          title="No mentor check-ins yet"
+          text="Log your first conversation with one of your youth: how it went, what you talked about and when to follow up."
+        >
+          <ph-button variant="primary" icon="plus" (click)="log()">Log a mentor check-in</ph-button>
+        </ph-empty-state>
+      </ph-card>
+    } @else {
+      <form class="filters" role="search" aria-label="Filter mentor check-ins">
+        <ph-select
+          inputId="filter-youth"
+          label="Youth"
+          name="youth"
+          [options]="youthOptions()"
+          [ngModel]="youthFilter()"
+          (ngModelChange)="youthFilter.set($event ?? '')"
+        />
+        <ph-select
+          inputId="filter-kind"
+          label="Type"
+          name="kind"
+          [options]="kindOptions"
+          [ngModel]="kindFilter()"
+          (ngModelChange)="kindFilter.set($event ?? '')"
+        />
+      </form>
+      @if (h.items.length) {
+        <ph-card [flush]="true">
+          <ph-list label="Mentor check-ins, newest first">
+            @for (c of h.items; track track(c)) {
+              <ph-list-item
+                [title]="c.youthName"
+                [avatar]="c.youthName"
+                avatarTint="peach"
+                [meta]="meta(c)"
+                [text]="c.topics"
+                [caption]="caption(c)"
+              >
+                <ph-badge [tone]="c.shared ? 'success' : 'neutral'">{{
+                  c.shared ? 'Shared' : 'Private'
+                }}</ph-badge>
+              </ph-list-item>
+            }
+          </ph-list>
+        </ph-card>
+      } @else {
+        <ph-card [flush]="true">
+          <ph-empty-state
+            icon="search"
+            title="No mentor check-ins match"
+            text="Try another youth or type."
+          >
+            <ph-button (click)="clearFilters()">Clear filters</ph-button>
+          </ph-empty-state>
+        </ph-card>
+      }
+    }
+  } @else {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load your mentor check-ins"
+        text="Check your connection and try again."
+      >
+        <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+}

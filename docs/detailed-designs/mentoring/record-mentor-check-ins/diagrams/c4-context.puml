@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Record mentor check-ins
+Person(m, "Mentor", "Logs conversations with his youth and reads his own history")
+Person(d, "Program director", "Assigns mentors; never reads mentor check-ins")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(m, ph, "Logs mentor check-ins, reads history and follow-ups", "HTTPS")
+Rel(d, ph, "Assigns youth to mentors", "HTTPS")
+@enduml
