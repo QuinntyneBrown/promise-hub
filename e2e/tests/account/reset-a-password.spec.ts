@@ -167,6 +167,28 @@ test.describe("Reset a password as a youth or mentor", () => {
     expect(await new LearningPage(page).apiStatus()).toBe(404);
   });
 
+  test("Given Samuel at Northgate where Mentoring is off, when he resets, then he lands on Today and nothing from Mentoring loads", async ({
+    page,
+  }) => {
+    const reset = new ResetPasswordPage(page);
+    const requested = reset.recordApiPaths();
+    await reset.openLink("tok-reset-samuel");
+
+    await reset.choose("harbour-lantern-2027");
+
+    const today = new TodayPage(page);
+    await expect(today.heading).toHaveText("Welcome, Samuel");
+    await expect(page).toHaveURL(/\/$/);
+    await expect(reset.toast("Password updated")).toBeVisible();
+    expect(
+      requested.filter(
+        (p) => p.startsWith("/api/learning") || p.startsWith("/api/mentoring"),
+      ),
+    ).toEqual([]);
+    expect(await new MentoringPage(page).apiStatus()).toBe(404);
+    await today.expectAccessible();
+  });
+
   test("Given the save fails, when Sofía sets her password, then the form stays with That didn't save", async ({
     page,
     api,

@@ -20,6 +20,7 @@ public sealed partial class PasswordResetForEveryRoleTests : IAsyncLifetime
     private const string Sofia = "sofia@harbourview.example";
     private const string Daniel = "daniel@harbourview.example";
     private const string Lucia = "lucia@northgate.example";
+    private const string Samuel = "samuel@northgate.example";
     private const string Priya = "priya@harbourview.example";
     private const string NewPassword = "harbour-lantern-2027";
 
@@ -113,6 +114,19 @@ public sealed partial class PasswordResetForEveryRoleTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.OK, (await browser.GetAsync("/me")).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await browser.GetAsync("/learning/me")).StatusCode);
+    }
+
+    [Fact]
+    public async Task A_mentor_whose_organization_has_mentoring_off_resets_and_still_gets_404_from_mentoring()
+    {
+        await Ask(Samuel);
+
+        var browser = Browser();
+        (await Reset(browser, Token(Samuel), NewPassword)).EnsureSuccessStatusCode();
+
+        var session = await browser.GetFromJsonAsync<JsonElement>("/me");
+        Assert.Equal("Mentor", session.GetProperty("role").GetString());
+        Assert.Equal(HttpStatusCode.NotFound, (await browser.GetAsync("/mentoring/youth")).StatusCode);
     }
 
     [Fact]

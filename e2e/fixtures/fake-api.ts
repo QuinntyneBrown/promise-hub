@@ -655,6 +655,7 @@ export class FakeApi {
     ["tok-reset-sofia", { email: "sofia@harbourview.example", usable: true }],
     ["tok-reset-daniel", { email: "daniel@harbourview.example", usable: true }],
     ["tok-reset-lucia", { email: "lucia@northgate.example", usable: true }],
+    ["tok-reset-samuel", { email: "samuel@northgate.example", usable: true }],
   ]);
   resetRequestedFor: string | null = null;
   /** Reset emails sent per address, all within the fake's one hour. */
