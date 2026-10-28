@@ -54,10 +54,10 @@ def feed(rows) -> str:
 @screen("mentor-dashboard", "page", "Mentoring", route="/mentoring", reqs=["L2-063", "L2-065", R_MENTOR])
 def mentor_dashboard(S):
     hdr = page_header("Mentoring", "Welcome back, Daniel. Here’s how your youth are doing.",
-                      btn("Reviews · 4", "", icon_name="check", href=page("mentor-reviews")) + btn("Mentor check-ins", "", icon_name="message", href=page("mentor-check-in-history"))
+                      btn("Reviews · 4", "", icon_name="check", href=page("mentor-reviews")) + btn("At-risk flags", "", icon_name="flag", href=page("mentor-flags")) + btn("Mentor check-ins", "", icon_name="message", href=page("mentor-check-in-history"))
                       + btn("My youth", "", icon_name="users", href=page("mentor-youth")))
     hdr_no_learning = page_header("Mentoring", "Welcome back, Daniel. Here’s how your youth are doing.",
-                                  btn("Mentor check-ins", "", icon_name="message", href=page("mentor-check-in-history")) + btn("My youth", "", icon_name="users", href=page("mentor-youth")))
+                                  btn("At-risk flags", "", icon_name="flag", href=page("mentor-flags")) + btn("Mentor check-ins", "", icon_name="message", href=page("mentor-check-in-history")) + btn("My youth", "", icon_name="users", href=page("mentor-youth")))
     from pages_checkins import followups_card
     follow = followups_card()
     numbers = kpis([("My youth", "6", "Across 2 cohorts"), ("My cohorts", "2", "Lead mentor on 1"), ("Checked in this week", "4", "of your 6 youth")])

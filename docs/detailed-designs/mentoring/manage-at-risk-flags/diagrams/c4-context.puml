@@ -1,0 +1,11 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Manage at-risk flags
+Person(m, "Mentor", "Raises and resolves flags on his youth")
+Person(d, "Program director or admin", "Notified of each flag; reads and resolves every flag; reports incidents")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(m, ph, "Raises, reads and resolves flags", "HTTPS")
+Rel(ph, d, "In-app notification of a new flag")
+Rel(d, ph, "Reads and resolves flags, reports an incident", "HTTPS")
+@enduml
