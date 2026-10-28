@@ -54,6 +54,21 @@ export class CheckInPage extends BasePage {
     await expect(this.dialog).toBeHidden();
   }
 
+  /** The arrival choices the open check-in sheet offers, in order. */
+  async sheetChoices(): Promise<string[]> {
+    return (await this.dialog.getByRole('radio').evaluateAll((radios) => radios.map((r) => (r as HTMLInputElement).labels?.[0]?.innerText.split('\n')[0].trim() ?? '')));
+  }
+
+  /** Saves the open check-in sheet with its first choice, Now. */
+  async checkInNow(): Promise<void> {
+    await this.dialog.getByRole('button', { name: 'Check in', exact: true }).click();
+    await expect(this.dialog).toBeHidden();
+  }
+
+  get historyLink(): Locator {
+    return this.page.getByRole('link', { name: 'Attendance history' });
+  }
+
   get offlineBanner(): Locator {
     return this.page.getByRole('main').getByRole('status').filter({ hasText: 'You’re offline' });
   }

@@ -1,0 +1,34 @@
+@startuml
+title Class structure — View upcoming schedule
+skinparam classAttributeIconSize 0
+class MySchedulePage {
+  #state : Signal<LoadResult<MySchedule> | null>
+  #days : computed
+  #retry() : void
+}
+interface AttendanceApi {
+  +mine() : Observable<LoadResult<MySchedule>>
+}
+class MyScheduleHandler {
+  +Window : TimeSpan = 28 days
+  +HandleAsync() : MyScheduleDto
+}
+class MyScheduleDto {
+  +Sessions : IReadOnlyList<MySessionDto>
+}
+class MySessionDto {
+  +Id : Guid
+  +Name : string
+  +ProgramName : string
+  +Day : DateOnly
+  +StartsAt : DateTimeOffset
+  +EndsAt : DateTimeOffset
+  +Place : string?
+  +Expected : int
+  +Status : string
+  +Today : bool
+}
+MySchedulePage ..> AttendanceApi
+MyScheduleHandler ..> MyScheduleDto : answers
+MyScheduleDto *-- MySessionDto
+@enduml

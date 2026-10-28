@@ -1,0 +1,37 @@
+@startuml
+title UML sequence behaviour — A volunteer opens Schedule
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Volunteer (Leo)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "MySchedulePage" as page
+  participant "AttendanceApi" as aapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "AttendanceEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "MyScheduleHandler" as h
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : Schedule
+page -> aapi : mine()
+aapi -> ep : GET /sessions/mine
+alt Roll Call off
+  ep --> page : 404 (route already redirects to Today, L2-101 c5)
+else no RunSessions
+  ep --> page : 403, forbidden state (L2-101 c4)
+else
+  ep -> h : HandleAsync
+  h -> db : SessionStaff of the caller's membership (tenant filtered)
+  h -> db : events not ended, starting within 28 days
+  h -> db : programs, roster sizes
+  h --> page : sessions with day, expected, status, today (L2-101 c1)
+  page -> actor : day groups, Today / Assigned / Cancelled; empty when none (L2-101 c2, c3)
+end
+@enduml

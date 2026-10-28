@@ -87,6 +87,22 @@ export class TodayPage {
     ),
     { initialValue: null as SessionSummary[] | null },
   );
+  /** A volunteer's sessions today (L2-100): only while Roll Call is on; null while loading. */
+  protected readonly volunteer = computed(() => this.session()?.role === 'Volunteer');
+  private readonly retry$ = new Subject<void>();
+  protected readonly mySessions = toSignal<LoadResult<{ sessions: SessionSummary[] }> | null>(
+    toObservable(this.session).pipe(
+      switchMap((s) =>
+        s?.role === 'Volunteer' && s.modules.includes('RollCall')
+          ? this.retry$.pipe(
+              startWith(undefined),
+              switchMap(() => this.attendance.today().pipe(startWith(null))),
+            )
+          : of(null),
+      ),
+    ),
+    { initialValue: null },
+  );
   /** Null while loading; only fetched while Roster is on. */
   protected readonly summary = toSignal<LoadResult<TodaySummary> | null>(
     toObservable(this.session).pipe(
@@ -105,9 +121,9 @@ export class TodayPage {
   protected readonly date = formatDate;
   protected readonly dateTime = formatDateTime;
 
-  /** Staff and volunteers have sessions; youth and mentors never ask for them. */
+  /** Staff have the session summary; participant roles never ask for it here (a volunteer's cards load separately). */
   private static runsSessions(s: Session): boolean {
-    return !PARTICIPANT_ROLES.includes(s.role) || s.role === 'Volunteer';
+    return !PARTICIPANT_ROLES.includes(s.role);
   }
 
   /** A participant's work: one item per module that is on and serves the role (L2-038 criteria 6 and 7). */
@@ -133,20 +149,23 @@ export class TodayPage {
         link: '/check-in',
       });
     }
-    if (s.role === 'Volunteer') {
-      for (const session of this.sessions() ?? []) {
-        items.push({
-          title: session.name,
-          meta: `${this.when(session.startsAt, session.endsAt)}${session.place ? ' · ' + session.place : ''} · you are assigned`,
-          link: `/check-in/${session.id}`,
-        });
-      }
+    // A volunteer's own schedule (L2-101), beside today's session cards.
+    if (s.role === 'Volunteer' && s.modules.includes('RollCall')) {
+      items.push({
+        title: 'Your schedule',
+        meta: 'The sessions you’re assigned to in the next four weeks',
+        link: '/my-schedule',
+      });
     }
     return items;
   });
 
   protected reload(): void {
     this.refresh$.next();
+  }
+
+  protected retry(): void {
+    this.retry$.next();
   }
 
   protected has(module: ModuleId): boolean {

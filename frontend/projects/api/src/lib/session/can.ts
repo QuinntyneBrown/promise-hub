@@ -20,6 +20,8 @@ const GRANTS: Record<Permission, Role[]> = {
   reviewEnrollments: ['Admin', 'ProgramDirector'],
   reviewAttendance: ['Admin', 'ProgramDirector', 'SiteLead', 'Mentor'],
   correctAttendance: ['Admin', 'ProgramDirector'],
+  /** Late and excused (L2-095); volunteers mark Present or Absent only (L2-100). */
+  qualifyAttendance: ['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker', 'Mentor'],
 };
 
 /** Whether a role holds a permission, to hide actions it lacks. The server enforces the same map on every request. */

@@ -111,8 +111,9 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
         // Tonight's staff, as on the event page: Jaylen leads and Aisha works it; she is not on last night's session.
         Assign(Harbourview, "Tutoring night", "jaylen@harbourview.example");
         Assign(Harbourview, "Tutoring night", "aisha@harbourview.example");
-        // Leo volunteers at tonight's session only.
+        // Leo volunteers at tonight's session and Saturday's sports (his schedule, L2-101); last night's is not his.
         Assign(Harbourview, "Tutoring night", "leo@harbourview.example");
+        Assign(Harbourview, "Saturday Sports", "leo@harbourview.example");
         var kidsClub = Program(Northgate, "Kids Club", new(2026, 9, 9), new(2027, 6, 16), "Wed, 6–7:30 pm", 30, "5–11", open: true);
         Enroll(Northgate, kidsClub, "Mateo Rivera");
         Session(Northgate, kidsClub, "Kids Club night", At(2026, 11, 11, 18), At(2026, 11, 11, 19), "Northgate fellowship hall", slip: false);

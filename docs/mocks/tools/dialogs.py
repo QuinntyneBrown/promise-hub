@@ -68,17 +68,22 @@ def simple(sid, title, opens_from, reqs, desc, body_fn, primary, *, icon_name=""
             S.add("confirm", f"{title}: extra friction before the destructive step.", **over(opens_from, base_state, overlays=box("confirm", body_override=confirm_body), **kw))
         if success_body is not None:
             S.add("success", f"{title}: done, with the next step inside the dialog.", **over(opens_from, base_state, overlays=dialog_box(title, "", success_body, btn("Done", "primary", attrs=" autofocus"), icon_name="check-circle", form=False), **kw))
-        for st, (d, html) in (extra_states or {}).items():
-            S.add(st, d, **over(opens_from, base_state, overlays=html, **kw))
+        for st, (d, html, *on) in (extra_states or {}).items():
+            S.add(st, d, **over(opens_from, on[0] if on else base_state, overlays=html, **kw))
     return _d
 
 
 # ------------------------------------------------------------------ Check-in and pickup
-simple("check-in-sheet", "Check in Kevin Tran", "check-in", [R_ROLL, "L1-008", "L2-095"], "Grade 3 · not yet here · no medical notes",
+simple("check-in-sheet", "Check in Kevin Tran", "check-in", [R_ROLL, "L1-008", "L2-095", "L2-100"], "Grade 3 · not yet here · no medical notes",
        lambda e: f'<div class="cluster">{avatar(CHILD["kevin"], "lg")}<div><div class="section-title">Kevin Tran</div><div class="text-muted">8 · Tran household · Linh Tran 289-555-0119</div></div></div>'
                  + fieldset("Arrived", choice("arr", "Now, 4:14 pm", checked=True) + choice("arr", "Earlier", small="Pick a time") + choice("arr", "Late", small="Arrived after the start; counts as here") + choice("arr", "Excused", small="Not coming, and the reason is accepted") + choice("arr", "Mark absent instead", small="Guardian is texted"))
                  + f'<p class="hint"><a href="{page("quick-card", "empty")}">Open Kevin’s Quick Card</a></p>',
-       "Check in", icon_name="clipboard", na={"invalid": "Arrival is a radio group with a default; nothing can be invalid."})
+       "Check in", icon_name="clipboard", na={"invalid": "Arrival is a radio group with a default; nothing can be invalid."},
+       extra_states={"volunteer": ("A volunteer checks Yusuf in on his assigned session: Now, Earlier or Mark absent instead. Late and Excused are for staff and mentors (L2-100), and there is no Quick Card link.",
+                                   dialog_box("Check in Yusuf Haddad", "Grade 8 · not yet here",
+                                              f'<div class="cluster">{avatar(CHILD["yusuf"], "lg")}<div><div class="section-title">Yusuf Haddad</div><div class="text-muted">Grade 8</div></div></div>'
+                                              + fieldset("Arrived", choice("arr", "Now, 4:14 pm", checked=True) + choice("arr", "Earlier", small="Pick a time") + choice("arr", "Mark absent instead")),
+                                              footer("Check in"), icon_name="clipboard", form=True), "volunteer")})
 
 simple("confirm-pickup", "Sign out Mateo Rivera", "check-in", [R_PICKUP, R_ROLL], "Pick from the approved list. Check ID if you don’t know them.",
        lambda e: fieldset("Picked up by", choice("who", f"Carmen Rivera <small>Mother · primary</small>", checked=not e) + choice("who", "Luis Rivera <small>Uncle · ask for ID</small>") + choice("who", "Rosa Alvarez <small>Grandmother · ask for ID</small>") + choice("who", "Someone else <small>Needs Carmen’s okay by phone</small>"), error=(e or {}).get("who", ""), fid="who")
@@ -368,8 +373,8 @@ def main_menu(S):
           **over("today", "youth", overlays=drawer(YOUTH["sofia"], "today", [("today", "Today", "home"), ("learn-home", "Learning", "star"), ("youth-schedule", "Schedule", "calendar")] + tail)))
     S.add("mentor", "A mentor’s menu: Today, Mentoring, Check-in, notifications and account.",
           **over("today", "mentor", overlays=drawer(STAFF["daniel"], "today", [("today", "Today", "home"), ("mentor-dashboard", "Mentoring", "users"), ("check-in", "Check-in", "clipboard")] + tail)))
-    S.add("volunteer", "A volunteer’s menu: Today, Check-in for their assigned sessions, notifications and account.",
-          **over("today", "volunteer", overlays=drawer(STAFF["leo"], "today", [("today", "Today", "home"), ("check-in", "Check-in", "clipboard")] + tail)))
+    S.add("volunteer", "A volunteer’s menu: Today, Check-in for their assigned sessions, Schedule (while Roll Call is on), notifications and account.",
+          **over("today", "volunteer", overlays=drawer(STAFF["leo"], "today", [("today", "Today", "home"), ("check-in", "Check-in", "clipboard"), ("my-schedule", "Schedule", "calendar")] + tail)))
 
 
 @screen("account-menu", "dialog", "Account menu", opens_from="today", reqs=[R_SEC], na={"busy": "A menu has no submit.", "invalid": "A menu has no inputs."})

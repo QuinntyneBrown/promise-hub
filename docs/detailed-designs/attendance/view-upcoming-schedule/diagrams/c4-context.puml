@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — View upcoming schedule
+Person(v, "Volunteer", "Helps at the sessions he is assigned to")
+Person(c, "Volunteer coordinator", "Assigns volunteers to sessions")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(v, ph, "Reads his schedule", "HTTPS")
+Rel(c, ph, "Assigns him in coverage", "HTTPS")
+@enduml

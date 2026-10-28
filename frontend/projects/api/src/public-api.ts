@@ -16,6 +16,8 @@ export * from './lib/attendance/session-attendance-row';
 export * from './lib/attendance/session-attendance-status';
 export * from './lib/attendance/youth-attendance-row';
 export * from './lib/attendance/sign-out';
+export * from './lib/attendance/my-schedule';
+export * from './lib/attendance/my-session';
 export * from './lib/auth/auth-api';
 export * from './lib/auth/auth-api.token';
 export * from './lib/auth/sign-in-outcome';

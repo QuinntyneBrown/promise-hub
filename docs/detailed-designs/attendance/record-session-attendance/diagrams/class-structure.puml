@@ -1,0 +1,30 @@
+@startuml
+title Class structure — Record session attendance
+skinparam classAttributeIconSize 0
+class CheckInPage {
+  #staff : computed<boolean>
+  #qualifies : computed<boolean>
+  #forbiddenText : computed<string>
+}
+class CheckInSheetData {
+  +entry : RosterEntry
+  +qualifiers : boolean
+}
+class CheckInSheetDialog {
+  #options : RadioOption[]
+  #submit() : void
+}
+class CheckInHandler {
+  +HandleAsync(eventId, command) : Result
+}
+class MarkAbsentHandler {
+  +HandleAsync(eventId, command) : Result
+}
+class RolePermissions {
+  +Has(role, QualifyAttendance) : bool
+}
+CheckInPage --> CheckInSheetDialog : opens with
+CheckInSheetDialog ..> CheckInSheetData
+CheckInHandler ..> RolePermissions : late
+MarkAbsentHandler ..> RolePermissions : excused
+@enduml

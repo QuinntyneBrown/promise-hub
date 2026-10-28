@@ -1,0 +1,27 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Record session attendance
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "CheckInPage", "Angular page", "names only for volunteers")
+  Component(sheet, "CheckInSheetDialog", "CDK Dialog", "now, earlier, absent")
+  Component(aapi, "AttendanceApi", "Contract + HTTP client", "checkIn, markAbsent")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "AttendanceEndpoints", "Minimal API", "roster, check-ins, absences")
+  Component(ci, "CheckInHandler", "Handler", "late needs QualifyAttendance")
+  Component(ma, "MarkAbsentHandler", "Handler", "excused needs QualifyAttendance")
+  Component(w, "AttendanceWriter", "Service", "idempotency, audit")
+  Component(acc, "SessionAccess", "Service", "assigned sessions")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "AttendanceRecords, AttendanceEvents, SessionStaff, AuditEntries")
+}
+Rel(page, sheet, "opens")
+Rel(page, aapi, "checkIn, markAbsent")
+Rel(aapi, ep, "JSON/HTTPS")
+Rel(ep, ci, "calls")
+Rel(ep, ma, "calls")
+Rel(ci, w, "applies")
+Rel(ma, w, "applies")
+Rel(w, acc, "asks")
+Rel(w, db, "reads and writes")
+@enduml

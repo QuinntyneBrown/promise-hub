@@ -1,7 +1,6 @@
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RosterEntry } from '@promisehub/api';
 import {
   PhButton,
   PhDialog,
@@ -10,13 +9,17 @@ import {
   RadioOption,
   formatTime,
 } from '@promisehub/components';
+import { CheckInSheetData } from './check-in-sheet-data';
 
 export type CheckInSheetResult =
   | { kind: 'check-in'; arrivedAt: string | null; late: boolean }
   | { kind: 'absent'; excused: boolean }
   | undefined;
 
-/** Check in a child (dialog: check-in-sheet): now, at an earlier time, late, excused, or mark absent instead (L2-095). */
+/**
+ * Check in a child (dialog: check-in-sheet): now, at an earlier time, late, excused, or mark absent instead (L2-095). Late and
+ * excused are offered only to those who may mark them; a volunteer sees Now, Earlier and Mark absent instead (L2-100).
+ */
 @Component({
   selector: 'ph-check-in-sheet-dialog',
   imports: [FormsModule, PhButton, PhDialog, PhRadioGroup, PhTextField],
@@ -24,7 +27,8 @@ export type CheckInSheetResult =
   templateUrl: './check-in-sheet-dialog.html',
 })
 export class CheckInSheetDialog {
-  protected readonly entry = inject<RosterEntry>(DIALOG_DATA);
+  private readonly data = inject<CheckInSheetData>(DIALOG_DATA);
+  protected readonly entry = this.data.entry;
   protected readonly ref = inject<DialogRef<CheckInSheetResult>>(DialogRef);
 
   protected arrived = 'now';
@@ -33,8 +37,12 @@ export class CheckInSheetDialog {
   protected readonly options: RadioOption[] = [
     { value: 'now', label: `Now, ${formatTime(new Date())}` },
     { value: 'earlier', label: 'Earlier', hint: 'Pick a time' },
-    { value: 'late', label: 'Late', hint: 'Arrived after the start; counts as here' },
-    { value: 'excused', label: 'Excused', hint: 'Not coming, and the reason is accepted' },
+    ...(this.data.qualifiers
+      ? [
+          { value: 'late', label: 'Late', hint: 'Arrived after the start; counts as here' },
+          { value: 'excused', label: 'Excused', hint: 'Not coming, and the reason is accepted' },
+        ]
+      : []),
     { value: 'absent', label: 'Mark absent instead' },
   ];
 

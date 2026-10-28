@@ -4,6 +4,7 @@ import { ShellPage } from '../../pages/shell.page';
 import { TodayPage } from '../../pages/today.page';
 
 // L2-038 criteria 6 to 9: the shell for youth, mentors and volunteers is composed from their own sections whose module is on.
+// L2-101 criterion 1: Schedule is a volunteer section while Roll Call is on.
 // L2-005 criterion 8: a module that is off disappears from their navigation. L2-094 criterion 1: Schedule is a youth section while Roster is on.
 const SUITE: ModuleId[] = ['Roster', 'Slips', 'RollCall', 'QuickCards', 'Pickup', 'Messages', 'Incidents', 'Reports'];
 
@@ -65,7 +66,7 @@ test.describe('A mentor', () => {
 test.describe('A volunteer', () => {
   test.use({ signedInAs: 'm-leo' });
 
-  test('Given Roll Call is on, when Leo signs in, then he sees Today and Check-in with his assigned session', async ({ page, api }) => {
+  test('Given Roll Call is on, when Leo signs in, then he sees Today, Check-in and Schedule with his assigned session', async ({ page, api }) => {
     api.setModules('org-harbourview', SUITE);
     const shell = new ShellPage(page);
     const today = new TodayPage(page);
@@ -73,8 +74,12 @@ test.describe('A volunteer', () => {
     await today.open();
 
     await expect(today.heading).toHaveText('Welcome, Leo');
-    expect(await shell.visibleNavigationLabels()).toEqual(['Today', 'Check-in', 'More']);
-    expect(await today.yourWork()).toEqual(['Tutoring night']);
+    expect(await shell.visibleNavigationLabels()).toEqual(['Today', 'Check-in', 'Schedule', 'More']);
+    await shell.openMenu();
+    expect(await shell.menuLabels()).toEqual(['Today', 'Check-in', 'Schedule', 'Notifications', 'Your account']);
+    await shell.closeMenuWithEscape();
+    await expect(today.volunteerSession('Tutoring night')).toContainText('Take attendance');
+    expect(await today.yourWork()).toEqual(['Your schedule']);
     await today.expectAccessible();
   });
 });

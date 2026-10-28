@@ -54,6 +54,29 @@ export class TodayPage extends BasePage {
     await this.card(card).getByRole('link', { name: new RegExp(name) }).click();
   }
 
+  /** A volunteer's card for a session he is assigned to today (mock: today/volunteer). */
+  volunteerSession(name: string): Locator {
+    return this.page.getByRole('region', { name, exact: true });
+  }
+
+  async takeAttendance(session: string): Promise<void> {
+    await this.volunteerSession(session).getByRole('link', { name: 'Take attendance' }).click();
+  }
+
+  /** A volunteer with no session today (mock: today/volunteer-empty). */
+  get noSessionToday(): Locator {
+    return this.page.getByRole('heading', { name: 'No session today' });
+  }
+
+  /** A volunteer's sessions failed to load (mock: today/volunteer-error). */
+  get sessionFailed(): Locator {
+    return this.page.getByRole('heading', { name: 'Your session didn’t load' });
+  }
+
+  async tryAgain(): Promise<void> {
+    await this.page.getByRole('button', { name: 'Try again' }).click();
+  }
+
   get loading(): Locator {
     return this.page.locator('[aria-busy="true"]');
   }

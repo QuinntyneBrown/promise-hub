@@ -43,4 +43,7 @@ public enum Permission
 
     /// <summary>Corrects a youth's mark at a session, audited with a reason (L2-097, ADR 0065).</summary>
     CorrectAttendance,
+
+    /// <summary>Marks a check-in late or an absence excused (L2-095); every role that runs sessions but volunteers (L2-100, ADR 0066).</summary>
+    QualifyAttendance,
 }

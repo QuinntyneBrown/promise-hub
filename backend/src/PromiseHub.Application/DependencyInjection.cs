@@ -45,6 +45,7 @@ public static class DependencyInjection
         services.AddScoped<SessionReader>();
         services.AddScoped<AttendanceWriter>();
         services.AddScoped<TodaySessionsHandler>();
+        services.AddScoped<MyScheduleHandler>();
         services.AddScoped<AttendanceHistoryHandler>();
         services.AddScoped<CorrectAttendanceHandler>();
         services.AddScoped<GetSessionRosterHandler>();

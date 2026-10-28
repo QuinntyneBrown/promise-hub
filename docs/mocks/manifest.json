@@ -28,7 +28,9 @@
       "requirements": [
         "L1-007",
         "L1-006",
-        "L1-010"
+        "L1-010",
+        "L2-100",
+        "L2-101"
       ],
       "states": [
         "default",
@@ -42,7 +44,10 @@
         "youth",
         "youth-learning-off",
         "mentor",
-        "volunteer"
+        "volunteer",
+        "volunteer-empty",
+        "volunteer-loading",
+        "volunteer-error"
       ]
     },
     {
@@ -57,7 +62,8 @@
         "L2-095",
         "L2-096",
         "L2-098",
-        "L2-099"
+        "L2-099",
+        "L2-100"
       ],
       "states": [
         "default",
@@ -70,6 +76,8 @@
         "complete",
         "mentor",
         "all-marked",
+        "volunteer",
+        "volunteer-forbidden",
         "long"
       ]
     },
@@ -2550,6 +2558,30 @@
       ]
     },
     {
+      "id": "my-schedule",
+      "kind": "page",
+      "title": "Your schedule",
+      "route": "/my-schedule",
+      "requirements": [
+        "L2-101",
+        "L2-100",
+        "L2-007",
+        "L2-005",
+        "L2-001",
+        "L2-038",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "cancelled",
+        "loading",
+        "empty",
+        "error",
+        "forbidden"
+      ]
+    },
+    {
       "id": "check-in-sheet",
       "kind": "dialog",
       "title": "Check in Kevin Tran",
@@ -2557,12 +2589,14 @@
       "requirements": [
         "L1-007",
         "L1-008",
-        "L2-095"
+        "L2-095",
+        "L2-100"
       ],
       "states": [
         "default",
         "busy",
-        "failed"
+        "failed",
+        "volunteer"
       ],
       "not_applicable": {
         "invalid": "Arrival is a radio group with a default; nothing can be invalid."

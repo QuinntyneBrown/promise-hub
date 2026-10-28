@@ -10,6 +10,7 @@ import { WriteOutcome } from '../write-outcome';
 import { AttendanceApi } from './attendance-api';
 import { AttendanceCorrection } from './attendance-correction';
 import { AttendanceHistory } from './attendance-history';
+import { MySchedule } from './my-schedule';
 import { NewWalkIn } from './new-walk-in';
 import { PickupOptions } from './pickup-options';
 import { SignOut } from './sign-out';
@@ -28,6 +29,10 @@ export class HttpAttendanceApi implements AttendanceApi {
       this.http.get<{ sessions: SessionSummary[] }>(`${this.baseUrl}/sessions/today`),
       (v) => v,
     );
+  }
+
+  mine(): Observable<LoadResult<MySchedule>> {
+    return toLoad(this.http.get<MySchedule>(`${this.baseUrl}/sessions/mine`));
   }
 
   roster(sessionId: string): Observable<LoadResult<SessionRoster>> {

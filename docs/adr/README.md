@@ -69,3 +69,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0063](0063-assigned-work-is-one-row-per-youth-and-item-shown-on-the-learning-home-until-done.md) | Assigned work is one row per youth and item, shown on her Learning home until she has done it |
 | [0064](0064-weekly-sessions-are-a-series-of-events-and-an-rsvp-is-one-row-per-event-and-youth.md) | Weekly sessions are a series of events, and an RSVP is one row per event and youth |
 | [0065](0065-late-and-excused-fold-into-roll-call-and-mentors-run-their-cohorts-sessions.md) | Late and excused fold into Roll Call's check-in model, mentors run their cohorts' sessions, and corrections are audited |
+| [0066](0066-the-volunteer-portal-is-the-shell-for-the-volunteer-role-with-present-and-absent-only.md) | The volunteer portal is the shell composed for the Volunteer role, with its own schedule endpoint and Present or Absent only |

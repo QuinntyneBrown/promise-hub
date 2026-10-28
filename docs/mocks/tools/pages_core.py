@@ -25,7 +25,7 @@ def offline_banner(queued: int = 0) -> str:
 
 
 # ------------------------------------------------------------------ Today
-@screen("today", "page", "Today", route="/", reqs=[R_ROLL, R_SLIPS, R_NOTIFY], na={})
+@screen("today", "page", "Today", route="/", reqs=[R_ROLL, R_SLIPS, R_NOTIFY, "L2-100", "L2-101"], na={})
 def today(S):
     def main_default(partial=False):
         greeting = page_header("Good afternoon, Jaylen", f"{TODAY} · Harbourview Community Centre",
@@ -115,9 +115,27 @@ def today(S):
           user=STAFF["daniel"], unread=0, modules=["today", "mentor-dashboard", "check-in"],
           main=participant("Daniel", [list_item("Mentoring", "The youth assigned to you", href=page("mentor-dashboard")),
                                       list_item("Check-in", "Take attendance for your cohorts’ sessions today", href=page("check-in", "mentor"))]))
-    S.add("volunteer", "Leo (Volunteer) signs in: Today and Check-in for the sessions he is assigned to.", nav="today", role="volunteer",
-          user=STAFF["leo"], unread=0, modules=["today", "check-in"],
-          main=participant("Leo", [list_item("Tutoring night", "Today, 4:00–6:00 pm · Harbourview Community Centre, Room 2 · you are assigned", href=page("check-in"))]))
+    # The volunteer portal (L2-100, L2-101, ADR 0066): today's assigned session first, then his schedule. No youth records.
+    VKW = dict(nav="today", role="volunteer", user=STAFF["leo"], unread=0, modules=["today", "check-in", "my-schedule"])
+    vhdr = page_header("Welcome, Leo", f"{TODAY} · {ORG}")
+    vwork = card(ul_list([list_item("Your schedule", "The sessions you’re assigned to in the next four weeks", href=page("my-schedule"),
+                                    lead=f'<span class="icon-tile" aria-hidden="true">{icon("calendar")}</span>')], card=False),
+                 title="Your work", tid="yours", cls="card--flush")
+    vsession = card(f'<div class="stack"><p class="text-muted">Your session today · 4:00–6:00 pm · Harbourview Community Centre, Room 2</p>'
+                    f'<p class="section-title">4 youth on the roster</p><p class="text-muted">0 of 4 checked in · After‑School Tutoring</p>'
+                    f'<div class="cluster">{btn("Take attendance", "primary", icon_name="clipboard", href=page("check-in", "volunteer"))}</div></div>',
+                    title="Tutoring night", tid="vsess")
+    S.add("volunteer", "Leo (Volunteer) signs in: Today, Check-in and Schedule. Today shows the session he is assigned to tonight with how many youth are on the roster and Take attendance, then his schedule. Nothing about any youth’s progress or record.", **VKW,
+          main=vhdr + vsession + vwork,
+          notes=note("GET /sessions/today answers only the sessions Leo is assigned to. Two sessions today show two cards, soonest first.", "top: 5rem; right: 1rem;"))
+    S.add("volunteer-empty", "Leo has no session today: say so and point to his schedule.", **VKW,
+          main=vhdr + card(empty("No session today", "You’re not assigned to a session today. Your schedule shows what’s next.",
+                                 action=btn("See your schedule", "primary", icon_name="calendar", href=page("my-schedule")), icon_name="calendar"), cls="card--flush") + vwork)
+    S.add("volunteer-loading", "Leo’s Today while his sessions load: a skeleton holds the session card’s place.", **VKW,
+          main=vhdr + f'<div class="card" aria-busy="true" aria-label="Loading your session today">{skeleton_header()}<span class="skeleton skeleton--card" aria-hidden="true"></span></div>' + vwork)
+    S.add("volunteer-error", "Leo’s sessions failed to load: the welcome and his schedule stay, the card offers Try again.", **VKW,
+          main=vhdr + card(empty("Your session didn’t load", "Check your connection and try again.", action=btn("Try again", "primary", icon_name="refresh"),
+                                 error=True, icon_name="alert-triangle"), cls="card--flush") + vwork)
 
 
 # ------------------------------------------------------------------ Check-in (Roll Call)
@@ -170,7 +188,7 @@ def checkin_filters(current="all"):
             + chips([("All 48", current == "all"), ("Not yet 15", current == "not-yet"), ("Checked in 31", current == "in"), ("Absent 2", current == "absent")], "Filter roster") + "</div>")
 
 
-@screen("check-in", "page", "Check-in", route="/check-in", reqs=[R_ROLL, R_PICKUP, R_MOBILE, "L2-095", "L2-096", "L2-098", "L2-099"], na={})
+@screen("check-in", "page", "Check-in", route="/check-in", reqs=[R_ROLL, R_PICKUP, R_MOBILE, "L2-095", "L2-096", "L2-098", "L2-099", "L2-100"], na={})
 def check_in(S):
     kind = "page"
     body = checkin_header() + checkin_summary() + checkin_filters() + f'<div class="card card--flush"><ul class="roster" aria-label="Roster for Tutoring night">{"".join(roster_rows())}</ul></div>' + \
@@ -236,6 +254,24 @@ def check_in(S):
     S.add("all-marked", "Mark the rest present: Yusuf, the one not yet here, is checked in and a toast says how many.", **MKW,
           main=mhdr + checkin_summary(3, 1, 0, 4, late=1, excused=1, cleared=False) + allin + mfoot(False),
           toast_html=toast_region(toast("success", "1 marked present", "Everyone on the roster is marked.")))
+    LEO = STAFF["leo"]
+    VKW = dict(nav="check-in", role="volunteer", user=LEO, unread=0, modules=["today", "check-in", "my-schedule"])
+    vrows = (f'<div class="card card--flush"><ul class="roster" aria-label="Roster for Tutoring night">'
+             + roster_row(dict(CHILD["jordan"], flag=""), "in", "Checked in 4:03 pm", kind)
+             + roster_row(dict(CHILD["mateo"], flag=""), "in", "Checked in 4:02 pm", kind)
+             + roster_row(dict(CHILD["sofia"], flag=""), "absent", "Absent", kind)
+             + roster_row(dict(CHILD["yusuf"], flag=""), "none", "Not yet here", kind) + "</ul></div>")
+    # Sign-out is staff only: a volunteer's checked-in rows offer nothing but the row's check-in time.
+    vrows = vrows.replace(btn("Sign out", "", size="sm", data_href=rel(kind, "dialog", "confirm-pickup")), "")
+    vhdr = page_header("Tutoring night", "Today, 4:00–6:00 pm · Harbourview Community Centre, Room 2 · 4 on roster",
+                       btn("Session notes", "", data_href=rel(kind, "dialog", "session-notes")) + btn("End session", "primary", data_href=rel(kind, "dialog", "end-session")))
+    S.add("volunteer", "Leo takes attendance for the session he is assigned to: names only, Check in or Mark absent from the sheet, and Mark the rest present. No medical flags, Quick Cards, sign-out, late, excused or attendance history.", **VKW,
+          main=vhdr + checkin_summary(2, 1, 1, 4, late=0, excused=0, cleared=False) + vrows +
+          f'<div class="cluster" style="margin-top: var(--space-3);">{btn("Mark the rest present", "", icon_name="check", aria_label="Mark the rest present, 1 not yet here")}{btn("Add walk-in", "ghost")}</div>',
+          notes=note("A volunteer runs only the sessions he is assigned to (L2-007 criterion 6). Late and Excused are refused for volunteers on the server (403).", "top: 5rem; right: 1rem;"))
+    S.add("volunteer-forbidden", "Leo opens a session he is not assigned to: the roster answers 403 and the page says why and who can add him.", **VKW,
+          main=card(empty("You’re not assigned to this session", "Volunteers open the sessions they’re assigned to. Ask your volunteer coordinator to add you.",
+                          action=btn("Your sessions today", "primary", href=page("check-in", "volunteer")), icon_name="lock", heading="h1"), cls="card--flush"))
     S.add("long", "A camp day with 212 children: search and filters first, the list virtualizes, nothing breaks.", nav="check-in", user=J,
           main=page_header("Summer Camp · Week 3, Monday", "Mon 20 Jul, 8:00 am–5:00 pm · 212 on roster", btn("End session", "", icon_name="check-circle", data_href=dialog("end-session"))) +
           f'<div class="roster-summary" role="group" aria-label="Session totals">{stat("Checked in", "1,187".split(",")[0] + "87")}{stat("Absent", "9")}{stat("Not yet", "16")}{stat("Cleared", "212")}</div>' +

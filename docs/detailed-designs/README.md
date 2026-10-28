@@ -54,6 +54,9 @@ One folder per subsystem, one folder per vertically sliced feature, each with a 
 | attendance | sync-offline-queue | L2-028 |
 | attendance | record-attendance | L2-095, L2-017, L2-062 |
 | attendance | review-attendance | L2-097, L2-018, L2-032 |
+| attendance | view-todays-session | L2-100, L2-038, L2-007 |
+| attendance | view-upcoming-schedule | L2-101, L2-009, L2-007 |
+| attendance | record-session-attendance | L2-100, L2-017, L2-095 |
 | attendance | sync-offline-attendance | L2-096, L2-028 |
 | attendance | sync-attendance-reliably | L2-098, L2-048 |
 | attendance | show-offline-sync-state | L2-099, L2-028 |

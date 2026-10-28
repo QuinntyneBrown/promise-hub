@@ -22,6 +22,9 @@ public static class AttendanceEndpoints
         // Volunteers run their assigned sessions without the staff app (ADR 0043).
         sessions.MapGet("/today", (TodaySessionsHandler handler, CancellationToken ct) => handler.HandleAsync(ct))
             .RequireAnyPermission(Permission.UseStaffApp, Permission.RunSessions);
+        // A person's own schedule (L2-101, ADR 0066): the sessions they are assigned to in the next four weeks.
+        sessions.MapGet("/mine", (MyScheduleHandler handler, CancellationToken ct) => handler.HandleAsync(ct))
+            .RequirePermission(Permission.RunSessions);
         sessions.MapGet("/{id:guid}/roster", async (Guid id, GetSessionRosterHandler handler, CancellationToken ct) =>
         {
             var (status, roster) = await handler.HandleAsync(id, ct);

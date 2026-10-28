@@ -4,6 +4,69 @@
       [title]="'Welcome, ' + firstName()"
       [subtitle]="today + ' · ' + s.organizationName"
     />
+    @if (volunteer() && has('RollCall')) {
+      @let mine = mySessions();
+      <div class="mine">
+        @switch (mine?.status) {
+          @case ('loaded') {
+            @if (mine?.status === 'loaded') {
+              @for (session of mine.value.sessions; track session.id) {
+                <ph-card [title]="session.name">
+                  <div class="stack">
+                    <p class="muted">
+                      Your session today · {{ when(session.startsAt, session.endsAt)
+                      }}{{ session.place ? ' · ' + session.place : '' }}
+                    </p>
+                    <p class="count">{{ session.expected }} youth on the roster</p>
+                    <p class="muted">
+                      {{ session.checkedIn }} of {{ session.expected }} checked in ·
+                      {{ session.programName }}
+                    </p>
+                    <div>
+                      <ph-button
+                        variant="primary"
+                        icon="check-in"
+                        [link]="['/check-in', session.id]"
+                        >Take attendance</ph-button
+                      >
+                    </div>
+                  </div>
+                </ph-card>
+              } @empty {
+                <ph-card [flush]="true">
+                  <ph-empty-state
+                    icon="events"
+                    title="No session today"
+                    text="You’re not assigned to a session today. Your schedule shows what’s next."
+                  >
+                    <ph-button variant="primary" icon="events" link="/my-schedule"
+                      >See your schedule</ph-button
+                    >
+                  </ph-empty-state>
+                </ph-card>
+              }
+            }
+          }
+          @case (null) {
+            <div aria-busy="true" aria-label="Loading your session today">
+              <ph-skeleton shape="card" />
+            </div>
+          }
+          @default {
+            <ph-card [flush]="true">
+              <ph-empty-state
+                icon="warning"
+                tone="error"
+                title="Your session didn’t load"
+                text="Check your connection and try again."
+              >
+                <ph-button variant="primary" (click)="retry()">Try again</ph-button>
+              </ph-empty-state>
+            </ph-card>
+          }
+        }
+      </div>
+    }
     @if (work().length) {
       <ph-card title="Your work" [flush]="true">
         <ph-list label="Your work" [inset]="true">
