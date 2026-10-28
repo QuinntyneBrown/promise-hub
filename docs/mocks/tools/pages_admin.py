@@ -171,7 +171,7 @@ def account(S):
                 + card(field("pw1", "New password", type_="password", error=e.get("pw1", ""), help_="At least 12 characters.", autocomplete="new-password") + field("pw2", "Repeat it", type_="password", error=e.get("pw2", ""), autocomplete="new-password"), title="Password", tid="pw")
                 + card((f'<div class="cluster cluster--between"><div><div class="section-title">Authenticator app</div><div class="text-muted">Added Tue 2 Sep 2026 · required for admins</div></div>{badge("On", "success")}</div><div class="cluster" style="margin-top: var(--space-3);">{btn("Show recovery codes", "", icon_name="key", data_href=dialog("recovery-codes"))}{btn("Turn off", "ghost", data_href=dialog("recovery-codes"))}</div>' if mfa else
                         f'<p class="text-muted">Takes two minutes with any authenticator app.</p><div class="cluster" style="margin-top: var(--space-3);">{btn("Set up two-step sign-in", "primary", icon_name="shield", data_href=dialog("recovery-codes"))}</div>'), title="Two-step sign-in", tid="mfa")
-                + card(switch("n1", "Email me about unsigned slips the day before my events", checked=True) + switch("n2", "Email me a Monday summary") + switch("n3", "Text me when no-show alerts go out", checked=True), title="Your notifications", tid="notif")
+                + card(f'<p class="text-muted">Incidents to review and at-risk flags reach you in the app.</p><div class="cluster" style="margin-top: var(--space-3);">{btn("Choose notifications", "", icon_name="bell", href=page("account-notifications"))}</div>', title="Notifications", tid="notif")
                 + card(ul_list([list_item("Fall on the stairs · Jordan Thompson", "Today, 5:52 pm · needs review", lead=f'<span class="icon-tile icon-tile--sm" aria-hidden="true">{icon("flag", "icon--sm")}</span>', href=page("incident"), end=badge("Needs review", "warning"))], card=False), title="Incidents you reported", tid="inc", cls="card--flush")
                 + f'<div class="form-actions cluster">{f"<p class=\"save-status save-status--saved\" role=\"status\">{icon("check")}Saved just now</p>" if saved else ""}{btn("Sign out everywhere", "ghost", data_href=dialog("sign-out-all"))}{btn("Save changes", "primary", type_="submit", busy=busy)}</div></form>')
     hdr = page_header("Your account", "2 devices · last sign-in Today, 3:55 pm, this phone")
@@ -195,12 +195,14 @@ def notifications(S):
              item(T, "<strong>Tom Nguyen</strong> accepted 3 enrollments for After‑School Tutoring.", "Today, 1:10 pm"),
              item("clipboard", "<strong>7 slips still unsigned</strong> for the RBG trip, due Thursday.", "Today, 6:00 am", False, f' <a href="{dialog("send-reminder")}">Send a reminder</a>'),
              item("check-circle", "<strong>Roster imported</strong>: 109 of 112 rows, 3 to fix.", "Mon 2 Nov, 9:40 am")]
-    hdr = page_header("Notifications", "2 unread", btn("Mark all read", "", icon_name="check") + btn("Settings", "ghost", icon_name="settings", href=page("account")))
+    hdr = page_header("Notifications", "2 unread", btn("Mark all read", "", icon_name="check") + btn("Settings", "ghost", icon_name="settings", href=page("account-notifications")))
     S.add("default", "Two unread notifications on top of this week’s.", nav="", main=hdr + f'<ul class="notice-list card card--flush" aria-label="Notifications">{"".join(items)}</ul>')
     S.add("read", "Everything read.", nav="", unread=0, main=hdr.replace("2 unread", "All read").replace(btn("Mark all read", "", icon_name="check"), "") + f'<ul class="notice-list card card--flush" aria-label="Notifications">{"".join(items).replace(" notice--unread", "").replace(" · Unread", "")}</ul>')
     S.add("loading", "Notifications loading.", nav="", main=page_header("Notifications", "") + skeleton_list(6, "Loading notifications"))
     S.add("empty", "Nothing yet.", nav="", unread=0, main=page_header("Notifications", "") + card(empty("You’re all caught up", "New activity lands here.", icon_name="bell"), cls="card--flush"))
     S.add("error", "Notifications failed to load.", nav="", main=page_header("Notifications", "") + card(empty("We couldn’t load notifications", "Try again.", action=btn("Try again", "primary", icon_name="refresh"), error=True, icon_name="alert-triangle"), cls="card--flush"))
+    from pages_notifications import center_states
+    center_states(S)
 
 
 # ------------------------------------------------------------------ Search

@@ -693,7 +693,12 @@
         "read",
         "loading",
         "empty",
-        "error"
+        "error",
+        "youth",
+        "mentor",
+        "live",
+        "module-off",
+        "youth-empty"
       ]
     },
     {
@@ -2783,6 +2788,37 @@
         "error",
         "forbidden"
       ]
+    },
+    {
+      "id": "account-notifications",
+      "kind": "page",
+      "title": "Notification preferences",
+      "route": "/account/notifications",
+      "requirements": [
+        "L2-111",
+        "L2-109",
+        "L2-005",
+        "L2-001",
+        "L2-032",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "mentor",
+        "staff",
+        "module-off",
+        "empty",
+        "loading",
+        "error",
+        "submitting",
+        "success",
+        "failed"
+      ],
+      "not_applicable": {
+        "forbidden": "Everyone sets their own; nobody can open another person’s.",
+        "invalid": "Switches are always valid; a refused save shows the failed state."
+      }
     },
     {
       "id": "check-in-sheet",
