@@ -13,6 +13,12 @@ public static class AttendanceEndpoints
     public static IEndpointRouteBuilder MapAttendanceEndpoints(this IEndpointRouteBuilder app)
     {
         var sessions = app.MapGroup("/sessions").RequireModule(ModuleId.RollCall);
+        // A cohort's history and rates (L2-097): staff who review attendance and mentors, their cohorts only.
+        app.MapGet("/attendance", async (Guid? programId, AttendanceHistoryHandler handler, CancellationToken ct) =>
+        {
+            var (status, history) = await handler.HandleAsync(programId, ct);
+            return history is not null ? Results.Ok(history) : new Application.Result(status).ToHttp();
+        }).RequireModule(ModuleId.RollCall).RequirePermission(Permission.ReviewAttendance);
         // Volunteers run their assigned sessions without the staff app (ADR 0043).
         sessions.MapGet("/today", (TodaySessionsHandler handler, CancellationToken ct) => handler.HandleAsync(ct))
             .RequireAnyPermission(Permission.UseStaffApp, Permission.RunSessions);

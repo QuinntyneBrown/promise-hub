@@ -1,0 +1,132 @@
+@let r = result();
+<ph-breadcrumb
+  [items]="[{ label: 'Check-in', link: '/check-in' }, { label: 'Attendance history' }]"
+/>
+@if (r === null) {
+  <ph-page-header title="Attendance history" />
+  <div class="stack" aria-busy="true" aria-label="Loading attendance">
+    <ph-skeleton shape="card" />
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (r.status === 'forbidden') {
+  <ph-error-page
+    icon="lock"
+    title="Attendance history is for site leads, directors and mentors"
+    text="You can still take attendance at the sessions you work."
+  >
+    <ph-button variant="primary" link="/check-in">Back to check-in</ph-button>
+  </ph-error-page>
+} @else if (r.status === 'not-found') {
+  <ph-page-header title="Attendance history" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="search"
+      title="We can’t find that cohort"
+      text="It may belong to another organization."
+    >
+      <ph-button variant="primary" link="/check-in/history">All your cohorts</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else if (r.status !== 'loaded') {
+  <ph-page-header title="Attendance history" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load attendance"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  @let h = r.value;
+  <ph-page-header title="Attendance history" [subtitle]="h.programId ? subtitle(h) : null">
+    <ph-button variant="primary" icon="check-in" link="/check-in">Take attendance</ph-button>
+  </ph-page-header>
+  @if (!h.programId) {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="programs"
+        title="No cohorts yet"
+        text="When you join a cohort’s mentor team, its attendance shows up here."
+      />
+    </ph-card>
+  } @else {
+    <div class="stack">
+      <div class="toolbar">
+        <ph-select
+          inputId="ah-cohort"
+          label="Cohort"
+          [options]="cohortOptions(h)"
+          [ngModel]="h.programId"
+          (ngModelChange)="choose($event)"
+        />
+      </div>
+      @if (!h.sessions.length) {
+        <ph-card [flush]="true">
+          <ph-empty-state
+            icon="check-in"
+            title="No attendance recorded yet"
+            [text]="
+              'Once someone takes attendance at a ' +
+              h.programName +
+              ' session, its history and rates show up here.'
+            "
+          >
+            <ph-button variant="primary" link="/check-in">Open check-in</ph-button>
+          </ph-empty-state>
+        </ph-card>
+      } @else {
+        <ph-tabs
+          label="Attendance view"
+          [items]="views"
+          [selected]="view()"
+          (selectedChange)="view.set($event)"
+        />
+        <div role="tabpanel" class="stack" [attr.aria-labelledby]="'tab-' + view()">
+          <div class="kpis">
+            <ph-stat
+              label="Attendance rate"
+              [value]="rate(h.rate)"
+              caption="present or late, of marked"
+              data-testid="stat-Attendance rate"
+            />
+            <ph-stat
+              label="Sessions recorded"
+              [value]="h.sessionsRecorded + ' of ' + h.sessionsHeld"
+              caption="held so far"
+              data-testid="stat-Sessions recorded"
+            />
+            <ph-stat
+              label="Below 70%"
+              [value]="'' + h.belowThreshold"
+              caption="youth to follow up"
+              data-testid="stat-Below 70%"
+            />
+          </div>
+          @if (view() === 'youth') {
+            <ph-table
+              caption="Attendance by youth"
+              [columns]="youthColumns"
+              [rows]="youthRows(h)"
+            />
+          } @else {
+            @if (unrecorded(h); as missing) {
+              <ph-alert
+                tone="warning"
+                [title]="day(missing.startsAt) + ' has no attendance'"
+                text="Nobody took attendance at that session."
+              />
+            }
+            <ph-table
+              caption="Attendance by session, newest first"
+              [columns]="sessionColumns"
+              [rows]="sessionRows(h)"
+            />
+          }
+        </div>
+      }
+    </div>
+  }
+}

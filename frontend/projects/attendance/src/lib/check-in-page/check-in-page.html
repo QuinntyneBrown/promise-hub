@@ -70,6 +70,9 @@
         @if (queue().length) {
           <ph-sync-chip data-testid="sync-chip">{{ queue().length }} queued</ph-sync-chip>
         }
+        @if (reviews()) {
+          <ph-button link="/check-in/history">Attendance history</ph-button>
+        }
         @if (notYet().length) {
           <ph-button
             [label]="'Mark the rest present, ' + notYet().length + ' not yet here'"

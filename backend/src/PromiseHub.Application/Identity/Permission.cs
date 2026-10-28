@@ -37,4 +37,10 @@ public enum Permission
 
     /// <summary>Reads her own schedule and RSVPs to its sessions (L2-094, ADR 0064).</summary>
     RespondToSessions,
+
+    /// <summary>Reads a cohort's attendance history and rates (L2-097, ADR 0065).</summary>
+    ReviewAttendance,
+
+    /// <summary>Corrects a youth's mark at a session, audited with a reason (L2-097, ADR 0065).</summary>
+    CorrectAttendance,
 }

@@ -47,6 +47,8 @@ const can = {
   mentorYouth: (m: Membership) => m.role === 'Mentor',
   reviewAtRiskFlags: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
   authorCurriculum: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
+  reviewAttendance: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead', 'Mentor'].includes(m.role),
+  correctAttendance: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
 };
 
 /**
@@ -55,7 +57,7 @@ const can = {
  */
 const PARTICIPANT_PATHS = [/^\/api\/me(\/|$)/, /^\/api\/notifications(\/|$)/, /^\/api\/auth\//, /^\/api\/learning\//, /^\/api\/mentoring\//, /^\/api\/curriculum(\/|$)/, /^\/api\/schedule(\/|$)/];
 /** Volunteers and mentors run sessions without the staff app (ADR 0043, ADR 0065): the session endpoints that need RunSessions. */
-const RUNNER_PATHS = [/^\/api\/sessions\/today$/, /^\/api\/sessions\/[^/]+\/(roster|check-ins|absences|end|notes|walk-ins)$/];
+const RUNNER_PATHS = [/^\/api\/attendance$/, /^\/api\/sessions\/today$/, /^\/api\/sessions\/[^/]+\/(roster|check-ins|absences|end|notes|walk-ins)$/];
 
 type ImportField = 'ChildName' | 'DateOfBirth' | 'School' | 'GuardianName' | 'GuardianPhone' | 'GuardianEmail' | 'Allergies' | 'Language' | 'Notes' | 'Skip';
 
@@ -834,6 +836,7 @@ export class FakeApi {
     ['PUT', /^\/api\/events\/(?<id>[^/]+)$/, (route, p) => this.saveEvent(route, p['id']!)],
     ['POST', /^\/api\/events\/(?<id>[^/]+)\/cancel$/, (route, p) => this.cancelEvent(route, p['id']!)],
     ['GET', /^\/api\/sessions\/today$/, (route) => this.todaySessions(route)],
+    ['GET', /^\/api\/attendance$/, (route) => this.attendanceHistory(route)],
     ['GET', /^\/api\/sessions\/(?<id>[^/]+)\/roster$/, (route, p) => this.sessionRoster(route, p['id']!)],
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/check-ins$/, (route, p) => this.attend(route, p['id']!, 'Present')],
     ['POST', /^\/api\/sessions\/(?<id>[^/]+)\/absences$/, (route, p) => this.attend(route, p['id']!, 'Absent')],
@@ -1665,8 +1668,67 @@ export class FakeApi {
   }
 
   /** Records a child's attendance at a session, as Roll Call would. */
-  recordAttendance(eventId: string, childId: string, status: 'Present' | 'Absent' | 'SignedOut', at: string | null): void {
-    this.sessionRecords(eventId).set(childId, { status, checkedInAt: status === 'Absent' ? null : at, signedOutAt: status === 'SignedOut' ? at : null });
+  recordAttendance(eventId: string, childId: string, status: 'Present' | 'Absent' | 'SignedOut', at: string | null, flags: { late?: boolean; excused?: boolean } = {}): void {
+    this.sessionRecords(eventId).set(childId, {
+      status,
+      checkedInAt: status === 'Absent' ? null : at,
+      signedOutAt: status === 'SignedOut' ? at : null,
+      late: status !== 'Absent' && !!flags.late,
+      excused: status === 'Absent' && !!flags.excused,
+    });
+  }
+
+  /** GET /attendance (L2-097): a cohort's sessions that have started and each youth on its roster, with rates. Mirrors AttendanceHistoryHandler. */
+  private async attendanceHistory(route: Route): Promise<void> {
+    const m = await this.rollCallCaller(route);
+    if (!m) return;
+    if (!can.reviewAttendance(m)) return this.forbidden(route);
+    const active = this.programs.filter((p) => p.organizationId === m.organizationId && p.status !== 'Archived');
+    const mine = m.role === 'Mentor' ? active.filter((p) => { const t = this.cohortMentors.get(p.id); return !!t && (t.lead === m.id || t.supporting.includes(m.id)); }) : active;
+    const cohorts = mine.map((p) => ({ id: p.id, name: p.name })).sort((a, b) => a.name.localeCompare(b.name));
+    const canCorrect = can.correctAttendance(m);
+    const chosen = new URL(route.request().url()).searchParams.get('programId') || cohorts[0]?.id;
+    if (!chosen) return route.fulfill({ json: { cohorts, programId: null, programName: null, schedule: null, rate: null, sessionsRecorded: 0, sessionsHeld: 0, belowThreshold: 0, canCorrect, sessions: [], youth: [] } });
+    const program = this.programs.find((p) => p.id === chosen && p.organizationId === m.organizationId);
+    if (!program) return route.fulfill({ status: 404 });
+    if (!cohorts.some((c) => c.id === chosen)) {
+      if (m.role === 'Mentor') {
+        this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'AccessDenied', record: 'Program', summary: `${program.name} · attendance history, not on the mentor’s team`, device: null });
+        return this.forbidden(route);
+      }
+      return route.fulfill({ status: 404 });
+    }
+    type Mark = 'Present' | 'Late' | 'Excused' | 'Absent';
+    const markOf = (r: FakeAttendance | undefined): Mark | null =>
+      !r ? null : r.status === 'Present' || r.status === 'SignedOut' ? (r.late ? 'Late' : 'Present') : r.status === 'Absent' ? (r.excused ? 'Excused' : 'Absent') : null;
+    const rate = (attended: number, marked: number) => (marked ? Math.round((100 * attended) / marked) : null);
+    const attended = (k: Mark) => k === 'Present' || k === 'Late';
+    const now = NOW.toISOString();
+    const events = this.events.filter((e) => e.programId === chosen && e.status !== 'Cancelled' && e.startsAt <= now).sort((a, b) => b.startsAt.localeCompare(a.startsAt));
+    const children = this.households.flatMap((h) => h.children);
+    const marks = events.flatMap((e) => [...this.sessionRecords(e.id)].filter(([id]) => children.some((c) => c.id === id)).map(([childId, r]) => ({ eventId: e.id, childId, mark: markOf(r) })).filter((x): x is { eventId: string; childId: string; mark: Mark } => x.mark !== null));
+    const count = (list: Mark[], k: Mark) => list.filter((x) => x === k).length;
+    const sessions = events.map((e) => {
+      const list = marks.filter((x) => x.eventId === e.id).map((x) => x.mark);
+      const status = e.status !== 'Ended' && now < e.endsAt ? 'InProgress' : !list.length ? 'NotRecorded' : e.status === 'Ended' || list.length >= program.roster.length ? 'Recorded' : 'NeedsReview';
+      return { eventId: e.id, name: e.name, startsAt: e.startsAt, present: count(list, 'Present'), late: count(list, 'Late'), excused: count(list, 'Excused'), absent: count(list, 'Absent'), rate: rate(list.filter(attended).length, list.length), status };
+    });
+    const youth = program.roster
+      .map((id) => children.find((c) => c.id === id)!)
+      .map((c) => {
+        const list = marks.filter((x) => x.childId === c.id).map((x) => x.mark);
+        const a = list.filter(attended).length;
+        return { childId: c.id, name: `${c.firstName} ${c.lastName}`, attended: a, marked: list.length, late: count(list, 'Late'), excused: count(list, 'Excused'), absent: count(list, 'Absent'), rate: rate(a, list.length), belowThreshold: list.length > 0 && a < 0.7 * list.length };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+    return route.fulfill({
+      json: {
+        cohorts, programId: program.id, programName: program.name, schedule: program.schedule,
+        rate: rate(marks.filter((x) => attended(x.mark)).length, marks.length),
+        sessionsRecorded: sessions.filter((x) => x.present + x.late + x.excused + x.absent > 0).length,
+        sessionsHeld: sessions.length, belowThreshold: youth.filter((y) => y.belowThreshold).length, canCorrect, sessions, youth,
+      },
+    });
   }
 
   /** Each child's one mentor (L2-062): child id to mentor membership id. */

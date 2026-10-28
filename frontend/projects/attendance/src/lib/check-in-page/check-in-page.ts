@@ -112,6 +112,10 @@ export class CheckInPage {
   protected readonly filter = signal<Filter>('all');
   protected readonly query = signal('');
   protected readonly canRun = computed(() => !!this.me() && can(this.me()!.role, 'runSessions'));
+  /** Attendance history is for those who review attendance: admins, directors, site leads and mentors (L2-097). */
+  protected readonly reviews = computed(
+    () => !!this.me() && can(this.me()!.role, 'reviewAttendance'),
+  );
   /** Check-in actions are offered only while the session is open; an ended session is read-only. */
   protected readonly live = computed(() => this.canRun() && this.session()?.status === 'Scheduled');
   protected readonly incidents = computed(() => !!this.me()?.modules.includes('Incidents'));

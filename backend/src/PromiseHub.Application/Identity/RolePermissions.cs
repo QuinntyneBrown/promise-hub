@@ -41,6 +41,8 @@ public static class RolePermissions
         Permission.AuthorCurriculum => role is Role.Admin or Role.ProgramDirector,
         Permission.ReviewAtRiskFlags => role is Role.Admin or Role.ProgramDirector,
         Permission.RespondToSessions => role is Role.Youth,
+        Permission.ReviewAttendance => role is Role.Admin or Role.ProgramDirector or Role.SiteLead or Role.Mentor,
+        Permission.CorrectAttendance => role is Role.Admin or Role.ProgramDirector,
         _ => false,
     };
 }
