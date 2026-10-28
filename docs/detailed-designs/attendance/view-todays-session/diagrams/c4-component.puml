@@ -1,0 +1,24 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — View today's session
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(today, "TodayPage", "Angular page", "volunteer cards, Your work")
+  Component(nav, "navigationFor", "Shell", "Today, Check-in, Schedule for volunteers")
+  Component(aapi, "AttendanceApi", "Contract + HTTP client", "ATTENDANCE_API.today()")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "AttendanceEndpoints", "Minimal API", "GET /sessions/today")
+  Component(h, "TodaySessionsHandler", "Handler", "today's scheduled sessions")
+  Component(acc, "SessionAccess", "Service", "assigned sessions")
+  Component(r, "SessionReader", "Service", "expected, checked in, absent")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Events, SessionStaff, Enrollments, AttendanceRecords")
+}
+Rel(today, aapi, "today()")
+Rel(aapi, ep, "JSON/HTTPS")
+Rel(ep, h, "calls")
+Rel(h, acc, "AssignedAsync")
+Rel(h, r, "SummaryAsync")
+Rel(acc, db, "reads")
+Rel(r, db, "reads")
+@enduml

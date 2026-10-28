@@ -1,0 +1,45 @@
+@startuml
+title UML sequence behaviour — A volunteer checks a youth in
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Volunteer (Leo)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "CheckInPage" as page
+  participant "CheckInSheetDialog" as sheet
+  participant "AttendanceApi" as aapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "AttendanceEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "CheckInHandler" as h
+  participant "AttendanceWriter" as w
+  participant "SessionAccess" as acc
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : Check in for Yusuf
+page -> sheet : open (qualifiers: false)
+sheet -> actor : Now, Earlier, Mark absent instead (L2-100 c3)
+actor -> sheet : Now
+sheet --> page : check-in
+page -> aapi : checkIn(session, child, null, action)
+aapi -> ep : POST /sessions/{id}/check-ins
+ep -> h : HandleAsync
+alt late without QualifyAttendance
+  h --> page : 403, nothing written (L2-100 c4)
+else
+  h -> w : ApplyAsync(CheckedIn)
+  w -> acc : AllowsAsync(event)
+  alt not assigned
+    w --> page : 403 (L2-100 c5)
+  else
+    w -> db : record Present, event, audit Updated
+    w --> page : 200 saved
+  end
+end
+@enduml

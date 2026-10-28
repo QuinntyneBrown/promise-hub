@@ -1,0 +1,44 @@
+@startuml
+title UML sequence behaviour — A volunteer opens Today
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Volunteer (Leo)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "TodayPage" as page
+  participant "AttendanceApi" as aapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "AttendanceEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "TodaySessionsHandler" as h
+  participant "SessionAccess" as acc
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : open Today
+alt Roll Call off
+  page -> actor : welcome, nothing to do yet (L2-100 c6)
+else
+  page -> page : skeleton (L2-100 c2)
+  page -> aapi : today()
+  aapi -> ep : GET /sessions/today
+  ep -> ep : Roll Call on, RunSessions
+  ep -> h : HandleAsync
+  h -> acc : AssignedAsync
+  acc -> db : SessionStaff where membership = Leo (tenant filtered)
+  h -> db : today's scheduled events, counts
+  h --> page : sessions
+  alt none
+    page -> actor : No session today, See your schedule (L2-100 c2)
+  else failed
+    page -> actor : Your session didn't load, Try again
+  else
+    page -> actor : card per session, n youth, Take attendance (L2-100 c1)
+  end
+end
+@enduml

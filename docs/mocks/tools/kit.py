@@ -518,7 +518,7 @@ TABBAR = [("today", "Today", "home"), ("check-in", "Check-in", "clipboard"), ("f
 NAV_ROLE = {
     "youth": [("today", "Today", "home", "today"), ("learn-home", "Learning", "star", "learning"), ("youth-schedule", "Schedule", "calendar", "schedule")],
     "mentor": [("today", "Today", "home", "today"), ("mentor-dashboard", "Mentoring", "users", "mentor-dashboard"), ("check-in", "Check-in", "clipboard", "check-in")],
-    "volunteer": [("today", "Today", "home", "today"), ("check-in", "Check-in", "clipboard", "check-in")],
+    "volunteer": [("today", "Today", "home", "today"), ("check-in", "Check-in", "clipboard", "check-in"), ("my-schedule", "Schedule", "calendar", "my-schedule")],
 }
 
 

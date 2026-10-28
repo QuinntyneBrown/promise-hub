@@ -1,0 +1,32 @@
+@startuml
+title Class structure — View today's session
+skinparam classAttributeIconSize 0
+class TodayPage {
+  #volunteer : computed<boolean>
+  #mySessions : Signal<LoadResult<SessionSummary[]> | null>
+  #retry() : void
+}
+interface AttendanceApi {
+  +today() : Observable<LoadResult<{sessions: SessionSummary[]}>>
+}
+class SessionSummary {
+  +id : string
+  +name : string
+  +programName : string
+  +startsAt : string
+  +endsAt : string
+  +place : string?
+  +expected : number
+  +checkedIn : number
+}
+class TodaySessionsHandler {
+  +HandleAsync() : TodaySessionsDto
+}
+class SessionAccess {
+  +Scoped : bool
+  +AssignedAsync() : HashSet<Guid>?
+}
+TodayPage ..> AttendanceApi
+AttendanceApi ..> SessionSummary
+TodaySessionsHandler ..> SessionAccess : asks
+@enduml
