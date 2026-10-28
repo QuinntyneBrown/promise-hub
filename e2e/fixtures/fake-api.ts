@@ -910,6 +910,7 @@ export class FakeApi {
     ['POST', /^\/api\/incidents\/(?<id>[^/]+)\/reopen$/, (route, p) => this.reopenIncident(route, p['id']!)],
     ['POST', /^\/api\/incidents\/(?<id>[^/]+)\/notes$/, (route, p) => this.addIncidentNote(route, p['id']!)],
     ['GET', /^\/api\/g\/home\/(?<token>[^/]+)$/, (route, p) => this.guardianHome(route, p['token']!)],
+    ['GET', /^\/api\/g\/home\/(?<token>[^/]+)\/children\/(?<child>[^/]+)$/, (route, p) => this.guardianChild(route, p['token']!, p['child']!)],
     ['POST', /^\/api\/g\/home\/(?<token>[^/]+)\/no-show$/, (route, p) => this.answerNoShow(route, p['token']!)],
     ['GET', /^\/api\/g\/slips\/(?<token>[^/]+)$/, (route, p) => this.guardianSlip(route, p['token']!)],
     ['POST', /^\/api\/g\/slips\/(?<token>[^/]+)\/sign$/, (route, p) => this.guardianAnswer(route, p['token']!, 'Signed')],
@@ -4607,6 +4608,69 @@ export class FakeApi {
           contact: primary ? { name: primary.name, mobile: primary.mobile, email: primary.email, language: household.language } : null, pickupRequests: this.pickupRequests
           .filter((r) => r.householdId === household.id && r.status === 'Pending')
           .map((r) => ({ id: r.id, child: household.children.find((c) => c.id === r.childId)!.firstName, collector: r.collector, event: this.events.find((x) => x.id === r.eventId)?.name ?? '', requestedAt: NOW.toISOString() })) } });
+  }
+
+  /** The household of a home link, as the guardian portal's pages resolve it: 410, 404 with Roster off, 401 until the device verifies. */
+  private async homeScope(route: Route, token: string) {
+    const householdId = this.homeLinks.get(token);
+    const household = householdId ? this.households.find((h) => h.id === householdId) : undefined;
+    const org = household ? organizations.find((o) => o.id === household.organizationId)! : undefined;
+    if (!household || !org) {
+      await route.fulfill({ status: 410, json: { code: 'link-expired', organization: null, phone: null } });
+      return null;
+    }
+    if (!this.modules.get(org.id)!.includes('Roster')) {
+      await route.fulfill({ status: 404 });
+      return null;
+    }
+    if (!this.trustedHouseholds.has(household.id)) {
+      const contacts = household.guardians.filter((g) => g.mobile).map((g) => `•••-•••-${g.mobile!.slice(-4)}`);
+      await route.fulfill({ status: 401, json: { code: 'verification-required', language: this.guardianLanguage(household.language), organization: org.name, phone: '905-555-0100', contacts } });
+      return null;
+    }
+    return { household, org };
+  }
+
+  /** GET /g/home/{token}/children/{childId}: one child of the link's household, read only (L2-102, L2-104). */
+  private async guardianChild(route: Route, token: string, childId: string): Promise<void> {
+    const scope = await this.homeScope(route, token);
+    if (!scope) return;
+    const { household, org } = scope;
+    const child = household.children.find((c) => c.id === childId);
+    if (!child) return route.fulfill({ status: 404 });
+    const programs = this.programs.filter((x) => x.organizationId === org.id && x.status === 'Active' && x.roster.includes(child.id));
+    const programIds = programs.map((x) => x.id);
+    const until = NOW.getTime() + 28 * 86_400_000;
+    const today = hamiltonDay(NOW.toISOString());
+    const coming = this.events
+      .filter((e) => programIds.includes(e.programId) && new Date(e.endsAt) > NOW && new Date(e.startsAt).getTime() <= until && e.status !== 'Ended')
+      .sort((a, z) => a.startsAt.localeCompare(z.startsAt));
+    const youth = [...this.youthLinks].some(([membershipId, linked]) => linked === child.id && memberships.some((m) => m.id === membershipId && m.organizationId === org.id && !this.removedMembers.has(m.id)));
+    const latest = this.consentOf(child.id);
+    const participation =
+      youth && (latest || this.consentRequired(org.id, child.id))
+        ? { status: this.consentStatusName(child.id), signedBy: latest?.signedBy ?? null, relationship: latest?.relationship ?? null, signedAt: latest?.signedAt ?? null,
+            reference: latest?.reference ?? null, withdrawnAt: latest?.withdrawnAt ?? null, withdrawnBy: latest?.withdrawnBy ?? null }
+        : null;
+    const slips = this.modules.get(org.id)!.includes('Slips')
+      ? coming
+          .filter((e) => this.slips.get(e.id)?.status === 'Sent')
+          .map((e) => {
+            const slip = this.slips.get(e.id)!;
+            const answer = slip.answers.get(child.id);
+            const current = answer && answer.version === slip.version ? answer : null;
+            return { eventId: e.id, event: e.name, startsAt: e.startsAt, signBy: slip.signBy, status: current?.status ?? 'NotSigned', signedBy: current?.by ?? null, at: current ? NOW.toISOString() : null };
+          })
+      : null;
+    return route.fulfill({
+      json: {
+        language: this.guardianLanguage(household.language), organization: org.name, phone: '905-555-0100', name: `${child.firstName} ${child.lastName}`, firstName: child.firstName,
+        programs: programs.map((x) => x.name).sort(),
+        schedule: coming.map((e) => ({ eventId: e.id, name: e.name, program: programs.find((x) => x.id === e.programId)!.name, startsAt: e.startsAt, endsAt: e.endsAt, place: e.place,
+          status: e.status === 'Cancelled' ? 'Cancelled' : 'Scheduled', today: hamiltonDay(e.startsAt) === today })),
+        consents: { participation, slips },
+      },
+    });
   }
 
   /** The household's unanswered no-show texts, one per session, with the children's first names. */

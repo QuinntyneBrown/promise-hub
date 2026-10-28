@@ -4,6 +4,7 @@ import type { Observable } from 'rxjs';
 import type { WriteOutcome } from '../write-outcome';
 import type { GuardianAnswers } from './guardian-answers';
 import type { GuardianHome } from './guardian-home';
+import type { GuardianChild } from './guardian-child';
 import type { GuardianPageResult } from './guardian-page-result';
 import type { GuardianSlipResult } from './guardian-slip-result';
 import type { GuardianVerifyOutcome } from './guardian-verify-outcome';
@@ -19,6 +20,8 @@ export interface GuardianApi {
   /** Withdraws the consent in force (L2-058). */
   withdrawConsent(token: string): Observable<WriteOutcome>;
   home(token: string): Observable<GuardianPageResult<GuardianHome>>;
+  /** One child of the link's household, read only (L2-102). */
+  child(token: string, childId: string): Observable<GuardianPageResult<GuardianChild>>;
   survey(token: string): Observable<GuardianPageResult<GuardianSurvey>>;
   /** Asks for a copy (Export) or deletion (Delete) of the household's data (L2-030 criterion 4). */
   requestData(token: string, kind: 'Export' | 'Delete', email: string): Observable<WriteOutcome>;

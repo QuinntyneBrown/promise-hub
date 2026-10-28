@@ -68,6 +68,12 @@ export class GuardianChildPage extends BasePage {
     return this.page.getByRole("main").getByText(content);
   }
 
+  /** Buttons and form fields on the page: the child page is read only (L2-102 criterion 5). */
+  async controlCount(): Promise<number> {
+    const main = this.page.getByRole('main');
+    return (await main.getByRole('button').count()) + (await main.getByRole('textbox').count()) + (await main.getByRole('combobox').count());
+  }
+
   async back(): Promise<void> {
     await this.page
       .getByRole("link", {
