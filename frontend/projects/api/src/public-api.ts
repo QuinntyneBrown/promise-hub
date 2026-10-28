@@ -255,6 +255,7 @@ export * from './lib/people/people-api';
 export * from './lib/people/people-api.token';
 export * from './lib/people/people-page';
 export * from './lib/people/people-query';
+export * from './lib/people/person-record';
 export * from './lib/people/person-row';
 export * from './lib/staff/staff-api';
 export * from './lib/staff/staff-api.token';

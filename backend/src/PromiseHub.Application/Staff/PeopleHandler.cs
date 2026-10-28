@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using PromiseHub.Application.Learning;
 using PromiseHub.Application.Organizations;
 using PromiseHub.Domain.Organizations;
+using PromiseHub.Domain.Households;
 using PromiseHub.Domain.Programs;
 
 namespace PromiseHub.Application.Staff;
@@ -9,7 +11,7 @@ namespace PromiseHub.Application.Staff;
 /// The people directory (page: people, L2-112, ADR 0070): the active organization's memberships that are not removed, searched and
 /// filtered on the server, 25 to a page. Mentoring fields and the Mentor filter exist only while Mentoring is on.
 /// </summary>
-public sealed class PeopleHandler(IPromiseHubDb db, ITenantContext tenant, IModuleGate modules)
+public sealed class PeopleHandler(IPromiseHubDb db, ITenantContext tenant, IModuleGate modules, LearnerProgress progress, LearnerBadges badges, TimeProvider clock)
 {
     public const int PageSize = 25;
 
@@ -71,5 +73,46 @@ public sealed class PeopleHandler(IPromiseHubDb db, ITenantContext tenant, IModu
         var programs = await db.Programs.AsNoTracking().Where(p => p.Status == ProgramStatus.Active).OrderBy(p => p.Name)
             .Select(p => new ProgramOptionDto(p.Id, p.Name)).ToListAsync(cancellationToken);
         return new PeopleListResult(new PeoplePageDto(items, ordered.Count, page, PageSize, [.. roles.Select(x => x.ToString())], programs), null);
+    }
+
+    /// <summary>One account's record (page: person, L2-113); null when it is not a current account of the active organization.</summary>
+    public async Task<PersonRecordDto?> GetAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var member = await db.Memberships.AsNoTracking().FirstOrDefaultAsync(m => m.Id == id && m.RemovedAt == null, cancellationToken);
+        if (member is null)
+        {
+            return null;
+        }
+        var on = await modules.OnAsync(cancellationToken);
+        var mentoring = on.Contains(ModuleId.Mentoring);
+        var details = await PersonDetails.LoadAsync(db, [member], mentoring, cancellationToken);
+        PersonChildDto? child = null;
+        if (member.ChildId is { } childId)
+        {
+            // A deleted child is hidden by the query filter, which also scopes the tenant; ask again without it, in this organization.
+            var row = await (from c in db.Children.IgnoreQueryFilters().AsNoTracking()
+                             join h in db.Households.IgnoreQueryFilters().AsNoTracking() on c.HouseholdId equals h.Id
+                             where c.Id == childId && c.OrganizationId == tenant.OrganizationId
+                             select new { Child = c, Household = h.Name }).FirstOrDefaultAsync(cancellationToken);
+            if (row is not null)
+            {
+                child = new PersonChildDto(row.Child.Id, row.Child.FullName, row.Child.AgeOn(DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime)),
+                    row.Household, row.Child.HouseholdId, row.Child.DeletedAt is not null);
+            }
+        }
+        var history = (await db.AuditEntries.AsNoTracking().Where(a => a.RecordType == "Membership" && a.RecordId == member.Id).ToListAsync(cancellationToken))
+            // Entries written in the same instant keep the order they were written in, newest first.
+            .Select((a, i) => (a, i)).OrderByDescending(x => x.a.OccurredAt).ThenByDescending(x => x.i).Select(x => x.a).Take(10)
+            .Select(a => new PersonHistoryDto(a.OccurredAt, a.Action.ToString(), a.Summary, a.ActorName)).ToList();
+        PersonLearningDto? learning = null;
+        if (on.Contains(ModuleId.Learning) && member.Role == Role.Youth)
+        {
+            var tracks = await progress.ForMembership(member.Id).TracksAsync(cancellationToken);
+            var earned = await badges.ForMembership(member.Id).ReadAsync(tracks, cancellationToken);
+            learning = new PersonLearningDto(tracks.Sum(t => t.Done), tracks.Sum(t => t.Total), [.. earned.Earned.Select(b => b.Name)]);
+        }
+        return new PersonRecordDto(member.Id, member.PersonName, member.Email, member.Role.ToString(), "Active", null, null,
+            details.LastSignedIn(member), member.Id == tenant.MembershipId, child, details.Programs(member), history,
+            mentoring ? details.Mentoring(member) : null, learning);
     }
 }

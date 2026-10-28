@@ -7,6 +7,7 @@ import { LoadResult } from '../load-result';
 import { PeopleApi } from './people-api';
 import { PeoplePage } from './people-page';
 import { PeopleQuery } from './people-query';
+import { PersonRecord } from './person-record';
 
 @Injectable()
 export class HttpPeopleApi implements PeopleApi {
@@ -19,5 +20,9 @@ export class HttpPeopleApi implements PeopleApi {
       if (query[key]) params = params.set(key, query[key]);
     }
     return toLoad(this.http.get<PeoplePage>(`${this.baseUrl}/people`, { params }));
+  }
+
+  get(id: string): Observable<LoadResult<PersonRecord>> {
+    return toLoad(this.http.get<PersonRecord>(`${this.baseUrl}/people/${id}`));
   }
 }

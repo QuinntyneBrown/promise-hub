@@ -2431,6 +2431,11 @@ export class FakeApi {
     ],
     ["GET", /^\/api\/staff$/, (route) => this.listStaff(route)],
     ["GET", /^\/api\/people$/, (route) => this.listPeople(route)],
+    [
+      "GET",
+      /^\/api\/people\/(?<id>[^/]+)$/,
+      (route, p) => this.getPerson(route, p["id"]!),
+    ],
     ["GET", /^\/api\/coverage$/, (route) => this.coverage(route)],
     [
       "PUT",
@@ -7430,9 +7435,90 @@ export class FakeApi {
         pageSize: 25,
         roles,
         programs: this.programs
-          .filter((p) => p.organizationId === m.organizationId && p.status === "Active")
+          .filter(
+            (p) =>
+              p.organizationId === m.organizationId && p.status === "Active",
+          )
           .map((p) => ({ id: p.id, name: p.name }))
           .sort((a, z) => a.name.localeCompare(z.name)),
+      },
+    });
+  }
+
+  /** The account's history, newest first, as the audit log holds it (L2-113 criterion 1). */
+  private personHistory = new Map<
+    string,
+    { at: string; action: string; summary: string; by: string }[]
+  >();
+
+  private recordPersonHistory(
+    id: string,
+    action: string,
+    summary: string,
+    by: string,
+  ): void {
+    this.personHistory.set(id, [
+      { at: "2026-11-05T21:20:00Z", action, summary, by },
+      ...(this.personHistory.get(id) ?? []),
+    ]);
+  }
+
+  /** A youth's lessons done of total and earned badges, as LearnerProgress and LearnerBadges answer them for her membership. */
+  private personLearning(x: Membership) {
+    const programs = this.placementsOf(x);
+    const tracks = this.learningState.tracks(x.id, programs);
+    const lessons = tracks.flatMap((t) => t.modules.flatMap((m) => m.lessons));
+    return {
+      lessonsDone: lessons.filter((l) => l.done).length,
+      lessonsTotal: lessons.length,
+      badges: this.journey.badgesOf(x, programs).earned.map((b) => b.name),
+    };
+  }
+
+  /** Mirrors backend PeopleHandler.GetAsync (L2-113, L2-114): admins only, this organization's current accounts only. */
+  private async getPerson(route: Route, id: string): Promise<void> {
+    const m = await this.adminCaller(route);
+    if (!m) return;
+    const x = this.staffOf(m).find((p) => p.id === id);
+    if (!x) return route.fulfill({ status: 404 });
+    const on = this.modules.get(m.organizationId)!;
+    const facts = this.personFacts(x, on.includes("Mentoring"));
+    const role = this.roleOverrides.get(x.id) ?? x.role;
+    const childId = this.youthLinks.get(x.id);
+    const household = childId
+      ? this.households.find((h) => h.children.some((c) => c.id === childId))
+      : undefined;
+    const child = household?.children.find((c) => c.id === childId);
+    const learning =
+      on.includes("Learning") && role === "Youth"
+        ? this.personLearning(x)
+        : undefined;
+    return route.fulfill({
+      json: {
+        id: x.id,
+        name: x.personName,
+        email: x.email,
+        role,
+        status: "Active",
+        deactivatedAt: null,
+        deactivatedBy: null,
+        lastSignedInAt: this.lastSignIns.get(x.email) ?? null,
+        isYou: x.id === m.id,
+        child:
+          child && household
+            ? {
+                id: child.id,
+                name: `${child.firstName} ${child.lastName}`,
+                age: ageOf(child.dateOfBirth),
+                household: household.name,
+                householdId: household.id,
+                deleted: false,
+              }
+            : null,
+        programs: facts.programs,
+        history: this.personHistory.get(x.id) ?? [],
+        ...(facts.mentoring ? { mentoring: facts.mentoring } : {}),
+        ...(learning ? { learning } : {}),
       },
     });
   }

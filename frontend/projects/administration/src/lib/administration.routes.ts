@@ -4,6 +4,7 @@ import { BillingPage } from './billing-page/billing-page';
 import { CoveragePage } from './coverage-page/coverage-page';
 import { OrganizationsPage } from './organizations-page/organizations-page';
 import { PeoplePage } from './people-page/people-page';
+import { PersonPage } from './person-page/person-page';
 import { StaffPage } from './staff-page/staff-page';
 
 /** Mounted by the app at /settings/staff; staff access is always part of the product. */
@@ -34,4 +35,5 @@ export const organizationsRoutes: Routes = [
 /** Mounted by the app at /people; people administration is always on and admins only (L2-112, ADR 0070). */
 export const peopleRoutes: Routes = [
   { path: '', component: PeoplePage, title: 'People · PromiseHub' },
+  { path: ':id', component: PersonPage, title: 'Person · PromiseHub' },
 ];

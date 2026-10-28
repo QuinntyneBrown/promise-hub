@@ -15,6 +15,8 @@ public static class PeopleEndpoints
             var result = await handler.ListAsync(new PeopleQuery(q, role, status, programId, page ?? 1), ct);
             return result.Page is { } list ? Results.Ok(list) : Results.Json(new { errors = result.Errors }, statusCode: StatusCodes.Status422UnprocessableEntity);
         });
+        people.MapGet("/{id:guid}", async (Guid id, PeopleHandler handler, CancellationToken ct) =>
+            await handler.GetAsync(id, ct) is { } person ? Results.Ok(person) : Results.NotFound());
         return app;
     }
 }
