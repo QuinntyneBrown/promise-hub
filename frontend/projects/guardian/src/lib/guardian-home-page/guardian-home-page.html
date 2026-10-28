@@ -133,6 +133,42 @@
           </ph-alert>
         }
         <p>{{ h().intro(home.organization) }}</p>
+        @if (home.children.length) {
+          <ph-card [title]="p().children" [flush]="true">
+            <ph-list [label]="p().children">
+              @for (child of home.children; track child.id) {
+                <ph-list-item
+                  [title]="child.name"
+                  [meta]="child.programs.length ? child.programs.join(', ') : p().noPrograms"
+                  [avatar]="child.name"
+                  [link]="['/g/home', token(), 'children', child.id]"
+                />
+              }
+            </ph-list>
+            <p phCardFooter>{{ p().childrenFooter }}</p>
+          </ph-card>
+        }
+        @if (home.announcements !== null && home.announcements !== undefined) {
+          <ph-card [title]="p().announcements">
+            <div class="stack">
+              <p>
+                {{
+                  home.announcements
+                    ? p().newAnnouncements(home.announcements, home.organization)
+                    : p().noNewAnnouncements
+                }}
+              </p>
+              <div>
+                <ph-button
+                  [variant]="home.announcements ? 'primary' : 'default'"
+                  icon="messages"
+                  [link]="['/g/home', token(), 'announcements']"
+                  >{{ p().readAnnouncements }}</ph-button
+                >
+              </div>
+            </div>
+          </ph-card>
+        }
         @let items = rows(home);
         @if (items.length) {
           <ph-list [label]="h().list">

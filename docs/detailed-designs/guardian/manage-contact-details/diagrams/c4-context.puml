@@ -1,0 +1,13 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Manage guardian consents and contact
+Person(g, "Guardian", "Carmen Rivera, no account, a verified link")
+Person(s, "Staff", "Marisol Delgado, program director")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+System_Ext(sms, "SMS and email providers", "Deliver links and messages")
+Rel(g, ph, "Reads consents and corrects contact details", "HTTPS")
+Rel(s, ph, "Runs programs and sends messages", "HTTPS")
+Rel(ph, sms, "Sends links, codes and messages")
+Rel(sms, g, "Texts and emails")
+@enduml

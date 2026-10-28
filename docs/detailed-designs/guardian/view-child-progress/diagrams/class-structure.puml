@@ -1,0 +1,47 @@
+@startuml
+title Class structure — View a child's progress
+skinparam classAttributeIconSize 0
+class GuardianChildPage {
+  +token : input<string>
+  +childId : input<string>
+  #result : Signal<GuardianPageResult<GuardianChild> | null>
+  #load() : void
+}
+interface GuardianApi {
+  +child(token, childId) : Observable<GuardianPageResult<GuardianChild>>
+}
+class GuardianChildHandler {
+  +Window : TimeSpan = 28 days
+  +GetAsync(request, childId) : GuardianResult
+}
+class GuardianChildDto {
+  +Language : string
+  +Organization : string
+  +Name : string
+  +FirstName : string
+  +Programs : IReadOnlyList<string>
+  +Schedule : IReadOnlyList<GuardianSessionDto>
+  +Consents : GuardianConsentsDto
+  +Attendance : GuardianAttendanceDto?
+  +Learning : GuardianLearningDto?
+}
+class GuardianAttendanceDto {
+  +Present, Late, Excused, Absent : int
+  +Recent : IReadOnlyList<GuardianAttendanceRowDto>
+}
+class GuardianLearningDto {
+  +CompletedLessons, TotalLessons : int
+  +Modules : IReadOnlyList<GuardianModuleDto>
+  +Badges : IReadOnlyList<GuardianBadgeDto>
+  +BadgeCount : int
+}
+class LearnerProgress {
+  +ForMembership(id) : LearnerProgress
+  +TracksAsync() : IReadOnlyList<TrackStatus>
+}
+GuardianChildPage ..> GuardianApi
+GuardianChildHandler ..> GuardianChildDto : answers
+GuardianChildHandler ..> LearnerProgress
+GuardianChildDto *-- GuardianAttendanceDto
+GuardianChildDto *-- GuardianLearningDto
+@enduml

@@ -36,6 +36,9 @@ One folder per subsystem, one folder per vertically sliced feature, each with a 
 | guardian | enforce-minor-safeguards | L2-057 |
 | guardian | view-consent-record | L2-058 |
 | guardian | manage-consent-settings | L2-058 |
+| guardian | view-child-progress | L2-102, L2-026, L2-088 |
+| guardian | read-announcements | L2-103, L2-019 |
+| guardian | manage-contact-details | L2-104, L2-055, L2-011 |
 | programs | manage-programs | L2-012 |
 | programs | manage-cohorts | L2-061, L2-012 |
 | programs | manage-terms-and-tracks | L2-061 |

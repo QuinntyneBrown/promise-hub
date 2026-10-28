@@ -38,6 +38,7 @@ import {
   GuardianPickupDialog,
 } from '../guardian-pickup-dialog/guardian-pickup-dialog';
 import { homeText } from '../home-text';
+import { portalText } from '../portal-text';
 
 type Enrollment = GuardianHome['children'][number]['enrollments'][number];
 type Step = 'contact' | 'code' | 'locked';
@@ -87,6 +88,7 @@ export class GuardianHomePage {
   });
   protected readonly t = computed(() => guardianText(this.language()));
   protected readonly h = computed(() => homeText(this.language()));
+  protected readonly p = computed(() => portalText(this.language()));
   protected readonly organization = computed(() => {
     const r = this.result();
     if (r?.status === 'loaded') return r.value.organization;

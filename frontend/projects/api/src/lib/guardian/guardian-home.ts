@@ -12,6 +12,8 @@ export interface GuardianHome {
     pickups: { id: string; name: string; relationship: string }[] | null;
     name: string;
     firstName: string;
+    /** The active programs the child is enrolled in (L2-102 criterion 1). */
+    programs: string[];
     enrollments: {
       program: string;
       status: 'Enrolled' | 'WaitingReview' | 'Waitlisted' | 'Declined';
@@ -31,6 +33,8 @@ export interface GuardianHome {
     event: string;
     requestedAt: string;
   }[];
+  /** How many announcements the household has not read; null while Messages is off (L2-103). */
+  announcements?: number | null;
   /** How the family page reaches the primary guardian, for them to correct. */
   contact?: { name: string; mobile: string | null; email: string | null; language: string } | null;
 }

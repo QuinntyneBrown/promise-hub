@@ -1,0 +1,40 @@
+@startuml
+title UML sequence behaviour — A guardian reads consents and corrects contact details
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Guardian (Carmen)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "GuardianChildPage" as page
+  participant "GuardianHomePage" as home
+  participant "GuardianApi" as gapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "GuardianEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "GuardianChildHandler" as h
+  
+  participant "GuardianHomeHandler" as hh
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : opens Sofía
+page -> gapi : child(token, childId)
+gapi -> ep : GET /g/home/{token}/children/{childId}
+ep -> h : GetAsync
+h -> db : latest GuardianConsent if a youth account links the child (L2-104 c1)
+opt Slips on
+  h -> db : sent slips of the child's events not ended, latest signature per slip (L2-104 c2)
+end
+h --> page : consents, read only
+actor -> home : Update your details
+home -> gapi : updateHousehold(token, mobile, email, language)
+gapi -> ep : PUT /g/home/{token}/household
+ep -> hh : UpdateHouseholdAsync
+hh -> db : guardian contact, household language, audit entry (L2-104 c3)
+hh --> home : 204, Saved
+@enduml

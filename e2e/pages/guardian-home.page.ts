@@ -25,6 +25,32 @@ export class GuardianHomePage extends BasePage {
     return this.enrollments.getByRole('listitem').filter({ hasText: `${child} · ${program}` });
   }
 
+  /** Your children (L2-102 criterion 1): one link per child. */
+  get children(): Locator {
+    return this.page.getByRole('list', { name: /^(Your children|Sus hijos|Vos enfants)$/ });
+  }
+
+  child(name: string): Locator {
+    return this.children.getByRole('listitem').filter({ hasText: name });
+  }
+
+  childLink(name: string): Locator {
+    return this.child(name).getByRole('link');
+  }
+
+  async openChild(name: string): Promise<void> {
+    await this.childLink(name).click();
+  }
+
+  /** The Announcements card (L2-103 criterion 2), present only while Messages is on. */
+  get announcements(): Locator {
+    return this.page.getByRole('region', { name: /^(Announcements|Anuncios|Annonces)$/ });
+  }
+
+  async openAnnouncements(): Promise<void> {
+    await this.announcements.getByRole('link').click();
+  }
+
   text(content: string | RegExp): Locator {
     return this.page.getByRole('main').getByText(content);
   }

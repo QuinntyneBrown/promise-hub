@@ -219,6 +219,8 @@ export * from './lib/applications/application-summary';
 export * from './lib/applications/applications-api';
 export * from './lib/applications/applications-api.token';
 export * from './lib/guardian/guardian-home';
+export * from './lib/guardian/guardian-child';
+export * from './lib/guardian/guardian-announcements';
 export * from './lib/guardian/guardian-page-result';
 export * from './lib/incidents/incident';
 export * from './lib/incidents/incident-form';

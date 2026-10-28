@@ -9,6 +9,8 @@ import { NewPickup } from '../pickups/new-pickup';
 import { GuardianAnswers } from './guardian-answers';
 import { GuardianApi } from './guardian-api';
 import { GuardianHome } from './guardian-home';
+import { GuardianChild } from './guardian-child';
+import { GuardianAnnouncements } from './guardian-announcements';
 import { GuardianPageResult } from './guardian-page-result';
 import { GuardianSlip } from './guardian-slip';
 import { GuardianSlipResult } from './guardian-slip-result';
@@ -65,6 +67,27 @@ export class HttpGuardianApi implements GuardianApi {
 
   home(token: string): Observable<GuardianPageResult<GuardianHome>> {
     return this.page<GuardianHome>(`${this.baseUrl}/g/home/${encodeURIComponent(token)}`);
+  }
+
+  child(token: string, childId: string): Observable<GuardianPageResult<GuardianChild>> {
+    return this.page<GuardianChild>(
+      `${this.baseUrl}/g/home/${encodeURIComponent(token)}/children/${encodeURIComponent(childId)}`,
+    );
+  }
+
+  announcements(token: string): Observable<GuardianPageResult<GuardianAnnouncements>> {
+    return this.page<GuardianAnnouncements>(
+      `${this.baseUrl}/g/home/${encodeURIComponent(token)}/announcements`,
+    );
+  }
+
+  markAnnouncementsRead(token: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(
+        `${this.baseUrl}/g/home/${encodeURIComponent(token)}/announcements/read`,
+        {},
+      ),
+    );
   }
 
   answerNoShow(

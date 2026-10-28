@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 73 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="73" data-video-title="Use the guardian portal" data-parts="Introduction|Family page|Child page|Progress|Announcements|Contact|Phone|States|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 73</div>
+  <h1>Use the guardian portal</h1>
+  <p class="lead">Each child’s schedule, consents and progress, and the family’s announcements, from one verified link</p>
+</section>
+
+<section id="family" data-part="1" data-cue="Carmen Rivera's household at Harbourview Youth Collective" data-clip="clips/child-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Carmen’s family page</h3><p>Her children, then Sofía.</p></div>
+</section>
+
+<section id="family-shot" data-part="1" data-cue="Your children lists Mateo and Sofía">
+  <h2>Your children, Announcements</h2>
+  <img class="shot" alt="Hi Carmen: Your children with Mateo Rivera and Sofía Rivera in After-School Tutoring, and Announcements saying 2 new with Read announcements" src="shots/desktop-home.png">
+  <p class="muted small">GET /g/home/{token} · children[].programs · announcements · L2-102, L2-103</p>
+</section>
+
+<section id="child" data-part="2" data-cue="Sofía's page is read only.">
+  <h2>Schedule and consents</h2>
+  <img class="shot" alt="Sofía’s page: Schedule with Tutoring night marked Today and the field trip, Consents with Taking part in Learning and mentoring Given and the field trip Not signed yet" src="shots/desktop-child.png">
+  <p class="muted small">GET /g/home/{token}/children/{childId} · the next 28 days · L2-102, L2-104</p>
+</section>
+
+<section id="attendance" data-part="3" data-cue="While Roll Call is on, Attendance shows">
+  <h2>Attendance</h2>
+  <img class="shot" alt="Attendance: 92%, 11 of 12 sessions, with Tutoring night Late, Excused and Present" src="shots/desktop-attendance.png">
+</section>
+
+<section id="learning" data-part="3" data-cue="While Learning is on and Sofía has a youth account">
+  <h2>Learning, read only</h2>
+  <img class="shot" alt="Learning: Overall progress 44%, 4 of 9 lessons, Badges 2 of 6, and Progress by module with bars and Complete, In progress and Not started" src="shots/desktop-learning.png">
+  <p class="muted small">LearnerProgress.ForMembership · LearnerBadges.ForMembership · ADR 0067</p>
+</section>
+
+<section id="private" data-part="3" data-cue="Her lessons, quiz answers, reflections">
+  <h2>What a guardian sees</h2>
+  <table class="facts">
+    <tr><th>Shown</th><th>Never sent</th></tr>
+    <tr><td>Sessions, consents, attendance marks</td><td>Lesson content, quiz questions and answers</td></tr>
+    <tr><td>Lessons done per module, badges earned</td><td>Reflections, mentor notes, check-ins</td></tr>
+    <tr><td>Her own household’s children</td><td>Another family’s or organization’s child (404)</td></tr>
+  </table>
+</section>
+
+<section id="announcements" data-part="4" data-cue="Read announcements lists the messages staff sent her household" data-clip="clips/announcements-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Announcements</h3><p>New, then Mark all read.</p></div>
+</section>
+
+<section id="announcements-shots" data-part="4" data-cue="Mark all read clears the New badges">
+  <h2>New, then all caught up</h2>
+  <div class="cols">
+    <img class="shot" alt="Announcements with two marked New and Mark all read" src="shots/desktop-announcements.png">
+    <img class="shot" alt="Announcements after Mark all read: All caught up, no New badges" src="shots/desktop-all-read.png">
+  </div>
+  <p class="muted small">Messages-module deliveries to the household · Delivery.ReadAt · L2-103</p>
+</section>
+
+<section id="contact" data-part="5" data-cue="Carmen keeps her own details current">
+  <h2>Contact details</h2>
+  <ul>
+    <li>Update your details on the family page: mobile, email, language</li>
+    <li>Saved and audited; a new mobile ends every link of the household</li>
+    <li>Consents are given or withdrawn from their own links</li>
+  </ul>
+  <p class="muted small">L2-104 · L2-011 criterion 7 · L2-026 criterion 4</p>
+</section>
+
+<section id="phone" data-part="6" data-cue="On a phone, the family page, Sofía's page and the announcements" data-clip="clips/phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>One column</h3><p>Family, Sofía, announcements.</p></div>
+</section>
+
+<section id="phone-shots" data-part="6" data-cue="Here are the family page, Sofía's progress and the announcements on the phone.">
+  <h2>On a phone</h2>
+  <div class="cols three">
+    <img class="shot" alt="Carmen’s family page on a phone" src="shots/phone-home.png">
+    <img class="shot" alt="Sofía’s Learning progress on a phone" src="shots/phone-learning.png">
+    <img class="shot" alt="The announcements on a phone" src="shots/phone-announcements.png">
+  </div>
+</section>
+
+<section id="states" data-part="7" data-cue="In Spanish, Carmen's household language" data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Language and states</h3><p>Spanish, Mateo, failed, empty, Messages off, expired.</p></div>
+</section>
+
+<section id="states-shots" data-part="7" data-cue="Another family's child is not available">
+  <h2>Spanish, empty, expired</h2>
+  <div class="cols three">
+    <img class="shot" alt="Sofía’s page in Spanish: Horario and Consentimientos" src="shots/desktop-spanish.png">
+    <img class="shot" alt="No announcements yet" src="shots/desktop-announcements-empty.png">
+    <img class="shot" alt="This link has expired with Call 905-555-0100" src="shots/desktop-expired.png">
+  </div>
+</section>
+
+<section id="testing" data-part="8" data-cue="The API tests cover the family page's children">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>GuardianPortalTests</code>: children, schedule, cancelled, consents, Slips off, attendance, Learning, refusals, Roster off</li>
+    <li><code>GuardianAnnouncementsTests</code>: unread, Mark all read, other households and organizations, Messages off</li>
+    <li><code>portal.spec.ts</code> on phone and laptop against the fake API, with axe on every state</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="9" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>The guardian portal is the household link, not an account</li><li>Each child’s page is read only: schedule, consents, attendance, progress</li><li>Announcements are the Messages sent to the family</li></ul>
+  <p class="muted">Next: announce and message</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

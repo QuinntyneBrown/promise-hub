@@ -1,0 +1,24 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — View a child's progress
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(home, "GuardianHomePage", "Angular page", "/g/home/:token, Your children")
+  Component(page, "GuardianChildPage", "Angular page", "/g/home/:token/children/:childId")
+  Component(gapi, "GuardianApi", "Contract + HTTP client", "GUARDIAN_API.child()")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "GuardianEndpoints", "Minimal API", "GET /g/home/{token}/children/{childId}")
+  Component(h, "GuardianChildHandler", "Handler", "schedule, consents, attendance, learning")
+  Component(acc, "GuardianAccess", "Service", "link → household, organization, trusted device")
+  Component(lp, "LearnerProgress / LearnerBadges", "Services", "the youth's tracks and badges, for a given membership")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Children, Enrollments, Programs, Events, AttendanceRecords, GuardianConsents, PermissionSlips, SlipSignatures, Memberships, LessonProgress, BadgeAwards")
+}
+Rel(home, page, "links to")
+Rel(page, gapi, "child(token, childId)")
+Rel(gapi, ep, "JSON/HTTPS")
+Rel(ep, h, "calls")
+Rel(h, acc, "ResolveAsync")
+Rel(h, lp, "ForMembership(youth)")
+Rel(h, db, "reads")
+@enduml

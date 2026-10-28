@@ -128,6 +128,10 @@ type ChannelChoice = 'TextWithEmailFallback' | 'EmailOnly' | 'TextOnly';
 
 interface FakeDelivery {
   household: string;
+  /** The household's id, for its guardian announcements (L2-103). */
+  householdId?: string;
+  /** When the household marked it read on the guardian pages. */
+  readAt?: string | null;
   guardian: string | null;
   channel: 'Sms' | 'Email';
   language: string;
@@ -576,6 +580,20 @@ export class FakeApi {
     }
   }
 
+  /** A message staff sent from Messages to households, already delivered, as the guardian's announcements read it (L2-103). */
+  announce(householdIds: string[], body: string, at: string, by = 'Marisol Delgado', read = false): void {
+    const households = this.households.filter((h) => householdIds.includes(h.id));
+    this.messages.push({
+      id: `msg-${this.nextId++}`, organizationId: households[0]!.organizationId, title: titleOf(body), body, sentAt: at, sentBy: by, audience: 'After-School Tutoring', channel: 'TextWithEmailFallback',
+      deliveries: households.map((h) => ({ household: h.name, householdId: h.id, guardian: null, channel: 'Sms', language: h.language, status: 'Sent', reason: null, at, readAt: read ? at : null })),
+    });
+  }
+
+  /** Changes a household's language, as the guardian's Update your details would (L2-027). */
+  setHouseholdLanguage(householdId: string, language: 'English' | 'Spanish' | 'French'): void {
+    this.households.find((h) => h.id === householdId)!.language = language;
+  }
+
   /** Trusts this browser for a household, as a verified code would. */
   trustGuardianDevice(householdId: string): void {
     this.trustedHouseholds.add(householdId);
@@ -905,6 +923,9 @@ export class FakeApi {
     ['POST', /^\/api\/incidents\/(?<id>[^/]+)\/reopen$/, (route, p) => this.reopenIncident(route, p['id']!)],
     ['POST', /^\/api\/incidents\/(?<id>[^/]+)\/notes$/, (route, p) => this.addIncidentNote(route, p['id']!)],
     ['GET', /^\/api\/g\/home\/(?<token>[^/]+)$/, (route, p) => this.guardianHome(route, p['token']!)],
+    ['GET', /^\/api\/g\/home\/(?<token>[^/]+)\/announcements$/, (route, p) => this.guardianAnnouncements(route, p['token']!)],
+    ['POST', /^\/api\/g\/home\/(?<token>[^/]+)\/announcements\/read$/, (route, p) => this.markAnnouncementsRead(route, p['token']!)],
+    ['GET', /^\/api\/g\/home\/(?<token>[^/]+)\/children\/(?<child>[^/]+)$/, (route, p) => this.guardianChild(route, p['token']!, p['child']!)],
     ['POST', /^\/api\/g\/home\/(?<token>[^/]+)\/no-show$/, (route, p) => this.answerNoShow(route, p['token']!)],
     ['GET', /^\/api\/g\/slips\/(?<token>[^/]+)$/, (route, p) => this.guardianSlip(route, p['token']!)],
     ['POST', /^\/api\/g\/slips\/(?<token>[^/]+)\/sign$/, (route, p) => this.guardianAnswer(route, p['token']!, 'Signed')],
@@ -3794,7 +3815,7 @@ export class FakeApi {
         const g = this.sortedGuardians(h)[0];
         const mobile = g?.mobile || null;
         const email = g?.email && !g.emailBounced ? g.email : null;
-        const base = { household: h.name.replace(/ household$/, ''), guardian: g?.name ?? null, language: h.language };
+        const base = { household: h.name.replace(/ household$/, ''), householdId: h.id, guardian: g?.name ?? null, language: h.language };
         if (b.channel === 'TextOnly') return { ...base, channel: 'Sms' as const, to: mobile, fallback: null, unreachable: mobile ? null : 'No mobile number' };
         if (b.channel === 'EmailOnly') return { ...base, channel: 'Email' as const, to: email, fallback: null, unreachable: email ? null : 'No email address' };
         return mobile
@@ -3847,7 +3868,7 @@ export class FakeApi {
     const segments = segmentsOf(`${org.name}: ${body}`);
     const now = NOW.toISOString();
     const deliveries: FakeDelivery[] = recipients.map((r) => {
-      const base = { household: r.household, guardian: r.guardian, language: r.language, at: null as string | null };
+      const base = { household: r.household, householdId: r.householdId, guardian: r.guardian, language: r.language, at: null as string | null };
       if (r.unreachable) return { ...base, channel: r.channel, status: 'Failed', reason: r.unreachable };
       if (r.channel === 'Email') return { ...base, channel: 'Email', status: 'Sent', reason: null, at: now };
       const { remaining, used } = this.capOf(m);
@@ -4591,6 +4612,7 @@ export class FakeApi {
           pickups: this.modules.get(org.id)!.includes('Pickup') ? this.activePickups(c.id).map((x) => ({ id: x.id, name: x.name, relationship: x.relationship })) : null,
           name: `${c.firstName} ${c.lastName}`,
           firstName: c.firstName,
+          programs: this.programs.filter((x) => x.status === 'Active' && x.roster.includes(c.id)).map((x) => x.name).sort(),
           enrollments: [...fromRequests, ...onRoster]
             .map((e) => ({ program: e.program.name, status: e.status, position: e.position, note: e.note, startsOn: e.program.startsOn, schedule: e.program.schedule }))
             .sort((a, z) => a.program.localeCompare(z.program)),
@@ -4598,9 +4620,137 @@ export class FakeApi {
       });
     const primary = this.sortedGuardians(household)[0];
     return route.fulfill({ json: { language: this.guardianLanguage(household.language), organization: org.name, phone: '905-555-0100', firstName: primary?.name.split(' ')[0] ?? '', children, noShows: this.openNoShows(household),
-          contact: primary ? { name: primary.name, mobile: primary.mobile, email: primary.email, language: household.language } : null, pickupRequests: this.pickupRequests
+          contact: primary ? { name: primary.name, mobile: primary.mobile, email: primary.email, language: household.language } : null,
+          announcements: this.modules.get(org.id)!.includes('Messages') ? this.announcementsOf(household.id).filter((a) => !a.read).length : null, pickupRequests: this.pickupRequests
           .filter((r) => r.householdId === household.id && r.status === 'Pending')
           .map((r) => ({ id: r.id, child: household.children.find((c) => c.id === r.childId)!.firstName, collector: r.collector, event: this.events.find((x) => x.id === r.eventId)?.name ?? '', requestedAt: NOW.toISOString() })) } });
+  }
+
+  /** The household of a home link, as the guardian portal's pages resolve it: 410, 404 with Roster off, 401 until the device verifies. */
+  private async homeScope(route: Route, token: string) {
+    const householdId = this.homeLinks.get(token);
+    const household = householdId ? this.households.find((h) => h.id === householdId) : undefined;
+    const org = household ? organizations.find((o) => o.id === household.organizationId)! : undefined;
+    if (!household || !org) {
+      await route.fulfill({ status: 410, json: { code: 'link-expired', organization: null, phone: null } });
+      return null;
+    }
+    if (!this.modules.get(org.id)!.includes('Roster')) {
+      await route.fulfill({ status: 404 });
+      return null;
+    }
+    if (!this.trustedHouseholds.has(household.id)) {
+      const contacts = household.guardians.filter((g) => g.mobile).map((g) => `•••-•••-${g.mobile!.slice(-4)}`);
+      await route.fulfill({ status: 401, json: { code: 'verification-required', language: this.guardianLanguage(household.language), organization: org.name, phone: '905-555-0100', contacts } });
+      return null;
+    }
+    return { household, org };
+  }
+
+  /** GET /g/home/{token}/children/{childId}: one child of the link's household, read only (L2-102, L2-104). */
+  private async guardianChild(route: Route, token: string, childId: string): Promise<void> {
+    const scope = await this.homeScope(route, token);
+    if (!scope) return;
+    const { household, org } = scope;
+    const child = household.children.find((c) => c.id === childId);
+    if (!child) return route.fulfill({ status: 404 });
+    const programs = this.programs.filter((x) => x.organizationId === org.id && x.status === 'Active' && x.roster.includes(child.id));
+    const programIds = programs.map((x) => x.id);
+    const until = NOW.getTime() + 28 * 86_400_000;
+    const today = hamiltonDay(NOW.toISOString());
+    const coming = this.events
+      .filter((e) => programIds.includes(e.programId) && new Date(e.endsAt) > NOW && new Date(e.startsAt).getTime() <= until && e.status !== 'Ended')
+      .sort((a, z) => a.startsAt.localeCompare(z.startsAt));
+    const youth = [...this.youthLinks].some(([membershipId, linked]) => linked === child.id && memberships.some((m) => m.id === membershipId && m.organizationId === org.id && !this.removedMembers.has(m.id)));
+    const latest = this.consentOf(child.id);
+    const participation =
+      youth && (latest || this.consentRequired(org.id, child.id))
+        ? { status: this.consentStatusName(child.id), signedBy: latest?.signedBy ?? null, relationship: latest?.relationship ?? null, signedAt: latest?.signedAt ?? null,
+            reference: latest?.reference ?? null, withdrawnAt: latest?.withdrawnAt ?? null, withdrawnBy: latest?.withdrawnBy ?? null }
+        : null;
+    const slips = this.modules.get(org.id)!.includes('Slips')
+      ? coming
+          .filter((e) => this.slips.get(e.id)?.status === 'Sent')
+          .map((e) => {
+            const slip = this.slips.get(e.id)!;
+            const answer = slip.answers.get(child.id);
+            const current = answer && answer.version === slip.version ? answer : null;
+            return { eventId: e.id, event: e.name, startsAt: e.startsAt, signBy: slip.signBy, status: current?.status ?? 'NotSigned', signedBy: current?.by ?? null, at: current ? NOW.toISOString() : null };
+          })
+      : null;
+    return route.fulfill({
+      json: {
+        language: this.guardianLanguage(household.language), organization: org.name, phone: '905-555-0100', name: `${child.firstName} ${child.lastName}`, firstName: child.firstName,
+        programs: programs.map((x) => x.name).sort(),
+        schedule: coming.map((e) => ({ eventId: e.id, name: e.name, program: programs.find((x) => x.id === e.programId)!.name, startsAt: e.startsAt, endsAt: e.endsAt, place: e.place,
+          status: e.status === 'Cancelled' ? 'Cancelled' : 'Scheduled', today: hamiltonDay(e.startsAt) === today })),
+        consents: { participation, slips },
+        attendance: this.modules.get(org.id)!.includes('RollCall') ? this.guardianAttendance(org.id, child.id) : null,
+        learning: this.modules.get(org.id)!.includes('Learning') ? this.guardianLearning(org.id, child.id) : null,
+      },
+    });
+  }
+
+  /** The Messages-module messages delivered to a household, newest first, with read flags (L2-103). Slip texts are not announcements. */
+  private announcementsOf(householdId: string) {
+    return this.messages
+      .filter((m) => !m.title.startsWith('Permission slip:'))
+      .flatMap((m) => {
+        const mine = m.deliveries.filter((d) => d.householdId === householdId && d.at);
+        return mine.length ? [{ id: m.id, title: m.title, body: m.body, from: m.sentBy, sentAt: mine[0]!.at!, read: mine.every((d) => d.readAt), deliveries: mine }] : [];
+      })
+      .sort((a, z) => z.sentAt.localeCompare(a.sentAt));
+  }
+
+  /** GET /g/home/{token}/announcements: Roster and Messages on, a verified device (L2-103). */
+  private async guardianAnnouncements(route: Route, token: string): Promise<void> {
+    const scope = await this.homeScope(route, token);
+    if (!scope) return;
+    if (!this.modules.get(scope.org.id)!.includes('Messages')) return route.fulfill({ status: 404 });
+    const items = this.announcementsOf(scope.household.id).map(({ deliveries: _, ...a }) => a);
+    return route.fulfill({
+      json: { language: this.guardianLanguage(scope.household.language), organization: scope.org.name, phone: '905-555-0100', unread: items.filter((a) => !a.read).length, announcements: items },
+    });
+  }
+
+  /** POST /g/home/{token}/announcements/read: every delivery to the household is read (L2-103 criterion 3). */
+  private async markAnnouncementsRead(route: Route, token: string): Promise<void> {
+    const scope = await this.homeScope(route, token);
+    if (!scope) return;
+    if (!this.modules.get(scope.org.id)!.includes('Messages')) return route.fulfill({ status: 404 });
+    for (const a of this.announcementsOf(scope.household.id)) for (const d of a.deliveries) d.readAt ??= NOW.toISOString();
+    return route.fulfill({ status: 204 });
+  }
+
+  /** A child's marks for the guardian page: counts and the five most recent sessions (L2-102 criterion 3). */
+  private guardianAttendance(organizationId: string, childId: string) {
+    const rows = this.events
+      .filter((e) => e.organizationId === organizationId)
+      .flatMap((e) => {
+        const r = this.attendance.get(e.id)?.get(childId);
+        if (!r || r.status === 'NotYet') return [];
+        const status = r.status === 'Absent' ? (r.excused ? 'Excused' : 'Absent') : r.late ? 'Late' : 'Present';
+        return [{ eventId: e.id, name: e.name, startsAt: e.startsAt, status }];
+      })
+      .sort((a, z) => z.startsAt.localeCompare(a.startsAt));
+    const count = (s: string) => rows.filter((r) => r.status === s).length;
+    return { present: count('Present'), late: count('Late'), excused: count('Excused'), absent: count('Absent'), recent: rows.slice(0, 5) };
+  }
+
+  /** The youth's own progress for her guardian, from the same fakes her journey reads; null without a youth account (L2-102 criterion 4). */
+  private guardianLearning(organizationId: string, childId: string) {
+    const m = memberships.find((x) => x.organizationId === organizationId && this.youthLinks.get(x.id) === childId && !this.removedMembers.has(x.id));
+    if (!m) return null;
+    const programs = this.placementsOf(m);
+    const tracks = this.learningState.tracks(m.id, programs);
+    const badges = this.journey.badgesOf(m, programs);
+    return {
+      completedLessons: tracks.reduce((n, t) => n + t.modules.reduce((k, x) => k + x.lessons.filter((l) => l.done).length, 0), 0),
+      totalLessons: tracks.reduce((n, t) => n + t.modules.reduce((k, x) => k + x.lessons.length, 0), 0),
+      modules: tracks.flatMap((t) => t.modules.map((x) => ({ title: x.module.title, track: t.track.name, done: x.lessons.filter((l) => l.done).length, total: x.lessons.length }))),
+      badges: badges.earned.map((b) => ({ name: b.name, icon: b.icon })),
+      badgeCount: badges.earned.length + badges.locked.length,
+    };
   }
 
   /** The household's unanswered no-show texts, one per session, with the children's first names. */

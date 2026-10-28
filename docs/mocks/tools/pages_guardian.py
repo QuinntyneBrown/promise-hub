@@ -43,6 +43,37 @@ def guardian_home(S):
     S.add("declined", "A declined enrollment shows the reason staff wrote.", main=f'<h1>Hi Carmen</h1><p class="text-muted">Where your children stand at Harbourview.</p>'
           + card(ul_list([list_item("Sofía Rivera · Winter Camp 2026", "Not enrolled: Camp is for ages 6 to 12.", end=badge("Not enrolled", "danger"))], card=False, label="Your children’s enrollments"), cls="card--flush") + g_footer())
     S.add("none", "A verified household with nothing enrolled or waiting.", main='<h1>Hi Carmen</h1><p class="text-muted">Where your children stand at Harbourview.</p>' + card('<p>No enrollments yet. Enroll from the link the program sends.</p>') + g_footer())
+    def portal(lang: str = "en", *, unread: int = 2, news: bool = True) -> str:
+        c = {
+            "en": dict(hi="Hi Carmen", intro="Where your children stand at Harbourview.", kids="Your children", news="Announcements",
+                       unread=f"{unread} new from Harbourview." if unread else "No new announcements.", read="Read announcements",
+                       mateo="After‑School Tutoring", sofia="After‑School Tutoring, Saturday Sports",
+                       view="See schedule, consents and progress"),
+            "es": dict(hi="Hola, Carmen", intro="Así van sus hijos en Harbourview.", kids="Sus hijos", news="Anuncios",
+                       unread=f"{unread} nuevos de Harbourview." if unread else "No hay anuncios nuevos.", read="Leer los anuncios",
+                       mateo="After‑School Tutoring", sofia="After‑School Tutoring, Saturday Sports",
+                       view="Ver horario, consentimientos y progreso"),
+            "fr": dict(hi="Bonjour Carmen", intro="Où en sont vos enfants à Harbourview.", kids="Vos enfants", news="Annonces",
+                       unread=f"{unread} nouvelles de Harbourview." if unread else "Aucune nouvelle annonce.", read="Lire les annonces",
+                       mateo="After‑School Tutoring", sofia="After‑School Tutoring, Saturday Sports",
+                       view="Voir l’horaire, les consentements et les progrès"),
+        }[lang]
+        kids = card(ul_list([list_item("Mateo Rivera", c["mateo"], href=page("guardian-child", "no-learning"), lead=f'<span class="avatar avatar--sm avatar--sky" aria-hidden="true">MR</span>'),
+                             list_item("Sofía Rivera", c["sofia"], href=page("guardian-child"), lead=f'<span class="avatar avatar--sm avatar--peach" aria-hidden="true">SR</span>')],
+                            card=False, label=c["kids"]), title=c["kids"], tid="kids", cls="card--flush", footer=c["view"])
+        ann = (card(f'<div class="stack"><p>{c["unread"]}</p><div>{btn(c["read"], "primary" if unread else "", icon_name="message", href=page("guardian-announcements", "success" if not unread else "default"))}</div></div>',
+                    title=c["news"], tid="news") if news else "")
+        return (f'<h1>{c["hi"]}</h1><p class="text-muted">{c["intro"]}</p>' + kids + ann
+                + card(ul_list([list_item("Sofía Rivera · After‑School Tutoring", "Enrolled · started Tue 8 Sep.", end=badge("Enrolled", "success"))], card=False, label="Your children’s enrollments"), cls="card--flush")
+                + g_footer())
+    S.add("portal", "The family page a verified household link opens (L2-102, L2-103): one row per child to their page of schedule, consents and progress, and Announcements with how many are new. The existing enrollment, details and pickup sections follow.",
+          main=portal(), notes=note("Announcements shows only while Messages is on; each child links to /g/home/{token}/children/{id}.", "top: 4rem; right: 1rem;"))
+    S.add("portal-es", "The family page in Spanish, Carmen’s household language (L2-027).", lang="Español", html_lang="es", main=portal("es"))
+    S.add("portal-fr", "The family page in French.", lang="Français", html_lang="fr", main=portal("fr"))
+    S.add("portal-read", "Everything read: the card says there is nothing new and the button is secondary.", main=portal(unread=0))
+    S.add("messages-off", "Messages is off: no Announcements card; nothing mentions it.", main=portal(news=False))
+    S.add("expired", "The household’s link was revoked (a new mobile number): the page says so and how to get a new one.",
+          main='<h1>This link has expired</h1>' + card(f'<div class="stack"><p>Ask Harbourview Youth Collective for a new one.</p><div>{btn("Call 905-555-0100", "primary", icon_name="phone", href="tel:+19055550100")}</div></div>') + g_footer())
     S.add("error", "The organization address is wrong or the organization closed its account.", main='<h1>We can’t find that organization</h1><p class="text-muted">Check the link, or contact the program.</p>' + btn("Try again", "primary", icon_name="refresh", size="lg"))
 
 

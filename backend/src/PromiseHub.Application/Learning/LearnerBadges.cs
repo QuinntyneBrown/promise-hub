@@ -10,12 +10,20 @@ namespace PromiseHub.Application.Learning;
 /// </summary>
 public sealed class LearnerBadges(IPromiseHubDb db, ITenantContext tenant)
 {
+    private Guid? _membership;
+
+    /// <summary>The youth whose progress is read: the caller, unless a guardian's page reads it for the youth's membership (ADR 0067).</summary>
+    private Guid MembershipId => _membership ?? tenant.MembershipId;
+
+    /// <summary>The same reads for another youth membership of the caller's organization, as the guardian portal shows them (L2-102 criterion 4).</summary>
+    public LearnerBadges ForMembership(Guid membershipId) => new(db, tenant) { _membership = membershipId };
+
     public const string ByHand = "Your program team awards it by hand.";
 
     public async Task<LearnerBadgesDto> ReadAsync(IReadOnlyList<TrackStatus> tracks, CancellationToken cancellationToken = default)
     {
         var modules = tracks.SelectMany(t => t.Modules).ToList();
-        var awards = await db.BadgeAwards.AsNoTracking().Where(a => a.MembershipId == tenant.MembershipId).ToListAsync(cancellationToken);
+        var awards = await db.BadgeAwards.AsNoTracking().Where(a => a.MembershipId == MembershipId).ToListAsync(cancellationToken);
         var held = awards.Select(a => a.BadgeId).ToHashSet();
         var badges = await db.Badges.AsNoTracking().ToListAsync(cancellationToken);
         var byId = badges.ToDictionary(b => b.Id);
@@ -42,7 +50,7 @@ public sealed class LearnerBadges(IPromiseHubDb db, ITenantContext tenant)
 
     private async Task<IReadOnlyList<MilestoneDto>> MilestonesAsync(IReadOnlyList<EarnedBadgeDto> earned, IReadOnlyList<LockedBadgeDto> locked, CancellationToken cancellationToken)
     {
-        var childId = await db.Memberships.AsNoTracking().Where(m => m.Id == tenant.MembershipId).Select(m => m.ChildId).FirstOrDefaultAsync(cancellationToken);
+        var childId = await db.Memberships.AsNoTracking().Where(m => m.Id == MembershipId).Select(m => m.ChildId).FirstOrDefaultAsync(cancellationToken);
         var joined = childId is { } child
             ? (await (from e in db.Enrollments.AsNoTracking()
                       join p in db.Programs.AsNoTracking() on e.ProgramId equals p.Id
