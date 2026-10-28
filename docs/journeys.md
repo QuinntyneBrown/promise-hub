@@ -11,6 +11,7 @@
 | Guardian | Complete a survey | Submit feedback or outcomes through a translated, verified page. | [3 days](detailed-designs/guardian/localize-guardian-pages/README.md) | 80% · [video](videos/38-complete-a-survey/README.md) |
 | Guardian | Give guardian consent for a youth | Grant or withdraw participation consent for a minor through a verified link. | [8 days](detailed-designs/guardian/manage-guardian-consent/README.md) | 100% · [video](videos/52-give-guardian-consent/README.md) |
 | Guardian | Apply or refer a youth | Submit an application or referral through the open enrollment link. | [3 days](detailed-designs/enrollment/submit-application/README.md) | 100% · [video](videos/58-apply-or-refer/README.md) |
+| Guardian | Register for a family event | Register the household and the children from the public page and get the link to show at the door. | [spec](specs/L2.md) | 0% |
 | Guardian | Use the guardian portal | See a child's progress, schedule and consents through guardian pages. | [17 days](prompts/73-use-the-guardian-portal.md) | 0% |
 | Site lead | Check children in | Open today's session and record arrivals from a phone. | [5 days](detailed-designs/attendance/check-in-and-sign-out/README.md) | 80% · [video](videos/06-check-children-in/README.md) |
 | Site lead | Sign children out | Verify pickup authority and record who collected each child. | [3 days](detailed-designs/attendance/check-in-and-sign-out/README.md) | 80% · [video](videos/08-sign-children-out/README.md) |
@@ -19,8 +20,10 @@
 | Site lead | Resolve missing slips | See who lacks consent and collect a signature on a tablet. | [3 days](detailed-designs/slips/remind-and-clear/README.md) | 75% · [video](videos/13-resolve-missing-slips/README.md) |
 | Site lead | Follow up no-shows | Review missing children and guardian responses after alerts. | [5 days](detailed-designs/attendance/alert-no-show-and-end-session/README.md) | 75% · [video](videos/22-follow-up-no-shows/README.md) |
 | Site lead | End a session | Reconcile attendance and close the day's session. | [3 days](detailed-designs/attendance/alert-no-show-and-end-session/README.md) | 85% · [video](videos/24-end-a-session/README.md) |
+| Site lead | Run a family event | Check households in and out with the adult present, register drop-ins at the door and end the night. | [spec](specs/L2.md) | 0% |
 | Site lead | Report an incident | Record what happened and submit it for supervisor review. | [3 days](detailed-designs/incidents/report-and-review-incident/README.md) | 80% · [video](videos/19-report-an-incident/README.md) |
 | Program director | Create programs and events | Set schedules, capacity, and event details for enrolled children. | [7 days](detailed-designs/programs/manage-programs/README.md) | 75% · [video](videos/05-create-programs-and-events/README.md) |
+| Program director | Create a family event | Set the audience and age band, share the drop-in link and watch households register. | [spec](specs/L2.md) | 0% |
 | Program director | Send permission slips | Write event consent, contact guardians, and monitor signatures. | [7 days](detailed-designs/slips/write-and-send-slip/README.md) | 70% · [video](videos/11-send-permission-slips/README.md) |
 | Program director | Review incidents | Examine submitted reports and record follow-up decisions. | [3 days](detailed-designs/incidents/report-and-review-incident/README.md) | 85% · [video](videos/21-review-incidents/README.md) |
 | Program director | Send guardian messages | Choose recipients, language, and channel; review delivery and failures. | [9 days](detailed-designs/messaging/compose-and-send-message/README.md) | 55% · [video](videos/10-send-guardian-messages/README.md) |
