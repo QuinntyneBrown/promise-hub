@@ -61,6 +61,8 @@
                         >{{ s.response ? 'Change RSVP' : 'RSVP' }}</ph-button
                       >
                     </div>
+                  }
+                  @if (s.status !== 'Cancelled') {
                     <ph-badge [tone]="badge(s.response).tone">{{
                       badge(s.response).label
                     }}</ph-badge>

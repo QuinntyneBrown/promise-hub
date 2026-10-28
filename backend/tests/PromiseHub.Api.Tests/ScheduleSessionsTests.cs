@@ -8,11 +8,12 @@ namespace PromiseHub.Api.Tests;
 
 // Acceptance test. Traces to: L2-093 criteria 1, 2 and 4 (Repeat weekly creates one event a week at the same local time through the program's
 // last day, a draft slip each, audited once; a start after the last day or more than 60 sessions is refused; editing changes one session;
-// creating needs ManageEvents), L2-012, L2-007, L2-032.
+// creating needs ManageEvents; Roster off answers 404; another organization's program answers 422), L2-012, L2-007, L2-032, L2-001, L2-005.
 public sealed class ScheduleSessionsTests : IAsyncLifetime
 {
     private static readonly Guid Marisol = DatabaseSeeder.MembershipId(DatabaseSeeder.Harbourview, "marisol@harbourview.example");
     private static readonly Guid Aisha = DatabaseSeeder.MembershipId(DatabaseSeeder.Harbourview, "aisha@harbourview.example");
+    private static readonly Guid Grace = DatabaseSeeder.MembershipId(DatabaseSeeder.Northgate, "grace@northgate.example");
     private static readonly Guid Tutoring = DatabaseSeeder.ProgramId(DatabaseSeeder.Harbourview, "After-School Tutoring");
 
     private readonly PromiseHubApiFactory _factory = new();
@@ -108,6 +109,26 @@ public sealed class ScheduleSessionsTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         Assert.Empty(await SeriesStarts());
+    }
+
+    [Fact]
+    public async Task With_Roster_off_a_weekly_series_answers_404_and_nothing_is_saved()
+    {
+        await _factory.ClientFor(Marisol).PutAsJsonAsync("/settings/modules", new { on = Array.Empty<string>() });
+
+        var response = await Create(Weekly("Tutoring night", "2027-06-03T20:00:00Z", "2027-06-03T22:00:00Z"));
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("0", Query("SELECT COUNT(*) FROM Events WHERE SeriesId IS NOT NULL")[0]);
+    }
+
+    [Fact]
+    public async Task Northgate_cannot_schedule_a_weekly_series_for_a_Harbourview_program()
+    {
+        var response = await _factory.ClientFor(Grace).PostAsJsonAsync("/events", Weekly("Sneaky night", "2027-06-03T20:00:00Z", "2027-06-03T22:00:00Z"));
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal("0", Query("SELECT COUNT(*) FROM Events WHERE SeriesId IS NOT NULL")[0]);
     }
 
     private static object Weekly(string name, string startsAt, string endsAt, bool repeats = true, bool slip = false, Guid? programId = null) =>
