@@ -122,6 +122,7 @@ public sealed class AssignWorkTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, (await Assign(Daniel, Body([]) with { programId = Sports })).StatusCode);
         Assert.Single(_work.Query($"SELECT Id FROM AuditEntries WHERE Action = 'AccessDenied' AND RecordType = 'Program' AND upper(RecordId) = upper('{Sports}')"));
         Assert.Equal(HttpStatusCode.NotFound, (await Assign(Daniel, Body([]) with { programId = Guid.NewGuid() })).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await Assign(Daniel, Body([]) with { programId = DatabaseSeeder.ProgramId(DatabaseSeeder.Northgate, "Kids Club") })).StatusCode);
         Assert.Empty(_work.Query("SELECT Id FROM AssignedWork"));
     }
 
