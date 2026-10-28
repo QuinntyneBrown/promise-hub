@@ -1,0 +1,31 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Receive notifications
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(shell, "Shell", "promisehub app", "bell with the unread count")
+  Component(page, "NotificationsPage", "today library", "the center")
+  Component(src, "RealtimeEvents", "api client", "one shared EventSource")
+  Component(napi, "NotificationsApi", "api client", "list, read, readAll")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(prod, "Producers", "Handlers", "AssignWork, SendDirectMessage, ComposeAnnouncement, grades, badges, flags")
+  Component(writer, "NotificationWriter", "Application", "adds notices, skips kinds turned off")
+  Component(kinds, "NotificationKinds", "Application", "kinds, modules, recipients")
+  Component(handler, "NotificationsHandler", "Application", "the caller's own notices")
+  Component(ev, "NotificationEvents", "EF Core interceptor", "tells the stream after a save")
+  Component(hub, "RealtimeHub", "Infrastructure", "subscribers by organization and membership")
+  ComponentDb(db, "PromiseHub database", "EF Core", "Notifications")
+}
+Rel(prod, writer, "NotifyMembersAsync / NotifyAsync")
+Rel(writer, db, "adds")
+Rel(db, ev, "SavedChanges")
+Rel(ev, hub, "Publish notification")
+Rel(handler, kinds, "visible kinds")
+Rel(page, napi, "list, read")
+Rel(shell, napi, "unread")
+Rel(page, src, "notification, open")
+Rel(shell, src, "notification, open")
+Rel(napi, handler, "GET /notifications")
+Rel(src, hub, "GET /realtime")
+@enduml

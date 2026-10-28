@@ -68,12 +68,14 @@ One folder per subsystem, one folder per vertically sliced feature, each with a 
 | messaging | publish-announcements | L2-105, L2-021, L2-022 |
 | messaging | exchange-messages | L2-106 |
 | messaging | safeguard-direct-messages | L2-108, L2-057 |
-| messaging | deliver-realtime-events | L2-107 |
+| messaging | deliver-realtime-events | L2-107, L2-110 |
 | reports | compute-report | L2-024 |
 | reports | export-report | L2-025 |
 | audit | record-and-search-audit | L2-032 |
 | billing | meter-plan-and-usage | L2-037 |
 | notifications | notify-in-app | L2-040 |
+| notifications | receive-notifications | L2-109, L2-110 |
+| notifications | configure-notifications | L2-111 |
 | search | search-organization | L2-039 |
 | shell | compose-navigation | L2-029, L2-038 |
 | shell | render-responsive-accessible-ui | L2-035, L2-036 |

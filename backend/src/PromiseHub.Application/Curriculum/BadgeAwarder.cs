@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PromiseHub.Application.Audit;
+using PromiseHub.Application.Notifications;
 using PromiseHub.Application.Organizations;
 using PromiseHub.Domain.Audit;
 using PromiseHub.Domain.Curriculum;
@@ -13,7 +14,7 @@ namespace PromiseHub.Application.Curriculum;
 /// its own save; it checks each automatic, not deleted badge of the organization she does not hold, and adds the award, a notification and
 /// an audit entry for each. A unique index keeps an award single when two events race.
 /// </summary>
-public sealed class BadgeAwarder(IPromiseHubDb db, ITenantContext tenant, IAuditWriter audit, TimeProvider clock)
+public sealed class BadgeAwarder(IPromiseHubDb db, ITenantContext tenant, IAuditWriter audit, TimeProvider clock, NotificationWriter notifications)
 {
     public async Task<int> AwardAsync(Guid membershipId, CancellationToken cancellationToken = default)
     {
@@ -35,7 +36,7 @@ public sealed class BadgeAwarder(IPromiseHubDb db, ITenantContext tenant, IAudit
             }
             var award = new BadgeAward(Guid.NewGuid(), tenant.OrganizationId, badge.Id, membershipId, now, null);
             db.BadgeAwards.Add(award);
-            db.Notifications.Add(new Notification(Guid.NewGuid(), tenant.OrganizationId, membershipId, "learning", $"You earned the {badge.Name} badge.", "/learning", now));
+            await notifications.NotifyMembersAsync([membershipId], "learning", $"You earned the {badge.Name} badge.", "/learning", cancellationToken);
             audit.Record(new AuditEvent(AuditAction.Created, "BadgeAward", award.Id, $"{badge.Name} earned by {name} automatically"));
             awarded++;
         }

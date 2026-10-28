@@ -1,0 +1,33 @@
+@startuml
+title UML sequence behaviour — Assigned work reaches Sofía's open center
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Youth (Sofía)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "NotificationsPage" as page
+  participant "RealtimeEvents" as src
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "AssignWorkHandler" as aw
+  participant "NotificationWriter" as writer
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  participant "NotificationEvents" as ev
+  participant "RealtimeHub" as hub
+  database "PromiseHub database" as db
+end box
+actor -> page : has /notifications open
+page -> src : events()
+aw -> writer : NotifyMembersAsync([Sofía], assignments, text, /learning) (L2-109 c1)
+writer -> db : skip if Sofía turned assignments off; add Notification
+aw -> db : SaveChanges
+db -> ev : SavedChanges: one notice added for Sofía
+ev -> hub : Publish(Harbourview, [Sofía], notification {}) (L2-110 c2)
+hub --> src : event: notification
+src --> page : notification
+page -> db : GET /notifications (her own, visible kinds only) (L2-109 c4, c5)
+page -> actor : the notice on top with New; the bell counts it (L2-110 c1)
+@enduml

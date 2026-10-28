@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 75 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="75" data-video-title="Receive notifications in real time" data-parts="Introduction|Center|Real time|Sources|Others|Stream|Choose|Phone|States|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 75</div>
+  <h1>Receive notifications in real time</h1>
+  <p class="lead">One notification center for youth, mentors and staff, live, and chosen by each person</p>
+</section>
+
+<section id="center" data-part="1" data-cue="Sofía Rivera is twelve and has a youth account at Harbourview Youth Collective." data-clip="clips/center-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Sofía’s center</h3><p>Her notices, then one arrives.</p></div>
+</section>
+
+<section id="center-shot" data-part="1" data-cue="Each row names its kind and its time">
+  <h2>Her own notices, newest first</h2>
+  <img class="shot" alt="Sofía’s notifications: an announcement, assigned work, a grade and a badge, two of them New" src="shots/desktop-center.png">
+  <p class="muted small">GET /notifications · kinds learning, assignments, messages, announcements · L2-109</p>
+</section>
+
+<section id="live" data-part="2" data-cue="While her center is open, Daniel writes to her.">
+  <h2>Live, then opened</h2>
+  <div class="cols">
+    <img class="shot" alt="New message from Daniel Osei on top with New, 3 unread, the bell at 3" src="shots/desktop-live.png">
+    <img class="shot" alt="Her conversation with Daniel opened from the notice" src="shots/desktop-opened.png">
+  </div>
+  <p class="muted small">No words in the notice · read on open · L2-110</p>
+</section>
+
+<section id="sources" data-part="3" data-cue="Three new kinds join the ones PromiseHub already had.">
+  <h2>Where notices come from</h2>
+  <table class="facts">
+    <tr><th>Kind</th><th>Raised by</th><th>Needs</th></tr>
+    <tr><td><code>assignments</code></td><td>AssignWorkHandler, to each youth account</td><td>Learning and Mentoring</td></tr>
+    <tr><td><code>messages</code></td><td>SendDirectMessageHandler, to the other participant</td><td>Messages and Mentoring</td></tr>
+    <tr><td><code>announcements</code></td><td>ComposeAnnouncementHandler, sent now</td><td>Messages</td></tr>
+    <tr><td><code>learning</code>, <code>mentoring</code>, <code>incidents</code></td><td>Grades, badges, flags, incidents</td><td>Their module</td></tr>
+  </table>
+  <p class="muted small">NotificationWriter · NotificationKinds · ADR 0069</p>
+</section>
+
+<section id="others" data-part="4" data-cue="Daniel's center has Sofía's message" data-clip="clips/others-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Daniel, then Marisol</h3><p>Each sees only their own.</p></div>
+</section>
+
+<section id="others-shots" data-part="4" data-cue="Each person sees only their own notices">
+  <h2>Mentor and director</h2>
+  <div class="cols">
+    <img class="shot" alt="Daniel’s notifications: New message from Sofía Rivera" src="shots/desktop-mentor.png">
+    <img class="shot" alt="Marisol’s notifications: Daniel Osei flagged Nadia Haddad as at risk, and an incident" src="shots/desktop-director.png">
+  </div>
+  <p class="muted small">Filtered by membership and organization · 404 for anyone else’s · L2-001</p>
+</section>
+
+<section id="stream" data-part="5" data-cue="The app keeps one event stream per tab">
+  <h2>One stream, no content</h2>
+  <table class="facts">
+    <tr><th>When</th><th>Event</th><th>Sent to</th></tr>
+    <tr><td>A save adds a notice</td><td><code>notification</code> <code>{}</code></td><td>Its recipient</td></tr>
+    <tr><td>A save reads one</td><td><code>notification</code> <code>{}</code></td><td>The reader’s other devices</td></tr>
+    <tr><td>Reconnecting</td><td><code>open</code></td><td>The bell and the page fetch again</td></tr>
+  </table>
+  <p class="muted small">NotificationEvents save interceptor · GET /realtime · one shared EventSource · L2-110</p>
+</section>
+
+<section id="choose" data-part="6" data-cue="From the center, Settings opens Notifications under Your account." data-clip="clips/preferences-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Notification preferences</h3><p>Announcements off, saved.</p></div>
+</section>
+
+<section id="choose-shots" data-part="6" data-cue="She turns announcements off and saves.">
+  <h2>Per person, per kind</h2>
+  <div class="cols three">
+    <img class="shot" alt="Sofía’s preferences: Grades and badges, Assigned work, Messages and Announcements, all on" src="shots/desktop-preferences.png">
+    <img class="shot" alt="Announcements off and Notification preferences saved" src="shots/desktop-saved.png">
+    <img class="shot" alt="Daniel’s preferences: Messages and Announcements" src="shots/desktop-mentor-preferences.png">
+  </div>
+  <p class="muted small">GET/PUT /notifications/preferences · 422 for a kind not offered · audited · L2-111</p>
+</section>
+
+<section id="phone" data-part="7" data-cue="On a phone, the center fits one column" data-clip="clips/phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>One column</h3><p>The center and the switches.</p></div>
+</section>
+
+<section id="phone-shots" data-part="7" data-cue="Here are her center and her preferences on the phone.">
+  <h2>On a phone</h2>
+  <div class="cols">
+    <img class="shot" alt="Sofía’s notifications on a phone with the new message on top" src="shots/phone-center.png">
+    <img class="shot" alt="Sofía’s notification preferences on a phone" src="shots/phone-preferences.png">
+  </div>
+</section>
+
+<section id="states" data-part="8" data-cue="Notifications are not a module; each kind follows its modules." data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>States</h3><p>Empty, error, Messages off, failed, nothing to choose.</p></div>
+</section>
+
+<section id="states-shots" data-part="8" data-cue="With nothing yet, the center says she is all caught up.">
+  <h2>Off, empty, failed</h2>
+  <div class="cols three">
+    <img class="shot" alt="With Messages off, only assigned work, the grade and the badge are listed" src="shots/desktop-messages-off.png">
+    <img class="shot" alt="With Messages off, only Grades and badges and Assigned work are offered" src="shots/desktop-preferences-off.png">
+    <img class="shot" alt="You’re all caught up" src="shots/desktop-empty.png">
+  </div>
+  <div class="cols three">
+    <img class="shot" alt="We couldn’t load notifications, with Try again" src="shots/desktop-error.png">
+    <img class="shot" alt="That didn’t go through: the switches kept" src="shots/desktop-failed.png">
+    <img class="shot" alt="Leo, a volunteer: Nothing to choose yet" src="shots/desktop-nothing.png">
+  </div>
+</section>
+
+<section id="testing" data-part="9" data-cue="The API tests cover assigned work">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>ReceiveNotificationsTests</code>: producers, kinds hidden while a module is off, nothing across people or organizations</li>
+    <li><code>RealtimeTests</code>: the notification event to the recipient only, and after a read</li>
+    <li><code>NotificationPreferencesTests</code>: offered kinds, 422, audit, one person only</li>
+    <li><code>receive-notifications</code> and <code>notification-preferences</code> specs with axe</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="10" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>One center for everyone; each kind follows its modules</li><li>A contentless event, then a permission-checked fetch</li><li>Each person chooses which kinds reach them</li></ul>
+  <p class="muted">Next: manage personal settings</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

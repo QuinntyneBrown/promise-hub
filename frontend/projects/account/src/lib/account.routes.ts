@@ -5,6 +5,7 @@ import { ForgotPasswordPage } from './forgot-password/forgot-password-page';
 import { ResetPasswordPage } from './reset-password/reset-password-page';
 import { AcceptInvitePage } from './accept-invite/accept-invite-page';
 import { MfaPage } from './mfa/mfa-page';
+import { NotificationPreferencesPage } from './notification-preferences/notification-preferences-page';
 import { OnboardPhonePage } from './onboard-phone/onboard-phone-page';
 import { OnboardReadyPage } from './onboard-ready/onboard-ready-page';
 import { SignInPage } from './sign-in/sign-in-page';
@@ -29,6 +30,11 @@ export const welcomeRoutes: Routes = [
 /** Your account, mounted by the app at /account inside the staff shell. */
 export const accountRoutes: Routes = [
   { path: '', component: AccountPage, title: 'Your account · PromiseHub' },
+  {
+    path: 'notifications',
+    component: NotificationPreferencesPage,
+    title: 'Notification preferences · PromiseHub',
+  },
 ];
 
 /** Recovering access, outside the shell: mounted at /forgot-password and /reset-password. */

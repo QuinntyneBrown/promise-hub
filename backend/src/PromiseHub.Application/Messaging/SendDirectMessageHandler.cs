@@ -1,4 +1,5 @@
 using PromiseHub.Application.Audit;
+using PromiseHub.Application.Notifications;
 using PromiseHub.Application.Organizations;
 using PromiseHub.Domain.Audit;
 using PromiseHub.Domain.Messaging;
@@ -11,7 +12,7 @@ namespace PromiseHub.Application.Messaging;
 /// (L2-107).
 /// </summary>
 public sealed class SendDirectMessageHandler(IPromiseHubDb db, ITenantContext tenant, ConversationAccess access, IAuditWriter audit, TimeProvider clock,
-    IRealtimeEvents events)
+    IRealtimeEvents events, NotificationWriter notifications)
 {
     public async Task<SendDirectMessageOutcome> HandleAsync(Guid youthId, SendDirectMessageRequest request, CancellationToken cancellationToken = default)
     {
@@ -42,6 +43,9 @@ public sealed class SendDirectMessageHandler(IPromiseHubDb db, ITenantContext te
         db.DirectMessages.Add(message);
         var (from, to) = tenant.MembershipId == mentor.Id ? (mentor.PersonName, scope.Youth.PersonName) : (scope.Youth.PersonName, mentor.PersonName);
         audit.Record(new AuditEvent(AuditAction.Created, "DirectMessage", message.Id, $"Message from {from} to {to}"));
+        // The other participant hears of it, never the words (L2-109 criterion 2).
+        var recipient = tenant.MembershipId == mentor.Id ? scope.Youth.Id : mentor.Id;
+        await notifications.NotifyMembersAsync([recipient], "messages", $"New message from {from}", $"/conversations/{scope.Youth.Id}", cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         events.Publish(tenant.OrganizationId, [scope.Youth.Id, mentor.Id], new RealtimeEvent("conversation", scope.Youth.Id));
         return new(Result.Created(message.Id), new DirectMessageDto(message.Id, body, tenant.ActorName, true, message.SentAt));

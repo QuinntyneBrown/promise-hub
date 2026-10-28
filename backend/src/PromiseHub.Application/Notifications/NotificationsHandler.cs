@@ -1,24 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using PromiseHub.Application.Organizations;
-using PromiseHub.Domain.Organizations;
 
 namespace PromiseHub.Application.Notifications;
 
 /// <summary>
 /// The caller's own notifications (L2-040). Notices of a module that is off are left out, and come back when it is on.
 /// </summary>
-public sealed class NotificationsHandler(IPromiseHubDb db, ITenantContext tenant, IModuleGate modules, TimeProvider clock)
+public sealed class NotificationsHandler(IPromiseHubDb db, ITenantContext tenant, NotificationKinds kinds, TimeProvider clock)
 {
     private const int Limit = 50;
-
-    private static readonly Dictionary<string, ModuleId> KindModule = new()
-    {
-        ["incidents"] = ModuleId.Incidents,
-        ["learning"] = ModuleId.Learning,
-        ["mentoring"] = ModuleId.Mentoring,
-        ["requests"] = ModuleId.Roster,
-        ["staff"] = ModuleId.Roster,
-    };
 
     public async Task<NotificationListDto> ListAsync(CancellationToken cancellationToken = default)
     {
@@ -56,9 +46,5 @@ public sealed class NotificationsHandler(IPromiseHubDb db, ITenantContext tenant
         return Result.Done;
     }
 
-    private async Task<HashSet<string>> VisibleAsync(CancellationToken cancellationToken)
-    {
-        var on = await modules.OnAsync(cancellationToken);
-        return [.. KindModule.Where(k => on.Contains(k.Value)).Select(k => k.Key)];
-    }
+    private Task<HashSet<string>> VisibleAsync(CancellationToken cancellationToken) => kinds.VisibleAsync(cancellationToken);
 }

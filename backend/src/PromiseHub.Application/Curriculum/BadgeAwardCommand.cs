@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PromiseHub.Application.Audit;
+using PromiseHub.Application.Notifications;
 using PromiseHub.Application.Learning;
 using PromiseHub.Application.Organizations;
 using PromiseHub.Domain.Audit;
@@ -13,7 +14,7 @@ namespace PromiseHub.Application.Curriculum;
 /// A program director awards a badge by hand (L2-085 criteria 4 to 6, ADR 0058): only a badge by hand, only to an active youth of the
 /// organization, once. The award carries her name; the youth is notified and the award audited.
 /// </summary>
-public sealed class BadgeAwardCommand(IPromiseHubDb db, ITenantContext tenant, IAuditWriter audit, TimeProvider clock)
+public sealed class BadgeAwardCommand(IPromiseHubDb db, ITenantContext tenant, IAuditWriter audit, TimeProvider clock, NotificationWriter notifications)
 {
     public async Task<Gated<Guid>> AwardAsync(Guid badgeId, AwardBadgeRequest request, CancellationToken cancellationToken = default)
     {
@@ -40,7 +41,7 @@ public sealed class BadgeAwardCommand(IPromiseHubDb db, ITenantContext tenant, I
         var now = clock.GetUtcNow();
         var award = new BadgeAward(Guid.NewGuid(), tenant.OrganizationId, badgeId, youth.Id, now, tenant.ActorName);
         db.BadgeAwards.Add(award);
-        db.Notifications.Add(new Notification(Guid.NewGuid(), tenant.OrganizationId, youth.Id, "learning", $"{tenant.ActorName} awarded you the {badge.Name} badge.", "/learning", now));
+        await notifications.NotifyMembersAsync([youth.Id], "learning", $"{tenant.ActorName} awarded you the {badge.Name} badge.", "/learning", cancellationToken);
         audit.Record(new AuditEvent(AuditAction.Created, "BadgeAward", award.Id, $"{badge.Name} awarded to {youth.PersonName} by {tenant.ActorName}"));
         try
         {

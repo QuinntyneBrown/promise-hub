@@ -7,6 +7,7 @@ import {
   AUTH_API,
   NOTIFICATIONS_API,
   PARTICIPANT_ROLES,
+  REALTIME_EVENTS,
   ROLE_LABELS,
   SESSION_API,
   Session,
@@ -57,11 +58,17 @@ export class Shell {
       ),
   );
 
-  /** The bell's unread count, read again after every navigation so it follows reads on any device. */
+  /**
+   * The bell's unread count, read again after every navigation, every read here, and every notification event or (re)connection of the
+   * stream, so a new notice or a read on another device shows without a reload (L2-110).
+   */
   protected readonly unread = toSignal(
     merge(
       this.router.events.pipe(filter((e) => e instanceof NavigationEnd)),
       this.notifications.changed,
+      inject(REALTIME_EVENTS)
+        .events()
+        .pipe(filter((e) => e.type === 'notification' || e.type === 'open')),
     ).pipe(
       startWith(null),
       switchMap(() => this.notifications.list()),

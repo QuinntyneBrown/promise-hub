@@ -1,0 +1,14 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Receive notifications
+Person(youth, "Youth", "Sofía Rivera")
+Person(mentor, "Mentor", "Daniel Osei")
+Person(staff, "Staff", "Marisol Delgado, program director")
+System(ph, "PromiseHub", "Learning, Mentoring and Messages raise notices; the center lists them")
+Rel(mentor, ph, "assigns work, writes messages")
+Rel(staff, ph, "sends announcements, reviews flags")
+Rel(ph, youth, "notices in near real time")
+Rel(ph, mentor, "notices in near real time")
+Rel(ph, staff, "notices in near real time")
+@enduml

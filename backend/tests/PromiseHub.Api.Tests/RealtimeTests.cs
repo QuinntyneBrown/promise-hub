@@ -7,7 +7,8 @@ namespace PromiseHub.Api.Tests;
 
 // Acceptance test. Traces to: L2-107 criteria 1 to 3 (the event stream of a signed-in member in the active organization, a conversation
 // event to the youth and her mentor only, an announcement event to its in-app recipients only, no words in any event, nothing across
-// organizations, anonymous 401), L2-001.
+// organizations, anonymous 401), L2-110 criteria 2 and 3 (a notification event with no content to the recipient of a new notice only, and to
+// the reader's other streams after a read), L2-001. Events of one action are matched by name, not by order (ADR 0069).
 public sealed class RealtimeTests : IAsyncLifetime
 {
     private static readonly TimeSpan Wait = TimeSpan.FromSeconds(5);
@@ -35,11 +36,10 @@ public sealed class RealtimeTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.Created, (await _factory.ClientFor(Daniel).PostAsJsonAsync($"/conversations/{Nadia}/messages", new { body = "Good luck with the interview tomorrow." })).StatusCode);
 
-        var toNadia = await nadia.NextEventAsync(Wait);
-        Assert.Equal("conversation", toNadia.Event);
+        var toNadia = await nadia.NextEventAsync("conversation", Wait);
         Assert.Equal($"{{\"youthId\":\"{Nadia}\"}}", toNadia.Data);
         Assert.DoesNotContain("interview", toNadia.Data, StringComparison.Ordinal);
-        Assert.Equal("conversation", (await daniel.NextEventAsync(Wait)).Event);
+        Assert.Equal("conversation", (await daniel.NextEventAsync("conversation", Wait)).Event);
         Assert.Null(await hana.NextEventOrNullAsync(TimeSpan.FromMilliseconds(500)));
         Assert.Null(await samuel.NextEventOrNullAsync(TimeSpan.FromMilliseconds(500)));
     }
@@ -54,12 +54,48 @@ public sealed class RealtimeTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Created, (await _factory.ClientFor(Marisol).PostAsJsonAsync("/announcements",
             new { title = "Tutoring night moves to Room 2", body = "Same time, 4:00 pm.", programId = Tutoring, audience = "Youth", sendAt = (string?)null })).StatusCode);
 
-        var toSofia = await sofia.NextEventAsync(Wait);
-        Assert.Equal("announcement", toSofia.Event);
+        var toSofia = await sofia.NextEventAsync("announcement", Wait);
         Assert.Equal("{}", toSofia.Data);
         // Nadia is enrolled in After-School Tutoring too (InitializeAsync); Lucía is at Northgate.
-        Assert.Equal("announcement", (await nadia.NextEventAsync(Wait)).Event);
+        Assert.Equal("announcement", (await nadia.NextEventAsync("announcement", Wait)).Event);
         Assert.Null(await lucia.NextEventOrNullAsync(TimeSpan.FromMilliseconds(500)));
+    }
+
+    [Fact]
+    public async Task A_new_notice_sends_a_notification_event_with_no_content_to_its_recipient_only()
+    {
+        var nadia = await Listen(Nadia);
+        var daniel = await Listen(Daniel);
+        var hana = await Listen(Hana);
+        var samuel = await Listen(Samuel);
+
+        await _factory.ClientFor(Daniel).PostAsJsonAsync($"/conversations/{Nadia}/messages", new { body = "Good luck with the interview tomorrow." });
+
+        var toNadia = await nadia.NextEventAsync("notification", Wait);
+        Assert.Equal("{}", toNadia.Data);
+        Assert.Null(await daniel.NextEventOrNullAsync("notification", TimeSpan.FromMilliseconds(500)));
+        Assert.Null(await hana.NextEventOrNullAsync(TimeSpan.FromMilliseconds(300)));
+        Assert.Null(await samuel.NextEventOrNullAsync(TimeSpan.FromMilliseconds(300)));
+    }
+
+    [Fact]
+    public async Task Reading_a_notice_tells_the_readers_other_open_streams()
+    {
+        await _factory.ClientFor(Daniel).PostAsJsonAsync($"/conversations/{Nadia}/messages", new { body = "See you Thursday." });
+        var phone = await Listen(Nadia);
+        var laptop = await Listen(Nadia);
+        var daniel = await Listen(Daniel);
+        var list = await _factory.ClientFor(Nadia).GetFromJsonAsync<System.Text.Json.JsonElement>("/notifications");
+        var id = list.GetProperty("items")[0].GetProperty("id").GetGuid();
+
+        Assert.Equal(HttpStatusCode.NoContent, (await _factory.ClientFor(Nadia).PostAsync($"/notifications/{id}/read", null)).StatusCode);
+
+        Assert.Equal("{}", (await laptop.NextEventAsync("notification", Wait)).Data);
+        Assert.Equal("{}", (await phone.NextEventAsync("notification", Wait)).Data);
+        Assert.Null(await daniel.NextEventOrNullAsync(TimeSpan.FromMilliseconds(300)));
+
+        Assert.Equal(HttpStatusCode.NoContent, (await _factory.ClientFor(Nadia).PostAsync("/notifications/read-all", null)).StatusCode);
+        Assert.Null(await laptop.NextEventOrNullAsync("notification", TimeSpan.FromMilliseconds(500)));
     }
 
     [Fact]
@@ -120,6 +156,28 @@ public sealed class RealtimeTests : IAsyncLifetime
 
         public async Task<(string Event, string Data)> NextEventAsync(TimeSpan wait) =>
             await NextEventOrNullAsync(wait) ?? throw new TimeoutException("No event arrived.");
+
+        /// <summary>The next event of that name; events of other names on the way are skipped.</summary>
+        public async Task<(string Event, string Data)> NextEventAsync(string name, TimeSpan wait) =>
+            await NextEventOrNullAsync(name, wait) ?? throw new TimeoutException($"No {name} event arrived.");
+
+        public async Task<(string Event, string Data)?> NextEventOrNullAsync(string name, TimeSpan wait)
+        {
+            var until = DateTime.UtcNow + wait;
+            while (DateTime.UtcNow < until)
+            {
+                var next = await NextEventOrNullAsync(until - DateTime.UtcNow);
+                if (next is null)
+                {
+                    return null;
+                }
+                if (next.Value.Event == name)
+                {
+                    return next;
+                }
+            }
+            return null;
+        }
 
         public async Task<(string Event, string Data)?> NextEventOrNullAsync(TimeSpan wait)
         {

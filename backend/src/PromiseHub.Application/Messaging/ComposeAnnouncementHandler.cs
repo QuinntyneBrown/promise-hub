@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PromiseHub.Application.Audit;
+using PromiseHub.Application.Notifications;
 using PromiseHub.Application.Organizations;
 using PromiseHub.Domain.Audit;
 using PromiseHub.Domain.Messaging;
@@ -12,7 +13,7 @@ namespace PromiseHub.Application.Messaging;
 /// audits it. When it is sent now, its in-app recipients' open streams are told (L2-107).
 /// </summary>
 public sealed class ComposeAnnouncementHandler(IPromiseHubDb db, ITenantContext tenant, TimeProvider clock, IAuditWriter audit,
-    AudienceResolver resolver, MessageWriter writer, AnnouncementRecipients recipients, IRealtimeEvents events)
+    AudienceResolver resolver, MessageWriter writer, AnnouncementRecipients recipients, IRealtimeEvents events, NotificationWriter notifications)
 {
     public async Task<Result> HandleAsync(ComposeAnnouncementRequest request, CancellationToken cancellationToken = default)
     {
@@ -74,10 +75,13 @@ public sealed class ComposeAnnouncementHandler(IPromiseHubDb db, ITenantContext 
         }
         audit.Record(new AuditEvent(AuditAction.Created, "Announcement", announcement.Id,
             $"{title} · {programName ?? "All programs"} · {announcement.Audience}"));
+        // Sent now: its in-app recipients get a notice (L2-109 criterion 3) and their open streams an event (L2-107).
+        var members = announcement.SendAt <= now ? await recipients.MembersAsync(announcement, cancellationToken) : [];
+        await notifications.NotifyMembersAsync(members, "announcements", $"{tenant.ActorName} posted an announcement: {title}", "/announcements", cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        if (announcement.SendAt <= now)
+        if (members.Count > 0)
         {
-            events.Publish(tenant.OrganizationId, await recipients.MembersAsync(announcement, cancellationToken), new RealtimeEvent("announcement"));
+            events.Publish(tenant.OrganizationId, members, new RealtimeEvent("announcement"));
         }
         return Result.Created(announcement.Id);
     }

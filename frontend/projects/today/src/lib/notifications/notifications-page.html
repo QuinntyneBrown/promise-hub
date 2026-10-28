@@ -5,6 +5,7 @@
     @if (l.unread) {
       <ph-button (click)="markAllRead()">Mark all read</ph-button>
     }
+    <ph-button variant="ghost" icon="settings" link="/account/notifications">Settings</ph-button>
   </ph-page-header>
   @if (l.items.length) {
     <ph-card [flush]="true">
@@ -16,7 +17,11 @@
             [muted]="!!n.readAt"
             [link]="n.link"
             (click)="opened(n)"
-          />
+          >
+            @if (!n.readAt) {
+              <ph-badge tone="info">New</ph-badge>
+            }
+          </ph-list-item>
         }
       </ph-list>
     </ph-card>

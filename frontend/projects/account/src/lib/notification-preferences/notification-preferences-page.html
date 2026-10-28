@@ -1,0 +1,61 @@
+<ph-breadcrumb [items]="crumbs" />
+<ph-page-header
+  title="Notifications"
+  subtitle="Choose what reaches you in the app. You still see everything in the center you chose to get."
+/>
+@switch (state()) {
+  @case ('loading') {
+    <div aria-busy="true" aria-label="Loading your notification preferences">
+      <ph-skeleton shape="card" />
+    </div>
+  }
+  @case ('error') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load your notification preferences"
+        text="Try again."
+      >
+        <ph-button variant="primary" (click)="load()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @default {
+    @if (kinds().length) {
+      <form class="stack" novalidate (ngSubmit)="save()">
+        @if (failed()) {
+          <ph-alert
+            tone="danger"
+            title="That didn’t go through"
+            text="Your preferences are unchanged. Try again."
+          />
+        }
+        <ph-card title="What we notify you about">
+          <div class="stack">
+            @for (k of kinds(); track k.key) {
+              <ph-switch
+                [label]="k.name"
+                [description]="k.hint"
+                [name]="k.key"
+                [ngModel]="k.inApp"
+                (ngModelChange)="change(k.key, $event)"
+              />
+            }
+          </div>
+        </ph-card>
+        <div>
+          <ph-button variant="primary" type="submit" [busy]="saving()">Save changes</ph-button>
+        </div>
+      </form>
+    } @else {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="notifications"
+          title="Nothing to choose yet"
+          text="Notifications for your role arrive in the center. There are no choices to make for them."
+        />
+      </ph-card>
+    }
+  }
+}
