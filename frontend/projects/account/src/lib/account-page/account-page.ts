@@ -12,10 +12,11 @@ import {
   PhSkeleton,
   ToastService,
 } from '@promisehub/components';
+import { ChangePasswordDialog } from '../change-password-dialog/change-password-dialog';
 import { RecoveryCodesDialog } from '../recovery-codes-dialog/recovery-codes-dialog';
 import { SignOutAllDialog } from '../sign-out-all-dialog/sign-out-all-dialog';
 
-/** Your account (mock: account): profile, two-step sign-in with recovery codes, and signing out other devices. */
+/** Your account (mock: account): the hub of personal settings: profile, password, display, two-step sign-in, notifications and devices. */
 @Component({
   selector: 'ph-account-page',
   imports: [PhBadge, PhButton, PhCard, PhDescriptionList, PhEmptyState, PhPageHeader, PhSkeleton],
@@ -59,6 +60,19 @@ export class AccountPage {
     this.dialogs
       .open<boolean, void, RecoveryCodesDialog>(RecoveryCodesDialog)
       .closed.subscribe(() => this.load());
+  }
+
+  protected changePassword(): void {
+    this.dialogs
+      .open<boolean, void, ChangePasswordDialog>(ChangePasswordDialog)
+      .closed.subscribe((done) => {
+        if (done)
+          this.toasts.show({
+            tone: 'success',
+            title: 'Password changed',
+            text: 'Your other devices were signed out.',
+          });
+      });
   }
 
   protected signOutOthers(): void {

@@ -664,6 +664,8 @@ export class FakeApi {
   private recoveryCodes = new Map<string, number>();
   /** Saved profiles by membership (L2-117); a membership without one shows its seeded name. */
   private readonly profiles = new Map<string, { name: string; mobile: string | null }>();
+  /** Passwords changed by their owner (L2-118), by email; everyone else signs in with the seeded one. */
+  private readonly passwords = new Map<string, string>();
   signedOutOthers = false;
   /** The audit log as the API keeps it: organization, when, who, action, record type and summary. */
   private auditEntries: {
@@ -2163,6 +2165,7 @@ export class FakeApi {
     ],
     ["GET", /^\/api\/me\/account$/, (route) => this.account(route)],
     ["PUT", /^\/api\/me\/profile$/, (route) => this.saveProfile(route)],
+    ["POST", /^\/api\/me\/password$/, (route) => this.changePassword(route)],
     [
       "POST",
       /^\/api\/me\/recovery-codes$/,
@@ -4851,7 +4854,7 @@ export class FakeApi {
     // The right password with every membership removed: told only now, never for a wrong password (L2-050).
     if (
       !membership &&
-      password === seededPassword &&
+      password === this.passwordOf(key) &&
       memberships.some((m) => m.email === key)
     ) {
       return route.fulfill({
@@ -4859,7 +4862,7 @@ export class FakeApi {
         json: { code: "account-deactivated" },
       });
     }
-    if (!membership || password !== seededPassword) {
+    if (!membership || password !== this.passwordOf(key)) {
       this.failSignIn(key, 1);
       return route.fulfill({
         status: 401,
@@ -5320,6 +5323,46 @@ export class FakeApi {
       action: "Updated",
       record: "Membership",
       summary: `${name} updated their profile`,
+      device: null,
+    });
+    return route.fulfill({ status: 204 });
+  }
+
+  /** The password an address signs in with now (L2-118). */
+  passwordOf(email: string): string {
+    return this.passwords.get(email) ?? seededPassword;
+  }
+
+  /** Mirrors backend ChangePasswordHandler: the current password, the policy, the repeat; other devices signed out; audited. */
+  private async changePassword(route: Route): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    const b = route.request().postDataJSON() as {
+      current?: string;
+      password?: string;
+      repeat?: string;
+    };
+    if (b.current !== this.passwordOf(m.email))
+      return route.fulfill({
+        status: 422,
+        json: { errors: { current: "That isn’t your current password." } },
+      });
+    const errors: Record<string, string> = {};
+    const weak = passwordProblem(b.password, m.email);
+    if (weak) errors["password"] = weak;
+    if (b.repeat !== b.password)
+      errors["repeat"] = "The two passwords don’t match.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
+    this.passwords.set(m.email, b.password!);
+    this.signedOutOthers = true;
+    this.auditEntries.push({
+      organizationId: m.organizationId,
+      when: NOW.toISOString(),
+      who: this.profileOf(m.id).name,
+      action: "Updated",
+      record: "StaffUser",
+      summary: `${this.profileOf(m.id).name} changed their password`,
       device: null,
     });
     return route.fulfill({ status: 204 });

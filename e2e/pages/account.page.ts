@@ -36,6 +36,23 @@ export class AccountPage extends BasePage {
     await this.page.getByRole('link', { name: 'Choose notifications' }).click();
   }
 
+  /** Opens the change-password dialog and fills it; `submit` presses Change password. */
+  async changePassword(current: string, password: string, repeat = password): Promise<void> {
+    await this.page.getByRole('button', { name: 'Change password' }).click();
+    await this.dialog.getByLabel('Current password').fill(current);
+    await this.dialog.getByLabel('New password').fill(password);
+    await this.dialog.getByLabel('Repeat it').fill(repeat);
+    await this.dialog.getByRole('button', { name: 'Change password' }).click();
+  }
+
+  passwordError(field: 'current' | 'password' | 'repeat'): Locator {
+    return this.dialog.locator(`#${field}-error`);
+  }
+
+  get passwordFailed(): Locator {
+    return this.dialog.getByRole('alert').filter({ hasText: 'That didn’t go through' });
+  }
+
   get dialog(): Locator {
     return this.page.getByRole('dialog');
   }

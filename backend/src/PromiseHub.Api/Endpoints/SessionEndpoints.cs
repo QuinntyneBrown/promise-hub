@@ -1,3 +1,4 @@
+using PromiseHub.Application;
 using PromiseHub.Api.Authorization;
 using PromiseHub.Application.Identity;
 using PromiseHub.Api.Authentication;
@@ -27,6 +28,20 @@ public static class SessionEndpoints
             }
             await SessionCookie.ReissueAsync(http, Guid.Parse(http.User.FindFirst(AuthSchemes.MembershipClaim)!.Value));
             return Results.NoContent();
+        });
+        app.MapPost("/me/password", async (ChangePasswordRequest request, ChangePasswordHandler handler, HttpContext http, CancellationToken ct) =>
+        {
+            if (!Guid.TryParse(http.User.FindFirst(AuthSchemes.UserClaim)?.Value, out var userId))
+            {
+                return Results.NotFound();
+            }
+            var result = await handler.ChangeAsync(userId, request, ct);
+            if (result.Status == ResultStatus.Done)
+            {
+                // This device carries on with the new session version; every other session ends (L2-118).
+                await SessionCookie.ReissueAsync(http, Guid.Parse(http.User.FindFirst(AuthSchemes.MembershipClaim)!.Value));
+            }
+            return result.ToHttp();
         });
         app.MapGet("/me/organizations", (SwitchOrganizationHandler handler, CancellationToken ct) => handler.ListAsync(ct));
         app.MapPost("/me/organization", async (SwitchOrganizationCommand command, SwitchOrganizationHandler handler, HttpContext http, CancellationToken ct) =>

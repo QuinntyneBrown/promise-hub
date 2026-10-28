@@ -10,6 +10,8 @@ export interface AccountApi {
   newRecoveryCodes(): Observable<LoadResult<{ codes: string[] }>>;
   /** Saves the name and mobile of the active membership (L2-117); an empty mobile clears it. */
   saveProfile(name: string, mobile: string): Observable<WriteOutcome>;
+  /** Changes the password by proving the current one (L2-118); every other session ends, this one stays. */
+  changePassword(current: string, password: string, repeat: string): Observable<WriteOutcome>;
   /** Ends every other session; this one stays signed in. */
   signOutOthers(): Observable<WriteOutcome>;
 }

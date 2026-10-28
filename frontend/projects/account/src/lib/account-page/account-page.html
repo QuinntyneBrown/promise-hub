@@ -11,6 +11,16 @@
         </div>
       </div>
     </ph-card>
+    <ph-card title="Password">
+      <div class="stack">
+        <p class="muted">Change it any time. Your other devices are signed out when you do.</p>
+        <div>
+          <ph-button icon="lock" hasPopup="dialog" (click)="changePassword()"
+            >Change password</ph-button
+          >
+        </div>
+      </div>
+    </ph-card>
     <ph-card title="Two-step sign-in">
       <div class="stack">
         <div class="row">

@@ -25,6 +25,12 @@ export class HttpAccountApi implements AccountApi {
     return toWrite(this.http.put<null>(`${this.baseUrl}/me/profile`, { name, mobile }));
   }
 
+  changePassword(current: string, password: string, repeat: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(`${this.baseUrl}/me/password`, { current, password, repeat }),
+    );
+  }
+
   signOutOthers(): Observable<WriteOutcome> {
     return toWrite(this.http.post<null>(`${this.baseUrl}/me/sign-out-others`, null));
   }
