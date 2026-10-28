@@ -101,6 +101,7 @@ One folder per subsystem, one folder per vertically sliced feature, each with a 
 | mentoring | approve-quiz-assessments | L2-081, L2-065 |
 | mentoring | assess-competencies | L2-082, L2-065 |
 | mentoring | record-mentor-check-ins | L2-090, L2-065, L2-007, L2-032 |
+| mentoring | manage-at-risk-flags | L2-091, L2-065, L2-040, L2-032, L2-023, L2-007 |
 | identity | scope-data-by-role | L2-065, L2-007 |
 | website | serve-public-site (journey 81 adds more; see [website](website/README.md)) | L2-005 |
 

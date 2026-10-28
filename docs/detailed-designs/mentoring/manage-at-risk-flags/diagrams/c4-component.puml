@@ -1,0 +1,37 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Manage at-risk flags
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "AtRiskFlagsPage", "Angular page", "/mentoring/flags")
+  Component(raise, "RaiseFlagDialog", "CDK Dialog", "raise a flag")
+  Component(resolve, "ResolveFlagDialog", "CDK Dialog", "resolve a flag")
+  Component(dash, "MentorDashboardPage", "Angular page", "At-risk flags link")
+  Component(nav, "Shell navigation", "Angular", "More: At-risk flags for flag readers")
+  Component(mapi, "MentoringApi", "Contract + HTTP client", "MENTORING_API")
+  Component(lib, "Components library", "Angular", "ph-dialog, ph-tabs, ph-list, ph-badge, ph-select, ph-radio-group, ph-textarea, ph-alert")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "MentoringEndpoints", "Minimal API", "GET and POST /mentoring/flags, POST /mentoring/flags/{id}/resolve")
+  Component(h, "AtRiskFlagsHandler", "Handler", "role, scope, validation, save, audit, notify")
+  Component(scope, "MentorScope", "Service", "the mentor's youth")
+  Component(nw, "NotificationWriter", "Service", "one notification per flag reader")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "AtRiskFlags, Children, Memberships, Notifications, AuditEntries")
+}
+Rel(page, raise, "opens")
+Rel(page, resolve, "opens")
+Rel(dash, page, "links")
+Rel(nav, page, "links")
+Rel(page, mapi, "loads flags")
+Rel(raise, mapi, "raises")
+Rel(resolve, mapi, "resolves")
+Rel(page, lib, "composes")
+Rel(raise, lib, "composes")
+Rel(resolve, lib, "composes")
+Rel(mapi, ep, "JSON/HTTPS")
+Rel(ep, h, "calls")
+Rel(h, scope, "uses")
+Rel(h, nw, "uses")
+Rel(h, db, "reads and writes")
+Rel(nw, db, "writes")
+@enduml

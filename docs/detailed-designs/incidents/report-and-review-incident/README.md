@@ -22,6 +22,8 @@ The Incident log module gates every page and endpoint here (`L2-005`).
 
 Slice 19 delivered `NewIncidentPage`, `IncidentsPage` (the log for supervisors, the forbidden state with your reports for everyone else) and `IncidentPage`, `INCIDENTS_API`, `GET /incidents`, `GET /incidents/form`, `GET /incidents/{id}` (each view audited), `POST /incidents` with email to the program directors, and the `Incident` entity (ADR 0021). Slice 20 added acceptance tests for youth workers and volunteer coordinators reporting and never reading others' reports. Slice 21 delivered `ReviewIncidentDialog`, `AddFollowUpDialog`, `ReopenIncidentDialog`, the review alert, follow-ups and trail on `IncidentPage` with the new library `ph-timeline`, and the review, notes and reopen endpoints. Drafts, several children and restricted names are not built yet.
 
+An at-risk flag (`mentoring/manage-at-risk-flags`, `L2-091`, ADR 0062) is not an incident: it records a worry, not something that happened. While the Incident log is on, each open flag offers admins and program directors Report an incident, which opens `NewIncidentPage` at `/incidents/new` unchanged; nothing links there while the module is off. Mentors are a participant role and do not report incidents. Prefilling the form with the flagged child is deferred.
+
 ## Description
 
 ### Frontend (`frontend/projects/incidents/`)

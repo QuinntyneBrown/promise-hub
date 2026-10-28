@@ -8,7 +8,8 @@ namespace PromiseHub.Api.Endpoints;
 
 /// <summary>
 /// The mentor's own pages (L2-063 to L2-065, ADR 0049): Mentoring on, Mentor role only, every read scoped by <see cref="MentorScope"/>.
-/// Reviews, grading, quiz approval and shared reflections also need Learning (L2-080, L2-081, L2-089, ADR 0057, ADR 0060).
+/// Reviews, grading, quiz approval and shared reflections also need Learning (L2-080, L2-081, L2-089, ADR 0057, ADR 0060). At-risk flags are
+/// also read and resolved by admins and program directors (L2-091, ADR 0062).
 /// </summary>
 public static class MentoringEndpoints
 {
@@ -47,6 +48,12 @@ public static class MentoringEndpoints
             var (result, checkIn) = await handler.LogAsync(request, ct);
             return checkIn is not null ? Results.Created($"/mentoring/check-ins/{checkIn.Id}", checkIn) : result.ToHttp();
         });
+        var flags = app.MapGroup("/mentoring/flags").RequireModule(ModuleId.Mentoring).RequireAnyPermission(Permission.MentorYouth, Permission.ReviewAtRiskFlags);
+        flags.MapGet("", (string? status, AtRiskFlagsHandler handler, CancellationToken ct) => handler.ListAsync(status, ct));
+        flags.MapPost("", async (RaiseFlagRequest request, AtRiskFlagsHandler handler, CancellationToken ct) =>
+            Written(await handler.RaiseAsync(request, ct), flag => Results.Created($"/mentoring/flags/{flag.Id}", flag)));
+        flags.MapPost("/{id:guid}/resolve", async (Guid id, ResolveFlagRequest request, AtRiskFlagsHandler handler, CancellationToken ct) =>
+            Written(await handler.ResolveAsync(id, request, ct), Results.Ok));
         var reviews = mentoring.MapGroup("").RequireModule(ModuleId.Learning);
         reviews.MapGet("/reviews", (ReviewQueueHandler handler, CancellationToken ct) => handler.HandleAsync(ct));
         reviews.MapGet("/submissions/{id:guid}", async (Guid id, SubmissionReviewHandler handler, CancellationToken ct) => (await handler.HandleAsync(id, ct)).ToHttp());
@@ -68,4 +75,10 @@ public static class MentoringEndpoints
             (await handler.ApproveAsync(id, request, ct)).ToHttp());
         return app;
     }
+
+    /// <summary>A written flag answers through <paramref name="written"/>; a conflict answers 409 with its code (ADR 0062).</summary>
+    private static IResult Written(FlagWriteResult result, Func<AtRiskFlagDto, IResult> written) =>
+        result.Flag is { } flag ? written(flag)
+        : result.Code is { } code ? Results.Json(new { code }, contentType: "application/problem+json", statusCode: StatusCodes.Status409Conflict)
+        : result.Result.ToHttp();
 }

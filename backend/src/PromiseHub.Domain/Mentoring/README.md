@@ -8,4 +8,4 @@ Domain types for the Mentoring module: mentor assignments, mentor check-ins, at-
 - `Competency`, `CompetencyAssessment`, `CompetencyLevel` — competencies a mentor assesses (prompt 63, ADR 0057).
 - `MentorCheckIn`, `MentorCheckInKind`, `MentorCheckInEngagement` — a mentor's record of one conversation with a youth, read only by its author (prompt 67, ADR 0061).
 
-At-risk flags arrive with prompt 68.
+- `AtRiskFlag`, `AtRiskFlagSeverity`, `AtRiskFlagOutcome` — a mentor's worry about one of his youth, open until a mentor of the youth, an admin or a program director resolves it with an outcome (prompt 68, ADR 0062).

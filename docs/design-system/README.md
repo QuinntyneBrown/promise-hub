@@ -67,7 +67,7 @@ Edit tokens and shared component CSS first. Edit catalogue metadata and generato
 | [Divider](components/divider.html) | Separate alternatives with text or draw a decorative rule. |
 | [Container, grid and stack](components/container-grid-stack.html) | Compose consistent pages through shared columns, gutters and vertical rhythm. |
 | [Table](components/table.html) | Compare records through captioned columns with reachable row actions. |
-| [List](components/list.html) | Scan related records with one clear primary link per item. A row may carry a paragraph of text (.list__text) under its meta, as for a youth's shared reflection. |
+| [List](components/list.html) | Scan related records with one clear primary link per item. A row may carry a paragraph of text (.list__text) under its meta, as for a youth's shared reflection, and a cluster of buttons under it for a row without a link, as on an at-risk flag. |
 | [Description list](components/description-list.html) | Present labelled facts, such as contact details and approved pickups. |
 | [Avatar](components/avatar.html) | Identify a person by initials or image alongside their written name. |
 | [Badge](components/badge.html) | Express a named status, role or meaningful count without relying on colour alone. |
@@ -146,6 +146,7 @@ Edit tokens and shared component CSS first. Edit catalogue metadata and generato
 | Badges and progression mocks (prompt 64) | The badge builder needed a medal youth earn, and the inherited .achievement selectors are emoji-based and unused | Added achievement-badge (earned, locked, small) built from the icon set, accent and border tokens; added the award and heart icons. Stages and competencies reuse card, list and button. No token changed. |
 | Journey and progress mocks (prompt 65) | The youth journey and badges pages list several medals together, and no list wrapped achievement badges | Added the achievement-badge collection (.achievement-badges, a labelled list grid) and the --layout-medal-min token (8rem) for its column; streak, stage and progress reuse stat, list, tabs, table and progress-bar. |
 | Mentor check-in mocks (prompt 67) | The mentor check-in dialog, history and Follow-ups card needed no new component | The dialog composes select, text-field (date), radio-group (how you met, how it went), textarea, switch and checkbox with error-summary; the history and the record use list with the text variant and a trailing badge (Shared or Private); filters use select. Sources regenerated. No token changed. |
+| At-risk flag mocks (prompt 68) | The at-risk flags page and the raise and resolve dialogs needed no new component | Each flag is a list item with the text variant, a trailing badge for how serious it is (danger High, warning Medium, neutral Low) and a cluster of buttons; Open and Resolved are tabs; the raise dialog composes select, radio-group with hints, textarea with a count, an info alert and error-summary; the resolve dialog composes description-list, radio-group and textarea. Sources regenerated. No token changed. |
 | Inherited component CSS | Includes historical selectors unused by PromiseHub | Retained for compatibility; catalogue scope is the PromiseHub evidence plus the core set. Do not interpret unused inherited selectors as implemented product features. |
 
 ## Verification

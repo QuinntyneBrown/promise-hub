@@ -65,7 +65,7 @@
 | Mentor | Use the mentor dashboard | See the roster of assigned youth and each youth's record. | [7 days](detailed-designs/mentoring/manage-mentor-roster/README.md) | 100% · [video](videos/55-use-the-mentor-dashboard/README.md) |
 | Mentor | Grade and assess | Grade submissions, approve quiz results and assess competencies. | [13 days](detailed-designs/mentoring/grade-submissions/README.md) | 100% · [video](videos/63-grade-and-assess/README.md) |
 | Mentor | Record mentor check-ins | Log check-ins with assigned youth. | [5 days](detailed-designs/mentoring/record-mentor-check-ins/README.md) | 100% · [video](videos/67-record-mentor-check-ins/README.md) |
-| Mentor | Flag at-risk youth | Raise, act on and resolve at-risk concerns. | [5 days](prompts/68-flag-at-risk-youth.md) | 0% |
+| Mentor | Flag at-risk youth | Raise, act on and resolve at-risk concerns. | [5 days](detailed-designs/mentoring/manage-at-risk-flags/README.md) | 100% · [video](videos/68-flag-at-risk-youth/README.md) |
 | Mentor | Assign work | Assign lessons, modules or projects to youth or a cohort. | [4 days](prompts/69-assign-work.md) | 0% |
 | Mentor | Take attendance for cohort sessions | Record cohort session attendance in Roll Call, including offline. | [7 days](prompts/71-take-attendance-for-cohort-sessions.md) | 0% |
 | Volunteer | Use the volunteer portal | See assigned sessions and today's schedule and take attendance. | [12 days](prompts/72-use-the-volunteer-portal.md) | 0% |

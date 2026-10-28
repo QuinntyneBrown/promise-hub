@@ -1,0 +1,54 @@
+@startuml
+title UML sequence behaviour — Reading and resolving at-risk flags
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Mentor or program director" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "AtRiskFlagsPage" as page
+  participant "ResolveFlagDialog" as dlg
+  participant "MentoringApi" as mapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "MentoringEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "AtRiskFlagsHandler" as h
+  participant "MentorScope" as scope
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : open At-risk flags
+page -> mapi : flags(Open)
+mapi -> ep : GET /mentoring/flags?status=Open
+ep -> h : ListAsync
+alt mentor
+  h -> scope : YouthIdsAsync
+  h -> db : flags on youth in his scope (L2-091 c4)
+else admin or program director
+  h -> db : every flag of the organization (c4)
+end
+h --> page : items High to Low then newest, counts, canRaise
+page --> actor : Open list; Report an incident while the Incident log is on (c7)
+actor -> dlg : Resolve, choose the outcome
+dlg -> mapi : resolveFlag(id, body)
+mapi -> ep : POST /mentoring/flags/{id}/resolve
+ep -> h : ResolveAsync
+alt flag of another organization or unknown
+  h --> dlg : 404
+else mentor outside the youth's scope
+  h -> db : audit AccessDenied on Child
+  h --> dlg : 403 (c8)
+else no outcome
+  h --> dlg : 422 (c5)
+else already resolved
+  h --> dlg : 409 already-resolved (c5)
+else
+  h -> db : resolve; audit Updated with the outcome, no note (c6)
+  h --> dlg : 200 flag
+  dlg --> page : reload; the flag moves to Resolved
+end
+@enduml

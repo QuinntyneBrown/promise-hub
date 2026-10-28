@@ -59,6 +59,8 @@ Sources that publish in phase 1: `incidents/report-and-review-incident` (inciden
 
 Slice 35 delivered `Notification`, `NotificationWriter` (incident reports notify reviewers), `GET /notifications` with read and read-all, module-hidden kinds, the bell's unread count in the shell and the notification center at `/notifications` (ADR 0029). The bell panel, other producers, digests and push are not built.
 
+Prompt 68 added the `mentoring` kind: raising an at-risk flag (`mentoring/manage-at-risk-flags`, `L2-091`) notifies every holder of `ReviewAtRiskFlags` (admins and program directors) through `NotificationWriter`, linking to `/mentoring/flags`, without the reason. `NotificationsHandler` maps `mentoring` to the Mentoring module, so those notices are hidden while it is off and come back when it is on.
+
 Slice 36 added `NotificationSettings` with `GET`/`PUT /settings/notifications`, the no-show delay, supervisor incident emails and the SMS cap honoured by the jobs, and `SettingsNotificationsPage` (ADR 0030).
 
 ## Requirements

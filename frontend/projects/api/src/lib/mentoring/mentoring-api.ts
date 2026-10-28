@@ -18,6 +18,10 @@ import type { SubmissionReview } from './submission-review';
 import type { LogMentorCheckIn } from './log-mentor-check-in';
 import type { MentorCheckInFilter } from './mentor-check-in-filter';
 import type { MentorCheckInHistory } from './mentor-check-in-history';
+import type { AtRiskFlags } from './at-risk-flags';
+import type { RaiseAtRiskFlag } from './raise-at-risk-flag';
+import type { FlagOutcome } from './flag-outcome';
+import type { ResolveAtRiskFlag } from './resolve-at-risk-flag';
 
 /** Mentoring (ADR 0043, ADR 0048): the calling mentor’s youth, and a cohort’s mentors set by program directors. */
 export interface MentoringApi {
@@ -46,6 +50,12 @@ export interface MentoringApi {
   checkIns(filter?: MentorCheckInFilter): Observable<LoadResult<MentorCheckInHistory>>;
   /** Logs a mentor check-in for one of the caller's youth; invalid carries one message per field (L2-090). */
   logCheckIn(body: LogMentorCheckIn): Observable<WriteOutcome>;
+  /** The at-risk flags the caller reads, open or resolved (L2-091 criterion 4); forbidden for roles that read none. */
+  flags(status: 'Open' | 'Resolved'): Observable<LoadResult<AtRiskFlags>>;
+  /** Raises an at-risk flag on one of the caller's youth; invalid carries one message per field, already-flagged a second open flag. */
+  raiseFlag(body: RaiseAtRiskFlag): Observable<FlagOutcome>;
+  /** Resolves an open flag with an outcome; invalid carries one message per field, already-resolved a flag resolved meanwhile. */
+  resolveFlag(id: string, body: ResolveAtRiskFlag): Observable<FlagOutcome>;
   /** One of the caller's youth's competencies; forbidden when the youth is not theirs. */
   competencies(childId: string): Observable<LoadResult<CompetencySheet>>;
   /** Saves every competency's level and note; only changed ones become new assessments. */

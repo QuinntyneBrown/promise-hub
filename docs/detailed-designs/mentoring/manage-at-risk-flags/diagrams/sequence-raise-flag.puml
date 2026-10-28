@@ -1,0 +1,54 @@
+@startuml
+title UML sequence behaviour — Raising an at-risk flag
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Mentor (Daniel)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "RaiseFlagDialog" as dlg
+  participant "MentoringApi" as mapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "MentoringEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "AtRiskFlagsHandler" as h
+  participant "MentorScope" as scope
+  participant "NotificationWriter" as nw
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> dlg : Raise flag
+dlg -> mapi : raiseFlag(body)
+mapi -> ep : POST /mentoring/flags
+alt Mentoring off
+  ep --> dlg : 404 (L2-091 c8)
+else neither MentorYouth nor ReviewAtRiskFlags
+  ep --> dlg : 403 (c8)
+else
+  ep -> h : RaiseAsync(request)
+  alt not a mentor (admin, program director)
+    h --> dlg : 403
+  else child of another organization or unknown
+    h --> dlg : 404
+  else outside his scope
+    h -> scope : CanSeeYouthAsync
+    h -> db : audit AccessDenied on Child
+    h --> dlg : 403
+  else invalid fields
+    h --> dlg : 422 errors by field (c2)
+  else youth already has an open flag
+    h --> dlg : 409 already-flagged (c2)
+  else
+    h -> db : insert AtRiskFlag (organization, child, raiser)
+    h -> db : audit Created with severity, no reason (c6)
+    h -> nw : NotifyAsync(ReviewAtRiskFlags, mentoring, /mentoring/flags) (c3)
+    nw -> db : one notification per admin and program director
+    h --> dlg : 201 flag
+    dlg --> actor : closes; toast Flag raised (c1)
+  end
+end
+@enduml

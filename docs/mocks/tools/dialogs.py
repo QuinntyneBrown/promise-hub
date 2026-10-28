@@ -762,3 +762,71 @@ def mentor_check_in(S):
     S.add("busy", "Saving: Save check-in is busy and cannot be pressed twice; Cancel still works.", **over("mentor-check-in-history", "default", overlays=checkin_box(busy=True)))
     S.add("failed", "The save failed: everything he wrote stays to try again.",
           **over("mentor-check-in-history", "default", overlays=checkin_box(alert_html=failed_alert("That didn’t go through", "The mentor check-in wasn’t saved. Everything is still here; try again."))))
+
+
+# ---------------------------------------------------------------- at-risk flags (prompt 68, L2-091)
+from pages_flags import R_FLAGS, SEVERITY, OUTCOMES  # noqa: E402
+
+FLAG_REASON = "Asked me twice whether he could stay late because nobody is home after school."
+
+
+def raise_flag_body(err=None, *, blank: bool = False) -> str:
+    err = err or {}
+    summary = form_summary(list(err.items())) if err else ""
+    youth = select("youth", "Youth", ["Choose a youth", "Emily Tran", "Jordan Thompson", "Kevin Tran", "Mateo Rivera", "Sofía Rivera", "Yusuf Haddad"],
+                   selected="Choose a youth" if (blank or "youth" in err) else "Mateo Rivera", error=err.get("youth", ""), attrs=" required")
+    sev = fieldset("How serious is it?", "".join(choice("severity", s, small=d, checked=(s == "Medium" and not blank and "severity" not in err), invalid="severity" in err)
+                                                for s, d in SEVERITY), error=err.get("severity", ""), fid="severity")
+    reason_value = "" if (blank or "reason" in err) else FLAG_REASON
+    reason = textarea("reason", "Why are you worried?", value=reason_value, rows=4, error=err.get("reason", ""), count=f"{len(reason_value)} / 1,000",
+                      help_="Program directors can read this.")
+    hint = alert("info", "Someone hurt or in danger?", "Don’t wait for a flag: tell your program director now.")
+    return summary + youth + sev + reason + hint
+
+
+def raise_flag_box(err=None, *, busy=False, alert_html="", blank=False) -> str:
+    return dialog_box("Raise an at-risk flag", "Your program director is told, and the flag stays open until it’s resolved.",
+                      raise_flag_body(err, blank=blank), footer("Raise flag", busy=busy), icon_name="flag", alert_html=alert_html, form=True, scroll=True)
+
+
+@screen("raise-flag", "dialog", "Raise an at-risk flag", opens_from="mentor-flags", reqs=R_FLAGS)
+def raise_flag(S):
+    S.add("default", "Raise a flag on Mateo: the youth, how serious it is (Medium) and why. A note says not to wait for a flag when someone is hurt or in danger.",
+          **over("mentor-flags", "default", overlays=raise_flag_box()))
+    S.add("empty", "Just opened: nothing chosen yet; focus on Youth.", **over("mentor-flags", "default", overlays=raise_flag_box(blank=True)))
+    S.add("invalid", "Raise with nothing filled in: errors beside the fields and in a summary.",
+          **over("mentor-flags", "default", overlays=raise_flag_box({"youth": "Choose a youth.", "severity": "Choose how serious it is.", "reason": "Say why you’re worried."})))
+    S.add("already-flagged", "Yusuf already has an open flag: the server answers 409 and the dialog says to resolve that one first.",
+          **over("mentor-flags", "default", overlays=raise_flag_box(alert_html=alert("warning", "Yusuf Haddad already has an open flag", "Resolve it before you raise another."))))
+    S.add("busy", "Raising: Raise flag is busy and cannot be pressed twice; Cancel still works.", **over("mentor-flags", "default", overlays=raise_flag_box(busy=True)))
+    S.add("failed", "The save failed: everything he wrote stays to try again.",
+          **over("mentor-flags", "default", overlays=raise_flag_box(alert_html=failed_alert("That didn’t go through", "The flag wasn’t raised. Everything is still here; try again."))))
+
+
+def resolve_flag_body(err=None, *, blank: bool = False) -> str:
+    err = err or {}
+    summary = form_summary(list(err.items())) if err else ""
+    who = facts([("Youth", "Yusuf Haddad"), ("Flag", "High · Raised by Daniel Osei · Wed 4 Nov")])
+    outcome = fieldset("How was it resolved?", "".join(choice("outcome", o, checked=(i == 0 and not blank and "outcome" not in err), invalid="outcome" in err)
+                                                     for i, o in enumerate(OUTCOMES)), error=err.get("outcome", ""), fid="outcome")
+    note_value = "" if blank else "Moved to Tuesday nights. Carmen at the front desk set up a ride with the Haddads’ neighbour."
+    note_ = textarea("note", "Note", value=note_value, rows=3, optional=True, count=f"{len(note_value)} / 1,000",
+                     help_="You can raise a new flag any time if things change.")
+    return summary + who + outcome + note_
+
+
+def resolve_flag_box(err=None, *, busy=False, alert_html="", blank=False) -> str:
+    return dialog_box("Resolve this flag?", "Yusuf leaves the open list. The flag and how it was resolved are kept.",
+                      resolve_flag_body(err, blank=blank), footer("Resolve flag", busy=busy), icon_name="check", alert_html=alert_html, form=True, scroll=True)
+
+
+@screen("resolve-flag", "dialog", "Resolve an at-risk flag", opens_from="mentor-flags", reqs=R_FLAGS)
+def resolve_flag(S):
+    S.add("default", "Resolve Yusuf’s flag: how it was resolved (Reconnected) and an optional note.", **over("mentor-flags", "default", overlays=resolve_flag_box()))
+    S.add("invalid", "Resolve with no outcome chosen: the error beside the choices and in a summary.",
+          **over("mentor-flags", "default", overlays=resolve_flag_box({"outcome": "Choose how it was resolved."}, blank=True)))
+    S.add("already-resolved", "Someone else resolved it a moment ago: the server answers 409; closing the dialog reloads the list.",
+          **over("mentor-flags", "default", overlays=resolve_flag_box(alert_html=alert("warning", "This flag is already resolved", "Close to see the latest."))))
+    S.add("busy", "Resolving: Resolve flag is busy; Cancel still works.", **over("mentor-flags", "default", overlays=resolve_flag_box(busy=True)))
+    S.add("failed", "The save failed: the choice and note stay to try again.",
+          **over("mentor-flags", "default", overlays=resolve_flag_box(alert_html=failed_alert("That didn’t go through", "The flag wasn’t resolved. Everything is still here; try again."))))

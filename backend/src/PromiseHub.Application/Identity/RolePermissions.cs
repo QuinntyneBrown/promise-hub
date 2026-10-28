@@ -39,6 +39,7 @@ public static class RolePermissions
         Permission.Learn => role is Role.Youth,
         Permission.MentorYouth => role is Role.Mentor,
         Permission.AuthorCurriculum => role is Role.Admin or Role.ProgramDirector,
+        Permission.ReviewAtRiskFlags => role is Role.Admin or Role.ProgramDirector,
         _ => false,
     };
 }

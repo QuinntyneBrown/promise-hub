@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 68 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="68" data-video-title="Flag at-risk youth" data-parts="Introduction|Raising|Server checks|Directors told|Resolving|Not an incident|Who sees|Phone|States|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 68</div>
+  <h1>Flag at-risk youth</h1>
+  <p class="lead">Put a worry on record, tell the program director, follow it to resolution</p>
+</section>
+
+<section id="raise" data-part="1" data-cue="Daniel Osei mentors at Harbourview Youth Collective." data-clip="clips/raise-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Raise a flag</h3><p>Who, how serious, and why.</p></div>
+</section>
+
+<section id="raise-shots" data-part="1" data-cue="When he raises it, a toast says program directors have been told">
+  <h2>Raised on Mateo</h2>
+  <div class="cols">
+    <img class="shot" alt="The Raise an at-risk flag dialog for Mateo, Medium, with the reason" src="shots/desktop-dialog.png">
+    <img class="shot" alt="At-risk flags with Mateo added and the Flag raised toast" src="shots/desktop-raised.png">
+  </div>
+</section>
+
+<section id="checks" data-part="2" data-cue="The server keeps each flag on the child">
+  <h2>What the server checks</h2>
+  <table class="facts">
+    <tr><th>Field</th><th>Rule</th></tr>
+    <tr><td>Who raises</td><td>A mentor, on a youth in his scope (403 audited), his organization (404)</td></tr>
+    <tr><td>Severity</td><td>Low, Medium or High</td></tr>
+    <tr><td>Reason</td><td>Required, up to 1,000 characters</td></tr>
+    <tr><td>One open flag</td><td>A second answers 409 already-flagged</td></tr>
+    <tr><td>Audit</td><td>Created, with the severity; never the reason</td></tr>
+  </table>
+  <p class="muted small">POST /mentoring/flags · L2-091 · ADR 0062</p>
+</section>
+
+<section id="told" data-part="3" data-cue="Raising a flag notifies every admin and program director" data-clip="clips/director-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Marisol is told and resolves</h3><p>Her notification opens every flag; she resolves Jordan’s.</p></div>
+</section>
+
+<section id="resolve" data-part="4" data-cue="Jordan leaves the open list, and the Resolved tab shows how it was resolved">
+  <h2>Resolved with an outcome</h2>
+  <div class="cols">
+    <img class="shot" alt="Resolve this flag? for Jordan: Reconnected, back on track, with a note" src="shots/desktop-resolve.png">
+    <img class="shot" alt="The Resolved tab: outcome, who, when and the note" src="shots/desktop-resolved.png">
+  </div>
+</section>
+
+<section id="incident" data-part="5" data-cue="An at-risk flag records a worry, not something that happened.">
+  <h2>Not an incident</h2>
+  <div class="cols">
+    <ul>
+      <li>Incident log on: Report an incident on each open flag</li>
+      <li>For admins and program directors only</li>
+      <li>Incident log off: nothing mentions incidents</li>
+      <li>Mentors: tell your program director now</li>
+    </ul>
+    <img class="shot" alt="At-risk flags with the Incident log off: Resolve only" src="shots/desktop-incidents-off.png">
+  </div>
+</section>
+
+<section id="who" data-part="6" data-cue="Daniel sees the flags on youth in his scope.">
+  <h2>Who sees a flag</h2>
+  <table class="facts">
+    <tr><th>Caller</th><th>Answer</th></tr>
+    <tr><td>Daniel, a mentor</td><td>Flags on youth in his scope; raises and resolves them</td></tr>
+    <tr><td>A youth outside his scope</td><td>403, audited</td></tr>
+    <tr><td>Admins, program directors</td><td>Every flag; resolve; told of new ones</td></tr>
+    <tr><td>Other staff, volunteers, guardians, youth</td><td>403</td></tr>
+    <tr><td>Another organization</td><td>404</td></tr>
+    <tr><td>Mentoring off</td><td>404, the page goes to Today, nothing deleted</td></tr>
+  </table>
+</section>
+
+<section id="phone" data-part="7" data-cue="On a phone, the flags fit one column" data-clip="clips/phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>One column</h3><p>The flags, and the dialog as a bottom sheet.</p></div>
+</section>
+
+<section id="states" data-part="8" data-cue="Raising with nothing filled in" data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Refused and failed</h3><p>Invalid, already flagged, failed, empty, error, Mentoring off.</p></div>
+</section>
+
+<section id="states-shots" data-part="8" data-cue="A mentor with no flags sees one calm empty state">
+  <h2>Every state says what to do</h2>
+  <div class="cols">
+    <img class="shot" alt="Yusuf Haddad already has an open flag" src="shots/desktop-already-flagged.png">
+    <img class="shot" alt="No youth flagged, with Raise a flag" src="shots/desktop-empty.png">
+  </div>
+</section>
+
+<section id="testing" data-part="9" data-cue="The API tests cover raising">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>AtRiskFlagsTests</code>: raising, checks, one open flag, audit, notifications, directors, resolving, scope, roles, tenancy, Mentoring off</li>
+    <li><code>at-risk-flags.spec.ts</code> on phone and laptop, with axe</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="10" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>A mentor raises a flag with how serious it is and why</li><li>Admins and program directors are told and read every flag</li><li>It stays open until resolved with an outcome, and it is not an incident</li></ul>
+  <p class="muted">Next: assign work to youth</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

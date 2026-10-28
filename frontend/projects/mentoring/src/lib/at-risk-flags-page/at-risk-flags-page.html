@@ -1,0 +1,114 @@
+@let r = result();
+@if (canRaise()) {
+  <ph-breadcrumb
+    [items]="[{ label: 'Mentoring', link: '/mentoring' }, { label: 'At-risk flags' }]"
+  />
+}
+@if (r?.status === 'forbidden') {
+  <ph-page-header title="At-risk flags" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      title="At-risk flags are for mentors and program directors"
+      text="Ask your program director if you’re worried about a child."
+    >
+      <ph-button link="/">Back to Today</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-page-header title="At-risk flags" [subtitle]="subtitle()">
+    @if (canRaise()) {
+      <ph-button variant="primary" icon="plus" (click)="raise()">Raise a flag</ph-button>
+    }
+  </ph-page-header>
+  <ph-tabs
+    label="At-risk flags"
+    [items]="tabs()"
+    [selected]="status()"
+    (selectedChange)="select($event)"
+  />
+  <div role="tabpanel" [attr.aria-labelledby]="'tab-' + status()">
+    @if (r === null) {
+      <div class="stack" aria-busy="true" aria-label="Loading at-risk flags">
+        <ph-skeleton shape="card" />
+        <ph-skeleton shape="card" />
+      </div>
+    } @else if (r.status === 'loaded') {
+      @let f = r.value;
+      @if (f.items.length) {
+        <ph-card [flush]="true">
+          <ph-list
+            [label]="
+              status() === 'Open'
+                ? 'Open at-risk flags, most serious first'
+                : 'Resolved at-risk flags, newest first'
+            "
+          >
+            @for (flag of f.items; track track(flag)) {
+              <ph-list-item
+                [title]="flag.youthName"
+                [avatar]="flag.youthName"
+                avatarTint="peach"
+                [meta]="raised(flag)"
+                [text]="flag.reason"
+                [caption]="resolvedCaption(flag)"
+              >
+                @if (flag.status === 'Open') {
+                  <div phListActions>
+                    @if (f.canRaise) {
+                      <ph-button variant="ghost" [link]="['/mentoring/youth', flag.childId]"
+                        >View record</ph-button
+                      >
+                    }
+                    <ph-button icon="check" (click)="resolve(flag)">Resolve</ph-button>
+                    @if (canReportIncident()) {
+                      <ph-button variant="ghost" icon="flag" link="/incidents/new"
+                        >Report an incident</ph-button
+                      >
+                    }
+                  </div>
+                }
+                <ph-badge [tone]="tone(flag.severity)">{{ flag.severity }}</ph-badge>
+              </ph-list-item>
+            }
+          </ph-list>
+        </ph-card>
+      } @else {
+        <ph-card [flush]="true">
+          @if (status() === 'Open') {
+            <ph-empty-state
+              icon="flag"
+              title="No youth flagged"
+              [text]="
+                f.canRaise
+                  ? 'When you’re worried about one of your youth, raise a flag. Your program director is told and it stays here until it’s resolved.'
+                  : 'When a mentor raises a flag, you’re told and it shows here until it’s resolved.'
+              "
+            >
+              @if (f.canRaise) {
+                <ph-button variant="primary" icon="plus" (click)="raise()">Raise a flag</ph-button>
+              }
+            </ph-empty-state>
+          } @else {
+            <ph-empty-state
+              icon="flag"
+              title="No resolved flags"
+              text="Resolved flags are kept here."
+            />
+          }
+        </ph-card>
+      }
+    } @else {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="warning"
+          tone="error"
+          title="We couldn’t load the at-risk flags"
+          text="Check your connection and try again."
+        >
+          <ph-button variant="primary" (click)="reload()">Try again</ph-button>
+        </ph-empty-state>
+      </ph-card>
+    }
+  </div>
+}

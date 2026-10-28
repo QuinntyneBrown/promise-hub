@@ -14,3 +14,6 @@ export { ApproveAllQuizzesDialog } from './lib/approve-all-quizzes-dialog/approv
 export { CompetenciesPage } from './lib/competencies-page/competencies-page';
 export { MentorCheckInsPage } from './lib/mentor-check-ins-page/mentor-check-ins-page';
 export { MentorCheckInDialog } from './lib/mentor-check-in-dialog/mentor-check-in-dialog';
+export { AtRiskFlagsPage } from './lib/at-risk-flags-page/at-risk-flags-page';
+export { RaiseFlagDialog } from './lib/raise-flag-dialog/raise-flag-dialog';
+export { ResolveFlagDialog } from './lib/resolve-flag-dialog/resolve-flag-dialog';

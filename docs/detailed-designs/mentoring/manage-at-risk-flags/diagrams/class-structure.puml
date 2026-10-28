@@ -1,0 +1,80 @@
+@startuml
+title Class structure — Manage at-risk flags
+skinparam classAttributeIconSize 0
+class AtRiskFlagsPage {
+  #status : signal<string>
+  #raise() : void
+  #resolve(flag) : void
+}
+class RaiseFlagDialog {
+  #childId, severity, reason : signal<string>
+  #save() : void
+}
+class ResolveFlagDialog {
+  #outcome, note : signal<string>
+  #save() : void
+}
+interface MentoringApi {
+  +flags(status) : Observable<LoadResult<AtRiskFlags>>
+  +raiseFlag(body) : Observable<FlagOutcome>
+  +resolveFlag(id, body) : Observable<FlagOutcome>
+}
+class AtRiskFlagsHandler {
+  +ListAsync(status, ct) : AtRiskFlagsDto
+  +RaiseAsync(request, ct) : FlagOutcomeResult
+  +ResolveAsync(id, request, ct) : FlagOutcomeResult
+}
+class MentorScope {
+  +YouthIdsAsync(ct)
+  +CanSeeYouthAsync(childId, ct)
+}
+class NotificationWriter {
+  +NotifyAsync(permission, kind, text, link, ct)
+}
+class AtRiskFlag <<entity>> {
+  +Id : Guid
+  +OrganizationId : Guid
+  +ChildId : Guid
+  +RaisedByMembershipId : Guid
+  +Severity : AtRiskFlagSeverity
+  +Reason : string
+  +RaisedAt : DateTimeOffset
+  +ResolvedByMembershipId : Guid?
+  +Outcome : AtRiskFlagOutcome?
+  +ResolutionNote : string?
+  +ResolvedAt : DateTimeOffset?
+  +Resolve(by, outcome, note, at)
+}
+enum AtRiskFlagSeverity {
+  Low
+  Medium
+  High
+}
+enum AtRiskFlagOutcome {
+  Reconnected
+  HandedToDirector
+  LeftProgram
+  FlaggedInError
+}
+class RaiseFlagRequest <<record>>
+class ResolveFlagRequest <<record>>
+class AtRiskFlagDto <<record>>
+class AtRiskFlagsDto <<record>>
+class FlagOutcomeResult <<record>>
+AtRiskFlagsPage --> MentoringApi
+AtRiskFlagsPage ..> RaiseFlagDialog : opens
+AtRiskFlagsPage ..> ResolveFlagDialog : opens
+RaiseFlagDialog --> MentoringApi
+ResolveFlagDialog --> MentoringApi
+AtRiskFlagsHandler --> MentorScope
+AtRiskFlagsHandler --> NotificationWriter
+AtRiskFlagsHandler ..> RaiseFlagRequest
+AtRiskFlagsHandler ..> ResolveFlagRequest
+AtRiskFlagsHandler ..> AtRiskFlagsDto
+AtRiskFlagsHandler ..> FlagOutcomeResult
+AtRiskFlagsDto *-- AtRiskFlagDto
+FlagOutcomeResult o-- AtRiskFlagDto
+AtRiskFlagsHandler o-- AtRiskFlag : persists
+AtRiskFlag --> AtRiskFlagSeverity
+AtRiskFlag --> AtRiskFlagOutcome
+@enduml

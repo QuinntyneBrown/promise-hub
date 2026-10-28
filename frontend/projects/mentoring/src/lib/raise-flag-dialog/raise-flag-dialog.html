@@ -1,0 +1,64 @@
+<ph-dialog
+  title="Raise an at-risk flag"
+  description="Your program director is told, and the flag stays open until it’s resolved."
+  icon="flag"
+>
+  <form class="stack" (ngSubmit)="save()">
+    @if (summary().length) {
+      <ph-error-summary title="Fix these to continue" [items]="summary()" />
+    }
+    @if (failed()) {
+      <ph-alert
+        tone="danger"
+        title="That didn’t go through"
+        text="The flag wasn’t raised. Everything is still here; try again."
+      />
+    }
+    @if (alreadyFlagged(); as name) {
+      <ph-alert
+        tone="warning"
+        [title]="name + ' already has an open flag'"
+        text="Resolve it before you raise another."
+      />
+    }
+    <ph-select
+      inputId="flag-youth"
+      label="Youth"
+      name="youth"
+      [options]="youthOptions"
+      [error]="errors()['childId'] ?? null"
+      [ngModel]="childId()"
+      (ngModelChange)="childId.set($event ?? '')"
+    />
+    <div id="flag-severity">
+      <ph-radio-group
+        legend="How serious is it?"
+        name="severity"
+        [options]="severities"
+        [error]="errors()['severity'] ?? null"
+        [ngModel]="severity()"
+        (ngModelChange)="severity.set($event)"
+      />
+    </div>
+    <ph-textarea
+      inputId="flag-reason"
+      label="Why are you worried?"
+      name="reason"
+      [rows]="4"
+      help="Program directors can read this."
+      [count]="count(reason())"
+      [error]="errors()['reason'] ?? null"
+      [ngModel]="reason()"
+      (ngModelChange)="reason.set($event ?? '')"
+    />
+    <ph-alert
+      tone="info"
+      title="Someone hurt or in danger?"
+      text="Don’t wait for a flag: tell your program director now."
+    />
+  </form>
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close()">Cancel</ph-button>
+    <ph-button variant="primary" icon="flag" [busy]="busy()" (click)="save()">Raise flag</ph-button>
+  </ng-container>
+</ph-dialog>

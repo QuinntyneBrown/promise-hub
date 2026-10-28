@@ -19,6 +19,11 @@ export class NotificationsPage extends BasePage {
     return this.list.getByRole('listitem');
   }
 
+  /** Any notification whose words include the text. */
+  mentioning(text: string): Locator {
+    return this.page.getByText(text);
+  }
+
   get empty(): Locator {
     return this.page.getByRole('heading', { name: 'You’re all caught up' });
   }

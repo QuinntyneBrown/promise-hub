@@ -2405,6 +2405,34 @@
       ]
     },
     {
+      "id": "mentor-flags",
+      "kind": "page",
+      "title": "At-risk flags",
+      "route": "/mentoring/flags",
+      "requirements": [
+        "L2-091",
+        "L2-065",
+        "L2-040",
+        "L2-032",
+        "L2-023",
+        "L2-007",
+        "L1-024",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "raised",
+        "resolved",
+        "empty",
+        "loading",
+        "error",
+        "director",
+        "incidents-off",
+        "forbidden"
+      ]
+    },
+    {
       "id": "applications",
       "kind": "page",
       "title": "Applications",
@@ -3872,6 +3900,55 @@
         "from-record",
         "shared",
         "invalid",
+        "busy",
+        "failed"
+      ]
+    },
+    {
+      "id": "raise-flag",
+      "kind": "dialog",
+      "title": "Raise an at-risk flag",
+      "opens_from": "mentor-flags",
+      "requirements": [
+        "L2-091",
+        "L2-065",
+        "L2-040",
+        "L2-032",
+        "L2-023",
+        "L2-007",
+        "L1-024",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "empty",
+        "invalid",
+        "already-flagged",
+        "busy",
+        "failed"
+      ]
+    },
+    {
+      "id": "resolve-flag",
+      "kind": "dialog",
+      "title": "Resolve an at-risk flag",
+      "opens_from": "mentor-flags",
+      "requirements": [
+        "L2-091",
+        "L2-065",
+        "L2-040",
+        "L2-032",
+        "L2-023",
+        "L2-007",
+        "L1-024",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "already-resolved",
         "busy",
         "failed"
       ]

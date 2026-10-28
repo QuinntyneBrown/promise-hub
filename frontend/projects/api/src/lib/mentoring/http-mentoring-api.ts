@@ -24,6 +24,11 @@ import { toGradeOutcome } from './to-grade-outcome';
 import { LogMentorCheckIn } from './log-mentor-check-in';
 import { MentorCheckInFilter } from './mentor-check-in-filter';
 import { MentorCheckInHistory } from './mentor-check-in-history';
+import { AtRiskFlags } from './at-risk-flags';
+import { RaiseAtRiskFlag } from './raise-at-risk-flag';
+import { FlagOutcome } from './flag-outcome';
+import { toFlagOutcome } from './to-flag-outcome';
+import { ResolveAtRiskFlag } from './resolve-at-risk-flag';
 
 @Injectable()
 export class HttpMentoringApi implements MentoringApi {
@@ -82,6 +87,25 @@ export class HttpMentoringApi implements MentoringApi {
 
   logCheckIn(body: LogMentorCheckIn): Observable<WriteOutcome> {
     return toWrite(this.http.post<{ id: string }>(`${this.baseUrl}/mentoring/check-ins`, body));
+  }
+
+  flags(status: 'Open' | 'Resolved'): Observable<LoadResult<AtRiskFlags>> {
+    return toLoad(
+      this.http.get<AtRiskFlags>(`${this.baseUrl}/mentoring/flags`, { params: { status } }),
+    );
+  }
+
+  raiseFlag(body: RaiseAtRiskFlag): Observable<FlagOutcome> {
+    return toFlagOutcome(this.http.post<{ id: string }>(`${this.baseUrl}/mentoring/flags`, body));
+  }
+
+  resolveFlag(id: string, body: ResolveAtRiskFlag): Observable<FlagOutcome> {
+    return toFlagOutcome(
+      this.http.post<{ id: string }>(
+        `${this.baseUrl}/mentoring/flags/${encodeURIComponent(id)}/resolve`,
+        body,
+      ),
+    );
   }
 
   quizApprovals(): Observable<LoadResult<QuizApprovals>> {

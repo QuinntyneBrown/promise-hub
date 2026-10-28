@@ -31,4 +31,7 @@ public enum Permission
     Learn,
     MentorYouth,
     AuthorCurriculum,
+
+    /// <summary>Reads and resolves every at-risk flag of the organization and is notified of new ones (L2-091, ADR 0062).</summary>
+    ReviewAtRiskFlags,
 }
