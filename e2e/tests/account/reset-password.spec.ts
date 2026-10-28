@@ -17,13 +17,13 @@ test.describe('Recover account access', () => {
     await reset.expectAccessible();
   });
 
-  test('Given not an email, when asked, then it says to enter the work email', async ({ page }) => {
+  test('Given not an email, when asked, then it says to enter an email address', async ({ page }) => {
     const reset = new ResetPasswordPage(page);
     await page.goto('/forgot-password');
 
     await reset.askForLink('jaylen');
 
-    await expect(reset.fieldError('email')).toHaveText('Enter your work email.');
+    await expect(reset.fieldError('email')).toHaveText('Enter your email address.');
   });
 
   test('Given a valid link, when a good password is chosen, then he lands on Today signed in', async ({ page }) => {

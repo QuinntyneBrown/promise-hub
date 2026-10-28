@@ -653,8 +653,12 @@ export class FakeApi {
   private resetLinks = new Map<string, { email: string; usable: boolean }>([
     ["tok-reset-jaylen", { email: "jaylen@harbourview.example", usable: true }],
     ["tok-reset-sofia", { email: "sofia@harbourview.example", usable: true }],
+    ["tok-reset-daniel", { email: "daniel@harbourview.example", usable: true }],
+    ["tok-reset-lucia", { email: "lucia@northgate.example", usable: true }],
   ]);
   resetRequestedFor: string | null = null;
+  /** Reset emails sent per address, all within the fake's one hour. */
+  private resetEmails = new Map<string, number>();
   /** Recovery codes left per person, and whether the other devices were signed out. */
   private recoveryCodes = new Map<string, number>();
   signedOutOthers = false;
@@ -5183,16 +5187,46 @@ export class FakeApi {
     this.resetLinks.get(token)!.usable = false;
   }
 
-  /** Mirrors backend PasswordResetHandler. */
+  /** How many reset emails went to an address (L2-115). */
+  resetEmailsTo(email: string): number {
+    return this.resetEmails.get(email) ?? 0;
+  }
+
+  /**
+   * Mirrors backend PasswordResetHandler: the same 202 for every address; an email only for an account with a current
+   * membership, at most three an hour, and the new link replaces every earlier one (L2-115, ADR 0071).
+   */
   private async forgotPassword(route: Route): Promise<void> {
     const b = route.request().postDataJSON() as { email: string };
     this.resetRequestedFor = b.email;
+    const email = b.email.trim().toLowerCase();
+    const current = this.hasCurrentMembership(email);
+    const sent = this.resetEmailsTo(email);
+    if (current && sent < 3) {
+      for (const link of this.resetLinks.values())
+        if (link.email === email) link.usable = false;
+      this.resetLinks.set(`tok-reset-${email}-${sent + 1}`, {
+        email,
+        usable: true,
+      });
+      this.resetEmails.set(email, sent + 1);
+    }
     return route.fulfill({ status: 202 });
+  }
+
+  private hasCurrentMembership(email: string): boolean {
+    return memberships.some(
+      (m) =>
+        m.email === email &&
+        !this.removedMemberships.has(m.id) &&
+        !this.deactivatedMembers.has(m.id),
+    );
   }
 
   private async checkReset(route: Route, token: string): Promise<void> {
     const link = this.resetLinks.get(token);
-    if (!link?.usable) return route.fulfill({ status: 410 });
+    if (!link?.usable || !this.hasCurrentMembership(link.email))
+      return route.fulfill({ status: 410 });
     return route.fulfill({ json: { email: link.email } });
   }
 
@@ -5203,7 +5237,8 @@ export class FakeApi {
       repeat: string;
     };
     const link = this.resetLinks.get(b.token);
-    if (!link?.usable) return route.fulfill({ status: 410 });
+    if (!link?.usable || !this.hasCurrentMembership(link.email))
+      return route.fulfill({ status: 410 });
     const errors: Record<string, string> = {};
     const weak = passwordProblem(b.password, link.email);
     if (weak) errors["password"] = weak;

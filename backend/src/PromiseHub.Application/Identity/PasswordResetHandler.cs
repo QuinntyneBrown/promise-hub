@@ -9,7 +9,7 @@ using PromiseHub.Domain.Identity;
 namespace PromiseHub.Application.Identity;
 
 /// <summary>
-/// Recovering access (L2-044): ask for a link by email (the answer never reveals whether the address exists), check the
+/// Recovering access for every role (L2-044, L2-115, ADR 0071): ask for a link by email (the answer never reveals whether the address exists), check the
 /// link, and set a new password that meets the password policy (L2-053). Resetting uses the link up, signs out other devices, is
 /// audited and signs the person in, through two-step sign-in where their role needs it.
 /// </summary>
@@ -24,6 +24,18 @@ public sealed class PasswordResetHandler(IPromiseHubDb db, TenantContext tenant,
         {
             return;
         }
+        // The throttle answers like any other request, so it reveals nothing (L2-115 criterion 3).
+        var hourAgo = clock.GetUtcNow() - TimeSpan.FromHours(1);
+        var earlier = await db.PasswordResets.Where(r => r.UserId == user.Id).ToListAsync(cancellationToken);
+        if (earlier.Count(r => r.CreatedAt > hourAgo) >= PasswordReset.PerHour)
+        {
+            return;
+        }
+        // Only the newest link works (L2-115 criterion 4).
+        foreach (var older in earlier)
+        {
+            older.Replace(clock.GetUtcNow());
+        }
         var token = GuardianTokens.New();
         db.PasswordResets.Add(new PasswordReset(Guid.NewGuid(), user.Id, GuardianTokens.Hash(token), clock.GetUtcNow()));
         await db.SaveChangesAsync(cancellationToken);
@@ -35,7 +47,13 @@ public sealed class PasswordResetHandler(IPromiseHubDb db, TenantContext tenant,
     public async Task<string?> CheckAsync(string token, CancellationToken cancellationToken = default)
     {
         var reset = await FindAsync(token, cancellationToken);
-        return reset is null ? null : (await db.StaffUsers.AsNoTracking().SingleAsync(u => u.Id == reset.UserId, cancellationToken)).Email;
+        if (reset is null)
+        {
+            return null;
+        }
+        var email = (await db.StaffUsers.AsNoTracking().SingleAsync(u => u.Id == reset.UserId, cancellationToken)).Email;
+        // A link sent before the account was deactivated or removed no longer works (L2-115 criterion 7).
+        return await ActiveMembership.ForAsync(db, email, cancellationToken) is null ? null : email;
     }
 
     public async Task<ResetPasswordResult> ResetAsync(ResetPasswordCommand command, CancellationToken cancellationToken = default)
