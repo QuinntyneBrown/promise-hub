@@ -40,6 +40,21 @@ test.describe('Assign work as a mentor', () => {
     expect(api.assignedWork.rows[0]).toMatchObject({ kind: 'Lesson', itemId: 'l-line', dueOn: '2026-11-13', message: MESSAGE, assignedBy: 'Daniel Osei' });
   });
 
+  test('Given he supports After-School Tutoring, when he assigns Last in Line to the whole cohort, then it goes to every youth on its roster', async ({ page, api }) => {
+    const dashboard = new MentoringPage(page);
+    const dialog = new AssignWorkDialog(page);
+    await dashboard.open();
+    await dashboard.assignWork();
+
+    await dialog.fill({ item: LINE, who: 'A whole cohort', cohort: 'After-School Tutoring · 4 youth', due: '2026-11-13', message: MESSAGE });
+    await dialog.expectAccessible();
+    await dialog.assign();
+
+    await expect(dashboard.toast('Work assigned')).toContainText('Last in Line · 4 youth · Due Fri 13 Nov');
+    expect(api.assignedWork.rows.map((r) => r.childId).sort()).toEqual(['c-jordan', 'c-mateo', 'c-sofia', 'c-yusuf']);
+    expect(api.assignedWork.rows.every((r) => r.programId === 'p-tutoring')).toBe(true);
+  });
+
   test('Given the dialog, when he assigns with nothing chosen, then each field says what it needs, and a youth outside the track is named by the server', async ({
     page,
     api,

@@ -6,7 +6,7 @@ using PromiseHub.Infrastructure.Persistence.Seed;
 namespace PromiseHub.Api.Tests;
 
 // Acceptance test. Traces to: L2-092 criteria 1 to 4 and 7 (a mentor is offered the published lessons, quizzes and assignments of the tracks
-// his youth follow, his youth and his cohorts; assigns one to chosen youth with a due date and a message, field-by-field errors, every youth
+// his youth follow, his youth and his cohorts; assigns one to chosen youth or a whole cohort he is on with a due date and a message, field-by-field errors, every youth
 // following the item's track, one row per youth and item, audited without the message; scope, roles and tenancy), L2-065, L2-007, L2-032.
 public sealed class AssignWorkTests : IAsyncLifetime
 {
@@ -16,6 +16,7 @@ public sealed class AssignWorkTests : IAsyncLifetime
     private static readonly Guid Daniel = MentorReviewWork.Daniel;
     private static readonly Guid Samuel = MentorReviewWork.Samuel;
     private static readonly Guid Grace = DatabaseSeeder.MembershipId(DatabaseSeeder.Northgate, "grace@northgate.example");
+    private static readonly Guid Tutoring = LearningContent.Tutoring;
     private static readonly Guid Sports = DatabaseSeeder.ProgramId(DatabaseSeeder.Harbourview, "Saturday Sports");
     private static readonly Guid Nadia = LearningContent.NadiaChild;
     private static readonly Guid Kevin = DatabaseSeeder.ChildId(DatabaseSeeder.Harbourview, "Kevin Tran");
@@ -84,6 +85,45 @@ public sealed class AssignWorkTests : IAsyncLifetime
         Assert.Equal(["2026-11-20 "], _work.Query("SELECT DueOn || ' ' || coalesce(Message, '') FROM AssignedWork"));
     }
 
+    // ---- criteria 1 and 2: a whole cohort he is on
+
+    [Fact]
+    public async Task Daniel_is_offered_the_cohorts_he_is_on_and_assigns_to_the_whole_roster_of_one()
+    {
+        await Team(Tutoring);
+
+        var cohort = Assert.Single((await Options(Daniel)).GetProperty("cohorts").EnumerateArray());
+        Assert.Equal("After-School Tutoring", cohort.GetProperty("name").GetString());
+        Assert.Equal(5, cohort.GetProperty("youthCount").GetInt32());
+        Assert.Equal(_c.Leadership, cohort.GetProperty("trackId").GetGuid());
+
+        var response = await Assign(Daniel, Body([]) with { programId = Tutoring });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.Equal(5, (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("count").GetInt32());
+        Assert.Equal(5, _work.Query($"SELECT Id FROM AssignedWork WHERE upper(ProgramId) = upper('{Tutoring}')").Count);
+        var audit = Assert.Single(_work.Query("SELECT Summary FROM AuditEntries WHERE Action = 'Created' AND RecordType = 'AssignedWork'"));
+        Assert.Contains("assigned Last in Line to 5 youth", audit);
+    }
+
+    [Fact]
+    public async Task A_cohort_and_chosen_youth_together_a_cohort_on_another_track_and_a_cohort_he_is_not_on_are_refused()
+    {
+        await Team(Tutoring);
+        await Team(Sports);
+
+        var both = await Errors(await Assign(Daniel, Body([Nadia]) with { programId = Tutoring }));
+        Assert.Equal("Choose who it’s for.", both.GetProperty("who").GetString());
+        var other = await Errors(await Assign(Daniel, Body([]) with { programId = Sports }));
+        Assert.Equal("Saturday Sports doesn’t follow the track this lesson is in.", other.GetProperty("programId").GetString());
+        Assert.Equal(HttpStatusCode.NoContent, (await _factory.ClientFor(Marisol).PutAsJsonAsync($"/programs/{Sports}/mentors",
+            new { leadMentorId = MentorReviewWork.Hana, supportingMentorIds = Array.Empty<Guid>() })).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await Assign(Daniel, Body([]) with { programId = Sports })).StatusCode);
+        Assert.Single(_work.Query($"SELECT Id FROM AuditEntries WHERE Action = 'AccessDenied' AND RecordType = 'Program' AND upper(RecordId) = upper('{Sports}')"));
+        Assert.Equal(HttpStatusCode.NotFound, (await Assign(Daniel, Body([]) with { programId = Guid.NewGuid() })).StatusCode);
+        Assert.Empty(_work.Query("SELECT Id FROM AssignedWork"));
+    }
+
     // ---- criterion 3: each field checked on the server
 
     [Fact]
@@ -146,6 +186,10 @@ public sealed class AssignWorkTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.NotFound, (await Assign(Samuel, Body([Nadia]))).StatusCode);
         Assert.Empty(_work.Query("SELECT Id FROM AssignedWork"));
     }
+
+    private async Task Team(Guid program) =>
+        Assert.Equal(HttpStatusCode.NoContent, (await _factory.ClientFor(Marisol).PutAsJsonAsync($"/programs/{program}/mentors",
+            new { leadMentorId = Daniel, supportingMentorIds = Array.Empty<Guid>() })).StatusCode);
 
     private sealed record AssignBody(string kind, Guid itemId, Guid[] childIds, Guid? programId, string dueOn, string? message);
 
