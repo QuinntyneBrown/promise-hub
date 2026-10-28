@@ -329,9 +329,40 @@ simple("invite-youth", "Invite Yusuf to PromiseHub", "child", [R_SEC, "L1-023"],
        "Send invitation", icon_name="mail", invalid_err={"em": "Enter an email like name@example.org."}, base_state="youth-account",
        success_body="<p>Sent to yusuf.haddad@example.com. Valid 14 days. You can resend or withdraw it from Staff and roles.</p>")
 
-simple("change-role", "Change Priya Raman’s role", "staff", [R_SEC, R_PRIVACY], "Takes effect on her next page load.",
-       lambda e: fieldset("Role", choice("role", "Volunteer coordinator <small>Current</small>", checked=True) + choice("role", "Site lead <small>Adds check-in, Quick Cards and medical</small>") + choice("role", "Admin <small>Adds settings and billing; MFA required</small>") + choice("role", "Youth worker")),
-       "Change role", icon_name="user", na={"invalid": "A radio group with a default."})
+@screen("change-role", "dialog", "Change role", opens_from="staff", reqs=[R_SEC, R_PRIVACY, "L2-113", "L2-114"],
+        na={"invalid": "A radio group with the current role chosen; the server's refusals (own role, a youth account, Mentor while Mentoring is off) show as the failed alert."})
+def change_role(S):
+    staff_roles = [("Youth worker", "Runs the sessions they’re assigned"), ("Site lead", "Adds check-in for any session, Quick Cards and medical"),
+                   ("Volunteer coordinator", "Reads rosters and slips"), ("Program director", "Programs, enrollment, incident review"),
+                   ("Admin", "Everything, including people and billing; MFA required")]
+
+    def radios(current: str, chosen: str, mentoring: bool = True) -> str:
+        roles = staff_roles + ([("Mentor", "Sees only the youth assigned to them")] if mentoring else []) + [("Volunteer", "Runs the sessions they’re assigned")]
+        return fieldset("Role", "".join(choice("role", f"{r} <small>{h}{' · current' if r == current else ''}</small>", checked=r == chosen) for r, h in roles))
+
+    def box(name, current, chosen, *, busy=False, alert_html="", warn=False, mentoring=True):
+        body = radios(current, chosen, mentoring) + (alert("warning", "This gives access to every family’s records", f"As a {chosen.lower()}, {name.split()[0]} will see children, guardians and attendance across Harbourview.") if warn else "")
+        return dialog_box(f"Change {name}’s role", "It applies the next time they do anything. The change is recorded in the audit log.", body,
+                          footer("Change role", busy=busy), icon_name="user", alert_html=alert_html, form=True)
+    S.add("default", "From Staff and roles: Priya Raman’s role, Volunteer coordinator now; the staff and participant roles a person can hold. Youth is never offered: a youth account follows its child record.", **over("staff", overlays=box("Priya Raman", "Volunteer coordinator", "Volunteer coordinator")))
+    S.add("person", "From Leo Martins’s record: moving a volunteer to a staff role warns that it opens every family’s records.", **over("person", "staff", overlays=box("Leo Martins", "Volunteer", "Youth worker", warn=True)))
+    S.add("busy", "Changing the role: the button is busy.", **over("person", "staff", overlays=box("Leo Martins", "Volunteer", "Youth worker", busy=True, warn=True)))
+    S.add("failed", "The change failed; the choice is kept and nothing changed.", **over("person", "staff", overlays=box("Leo Martins", "Volunteer", "Youth worker", warn=True, alert_html=failed_alert("That didn’t go through", "The role didn’t change. Try again."))))
+    S.add("mentoring-off", "Mentoring is off: Mentor is not offered.", **over("person", "staff", overlays=box("Leo Martins", "Volunteer", "Volunteer", mentoring=False)))
+
+
+@screen("deactivate-person", "dialog", "Deactivate a person", opens_from="person", reqs=["L2-113", "L2-114", "L2-032", R_SEC], na={"invalid": "Confirming needs no input."})
+def deactivate_person(S):
+    def box(title, desc, body, *, busy=False, alert_html="", base="staff"):
+        return over("person", base, overlays=dialog_box(title, desc, body, footer("Deactivate", busy=busy, danger=True, autofocus_cancel=True), icon_name="lock", danger=True, alert_html=alert_html, form=True))
+    leo_t, leo_d = "Deactivate Leo Martins?", "He’s signed out everywhere and can’t sign in. His attendance, sessions and history stay, and you can reactivate him any time."
+    leo_b = "<p>Turn off an account when someone leaves. To end access for good, remove them in Staff and roles.</p>"
+    S.add("default", "Confirm before turning Leo’s account off; Cancel has focus.", **box(leo_t, leo_d, leo_b))
+    S.add("youth", "Sofía’s youth account: her child record, progress and consents stay.", **box("Deactivate Sofía Rivera?",
+          "She’s signed out everywhere and can’t sign in. Her child record, Learning progress and consents stay, and you can reactivate her while her child record exists.", "", base="default"))
+    S.add("busy", "Deactivating: the button is busy.", **box(leo_t, leo_d, leo_b, busy=True))
+    S.add("failed", "It failed: nothing changed.", **box(leo_t, leo_d, leo_b, alert_html=failed_alert("That didn’t go through", "Leo’s account is still on. Try again.")))
+
 
 simple("remove-staff", "Remove Aisha Bello?", "staff", [R_SEC, R_PRIVACY], "Signed out everywhere. Her reports and audit entries stay.",
        lambda e: fieldset("Her sessions", choice("s", "Reassign tonight’s Tutoring night to Jaylen Okafor", checked=True) + choice("s", "Leave unassigned")) + field("confirm", "Type her name to confirm", value="", error=(e or {}).get("confirm", ""), autofocus=True),
@@ -369,6 +400,7 @@ def main_menu(S):
                 f'<div style="padding: var(--space-3) var(--space-4); border-top: var(--border-width-hairline) solid var(--color-border-default);" class="cluster cluster--snug">{avatar(user)}<div><div style="font: var(--text-label);">{esc(user["name"])}</div><div class="text-caption">{esc(user["role"])} · {ORG_SHORT}</div></div></div></nav>')
     S.add("default", "The More menu on a phone: every section, current one marked, sign out at the end.", **over("today", overlays=drawer()))
     S.add("director", "The same menu for the program director, from Programs; Applications shows while Roster is on and Curriculum while Learning is on.", **over("programs", overlays=drawer(STAFF["marisol"], "programs", director_links)))
+    S.add("admin", "Tom’s menu (Admin): People sits beside Settings; only admins see it.", **over("today", overlays=drawer(STAFF["tom"], "today", director_links[:-3] + [("people", "People", "users")] + director_links[-3:])))
     S.add("youth", "A youth’s menu: Today, Learning, Schedule (while Roster is on), Messages and Announcements (while Messages is on), notifications and account only; no staff sections, no Settings.",
           **over("today", "youth", overlays=drawer(YOUTH["sofia"], "today", [("today", "Today", "home"), ("learn-home", "Learning", "star"), ("youth-schedule", "Schedule", "calendar"), ("conversations", "Messages", "message"), ("youth-announcements", "Announcements", "bell")] + tail)))
     S.add("mentor", "A mentor’s menu: Today, Mentoring, Check-in, Messages and Announcements (while Messages is on), notifications and account.",

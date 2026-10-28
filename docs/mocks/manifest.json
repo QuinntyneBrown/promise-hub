@@ -2821,6 +2821,65 @@
       }
     },
     {
+      "id": "people",
+      "kind": "page",
+      "title": "People",
+      "route": "/people",
+      "requirements": [
+        "L2-112",
+        "L2-114",
+        "L2-007",
+        "L2-001",
+        "L2-005",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "filtered",
+        "deactivated",
+        "mentoring-off",
+        "paged",
+        "no-results",
+        "empty",
+        "loading",
+        "error",
+        "forbidden"
+      ]
+    },
+    {
+      "id": "person",
+      "kind": "page",
+      "title": "Person",
+      "route": "/people/:id",
+      "requirements": [
+        "L2-113",
+        "L2-114",
+        "L2-007",
+        "L2-032",
+        "L2-001",
+        "L2-005",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "staff",
+        "mentoring-off",
+        "learning-off",
+        "deactivated",
+        "success",
+        "child-deleted",
+        "you",
+        "loading",
+        "error",
+        "forbidden"
+      ],
+      "not_applicable": {
+        "empty": "A record always has its account; sections with nothing to show are left out."
+      }
+    },
+    {
       "id": "check-in-sheet",
       "kind": "dialog",
       "title": "Check in Kevin Tran",
@@ -3562,19 +3621,44 @@
     {
       "id": "change-role",
       "kind": "dialog",
-      "title": "Change Priya Raman’s role",
+      "title": "Change role",
       "opens_from": "staff",
       "requirements": [
         "L1-016",
-        "L1-015"
+        "L1-015",
+        "L2-113",
+        "L2-114"
       ],
       "states": [
         "default",
+        "person",
+        "busy",
+        "failed",
+        "mentoring-off"
+      ],
+      "not_applicable": {
+        "invalid": "A radio group with the current role chosen; the server's refusals (own role, a youth account, Mentor while Mentoring is off) show as the failed alert."
+      }
+    },
+    {
+      "id": "deactivate-person",
+      "kind": "dialog",
+      "title": "Deactivate a person",
+      "opens_from": "person",
+      "requirements": [
+        "L2-113",
+        "L2-114",
+        "L2-032",
+        "L1-016"
+      ],
+      "states": [
+        "default",
+        "youth",
         "busy",
         "failed"
       ],
       "not_applicable": {
-        "invalid": "A radio group with a default."
+        "invalid": "Confirming needs no input."
       }
     },
     {
@@ -3673,6 +3757,7 @@
       "states": [
         "default",
         "director",
+        "admin",
         "youth",
         "mentor",
         "volunteer"
