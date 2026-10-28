@@ -74,7 +74,8 @@ test.describe('A volunteer', () => {
 
     await expect(today.heading).toHaveText('Welcome, Leo');
     expect(await shell.visibleNavigationLabels()).toEqual(['Today', 'Check-in', 'More']);
-    expect(await today.yourWork()).toEqual(['Tutoring night']);
+    await expect(today.volunteerSession('Tutoring night')).toContainText('Take attendance');
+    expect(await today.yourWork()).toEqual(['Your schedule']);
     await today.expectAccessible();
   });
 });

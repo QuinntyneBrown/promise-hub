@@ -375,6 +375,11 @@ export class FakeApi {
     memberships.splice(SEEDED_MEMBERSHIPS);
   }
 
+  /** Who is staffed onto a session, as a coordinator assigning coverage would (L2-009 criterion 8). */
+  setSessionStaff(eventId: string, membershipIds: string[]): void {
+    this.sessionStaff.set(eventId, [...membershipIds]);
+  }
+
   /** Makes the next calls to a route answer with the given status, as the real API would on a fault. */
   failNext(path: string, status: number): void {
     this.failures.set(path, status);

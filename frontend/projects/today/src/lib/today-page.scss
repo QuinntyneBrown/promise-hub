@@ -26,3 +26,8 @@
   grid-template-columns: repeat(auto-fill, minmax(min(100%%, 20rem), 1fr));
   margin-block-start: var(--layout-gutter);
 }
+.mine {
+  display: grid;
+  gap: var(--layout-gutter);
+  margin-block-end: var(--layout-gutter);
+}
