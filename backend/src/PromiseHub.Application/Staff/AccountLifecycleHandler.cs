@@ -65,7 +65,7 @@ public sealed class AccountLifecycleHandler(IPromiseHubDb db, ITenantContext ten
             .ToListAsync(cancellationToken);
         foreach (var member in youth)
         {
-            member.Deactivate(clock.GetUtcNow(), "with the child record");
+            member.Deactivate(clock.GetUtcNow(), tenant.ActorName);
             audit.Record(new AuditEvent(AuditAction.Deactivated, "Membership", member.Id, $"{member.PersonName}’s account deactivated with the child record by {tenant.ActorName}"));
         }
     }

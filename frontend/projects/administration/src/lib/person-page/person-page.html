@@ -77,7 +77,7 @@
             <ph-description-list [facts]="programFacts()" />
           </ph-card>
         }
-        @if (p.mentoring) {
+        @if (p.mentoring && (p.role === 'Youth' || p.role === 'Mentor')) {
           <ph-card title="Mentoring">
             <ph-description-list [facts]="mentoringFacts()" />
           </ph-card>

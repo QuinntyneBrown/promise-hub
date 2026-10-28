@@ -30,7 +30,7 @@ public sealed class Membership : ITenantOwned
     /// <summary>Set while an admin has turned this account off (ADR 0070); reversible, unlike <see cref="RemovedAt"/>.</summary>
     public DateTimeOffset? DeactivatedAt { get; private set; }
 
-    /// <summary>Who turned it off, or why when no one did ("with her child record").</summary>
+    /// <summary>Who turned it off, directly or by deleting the household of a youth's child record.</summary>
     public string? DeactivatedBy { get; private set; }
 
     /// <summary>Not removed and not deactivated: the membership can start or continue a session.</summary>

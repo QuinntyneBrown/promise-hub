@@ -4618,7 +4618,7 @@ export class FakeApi {
   /** The youth account's household was deleted: the account is deactivated with its child record and stays off. */
   deleteChildRecordOf(id: string): void {
     this.deletedChildRecords.add(id);
-    this.deactivatePerson(id, "with the child record");
+    this.deactivatePerson(id);
   }
 
   /** Assigns a mentor to a child, as a program director would from a cohort's roster. */
