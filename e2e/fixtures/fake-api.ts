@@ -11993,7 +11993,7 @@ export class FakeApi {
     return route.fulfill({ json: { kinds } });
   }
 
-  /** PUT /notifications/preferences: a kind not offered is refused with 422; saving is audited. */
+  /** PUT /notifications/preferences: a kind the role never receives is refused with 422, one whose module is off answers 404; saving is audited. */
   private async saveNotificationPreferences(route: Route): Promise<void> {
     const m = memberships.find((x) => x.id === this.membershipId);
     if (!m) return this.unauthenticated(route);
@@ -12002,6 +12002,15 @@ export class FakeApi {
       kinds?: { key: string; inApp: boolean }[];
     };
     const choices = b.kinds ?? [];
+    // A kind the role receives whose module is off answers 404 (L2-121).
+    if (
+      choices.some(
+        (c) =>
+          !offered.includes(c.key) &&
+          NOTIFICATION_KINDS.some((k) => k.key === c.key && k.receives(m)),
+      )
+    )
+      return route.fulfill({ status: 404 });
     if (choices.some((c) => !offered.includes(c.key)))
       return route.fulfill({
         status: 422,

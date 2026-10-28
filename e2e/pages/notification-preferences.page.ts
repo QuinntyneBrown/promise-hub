@@ -46,6 +46,25 @@ export class NotificationPreferencesPage extends BasePage {
     });
   }
 
+  get breadcrumb(): Locator {
+    return this.page.getByRole("navigation", { name: "Breadcrumb" });
+  }
+
+  /** The status PUT /notifications/preferences answers for one kind, as a direct request would (L2-121). */
+  async saveStatus(key: string, inApp: boolean): Promise<number> {
+    return this.page.evaluate(
+      async ([k, on]) =>
+        (
+          await fetch("/api/notifications/preferences", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ kinds: [{ key: k, inApp: on }] }),
+          })
+        ).status,
+      [key, inApp] as const,
+    );
+  }
+
   async tryAgain(): Promise<void> {
     await this.page.getByRole("button", { name: "Try again" }).click();
   }
