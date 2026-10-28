@@ -71,6 +71,8 @@ public static class DependencyInjection
         services.AddScoped<Surveys.GuardianSurveyHandler>();
         services.AddScoped<Search.SearchHandler>();
         services.AddScoped<Notifications.NotificationWriter>();
+        services.AddScoped<Notifications.NotificationKinds>();
+        services.AddScoped<Notifications.NotificationPreferencesHandler>();
         services.AddScoped<Notifications.NotificationsHandler>();
         services.AddScoped<Notifications.NotificationSettingsReader>();
         services.AddScoped<Notifications.NotificationSettingsHandler>();

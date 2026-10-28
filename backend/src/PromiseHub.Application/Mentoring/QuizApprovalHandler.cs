@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PromiseHub.Application.Audit;
+using PromiseHub.Application.Notifications;
 using PromiseHub.Application.Curriculum;
 using PromiseHub.Application.Learning;
 using PromiseHub.Application.Organizations;
@@ -15,7 +16,8 @@ namespace PromiseHub.Application.Mentoring;
 /// at the auto-score or an override from 0 to 100, or all at once at their auto-scores. Each approval notifies the youth and is audited with
 /// the auto-score and any override.
 /// </summary>
-public sealed class QuizApprovalHandler(IPromiseHubDb db, ITenantContext tenant, MentorYouthMemberships youth, IAuditWriter audit, TimeProvider clock, BadgeAwarder badges)
+public sealed class QuizApprovalHandler(IPromiseHubDb db, ITenantContext tenant, MentorYouthMemberships youth, IAuditWriter audit, TimeProvider clock, BadgeAwarder badges,
+    NotificationWriter notifications)
 {
     public async Task<QuizApprovalsDto> ListAsync(CancellationToken cancellationToken = default)
     {
@@ -48,7 +50,7 @@ public sealed class QuizApprovalHandler(IPromiseHubDb db, ITenantContext tenant,
             return Gated<ApproveAllDto>.Invalid(new Dictionary<string, string> { ["override"] = "Enter a whole number from 0 to 100, or leave it blank." });
         }
         var quiz = await db.Quizzes.AsNoTracking().FirstAsync(q => q.Id == attempt.QuizId, cancellationToken);
-        Approve(attempt, quiz, request.Override);
+        await ApproveAsync(attempt, quiz, request.Override, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         await badges.AwardAsync(attempt.MembershipId, cancellationToken);
         return Gated<ApproveAllDto>.Found(new ApproveAllDto(1));
@@ -62,7 +64,7 @@ public sealed class QuizApprovalHandler(IPromiseHubDb db, ITenantContext tenant,
         var quizzes = await db.Quizzes.AsNoTracking().Where(q => quizIds.Contains(q.Id)).ToDictionaryAsync(q => q.Id, cancellationToken);
         foreach (var attempt in attempts)
         {
-            Approve(attempt, quizzes[attempt.QuizId], null);
+            await ApproveAsync(attempt, quizzes[attempt.QuizId], null, cancellationToken);
         }
         await db.SaveChangesAsync(cancellationToken);
         foreach (var membership in attempts.Select(a => a.MembershipId).Distinct())
@@ -72,7 +74,7 @@ public sealed class QuizApprovalHandler(IPromiseHubDb db, ITenantContext tenant,
         return new ApproveAllDto(attempts.Count);
     }
 
-    private void Approve(QuizAttempt attempt, Quiz quiz, int? overrideScore)
+    private async Task ApproveAsync(QuizAttempt attempt, Quiz quiz, int? overrideScore, CancellationToken cancellationToken)
     {
         var now = clock.GetUtcNow();
         attempt.Approve(overrideScore, quiz.PassMark, tenant.ActorName, now);
@@ -80,7 +82,7 @@ public sealed class QuizApprovalHandler(IPromiseHubDb db, ITenantContext tenant,
         audit.Record(new AuditEvent(AuditAction.Updated, "QuizAttempt", attempt.Id,
             $"{quiz.Title} attempt {attempt.Number} approved at {attempt.Score}% by {tenant.ActorName}{(overrideScore is null ? "" : $" (auto-score {auto}%)")}",
             Before: new { AutoScore = auto }, After: new { attempt.Score, Override = overrideScore, attempt.Passed }));
-        db.Notifications.Add(new Notification(Guid.NewGuid(), tenant.OrganizationId, attempt.MembershipId, "learning",
-            $"{tenant.ActorName} approved your {quiz.Title} score: {attempt.Score}%.", $"/learning/attempts/{attempt.Id}", now));
+        await notifications.NotifyMembersAsync([attempt.MembershipId], "learning", $"{tenant.ActorName} approved your {quiz.Title} score: {attempt.Score}%.",
+            $"/learning/attempts/{attempt.Id}", cancellationToken);
     }
 }

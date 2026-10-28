@@ -1,6 +1,7 @@
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using PromiseHub.Application.Audit;
+using PromiseHub.Application.Notifications;
 using PromiseHub.Application.Organizations;
 using PromiseHub.Domain.Audit;
 using PromiseHub.Domain.Curriculum;
@@ -16,7 +17,7 @@ namespace PromiseHub.Application.Mentoring;
 /// One row per youth and item; audited once as Created without the message.
 /// </summary>
 public sealed class AssignWorkHandler(IPromiseHubDb db, ITenantContext tenant, MentorScope scope, IAuditWriter audit, OrganizationToday today,
-    TimeProvider clock)
+    TimeProvider clock, NotificationWriter notifications)
 {
     public async Task<AssignWorkOptionsDto> OptionsAsync(CancellationToken cancellationToken = default)
     {
@@ -156,6 +157,12 @@ public sealed class AssignWorkHandler(IPromiseHubDb db, ITenantContext tenant, M
         var due = dueOn!.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         audit.Record(new AuditEvent(AuditAction.Created, nameof(AssignedWork), item!.Id, $"{tenant.ActorName} assigned {item.Title} to {recipients.Count} youth",
             After: new { Kind = kind.ToString(), DueOn = due, Youth = recipients.Count }));
+        // Each recipient's youth account hears of it (L2-109 criterion 1); a child without one has nobody to tell.
+        var youthAccounts = await db.Memberships.AsNoTracking()
+            .Where(m => m.Role == Domain.Organizations.Role.Youth && m.RemovedAt == null && m.ChildId != null && recipients.Contains(m.ChildId.Value))
+            .Select(m => m.Id).ToListAsync(cancellationToken);
+        await notifications.NotifyMembersAsync(youthAccounts, "assignments",
+            $"{tenant.ActorName} assigned you the {item.Title} {noun}, due {dueOn.Value.ToString("ddd d MMM", CultureInfo.InvariantCulture)}.", "/learning", cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return (Result.Done, new AssignedWorkResultDto(recipients.Count, item.Title, due));
     }

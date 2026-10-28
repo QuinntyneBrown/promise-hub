@@ -16,7 +16,9 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, string connectionString)
     {
-        services.AddDbContext<PromiseHubDbContext>(o => o.UseSqlite(connectionString));
+        // Every save that adds or reads a notice tells the recipient's open streams (L2-110, ADR 0069).
+        services.AddSingleton<Notifications.NotificationEvents>();
+        services.AddDbContext<PromiseHubDbContext>((sp, o) => o.UseSqlite(connectionString).AddInterceptors(sp.GetRequiredService<Notifications.NotificationEvents>()));
         services.AddScoped<IPromiseHubDb>(sp => sp.GetRequiredService<PromiseHubDbContext>());
         services.AddScoped<IAuditWriter, AuditWriter>();
         services.AddScoped<IMigrationStatus, MigrationStatus>();

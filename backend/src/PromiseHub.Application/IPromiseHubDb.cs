@@ -60,6 +60,7 @@ public interface IPromiseHubDb
     DbSet<EndedSession> EndedSessions { get; }
     DbSet<Domain.Notifications.Notification> Notifications { get; }
     DbSet<Domain.Notifications.NotificationSettings> NotificationSettings { get; }
+    DbSet<Domain.Notifications.NotificationPreference> NotificationPreferences { get; }
     DbSet<Domain.Reports.ReportExport> ReportExports { get; }
     DbSet<Domain.Surveys.Survey> Surveys { get; }
     DbSet<Domain.Surveys.SurveyResponse> SurveyResponses { get; }

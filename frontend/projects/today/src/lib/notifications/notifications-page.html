@@ -16,7 +16,11 @@
             [muted]="!!n.readAt"
             [link]="n.link"
             (click)="opened(n)"
-          />
+          >
+            @if (!n.readAt) {
+              <ph-badge tone="info">New</ph-badge>
+            }
+          </ph-list-item>
         }
       </ph-list>
     </ph-card>

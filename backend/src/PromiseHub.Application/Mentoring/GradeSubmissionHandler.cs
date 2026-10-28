@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using PromiseHub.Application.Audit;
+using PromiseHub.Application.Notifications;
 using PromiseHub.Application.Curriculum;
 using PromiseHub.Application.Learning;
 using PromiseHub.Application.Organizations;
@@ -16,7 +17,8 @@ namespace PromiseHub.Application.Mentoring;
 /// comment; approve accepts it with the total; revise sends it back with the note. Approve and revise notify the youth. The change, its
 /// history step, the notification and the audit entry are one save; a race past the version check is answered stale too.
 /// </summary>
-public sealed class GradeSubmissionHandler(IPromiseHubDb db, ITenantContext tenant, MentorYouthMemberships youth, IAuditWriter audit, TimeProvider clock, BadgeAwarder badges)
+public sealed class GradeSubmissionHandler(IPromiseHubDb db, ITenantContext tenant, MentorYouthMemberships youth, IAuditWriter audit, TimeProvider clock, BadgeAwarder badges,
+    NotificationWriter notifications)
 {
     public async Task<Gated<GradeOutcomeDto>> HandleAsync(Guid submissionId, GradeRequest request, CancellationToken cancellationToken = default)
     {
@@ -80,13 +82,13 @@ public sealed class GradeSubmissionHandler(IPromiseHubDb db, ITenantContext tena
         if (decision == "approve")
         {
             db.SubmissionEvents.Add(submission.Accept(total, comment, tenant.ActorName, now));
-            Notify(submission, $"{tenant.ActorName} approved {assignment.Title}: {total} of {assignment.TotalPoints} points.", now);
+            await NotifyAsync(submission, $"{tenant.ActorName} approved {assignment.Title}: {total} of {assignment.TotalPoints} points.", cancellationToken);
             summary = $"{assignment.Title} · approved by {tenant.ActorName}, {total} of {assignment.TotalPoints} points";
         }
         else if (decision == "revise")
         {
             db.SubmissionEvents.Add(submission.RequestRevision(comment!, tenant.ActorName, now));
-            Notify(submission, $"{tenant.ActorName} asked for a revision of {assignment.Title}.", now);
+            await NotifyAsync(submission, $"{tenant.ActorName} asked for a revision of {assignment.Title}.", cancellationToken);
             summary = $"{assignment.Title} · sent back for revision by {tenant.ActorName}";
         }
         audit.Record(new AuditEvent(AuditAction.Updated, "AssignmentSubmission", submission.Id, summary,
@@ -106,6 +108,6 @@ public sealed class GradeSubmissionHandler(IPromiseHubDb db, ITenantContext tena
         return Gated<GradeOutcomeDto>.Found(new GradeOutcomeDto(submission.Status.ToString(), submission.Points, submission.Version));
     }
 
-    private void Notify(AssignmentSubmission submission, string text, DateTimeOffset now) =>
-        db.Notifications.Add(new Notification(Guid.NewGuid(), tenant.OrganizationId, submission.MembershipId, "learning", text, $"/learning/submissions/{submission.Id}", now));
+    private Task NotifyAsync(AssignmentSubmission submission, string text, CancellationToken cancellationToken) =>
+        notifications.NotifyMembersAsync([submission.MembershipId], "learning", text, $"/learning/submissions/{submission.Id}", cancellationToken);
 }

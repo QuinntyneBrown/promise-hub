@@ -1,7 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { AppNotification, LoadResult, NOTIFICATIONS_API, NotificationList } from '@promisehub/api';
 import {
+  AppNotification,
+  LoadResult,
+  NOTIFICATIONS_API,
+  NotificationList,
+  REALTIME_EVENTS,
+} from '@promisehub/api';
+import {
+  PhBadge,
   PhButton,
   PhCard,
   PhEmptyState,
@@ -11,12 +18,16 @@ import {
   PhSkeleton,
   formatDateTime,
 } from '@promisehub/components';
-import { Subject, startWith, switchMap } from 'rxjs';
+import { Subject, filter, map, merge, startWith, switchMap } from 'rxjs';
+import { NOTIFICATION_KIND_LABELS } from './notification-kind-label';
 
-/** The notification center (mock: notifications): the caller's notices, newest first, with Mark all read. */
+/**
+ * The notification center (mock: notifications, L2-040, L2-109): every member's own notices, newest first, each with its kind, New while
+ * unread, and Mark all read.
+ */
 @Component({
   selector: 'ph-notifications-page',
-  imports: [PhButton, PhCard, PhEmptyState, PhList, PhListItem, PhPageHeader, PhSkeleton],
+  imports: [PhBadge, PhButton, PhCard, PhEmptyState, PhList, PhListItem, PhPageHeader, PhSkeleton],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './notifications-page.html',
 })
@@ -24,10 +35,25 @@ export class NotificationsPage {
   private readonly api = inject(NOTIFICATIONS_API);
   private readonly refresh$ = new Subject<void>();
 
-  protected readonly result = toSignal(
-    this.refresh$.pipe(
-      startWith(undefined),
-      switchMap(() => this.api.list().pipe(startWith<LoadResult<NotificationList> | null>(null))),
+  /** A new notice, a read elsewhere or a (re)connected stream fetches the list again without the loading state (L2-110). */
+  private readonly quiet$ = inject(REALTIME_EVENTS)
+    .events()
+    .pipe(filter((e) => e.type === 'notification' || e.type === 'open'));
+
+  /** Null while loading. */
+  protected readonly result = toSignal<LoadResult<NotificationList> | null>(
+    merge(
+      this.refresh$.pipe(
+        startWith(undefined),
+        map(() => true),
+      ),
+      this.quiet$.pipe(map(() => false)),
+    ).pipe(
+      switchMap((loud) =>
+        loud
+          ? this.api.list().pipe(startWith<LoadResult<NotificationList> | null>(null))
+          : this.api.list().pipe(filter((r) => r.status === 'loaded')),
+      ),
     ),
     { initialValue: null },
   );
@@ -45,7 +71,8 @@ export class NotificationsPage {
   }
 
   protected meta(n: AppNotification): string {
-    return formatDateTime(n.createdAt) + (n.readAt ? '' : ' · Unread');
+    const kind = NOTIFICATION_KIND_LABELS[n.kind];
+    return (kind ? `${kind} · ` : '') + formatDateTime(n.createdAt) + (n.readAt ? '' : ' · Unread');
   }
 
   /** Opening a notice marks it read; the link then navigates. */

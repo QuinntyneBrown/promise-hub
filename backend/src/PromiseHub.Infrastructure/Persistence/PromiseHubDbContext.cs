@@ -56,6 +56,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Staff.StaffInvitation> StaffInvitations => Set<Domain.Staff.StaffInvitation>();
     public DbSet<Domain.Notifications.Notification> Notifications => Set<Domain.Notifications.Notification>();
     public DbSet<Domain.Notifications.NotificationSettings> NotificationSettings => Set<Domain.Notifications.NotificationSettings>();
+    public DbSet<Domain.Notifications.NotificationPreference> NotificationPreferences => Set<Domain.Notifications.NotificationPreference>();
     public DbSet<Domain.Reports.ReportExport> ReportExports => Set<Domain.Reports.ReportExport>();
     public DbSet<Domain.Surveys.Survey> Surveys => Set<Domain.Surveys.Survey>();
     public DbSet<Domain.Surveys.SurveyResponse> SurveyResponses => Set<Domain.Surveys.SurveyResponse>();
@@ -416,6 +417,11 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(x => x.CreatedBy).HasMaxLength(200);
             e.Property(x => x.CreatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.Property(x => x.ExpiresAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+        });
+        modelBuilder.Entity<Domain.Notifications.NotificationPreference>(e =>
+        {
+            e.Property(p => p.Kind).HasMaxLength(40);
+            e.HasIndex(p => new { p.MembershipId, p.Kind }).IsUnique();
         });
         modelBuilder.Entity<Domain.Notifications.Notification>(e =>
         {
