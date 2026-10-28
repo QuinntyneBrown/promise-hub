@@ -1,0 +1,136 @@
+@let r = result();
+@let p = person();
+@if (r?.status === 'forbidden') {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      title="Only admins manage people"
+      text="Ask an admin to change a role or an account."
+      [headingLevel]="1"
+    >
+      <ph-button link="/">Back to Today</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-breadcrumb [items]="crumbs()" />
+  @if (p) {
+    <ph-page-header [title]="p.name">
+      @if (!p.isYou && p.role !== 'Youth') {
+        <ph-button icon="account" hasPopup="dialog" (click)="changeRole(p)">Change role</ph-button>
+      }
+      @if (!p.isYou) {
+        @if (p.status === 'Deactivated') {
+          <ph-button
+            variant="primary"
+            icon="refresh"
+            [disabled]="!!p.child?.deleted"
+            [busy]="busy()"
+            (click)="reactivate(p)"
+            >Reactivate</ph-button
+          >
+        } @else {
+          <ph-button variant="danger" icon="lock" hasPopup="dialog" (click)="deactivate(p)"
+            >Deactivate</ph-button
+          >
+        }
+      }
+    </ph-page-header>
+    <div class="badges">
+      <ph-badge [tone]="p.role === 'Admin' ? 'success' : 'info'">{{ roleLabel[p.role] }}</ph-badge>
+      <ph-badge [tone]="p.status === 'Active' ? 'success' : 'neutral'">{{ p.status }}</ph-badge>
+    </div>
+    @if (p.child?.deleted) {
+      <ph-alert
+        title="The child record was deleted"
+        [text]="
+          'A youth account follows its child record, so ' +
+          p.name.split(' ')[0] +
+          '’s stays off. Nothing else was removed.'
+        "
+      />
+    }
+    @if (failed(); as text) {
+      <ph-alert tone="danger" title="That didn’t go through" [text]="text" />
+    }
+    @if (p.isYou) {
+      <ph-alert
+        title="This is you"
+        text="Another admin changes your role or turns off your account."
+      />
+    }
+    <div class="split">
+      <div class="stack">
+        <ph-card title="Account">
+          <ph-description-list [facts]="account()" />
+        </ph-card>
+        @if (p.child; as c) {
+          <ph-card title="Youth record">
+            <ph-description-list [facts]="youth()" />
+            @if (!c.deleted) {
+              <ph-button [link]="['/families', c.householdId, 'children', c.id]"
+                >Open child record</ph-button
+              >
+            }
+          </ph-card>
+        } @else if (programFacts().length) {
+          <ph-card title="Programs">
+            <ph-description-list [facts]="programFacts()" />
+          </ph-card>
+        }
+        @if (p.mentoring && (p.role === 'Youth' || p.role === 'Mentor')) {
+          <ph-card title="Mentoring">
+            <ph-description-list [facts]="mentoringFacts()" />
+          </ph-card>
+        }
+        @if (p.learning; as l) {
+          <ph-card title="Learning">
+            <ph-progress-bar
+              [value]="l.lessonsDone"
+              [max]="l.lessonsTotal || 1"
+              label="Lessons done"
+              [caption]="l.lessonsDone + ' of ' + l.lessonsTotal + ' lessons'"
+            />
+            <ph-description-list
+              [facts]="[
+                { key: 'badges', term: 'Badges', value: l.badges.join(', ') || 'None yet' },
+              ]"
+            />
+          </ph-card>
+        }
+      </div>
+      <div class="stack">
+        <ph-card title="History" [flush]="true">
+          @if (p.history.length) {
+            <ph-list label="Account history" [inset]="true">
+              @for (h of p.history; track $index) {
+                <ph-list-item [title]="h.summary" [meta]="h.by + ' · ' + when(h.at)" />
+              }
+            </ph-list>
+          } @else {
+            <ph-empty-state
+              icon="shield"
+              title="Nothing recorded yet"
+              text="Role changes and deactivations appear here."
+            />
+          }
+        </ph-card>
+      </div>
+    </div>
+  } @else if (r === null) {
+    <h1 class="visually-hidden">Loading this person</h1>
+    <div aria-busy="true" aria-label="Loading the record"><ph-skeleton shape="card" /></div>
+  } @else {
+    <ph-page-header title="Person" />
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load this person"
+        text="They may not be in this organization any more. Go back to People or try again."
+      >
+        <ph-button link="/people">Back to People</ph-button>
+        <ph-button variant="primary" (click)="load()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+}

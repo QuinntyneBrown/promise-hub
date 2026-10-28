@@ -62,6 +62,10 @@ ADR 0043 adds the roles **Youth**, **Mentor** and **Volunteer** to `Role`.
 
 `TenantContextMiddleware` answers each way a session ends with its own code (ADR 0044): a removed membership with no other current one answers 401 "account-deactivated" and the app shows `account-deactivated`; a session id recorded at sign-out (`EndedSession`) answers 401 with no code; an older session version answers 401 as before. The anonymous `/auth` endpoints that start a session skip this resolution, so a stale cookie never blocks the next sign-in on a shared device. See `handle-deactivated-account` and `end-user-session`.
 
+## Deactivated memberships (prompt 76)
+
+A membership can now be deactivated as well as removed (ADR 0070). `ActiveMembership`, `SignInHandler`, `SwitchOrganizationHandler` and `TenantContextMiddleware` treat `DeactivatedAt` like `RemovedAt`: a session in a deactivated membership continues in the person's next organization or answers 401 `account-deactivated`, and sign-in reports the account inactive only after the right password. Role changes (`PUT /staff/{id}/role`) also refuse a youth account, a change to Youth and Mentor while Mentoring is off (`L2-113`, `L2-114`).
+
 ## Requirements
 
 The feature realizes the following level-2 (L2) requirements. Each L2 requirement refines a level-1 (L1) requirement, cited by identifier.

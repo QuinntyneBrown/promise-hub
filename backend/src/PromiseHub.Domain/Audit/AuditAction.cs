@@ -25,4 +25,6 @@ public enum AuditAction
     Withdrawn,
     Completed,
     Submitted,
+    Deactivated,
+    Reactivated,
 }

@@ -41,13 +41,15 @@
                   roleLabel[m.role]
                 }}</ph-badge>
                 @if (!m.isYou) {
-                  <ph-button
-                    size="sm"
-                    hasPopup="dialog"
-                    [label]="'Change role for ' + m.name"
-                    (click)="changeRole(m)"
-                    >Change role</ph-button
-                  >
+                  @if (m.role !== 'Youth') {
+                    <ph-button
+                      size="sm"
+                      hasPopup="dialog"
+                      [label]="'Change role for ' + m.name"
+                      (click)="changeRole(m)"
+                      >Change role</ph-button
+                    >
+                  }
                   <ph-button
                     variant="ghost"
                     size="sm"

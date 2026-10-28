@@ -114,9 +114,23 @@ public sealed class StaffAccessHandler(IPromiseHubDb db, ITenantContext tenant, 
         {
             return Result.Invalid(new Dictionary<string, string> { ["role"] = "Choose a role." });
         }
+        // A youth account follows its child record, and youth are invited from theirs (ADR 0045, ADR 0070).
+        if (member.Role == Role.Youth)
+        {
+            return Result.Invalid(new Dictionary<string, string> { ["role"] = "A youth account’s role follows its child record." });
+        }
+        if (role == Role.Youth)
+        {
+            return Result.Invalid(new Dictionary<string, string> { ["role"] = "Invite youth from their child record." });
+        }
+        if (role == Role.Mentor && !await modules.IsOnAsync(ModuleId.Mentoring, cancellationToken))
+        {
+            return Result.Invalid(new Dictionary<string, string> { ["role"] = "Turn on Mentoring to make someone a mentor." });
+        }
         var before = member.Role;
         member.ChangeRole(role);
-        audit.Record(new AuditEvent(AuditAction.RoleChanged, "Membership", member.Id, $"{member.PersonName} · {before} → {role} by {tenant.ActorName}"));
+        audit.Record(new AuditEvent(AuditAction.RoleChanged, "Membership", member.Id, $"{member.PersonName} · {before} → {role} by {tenant.ActorName}",
+            Before: new { Role = before.ToString() }, After: new { Role = role.ToString() }));
         await db.SaveChangesAsync(cancellationToken);
         return Result.Done;
     }

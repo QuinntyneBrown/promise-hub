@@ -19,10 +19,11 @@ public sealed class TenantContextMiddleware(RequestDelegate next)
             var claimed = Guid.TryParse(context.User.FindFirst(AuthSchemes.MembershipClaim)?.Value, out var membershipId)
                 ? await db.Memberships.IgnoreQueryFilters().AsNoTracking().FirstOrDefaultAsync(m => m.Id == membershipId, context.RequestAborted)
                 : null;
-            var membership = claimed?.RemovedAt is null ? claimed : null;
-            if (claimed is { RemovedAt: not null })
+            var membership = claimed is { IsActive: true } ? claimed : null;
+            if (claimed is { IsActive: false })
             {
-                // Removed from the active organization: continue in the person's remaining one, or sign out (L2-002 criterion 4).
+                // Removed from or deactivated in the active organization (ADR 0070): continue in the person's remaining one, or sign
+                // out (L2-002 criterion 4).
                 membership = await ActiveMembership.ForAsync(db, claimed.Email, context.RequestAborted);
                 if (membership is not null)
                 {

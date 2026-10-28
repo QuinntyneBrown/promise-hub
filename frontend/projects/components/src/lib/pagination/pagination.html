@@ -1,0 +1,14 @@
+<nav class="pagination" [attr.aria-label]="label()">
+  <span class="range" role="status">{{ range() }}</span>
+  <div class="buttons">
+    <ph-button [disabled]="page() <= 1" (click)="go(page() - 1)">Previous</ph-button>
+    @if (numbered()) {
+      @for (n of numbers(); track n) {
+        <ph-button [current]="n === page()" [label]="'Page ' + n" (click)="go(n)">{{
+          n
+        }}</ph-button>
+      }
+    }
+    <ph-button [disabled]="page() >= pages()" (click)="go(page() + 1)">Next</ph-button>
+  </div>
+</nav>

@@ -2430,6 +2430,22 @@ export class FakeApi {
       (route, p) => this.addPickup(route, p["id"]!),
     ],
     ["GET", /^\/api\/staff$/, (route) => this.listStaff(route)],
+    ["GET", /^\/api\/people$/, (route) => this.listPeople(route)],
+    [
+      "GET",
+      /^\/api\/people\/(?<id>[^/]+)$/,
+      (route, p) => this.getPerson(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/people\/(?<id>[^/]+)\/deactivate$/,
+      (route, p) => this.deactivatePersonRoute(route, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/people\/(?<id>[^/]+)\/reactivate$/,
+      (route, p) => this.reactivatePersonRoute(route, p["id"]!),
+    ],
     ["GET", /^\/api\/coverage$/, (route) => this.coverage(route)],
     [
       "PUT",
@@ -4565,6 +4581,45 @@ export class FakeApi {
     string,
     { lead: string; supporting: string[] }
   >();
+
+  /** More accounts at Harbourview, as accepted invitations would add them: Youth worker 01 to n (L2-112 paging). */
+  addPeople(count: number): void {
+    for (let i = 1; i <= count; i++) {
+      const n = String(i).padStart(2, "0");
+      memberships.push({
+        id: `m-worker-${n}`,
+        organizationId: "org-harbourview",
+        personName: `Worker ${n}`,
+        email: `worker${n}@harbourview.example`,
+        role: "YouthWorker",
+      });
+    }
+  }
+
+  /** Removes every other account of the person's organization, as a brand-new organization would have only its founder. */
+  leaveOnly(membershipId: string): void {
+    const keep = memberships.find((m) => m.id === membershipId)!;
+    for (const m of memberships)
+      if (m.organizationId === keep.organizationId && m.id !== keep.id)
+        this.removedMembers.add(m.id);
+  }
+
+  /** Deactivated accounts with when and by whom (ADR 0070); the session treats them like removed memberships. */
+  private deactivatedMembers = new Map<string, { at: string; by: string }>();
+  /** Youth accounts whose child record was deleted with its household. */
+  private deletedChildRecords = new Set<string>();
+
+  /** An admin deactivated this account, as POST /people/{id}/deactivate would. */
+  deactivatePerson(id: string, by = "Tom Nguyen"): void {
+    this.deactivatedMembers.set(id, { at: "2026-11-05T21:20:00Z", by });
+    this.removedMemberships.add(id);
+  }
+
+  /** The youth account's household was deleted: the account is deactivated with its child record and stays off. */
+  deleteChildRecordOf(id: string): void {
+    this.deletedChildRecords.add(id);
+    this.deactivatePerson(id);
+  }
 
   /** Assigns a mentor to a child, as a program director would from a cohort's roster. */
   assignYouthMentor(childId: string, mentorId: string): void {
@@ -7292,6 +7347,263 @@ export class FakeApi {
     return route.fulfill({ status: 204 });
   }
 
+  /** The last successful sign-in by email (as SignInAttempts would hold them), for the people directory (L2-112). */
+  private lastSignIns = new Map<string, string>([
+    ["tom@harbourview.example", "2026-11-05T14:02:00Z"],
+    ["sofia@harbourview.example", "2026-11-05T21:10:00Z"],
+    ["daniel@harbourview.example", "2026-11-05T21:05:00Z"],
+    ["jaylen@harbourview.example", "2026-11-05T20:55:00Z"],
+    ["marisol@harbourview.example", "2026-11-05T14:15:00Z"],
+    ["aisha@harbourview.example", "2026-11-05T20:40:00Z"],
+  ]);
+
+  /** Mirrors backend PersonDetails: a youth's child's programs or a mentor's cohorts, and mentoring while Mentoring is on. */
+  private personFacts(x: Membership, mentoring: boolean) {
+    const childId = this.youthLinks.get(x.id);
+    const programs = this.programs
+      .filter((p) => p.organizationId === x.organizationId)
+      .filter(
+        (p) =>
+          (childId !== undefined && p.roster.includes(childId)) ||
+          (mentoring &&
+            (this.cohortMentors.get(p.id)?.lead === x.id ||
+              !!this.cohortMentors.get(p.id)?.supporting.includes(x.id))),
+      )
+      .map((p) => p.name)
+      .sort();
+    const childName = (id: string) =>
+      this.households.flatMap((h) => h.children).find((c) => c.id === id);
+    const mentorId = childId ? this.youthMentors.get(childId) : undefined;
+    return {
+      programs,
+      mentoring: mentoring
+        ? {
+            mentor: mentorId
+              ? (memberships.find((m) => m.id === mentorId)?.personName ?? null)
+              : null,
+            youth: [...this.youthMentors]
+              .filter(([, mentor]) => mentor === x.id)
+              .map(([c]) => {
+                const child = childName(c);
+                return child ? `${child.firstName} ${child.lastName}` : "";
+              })
+              .filter(Boolean)
+              .sort(),
+          }
+        : undefined,
+    };
+  }
+
+  /** Mirrors backend PeopleHandler.ListAsync (L2-112, L2-114): admins only, filtered on the server, 25 to a page. */
+  private async listPeople(route: Route): Promise<void> {
+    const m = await this.adminCaller(route);
+    if (!m) return;
+    const url = new URL(route.request().url());
+    const q = (url.searchParams.get("q") ?? "").trim().toLowerCase();
+    const role = url.searchParams.get("role") ?? "";
+    const status = url.searchParams.get("status") ?? "";
+    const programId = url.searchParams.get("programId") ?? "";
+    const page = Math.max(1, Number(url.searchParams.get("page") ?? 1) || 1);
+    const mentoring = this.modules.get(m.organizationId)!.includes("Mentoring");
+    const roles = [
+      "Admin",
+      "ProgramDirector",
+      "SiteLead",
+      "YouthWorker",
+      "VolunteerCoordinator",
+      "Youth",
+      "Mentor",
+      "Volunteer",
+    ].filter((r) => mentoring || r !== "Mentor");
+    const errors: Record<string, string> = {};
+    if (role && !roles.includes(role)) errors["role"] = "Choose a role.";
+    if (status && status !== "Active" && status !== "Deactivated")
+      errors["status"] = "Choose Active or Deactivated.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
+    const all = this.staffOf(m)
+      .map((x) => ({
+        x,
+        role: this.roleOverrides.get(x.id) ?? x.role,
+        status: this.deactivatedMembers.has(x.id) ? "Deactivated" : "Active",
+        facts: this.personFacts(x, mentoring),
+      }))
+      .filter((p) => !role || p.role === role)
+      .filter((p) => !status || p.status === status)
+      .filter(
+        (p) =>
+          !q ||
+          p.x.personName.toLowerCase().includes(q) ||
+          p.x.email.toLowerCase().includes(q),
+      )
+      .filter(
+        (p) =>
+          !programId ||
+          p.facts.programs.includes(
+            this.programs.find((pr) => pr.id === programId)?.name ?? "\u0000",
+          ),
+      )
+      .sort((a, z) => a.x.personName.localeCompare(z.x.personName));
+    return route.fulfill({
+      json: {
+        items: all.slice((page - 1) * 25, page * 25).map((p) => ({
+          id: p.x.id,
+          name: p.x.personName,
+          email: p.x.email,
+          role: p.role,
+          status: p.status,
+          programs: p.facts.programs,
+          lastSignedInAt: this.lastSignIns.get(p.x.email) ?? null,
+          isYou: p.x.id === m.id,
+          ...(p.facts.mentoring ? { mentoring: p.facts.mentoring } : {}),
+        })),
+        total: all.length,
+        page,
+        pageSize: 25,
+        roles,
+        programs: this.programs
+          .filter(
+            (p) =>
+              p.organizationId === m.organizationId && p.status === "Active",
+          )
+          .map((p) => ({ id: p.id, name: p.name }))
+          .sort((a, z) => a.name.localeCompare(z.name)),
+      },
+    });
+  }
+
+  /** The account's history, newest first, as the audit log holds it (L2-113 criterion 1). */
+  private personHistory = new Map<
+    string,
+    { at: string; action: string; summary: string; by: string }[]
+  >();
+
+  private recordPersonHistory(
+    id: string,
+    action: string,
+    summary: string,
+    by: string,
+  ): void {
+    this.personHistory.set(id, [
+      { at: "2026-11-05T21:20:00Z", action, summary, by },
+      ...(this.personHistory.get(id) ?? []),
+    ]);
+  }
+
+  /** A youth's lessons done of total and earned badges, as LearnerProgress and LearnerBadges answer them for her membership. */
+  private personLearning(x: Membership) {
+    const programs = this.placementsOf(x);
+    const tracks = this.learningState.tracks(x.id, programs);
+    const lessons = tracks.flatMap((t) => t.modules.flatMap((m) => m.lessons));
+    return {
+      lessonsDone: lessons.filter((l) => l.done).length,
+      lessonsTotal: lessons.length,
+      badges: this.journey.badgesOf(x, programs).earned.map((b) => b.name),
+    };
+  }
+
+  /** Mirrors backend AccountLifecycleHandler.DeactivateAsync (L2-113 criterion 4). */
+  private async deactivatePersonRoute(route: Route, id: string): Promise<void> {
+    const m = await this.adminCaller(route);
+    if (!m) return;
+    const x = this.staffOf(m).find((p) => p.id === id);
+    if (!x) return route.fulfill({ status: 404 });
+    if (x.id === m.id)
+      return route.fulfill({
+        status: 422,
+        json: {
+          errors: {
+            member: "You can’t deactivate your own account. Ask another admin.",
+          },
+        },
+      });
+    if (!this.deactivatedMembers.has(id)) {
+      this.deactivatePerson(id, m.personName);
+      this.recordPersonHistory(
+        id,
+        "Deactivated",
+        `${x.personName}’s account deactivated by ${m.personName}`,
+        m.personName,
+      );
+    }
+    return route.fulfill({ status: 204 });
+  }
+
+  /** Mirrors backend AccountLifecycleHandler.ReactivateAsync (L2-113 criteria 5 and 6). */
+  private async reactivatePersonRoute(route: Route, id: string): Promise<void> {
+    const m = await this.adminCaller(route);
+    if (!m) return;
+    const x = this.staffOf(m).find((p) => p.id === id);
+    if (!x) return route.fulfill({ status: 404 });
+    if (this.deletedChildRecords.has(id))
+      return route.fulfill({
+        status: 422,
+        json: {
+          errors: {
+            member: `${x.personName.split(" ")[0]}’s child record was deleted, so the account stays off.`,
+          },
+        },
+      });
+    if (this.deactivatedMembers.delete(id)) {
+      this.removedMemberships.delete(id);
+      this.recordPersonHistory(
+        id,
+        "Reactivated",
+        `${x.personName}’s account reactivated by ${m.personName}`,
+        m.personName,
+      );
+    }
+    return route.fulfill({ status: 204 });
+  }
+
+  /** Mirrors backend PeopleHandler.GetAsync (L2-113, L2-114): admins only, this organization's current accounts only. */
+  private async getPerson(route: Route, id: string): Promise<void> {
+    const m = await this.adminCaller(route);
+    if (!m) return;
+    const x = this.staffOf(m).find((p) => p.id === id);
+    if (!x) return route.fulfill({ status: 404 });
+    const on = this.modules.get(m.organizationId)!;
+    const facts = this.personFacts(x, on.includes("Mentoring"));
+    const role = this.roleOverrides.get(x.id) ?? x.role;
+    const childId = this.youthLinks.get(x.id);
+    const household = childId
+      ? this.households.find((h) => h.children.some((c) => c.id === childId))
+      : undefined;
+    const child = household?.children.find((c) => c.id === childId);
+    const learning =
+      on.includes("Learning") && role === "Youth"
+        ? this.personLearning(x)
+        : undefined;
+    return route.fulfill({
+      json: {
+        id: x.id,
+        name: x.personName,
+        email: x.email,
+        role,
+        status: this.deactivatedMembers.has(x.id) ? "Deactivated" : "Active",
+        deactivatedAt: this.deactivatedMembers.get(x.id)?.at ?? null,
+        deactivatedBy: this.deactivatedMembers.get(x.id)?.by ?? null,
+        lastSignedInAt: this.lastSignIns.get(x.email) ?? null,
+        isYou: x.id === m.id,
+        child:
+          child && household
+            ? {
+                id: child.id,
+                name: `${child.firstName} ${child.lastName}`,
+                age: ageOf(child.dateOfBirth),
+                household: household.name,
+                householdId: household.id,
+                deleted: this.deletedChildRecords.has(x.id),
+              }
+            : null,
+        programs: facts.programs,
+        history: this.personHistory.get(x.id) ?? [],
+        ...(facts.mentoring ? { mentoring: facts.mentoring } : {}),
+        ...(learning ? { learning } : {}),
+      },
+    });
+  }
+
   private async listStaff(route: Route): Promise<void> {
     const m = await this.adminCaller(route);
     if (!m) return;
@@ -7527,9 +7839,29 @@ export class FakeApi {
         status: 422,
         json: { errors: { role: "You can’t change your own role." } },
       });
-    this.roleOverrides.set(
+    const role = (route.request().postDataJSON() as { role: string }).role;
+    const before = this.roleOverrides.get(id) ?? target.role;
+    // Mirrors backend StaffAccessHandler.ChangeRoleAsync (L2-113 criterion 3, ADR 0070).
+    const refusal =
+      before === "Youth"
+        ? "A youth account’s role follows its child record."
+        : role === "Youth"
+          ? "Invite youth from their child record."
+          : role === "Mentor" &&
+              !this.modules.get(m.organizationId)!.includes("Mentoring")
+            ? "Turn on Mentoring to make someone a mentor."
+            : null;
+    if (refusal)
+      return route.fulfill({
+        status: 422,
+        json: { errors: { role: refusal } },
+      });
+    this.roleOverrides.set(id, role);
+    this.recordPersonHistory(
       id,
-      (route.request().postDataJSON() as { role: string }).role,
+      "RoleChanged",
+      `${target.personName} · ${before} → ${role} by ${m.personName}`,
+      m.personName,
     );
     return route.fulfill({ status: 204 });
   }

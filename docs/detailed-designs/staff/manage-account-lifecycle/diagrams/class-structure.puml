@@ -1,0 +1,28 @@
+@startuml
+title Class structure — Manage an account lifecycle
+class Membership {
+  Id : Guid
+  Role : Role
+  RemovedAt : DateTimeOffset?
+  DeactivatedAt : DateTimeOffset?
+  DeactivatedBy : string?
+  ChildId : Guid?
+  Deactivate(now, by)
+  Reactivate()
+  ChangeRole(role)
+}
+class AccountLifecycleHandler {
+  DeactivateAsync(id) : Result
+  ReactivateAsync(id) : Result
+  DeactivateYouthOfAsync(childIds)
+}
+class StaffAccessHandler {
+  ChangeRoleAsync(id, command) : Result
+}
+class DeleteHouseholdHandler
+class DataRequestHandler
+AccountLifecycleHandler --> Membership : changes
+StaffAccessHandler --> Membership : changes
+DeleteHouseholdHandler ..> AccountLifecycleHandler : youth follow the child
+DataRequestHandler ..> AccountLifecycleHandler : youth follow the child
+@enduml

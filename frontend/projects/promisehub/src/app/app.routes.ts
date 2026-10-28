@@ -86,6 +86,10 @@ export const routes: Routes = [
         loadChildren: () => import('@promisehub/administration').then((m) => m.coverageRoutes),
       },
       {
+        path: 'people',
+        loadChildren: () => import('@promisehub/administration').then((m) => m.peopleRoutes),
+      },
+      {
         path: 'settings/staff',
         loadChildren: () => import('@promisehub/administration').then((m) => m.routes),
       },

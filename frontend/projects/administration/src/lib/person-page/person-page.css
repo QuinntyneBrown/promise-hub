@@ -1,0 +1,29 @@
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-block-end: var(--space-4);
+}
+.split {
+  display: grid;
+  gap: var(--layout-gutter);
+  margin-block-start: var(--space-4);
+}
+@media (min-width: 1024px) {
+  .split {
+    grid-template-columns: 2fr 1fr;
+    align-items: start;
+  }
+}
+.stack {
+  display: grid;
+  gap: var(--layout-gutter);
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

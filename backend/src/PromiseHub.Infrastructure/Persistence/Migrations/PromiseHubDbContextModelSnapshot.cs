@@ -3108,6 +3108,13 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("ChildId")
                         .HasColumnType("TEXT");
 
+                    b.Property<long?>("DeactivatedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("DeactivatedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(320)

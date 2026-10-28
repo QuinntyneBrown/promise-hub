@@ -37,6 +37,8 @@ import { INCIDENTS_API } from './incidents/incidents-api.token';
 import { HttpInvitationApi } from './invitations/http-invitation-api';
 import { INVITATION_API } from './invitations/invitation-api.token';
 import { HttpModulesApi } from './modules/http-modules-api';
+import { HttpPeopleApi } from './people/http-people-api';
+import { PEOPLE_API } from './people/people-api.token';
 import { HttpStaffApi } from './staff/http-staff-api';
 import { STAFF_API } from './staff/staff-api.token';
 import { HttpNotificationSettingsApi } from './notifications/http-notification-settings-api';
@@ -109,6 +111,7 @@ export function provideApi(): EnvironmentProviders {
     { provide: INCIDENTS_API, useClass: HttpIncidentsApi },
     { provide: PICKUP_API, useClass: HttpPickupApi },
     { provide: STAFF_API, useClass: HttpStaffApi },
+    { provide: PEOPLE_API, useClass: HttpPeopleApi },
     { provide: TODAY_API, useClass: HttpTodayApi },
     { provide: SEARCH_API, useClass: HttpSearchApi },
     { provide: ACCOUNT_API, useClass: HttpAccountApi },

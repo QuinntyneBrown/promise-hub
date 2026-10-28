@@ -55,3 +55,16 @@ tbody tr:last-child td {
   text-align: end;
   white-space: nowrap;
 }
+
+a {
+  color: var(--color-fg-link);
+}
+a:hover {
+  color: var(--color-fg-link-hover);
+}
+
+@media (max-width: 639.98px) {
+  .hide-sm {
+    display: none;
+  }
+}

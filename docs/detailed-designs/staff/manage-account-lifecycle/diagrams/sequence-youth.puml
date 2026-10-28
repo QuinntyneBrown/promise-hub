@@ -1,0 +1,23 @@
+@startuml
+title UML sequence behaviour — a youth account follows its child record
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Admin (Tom)" as actor
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "DeleteHouseholdHandler" as del
+  participant "AccountLifecycleHandler" as h
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> del : DELETE household Haddad
+del -> db : soft-delete household, guardians, children
+del -> h : DeactivateYouthOfAsync(Yusuf, Nadia)
+h -> db : Nadia's youth account deactivated; audited (L2-113 c6)
+actor -> h : POST /people/{nadia}/reactivate
+h -> db : her child record deleted?
+h --> actor : 422 "Nadia’s child record was deleted, so her account stays off." (L2-113 c6)
+@enduml

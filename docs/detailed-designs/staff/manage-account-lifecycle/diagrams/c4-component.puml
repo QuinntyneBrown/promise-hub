@@ -1,0 +1,27 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Manage an account lifecycle
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "PersonPage", "administration library", "actions")
+  Component(dlg, "DeactivatePersonDialog / ChangeRoleDialog", "administration library", "CDK dialogs")
+  Component(papi, "PeopleApi / StaffApi", "api client", "deactivate, reactivate, changeRole")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "PeopleEndpoints / StaffEndpoints", "Minimal API", "ManageStaff")
+  Component(h, "AccountLifecycleHandler", "Application", "deactivate, reactivate, youth follows child")
+  Component(sa, "StaffAccessHandler", "Application", "change role")
+  Component(mw, "TenantContextMiddleware", "Api", "refuses a deactivated membership")
+  Component(audit, "IAuditWriter", "Application", "Deactivated, Reactivated, RoleChanged")
+  ComponentDb(db, "PromiseHub database", "EF Core", "Memberships, AuditEntries")
+}
+Rel(page, dlg, "opens")
+Rel(dlg, papi, "calls")
+Rel(papi, ep, "POST /people/{id}/deactivate, PUT /staff/{id}/role")
+Rel(ep, h, "calls")
+Rel(ep, sa, "calls")
+Rel(h, audit, "records")
+Rel(sa, audit, "records")
+Rel(h, db, "writes")
+Rel(mw, db, "reads the membership on every request")
+@enduml

@@ -1,0 +1,30 @@
+@startuml
+title UML sequence behaviour — Tom deactivates Leo
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Admin (Tom)" as actor
+actor "Volunteer (Leo)" as leo
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "DeactivatePersonDialog" as dlg
+end box
+box "Backend — PromiseHub.Api / Application" #ECFDF3
+  participant "AccountLifecycleHandler" as h
+  participant "TenantContextMiddleware" as mw
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> dlg : Deactivate, confirm
+dlg -> h : POST /people/{id}/deactivate
+h -> h : in Harbourview? not you? (L2-114 c3, L2-113 c4)
+h -> db : DeactivatedAt, DeactivatedBy; audit Deactivated (L2-113 c4)
+h --> dlg : 204; toast; record shows Deactivated
+leo -> mw : next request
+mw -> db : membership deactivated
+mw --> leo : 401 account-deactivated, or his next organization (L2-050)
+actor -> h : POST /people/{id}/reactivate
+h -> db : clear; audit Reactivated (L2-113 c5)
+@enduml

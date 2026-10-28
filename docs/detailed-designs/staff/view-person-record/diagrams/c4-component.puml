@@ -1,0 +1,22 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — View a person record
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "PersonPage", "administration library", "cards, history, actions")
+  Component(papi, "PeopleApi", "api client", "get(id)")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "PeopleEndpoints", "Minimal API", "ManageStaff")
+  Component(h, "PeopleHandler", "Application", "record by module")
+  Component(lp, "LearnerProgress / LearnerBadges", "Application", "lessons and badges")
+  Component(gate, "IModuleGate", "Application", "Mentoring, Learning on?")
+  ComponentDb(db, "PromiseHub database", "EF Core", "Memberships, Children, YouthMentors, AuditEntries")
+}
+Rel(page, papi, "get")
+Rel(papi, ep, "GET /people/{id}")
+Rel(ep, h, "calls")
+Rel(h, gate, "asks")
+Rel(h, lp, "while Learning is on")
+Rel(h, db, "queries")
+@enduml

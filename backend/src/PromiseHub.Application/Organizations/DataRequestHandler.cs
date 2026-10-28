@@ -17,7 +17,7 @@ namespace PromiseHub.Application.Organizations;
 /// household, which is purged after 30 days. Every step is audited.
 /// </summary>
 public sealed class DataRequestHandler(IPromiseHubDb db, ITenantContext tenant, GuardianAccess access, IModuleGate modules,
-    NotificationWriter notifications, IEmailSender email, IAuditWriter audit, TimeProvider clock)
+    NotificationWriter notifications, IEmailSender email, IAuditWriter audit, TimeProvider clock, Staff.AccountLifecycleHandler accounts)
 {
     public async Task<GuardianResult> AskAsync(GuardianRequest request, DataRequestBody body, CancellationToken cancellationToken = default)
     {
@@ -100,10 +100,13 @@ public sealed class DataRequestHandler(IPromiseHubDb db, ITenantContext tenant, 
             {
                 guardian.SoftDelete(now);
             }
-            foreach (var child in await db.Children.Where(c => c.HouseholdId == household.Id).ToListAsync(cancellationToken))
+            var children = await db.Children.Where(c => c.HouseholdId == household.Id).ToListAsync(cancellationToken);
+            foreach (var child in children)
             {
                 child.SoftDelete(now);
             }
+            // A youth account follows its child record (ADR 0070).
+            await accounts.DeactivateYouthOfAsync([.. children.Select(c => c.Id)], cancellationToken);
         }
         dataRequest.Fulfil(tenant.ActorName, now, export);
         audit.Record(new AuditEvent(AuditAction.Updated, "DataRequest", dataRequest.Id, $"{household.Name} · {dataRequest.Kind} fulfilled"));

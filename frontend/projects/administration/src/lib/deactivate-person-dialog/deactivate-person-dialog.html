@@ -1,0 +1,20 @@
+<ph-dialog
+  [title]="'Deactivate ' + data.name + '?'"
+  [description]="description()"
+  icon="lock"
+  tone="danger"
+>
+  @if (failed(); as text) {
+    <ph-alert tone="danger" title="That didn’t go through" [text]="text" />
+  }
+  @if (!data.youth) {
+    <p>
+      Turn off an account when someone leaves. To end access for good, remove them in Staff and
+      roles.
+    </p>
+  }
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close()" cdkFocusInitial>Cancel</ph-button>
+    <ph-button variant="danger" [busy]="busy()" (click)="confirm()">Deactivate</ph-button>
+  </ng-container>
+</ph-dialog>

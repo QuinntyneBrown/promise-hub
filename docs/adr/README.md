@@ -73,3 +73,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0067](0067-the-guardian-portal-is-the-household-link-with-read-only-child-pages-and-messages-as-announcements.md) | The guardian portal is the household link, with read-only child pages and Messages as announcements |
 | [0068](0068-announcements-and-direct-messages-are-messages-with-safeguards-on-the-server-and-a-per-tenant-event-stream.md) | Announcements and direct messages are Messages, with safeguards on the server and a per-tenant event stream |
 | [0069](0069-notifications-follow-their-modules-reach-the-stream-on-save-and-are-chosen-per-person-and-kind.md) | Notifications follow their modules, reach the stream on save, and are chosen per person and kind |
+| [0070](0070-people-are-memberships-deactivation-is-reversible-and-a-youth-account-follows-its-child.md) | People are memberships, deactivation is reversible, and a youth account follows its child |

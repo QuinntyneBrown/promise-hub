@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Manage an account lifecycle
+Person(admin, "Admin", "Tom Nguyen, Harbourview")
+Person(member, "Member", "Staff, mentor, volunteer or youth")
+System(ph, "PromiseHub", "People directory and records")
+Rel(admin, ph, "changes roles, deactivates and reactivates")
+Rel(member, ph, "signs in with the membership")
+@enduml

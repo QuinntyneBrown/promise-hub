@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — View a person record
+Person(admin, "Admin", "Tom Nguyen, Harbourview")
+Person(member, "Member", "Staff, mentor, volunteer or youth")
+System(ph, "PromiseHub", "People directory and records")
+Rel(admin, ph, "reads a person record")
+Rel(member, ph, "signs in with the membership")
+@enduml

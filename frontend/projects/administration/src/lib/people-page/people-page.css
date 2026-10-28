@@ -1,0 +1,10 @@
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: flex-end;
+  margin-block-end: var(--layout-gutter);
+}
+.search {
+  flex: 1 1 14rem;
+}
