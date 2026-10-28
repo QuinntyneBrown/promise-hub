@@ -1,0 +1,79 @@
+<div class="calendar">
+  <table class="grid">
+    <caption class="visually-hidden">
+      {{
+        label()
+      }}
+    </caption>
+    <thead>
+      <tr>
+        @for (w of weekdays; track w.short) {
+          <th scope="col">
+            <abbr [title]="w.long">{{ w.short }}</abbr>
+          </th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (week of weeks(); track week[0]!.date) {
+        <tr>
+          @for (day of week; track day.date) {
+            <td
+              class="day"
+              [class.outside]="day.outside"
+              [class.today]="day.today"
+              [attr.aria-current]="day.today ? 'date' : null"
+            >
+              @if (day.outside) {
+                <span class="date" aria-hidden="true">{{ day.number }}</span>
+              } @else {
+                <span class="date"
+                  ><span class="visually-hidden">{{ day.weekday }} </span>{{ day.number }}</span
+                >
+              }
+              @if (day.entries.length) {
+                <ul class="events" [attr.aria-label]="day.weekday + ' ' + day.number">
+                  @for (e of day.entries; track e.key) {
+                    <li>
+                      <ng-container
+                        *ngTemplateOutlet="entry; context: { $implicit: e }"
+                      ></ng-container>
+                    </li>
+                  }
+                </ul>
+              }
+            </td>
+          }
+        </tr>
+      }
+    </tbody>
+  </table>
+  <ol class="agenda" [attr.aria-label]="label() + ', days with sessions'">
+    @for (day of agenda(); track day.date) {
+      <li class="agenda-day">
+        <h3 class="agenda-date">
+          {{ short(day) }}
+          @if (day.today) {
+            <span class="today-tag">Today</span>
+          }
+        </h3>
+        <ul class="events">
+          @for (e of day.entries; track e.key) {
+            <li>
+              <ng-container *ngTemplateOutlet="entry; context: { $implicit: e }"></ng-container>
+            </li>
+          }
+        </ul>
+      </li>
+    }
+  </ol>
+</div>
+
+<ng-template #entry let-e>
+  <a class="event" [class.cancelled]="e.cancelled" [routerLink]="e.link">
+    @if (e.cancelled) {
+      <span class="status">Cancelled · </span>
+    }
+    <span class="time">{{ e.time }}</span> <span class="name">{{ e.label }}</span>
+  </a>
+</ng-template>

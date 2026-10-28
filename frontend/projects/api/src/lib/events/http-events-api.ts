@@ -5,6 +5,7 @@ import { API_BASE_URL } from '../api-base-url';
 import { toLoad, toWrite } from '../http-results';
 import { LoadResult } from '../load-result';
 import { WriteOutcome } from '../write-outcome';
+import { EventCalendar } from './event-calendar';
 import { EventDetail } from './event-detail';
 import { EventFields } from './event-fields';
 import { EventList } from './event-list';
@@ -24,6 +25,13 @@ export class HttpEventsApi implements EventsApi {
     if (programId) params = params.set('programId', programId);
     if (q) params = params.set('q', q);
     return toLoad(this.http.get<EventList>(`${this.baseUrl}/events`, { params }));
+  }
+
+  calendar(month: string, programId: string): Observable<LoadResult<EventCalendar>> {
+    let params = new HttpParams();
+    if (month) params = params.set('month', month);
+    if (programId) params = params.set('programId', programId);
+    return toLoad(this.http.get<EventCalendar>(`${this.baseUrl}/events/calendar`, { params }));
   }
 
   get(id: string): Observable<LoadResult<EventDetail>> {

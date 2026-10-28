@@ -13,6 +13,8 @@ export * from './lib/auth/auth-api';
 export * from './lib/auth/auth-api.token';
 export * from './lib/auth/sign-in-outcome';
 export * from './lib/auth/sign-in-request';
+export * from './lib/events/calendar-event';
+export * from './lib/events/event-calendar';
 export * from './lib/events/event-detail';
 export * from './lib/events/event-fields';
 export * from './lib/events/event-list';

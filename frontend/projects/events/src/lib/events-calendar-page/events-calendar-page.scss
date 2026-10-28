@@ -1,0 +1,19 @@
+.month {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.title {
+  margin: 0;
+  font: var(--text-h3);
+  min-width: var(--layout-label-wide);
+  text-align: center;
+}
+
+.program {
+  flex: 0 1 16rem;
+  min-width: 0;
+  margin-inline-start: auto;
+}

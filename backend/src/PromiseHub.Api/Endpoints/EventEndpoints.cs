@@ -13,6 +13,10 @@ public static class EventEndpoints
     {
         var events = app.MapGroup("/events").RequireModule(ModuleId.Roster);
         events.MapGet("", (string? filter, Guid? programId, string? q, ListEventsHandler handler, CancellationToken ct) => handler.HandleAsync(filter, programId, q, ct));
+        events.MapGet("/calendar", async (string? month, Guid? programId, EventCalendarHandler handler, CancellationToken ct) =>
+            await handler.HandleAsync(month, programId, ct) is { } calendar
+                ? Results.Ok(calendar)
+                : Results.Json(new { errors = new { month = "Choose a month." } }, statusCode: StatusCodes.Status422UnprocessableEntity));
         events.MapGet("/{id:guid}", async (Guid id, GetEventHandler handler, CancellationToken ct) =>
             await handler.HandleAsync(id, ct) is { } e ? Results.Ok(e) : Results.NotFound());
         events.MapPost("", async (SaveEventCommand command, CreateEventHandler handler, CancellationToken ct) =>

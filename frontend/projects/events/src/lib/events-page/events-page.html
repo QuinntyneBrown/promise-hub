@@ -1,5 +1,6 @@
 @let r = result();
 <ph-page-header title="Events" [subtitle]="r?.status === 'loaded' ? subtitle(r.value) : null">
+  <ph-button link="/events/calendar" icon="events">Calendar</ph-button>
   @if (canCreate()) {
     <ph-button variant="primary" link="/events/new" icon="events">New event</ph-button>
   }

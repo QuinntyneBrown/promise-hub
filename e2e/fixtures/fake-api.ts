@@ -10,7 +10,7 @@ import { FakeReviews, type YouthAccounts } from './fake-reviews';
 import { FakeMentorCheckIns, type FakeMentorCheckIn, TODAY } from './fake-mentor-check-ins';
 import { FakeAtRiskFlags } from './fake-at-risk-flags';
 import { FakeAssignedWorkStore, type Recipient } from './fake-assigned-work';
-import { type FakeEvent, type FakeProgram, NOW, seedEvents, seedPrograms, weeklyStarts } from './programs';
+import { type FakeEvent, type FakeProgram, NOW, seedEvents, seedPrograms, weeklyStarts, hamiltonDay } from './programs';
 import { type Membership, type ModuleId, moduleCatalog, memberships, organizations, seededMfaCode, seededPassword } from './seed';
 
 /** Mirrors backend RolePermissions. */
@@ -602,6 +602,11 @@ export class FakeApi {
     this.modules.set(organizationId, on);
   }
 
+  /** Cancels a session, as a director cancelling it without telling guardians would. */
+  cancelSession(eventId: string): void {
+    Object.assign(this.events.find((e) => e.id === eventId)!, { status: 'Cancelled', cancelledAt: NOW.toISOString(), cancelledBy: 'Marisol Delgado' });
+  }
+
   /** Removes every household of an organization, for empty states. */
   clearHouseholds(organizationId: string): void {
     this.households = this.households.filter((h) => h.organizationId !== organizationId);
@@ -786,6 +791,7 @@ export class FakeApi {
     ['POST', /^\/api\/programs\/(?<id>[^/]+)\/enrollments$/, (route, p) => this.enroll(route, p['id']!)],
     ['DELETE', /^\/api\/programs\/(?<id>[^/]+)\/enrollments\/(?<child>[^/]+)$/, (route, p) => this.unenroll(route, p['id']!, p['child']!)],
     ['GET', /^\/api\/events$/, (route) => this.listEvents(route)],
+    ['GET', /^\/api\/events\/calendar$/, (route) => this.eventCalendar(route)],
     ['POST', /^\/api\/events$/, (route) => this.saveEvent(route, null)],
     ['GET', /^\/api\/events\/(?<id>[^/]+)$/, (route, p) => this.getEvent(route, p['id']!)],
     ['PUT', /^\/api\/events\/(?<id>[^/]+)$/, (route, p) => this.saveEvent(route, p['id']!)],
@@ -2687,6 +2693,28 @@ export class FakeApi {
       .filter((e) => !programId || e.programId === programId)
       .filter((e) => !q || `${e.name} ${e.programName} ${e.place ?? ''}`.toLowerCase().includes(q));
     return route.fulfill({ json: { events, upcoming: upcoming.length, needSlips: needSlips.length } });
+  }
+
+  /** The month's events by Hamilton calendar day, optionally of one program (L2-093). Mirrors EventCalendarHandler. */
+  private async eventCalendar(route: Route): Promise<void> {
+    const m = await this.rosterCaller(route);
+    if (!m) return;
+    if (!can.useStaffApp(m)) return this.forbidden(route);
+    const url = new URL(route.request().url());
+    const today = hamiltonDay(NOW.toISOString());
+    const month = url.searchParams.get('month') || today.slice(0, 7);
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return route.fulfill({ status: 422, json: { errors: { month: 'Choose a month.' } } });
+    const programId = url.searchParams.get('programId');
+    const events = this.events
+      .filter((e) => e.organizationId === m.organizationId && (!programId || e.programId === programId))
+      .map((e) => ({ e, day: hamiltonDay(e.startsAt) }))
+      .filter(({ day }) => day.startsWith(month))
+      .sort((a, b) => a.e.startsAt.localeCompare(b.e.startsAt) || a.e.name.localeCompare(b.e.name))
+      .map(({ e, day }) => {
+        const s = this.eventSummary(e);
+        return { id: e.id, name: e.name, programId: s.programId, programName: s.programName, day, startsAt: e.startsAt, endsAt: e.endsAt, place: e.place, status: e.status };
+      });
+    return route.fulfill({ json: { month, today, events } });
   }
 
   private async getEvent(route: Route, id: string): Promise<void> {
