@@ -12,7 +12,7 @@ MARISOL = STAFF["marisol"]
 DANIEL = STAFF["daniel"]
 AISHA = STAFF["aisha"]
 DIRECTOR = dict(nav="check-in", user=MARISOL)
-MENTOR = dict(nav="check-in", role="mentor", user=DANIEL, unread=0, modules=["today", "mentor-dashboard", "check-in"])
+MENTOR = dict(nav="check-in", role="mentor", user=DANIEL, unread=0, modules=["today", "mentor-dashboard", "check-in", "conversations"])
 
 # After‑School Tutoring's sessions so far this term as Marisol sees them on Thu 5 Nov 2026 at 4:30 pm; the cohort is the four seeded youth.
 # Each: date, session, present, late, excused, absent, status.

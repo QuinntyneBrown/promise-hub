@@ -106,13 +106,13 @@ def today(S):
             card(empty("Nothing to do here yet", "Your program staff will tell you what comes next.", icon_name="sparkle"), cls="card--flush"))
     learning_card = list_item("Learning", "Your lessons, quizzes and badges", href=page("learn-home"))
     S.add("youth", "Sofía (Youth, 12) signs in: the youth shell shows Today and Learning only; no search, no staff sections.", nav="today", role="youth",
-          user=YOUTH["sofia"], unread=0, modules=["today", "learning", "schedule"], main=participant("Sofía", [learning_card]),
+          user=YOUTH["sofia"], unread=0, modules=["today", "learning", "schedule", "conversations"], main=participant("Sofía", [learning_card]),
           notes=note("A youth reaches only their own record: the child linked to their account. Families, events and search are closed to them on the server.", "top: 5rem; right: 1rem;"))
     S.add("youth-learning-off", "The same youth while Learning is off: Learning is gone from the bar, the tab bar and the menu, and Today says there is nothing to do.", nav="today", role="youth",
           user=YOUTH["sofia"], unread=0, modules=["today", "schedule"], main=participant("Sofía", []),
           notes=note("Opening /learning while Learning is off redirects here to Today.", "top: 5rem; right: 1rem;"))
     S.add("mentor", "Daniel (Mentor) signs in: Today, Mentoring and Check-in; a mentor sees only the youth assigned to them and takes attendance for his cohorts’ sessions.", nav="today", role="mentor",
-          user=STAFF["daniel"], unread=0, modules=["today", "mentor-dashboard", "check-in"],
+          user=STAFF["daniel"], unread=0, modules=["today", "mentor-dashboard", "check-in", "conversations"],
           main=participant("Daniel", [list_item("Mentoring", "The youth assigned to you", href=page("mentor-dashboard")),
                                       list_item("Check-in", "Take attendance for your cohorts’ sessions today", href=page("check-in", "mentor"))]))
     # The volunteer portal (L2-100, L2-101, ADR 0066): today's assigned session first, then his schedule. No youth records.
@@ -237,7 +237,7 @@ def check_in(S):
                f'<div class="cluster">{btn("Back to Today", "primary", href=page("today"))}{btn("View attendance", "", href=page("attendance-history"))}{btn("Report an incident", "ghost", icon_name="flag", href=page("new-incident"))}</div></div>', cls="card--success"),
           toast_html=toast_region(toast("success", "Session ended", "46 present · 2 absent · attendance saved")))
     DANIEL = STAFF["daniel"]
-    MKW = dict(nav="check-in", role="mentor", user=DANIEL, unread=0, modules=["today", "mentor-dashboard", "check-in"])
+    MKW = dict(nav="check-in", role="mentor", user=DANIEL, unread=0, modules=["today", "mentor-dashboard", "check-in", "conversations"])
     cohort = (f'<div class="card card--flush"><ul class="roster" aria-label="Roster for Tutoring night">'
               + roster_row(dict(CHILD["jordan"], flag=""), "in", "Late · checked in 4:21 pm · Grade 6", kind)
               + roster_row(dict(CHILD["mateo"], flag=""), "in", "Checked in 4:02 pm · Grade 4", kind)

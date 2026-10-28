@@ -7,7 +7,7 @@ from reg import screen
 R_MENTOR = "L1-024"
 DANIEL = STAFF["daniel"]
 HANA = STAFF["hana"]
-KW = dict(nav="mentor-dashboard", role="mentor", user=DANIEL, unread=0, modules=["today", "mentor-dashboard", "check-in"])
+KW = dict(nav="mentor-dashboard", role="mentor", user=DANIEL, unread=0, modules=["today", "mentor-dashboard", "check-in", "conversations"])
 NA_FORM = "Read only: nothing on this screen is a form."
 
 # Daniel leads Saturday Sports, supports After‑School Tutoring and mentors Mateo directly (L2-062).
