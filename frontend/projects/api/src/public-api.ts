@@ -360,6 +360,7 @@ export * from './lib/mentoring/at-risk-flag';
 export * from './lib/mentoring/at-risk-flags';
 export * from './lib/mentoring/raise-at-risk-flag';
 export * from './lib/mentoring/flag-outcome';
+export * from './lib/mentoring/resolve-at-risk-flag';
 export * from './lib/mentoring/mentoring-api';
 export * from './lib/mentoring/mentoring-api.token';
 export * from './lib/website/public-site';

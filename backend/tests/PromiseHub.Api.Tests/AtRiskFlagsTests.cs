@@ -5,9 +5,9 @@ using PromiseHub.Infrastructure.Persistence.Seed;
 
 namespace PromiseHub.Api.Tests;
 
-// Acceptance test. Traces to: L2-091 criteria 1, 2, 3, 4, 6 and 8 (a mentor raises an at-risk flag on one of his youth with a severity and a
+// Acceptance test. Traces to: L2-091 criteria 1 to 6 and 8 (a mentor raises an at-risk flag on one of his youth with a severity and a
 // reason, field-by-field errors, one open flag per youth, admins and program directors notified and reading every flag, his open flags most
-// serious first, audited without the reason, scope, roles, tenancy and Mentoring off), L2-065, L2-040, L2-007, L2-032.
+// serious first, resolving with an outcome, audited without the reason or the note, scope, roles, tenancy and Mentoring off), L2-065, L2-040, L2-007, L2-032.
 public sealed class AtRiskFlagsTests : IAsyncLifetime
 {
     private static readonly Guid Marisol = DatabaseSeeder.MembershipId(DatabaseSeeder.Harbourview, "marisol@harbourview.example");
@@ -166,6 +166,88 @@ public sealed class AtRiskFlagsTests : IAsyncLifetime
         Assert.DoesNotContain(await Notifications(Grace), n => n.GetProperty("kind").GetString() == "mentoring");
     }
 
+    // ---- criteria 5 and 6: resolving with an outcome, audited without the note
+
+    [Fact]
+    public async Task Daniel_resolves_his_flag_with_an_outcome_and_a_note_and_a_new_flag_can_be_raised()
+    {
+        var id = await RaisedId(Daniel, Body(Mateo));
+
+        var response = await Resolve(Daniel, id, new { outcome = "Reconnected", note = "Carmen arranged for his aunt to be home after school." });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var flag = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("Resolved", flag.GetProperty("status").GetString());
+        Assert.Equal("Reconnected", flag.GetProperty("outcome").GetString());
+        Assert.Equal("Carmen arranged for his aunt to be home after school.", flag.GetProperty("resolutionNote").GetString());
+        Assert.Equal("Daniel Osei", flag.GetProperty("resolvedBy").GetString());
+        Assert.Empty((await Flags(Daniel, "")).GetProperty("items").EnumerateArray());
+        var resolved = await Flags(Daniel, "?status=Resolved");
+        Assert.Single(resolved.GetProperty("items").EnumerateArray());
+        Assert.Equal(1, resolved.GetProperty("resolvedCount").GetInt32());
+        var audit = _db.Query("SELECT Summary || ' ' || AfterJson FROM AuditEntries WHERE Action = 'Updated' AND RecordType = 'AtRiskFlag'");
+        Assert.Single(audit);
+        Assert.Contains("Mateo Rivera", audit[0]);
+        Assert.Contains("\"Outcome\":\"Reconnected\"", audit[0]);
+        Assert.DoesNotContain("aunt", audit[0]);
+        Assert.Equal(HttpStatusCode.Created, (await Raise(Daniel, Body(Mateo) with { severity = "Low" })).StatusCode);
+    }
+
+    [Fact]
+    public async Task Another_mentor_of_the_youth_and_a_program_director_resolve_and_resolved_flags_list_newest_first()
+    {
+        await Mentors(lead: Hana, supporting: Daniel);
+        var sofia = await RaisedId(Daniel, Body(Sofia));
+        var mateo = await RaisedId(Daniel, Body(Mateo));
+
+        Assert.Equal(HttpStatusCode.OK, (await Resolve(Hana, sofia, new { outcome = "LeftProgram" })).StatusCode);
+        _factory.Clock.Advance(TimeSpan.FromMinutes(1));
+        Assert.Equal(HttpStatusCode.OK, (await Resolve(Marisol, mateo, new { outcome = "HandedToDirector" })).StatusCode);
+
+        var resolved = (await Flags(Tom, "?status=Resolved")).GetProperty("items").EnumerateArray().ToList();
+        Assert.Equal(["Mateo Rivera", "Sofía Rivera"], resolved.Select(i => i.GetProperty("youthName").GetString()));
+        Assert.Equal(["Marisol Delgado", "Hana Kim"], resolved.Select(i => i.GetProperty("resolvedBy").GetString()));
+        Assert.Equal(JsonValueKind.Null, resolved[0].GetProperty("resolutionNote").ValueKind);
+    }
+
+    [Fact]
+    public async Task A_missing_or_unknown_outcome_a_long_note_and_a_resolved_flag_are_refused()
+    {
+        var id = await RaisedId(Daniel, Body(Mateo));
+
+        var missing = await Errors(await Resolve(Daniel, id, new { outcome = (string?)null }));
+        Assert.Equal("Choose how it was resolved.", missing.GetProperty("outcome").GetString());
+        var wrong = await Errors(await Resolve(Daniel, id, new { outcome = "Fixed", note = new string('a', 1001) }));
+        Assert.Equal("Choose how it was resolved.", wrong.GetProperty("outcome").GetString());
+        Assert.Equal("Keep it to 1,000 characters.", wrong.GetProperty("note").GetString());
+        Assert.Single((await Flags(Daniel, "")).GetProperty("items").EnumerateArray());
+
+        Assert.Equal(HttpStatusCode.OK, (await Resolve(Daniel, id, new { outcome = "FlaggedInError" })).StatusCode);
+        var again = await Resolve(Marisol, id, new { outcome = "Reconnected" });
+        Assert.Equal(HttpStatusCode.Conflict, again.StatusCode);
+        Assert.Equal("already-resolved", (await again.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("code").GetString());
+    }
+
+    [Fact]
+    public async Task Resolving_outside_his_scope_another_organization_other_roles_and_Mentoring_off_are_refused()
+    {
+        var id = await RaisedId(Daniel, Body(Mateo));
+
+        Assert.Equal(HttpStatusCode.Forbidden, (await Resolve(Hana, id, new { outcome = "Reconnected" })).StatusCode);
+        Assert.Single(_db.Query($"SELECT Id FROM AuditEntries WHERE Action = 'AccessDenied' AND RecordType = 'Child' AND upper(RecordId) = upper('{Mateo}')"));
+        Assert.Equal(HttpStatusCode.NotFound, (await Resolve(Daniel, Guid.NewGuid(), new { outcome = "Reconnected" })).StatusCode);
+        foreach (var who in new[] { Jaylen, Nadia })
+        {
+            Assert.Equal(HttpStatusCode.Forbidden, (await Resolve(who, id, new { outcome = "Reconnected" })).StatusCode);
+        }
+        Assert.True((await _factory.ClientFor(Grace).PutAsJsonAsync("/settings/modules", new { on = new[] { "Roster", "RollCall", "QuickCards", "Mentoring" } })).IsSuccessStatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await Resolve(Grace, id, new { outcome = "Reconnected" })).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await Resolve(Samuel, id, new { outcome = "Reconnected" })).StatusCode);
+        Assert.True((await _factory.ClientFor(Tom).PutAsJsonAsync("/settings/modules", new { on = new[] { "Roster", "RollCall" } })).IsSuccessStatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await Resolve(Daniel, id, new { outcome = "Reconnected" })).StatusCode);
+        Assert.Empty(_db.Query("SELECT Id FROM AtRiskFlags WHERE ResolvedAt IS NOT NULL"));
+    }
+
     // ---- criterion 8: scope, tenancy, roles and the module
 
     [Fact]
@@ -221,6 +303,16 @@ public sealed class AtRiskFlagsTests : IAsyncLifetime
 
     private async Task<List<JsonElement>> Notifications(Guid membership) =>
         [.. (await (await _factory.ClientFor(membership).GetAsync("/notifications")).Content.ReadFromJsonAsync<JsonElement>()).GetProperty("items").EnumerateArray()];
+
+    private async Task<Guid> RaisedId(Guid membership, object body)
+    {
+        var response = await Raise(membership, body);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        return (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
+    }
+
+    private Task<HttpResponseMessage> Resolve(Guid membership, Guid flag, object body) =>
+        _factory.ClientFor(membership).PostAsJsonAsync($"/mentoring/flags/{flag}/resolve", body);
 
     private sealed record FlagBody(Guid childId, string severity, string reason);
 

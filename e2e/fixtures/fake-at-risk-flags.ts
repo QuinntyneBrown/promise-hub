@@ -19,6 +19,7 @@ export interface FakeAtRiskFlag {
 }
 
 const SEVERITIES = ['Low', 'Medium', 'High'];
+const OUTCOMES = ['Reconnected', 'HandedToDirector', 'LeftProgram', 'FlaggedInError'];
 
 /**
  * At-risk flags as the API keeps them (L2-091, ADR 0062). FakeApi checks the Mentoring module, the role, the organization and the mentor's
@@ -98,6 +99,24 @@ export class FakeAtRiskFlags {
     };
     this.rows.push(row);
     return route.fulfill({ status: 201, json: this.view(row) });
+  }
+
+  /** POST /mentoring/flags/{id}/resolve once the caller may: the outcome checked as the server does, 409 once resolved. */
+  resolve(route: Route, flag: FakeAtRiskFlag, resolver: string): Promise<void> {
+    if (this.failSaves) return route.fulfill({ status: 500 });
+    const b = route.request().postDataJSON() as Record<string, unknown>;
+    const errors: Record<string, string> = {};
+    if (!OUTCOMES.includes(b['outcome'] as string)) errors['outcome'] = 'Choose how it was resolved.';
+    const note = typeof b['note'] === 'string' ? b['note'].trim() : '';
+    if (note.length > 1000) errors['note'] = 'Keep it to 1,000 characters.';
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    if (flag.status === 'Resolved') return route.fulfill({ status: 409, contentType: 'application/problem+json', json: { code: 'already-resolved' } });
+    flag.status = 'Resolved';
+    flag.outcome = b['outcome'] as string;
+    flag.resolutionNote = note || null;
+    flag.resolvedBy = resolver;
+    flag.resolvedAt = new Date(NOW.getTime() + this.next++ * 1000).toISOString();
+    return route.fulfill({ json: this.view(flag) });
   }
 
   view(r: FakeAtRiskFlag) {

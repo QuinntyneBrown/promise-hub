@@ -52,6 +52,8 @@ public static class MentoringEndpoints
         flags.MapGet("", (string? status, AtRiskFlagsHandler handler, CancellationToken ct) => handler.ListAsync(status, ct));
         flags.MapPost("", async (RaiseFlagRequest request, AtRiskFlagsHandler handler, CancellationToken ct) =>
             Written(await handler.RaiseAsync(request, ct), flag => Results.Created($"/mentoring/flags/{flag.Id}", flag)));
+        flags.MapPost("/{id:guid}/resolve", async (Guid id, ResolveFlagRequest request, AtRiskFlagsHandler handler, CancellationToken ct) =>
+            Written(await handler.ResolveAsync(id, request, ct), Results.Ok));
         var reviews = mentoring.MapGroup("").RequireModule(ModuleId.Learning);
         reviews.MapGet("/reviews", (ReviewQueueHandler handler, CancellationToken ct) => handler.HandleAsync(ct));
         reviews.MapGet("/submissions/{id:guid}", async (Guid id, SubmissionReviewHandler handler, CancellationToken ct) => (await handler.HandleAsync(id, ct)).ToHttp());

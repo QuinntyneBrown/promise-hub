@@ -1,0 +1,56 @@
+<ph-dialog
+  title="Resolve this flag?"
+  [description]="
+    data.flag.youthName + ' leaves the open list. The flag and how it was resolved are kept.'
+  "
+  icon="check"
+>
+  <form class="stack" (ngSubmit)="save()">
+    @if (summary().length) {
+      <ph-error-summary title="Fix these to continue" [items]="summary()" />
+    }
+    @if (failed()) {
+      <ph-alert
+        tone="danger"
+        title="That didn’t go through"
+        text="The flag wasn’t resolved. Everything is still here; try again."
+      />
+    }
+    @if (alreadyResolved()) {
+      <ph-alert
+        tone="warning"
+        title="This flag is already resolved"
+        text="Close to see the latest."
+      />
+    }
+    <ph-description-list [facts]="facts" />
+    <div id="flag-outcome">
+      <ph-radio-group
+        legend="How was it resolved?"
+        name="outcome"
+        [options]="outcomes"
+        [error]="errors()['outcome'] ?? null"
+        [ngModel]="outcome()"
+        (ngModelChange)="outcome.set($event)"
+      />
+    </div>
+    <ph-textarea
+      inputId="flag-note"
+      label="Note"
+      name="note"
+      [optional]="true"
+      [rows]="3"
+      help="You can raise a new flag any time if things change."
+      [count]="count(note())"
+      [error]="errors()['note'] ?? null"
+      [ngModel]="note()"
+      (ngModelChange)="note.set($event ?? '')"
+    />
+  </form>
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close()">Cancel</ph-button>
+    <ph-button variant="primary" icon="check" [busy]="busy()" (click)="save()"
+      >Resolve flag</ph-button
+    >
+  </ng-container>
+</ph-dialog>

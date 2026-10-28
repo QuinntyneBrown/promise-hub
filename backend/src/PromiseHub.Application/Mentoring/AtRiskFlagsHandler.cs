@@ -12,7 +12,8 @@ namespace PromiseHub.Application.Mentoring;
 /// At-risk flags (L2-091, ADR 0062): a mentor raises one on a youth in his scope (404 outside the organization, 403 audited outside his scope,
 /// 422 by field, 409 when the youth already has an open flag), audited as Created without the reason, and every admin and program director is
 /// notified. A mentor reads the flags on youth in his
-/// scope; admins and program directors read every flag of the organization.
+/// scope; admins and program directors read every flag of the organization. A mentor of the youth, an admin or a program director resolves an
+/// open flag with an outcome (409 once resolved), audited as Updated without the note.
 /// </summary>
 public sealed class AtRiskFlagsHandler(IPromiseHubDb db, ITenantContext tenant, MentorScope scope, IAuditWriter audit, NotificationWriter notifications,
     TimeProvider clock)
@@ -88,6 +89,43 @@ public sealed class AtRiskFlagsHandler(IPromiseHubDb db, ITenantContext tenant, 
             "/mentoring/flags", cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return new(Result.Created(flag.Id), (await ToDtosAsync([flag], cancellationToken))[0]);
+    }
+
+    public async Task<FlagWriteResult> ResolveAsync(Guid id, ResolveFlagRequest request, CancellationToken cancellationToken = default)
+    {
+        var flag = await db.AtRiskFlags.FirstOrDefaultAsync(f => f.Id == id, cancellationToken);
+        if (flag is null)
+        {
+            return new(Result.NotFound);
+        }
+        if (IsMentor && await RefuseAsync(flag.ChildId, cancellationToken) is { } refused)
+        {
+            return new(refused);
+        }
+        var errors = new Dictionary<string, string>();
+        if (!TryParse<AtRiskFlagOutcome>(request.Outcome, out var outcome))
+        {
+            errors["outcome"] = "Choose how it was resolved.";
+        }
+        var note = string.IsNullOrWhiteSpace(request.Note) ? null : request.Note.Trim();
+        if (note?.Length > AtRiskFlag.MaximumText)
+        {
+            errors["note"] = "Keep it to 1,000 characters.";
+        }
+        if (errors.Count > 0)
+        {
+            return new(Result.Invalid(errors));
+        }
+        if (!flag.IsOpen)
+        {
+            return new(Result.Conflict, Code: "already-resolved");
+        }
+        var child = await db.Children.AsNoTracking().FirstAsync(c => c.Id == flag.ChildId, cancellationToken);
+        flag.Resolve(tenant.MembershipId, outcome, note, clock.GetUtcNow());
+        audit.Record(new AuditEvent(AuditAction.Updated, nameof(AtRiskFlag), flag.Id, $"At-risk flag on {child.FullName} resolved by {tenant.ActorName}",
+            Before: new { Status = "Open" }, After: new { Status = Resolved, Outcome = outcome.ToString() }));
+        await db.SaveChangesAsync(cancellationToken);
+        return new(Result.Done, (await ToDtosAsync([flag], cancellationToken))[0]);
     }
 
     private async Task<IReadOnlyList<AtRiskFlagDto>> ToDtosAsync(IReadOnlyList<AtRiskFlag> flags, CancellationToken cancellationToken)

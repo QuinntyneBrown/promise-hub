@@ -18,15 +18,18 @@ import {
   ToastService,
 } from '@promisehub/components';
 import { Subject, startWith, switchMap } from 'rxjs';
-import { raisedLine, severityTone } from '../flag-words';
+import { raisedLine, resolvedLine, severityTone } from '../flag-words';
 import { RaiseFlagDialog } from '../raise-flag-dialog/raise-flag-dialog';
 import { RaiseFlagDialogData } from '../raise-flag-dialog-data';
+import { ResolveFlagDialog } from '../resolve-flag-dialog/resolve-flag-dialog';
+import { ResolveFlagDialogData } from '../resolve-flag-dialog-data';
 
 type Status = 'Open' | 'Resolved';
 
 /**
  * At-risk flags (mock: mentor-flags, L2-091 criterion 4): a mentor's flags on his youth, or every flag of the organization for admins and
- * program directors, open (most serious first) or resolved. Raise a flag opens the dialog and the list reloads with the new flag.
+ * program directors, open (most serious first) or resolved (newest first, with the outcome). Raise a flag and Resolve open their dialogs
+ * and the list reloads.
  */
 @Component({
   selector: 'ph-at-risk-flags-page',
@@ -58,6 +61,7 @@ export class AtRiskFlagsPage {
   );
   protected readonly tone = severityTone;
   protected readonly raised = raisedLine;
+  protected readonly resolvedCaption = resolvedLine;
 
   /** Null while loading. */
   protected readonly result = toSignal<LoadResult<AtRiskFlags> | null>(
@@ -110,6 +114,16 @@ export class AtRiskFlagsPage {
           text: `${name} · Program directors have been told`,
         });
         this.status.set('Open');
+        this.refresh$.next();
+      });
+  }
+
+  protected resolve(flag: AtRiskFlag): void {
+    this.dialogs
+      .open<string, ResolveFlagDialogData, ResolveFlagDialog>(ResolveFlagDialog, { flag })
+      .closed.subscribe((name) => {
+        if (name !== undefined)
+          this.toasts.show({ tone: 'success', title: 'Flag resolved', text: name });
         this.refresh$.next();
       });
   }

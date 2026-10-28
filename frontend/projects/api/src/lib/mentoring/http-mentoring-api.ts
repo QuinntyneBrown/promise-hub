@@ -28,6 +28,7 @@ import { AtRiskFlags } from './at-risk-flags';
 import { RaiseAtRiskFlag } from './raise-at-risk-flag';
 import { FlagOutcome } from './flag-outcome';
 import { toFlagOutcome } from './to-flag-outcome';
+import { ResolveAtRiskFlag } from './resolve-at-risk-flag';
 
 @Injectable()
 export class HttpMentoringApi implements MentoringApi {
@@ -96,6 +97,15 @@ export class HttpMentoringApi implements MentoringApi {
 
   raiseFlag(body: RaiseAtRiskFlag): Observable<FlagOutcome> {
     return toFlagOutcome(this.http.post<{ id: string }>(`${this.baseUrl}/mentoring/flags`, body));
+  }
+
+  resolveFlag(id: string, body: ResolveAtRiskFlag): Observable<FlagOutcome> {
+    return toFlagOutcome(
+      this.http.post<{ id: string }>(
+        `${this.baseUrl}/mentoring/flags/${encodeURIComponent(id)}/resolve`,
+        body,
+      ),
+    );
   }
 
   quizApprovals(): Observable<LoadResult<QuizApprovals>> {

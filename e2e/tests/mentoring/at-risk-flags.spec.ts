@@ -5,6 +5,7 @@ import { AtRiskFlagsPage } from '../../pages/mentor-flags.page';
 import { MentoringPage } from '../../pages/mentoring.page';
 import { NotificationsPage } from '../../pages/notifications.page';
 import { RaiseFlagDialog } from '../../pages/raise-flag.page';
+import { ResolveFlagDialog } from '../../pages/resolve-flag.page';
 import { ShellPage } from '../../pages/shell.page';
 import { TodayPage } from '../../pages/today.page';
 
@@ -283,5 +284,97 @@ test.describe('At-risk flags in the menu of a site lead', () => {
     await shell.openMenu();
 
     expect(await shell.menuLabels()).not.toContain('At-risk flags');
+  });
+});
+
+// Acceptance test. Traces to: L2-091 criteria 5 and 9 (a mentor of the youth or a program director resolves an open flag with an outcome and
+// an optional note; the resolved tab; no outcome, already resolved and failed), L2-035.
+test.describe('Resolving at-risk flags', () => {
+  test.describe('as a mentor', () => {
+    test.use({ signedInAs: 'm-daniel' });
+
+    test.beforeEach(({ api }) => {
+      api.setModules('org-harbourview', ALL);
+      api.assignYouthMentor('c-mateo', 'm-daniel');
+      api.setCohortTeam('p-tutoring', 'm-hana', ['m-daniel']);
+      seedFlags(api);
+    });
+
+    test('Given Yusuf’s open flag, when Daniel resolves it as reconnected with a note, then it leaves the open list and shows under Resolved', async ({
+      page,
+      api,
+    }) => {
+      const flags = new AtRiskFlagsPage(page);
+      const dialog = new ResolveFlagDialog(page);
+      await flags.open();
+
+      await flags.resolve('Yusuf Haddad');
+      await dialog.expectOpen();
+      await expect(dialog.fact('Yusuf Haddad')).toBeVisible();
+      await expect(dialog.fact('High · Raised by Daniel Osei')).toBeVisible();
+      await dialog.expectAccessible();
+      await dialog.fill('Reconnected, back on track', 'Moved to Tuesday nights; his neighbour drives him.');
+      await dialog.save();
+
+      await expect(flags.toast('Flag resolved')).toBeVisible();
+      await expect(flags.items).toHaveCount(1);
+      await expect(flags.item('Yusuf Haddad')).toHaveCount(0);
+      expect(api.atRiskFlags.rows.find((f) => f.childId === 'c-yusuf')).toMatchObject({ status: 'Resolved', outcome: 'Reconnected', resolvedBy: 'Daniel Osei' });
+      await flags.showResolved();
+      await expect(flags.items).toHaveCount(1);
+      await expect(flags.items.first()).toContainText('Yusuf Haddad');
+      await expect(flags.items.first()).toContainText('Reconnected, back on track · Resolved by Daniel Osei');
+      await expect(flags.items.first()).toContainText('Moved to Tuesday nights; his neighbour drives him.');
+      await expect(flags.items.first().getByRole('button', { name: 'Resolve' })).toHaveCount(0);
+      await flags.expectAccessible();
+    });
+
+    test('Given the dialog, when he resolves without an outcome, then it asks for one; a flag resolved meanwhile says so; a failed save keeps his note', async ({
+      page,
+      api,
+    }) => {
+      const flags = new AtRiskFlagsPage(page);
+      const dialog = new ResolveFlagDialog(page);
+      await flags.open();
+      await flags.resolve('Jordan Thompson');
+
+      await dialog.save();
+      await expect(dialog.summary).toBeVisible();
+      await expect(dialog.dialog.getByText('Choose how it was resolved.').first()).toBeVisible();
+      await dialog.expectAccessible();
+
+      api.atRiskFlags.failSaves = true;
+      await dialog.fill('Flagged in error', 'He was tired after a tournament.');
+      await dialog.save();
+      await expect(dialog.failed).toBeVisible();
+      await expect(dialog.dialog.getByLabel('Note')).toHaveValue('He was tired after a tournament.');
+
+      api.atRiskFlags.failSaves = false;
+      api.atRiskFlags.rows.find((f) => f.childId === 'c-jordan')!.status = 'Resolved';
+      await dialog.save();
+      await expect(dialog.alreadyResolved).toBeVisible();
+      await dialog.close();
+      await expect(flags.item('Jordan Thompson')).toHaveCount(0);
+    });
+  });
+
+  test.describe('as a program director', () => {
+    test.use({ signedInAs: 'm-marisol' });
+
+    test('Given an open flag, when Marisol resolves it as handed to her, then it moves to Resolved with her name', async ({ page, api }) => {
+      api.setModules('org-harbourview', ALL);
+      seedFlags(api);
+      const flags = new AtRiskFlagsPage(page);
+      const dialog = new ResolveFlagDialog(page);
+      await flags.open();
+
+      await flags.resolve('Amara Okonkwo');
+      await dialog.fill('Handed to the program director');
+      await dialog.save();
+
+      await expect(flags.toast('Flag resolved')).toBeVisible();
+      await flags.showResolved();
+      await expect(flags.items.first()).toContainText('Handed to the program director · Resolved by Marisol Delgado');
+    });
   });
 });

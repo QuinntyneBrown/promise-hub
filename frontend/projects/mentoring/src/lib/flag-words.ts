@@ -17,3 +17,22 @@ export function severityTone(severity: string): 'neutral' | 'warning' | 'danger'
 export function raisedLine(f: AtRiskFlag): string {
   return `Raised by ${f.raisedBy} · ${formatDay(f.raisedAt)}`;
 }
+
+/** How a flag was resolved, as the dialog and the resolved list say it (Waypoint's resolution reasons). */
+export const OUTCOME_LABEL: Record<string, string> = {
+  Reconnected: 'Reconnected, back on track',
+  HandedToDirector: 'Handed to the program director',
+  LeftProgram: 'Left the program',
+  FlaggedInError: 'Flagged in error',
+};
+
+export const OUTCOME_OPTIONS: RadioOption[] = Object.entries(OUTCOME_LABEL).map(
+  ([value, label]) => ({ value, label }),
+);
+
+/** “Reconnected, back on track · Resolved by Daniel Osei · Sat 31 Oct · Note: …”, or null while the flag is open. */
+export function resolvedLine(f: AtRiskFlag): string | null {
+  if (f.status !== 'Resolved' || !f.outcome || !f.resolvedAt) return null;
+  const line = `${OUTCOME_LABEL[f.outcome] ?? f.outcome} · Resolved by ${f.resolvedBy ?? 'Former staff'} · ${formatDay(f.resolvedAt)}`;
+  return f.resolutionNote ? `${line} · Note: ${f.resolutionNote}` : line;
+}

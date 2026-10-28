@@ -51,12 +51,16 @@
                 avatarTint="peach"
                 [meta]="raised(flag)"
                 [text]="flag.reason"
+                [caption]="resolvedCaption(flag)"
               >
-                @if (flag.status === 'Open' && f.canRaise) {
+                @if (flag.status === 'Open') {
                   <div phListActions>
-                    <ph-button variant="ghost" [link]="['/mentoring/youth', flag.childId]"
-                      >View record</ph-button
-                    >
+                    @if (f.canRaise) {
+                      <ph-button variant="ghost" [link]="['/mentoring/youth', flag.childId]"
+                        >View record</ph-button
+                      >
+                    }
+                    <ph-button icon="check" (click)="resolve(flag)">Resolve</ph-button>
                   </div>
                 }
                 <ph-badge [tone]="tone(flag.severity)">{{ flag.severity }}</ph-badge>

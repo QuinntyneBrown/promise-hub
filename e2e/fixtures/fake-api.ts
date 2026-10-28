@@ -710,6 +710,7 @@ export class FakeApi {
     ['POST', /^\/api\/mentoring\/check-ins$/, (route) => this.logMentorCheckIn(route)],
     ['GET', /^\/api\/mentoring\/flags$/, (route) => this.listAtRiskFlags(route)],
     ['POST', /^\/api\/mentoring\/flags$/, (route) => this.raiseAtRiskFlag(route)],
+    ['POST', /^\/api\/mentoring\/flags\/(?<id>[^/]+)\/resolve$/, (route, p) => this.resolveAtRiskFlag(route, p['id']!)],
     ['GET', /^\/api\/mentoring\/youth\/(?<id>[^/]+)$/, (route, p) => this.mentorYouthRecord(route, p['id']!)],
     ['GET', /^\/api\/mentoring\/youth\/(?<id>[^/]+)\/reflections$/, (route, p) => this.mentorReflections(route, p['id']!)],
     ['GET', /^\/api\/mentoring\/youth\/(?<id>[^/]+)\/competencies$/, (route, p) => this.mentorCompetencies(route, p['id']!, false)],
@@ -1421,6 +1422,20 @@ export class FakeApi {
     if (this.atRiskFlags.rows.length > before) {
       this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'Created', record: 'AtRiskFlag', summary: `At-risk flag on ${child!.name} by ${m.personName}`, device: null });
       this.notifyFlag(m.organizationId, m.personName, child!.name, this.atRiskFlags.rows.at(-1)!.severity);
+    }
+  }
+
+  /** POST /mentoring/flags/{id}/resolve (L2-091 criteria 5, 6 and 8): a mentor of the youth, an admin or a program director; audited without the note. */
+  private async resolveAtRiskFlag(route: Route, id: string): Promise<void> {
+    const m = await this.participantModuleCaller(route, 'Mentoring', (x) => can.mentorYouth(x) || can.reviewAtRiskFlags(x));
+    if (!m) return;
+    const flag = this.atRiskFlags.rows.find((f) => f.id === id && f.organizationId === m.organizationId);
+    if (!flag) return route.fulfill({ status: 404 });
+    if (can.mentorYouth(m) && (await this.mentorCheckInChild(route, m, flag.childId)) === undefined) return;
+    const wasOpen = flag.status === 'Open';
+    await this.atRiskFlags.resolve(route, flag, m.personName);
+    if (wasOpen && flag.status === 'Resolved') {
+      this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'Updated', record: 'AtRiskFlag', summary: `At-risk flag on ${flag.youthName} resolved by ${m.personName}`, device: null });
     }
   }
 
