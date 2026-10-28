@@ -24,7 +24,7 @@ Open questions: none. Deferred: notifications (prompt 75), presence and typing i
 
 ## Built so far
 
-Prompt 74 delivered everything above: `IRealtimeEvents`, `RealtimeEvent`, `RealtimeHub` and `RealtimeSubscription`, `RealtimeEndpoints`, `REALTIME_EVENTS` with `EventSourceRealtimeEvents`, and the quiet refetch on the conversation, conversations and announcements pages. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/RealtimeTests.cs` and `e2e/tests/messaging/realtime.spec.ts` (the fake API answers the stream as a long poll, so every response ends with a reconnection).
+Prompt 74 delivered everything above: `IRealtimeEvents`, `RealtimeEvent`, `RealtimeHub` and `RealtimeSubscription`, `RealtimeEndpoints`, `REALTIME_EVENTS` with `EventSourceRealtimeEvents`, and the quiet refetch on the conversation, conversations and announcements pages. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/RealtimeTests.cs` and `e2e/tests/messaging/realtime.spec.ts` (the fake API answers the stream as a long poll, so every response ends with a reconnection). It is estimated at 90%, not 100%, because two parts are deferred by ADR 0068: no event fires at a scheduled announcement's send time (its readers see it on their next fetch), and the stream runs on one API instance only (scale-out needs a shared broker).
 
 ## Requirements
 
