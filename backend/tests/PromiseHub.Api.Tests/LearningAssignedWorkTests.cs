@@ -5,15 +5,17 @@ using PromiseHub.Infrastructure.Persistence.Seed;
 
 namespace PromiseHub.Api.Tests;
 
-// Acceptance test. Traces to: L2-092 criteria 5 and 6 (the youth sees the work assigned to her on her Learning home, soonest due first,
+// Acceptance test. Traces to: L2-092 criteria 5, 6 and 7 (the youth sees the work assigned to her on her Learning home, soonest due first,
 // with days left, who assigned it and the message; done or hidden work drops off; only her own; hidden while Mentoring is off and back when
-// it is on), L2-068, L2-065.
+// it is on; another organization's youth never sees them), L2-068, L2-065.
 public sealed class LearningAssignedWorkTests : IAsyncLifetime
 {
     private static readonly Guid Tom = LearningContent.Tom;
     private static readonly Guid Daniel = MentorReviewWork.Daniel;
     private static readonly Guid Nadia = LearningContent.NadiaChild;
     private static readonly Guid Mateo = DatabaseSeeder.ChildId(DatabaseSeeder.Harbourview, "Mateo Rivera");
+    private static readonly Guid Grace = DatabaseSeeder.MembershipId(DatabaseSeeder.Northgate, "grace@northgate.example");
+    private static readonly Guid Lucia = DatabaseSeeder.MembershipId(DatabaseSeeder.Northgate, "lucia@northgate.example");
     private const string Message = "Read this before Tutoring night next week.";
 
     private readonly PromiseHubApiFactory _factory = new();
@@ -79,6 +81,23 @@ public sealed class LearningAssignedWorkTests : IAsyncLifetime
         Assert.Empty(await Assigned());
 
         Assert.True((await _factory.ClientFor(Tom).PutAsJsonAsync("/settings/modules", new { on = new[] { "Roster", "RollCall", "Learning", "Mentoring" } })).IsSuccessStatusCode);
+        Assert.Single(await Assigned());
+    }
+
+    [Fact]
+    public async Task With_both_modules_on_at_Northgate_its_youth_never_sees_Harbourviews_assigned_work()
+    {
+        await Assign("Lesson", _c.Line, "2026-11-13", Message);
+        var grace = _factory.ClientFor(Grace);
+        Assert.True((await grace.PutAsJsonAsync("/settings/modules", new { on = new[] { "Roster", "RollCall", "QuickCards", "Mentoring", "Learning" } })).IsSuccessStatusCode);
+        await grace.PutAsJsonAsync("/settings/consent", new { consentAge = 13, wording = "We agree that our child may join lessons and mentoring." });
+        await grace.PostAsJsonAsync($"/programs/{DatabaseSeeder.ProgramId(DatabaseSeeder.Northgate, "Kids Club")}/enrollments",
+            new { childId = DatabaseSeeder.ChildId(DatabaseSeeder.Northgate, "Lucía Rivera") });
+
+        var response = await _factory.ClientFor(Lucia).GetAsync("/learning/home");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Empty((await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("assigned").EnumerateArray());
         Assert.Single(await Assigned());
     }
 
