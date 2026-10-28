@@ -40,8 +40,11 @@ export class Shell {
 
   protected readonly menuOpen = signal(false);
   protected readonly session = toSignal(
-    inject(SESSION_API)
-      .current()
+    this.sessions.changed
+      .pipe(
+        startWith(null),
+        switchMap(() => this.sessions.current()),
+      )
       .pipe(
         catchError((error: HttpErrorResponse) => {
           if (error.status !== 401) {

@@ -62,6 +62,7 @@ public static class DependencyInjection
         services.AddScoped<PrivacyHandler>();
         services.AddScoped<ConsentPolicyHandler>();
         services.AddScoped<AccountHandler>();
+        services.AddScoped<ProfileHandler>();
         services.AddScoped<PasswordResetHandler>();
         services.AddScoped<Audit.AuditLogHandler>();
         services.AddScoped<Organizations.PlatformOrganizationsHandler>();

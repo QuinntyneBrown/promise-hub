@@ -13,4 +13,10 @@ export interface SessionApi {
 
   /** Forgets the loaded session, after signing in or out. */
   reset(): void;
+
+  /** Loads the session again after the person changed it (their name, their display), and tells `changed` subscribers. */
+  refresh(): void;
+
+  /** Emits after `refresh()`, so the shell reads the session again. */
+  readonly changed: Observable<void>;
 }

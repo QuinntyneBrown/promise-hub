@@ -13,6 +13,8 @@ public static class SessionEndpoints
         var app = root.MapGroup(string.Empty).AllowAnyMember();
         app.MapGet("/me", (GetSessionHandler handler, CancellationToken ct) => handler.HandleAsync(ct));
         app.MapGet("/me/account", (AccountHandler handler, CancellationToken ct) => handler.GetAsync(ct));
+        app.MapPut("/me/profile", async (SaveProfileRequest request, ProfileHandler handler, CancellationToken ct) =>
+            (await handler.SaveAsync(request, ct)).ToHttp());
         app.MapPost("/me/recovery-codes", async (AccountHandler handler, HttpContext http, CancellationToken ct) =>
             Guid.TryParse(http.User.FindFirst(AuthSchemes.UserClaim)?.Value, out var userId) && await handler.NewRecoveryCodesAsync(userId, ct) is { } codes
                 ? Results.Ok(codes)

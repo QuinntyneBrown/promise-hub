@@ -39,6 +39,8 @@ export class PhTextField implements ControlValueAccessor {
   readonly inputmode = input<string | null>(null);
   readonly maxlength = input<number | null>(null);
   readonly error = input<string | null>(null);
+  /** The read-only state: the value is shown, selectable and announced, but set elsewhere (design system: text-field). */
+  readonly readonly = input(false);
 
   protected readonly value = signal('');
   protected readonly disabled = signal(false);

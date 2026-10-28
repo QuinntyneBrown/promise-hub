@@ -4,7 +4,12 @@
   <ph-page-header title="Your account" [subtitle]="a.name" />
   <div class="stack">
     <ph-card title="Profile">
-      <ph-description-list [facts]="facts(a)" />
+      <div class="stack">
+        <ph-description-list [facts]="facts(a)" />
+        <div>
+          <ph-button icon="edit" link="/account/profile">Edit profile</ph-button>
+        </div>
+      </div>
     </ph-card>
     <ph-card title="Two-step sign-in">
       <div class="stack">

@@ -74,15 +74,15 @@ def profile_form(*, name="Jaylen Okafor", email="jaylen@harbourview.example", mo
                  err=None, busy=False, saved=False, alert_html="") -> str:
     e = err or {}
     summary = form_summary([(k, m) for k, m in e.items()]) if e else ""
-    name_field = (field("name", "Name", value=name, readonly=True, help_=f"Your name comes from your record at {ORG_SHORT}. Ask staff to change it.") if youth
+    name_field = (field("name", "Name", value=name, readonly=True, help_=f"Your name comes from your record at {ORG}. Ask staff to change it.") if youth
                   else field("name", "Name", value=name, required=True, autocomplete="name", error=e.get("name", "")))
     status_ = f'<p class="save-status save-status--saved" role="status">{icon("check")}Saved just now</p>' if saved else ""
     return (f'<form class="stack form-width--md" action="#" method="post" novalidate>{summary}{alert_html}'
             + card(name_field
                    + field("email", "Email", type_="email", value=email, readonly=True, help_="You sign in with this email in every organization. Ask an admin to change it.")
                    + field("mobile", "Mobile", type_="tel", value=mobile, optional=True, autocomplete="tel", inputmode="tel", error=e.get("mobile", ""),
-                           help_=f"For alerts from {ORG_SHORT}. Families never see it."), title="About you", tid="about")
-            + card(facts([("Role", role), ("Organization", ORG)]) + muted("Your role is set by an admin."), title=f"Set by {ORG_SHORT}", tid="managed")
+                           help_=f"For alerts from {ORG}. Families never see it."), title="About you", tid="about")
+            + card(facts([("Role", role), ("Organization", ORG)]) + muted("Your role is set by an admin."), title=f"Set by {ORG}", tid="managed")
             + f'<div class="form-actions cluster">{status_}{btn("Cancel", "ghost", href=page("account"))}{btn("Save changes", "primary", type_="submit", busy=busy)}</div></form>')
 
 

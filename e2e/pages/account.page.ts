@@ -16,6 +16,26 @@ export class AccountPage extends BasePage {
     return this.page.getByRole('region', { name: 'Two-step sign-in' });
   }
 
+  get password(): Locator {
+    return this.page.getByRole('region', { name: 'Password' });
+  }
+
+  get display(): Locator {
+    return this.page.getByRole('region', { name: 'Display' });
+  }
+
+  async editProfile(): Promise<void> {
+    await this.page.getByRole('link', { name: 'Edit profile' }).click();
+  }
+
+  async changeDisplay(): Promise<void> {
+    await this.page.getByRole('link', { name: 'Change display' }).click();
+  }
+
+  async chooseNotifications(): Promise<void> {
+    await this.page.getByRole('link', { name: 'Choose notifications' }).click();
+  }
+
   get dialog(): Locator {
     return this.page.getByRole('dialog');
   }

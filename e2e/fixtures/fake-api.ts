@@ -662,6 +662,8 @@ export class FakeApi {
   private resetEmails = new Map<string, number>();
   /** Recovery codes left per person, and whether the other devices were signed out. */
   private recoveryCodes = new Map<string, number>();
+  /** Saved profiles by membership (L2-117); a membership without one shows its seeded name. */
+  private readonly profiles = new Map<string, { name: string; mobile: string | null }>();
   signedOutOthers = false;
   /** The audit log as the API keeps it: organization, when, who, action, record type and summary. */
   private auditEntries: {
@@ -2160,6 +2162,7 @@ export class FakeApi {
       (route) => this.resetPassword(route),
     ],
     ["GET", /^\/api\/me\/account$/, (route) => this.account(route)],
+    ["PUT", /^\/api\/me\/profile$/, (route) => this.saveProfile(route)],
     [
       "POST",
       /^\/api\/me\/recovery-codes$/,
@@ -2993,7 +2996,7 @@ export class FakeApi {
     )!;
     return route.fulfill({
       json: {
-        personName: membership.personName,
+        personName: this.profileOf(membership.id).name,
         role: membership.role,
         organizationId: organization.id,
         organizationName: organization.name,
@@ -5272,15 +5275,54 @@ export class FakeApi {
     const org = organizations.find((o) => o.id === m.organizationId)!;
     return route.fulfill({
       json: {
-        name: m.personName,
+        name: this.profileOf(m.id).name,
         email: m.email,
         role: m.role,
         organization: org.name,
-        mobile: null,
+        mobile: this.profileOf(m.id).mobile,
         twoStepOn: ["Admin", "ProgramDirector"].includes(m.role),
         recoveryCodesLeft: this.recoveryCodes.get(m.email) ?? 0,
       },
     });
+  }
+
+  /** The name and mobile of a membership, as saved from its profile (L2-117). */
+  profileOf(membershipId: string): { name: string; mobile: string | null } {
+    const m = memberships.find((x) => x.id === membershipId)!;
+    return this.profiles.get(membershipId) ?? { name: m.personName, mobile: null };
+  }
+
+  /** Mirrors backend ProfileHandler: the active membership only; a youth's name is read-only; audited without values. */
+  private async saveProfile(route: Route): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    const b = route.request().postDataJSON() as {
+      name?: string | null;
+      mobile?: string | null;
+    };
+    const name = (b.name ?? "").trim();
+    const mobile = (b.mobile ?? "").trim();
+    const current = this.profileOf(m.id);
+    const errors: Record<string, string> = {};
+    if (!name) errors["name"] = "Enter your name.";
+    else if (name.length > 100) errors["name"] = "Use at most 100 characters.";
+    else if (m.role === "Youth" && name !== current.name)
+      errors["name"] = "Your name comes from your record. Ask staff to change it.";
+    if (mobile && mobile.replace(/\D/g, "").length !== 10)
+      errors["mobile"] = "Include the area code, like 905-555-0101.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
+    this.profiles.set(m.id, { name, mobile: mobile || null });
+    this.auditEntries.push({
+      organizationId: m.organizationId,
+      when: NOW.toISOString(),
+      who: name,
+      action: "Updated",
+      record: "Membership",
+      summary: `${name} updated their profile`,
+      device: null,
+    });
+    return route.fulfill({ status: 204 });
   }
 
   private async newRecoveryCodes(route: Route): Promise<void> {

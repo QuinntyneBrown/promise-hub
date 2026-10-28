@@ -21,6 +21,10 @@ export class HttpAccountApi implements AccountApi {
     return toLoad(this.http.post<{ codes: string[] }>(`${this.baseUrl}/me/recovery-codes`, null));
   }
 
+  saveProfile(name: string, mobile: string): Observable<WriteOutcome> {
+    return toWrite(this.http.put<null>(`${this.baseUrl}/me/profile`, { name, mobile }));
+  }
+
   signOutOthers(): Observable<WriteOutcome> {
     return toWrite(this.http.post<null>(`${this.baseUrl}/me/sign-out-others`, null));
   }
