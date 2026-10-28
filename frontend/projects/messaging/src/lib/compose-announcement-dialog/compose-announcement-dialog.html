@@ -1,0 +1,90 @@
+<ph-dialog title="New announcement" description="Pick who hears it and when it goes out.">
+  <form class="stack" (ngSubmit)="send()">
+    @if (summary().length) {
+      <ph-error-summary title="Fix these to continue" [items]="summary()" />
+    }
+    @if (failed()) {
+      <ph-alert
+        tone="danger"
+        title="That didn’t go through"
+        text="Nobody was told anything. Try again."
+      />
+    }
+    <ph-text-field
+      inputId="ann-title"
+      label="Title"
+      name="title"
+      [maxlength]="120"
+      [error]="errors()['title'] ?? null"
+      [ngModel]="title()"
+      (ngModelChange)="title.set($event ?? '')"
+    />
+    <ph-textarea
+      inputId="ann-body"
+      label="Message"
+      name="body"
+      [rows]="4"
+      [count]="count(body())"
+      [error]="errors()['body'] ?? null"
+      [ngModel]="body()"
+      (ngModelChange)="body.set($event ?? '')"
+    />
+    <ph-select
+      inputId="ann-program"
+      label="Program"
+      name="program"
+      [options]="programOptions"
+      [ngModel]="programId()"
+      (ngModelChange)="programId.set($event ?? '')"
+    />
+    <div id="ann-audience">
+      <ph-radio-group
+        legend="Who hears it"
+        name="audience"
+        [options]="audiences"
+        [error]="errors()['audience'] ?? null"
+        [ngModel]="audience()"
+        (ngModelChange)="audience.set($event)"
+      />
+    </div>
+    <ph-radio-group
+      legend="When"
+      name="when"
+      [options]="whenOptions"
+      [ngModel]="when()"
+      (ngModelChange)="when.set($event)"
+    />
+    @if (when() === 'later') {
+      <div class="cluster">
+        <ph-text-field
+          inputId="ann-date"
+          label="Date"
+          type="date"
+          name="date"
+          [error]="errors()['sendAt'] ?? null"
+          [ngModel]="date()"
+          (ngModelChange)="date.set($event ?? '')"
+        />
+        <ph-text-field
+          inputId="ann-time"
+          label="Time"
+          type="time"
+          name="time"
+          [ngModel]="time()"
+          (ngModelChange)="time.set($event ?? '')"
+        />
+      </div>
+    }
+    <ph-alert
+      tone="info"
+      title="Guardians get a text"
+      text="Or an email when there’s no mobile. Texts count toward your SMS cap; youth and mentors read it in the app."
+    />
+  </form>
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close()">Cancel</ph-button>
+    <ph-button variant="primary" icon="messages" [busy]="busy()" (click)="send()">{{
+      when() === 'later' ? 'Schedule' : 'Send'
+    }}</ph-button>
+  </ng-container>
+</ph-dialog>

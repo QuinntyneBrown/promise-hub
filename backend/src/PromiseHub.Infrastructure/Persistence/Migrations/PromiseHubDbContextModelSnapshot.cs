@@ -2621,6 +2621,100 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.ToTable("YouthMentors");
                 });
 
+            modelBuilder.Entity("PromiseHub.Domain.Messaging.Announcement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Audience")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("CreatedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CreatedByMembershipId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedByRole")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("GuardianMessageId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ProgramId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("SendAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByMembershipId");
+
+                    b.HasIndex("GuardianMessageId");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("ProgramId");
+
+                    b.HasIndex("OrganizationId", "SendAt");
+
+                    b.ToTable("Announcements");
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Messaging.AnnouncementRead", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("AnnouncementId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("MembershipId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("ReadAt")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MembershipId");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("AnnouncementId", "MembershipId")
+                        .IsUnique();
+
+                    b.ToTable("AnnouncementReads");
+                });
+
             modelBuilder.Entity("PromiseHub.Domain.Messaging.Delivery", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2699,6 +2793,50 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.ToTable("Deliveries");
                 });
 
+            modelBuilder.Entity("PromiseHub.Domain.Messaging.DirectMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("MentorMembershipId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("ReadAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("SenderMembershipId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("SentAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("YouthMembershipId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MentorMembershipId");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("SenderMembershipId");
+
+                    b.HasIndex("YouthMembershipId");
+
+                    b.HasIndex("OrganizationId", "YouthMembershipId", "SentAt");
+
+                    b.ToTable("DirectMessages");
+                });
+
             modelBuilder.Entity("PromiseHub.Domain.Messaging.Message", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2712,7 +2850,7 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Body")
                         .IsRequired()
-                        .HasMaxLength(480)
+                        .HasMaxLength(2000)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Channel")
@@ -4335,6 +4473,50 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("PromiseHub.Domain.Messaging.Announcement", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Organizations.Membership", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByMembershipId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Messaging.Message", null)
+                        .WithMany()
+                        .HasForeignKey("GuardianMessageId");
+
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Programs.Program", null)
+                        .WithMany()
+                        .HasForeignKey("ProgramId");
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Messaging.AnnouncementRead", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Messaging.Announcement", null)
+                        .WithMany()
+                        .HasForeignKey("AnnouncementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Organizations.Membership", null)
+                        .WithMany()
+                        .HasForeignKey("MembershipId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("PromiseHub.Domain.Messaging.Delivery", b =>
                 {
                     b.HasOne("PromiseHub.Domain.Messaging.Message", null)
@@ -4346,6 +4528,33 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
                         .WithMany()
                         .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Messaging.DirectMessage", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Organizations.Membership", null)
+                        .WithMany()
+                        .HasForeignKey("MentorMembershipId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Organizations.Membership", null)
+                        .WithMany()
+                        .HasForeignKey("SenderMembershipId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Organizations.Membership", null)
+                        .WithMany()
+                        .HasForeignKey("YouthMembershipId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

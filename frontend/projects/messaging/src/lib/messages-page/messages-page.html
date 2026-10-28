@@ -2,6 +2,7 @@
 @if (r?.status !== 'forbidden') {
   <ph-page-header title="Messages" [subtitle]="r?.status === 'loaded' ? subtitle(r.value) : null">
     @if (canSend()) {
+      <ph-button link="/messages/announcements">Announcements</ph-button>
       <ph-button variant="primary" link="/messages/new" icon="messages">New message</ph-button>
     }
   </ph-page-header>

@@ -67,6 +67,7 @@ app.MapEventEndpoints();
 app.MapScheduleEndpoints();
 app.MapAttendanceEndpoints();
 app.MapMessagingEndpoints();
+app.MapAnnouncementEndpoints();
 app.MapSlipEndpoints();
 app.MapGuardianEndpoints();
 app.MapImportEndpoints();

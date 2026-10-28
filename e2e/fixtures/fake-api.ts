@@ -8,6 +8,7 @@ import { FakeReflections } from './fake-reflections';
 import { FakeLearning } from './fake-learning';
 import { FakeReviews, type YouthAccounts } from './fake-reviews';
 import { FakeMentorCheckIns, type FakeMentorCheckIn, TODAY } from './fake-mentor-check-ins';
+import { FakeAnnouncements, reachesGuardians, reachesMentors, reachesYouth, type FakeAnnouncement } from './fake-announcements';
 import { FakeAtRiskFlags } from './fake-at-risk-flags';
 import { FakeAssignedWorkStore, type Recipient } from './fake-assigned-work';
 import { type FakeEvent, type FakeProgram, NOW, seedEvents, seedPrograms, weeklyStarts, hamiltonDay } from './programs';
@@ -634,6 +635,8 @@ export class FakeApi {
   readonly mentorCheckIns = new FakeMentorCheckIns();
   /** At-risk flags (L2-091). */
   readonly atRiskFlags = new FakeAtRiskFlags();
+  /** Announcements (L2-105); tests seed and read them through it. */
+  readonly announcements = new FakeAnnouncements();
   /** Work mentors assigned (L2-092); tests read and seed it. */
   readonly assignedWork = new FakeAssignedWorkStore(this.curriculumState);
 
@@ -642,6 +645,11 @@ export class FakeApi {
 
   /** The progression framework (L2-086); its competencies are the ones mentors assess in reviews. */
   readonly progression = new FakeProgression(() => this.reviews.competencies);
+
+  /** The audit entries recorded for a record type, oldest first. */
+  auditOf(record: string): { who: string; action: string; summary: string }[] {
+    return this.auditEntries.filter((e) => e.record === record);
+  }
 
   /** Sets the modules on for an organization, as Settings › Modules would. */
   setModules(organizationId: string, on: ModuleId[]): void {
@@ -941,6 +949,8 @@ export class FakeApi {
     ['POST', /^\/api\/slips\/(?<id>[^/]+)\/send-now$/, (route, p) => this.slipTransition(route, p['id']!, 'send-now')],
     ['POST', /^\/api\/slips\/(?<id>[^/]+)\/cancel-send$/, (route, p) => this.slipTransition(route, p['id']!, 'cancel')],
     ['PUT', /^\/api\/slips\/(?<id>[^/]+)$/, (route, p) => this.editSlip(route, p['id']!)],
+    ['GET', /^\/api\/announcements$/, (route) => this.listAnnouncements(route)],
+    ['POST', /^\/api\/announcements$/, (route) => this.composeAnnouncement(route)],
     ['GET', /^\/api\/messages$/, (route) => this.listMessages(route)],
     ['POST', /^\/api\/messages\/preview$/, (route) => this.previewMessage(route)],
     ['POST', /^\/api\/messages$/, (route) => this.sendMessage(route)],
@@ -3864,10 +3874,18 @@ export class FakeApi {
     else if (body.length > 480) errors['body'] = 'Keep it to 480 characters.';
     if (recipients.length === 0) errors['audience'] = 'Nobody matches. Loosen a filter.';
     if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    const deliveries = this.deliver(m, recipients, body);
+    const id = `msg-${this.nextId++}`;
+    this.messages.unshift({ id, organizationId: m.organizationId, title: titleOf(body), body, sentAt: NOW.toISOString(), sentBy: m.personName, audience: label, channel: b.channel, deliveries });
+    return route.fulfill({ status: 201, json: { id } });
+  }
+
+  /** The send job at once: texts within the cap, email instead or paused beyond it. */
+  private deliver(m: Membership, recipients: ReturnType<FakeApi['audienceOf']>['recipients'], body: string): FakeDelivery[] {
     const org = organizations.find((o) => o.id === m.organizationId)!;
     const segments = segmentsOf(`${org.name}: ${body}`);
     const now = NOW.toISOString();
-    const deliveries: FakeDelivery[] = recipients.map((r) => {
+    return recipients.map((r) => {
       const base = { household: r.household, householdId: r.householdId, guardian: r.guardian, language: r.language, at: null as string | null };
       if (r.unreachable) return { ...base, channel: r.channel, status: 'Failed', reason: r.unreachable };
       if (r.channel === 'Email') return { ...base, channel: 'Email', status: 'Sent', reason: null, at: now };
@@ -3880,9 +3898,56 @@ export class FakeApi {
         ? { ...base, channel: 'Email', status: 'FellBackToEmail', reason: 'SMS cap reached', at: now }
         : { ...base, channel: 'Sms', status: 'Paused', reason: 'SMS cap reached' };
     });
-    const id = `msg-${this.nextId++}`;
-    this.messages.unshift({ id, organizationId: m.organizationId, title: titleOf(body), body, sentAt: now, sentBy: m.personName, audience: label, channel: b.channel, deliveries });
-    return route.fulfill({ status: 201, json: { id } });
+  }
+
+  /** The members an announcement reaches in the app (L2-105 criterion 3): youth accounts of enrolled children, mentors of the program. */
+  private announcementMembers(a: FakeAnnouncement): string[] {
+    const programs = this.programs.filter((p) => p.organizationId === a.organizationId && p.status === 'Active' && (!a.programId || p.id === a.programId));
+    const children = new Set(programs.flatMap((p) => p.roster));
+    const active = memberships.filter((x) => x.organizationId === a.organizationId && !this.removedMembers.has(x.id));
+    const ids: string[] = [];
+    if (reachesYouth(a)) ids.push(...active.filter((x) => x.role === 'Youth' && children.has(this.youthLinks.get(x.id) ?? '')).map((x) => x.id));
+    if (reachesMentors(a)) {
+      const named = new Set<string>();
+      for (const p of programs) {
+        const team = this.cohortMentors.get(p.id);
+        if (team) [team.lead, ...team.supporting].forEach((x) => named.add(x));
+      }
+      [...this.youthMentors].filter(([child]) => children.has(child)).forEach(([, mentor]) => named.add(mentor));
+      ids.push(...active.filter((x) => x.role === 'Mentor' && (!a.programId || named.has(x.id))).map((x) => x.id));
+    }
+    return [...new Set(ids)];
+  }
+
+  /** GET /announcements: Messages on, Send messages (L2-105 criterion 7). */
+  private async listAnnouncements(route: Route): Promise<void> {
+    const m = await this.messagingCaller(route);
+    if (!m) return;
+    const announcements = this.announcements.rows
+      .filter((a) => a.organizationId === m.organizationId)
+      .sort((a, z) => z.sendAt.localeCompare(a.sendAt))
+      .map((a) => this.announcements.row(a, this.announcementMembers(a)));
+    return route.fulfill({ json: { announcements } });
+  }
+
+  /** POST /announcements (L2-105 criteria 1 to 4): the guardians' copy goes through Messages; audited as Created. */
+  private async composeAnnouncement(route: Route): Promise<void> {
+    const m = await this.messagingCaller(route);
+    if (!m) return;
+    const draft = await this.announcements.compose(route, (id) => this.programs.find((p) => p.id === id && p.organizationId === m.organizationId)?.name);
+    if (!draft) return;
+    let households = 0;
+    const row = { ...draft, organizationId: m.organizationId, sentBy: m.personName, sentByRole: m.role, households: 0 };
+    if (reachesGuardians(row as FakeAnnouncement)) {
+      const { label, recipients } = this.audienceOf(m, { programId: draft.programId, eventId: null, language: null, body: draft.body, channel: 'TextWithEmailFallback' });
+      households = recipients.length;
+      if (recipients.length && draft.sendAt <= NOW.toISOString()) {
+        this.messages.unshift({ id: `msg-${this.nextId++}`, organizationId: m.organizationId, title: draft.title, body: draft.body, sentAt: NOW.toISOString(), sentBy: m.personName, audience: label, channel: 'TextWithEmailFallback', deliveries: this.deliver(m, recipients, draft.body) });
+      }
+    }
+    const saved = this.announcements.add({ ...row, households });
+    this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'Created', record: 'Announcement', summary: `${saved.title} · ${saved.program ?? 'All programs'} · ${saved.audience}`, device: null });
+    return route.fulfill({ status: 201, json: { id: saved.id } });
   }
 
   private counts(d: FakeDelivery[]) {
