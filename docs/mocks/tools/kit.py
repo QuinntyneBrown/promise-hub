@@ -516,8 +516,8 @@ TABBAR = [("today", "Today", "home"), ("check-in", "Check-in", "clipboard"), ("f
 
 # Participant roles (ADR 0043): their own sections only, each shown while its module is on. No search, no Settings.
 NAV_ROLE = {
-    "youth": [("today", "Today", "home", "today"), ("learn-home", "Learning", "star", "learning"), ("youth-schedule", "Schedule", "calendar", "schedule")],
-    "mentor": [("today", "Today", "home", "today"), ("mentor-dashboard", "Mentoring", "users", "mentor-dashboard"), ("check-in", "Check-in", "clipboard", "check-in")],
+    "youth": [("today", "Today", "home", "today"), ("learn-home", "Learning", "star", "learning"), ("youth-schedule", "Schedule", "calendar", "schedule"), ("conversations", "Messages", "message", "conversations")],
+    "mentor": [("today", "Today", "home", "today"), ("mentor-dashboard", "Mentoring", "users", "mentor-dashboard"), ("check-in", "Check-in", "clipboard", "check-in"), ("conversations", "Messages", "message", "conversations")],
     "volunteer": [("today", "Today", "home", "today"), ("check-in", "Check-in", "clipboard", "check-in"), ("my-schedule", "Schedule", "calendar", "my-schedule")],
 }
 
@@ -541,7 +541,7 @@ def topbar(current: str, user: dict, *, unread: int = 2, kind: str = "page", men
         if modules is not None and cur not in modules:
             continue
         a = ' aria-current="page"' if cur == current else ""
-        md = " nav-link--md" if sid in ("programs", "messages", "reports") else ""
+        md = " nav-link--md" if sid in ("programs", "messages", "reports", "conversations") else ""
         links.append(f'<a class="nav-link{md}" href="{rel(kind, "page", sid)}"{a}>{esc(label)}</a>')
     for sid, label, _ic, cur in ([] if participant else NAV_SECONDARY):
         a = ' aria-current="page"' if cur == current else ""

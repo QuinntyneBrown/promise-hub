@@ -60,6 +60,6 @@ def my_schedule(S):
           main=hdr() + card(empty("We couldn’t load your schedule", "Check your connection and try again.", action=btn("Try again", "primary", icon_name="refresh"),
                                   error=True, icon_name="alert-triangle"), cls="card--flush"))
     S.add("forbidden", "A youth opens /my-schedule: the server answers 403 and the page says the schedule is for the people who run sessions.", nav="today", role="youth",
-          user=YOUTH["sofia"], unread=0, modules=["today", "learning", "schedule"],
+          user=YOUTH["sofia"], unread=0, modules=["today", "learning", "schedule", "conversations"],
           main=card(empty("This schedule is for people who run sessions", "Your own sessions are in Schedule.",
                           action=btn("Back to Today", "primary", href=page("today", "youth")), icon_name="lock", heading="h1"), cls="card--flush"))

@@ -8,6 +8,8 @@ import { FakeReflections } from './fake-reflections';
 import { FakeLearning } from './fake-learning';
 import { FakeReviews, type YouthAccounts } from './fake-reviews';
 import { FakeMentorCheckIns, type FakeMentorCheckIn, TODAY } from './fake-mentor-check-ins';
+import { FakeConversations, type FakeDirectMessage } from './fake-conversations';
+import { FakeAnnouncements, reachesGuardians, reachesMentors, reachesYouth, type FakeAnnouncement } from './fake-announcements';
 import { FakeAtRiskFlags } from './fake-at-risk-flags';
 import { FakeAssignedWorkStore, type Recipient } from './fake-assigned-work';
 import { type FakeEvent, type FakeProgram, NOW, seedEvents, seedPrograms, weeklyStarts, hamiltonDay } from './programs';
@@ -56,7 +58,7 @@ const can = {
  * What a participant role (Youth, Mentor, Volunteer) may call: mirrors the API's fallback policy, which closes every staff
  * endpoint to them unless it opts in (ADR 0043). Volunteers also open their assigned sessions.
  */
-const PARTICIPANT_PATHS = [/^\/api\/me(\/|$)/, /^\/api\/notifications(\/|$)/, /^\/api\/auth\//, /^\/api\/learning\//, /^\/api\/mentoring\//, /^\/api\/curriculum(\/|$)/, /^\/api\/schedule(\/|$)/];
+const PARTICIPANT_PATHS = [/^\/api\/me(\/|$)/, /^\/api\/announcements\/mine(\/|$)/, /^\/api\/conversations(\/|$)/, /^\/api\/realtime$/, /^\/api\/notifications(\/|$)/, /^\/api\/auth\//, /^\/api\/learning\//, /^\/api\/mentoring\//, /^\/api\/curriculum(\/|$)/, /^\/api\/schedule(\/|$)/];
 /** Volunteers and mentors run sessions without the staff app (ADR 0043, ADR 0065): the session endpoints that need RunSessions. */
 const RUNNER_PATHS = [/^\/api\/attendance$/, /^\/api\/sessions\/(today|mine)$/, /^\/api\/sessions\/[^/]+\/(roster|check-ins|absences|end|notes|walk-ins)$/];
 
@@ -634,6 +636,10 @@ export class FakeApi {
   readonly mentorCheckIns = new FakeMentorCheckIns();
   /** At-risk flags (L2-091). */
   readonly atRiskFlags = new FakeAtRiskFlags();
+  /** Direct messages (L2-106); tests seed them and reply as the other side. */
+  readonly conversations = new FakeConversations();
+  /** Announcements (L2-105); tests seed and read them through it. */
+  readonly announcements = new FakeAnnouncements();
   /** Work mentors assigned (L2-092); tests read and seed it. */
   readonly assignedWork = new FakeAssignedWorkStore(this.curriculumState);
 
@@ -642,6 +648,11 @@ export class FakeApi {
 
   /** The progression framework (L2-086); its competencies are the ones mentors assess in reviews. */
   readonly progression = new FakeProgression(() => this.reviews.competencies);
+
+  /** The audit entries recorded for a record type, oldest first. */
+  auditOf(record: string): { who: string; action: string; summary: string }[] {
+    return this.auditEntries.filter((e) => e.record === record);
+  }
 
   /** Sets the modules on for an organization, as Settings › Modules would. */
   setModules(organizationId: string, on: ModuleId[]): void {
@@ -941,6 +952,14 @@ export class FakeApi {
     ['POST', /^\/api\/slips\/(?<id>[^/]+)\/send-now$/, (route, p) => this.slipTransition(route, p['id']!, 'send-now')],
     ['POST', /^\/api\/slips\/(?<id>[^/]+)\/cancel-send$/, (route, p) => this.slipTransition(route, p['id']!, 'cancel')],
     ['PUT', /^\/api\/slips\/(?<id>[^/]+)$/, (route, p) => this.editSlip(route, p['id']!)],
+    ['GET', /^\/api\/realtime$/, (route) => this.realtime(route)],
+    ['GET', /^\/api\/conversations$/, (route) => this.listConversations(route)],
+    ['GET', /^\/api\/conversations\/(?<id>[^/]+)$/, (route, p) => this.getConversation(route, p['id']!)],
+    ['POST', /^\/api\/conversations\/(?<id>[^/]+)\/messages$/, (route, p) => this.sendDirectMessage(route, p['id']!)],
+    ['GET', /^\/api\/announcements\/mine$/, (route) => this.myAnnouncements(route)],
+    ['POST', /^\/api\/announcements\/mine\/read$/, (route) => this.readMyAnnouncements(route)],
+    ['GET', /^\/api\/announcements$/, (route) => this.listAnnouncements(route)],
+    ['POST', /^\/api\/announcements$/, (route) => this.composeAnnouncement(route)],
     ['GET', /^\/api\/messages$/, (route) => this.listMessages(route)],
     ['POST', /^\/api\/messages\/preview$/, (route) => this.previewMessage(route)],
     ['POST', /^\/api\/messages$/, (route) => this.sendMessage(route)],
@@ -3864,10 +3883,18 @@ export class FakeApi {
     else if (body.length > 480) errors['body'] = 'Keep it to 480 characters.';
     if (recipients.length === 0) errors['audience'] = 'Nobody matches. Loosen a filter.';
     if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    const deliveries = this.deliver(m, recipients, body);
+    const id = `msg-${this.nextId++}`;
+    this.messages.unshift({ id, organizationId: m.organizationId, title: titleOf(body), body, sentAt: NOW.toISOString(), sentBy: m.personName, audience: label, channel: b.channel, deliveries });
+    return route.fulfill({ status: 201, json: { id } });
+  }
+
+  /** The send job at once: texts within the cap, email instead or paused beyond it. */
+  private deliver(m: Membership, recipients: ReturnType<FakeApi['audienceOf']>['recipients'], body: string): FakeDelivery[] {
     const org = organizations.find((o) => o.id === m.organizationId)!;
     const segments = segmentsOf(`${org.name}: ${body}`);
     const now = NOW.toISOString();
-    const deliveries: FakeDelivery[] = recipients.map((r) => {
+    return recipients.map((r) => {
       const base = { household: r.household, householdId: r.householdId, guardian: r.guardian, language: r.language, at: null as string | null };
       if (r.unreachable) return { ...base, channel: r.channel, status: 'Failed', reason: r.unreachable };
       if (r.channel === 'Email') return { ...base, channel: 'Email', status: 'Sent', reason: null, at: now };
@@ -3880,9 +3907,215 @@ export class FakeApi {
         ? { ...base, channel: 'Email', status: 'FellBackToEmail', reason: 'SMS cap reached', at: now }
         : { ...base, channel: 'Sms', status: 'Paused', reason: 'SMS cap reached' };
     });
-    const id = `msg-${this.nextId++}`;
-    this.messages.unshift({ id, organizationId: m.organizationId, title: titleOf(body), body, sentAt: now, sentBy: m.personName, audience: label, channel: b.channel, deliveries });
-    return route.fulfill({ status: 201, json: { id } });
+  }
+
+  /** The members an announcement reaches in the app (L2-105 criterion 3): youth accounts of enrolled children, mentors of the program. */
+  private announcementMembers(a: FakeAnnouncement): string[] {
+    const programs = this.programs.filter((p) => p.organizationId === a.organizationId && p.status === 'Active' && (!a.programId || p.id === a.programId));
+    const children = new Set(programs.flatMap((p) => p.roster));
+    const active = memberships.filter((x) => x.organizationId === a.organizationId && !this.removedMembers.has(x.id));
+    const ids: string[] = [];
+    if (reachesYouth(a)) ids.push(...active.filter((x) => x.role === 'Youth' && children.has(this.youthLinks.get(x.id) ?? '')).map((x) => x.id));
+    if (reachesMentors(a)) {
+      const named = new Set<string>();
+      for (const p of programs) {
+        const team = this.cohortMentors.get(p.id);
+        if (team) [team.lead, ...team.supporting].forEach((x) => named.add(x));
+      }
+      [...this.youthMentors].filter(([child]) => children.has(child)).forEach(([, mentor]) => named.add(mentor));
+      ids.push(...active.filter((x) => x.role === 'Mentor' && (!a.programId || named.has(x.id))).map((x) => x.id));
+    }
+    return [...new Set(ids)];
+  }
+
+  /** Events waiting for each member's next stream response (L2-107). */
+  private readonly realtimeQueue = new Map<string, string[]>();
+
+  private publish(membershipIds: string[], event: 'conversation' | 'announcement', data: object): void {
+    for (const id of membershipIds) this.realtimeQueue.set(id, [...(this.realtimeQueue.get(id) ?? []), `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`]);
+  }
+
+  /**
+   * GET /realtime as a long poll: answers when an event is waiting for the caller, or after two seconds, then the browser reconnects (as it
+   * does when a real stream drops) and the page fetches again.
+   */
+  private async realtime(route: Route): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    const started = Date.now();
+    while (!this.realtimeQueue.get(m.id)?.length && Date.now() - started < 2000) await new Promise((r) => setTimeout(r, 50));
+    const events = this.realtimeQueue.get(m.id) ?? [];
+    this.realtimeQueue.set(m.id, []);
+    try {
+      await route.fulfill({ status: 200, headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' }, body: `retry: 300\n\n${events.join('')}` });
+    } catch {
+      // The page closed while the stream was open.
+    }
+  }
+
+  /** The other side writes in a conversation, as the youth or her mentor would; its event goes to both unless told not to. */
+  writeAs(senderId: string, youthId: string, body: string, options: { event?: boolean } = {}): void {
+    const childId = this.youthLinks.get(youthId)!;
+    const mentorId = this.youthMentors.get(childId)!;
+    const last = this.conversations.rows.map((r) => r.sentAt).sort().pop();
+    const sentAt = new Date(Math.max(NOW.getTime(), last ? new Date(last).getTime() + 60_000 : 0)).toISOString();
+    this.conversations.seed({ youthId, mentorId, senderId, body, sentAt });
+    if (options.event !== false) this.publish([youthId, mentorId], 'conversation', { youthId });
+  }
+
+  /** Staff announce now, as Compose would; its in-app recipients' streams are told. */
+  announceNow(row: Parameters<FakeAnnouncements['seed']>[0]): void {
+    const saved = this.announcements.seed(row);
+    this.publish(this.announcementMembers(saved), 'announcement', {});
+  }
+
+  /** The caller of a conversations endpoint: Messages and Mentoring on; mentors, youth, admins and program directors (L2-106, L2-108). */
+  private async conversationCaller(route: Route): Promise<Membership | null> {
+    const m = await this.participantModuleCaller(route, 'Messages', (x) => ['Mentor', 'Youth', 'Admin', 'ProgramDirector'].includes(x.role));
+    if (!m) return null;
+    if (!this.modules.get(m.organizationId)!.includes('Mentoring')) {
+      await route.fulfill({ status: 404 });
+      return null;
+    }
+    return m;
+  }
+
+  /** A youth account of the caller's organization, her current mentor and whether a guardian's consent blocks it (ADR 0068). */
+  private conversationScope(m: Membership, youthId: string) {
+    const youth = memberships.find((x) => x.id === youthId && x.role === 'Youth' && x.organizationId === m.organizationId && !this.removedMembers.has(x.id));
+    const childId = youth ? this.youthLinks.get(youth.id) : undefined;
+    if (!youth || !childId) return null;
+    const mentorId = this.youthMentors.get(childId);
+    const mentor = memberships.find((x) => x.id === mentorId && x.role === 'Mentor' && !this.removedMembers.has(x.id)) ?? null;
+    const participant = !!mentor && (m.id === youth.id || m.id === mentor.id);
+    const supervisor = m.role === 'Admin' || m.role === 'ProgramDirector';
+    const blocked = this.consentRequired(m.organizationId, childId) && this.consentStatusName(childId) !== 'Given' ? 'consent' : null;
+    return { youth, mentor, participant, supervisor, blocked };
+  }
+
+  private conversationRow(youth: Membership, mentor: Membership, messages: FakeDirectMessage[], me: string, blocked: string | null) {
+    const last = messages[messages.length - 1];
+    return {
+      youthId: youth.id, youthName: youth.personName, mentorId: mentor.id, mentorName: mentor.personName,
+      lastMessage: last?.body ?? null, lastMessageMine: last?.senderId === me, lastMessageAt: last?.sentAt ?? null,
+      unread: messages.filter((d) => d.senderId !== me && !d.readAt).length, blocked,
+    };
+  }
+
+  /** GET /conversations (L2-106 criterion 1, L2-108 criterion 4). */
+  private async listConversations(route: Route): Promise<void> {
+    const m = await this.conversationCaller(route);
+    if (!m) return;
+    let rows: ReturnType<FakeApi['conversationRow']>[] = [];
+    if (m.role === 'Mentor' || m.role === 'Youth') {
+      const youth = memberships.filter((x) => x.role === 'Youth' && x.organizationId === m.organizationId && !this.removedMembers.has(x.id));
+      for (const y of youth) {
+        const scope = this.conversationScope(m, y.id);
+        if (!scope?.participant) continue;
+        rows.push(this.conversationRow(y, scope.mentor!, this.conversations.of(y.id, scope.mentor!.id), m.id, scope.blocked));
+      }
+    } else {
+      const ids = [...new Set(this.conversations.rows.filter((d) => d.organizationId === m.organizationId).map((d) => d.youthId))];
+      rows = ids.map((id) => {
+        const messages = this.conversations.of(id);
+        const youth = memberships.find((x) => x.id === id)!;
+        const mentor = memberships.find((x) => x.id === messages[messages.length - 1]!.mentorId)!;
+        return { ...this.conversationRow(youth, mentor, messages, m.id, this.conversationScope(m, id)?.blocked ?? null), unread: 0 };
+      });
+    }
+    rows.sort((a, z) => (z.lastMessageAt ?? '').localeCompare(a.lastMessageAt ?? '') || a.youthName.localeCompare(z.youthName));
+    return route.fulfill({ json: { conversations: rows } });
+  }
+
+  /** GET /conversations/{youthId}: a participant's read marks what was sent to her; a supervisor's opening is audited. */
+  private async getConversation(route: Route, youthId: string): Promise<void> {
+    const m = await this.conversationCaller(route);
+    if (!m) return;
+    const scope = this.conversationScope(m, youthId);
+    if (!scope || (!scope.mentor && !scope.supervisor)) return route.fulfill({ status: 404 });
+    if (!scope.participant && !scope.supervisor) return route.fulfill({ status: 403, json: { code: 'forbidden' } });
+    const messages = scope.participant ? this.conversations.of(youthId, scope.mentor!.id) : this.conversations.of(youthId);
+    if (scope.participant) messages.filter((d) => d.senderId !== m.id && !d.readAt).forEach((d) => (d.readAt = NOW.toISOString()));
+    else this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'Viewed', record: 'Conversation', summary: `${scope.youth.personName} and ${scope.mentor?.personName ?? 'former mentors'}`, device: null });
+    return route.fulfill({
+      json: {
+        youthId, youthName: scope.youth.personName, mentorId: scope.mentor?.id ?? null, mentorName: scope.mentor?.personName ?? null,
+        readOnly: !scope.participant, canSend: scope.participant && !scope.blocked, blocked: scope.blocked,
+        messages: messages.map((d) => ({ id: d.id, body: d.body, from: memberships.find((x) => x.id === d.senderId)?.personName ?? '', mine: d.senderId === m.id, sentAt: d.sentAt })),
+      },
+    });
+  }
+
+  /** POST /conversations/{youthId}/messages: the youth or her mentor only, never while consent is needed; audited without the words. */
+  private async sendDirectMessage(route: Route, youthId: string): Promise<void> {
+    const m = await this.conversationCaller(route);
+    if (!m) return;
+    const scope = this.conversationScope(m, youthId);
+    if (!scope) return route.fulfill({ status: 404 });
+    if (!scope.participant) return route.fulfill({ status: 403, json: { code: 'forbidden' } });
+    if (scope.blocked) return route.fulfill({ status: 409, json: { code: 'blocked', blocked: scope.blocked } });
+    const saved = await this.conversations.send(route, m.organizationId, youthId, scope.mentor!.id, m.id);
+    if (!saved) return;
+    const to = m.id === scope.mentor!.id ? scope.youth.personName : scope.mentor!.personName;
+    this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'Created', record: 'DirectMessage', summary: `Message from ${m.personName} to ${to}`, device: null });
+    this.publish([youthId, scope.mentor!.id], 'conversation', { youthId });
+    return route.fulfill({ status: 201, json: { id: saved.id, body: saved.body, from: m.personName, mine: true, sentAt: saved.sentAt } });
+  }
+
+  /** The announcements a youth or mentor reads (L2-105 criterion 5): sent by now, and they are among its members. */
+  private announcementsFor(m: Membership): FakeAnnouncement[] {
+    return this.announcements.rows
+      .filter((a) => a.organizationId === m.organizationId && a.sendAt <= NOW.toISOString() && this.announcementMembers(a).includes(m.id))
+      .sort((a, z) => z.sendAt.localeCompare(a.sendAt));
+  }
+
+  /** GET /announcements/mine: Messages on, youth and mentors (ReadAnnouncements). */
+  private async myAnnouncements(route: Route): Promise<void> {
+    const m = await this.participantModuleCaller(route, 'Messages', (x) => x.role === 'Youth' || x.role === 'Mentor');
+    if (!m) return;
+    const announcements = this.announcementsFor(m).map((a) => this.announcements.item(a, m.id));
+    return route.fulfill({ json: { unread: announcements.filter((a) => !a.read).length, announcements } });
+  }
+
+  /** POST /announcements/mine/read: every announcement she reads, read for her alone (L2-105 criterion 6). */
+  private async readMyAnnouncements(route: Route): Promise<void> {
+    const m = await this.participantModuleCaller(route, 'Messages', (x) => x.role === 'Youth' || x.role === 'Mentor');
+    if (!m) return;
+    if (this.announcements.failMarkRead) return route.fulfill({ status: 500 });
+    this.announcementsFor(m).forEach((a) => this.announcements.reads.add(`${a.id}:${m.id}`));
+    return route.fulfill({ status: 204 });
+  }
+
+  /** GET /announcements: Messages on, Send messages (L2-105 criterion 7). */
+  private async listAnnouncements(route: Route): Promise<void> {
+    const m = await this.messagingCaller(route);
+    if (!m) return;
+    const announcements = this.announcements.rows
+      .filter((a) => a.organizationId === m.organizationId)
+      .sort((a, z) => z.sendAt.localeCompare(a.sendAt))
+      .map((a) => this.announcements.row(a, this.announcementMembers(a)));
+    return route.fulfill({ json: { announcements } });
+  }
+
+  /** POST /announcements (L2-105 criteria 1 to 4): the guardians' copy goes through Messages; audited as Created. */
+  private async composeAnnouncement(route: Route): Promise<void> {
+    const m = await this.messagingCaller(route);
+    if (!m) return;
+    const draft = await this.announcements.compose(route, (id) => this.programs.find((p) => p.id === id && p.organizationId === m.organizationId)?.name);
+    if (!draft) return;
+    let households = 0;
+    const row = { ...draft, organizationId: m.organizationId, sentBy: m.personName, sentByRole: m.role, households: 0 };
+    if (reachesGuardians(row as FakeAnnouncement)) {
+      const { label, recipients } = this.audienceOf(m, { programId: draft.programId, eventId: null, language: null, body: draft.body, channel: 'TextWithEmailFallback' });
+      households = recipients.length;
+      if (recipients.length && draft.sendAt <= NOW.toISOString()) {
+        this.messages.unshift({ id: `msg-${this.nextId++}`, organizationId: m.organizationId, title: draft.title, body: draft.body, sentAt: NOW.toISOString(), sentBy: m.personName, audience: label, channel: 'TextWithEmailFallback', deliveries: this.deliver(m, recipients, draft.body) });
+      }
+    }
+    const saved = this.announcements.add({ ...row, households });
+    if (saved.sendAt <= NOW.toISOString()) this.publish(this.announcementMembers(saved), 'announcement', {});
+    this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'Created', record: 'Announcement', summary: `${saved.title} · ${saved.program ?? 'All programs'} · ${saved.audience}`, device: null });
+    return route.fulfill({ status: 201, json: { id: saved.id } });
   }
 
   private counts(d: FakeDelivery[]) {

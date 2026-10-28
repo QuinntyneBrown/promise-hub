@@ -65,6 +65,10 @@ One folder per subsystem, one folder per vertically sliced feature, each with a 
 | attendance | show-offline-sync-state | L2-099, L2-028 |
 | messaging | compose-and-send-message | L2-021 |
 | messaging | enforce-sms-cap | L2-022 |
+| messaging | publish-announcements | L2-105, L2-021, L2-022 |
+| messaging | exchange-messages | L2-106 |
+| messaging | safeguard-direct-messages | L2-108, L2-057 |
+| messaging | deliver-realtime-events | L2-107 |
 | reports | compute-report | L2-024 |
 | reports | export-report | L2-025 |
 | audit | record-and-search-audit | L2-032 |

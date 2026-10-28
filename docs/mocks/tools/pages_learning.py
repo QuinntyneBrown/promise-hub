@@ -7,7 +7,7 @@ from reg import screen
 
 R_LEARN = "L1-023"
 SOFIA = YOUTH["sofia"]
-YKW = dict(nav="learning", role="youth", user=SOFIA, unread=0, modules=["today", "learning", "schedule"])
+YKW = dict(nav="learning", role="youth", user=SOFIA, unread=0, modules=["today", "learning", "schedule", "conversations"])
 SUB = "Your lessons, quizzes, assignments and badges."
 
 PASSAGE = "“For even the Son of Man did not come to be served, but to serve, and to give his life as a ransom for many.”"

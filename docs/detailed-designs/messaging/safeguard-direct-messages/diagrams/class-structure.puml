@@ -1,0 +1,33 @@
+@startuml
+title Class structure — Safeguard direct messages
+hide empty members
+class ConversationAccess {
+  +ForAsync(Guid youthId) : ConversationScope?
+}
+class ConversationScope {
+  +IsParticipant : bool
+  +IsSupervisor : bool
+  +Blocked : string?
+  +CanSend : bool
+}
+class ConsentGate {
+  +GatedAsync(Guid membershipId) : bool
+}
+class YouthMentor {
+  +ChildId : Guid
+  +MentorMembershipId : Guid
+}
+class Membership {
+  +Role : Role
+  +ChildId : Guid?
+  +RemovedAt : DateTimeOffset?
+}
+enum Permission {
+  SuperviseConversations
+}
+ConversationAccess --> ConsentGate
+ConversationAccess --> YouthMentor
+ConversationAccess --> Membership
+ConversationAccess ..> ConversationScope : creates
+ConversationAccess ..> Permission
+@enduml

@@ -1,0 +1,21 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Deliver real-time events
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(src, "RealtimeEvents", "api client", "EventSource with credentials, reconnects")
+  Component(page, "ConversationPage / YouthAnnouncementsPage", "Angular pages", "refetch on events")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "RealtimeEndpoints", "Minimal API", "GET /realtime, any member")
+  Component(port, "IRealtimeEvents", "Application port", "Publish(organizationId, membershipIds, event)")
+  Component(hub, "RealtimeHub", "Infrastructure singleton", "subscribers keyed by organization and membership")
+  Component(sh, "SendDirectMessageHandler / ComposeAnnouncementHandler", "Handlers", "publish after saving")
+  ComponentDb(db, "PromiseHub database", "EF Core", "tenant-owned rows")
+}
+Rel(page, src, "subscribes")
+Rel(src, ep, "EventSource")
+Rel(ep, hub, "Subscribe(organizationId, membershipId)")
+Rel(sh, port, "Publish")
+Rel(port, hub, "implemented by")
+@enduml

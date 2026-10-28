@@ -1,0 +1,75 @@
+@let r = result();
+@if (supervisor()) {
+  <ph-breadcrumb
+    [items]="[{ label: 'Messages', link: '/messages' }, { label: 'Mentor conversations' }]"
+  />
+}
+<ph-page-header
+  [title]="supervisor() ? 'Mentor conversations' : 'Messages'"
+  [subtitle]="subtitle()"
+/>
+@if (r === null) {
+  <div class="stack" aria-busy="true" aria-label="Loading conversations">
+    <ph-skeleton shape="card" />
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (r.status === 'loaded') {
+  @if (r.value.conversations.length) {
+    <ph-card [flush]="true">
+      <ph-list label="Conversations">
+        @for (c of r.value.conversations; track c.youthId) {
+          <ph-list-item
+            [title]="title(c)"
+            [avatar]="title(c)"
+            avatarTint="peach"
+            [meta]="meta(c)"
+            [link]="['/conversations', c.youthId]"
+          >
+            @if (c.blocked) {
+              <ph-badge tone="warning">Waiting for consent</ph-badge>
+            } @else if (c.unread) {
+              <ph-badge tone="info">{{ c.unread }} new</ph-badge>
+            } @else if (c.lastMessageAt) {
+              <span class="text-caption">{{ when(c) }}</span>
+            }
+          </ph-list-item>
+        }
+      </ph-list>
+    </ph-card>
+  } @else {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="messages"
+        title="No conversations yet"
+        [text]="
+          supervisor()
+            ? 'When a mentor and a youth write to each other, their conversation shows here.'
+            : youth()
+              ? 'When you have a mentor, you can message them here.'
+              : 'When a youth you mentor has a youth account, you can message them here.'
+        "
+      />
+    </ph-card>
+  }
+} @else if (r.status === 'forbidden') {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      title="Direct messages are for mentors and youth"
+      text="Message families from Messages; mentors talk with their youth here."
+    >
+      <ph-button link="/">Back to Today</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load your messages"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" (click)="load()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}

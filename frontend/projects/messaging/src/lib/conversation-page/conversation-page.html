@@ -1,0 +1,95 @@
+@let r = result();
+@let c = conversation();
+<ph-breadcrumb
+  [items]="[
+    {
+      label: c?.readOnly ? 'Mentor conversations' : 'Messages',
+      link: '/conversations',
+    },
+    { label: c ? other() : 'Conversation' },
+  ]"
+/>
+@if (r === null) {
+  <div class="stack" aria-busy="true" aria-label="Loading messages">
+    <ph-skeleton shape="title" />
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (c) {
+  <ph-page-header
+    [title]="other()"
+    [subtitle]="c.readOnly ? 'Mentor and youth · read only' : null"
+  />
+  @if (blocked()) {
+    <ph-alert
+      tone="warning"
+      title="Waiting for a guardian’s consent"
+      [text]="
+        'Messaging opens once ' +
+        c.youthName.split(' ')[0] +
+        '’s guardian consents. Ask your program director to send the consent link.'
+      "
+    />
+  }
+  <ph-card>
+    @if (!c.messages.length && !pending().length) {
+      <ph-empty-state
+        icon="messages"
+        [title]="c.readOnly ? 'No messages yet' : 'Say hi to ' + other().split(' ')[0]"
+        [text]="
+          c.readOnly
+            ? 'Nothing has been written in this conversation.'
+            : 'Start the conversation. Program directors can read it.'
+        "
+      />
+    }
+    <ph-message-thread
+      [label]="'Messages with ' + other() + ', oldest first'"
+      [messages]="messages()"
+      [composer]="!c.readOnly"
+      [disabled]="blocked()"
+      [busy]="sending()"
+      [error]="error()"
+      [(draft)]="draft"
+      (send)="send($event)"
+      (retry)="retry($event)"
+    />
+  </ph-card>
+  <p class="text-caption">
+    @if (c.readOnly) {
+      You’re reading this for safeguarding; opening it is recorded in the audit log.
+    } @else {
+      Messages are kept for safeguarding. Program directors can read this conversation.
+    }
+  </p>
+} @else if (r.status === 'forbidden') {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      title="This isn’t one of your conversations"
+      text="You can message the youth you mentor, or your mentor."
+    >
+      <ph-button link="/conversations">Back to Messages</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else if (r.status === 'not-found') {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="messages"
+      title="There’s no conversation here"
+      text="It may belong to someone else, or the youth no longer has a mentor."
+    >
+      <ph-button link="/conversations">Back to Messages</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load this conversation"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" (click)="load()">Try again</ph-button>
+    </ph-empty-state>
+  </ph-card>
+}

@@ -134,6 +134,12 @@ export const routes: Routes = [
       ...moduleRoute('messages', 'Messages', () =>
         import('@promisehub/messaging').then((m) => m.routes),
       ),
+      ...moduleRoute('announcements', 'Messages', () =>
+        import('@promisehub/messaging').then((m) => m.announcementRoutes),
+      ),
+      ...moduleRoute('conversations', ['Messages', 'Mentoring'], () =>
+        import('@promisehub/messaging').then((m) => m.conversationRoutes),
+      ),
       ...moduleRoute('incidents', 'Incidents', () =>
         import('@promisehub/incidents').then((m) => m.routes),
       ),

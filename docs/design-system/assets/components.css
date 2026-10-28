@@ -1916,3 +1916,20 @@ li.quiz-option:hover { border-color: var(--color-border-strong); }
   .calendar__grid { display: none; }
   .calendar__agenda { display: block; }
 }
+
+/* ---------- Message thread (prompt 74) ------------------------------------------ */
+/* A conversation between a mentor and a youth: a log of messages, theirs on the start side and the reader's own on the end side, each with
+   who and when in words, day separators, a sending or failed message said in words, and a composer at the end. */
+.thread { display: flex; flex-direction: column; gap: var(--space-4); }
+.thread__log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-3); }
+.thread__day { align-self: center; font: var(--text-caption); color: var(--color-fg-muted); padding: var(--space-1) var(--space-3); border-radius: var(--radius-full); background: var(--color-bg-subtle); }
+.thread__message { display: flex; flex-direction: column; gap: var(--space-1); max-width: min(100%, var(--layout-message-width)); align-self: flex-start; align-items: flex-start; }
+.thread__message--mine { align-self: flex-end; align-items: flex-end; }
+.thread__bubble { margin: 0; padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); border-end-start-radius: var(--radius-xs); background: var(--color-bg-subtle); color: var(--color-fg-default); font: var(--text-body); overflow-wrap: anywhere; white-space: pre-wrap; }
+.thread__message--mine .thread__bubble { background: var(--color-accent); color: var(--color-fg-on-accent); border-end-start-radius: var(--radius-lg); border-end-end-radius: var(--radius-xs); }
+.thread__message--new .thread__bubble { box-shadow: 0 0 0 var(--border-width-thick) var(--color-accent); }
+.thread__meta { font: var(--text-caption); color: var(--color-fg-muted); display: flex; gap: var(--space-2); flex-wrap: wrap; align-items: center; }
+.thread__meta--failed { color: var(--color-danger-fg); font-weight: var(--font-weight-medium); }
+.thread__composer { display: flex; gap: var(--space-2); align-items: flex-end; padding-top: var(--space-3); border-top: var(--border-width-hairline) solid var(--color-border-default); }
+.thread__composer .field { flex: 1; min-width: 0; }
+.thread__composer .btn { flex: none; }

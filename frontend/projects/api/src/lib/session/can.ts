@@ -22,6 +22,8 @@ const GRANTS: Record<Permission, Role[]> = {
   correctAttendance: ['Admin', 'ProgramDirector'],
   /** Late and excused (L2-095); volunteers mark Present or Absent only (L2-100). */
   qualifyAttendance: ['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker', 'Mentor'],
+  /** Read every mentor and youth conversation, read only (L2-108). */
+  superviseConversations: ['Admin', 'ProgramDirector'],
 };
 
 /** Whether a role holds a permission, to hide actions it lacks. The server enforces the same map on every request. */

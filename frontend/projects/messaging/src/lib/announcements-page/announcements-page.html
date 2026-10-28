@@ -1,0 +1,83 @@
+@let r = result();
+<ph-breadcrumb [items]="[{ label: 'Messages', link: '/messages' }, { label: 'Announcements' }]" />
+@if (r?.status === 'forbidden') {
+  <ph-page-header title="Announcements" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="lock"
+      title="Announcements are sent by directors and site leads"
+      text="Ask your program director if families need to hear something."
+    >
+      <ph-button link="/">Back to Today</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-page-header
+    title="Announcements"
+    subtitle="Tell youth, mentors and families what’s coming. Youth and mentors read them in the app; guardians get a text or an email."
+  >
+    <ph-button variant="primary" icon="plus" (click)="compose()">New announcement</ph-button>
+  </ph-page-header>
+  @if (r === null) {
+    <div class="stack" aria-busy="true" aria-label="Loading announcements">
+      <ph-skeleton shape="card" />
+      <ph-skeleton shape="card" />
+    </div>
+  } @else if (r.status === 'loaded') {
+    @if (r.value.announcements.length) {
+      <div class="kpis">
+        <ph-stat
+          label="Sent"
+          [value]="'' + sentCount().sent"
+          [caption]="sentCount().scheduled + ' scheduled'"
+        />
+        <ph-stat
+          label="Read in the app"
+          [value]="readTotals().read + ' of ' + readTotals().reached"
+          [caption]="readTotals().percent + '% of youth and mentors'"
+        />
+      </div>
+      <ph-card [flush]="true">
+        <ph-list label="Announcements, newest first">
+          @for (a of r.value.announcements; track a.id) {
+            <ph-list-item
+              [title]="a.title"
+              [meta]="audience(a)"
+              [text]="a.body"
+              [caption]="caption(a)"
+            >
+              @if (a.status === 'Scheduled') {
+                <ph-badge tone="info">Scheduled</ph-badge>
+              } @else {
+                <ph-badge [tone]="a.recipients && a.reads === a.recipients ? 'success' : 'neutral'"
+                  >Read by {{ a.reads }} of {{ a.recipients }}</ph-badge
+                >
+              }
+            </ph-list-item>
+          }
+        </ph-list>
+      </ph-card>
+    } @else {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="messages"
+          title="No announcements yet"
+          text="Tell a program, or everyone, what’s coming: youth and mentors read it in the app and guardians get a text."
+        >
+          <ph-button variant="primary" icon="plus" (click)="compose()">New announcement</ph-button>
+        </ph-empty-state>
+      </ph-card>
+    }
+  } @else {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load announcements"
+        text="Check your connection and try again."
+      >
+        <ph-button variant="primary" (click)="load()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+}

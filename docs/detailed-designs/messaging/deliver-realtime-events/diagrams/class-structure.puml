@@ -1,0 +1,25 @@
+@startuml
+title Class structure — Deliver real-time events
+hide empty members
+interface IRealtimeEvents {
+  +Publish(Guid organizationId, IEnumerable<Guid> membershipIds, RealtimeEvent e)
+}
+class RealtimeEvent {
+  +Type : string
+  +YouthId : Guid?
+}
+class RealtimeHub {
+  +Subscribe(Guid organizationId, Guid membershipId) : RealtimeSubscription
+}
+class RealtimeSubscription {
+  +Reader : ChannelReader<RealtimeEvent>
+  +Dispose()
+}
+class RealtimeEndpoints {
+  +MapRealtimeEndpoints()
+}
+IRealtimeEvents <|.. RealtimeHub
+RealtimeHub ..> RealtimeSubscription : creates
+RealtimeEndpoints --> RealtimeHub
+IRealtimeEvents ..> RealtimeEvent
+@enduml

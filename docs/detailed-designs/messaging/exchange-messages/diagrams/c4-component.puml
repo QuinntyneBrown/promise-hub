@@ -1,0 +1,33 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Exchange messages
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(list, "ConversationsPage", "Angular page", "/conversations")
+  Component(page, "ConversationPage", "Angular page", "/conversations/:youthId")
+  Component(thread, "ph-message-thread", "components library", "log and composer")
+  Component(capi, "ConversationsApi", "Contract + HTTP client", "list, get, send")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "ConversationEndpoints", "Minimal API", "Messages and Mentoring modules")
+  Component(lh, "ConversationsHandler", "Handler", "a member's conversations")
+  Component(gh, "ConversationHandler", "Handler", "one conversation, marks read")
+  Component(sh, "SendDirectMessageHandler", "Handler", "validates, records, audits")
+  Component(acc, "ConversationAccess", "Service", "who may read and write (L2-108)")
+  Component(rt, "IRealtimeEvents", "Port", "conversation event")
+  ComponentDb(db, "PromiseHub database", "EF Core", "tenant-owned rows")
+}
+Rel(list, capi, "calls")
+Rel(page, thread, "renders")
+Rel(page, capi, "calls")
+Rel(capi, ep, "JSON/HTTPS")
+Rel(ep, lh, "GET /conversations")
+Rel(ep, gh, "GET /conversations/{youthId}")
+Rel(ep, sh, "POST /conversations/{youthId}/messages")
+Rel(lh, acc, "uses")
+Rel(gh, acc, "uses")
+Rel(sh, acc, "uses")
+Rel(sh, rt, "publishes")
+Rel(sh, db, "writes")
+Rel(gh, db, "reads, marks read")
+@enduml

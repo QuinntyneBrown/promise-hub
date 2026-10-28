@@ -2651,6 +2651,140 @@
       }
     },
     {
+      "id": "announcements",
+      "kind": "page",
+      "title": "Announcements",
+      "route": "/messages/announcements",
+      "requirements": [
+        "L2-105",
+        "L2-021",
+        "L2-022",
+        "L2-032",
+        "L2-005",
+        "L2-001",
+        "L1-010",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "sent",
+        "scheduled",
+        "empty",
+        "loading",
+        "error",
+        "forbidden"
+      ]
+    },
+    {
+      "id": "compose-announcement",
+      "kind": "dialog",
+      "title": "New announcement",
+      "opens_from": "announcements",
+      "requirements": [
+        "L2-105",
+        "L2-021",
+        "L2-022",
+        "L2-032",
+        "L2-005",
+        "L2-001",
+        "L1-010",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "scheduled",
+        "invalid",
+        "past",
+        "busy",
+        "failed"
+      ]
+    },
+    {
+      "id": "youth-announcements",
+      "kind": "page",
+      "title": "Your announcements",
+      "route": "/announcements",
+      "requirements": [
+        "L2-105",
+        "L2-107",
+        "L2-005",
+        "L2-001",
+        "L1-010",
+        "L1-024",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "success",
+        "mentor",
+        "empty",
+        "loading",
+        "error",
+        "mark-failed"
+      ]
+    },
+    {
+      "id": "conversations",
+      "kind": "page",
+      "title": "Messages",
+      "route": "/conversations",
+      "requirements": [
+        "L2-106",
+        "L2-107",
+        "L2-108",
+        "L2-032",
+        "L2-005",
+        "L2-001",
+        "L1-024",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "youth",
+        "blocked",
+        "supervisor",
+        "empty",
+        "loading",
+        "error",
+        "forbidden"
+      ]
+    },
+    {
+      "id": "conversation",
+      "kind": "page",
+      "title": "Conversation",
+      "route": "/conversations/:youthId",
+      "requirements": [
+        "L2-106",
+        "L2-107",
+        "L2-108",
+        "L2-032",
+        "L2-005",
+        "L2-001",
+        "L1-024",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "youth",
+        "received",
+        "sending",
+        "failed",
+        "invalid",
+        "empty",
+        "blocked",
+        "supervisor",
+        "loading",
+        "error",
+        "forbidden"
+      ]
+    },
+    {
       "id": "check-in-sheet",
       "kind": "dialog",
       "title": "Check in Kevin Tran",

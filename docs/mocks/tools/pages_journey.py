@@ -6,7 +6,7 @@ from reg import screen
 
 R_LEARN = "L1-023"
 SOFIA = YOUTH["sofia"]
-YKW = dict(nav="learning", role="youth", user=SOFIA, unread=0, modules=["today", "learning", "schedule"])
+YKW = dict(nav="learning", role="youth", user=SOFIA, unread=0, modules=["today", "learning", "schedule", "conversations"])
 R_JOURNEY = ["L2-087", R_LEARN, "L2-035", "L2-036"]
 R_PROGRESS = ["L2-088", R_LEARN, "L2-035", "L2-036"]
 

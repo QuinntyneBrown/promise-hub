@@ -37,6 +37,9 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<SessionStaff> SessionStaff => Set<SessionStaff>();
     public DbSet<Message> Messages => Set<Message>();
     public DbSet<Delivery> Deliveries => Set<Delivery>();
+    public DbSet<Announcement> Announcements => Set<Announcement>();
+    public DbSet<AnnouncementRead> AnnouncementReads => Set<AnnouncementRead>();
+    public DbSet<DirectMessage> DirectMessages => Set<DirectMessage>();
     public DbSet<SmsUsagePeriod> SmsUsagePeriods => Set<SmsUsagePeriod>();
     public DbSet<SlipSignature> SlipSignatures => Set<SlipSignature>();
     public DbSet<GuardianLink> GuardianLinks => Set<GuardianLink>();
@@ -577,7 +580,8 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
         modelBuilder.Entity<Message>(e =>
         {
             e.Property(m => m.Title).HasMaxLength(200);
-            e.Property(m => m.Body).HasMaxLength(Application.Messaging.SendMessageHandler.MaxLength);
+            // An announcement's guardian copy carries its whole body (L2-105, ADR 0068); composed messages stay within SendMessageHandler.MaxLength.
+            e.Property(m => m.Body).HasMaxLength(Announcement.MaximumBody);
             e.Property(m => m.Audience).HasMaxLength(300);
             e.Property(m => m.Language).HasMaxLength(50);
             e.Property(m => m.CreatedBy).HasMaxLength(200);
@@ -585,6 +589,41 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(m => m.Status).HasConversion<string>().HasMaxLength(20);
             e.Property(m => m.Source).HasConversion<string>().HasMaxLength(20);
             e.Property(m => m.CreatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+        });
+        modelBuilder.Entity<Announcement>(e =>
+        {
+            e.HasIndex(a => new { a.OrganizationId, a.SendAt });
+            e.Property(a => a.Title).HasMaxLength(Announcement.MaximumTitle);
+            e.Property(a => a.Body).HasMaxLength(Announcement.MaximumBody);
+            e.Property(a => a.CreatedBy).HasMaxLength(200);
+            e.Property(a => a.Audience).HasConversion<string>().HasMaxLength(20);
+            e.Property(a => a.CreatedByRole).HasConversion<string>().HasMaxLength(30);
+            e.Property(a => a.SendAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(a => a.CreatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Ignore(a => a.ReachesYouth);
+            e.Ignore(a => a.ReachesMentors);
+            e.Ignore(a => a.ReachesGuardians);
+            e.HasOne<Domain.Programs.Program>().WithMany().HasForeignKey(a => a.ProgramId);
+            e.HasOne<Membership>().WithMany().HasForeignKey(a => a.CreatedByMembershipId);
+            e.HasOne<Message>().WithMany().HasForeignKey(a => a.GuardianMessageId);
+        });
+        modelBuilder.Entity<AnnouncementRead>(e =>
+        {
+            e.HasIndex(r => new { r.AnnouncementId, r.MembershipId }).IsUnique();
+            e.Property(r => r.ReadAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.HasOne<Announcement>().WithMany().HasForeignKey(r => r.AnnouncementId);
+            e.HasOne<Membership>().WithMany().HasForeignKey(r => r.MembershipId);
+        });
+        modelBuilder.Entity<DirectMessage>(e =>
+        {
+            e.HasIndex(m => new { m.OrganizationId, m.YouthMembershipId, m.SentAt });
+            e.Property(m => m.Body).HasMaxLength(DirectMessage.MaximumBody);
+            e.Property(m => m.SentAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(m => m.ReadAt).HasConversion(v => v.HasValue ? v.Value.UtcTicks : (long?)null,
+                v => v.HasValue ? new DateTimeOffset(v.Value, TimeSpan.Zero) : null);
+            e.HasOne<Membership>().WithMany().HasForeignKey(m => m.YouthMembershipId);
+            e.HasOne<Membership>().WithMany().HasForeignKey(m => m.MentorMembershipId);
+            e.HasOne<Membership>().WithMany().HasForeignKey(m => m.SenderMembershipId);
         });
         modelBuilder.Entity<Delivery>(e =>
         {

@@ -34,6 +34,9 @@ public interface IPromiseHubDb
     DbSet<SessionStaff> SessionStaff { get; }
     DbSet<Message> Messages { get; }
     DbSet<Delivery> Deliveries { get; }
+    DbSet<Announcement> Announcements { get; }
+    DbSet<AnnouncementRead> AnnouncementReads { get; }
+    DbSet<DirectMessage> DirectMessages { get; }
     DbSet<SmsUsagePeriod> SmsUsagePeriods { get; }
     DbSet<SlipSignature> SlipSignatures { get; }
     DbSet<GuardianLink> GuardianLinks { get; }

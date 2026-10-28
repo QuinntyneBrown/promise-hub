@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Deliver real-time events
+Person(m, "Signed-in member", "Mentor, youth")
+System(ph, "PromiseHub", "Youth-serving organization platform; Messages module")
+Rel(ph, m, "pushes events while the app is open")
+@enduml

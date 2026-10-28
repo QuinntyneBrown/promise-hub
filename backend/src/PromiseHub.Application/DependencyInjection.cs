@@ -91,6 +91,14 @@ public static class DependencyInjection
         services.AddScoped<Messaging.GetMessageHandler>();
         services.AddScoped<Messaging.GetSmsCapHandler>();
         services.AddScoped<Messaging.MessageWriter>();
+        services.AddScoped<Messaging.AnnouncementRecipients>();
+        services.AddScoped<Messaging.ComposeAnnouncementHandler>();
+        services.AddScoped<Messaging.ListAnnouncementsHandler>();
+        services.AddScoped<Messaging.MyAnnouncementsHandler>();
+        services.AddScoped<Messaging.ConversationAccess>();
+        services.AddScoped<Messaging.ConversationsHandler>();
+        services.AddScoped<Messaging.ConversationHandler>();
+        services.AddScoped<Messaging.SendDirectMessageHandler>();
         services.AddScoped<Slips.SlipReader>();
         services.AddScoped<Slips.SlipSender>();
         services.AddScoped<Slips.GetSlipHandler>();

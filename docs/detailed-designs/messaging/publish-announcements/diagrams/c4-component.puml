@@ -1,0 +1,36 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Publish announcements
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "AnnouncementsPage", "Angular page", "/messages/announcements")
+  Component(dlg, "ComposeAnnouncementDialog", "CDK dialog", "title, body, program, audience, when")
+  Component(feed, "YouthAnnouncementsPage", "Angular page", "/announcements")
+  Component(aapi, "AnnouncementsApi", "Contract + HTTP client", "list, compose, mine, markAllRead")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "AnnouncementEndpoints", "Minimal API", "Messages module, SendMessages or ReadAnnouncements")
+  Component(compose, "ComposeAnnouncementHandler", "Handler", "validates, records, queues the guardian copy")
+  Component(list, "ListAnnouncementsHandler", "Handler", "rows with reach and reads")
+  Component(mine, "MyAnnouncementsHandler", "Handler", "feed, mark all read")
+  Component(rec, "AnnouncementRecipients", "Service", "who an announcement reaches")
+  Component(writer, "MessageWriter", "Service", "queues guardian deliveries (L2-021)")
+  Component(rt, "IRealtimeEvents", "Port", "announcement event")
+  ComponentDb(db, "PromiseHub database", "EF Core", "tenant-owned rows")
+}
+Rel(page, dlg, "opens")
+Rel(page, aapi, "calls")
+Rel(dlg, aapi, "calls")
+Rel(feed, aapi, "calls")
+Rel(aapi, ep, "JSON/HTTPS")
+Rel(ep, compose, "POST /announcements")
+Rel(ep, list, "GET /announcements")
+Rel(ep, mine, "GET /announcements/mine, POST .../read")
+Rel(compose, rec, "uses")
+Rel(list, rec, "uses")
+Rel(mine, rec, "uses")
+Rel(compose, writer, "guardians")
+Rel(compose, rt, "publishes")
+Rel(compose, db, "writes")
+Rel(mine, db, "reads, writes reads")
+@enduml

@@ -1,0 +1,36 @@
+@startuml
+title UML sequence behaviour — A message reaches an open conversation
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Youth (Sofía)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "ConversationPage" as page
+  participant "RealtimeEvents" as src
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "RealtimeEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "SendDirectMessageHandler" as sh
+  participant "RealtimeHub" as hub
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : opens her conversation
+page -> src : events()
+src -> ep : GET /realtime (cookie session) (L2-107 c2)
+ep -> hub : Subscribe(Harbourview, Sofía)
+ep --> src : text/event-stream, open
+src --> page : open: fetch the conversation (L2-107 c4)
+sh -> db : Daniel's message saved
+sh -> hub : Publish(Harbourview, [Sofía, Daniel], conversation {youthId}) (L2-107 c3)
+hub -> ep : only subscribers of Harbourview with those memberships
+ep --> src : event: conversation, data: {youthId}
+src --> page : conversation event
+page -> ep : GET /conversations/{youthId}
+page -> actor : the new message at the end, without a reload (L2-107 c1)
+@enduml

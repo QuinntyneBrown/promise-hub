@@ -32,7 +32,7 @@
 | Program director | Author quizzes and assignments | Create quizzes, assignments, rubrics and attempt rules. | [7 days](detailed-designs/curriculum/author-quizzes/README.md) | 100% · [video](videos/60-author-quizzes-and-assignments/README.md) |
 | Program director | Author badges and progression | Define badges, award rules and the progression framework. | [10 days](detailed-designs/curriculum/author-badges/README.md) | 100% · [video](videos/64-author-badges-and-progression/README.md) |
 | Program director | Schedule sessions and RSVP | Schedule cohort sessions as events and collect RSVPs. | [11 days](detailed-designs/events/schedule-sessions/README.md) | 100% · [video](videos/70-schedule-sessions-and-rsvp/README.md) |
-| Program director | Announce and message | Send announcements and direct messages. | [11 days](prompts/74-announce-and-message.md) | 0% |
+| Program director | Announce and message | Send announcements and direct messages. | [11 days](detailed-designs/messaging/publish-announcements/README.md) | 90% · [video](videos/74-announce-and-message/README.md) |
 | Program director | Report, export and import learning data | Run learning reports and move learning data in and out. | [31 days](prompts/80-report-export-and-import.md) | 0% |
 | Admin / office manager | Set up an organization | Choose modules and create the first program, roster, staff, and slip. | [5 days](detailed-designs/organizations/set-up-organization/README.md) | 65% · [video](videos/39-set-up-an-organization/README.md) |
 | Admin / office manager | Import a roster | Map spreadsheet columns, review records, and create households and children. | [5 days](detailed-designs/imports/import-roster/README.md) | 75% · [video](videos/14-import-a-roster/README.md) |

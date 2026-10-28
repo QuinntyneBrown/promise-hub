@@ -10,7 +10,7 @@ R_RSVP = ["L2-094", "L2-093", "L2-012", "L2-056", "L2-007", "L2-032", "L2-035", 
 MARISOL = STAFF["marisol"]
 SOFIA = YOUTH["sofia"]
 STAFF_KW = dict(nav="events", user=MARISOL)
-YOUTH_KW = dict(nav="schedule", role="youth", user=SOFIA, unread=0, modules=["today", "learning", "schedule"])
+YOUTH_KW = dict(nav="schedule", role="youth", user=SOFIA, unread=0, modules=["today", "learning", "schedule", "conversations"])
 
 WEEKDAYS = [("Mon", "Monday"), ("Tue", "Tuesday"), ("Wed", "Wednesday"), ("Thu", "Thursday"), ("Fri", "Friday"), ("Sat", "Saturday"), ("Sun", "Sunday")]
 

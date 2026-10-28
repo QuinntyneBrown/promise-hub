@@ -1,0 +1,51 @@
+@startuml
+title UML sequence behaviour — Marisol announces; Sofía reads and marks read
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Program director (Marisol), youth (Sofía)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "ComposeAnnouncementDialog" as dlg
+  participant "YouthAnnouncementsPage" as feed
+  participant "AnnouncementsApi" as aapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "AnnouncementEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "ComposeAnnouncementHandler" as compose
+  participant "MyAnnouncementsHandler" as mine
+  participant "AnnouncementRecipients" as rec
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> dlg : Title, message, program, Youth and guardians, Send now
+dlg -> aapi : compose(request)
+aapi -> ep : POST /announcements
+ep -> ep : Messages on? SendMessages? (L2-105 c8)
+ep -> compose : HandleAsync
+compose -> compose : validate fields, program of this organization (L2-105 c2)
+compose -> db : Announcement; audit Created (L2-105 c1)
+alt reaches guardians
+  compose -> db : Message + Deliveries due at SendAt via MessageWriter (L2-105 c3, L2-022)
+end
+compose -> rec : in-app recipients (youth and mentors of the program)
+compose -> ep : publish announcement event when sent now (L2-107 c3)
+ep --> dlg : 201 {id}
+actor -> feed : Sofía opens Announcements
+feed -> aapi : mine()
+aapi -> ep : GET /announcements/mine
+ep -> mine : GetAsync
+mine -> rec : VisibleTo(Sofía): her role, her programs, SendAt <= now (L2-105 c5)
+mine -> db : reads of Sofía
+mine --> feed : newest first, read flags, unread
+actor -> feed : Mark all read
+feed -> aapi : markAllRead()
+aapi -> ep : POST /announcements/mine/read
+ep -> mine : MarkAllReadAsync
+mine -> db : AnnouncementRead per unread one (L2-105 c6)
+mine --> feed : 204
+@enduml
