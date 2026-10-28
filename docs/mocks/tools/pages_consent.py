@@ -84,7 +84,7 @@ def guardian_consent(S):
 @screen("consent-required", "page", "Consent required", route="/learning", reqs=[R_LEARN, R_GUARD], na={"empty": "The state itself is the empty Learning page for a youth without consent."})
 def consent_required(S):
     hdr = page_header("Learning", "Your lessons, quizzes, assignments and badges.")
-    kw = dict(nav="learning", role="youth", user=SOFIA, unread=0, modules=["today", "learning"])
+    kw = dict(nav="learning", role="youth", user=SOFIA, unread=0, modules=["today", "learning", "schedule"])
     text = "Because you’re under 18, a parent or guardian approves your account before you start. We’ll text them a secure link; it takes them a minute."
 
     def gate(action, title="A guardian needs to give consent", body=text, icon_name="shield", extra=""):

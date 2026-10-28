@@ -123,7 +123,7 @@ def session_item(s: dict, *, cancelled: bool = False) -> str:
         label = "Change RSVP" if s["rsvp"] else "RSVP"
         action = f'<div class="cluster">{btn(label, "" if s["rsvp"] else "primary", size="sm", data_href=dialog("rsvp"), aria_label=f"{label} for {s["name"]}, {s["day"]}")}</div>'
     body = f'<div class="list__body"><div class="list__title">{esc(s["name"])}</div><div class="list__meta">{esc(meta)}</div>{text}{action}</div>'
-    return f'<li class="list__item"><span class="icon-tile" aria-hidden="true">{icon("calendar")}</span>{body}{end}</li>'
+    return f'<li class="list__item">{body}{end}</li>'
 
 
 def day_groups(sessions: list[dict], cancelled: set | None = None) -> str:
@@ -152,6 +152,8 @@ def youth_schedule(S):
     S.add("cancelled", "Staff cancelled Tutoring night on Thu 19 Nov: it says Cancelled and offers no RSVP.", **YOUTH_KW,
           main=youth_hdr() + day_groups(SESSIONS, cancelled={2}))
     S.add("loading", "The schedule loading: skeleton rows in its place.", **YOUTH_KW, main=youth_hdr() + skeleton_list(4, "Loading your schedule"))
+    S.add("consent-required", "Sofía is under the consent age and no guardian has agreed yet: the server answers 403 consent-required and the page says so.", **YOUTH_KW,
+          main=youth_hdr() + card(empty("A guardian needs to agree first", "Once a guardian agrees, your sessions show up here.", icon_name="lock"), cls="card--flush"))
     S.add("empty", "Nothing in the next four weeks: say when it will show up.", **YOUTH_KW,
           main=youth_hdr() + card(empty("Nothing scheduled in the next four weeks", "When your program adds a session, it’ll show up here.", icon_name="calendar"), cls="card--flush"))
     S.add("error", "The schedule failed to load; the header stays.", **YOUTH_KW,

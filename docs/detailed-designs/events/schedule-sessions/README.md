@@ -30,9 +30,13 @@ Backend:
 - **`EventRules.CheckAsync`** — with `RepeatsWeekly`, a start whose local date is after the program's last day answers `startsAt` "Start on or before the program’s last day, Thu 24 Jun 2027."; more than 60 sessions answers `repeatsWeekly` "A weekly series can have at most 60 sessions."
 - **`CreateEventHandler`** — a single event as before; with `RepeatsWeekly`, one `Event` per weekly start with the same duration and one new `SeriesId`, a draft `PermissionSlip` for each when a slip is needed, one audit entry (Created on `Event`, the first session's id, "Tutoring night (33 weekly sessions)"), and answers 201 with the first id and the count.
 - **`GetEventHandler`** — `EventDto.SeriesSize`: how many events share the series.
-- **Persistence** — `Events.SeriesId` (nullable, indexed); migration `EventSeriesAndRsvps` (shared with `rsvp-to-session`).
+- **Persistence** — `Events.SeriesId` (nullable, indexed); migration `EventSeries`.
 
 Open questions: none. Deferred: editing or cancelling a whole series, other repeat rules (every two weeks, several weekdays), and an end date other than the program's last day.
+
+## Built so far
+
+Prompt 70 delivered everything above: `POST /events` with `repeatsWeekly` (answering the first id and `count`), `WeeklySeries`, the series checks in `EventRules`, one audit entry per series, `EventDto.SeriesSize`, the event form's Repeat weekly switch (new events only, with "Every Thursday at this time, until the program’s last day.") and the "n weekly sessions" toast, and the event's Repeats fact. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/ScheduleSessionsTests.cs`, `e2e/tests/events/schedule-sessions.spec.ts`.
 
 ## Requirements
 

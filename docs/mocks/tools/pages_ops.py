@@ -62,7 +62,7 @@ def program_form(S):
 def event_form(S):
     def form(err=None, busy=False, v=None, edit=False, weekly=False):
         v = v or dict(name="", prog="After‑School Tutoring", start="", end="", place="", notes="")
-        repeat_desc = ("Every Thursday at this time, through Thu 24 Jun 2027, the program’s last day · 33 sessions." if weekly
+        repeat_desc = ("Every Thursday at this time, until the program’s last day." if weekly
                        else "Off: one session. Turn it on to repeat it every week until the program ends.")
         repeat = "" if edit else switch("weekly", "Repeat weekly", checked=weekly, desc=repeat_desc)
         repeat_err = f'<div class="field__error" id="weekly-error">{esc(e_w)}</div>' if (e_w := (err or {}).get("weekly", "")) else ""

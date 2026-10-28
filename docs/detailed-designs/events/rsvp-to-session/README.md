@@ -31,9 +31,13 @@ Backend:
 - **`RsvpHandler`** — 404 for an unknown event or another organization's; 403 audited as AccessDenied on `Event` when her child has no active enrollment in its program; 409 when it has started, ended or been cancelled; 422 `response` "Choose whether you’re going." and `note` "Keep it to 500 characters."; inserts or updates the row and audits Created or Updated on `EventRsvp` with the event and the answer, never the note; answers 200 with the answer and note.
 - **`GetEventHandler`** — `EventDto.Rsvps` (`EventRsvpsDto`: going, maybe, can't make it, no reply and `EventRsvpDto` per answer with child id and name, answer, note and when), newest first.
 - **Endpoints** — `ScheduleEndpoints`: `GET /schedule` and `PUT /schedule/{eventId}/rsvp` with Roster, `RespondToSessions` (Youth only) and `RequireGuardianConsent()`.
-- **Persistence** — `EventRsvps` with the tenant query filter and a unique index on organization, event and child; migration `EventSeriesAndRsvps`.
+- **Persistence** — `EventRsvps` with the tenant query filter and a unique index on organization, event and child; migration `EventRsvps`.
 
 Open questions: none. Deferred: a reminder before the session, telling staff when a note arrives, and a guardian answering for a younger child.
+
+## Built so far
+
+Prompt 70 delivered everything above in two slices: the youth's schedule and RSVP (`GET /schedule`, `PUT /schedule/{eventId}/rsvp`, `RespondToSessions`, `YouthSchedulePage`, `RsvpDialog`, the Schedule navigation section, and a consent-required state when the server answers 403 `consent-required`), then the RSVP counts on the event (`EventRsvpSummary`, the RSVPs card). Acceptance tests: `backend/tests/PromiseHub.Api.Tests/YouthScheduleTests.cs`, `backend/tests/PromiseHub.Api.Tests/EventRsvpsTests.cs`, `e2e/tests/events/youth-schedule.spec.ts`, `e2e/tests/events/event-rsvps.spec.ts`, and the youth navigation in `e2e/tests/shell/participant-shell.spec.ts`.
 
 ## Requirements
 

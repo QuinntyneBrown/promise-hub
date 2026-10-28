@@ -364,8 +364,8 @@ def main_menu(S):
                 f'<div style="padding: var(--space-3) var(--space-4); border-top: var(--border-width-hairline) solid var(--color-border-default);" class="cluster cluster--snug">{avatar(user)}<div><div style="font: var(--text-label);">{esc(user["name"])}</div><div class="text-caption">{esc(user["role"])} · {ORG_SHORT}</div></div></div></nav>')
     S.add("default", "The More menu on a phone: every section, current one marked, sign out at the end.", **over("today", overlays=drawer()))
     S.add("director", "The same menu for the program director, from Programs; Applications shows while Roster is on and Curriculum while Learning is on.", **over("programs", overlays=drawer(STAFF["marisol"], "programs", director_links)))
-    S.add("youth", "A youth’s menu: Today, Learning, notifications and account only; no staff sections, no Settings.",
-          **over("today", "youth", overlays=drawer(YOUTH["sofia"], "today", [("today", "Today", "home"), ("learn-home", "Learning", "star")] + tail)))
+    S.add("youth", "A youth’s menu: Today, Learning, Schedule (while Roster is on), notifications and account only; no staff sections, no Settings.",
+          **over("today", "youth", overlays=drawer(YOUTH["sofia"], "today", [("today", "Today", "home"), ("learn-home", "Learning", "star"), ("youth-schedule", "Schedule", "calendar")] + tail)))
     S.add("mentor", "A mentor’s menu: Today, Mentoring, notifications and account.",
           **over("today", "mentor", overlays=drawer(STAFF["daniel"], "today", [("today", "Today", "home"), ("mentor-dashboard", "Mentoring", "users")] + tail)))
     S.add("volunteer", "A volunteer’s menu: Today, Check-in for their assigned sessions, notifications and account.",

@@ -28,6 +28,10 @@ Backend:
 
 Open questions: none. Deferred: week and day views, a mentor's calendar, and RSVP counts on calendar entries.
 
+## Built so far
+
+Prompt 70 delivered everything above: `GET /events/calendar`, `EventCalendarHandler`, `PhCalendar` in the components library, `EventsCalendarPage` at `/events/calendar` with the month and program in the query string, and the Calendar link on Events. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/EventCalendarTests.cs`, `e2e/tests/events/calendar.spec.ts`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |
