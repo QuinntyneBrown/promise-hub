@@ -15,7 +15,8 @@ const EVERYONE: Role[] = [...STAFF, 'Youth', 'Mentor', 'Volunteer'];
  * on; a section without roles serves the five staff roles (ADR 0043).
  */
 export interface Section extends NavItem {
-  module?: ModuleId;
+  /** The module it belongs to, or every module it needs. */
+  module?: ModuleId | ModuleId[];
   roles?: Role[];
 }
 
@@ -69,6 +70,15 @@ export const NAVIGATION: Section[] = [
     tab: true,
     module: 'RollCall',
     roles: ['Volunteer'],
+  },
+  {
+    label: 'Messages',
+    link: '/conversations',
+    icon: 'messages',
+    placement: 'wide',
+    tab: true,
+    module: ['Messages', 'Mentoring'],
+    roles: ['Youth', 'Mentor'],
   },
   {
     label: 'Families',
@@ -128,6 +138,14 @@ export const NAVIGATION: Section[] = [
     roles: ['Admin', 'ProgramDirector'],
   },
   {
+    label: 'Mentor conversations',
+    link: '/conversations',
+    icon: 'messages',
+    placement: 'overflow',
+    module: ['Messages', 'Mentoring'],
+    roles: ['Admin', 'ProgramDirector'],
+  },
+  {
     label: 'Announcements',
     link: '/announcements',
     icon: 'messages',
@@ -155,7 +173,7 @@ export const NAVIGATION: Section[] = [
 export function navigationFor(modules: readonly ModuleId[], role: Role): NavItem[] {
   return NAVIGATION.filter(
     (section) =>
-      (!section.module || modules.includes(section.module)) &&
+      [section.module ?? []].flat().every((m) => modules.includes(m)) &&
       (section.roles ?? STAFF).includes(role),
   );
 }

@@ -60,6 +60,8 @@ export * from './lib/quick-card/quick-card-section';
 export * from './lib/progress-bar/progress-bar';
 export * from './lib/scripture-block/scripture-block';
 export * from './lib/quiz-option/quiz-option';
+export * from './lib/message-thread/message-thread';
+export * from './lib/message-thread/thread-message';
 export * from './lib/achievement-badge/achievement-badge';
 export * from './lib/achievement-badge/achievement-icon';
 export * from './lib/achievement-badges/achievement-badges';

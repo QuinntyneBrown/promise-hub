@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 import { AnnouncementsPage } from './announcements-page/announcements-page';
+import { ConversationPage } from './conversation-page/conversation-page';
+import { ConversationsPage } from './conversations-page/conversations-page';
 import { MessagePage } from './message-page/message-page';
 import { MessagesPage } from './messages-page/messages-page';
 import { NewMessagePage } from './new-message-page/new-message-page';
@@ -15,4 +17,10 @@ export const routes: Routes = [
 /** A youth's or mentor's announcements (L2-105 criterion 5), at /announcements. */
 export const announcementRoutes: Routes = [
   { path: '', component: YouthAnnouncementsPage, title: 'Announcements · PromiseHub' },
+];
+
+/** Direct messages between a mentor and a youth (L2-106, L2-108), at /conversations. */
+export const conversationRoutes: Routes = [
+  { path: '', component: ConversationsPage, title: 'Messages · PromiseHub' },
+  { path: ':youthId', component: ConversationPage, title: 'Conversation · PromiseHub' },
 ];

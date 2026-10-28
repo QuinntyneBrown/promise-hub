@@ -17,4 +17,5 @@ export type Permission =
   | 'assignStaff'
   | 'reviewAttendance'
   | 'correctAttendance'
-  | 'qualifyAttendance';
+  | 'qualifyAttendance'
+  | 'superviseConversations';

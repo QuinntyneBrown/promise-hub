@@ -18,6 +18,8 @@ import { HttpMessagingApi } from './messaging/http-messaging-api';
 import { MESSAGING_API } from './messaging/messaging-api.token';
 import { ANNOUNCEMENTS_API } from './messaging/announcements-api.token';
 import { HttpAnnouncementsApi } from './messaging/http-announcements-api';
+import { CONVERSATIONS_API } from './messaging/conversations-api.token';
+import { HttpConversationsApi } from './messaging/http-conversations-api';
 import { GUARDIAN_API } from './guardian/guardian-api.token';
 import { GUARDIAN_ENROLLMENT_API } from './guardian/guardian-enrollment-api.token';
 import { HttpGuardianEnrollmentApi } from './guardian/http-guardian-enrollment-api';
@@ -92,6 +94,7 @@ export function provideApi(): EnvironmentProviders {
     { provide: QUICK_CARD_API, useClass: HttpQuickCardApi },
     { provide: MESSAGING_API, useClass: HttpMessagingApi },
     { provide: ANNOUNCEMENTS_API, useClass: HttpAnnouncementsApi },
+    { provide: CONVERSATIONS_API, useClass: HttpConversationsApi },
     { provide: SLIPS_API, useClass: HttpSlipsApi },
     { provide: GUARDIAN_API, useClass: HttpGuardianApi },
     { provide: GUARDIAN_ENROLLMENT_API, useClass: HttpGuardianEnrollmentApi },

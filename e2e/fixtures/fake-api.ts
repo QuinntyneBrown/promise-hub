@@ -8,6 +8,7 @@ import { FakeReflections } from './fake-reflections';
 import { FakeLearning } from './fake-learning';
 import { FakeReviews, type YouthAccounts } from './fake-reviews';
 import { FakeMentorCheckIns, type FakeMentorCheckIn, TODAY } from './fake-mentor-check-ins';
+import { FakeConversations, type FakeDirectMessage } from './fake-conversations';
 import { FakeAnnouncements, reachesGuardians, reachesMentors, reachesYouth, type FakeAnnouncement } from './fake-announcements';
 import { FakeAtRiskFlags } from './fake-at-risk-flags';
 import { FakeAssignedWorkStore, type Recipient } from './fake-assigned-work';
@@ -635,6 +636,8 @@ export class FakeApi {
   readonly mentorCheckIns = new FakeMentorCheckIns();
   /** At-risk flags (L2-091). */
   readonly atRiskFlags = new FakeAtRiskFlags();
+  /** Direct messages (L2-106); tests seed them and reply as the other side. */
+  readonly conversations = new FakeConversations();
   /** Announcements (L2-105); tests seed and read them through it. */
   readonly announcements = new FakeAnnouncements();
   /** Work mentors assigned (L2-092); tests read and seed it. */
@@ -949,6 +952,9 @@ export class FakeApi {
     ['POST', /^\/api\/slips\/(?<id>[^/]+)\/send-now$/, (route, p) => this.slipTransition(route, p['id']!, 'send-now')],
     ['POST', /^\/api\/slips\/(?<id>[^/]+)\/cancel-send$/, (route, p) => this.slipTransition(route, p['id']!, 'cancel')],
     ['PUT', /^\/api\/slips\/(?<id>[^/]+)$/, (route, p) => this.editSlip(route, p['id']!)],
+    ['GET', /^\/api\/conversations$/, (route) => this.listConversations(route)],
+    ['GET', /^\/api\/conversations\/(?<id>[^/]+)$/, (route, p) => this.getConversation(route, p['id']!)],
+    ['POST', /^\/api\/conversations\/(?<id>[^/]+)\/messages$/, (route, p) => this.sendDirectMessage(route, p['id']!)],
     ['GET', /^\/api\/announcements\/mine$/, (route) => this.myAnnouncements(route)],
     ['POST', /^\/api\/announcements\/mine\/read$/, (route) => this.readMyAnnouncements(route)],
     ['GET', /^\/api\/announcements$/, (route) => this.listAnnouncements(route)],
@@ -3919,6 +3925,98 @@ export class FakeApi {
       ids.push(...active.filter((x) => x.role === 'Mentor' && (!a.programId || named.has(x.id))).map((x) => x.id));
     }
     return [...new Set(ids)];
+  }
+
+  /** The caller of a conversations endpoint: Messages and Mentoring on; mentors, youth, admins and program directors (L2-106, L2-108). */
+  private async conversationCaller(route: Route): Promise<Membership | null> {
+    const m = await this.participantModuleCaller(route, 'Messages', (x) => ['Mentor', 'Youth', 'Admin', 'ProgramDirector'].includes(x.role));
+    if (!m) return null;
+    if (!this.modules.get(m.organizationId)!.includes('Mentoring')) {
+      await route.fulfill({ status: 404 });
+      return null;
+    }
+    return m;
+  }
+
+  /** A youth account of the caller's organization, her current mentor and whether a guardian's consent blocks it (ADR 0068). */
+  private conversationScope(m: Membership, youthId: string) {
+    const youth = memberships.find((x) => x.id === youthId && x.role === 'Youth' && x.organizationId === m.organizationId && !this.removedMembers.has(x.id));
+    const childId = youth ? this.youthLinks.get(youth.id) : undefined;
+    if (!youth || !childId) return null;
+    const mentorId = this.youthMentors.get(childId);
+    const mentor = memberships.find((x) => x.id === mentorId && x.role === 'Mentor' && !this.removedMembers.has(x.id)) ?? null;
+    const participant = !!mentor && (m.id === youth.id || m.id === mentor.id);
+    const supervisor = m.role === 'Admin' || m.role === 'ProgramDirector';
+    const blocked = this.consentRequired(m.organizationId, childId) && this.consentStatusName(childId) !== 'Given' ? 'consent' : null;
+    return { youth, mentor, participant, supervisor, blocked };
+  }
+
+  private conversationRow(youth: Membership, mentor: Membership, messages: FakeDirectMessage[], me: string, blocked: string | null) {
+    const last = messages[messages.length - 1];
+    return {
+      youthId: youth.id, youthName: youth.personName, mentorId: mentor.id, mentorName: mentor.personName,
+      lastMessage: last?.body ?? null, lastMessageMine: last?.senderId === me, lastMessageAt: last?.sentAt ?? null,
+      unread: messages.filter((d) => d.senderId !== me && !d.readAt).length, blocked,
+    };
+  }
+
+  /** GET /conversations (L2-106 criterion 1, L2-108 criterion 4). */
+  private async listConversations(route: Route): Promise<void> {
+    const m = await this.conversationCaller(route);
+    if (!m) return;
+    let rows: ReturnType<FakeApi['conversationRow']>[] = [];
+    if (m.role === 'Mentor' || m.role === 'Youth') {
+      const youth = memberships.filter((x) => x.role === 'Youth' && x.organizationId === m.organizationId && !this.removedMembers.has(x.id));
+      for (const y of youth) {
+        const scope = this.conversationScope(m, y.id);
+        if (!scope?.participant) continue;
+        rows.push(this.conversationRow(y, scope.mentor!, this.conversations.of(y.id, scope.mentor!.id), m.id, scope.blocked));
+      }
+    } else {
+      const ids = [...new Set(this.conversations.rows.filter((d) => d.organizationId === m.organizationId).map((d) => d.youthId))];
+      rows = ids.map((id) => {
+        const messages = this.conversations.of(id);
+        const youth = memberships.find((x) => x.id === id)!;
+        const mentor = memberships.find((x) => x.id === messages[messages.length - 1]!.mentorId)!;
+        return { ...this.conversationRow(youth, mentor, messages, m.id, this.conversationScope(m, id)?.blocked ?? null), unread: 0 };
+      });
+    }
+    rows.sort((a, z) => (z.lastMessageAt ?? '').localeCompare(a.lastMessageAt ?? '') || a.youthName.localeCompare(z.youthName));
+    return route.fulfill({ json: { conversations: rows } });
+  }
+
+  /** GET /conversations/{youthId}: a participant's read marks what was sent to her; a supervisor's opening is audited. */
+  private async getConversation(route: Route, youthId: string): Promise<void> {
+    const m = await this.conversationCaller(route);
+    if (!m) return;
+    const scope = this.conversationScope(m, youthId);
+    if (!scope || (!scope.mentor && !scope.supervisor)) return route.fulfill({ status: 404 });
+    if (!scope.participant && !scope.supervisor) return route.fulfill({ status: 403, json: { code: 'forbidden' } });
+    const messages = scope.participant ? this.conversations.of(youthId, scope.mentor!.id) : this.conversations.of(youthId);
+    if (scope.participant) messages.filter((d) => d.senderId !== m.id && !d.readAt).forEach((d) => (d.readAt = NOW.toISOString()));
+    else this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'Viewed', record: 'Conversation', summary: `${scope.youth.personName} and ${scope.mentor?.personName ?? 'former mentors'}`, device: null });
+    return route.fulfill({
+      json: {
+        youthId, youthName: scope.youth.personName, mentorId: scope.mentor?.id ?? null, mentorName: scope.mentor?.personName ?? null,
+        readOnly: !scope.participant, canSend: scope.participant && !scope.blocked, blocked: scope.blocked,
+        messages: messages.map((d) => ({ id: d.id, body: d.body, from: memberships.find((x) => x.id === d.senderId)?.personName ?? '', mine: d.senderId === m.id, sentAt: d.sentAt })),
+      },
+    });
+  }
+
+  /** POST /conversations/{youthId}/messages: the youth or her mentor only, never while consent is needed; audited without the words. */
+  private async sendDirectMessage(route: Route, youthId: string): Promise<void> {
+    const m = await this.conversationCaller(route);
+    if (!m) return;
+    const scope = this.conversationScope(m, youthId);
+    if (!scope) return route.fulfill({ status: 404 });
+    if (!scope.participant) return route.fulfill({ status: 403, json: { code: 'forbidden' } });
+    if (scope.blocked) return route.fulfill({ status: 409, json: { code: 'blocked', blocked: scope.blocked } });
+    const saved = await this.conversations.send(route, m.organizationId, youthId, scope.mentor!.id, m.id);
+    if (!saved) return;
+    const to = m.id === scope.mentor!.id ? scope.youth.personName : scope.mentor!.personName;
+    this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'Created', record: 'DirectMessage', summary: `Message from ${m.personName} to ${to}`, device: null });
+    return route.fulfill({ status: 201, json: { id: saved.id, body: saved.body, from: m.personName, mine: true, sentAt: saved.sentAt } });
   }
 
   /** The announcements a youth or mentor reads (L2-105 criterion 5): sent by now, and they are among its members. */
