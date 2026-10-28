@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 74 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="74" data-video-title="Announce and message" data-parts="Introduction|Announce|Guardians|Read|Conversations|Real time|Phone|Safeguards|Supervisors|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 74</div>
+  <h1>Announce and message</h1>
+  <p class="lead">Announcements to a program, and direct messages between a mentor and a youth, safe and in near real time</p>
+</section>
+
+<section id="announce" data-part="1" data-cue="Marisol Delgado is the program director" data-clip="clips/announce-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>New announcement</h3><p>Tutoring, youth and guardians, now.</p></div>
+</section>
+
+<section id="announce-shots" data-part="1" data-cue="She sends it now.">
+  <h2>Compose, then sent</h2>
+  <div class="cols">
+    <img class="shot" alt="The New announcement dialog with the title, the message, After-School Tutoring and Youth and guardians chosen" src="shots/desktop-compose.png">
+    <img class="shot" alt="Announcements with Announcement sent and Tutoring night moves to Room 2 at the top, read by 0 of 1" src="shots/desktop-announced.png">
+  </div>
+  <p class="muted small">POST /announcements · GET /announcements · L2-105</p>
+</section>
+
+<section id="guardians" data-part="2" data-cue="Guardians have no accounts">
+  <h2>The guardians’ copy</h2>
+  <ul>
+    <li>A Messages-module message to the enrolled children’s households</li>
+    <li>Text, or email without a mobile; the SMS cap applies as before</li>
+    <li>Listed on the guardian portal as an announcement</li>
+    <li>Scheduled: deliveries due at the send time; nobody sees it before</li>
+  </ul>
+  <p class="muted small">MessageWriter.Queue(…, dueAt) · L2-021, L2-022, L2-103 · ADR 0068</p>
+</section>
+
+<section id="read" data-part="3" data-cue="Sofía Rivera is twelve and has a youth account." data-clip="clips/youth-announcements-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Sofía’s announcements</h3><p>New, Mark all read, one arrives.</p></div>
+</section>
+
+<section id="read-shots" data-part="3" data-cue="While the page is open, a new announcement appears">
+  <h2>New, read, and live</h2>
+  <div class="cols three">
+    <img class="shot" alt="Sofía’s announcements with New on the unread" src="shots/desktop-youth-announcements.png">
+    <img class="shot" alt="After Mark all read: All caught up" src="shots/desktop-youth-read.png">
+    <img class="shot" alt="The Gardens trip announcement arrived without a reload, marked New" src="shots/desktop-youth-live.png">
+  </div>
+  <p class="muted small">GET /announcements/mine · POST /announcements/mine/read · ReadAnnouncements</p>
+</section>
+
+<section id="conversations" data-part="4" data-cue="Daniel opens Messages from his navigation." data-clip="clips/conversation-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Daniel and Sofía</h3><p>Read, answer, her reply arrives.</p></div>
+</section>
+
+<section id="conversation-shots" data-part="4" data-cue="When Sofía replies, her message arrives">
+  <h2>One conversation per youth</h2>
+  <div class="cols">
+    <img class="shot" alt="Daniel’s Messages: Sofía Rivera with 1 new and Nadia Haddad with no messages yet" src="shots/desktop-conversations.png">
+    <img class="shot" alt="The conversation with Sofía: her reply Can I bring my friend Grace next time? ringed as new at the end" src="shots/desktop-received.png">
+  </div>
+  <p class="muted small">ph-message-thread · GET /conversations/{youthId} · L2-106</p>
+</section>
+
+<section id="realtime" data-part="5" data-cue="The app keeps one event stream open">
+  <h2>Events name what changed</h2>
+  <table class="facts">
+    <tr><th>Event</th><th>Sent to</th><th>Carries</th></tr>
+    <tr><td><code>conversation</code></td><td>The youth and her mentor</td><td>The youth’s id only</td></tr>
+    <tr><td><code>announcement</code></td><td>Its in-app recipients</td><td>Nothing</td></tr>
+    <tr><td><code>open</code> (reconnect)</td><td>The page itself</td><td>Fetch again</td></tr>
+  </table>
+  <p class="muted small">GET /realtime · text/event-stream · RealtimeHub keyed by organization and membership · L2-107</p>
+</section>
+
+<section id="phone" data-part="6" data-cue="On a phone, Messages is in Sofía's tab bar." data-clip="clips/phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>One column</h3><p>Messages, the thread, announcements.</p></div>
+</section>
+
+<section id="phone-shots" data-part="6" data-cue="Here are her conversations, the thread and her announcements on the phone.">
+  <h2>On a phone</h2>
+  <div class="cols three">
+    <img class="shot" alt="Sofía’s Messages on a phone: Daniel Osei with 1 new" src="shots/phone-conversations.png">
+    <img class="shot" alt="The conversation on a phone with the composer under the thread" src="shots/phone-conversation.png">
+    <img class="shot" alt="Sofía’s announcements on a phone" src="shots/phone-announcements.png">
+  </div>
+</section>
+
+<section id="safeguards" data-part="7" data-cue="The safeguards live on the server." data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Safeguards and states</h3><p>Consent, failed, empty, supervisor, refused, off.</p></div>
+</section>
+
+<section id="safeguard-shots" data-part="7" data-cue="If a send fails, the message stays">
+  <h2>Blocked, failed, empty</h2>
+  <div class="cols three">
+    <img class="shot" alt="Waiting for a guardian’s consent with the composer disabled" src="shots/desktop-blocked.png">
+    <img class="shot" alt="A message kept with Not sent and Try again" src="shots/desktop-failed.png">
+    <img class="shot" alt="Say hi to Nadia, an empty conversation" src="shots/desktop-empty.png">
+  </div>
+  <p class="muted small">409 blocked: consent · ConsentGate · L2-108</p>
+</section>
+
+<section id="supervisors" data-part="8" data-cue="Marisol reads every conversation">
+  <h2>Read only, audited</h2>
+  <div class="cols three">
+    <img class="shot" alt="Sofía Rivera and Daniel Osei, read only, with no composer" src="shots/desktop-supervisor.png">
+    <img class="shot" alt="Direct messages are for mentors and youth: a youth worker refused" src="shots/desktop-forbidden.png">
+    <img class="shot" alt="With Messages off, Daniel is back on Today with no Messages in his navigation" src="shots/desktop-messages-off.png">
+  </div>
+  <p class="muted small">SuperviseConversations · Viewed Conversation in the audit log · 404 while off</p>
+</section>
+
+<section id="testing" data-part="9" data-cue="The API tests cover composing">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>AnnouncementsTests</code>, <code>MyAnnouncementsTests</code>: compose, schedule, guardian copy, reach, feeds, reads</li>
+    <li><code>ConversationsTests</code>, <code>ConversationSafeguardsTests</code>: participants, consent, reassignment, supervisors</li>
+    <li><code>RealtimeTests</code>: events to the right members, no words, no other organization</li>
+    <li><code>announcements</code>, <code>youth-announcements</code>, <code>conversations</code>, <code>realtime</code> specs with axe</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="10" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Announcements: youth and mentors in the app, guardians through Messages</li><li>A conversation is a youth and her mentor, blocked until consent for a minor</li><li>Events carry no words; pages fetch what they may read</li></ul>
+  <p class="muted">Next: receive notifications in real time</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
