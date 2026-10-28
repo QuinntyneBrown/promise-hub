@@ -30,6 +30,10 @@ Ported from Waypoint `program-administration/manage-account-lifecycle` (`L2-ADMI
 
 Open questions: none.
 
+## Built so far
+
+Prompt 76 delivered `Membership.DeactivatedAt` and `DeactivatedBy` (migration `MembershipDeactivation`), `AccountLifecycleHandler` with `POST /people/{id}/deactivate` and `/reactivate`, the new `Deactivated` and `Reactivated` audit actions, the session checks, the youth accounts deactivated with a deleted household, the role rules on `PUT /staff/{id}/role`, `DeactivatePersonDialog`, the extended `ChangeRoleDialog` and the record's actions. Acceptance tests: `AccountLifecycleTests.cs`, `DeactivatedSignInTests.cs` and `PersonRoleChangeTests.cs` in `backend/tests/PromiseHub.Api.Tests/`, and `e2e/tests/administration/person.spec.ts`. It is estimated at 90%, not 100%, because ADR 0070 defers sending a password reset from the record (prompt 77).
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

@@ -28,6 +28,10 @@ Ported from Waypoint `program-administration/search-people` (`L2-ADMIN-001`, ADR
 
 Open questions: none.
 
+## Built so far
+
+Prompt 76 delivered everything above: `PeopleHandler.ListAsync`, `PersonDetails`, `GET /people`, `PEOPLE_API`, `PeoplePage` at `/people` with the filters kept in the URL, `PhPagination` (also used by the audit log), link cells and phone-hidden columns in `PhTable`, and People in the admin's More menu. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/PeopleDirectoryTests.cs` and `e2e/tests/administration/people.spec.ts`. Exporting the directory is deferred by ADR 0070.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

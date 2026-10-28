@@ -341,8 +341,8 @@ def change_role(S):
         return fieldset("Role", "".join(choice("role", f"{r} <small>{h}{' · current' if r == current else ''}</small>", checked=r == chosen) for r, h in roles))
 
     def box(name, current, chosen, *, busy=False, alert_html="", warn=False, mentoring=True):
-        body = radios(current, chosen, mentoring) + (alert("warning", "This gives access to every family’s records", f"As a {chosen.lower()}, {name.split()[0]} will see children, guardians and attendance across Harbourview.") if warn else "")
-        return dialog_box(f"Change {name}’s role", "It applies the next time they do anything. The change is recorded in the audit log.", body,
+        body = radios(current, chosen, mentoring) + (alert("warning", "This gives access to every family’s records", "Staff roles see children, guardians and attendance across the organization.") if warn else "")
+        return dialog_box(f"Change role for {name}", "It applies the next time they do anything. The change is recorded in the audit log.", body,
                           footer("Change role", busy=busy), icon_name="user", alert_html=alert_html, form=True)
     S.add("default", "From Staff and roles: Priya Raman’s role, Volunteer coordinator now; the staff and participant roles a person can hold. Youth is never offered: a youth account follows its child record.", **over("staff", overlays=box("Priya Raman", "Volunteer coordinator", "Volunteer coordinator")))
     S.add("person", "From Leo Martins’s record: moving a volunteer to a staff role warns that it opens every family’s records.", **over("person", "staff", overlays=box("Leo Martins", "Volunteer", "Youth worker", warn=True)))

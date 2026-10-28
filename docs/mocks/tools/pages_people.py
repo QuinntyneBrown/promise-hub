@@ -122,8 +122,8 @@ def history(items) -> str:
     return card(ul_list([list_item(esc(t), esc(m)) for t, m in items], card=False, label="Account history"), title="History", tid="history", cls="card--flush")
 
 
-SOFIA_HISTORY = [("Linked to Sofía Rivera’s child record", "Tom Nguyen · Mon 7 Sep"), ("Joined as Youth", "Accepted Tom Nguyen’s invitation · Mon 7 Sep")]
-LEO_HISTORY = [("Deactivated", "Tom Nguyen · Today, 4:20 pm"), ("Joined as Volunteer", "Accepted Priya Raman’s invitation · Tue 1 Sep")]
+SOFIA_HISTORY = [("Sofía Rivera linked to Sofía Rivera", "Tom Nguyen · Mon 7 Sep")]
+LEO_HISTORY = [("Leo Martins’s account deactivated by Tom Nguyen", "Tom Nguyen · Today, 4:20 pm"), ("Leo Martins · Mentor → Volunteer by Tom Nguyen", "Tom Nguyen · Tue 1 Sep")]
 
 
 def youth_cards(*, learning: bool = True, mentoring: bool = True) -> str:
@@ -162,15 +162,15 @@ def person(S):
     S.add("deactivated", "Tom deactivated Leo: he is signed out everywhere and can’t sign in; his records stay; Reactivate turns him back on.", **KW,
           main=leo(status_="Deactivated", hist=LEO_HISTORY), toast_html=toast_region(toast("success", "Leo Martins deactivated", "Signed out and can’t sign in. Nothing was deleted.")))
     S.add("success", "Reactivated: Leo can sign in again with his old role; the history says who did it.", **KW,
-          main=leo(hist=[("Reactivated", "Tom Nguyen · Today, 4:25 pm")] + LEO_HISTORY), toast_html=toast_region(toast("success", "Leo Martins reactivated", "They can sign in again.")))
+          main=leo(hist=[("Leo Martins’s account reactivated by Tom Nguyen", "Tom Nguyen · Today, 4:25 pm")] + LEO_HISTORY), toast_html=toast_region(toast("success", "Leo Martins reactivated", "They can sign in again.")))
     S.add("child-deleted", "Nadia’s household was deleted, so her youth account was deactivated with her child record and can’t be reactivated.", **KW,
           main=record_hdr(YOUTH["nadia"], "Youth", "Deactivated", actions=acts("Nadia", deactivated=True, youth=True, blocked=True))
           + alert("info", "The child record was deleted", "A youth account follows its child record, so Nadia’s stays off. Nothing else was removed.")
           + f'<div class="split"><div class="stack">{account("nadia@harbourview.example", "Youth", "Deactivated", "Tue 3 Nov", [("Deactivated", "Today, 2:10 pm with her child record")])}</div>'
-          + f'<div class="stack">{history([("Deactivated with her child record", "Tom Nguyen deleted the Haddad household · Today, 2:10 pm"), ("Joined as Youth", "Accepted Tom Nguyen’s invitation · Tue 8 Sep")])}</div></div>')
+          + f'<div class="stack">{history([("Nadia Haddad’s account deactivated with the child record by Tom Nguyen", "Tom Nguyen · Today, 2:10 pm")])}</div></div>')
     S.add("you", "Tom opens his own record: no Change role or Deactivate; another admin does that.", **KW,
           main=record_hdr(T, "Admin", "Active") + alert("info", "This is you", "Another admin changes your role or turns off your account.")
-          + f'<div class="split"><div class="stack">{account("tom@harbourview.example", "Admin", "Active", "Today, 9:02 am")}</div><div class="stack">{history([("Joined as Admin", "Created Harbourview · Tue 1 Sep")])}</div></div>')
+          + f'<div class="split"><div class="stack">{account("tom@harbourview.example", "Admin", "Active", "Today, 9:02 am")}</div><div class="stack">{card(empty("Nothing recorded yet", "Role changes and deactivations appear here.", icon_name="shield"), title="History", tid="history", cls="card--flush")}</div></div>')
     S.add("loading", "Loading the record.", **KW, main=breadcrumb([("People", page("people"))], "Loading") + '<h1 class="visually-hidden">Loading this person</h1>' + skeleton_header() + skeleton_list(4, "Loading the record"))
     S.add("error", "The record failed to load (or is not in this organization); back to People or Try again.", **KW,
           main=breadcrumb([("People", page("people"))], "Person") + page_header("Person") + failed("We couldn’t load this person"))

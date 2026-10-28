@@ -25,6 +25,10 @@ Ported from Waypoint `program-administration/view-person-record` (`L2-ADMIN-002`
 
 Open questions: none.
 
+## Built so far
+
+Prompt 76 delivered `PeopleHandler.GetAsync`, `GET /people/{id}` and `PersonPage` at `/people/:id` with the Account, Youth record (Open child record), Programs, Mentoring, Learning and History cards. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/PersonRecordTests.cs` and `e2e/tests/administration/person.spec.ts`. It is estimated at 90%, not 100%, because ADR 0070 defers profile editing, staff notes and the youth's consent summary on the record.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

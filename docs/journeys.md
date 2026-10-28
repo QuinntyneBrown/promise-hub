@@ -45,7 +45,7 @@
 | Admin / office manager | Review audit history | Search sensitive actions by person, record, and time. | [5 days](detailed-designs/audit/record-and-search-audit/README.md) | 85% · [video](videos/44-review-audit-history/README.md) |
 | Admin / office manager | Configure notifications | Set reminder, no-show, and messaging preferences. | [3 days](detailed-designs/notifications/notify-in-app/README.md) | 70% · [video](videos/36-configure-notifications/README.md) |
 | Admin / office manager | Review and place applicants | Review applications and place youth into cohorts. | [9 days](detailed-designs/enrollment/decide-and-enroll-applicant/README.md) | 100% · [video](videos/59-review-and-place-applicants/README.md) |
-| Admin / office manager | Manage people | Manage youth, mentor and volunteer accounts and their lifecycle. | [14 days](detailed-designs/staff/search-people/README.md) | 0% |
+| Admin / office manager | Manage people | Manage youth, mentor and volunteer accounts and their lifecycle. | [14 days](detailed-designs/staff/search-people/README.md) | 90% |
 | Admin / office manager | Configure the organization | Edit organization profile, consent policy, terms and tracks. | [14 days](prompts/79-configure-the-organization.md) | 0% |
 | Youth worker | Start an invited shift | Accept an invitation, complete setup, and reach today's assigned session. | [4 days](detailed-designs/staff/invite-and-onboard-staff/README.md) | 80% · [video](videos/30-start-an-invited-shift/README.md) |
 | Youth worker | Record attendance | Check children in or out within assigned permissions. | [3 days](detailed-designs/attendance/check-in-and-sign-out/README.md) | 75% · [video](videos/09-record-attendance-as-youth-worker/README.md) |
