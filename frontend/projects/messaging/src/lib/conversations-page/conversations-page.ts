@@ -5,6 +5,7 @@ import {
   ConversationList,
   ConversationRow,
   LoadResult,
+  REALTIME_EVENTS,
   SESSION_API,
   can,
 } from '@promisehub/api';
@@ -19,7 +20,7 @@ import {
   PhPageHeader,
   PhSkeleton,
 } from '@promisehub/components';
-import { EMPTY, Subject, catchError, startWith, switchMap } from 'rxjs';
+import { EMPTY, Subject, catchError, filter, map, merge, startWith, switchMap } from 'rxjs';
 import { dayLabel, timeLabel } from '../thread-words';
 
 /**
@@ -51,11 +52,25 @@ export class ConversationsPage {
       .pipe(catchError(() => EMPTY)),
   );
 
+  /** A message in any of the reader's conversations, or a (re)connected stream, fetches the list again quietly (L2-107). */
+  private readonly quiet$ = inject(REALTIME_EVENTS)
+    .events()
+    .pipe(filter((e) => e.type === 'conversation' || e.type === 'open'));
+
   /** Null while loading. */
   protected readonly result = toSignal<LoadResult<ConversationList> | null>(
-    this.refresh$.pipe(
-      startWith(undefined),
-      switchMap(() => this.api.list().pipe(startWith<LoadResult<ConversationList> | null>(null))),
+    merge(
+      this.refresh$.pipe(
+        startWith(undefined),
+        map(() => true),
+      ),
+      this.quiet$.pipe(map(() => false)),
+    ).pipe(
+      switchMap((loud) =>
+        loud
+          ? this.api.list().pipe(startWith<LoadResult<ConversationList> | null>(null))
+          : this.api.list().pipe(filter((r) => r.status === 'loaded')),
+      ),
     ),
     { initialValue: null },
   );

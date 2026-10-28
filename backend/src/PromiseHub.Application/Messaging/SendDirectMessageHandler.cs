@@ -7,9 +7,11 @@ namespace PromiseHub.Application.Messaging;
 
 /// <summary>
 /// Sends a direct message (L2-106 criteria 3 to 6, L2-108): only the youth or her current mentor, never while a guardian's consent is needed,
-/// 1 to 2,000 characters kept as plain text; audited with the two names and never the words.
+/// 1 to 2,000 characters kept as plain text; audited with the two names and never the words; both participants' open streams are told
+/// (L2-107).
 /// </summary>
-public sealed class SendDirectMessageHandler(IPromiseHubDb db, ITenantContext tenant, ConversationAccess access, IAuditWriter audit, TimeProvider clock)
+public sealed class SendDirectMessageHandler(IPromiseHubDb db, ITenantContext tenant, ConversationAccess access, IAuditWriter audit, TimeProvider clock,
+    IRealtimeEvents events)
 {
     public async Task<SendDirectMessageOutcome> HandleAsync(Guid youthId, SendDirectMessageRequest request, CancellationToken cancellationToken = default)
     {
@@ -41,6 +43,7 @@ public sealed class SendDirectMessageHandler(IPromiseHubDb db, ITenantContext te
         var (from, to) = tenant.MembershipId == mentor.Id ? (mentor.PersonName, scope.Youth.PersonName) : (scope.Youth.PersonName, mentor.PersonName);
         audit.Record(new AuditEvent(AuditAction.Created, "DirectMessage", message.Id, $"Message from {from} to {to}"));
         await db.SaveChangesAsync(cancellationToken);
+        events.Publish(tenant.OrganizationId, [scope.Youth.Id, mentor.Id], new RealtimeEvent("conversation", scope.Youth.Id));
         return new(Result.Created(message.Id), new DirectMessageDto(message.Id, body, tenant.ActorName, true, message.SentAt));
     }
 }

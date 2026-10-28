@@ -952,6 +952,7 @@ export class FakeApi {
     ['POST', /^\/api\/slips\/(?<id>[^/]+)\/send-now$/, (route, p) => this.slipTransition(route, p['id']!, 'send-now')],
     ['POST', /^\/api\/slips\/(?<id>[^/]+)\/cancel-send$/, (route, p) => this.slipTransition(route, p['id']!, 'cancel')],
     ['PUT', /^\/api\/slips\/(?<id>[^/]+)$/, (route, p) => this.editSlip(route, p['id']!)],
+    ['GET', /^\/api\/realtime$/, (route) => this.realtime(route)],
     ['GET', /^\/api\/conversations$/, (route) => this.listConversations(route)],
     ['GET', /^\/api\/conversations\/(?<id>[^/]+)$/, (route, p) => this.getConversation(route, p['id']!)],
     ['POST', /^\/api\/conversations\/(?<id>[^/]+)\/messages$/, (route, p) => this.sendDirectMessage(route, p['id']!)],
@@ -3927,6 +3928,47 @@ export class FakeApi {
     return [...new Set(ids)];
   }
 
+  /** Events waiting for each member's next stream response (L2-107). */
+  private readonly realtimeQueue = new Map<string, string[]>();
+
+  private publish(membershipIds: string[], event: 'conversation' | 'announcement', data: object): void {
+    for (const id of membershipIds) this.realtimeQueue.set(id, [...(this.realtimeQueue.get(id) ?? []), `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`]);
+  }
+
+  /**
+   * GET /realtime as a long poll: answers when an event is waiting for the caller, or after two seconds, then the browser reconnects (as it
+   * does when a real stream drops) and the page fetches again.
+   */
+  private async realtime(route: Route): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    const started = Date.now();
+    while (!this.realtimeQueue.get(m.id)?.length && Date.now() - started < 2000) await new Promise((r) => setTimeout(r, 50));
+    const events = this.realtimeQueue.get(m.id) ?? [];
+    this.realtimeQueue.set(m.id, []);
+    try {
+      await route.fulfill({ status: 200, headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' }, body: `retry: 300\n\n${events.join('')}` });
+    } catch {
+      // The page closed while the stream was open.
+    }
+  }
+
+  /** The other side writes in a conversation, as the youth or her mentor would; its event goes to both unless told not to. */
+  writeAs(senderId: string, youthId: string, body: string, options: { event?: boolean } = {}): void {
+    const childId = this.youthLinks.get(youthId)!;
+    const mentorId = this.youthMentors.get(childId)!;
+    const last = this.conversations.rows.map((r) => r.sentAt).sort().pop();
+    const sentAt = new Date(Math.max(NOW.getTime(), last ? new Date(last).getTime() + 60_000 : 0)).toISOString();
+    this.conversations.seed({ youthId, mentorId, senderId, body, sentAt });
+    if (options.event !== false) this.publish([youthId, mentorId], 'conversation', { youthId });
+  }
+
+  /** Staff announce now, as Compose would; its in-app recipients' streams are told. */
+  announceNow(row: Parameters<FakeAnnouncements['seed']>[0]): void {
+    const saved = this.announcements.seed(row);
+    this.publish(this.announcementMembers(saved), 'announcement', {});
+  }
+
   /** The caller of a conversations endpoint: Messages and Mentoring on; mentors, youth, admins and program directors (L2-106, L2-108). */
   private async conversationCaller(route: Route): Promise<Membership | null> {
     const m = await this.participantModuleCaller(route, 'Messages', (x) => ['Mentor', 'Youth', 'Admin', 'ProgramDirector'].includes(x.role));
@@ -4016,6 +4058,7 @@ export class FakeApi {
     if (!saved) return;
     const to = m.id === scope.mentor!.id ? scope.youth.personName : scope.mentor!.personName;
     this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'Created', record: 'DirectMessage', summary: `Message from ${m.personName} to ${to}`, device: null });
+    this.publish([youthId, scope.mentor!.id], 'conversation', { youthId });
     return route.fulfill({ status: 201, json: { id: saved.id, body: saved.body, from: m.personName, mine: true, sentAt: saved.sentAt } });
   }
 
@@ -4070,6 +4113,7 @@ export class FakeApi {
       }
     }
     const saved = this.announcements.add({ ...row, households });
+    if (saved.sendAt <= NOW.toISOString()) this.publish(this.announcementMembers(saved), 'announcement', {});
     this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'Created', record: 'Announcement', summary: `${saved.title} · ${saved.program ?? 'All programs'} · ${saved.audience}`, device: null });
     return route.fulfill({ status: 201, json: { id: saved.id } });
   }

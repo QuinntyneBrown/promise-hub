@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
@@ -6,6 +7,7 @@ import {
   Conversation,
   DirectMessage,
   LoadResult,
+  REALTIME_EVENTS,
   SESSION_API,
 } from '@promisehub/api';
 import {
@@ -19,7 +21,7 @@ import {
   PhSkeleton,
   ThreadMessage,
 } from '@promisehub/components';
-import { EMPTY, catchError } from 'rxjs';
+import { EMPTY, catchError, filter, switchMap } from 'rxjs';
 import { dayLabel, firstName, timeLabel } from '../thread-words';
 
 /** A message the reader wrote that the server has not taken yet. */
@@ -64,6 +66,8 @@ export class ConversationPage {
   protected readonly draft = signal('');
   protected readonly error = signal<string | null>(null);
   protected readonly blockedNow = signal(false);
+  /** Messages that arrived through the event stream while the page was open (L2-107 criterion 1). */
+  protected readonly fresh = signal<ReadonlySet<string>>(new Set());
 
   protected readonly conversation = computed(() => {
     const r = this.result();
@@ -91,6 +95,7 @@ export class ConversationPage {
         mine: m.mine,
         meta: `${m.mine ? 'You' : firstName(m.from)} · ${timeLabel(m.sentAt)}`,
         day: day !== lastDay ? day : null,
+        state: this.fresh().has(m.id) ? 'new' : null,
       };
       lastDay = day;
       return item;
@@ -110,6 +115,30 @@ export class ConversationPage {
 
   constructor() {
     this.load();
+    // A message in this conversation, or a (re)connected stream, fetches it again quietly; what is new to the reader is marked.
+    inject(REALTIME_EVENTS)
+      .events()
+      .pipe(
+        filter(
+          (e) => e.type === 'open' || (e.type === 'conversation' && e.youthId === this.youthId),
+        ),
+        switchMap(() => this.api.get(this.youthId)),
+        filter((r) => r.status === 'loaded'),
+        takeUntilDestroyed(),
+      )
+      .subscribe((r) => this.refreshed(r));
+  }
+
+  private refreshed(r: LoadResult<Conversation>): void {
+    const before = this.conversation();
+    if (r.status !== 'loaded' || !before) {
+      this.result.set(r);
+      return;
+    }
+    const known = new Set(before.messages.map((m) => m.id));
+    const arrived = r.value.messages.filter((m) => !known.has(m.id) && !m.mine).map((m) => m.id);
+    if (arrived.length) this.fresh.update((set) => new Set([...set, ...arrived]));
+    this.result.set(r);
   }
 
   protected load(): void {

@@ -9,10 +9,10 @@ namespace PromiseHub.Application.Messaging;
 /// <summary>
 /// Records an announcement (L2-105 criteria 1 to 4, ADR 0068): checks each field, answers 404 for a program outside the organization,
 /// queues the guardians' copy as a Messages-module message due at the send time (so the send job and the SMS cap apply unchanged) and
-/// audits it.
+/// audits it. When it is sent now, its in-app recipients' open streams are told (L2-107).
 /// </summary>
 public sealed class ComposeAnnouncementHandler(IPromiseHubDb db, ITenantContext tenant, TimeProvider clock, IAuditWriter audit,
-    AudienceResolver resolver, MessageWriter writer)
+    AudienceResolver resolver, MessageWriter writer, AnnouncementRecipients recipients, IRealtimeEvents events)
 {
     public async Task<Result> HandleAsync(ComposeAnnouncementRequest request, CancellationToken cancellationToken = default)
     {
@@ -75,6 +75,10 @@ public sealed class ComposeAnnouncementHandler(IPromiseHubDb db, ITenantContext 
         audit.Record(new AuditEvent(AuditAction.Created, "Announcement", announcement.Id,
             $"{title} · {programName ?? "All programs"} · {announcement.Audience}"));
         await db.SaveChangesAsync(cancellationToken);
+        if (announcement.SendAt <= now)
+        {
+            events.Publish(tenant.OrganizationId, await recipients.MembersAsync(announcement, cancellationToken), new RealtimeEvent("announcement"));
+        }
         return Result.Created(announcement.Id);
     }
 }

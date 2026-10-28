@@ -1,6 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ANNOUNCEMENTS_API, LoadResult, MyAnnouncement, MyAnnouncements } from '@promisehub/api';
+import {
+  ANNOUNCEMENTS_API,
+  LoadResult,
+  MyAnnouncement,
+  MyAnnouncements,
+  REALTIME_EVENTS,
+} from '@promisehub/api';
 import {
   PhAlert,
   PhBadge,
@@ -14,7 +20,7 @@ import {
   ToastService,
   formatDay,
 } from '@promisehub/components';
-import { Subject, startWith, switchMap } from 'rxjs';
+import { Subject, filter, map, merge, startWith, switchMap } from 'rxjs';
 
 /**
  * A youth's or mentor's announcements (mock: youth-announcements, L2-105 criteria 5 and 6): newest first with who sent them, New on the
@@ -41,11 +47,25 @@ export class YouthAnnouncementsPage {
   private readonly toasts = inject(ToastService);
   private readonly refresh$ = new Subject<void>();
 
+  /** A new announcement, or a (re)connected stream, fetches the list again without the loading state (L2-107). */
+  private readonly quiet$ = inject(REALTIME_EVENTS)
+    .events()
+    .pipe(filter((e) => e.type === 'announcement' || e.type === 'open'));
+
   /** Null while loading. */
   protected readonly result = toSignal<LoadResult<MyAnnouncements> | null>(
-    this.refresh$.pipe(
-      startWith(undefined),
-      switchMap(() => this.api.mine().pipe(startWith<LoadResult<MyAnnouncements> | null>(null))),
+    merge(
+      this.refresh$.pipe(
+        startWith(undefined),
+        map(() => true),
+      ),
+      this.quiet$.pipe(map(() => false)),
+    ).pipe(
+      switchMap((loud) =>
+        loud
+          ? this.api.mine().pipe(startWith<LoadResult<MyAnnouncements> | null>(null))
+          : this.api.mine().pipe(filter((r) => r.status === 'loaded')),
+      ),
     ),
     { initialValue: null },
   );

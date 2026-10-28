@@ -26,6 +26,9 @@ public static class DependencyInjection
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<ISmsSender, LoggingSmsSender>();
         services.AddSingleton<IEmailSender, LoggingEmailSender>();
+        // The open event streams (L2-107, ADR 0068): one hub per API instance, published to through the port.
+        services.AddSingleton<Messaging.RealtimeHub>();
+        services.AddSingleton<Application.Messaging.IRealtimeEvents>(sp => sp.GetRequiredService<Messaging.RealtimeHub>());
         services.AddSingleton<MessageDispatchRunner>();
         services.AddSingleton<Privacy.RetentionRunner>();
         services.AddSingleton<Observability.RequestMetrics>();

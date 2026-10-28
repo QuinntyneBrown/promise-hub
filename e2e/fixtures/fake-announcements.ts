@@ -74,6 +74,8 @@ export class FakeAnnouncements {
       households: 0,
       sentByRole: "ProgramDirector",
       ...row,
+      // Times compare as ISO strings, so they are kept in one form.
+      sendAt: new Date(row.sendAt).toISOString(),
       id: row.id ?? `ann-${this.next++}`,
     };
     this.rows.push(full);
@@ -99,7 +101,9 @@ export class FakeAnnouncements {
       ? (b["audience"] as FakeAudience)
       : null;
     const sendAt =
-      typeof b["sendAt"] === "string" && b["sendAt"] ? b["sendAt"] : null;
+      typeof b["sendAt"] === "string" && b["sendAt"]
+        ? new Date(b["sendAt"]).toISOString()
+        : null;
     const programId =
       typeof b["programId"] === "string" && b["programId"]
         ? b["programId"]
