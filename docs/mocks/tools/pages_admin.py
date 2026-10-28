@@ -293,26 +293,43 @@ def account_deactivated(S):
 
 @screen("forgot-password", "page", "Forgot password", route="/forgot-password", reqs=[R_SEC], shell="auth", na={"loading": "The form is static.", "empty": "A form has no collection to be empty of."})
 def forgot_password(S):
-    def form(err=None, busy=False):
+    def form(err=None, busy=False, who="jaylen@harbourview.example"):
         e = err or {}
-        return f'<form class="stack" action="#" method="post" novalidate>{field("email", "Work email", type_="email", value="jaylen@harbourview.example" if not e else "jaylen@harbourview", autofocus=True, autocomplete="username", error=e.get("email", ""))}{btn("Email me a reset link", "primary", type_="submit", busy=busy, size="lg", block=True)}<p class="text-center"><a href="{page("sign-in")}">Back to sign in</a></p></form>'
+        return f'<form class="stack" action="#" method="post" novalidate>{field("email", "Email", type_="email", value=who if not e else "jaylen@harbourview", autofocus=True, autocomplete="username", error=e.get("email", ""))}{btn("Email me a reset link", "primary", type_="submit", busy=busy, size="lg", block=True)}<p class="text-center"><a href="{page("sign-in")}">Back to sign in</a></p></form>'
+    def sent(masked):
+        return (auth_head("Check your email", f"If {masked} has an account, a link is on its way. It works once, for one hour.")
+                + btn("Back to sign in", "primary", href=page("sign-in"), size="lg", block=True)
+                + f'<p class="text-center text-muted">Didn’t get it? Check spam, or {btn("Resend the email", "ghost", size="sm")}</p>')
     S.add("default", "Ask for a reset link.", main=auth_head("Reset your password", "The link works for one hour.") + form())
-    S.add("invalid", "Not an email.", main=auth_head("Reset your password", "The link works for one hour.") + form(err={"email": "Enter your work email."}))
+    S.add("youth", "Sofía (Youth) asks with her own email; the same form serves youth, mentors and staff.", main=auth_head("Reset your password", "The link works for one hour.") + form(who="sofia@harbourview.example"),
+          notes=note("Same 202 and the same page for an unknown, deactivated or removed address; no email goes to them. At most three emails per address in an hour; a fourth request looks identical and sends nothing.", "top: 5rem; right: 1rem;"))
+    S.add("invalid", "Not an email.", main=auth_head("Reset your password", "The link works for one hour.") + form(err={"email": "Enter your email address."}))
     S.add("submitting", "Sending.", main=auth_head("Reset your password", "The link works for one hour.") + form(busy=True))
-    S.add("success", "Sent, with the same message whether or not the address exists.", main=auth_head("Check your email", "If jaylen@harbourview.example has an account, a link is on its way.") + f'<div class="cluster" style="justify-content: center;">{btn("Back to sign in", "", href=page("sign-in"))}{btn("Send again", "ghost")}</div>')
+    S.add("success", "Sent: the address is masked and the message is the same whether or not it has an account; resend is offered.", main=sent("s••••@harbourview.example"),
+          notes=note("The address is masked so a shared phone doesn’t show it in full. A newer link replaces any earlier one.", "top: 5rem; right: 1rem;"))
+    S.add("resent", "Resent: a toast confirms, the page stays.", main=sent("s••••@harbourview.example"),
+          toast_html=toast_region(toast("success", "Sent again", "If s••••@harbourview.example has an account, the newest link is the one that works.")))
     S.add("error", "Couldn’t send.", main=auth_head("Reset your password", "The link works for one hour.") + alert("danger", "We couldn’t send the email", "Try again in a moment.") + form())
 
 
-@screen("reset-password", "page", "Reset password", route="/reset-password", reqs=[R_SEC], shell="auth", na={"loading": "The form is static.", "empty": "A form has no collection to be empty of."})
+@screen("reset-password", "page", "Reset password", route="/reset-password", reqs=[R_SEC, "L1-023", "L1-024"], shell="auth", na={"empty": "A form has no collection to be empty of."})
 def reset_password(S):
     def form(err=None, busy=False):
         e = err or {}
-        return f'<form class="stack" action="#" method="post" novalidate>{field("pw1", "New password", type_="password", autofocus=True, autocomplete="new-password", error=e.get("pw1", ""), help_="At least 12 characters.")}{field("pw2", "Repeat it", type_="password", autocomplete="new-password", error=e.get("pw2", ""))}{btn("Set password and sign in", "primary", type_="submit", busy=busy, size="lg", block=True)}</form>'
+        return f'<form class="stack" action="#" method="post" novalidate>{field("pw1", "New password", type_="password", autofocus=True, autocomplete="new-password", error=e.get("pw1", ""), help_="At least 12 characters, and not your email. Other devices are signed out.")}{field("pw2", "Repeat it", type_="password", autocomplete="new-password", error=e.get("pw2", ""))}{btn("Set password and sign in", "primary", type_="submit", busy=busy, size="lg", block=True)}</form>'
     S.add("default", "Choose a new password from the emailed link.", main=auth_head("Choose a new password", "For jaylen@harbourview.example") + form())
+    S.add("youth", "Sofía opens her link: it names her account; after saving she lands on Learning (Today while Learning is off).", main=auth_head("Choose a new password", "For sofia@harbourview.example") + form(),
+          notes=note("Youth land on Learning, mentors on Mentoring, everyone else on Today; with that module off, Today, and nothing of the module is fetched.", "top: 5rem; right: 1rem;"))
+    S.add("mentor", "Daniel (Mentor) opens his link; he lands on Mentoring.", main=auth_head("Choose a new password", "For daniel@harbourview.example") + form())
+    S.add("loading", "Checking the link before showing the form.", main=auth_head("Checking your link…"))
     S.add("invalid", "Too short, and the repeat doesn’t match.", main=auth_head("Choose a new password", "For jaylen@harbourview.example") + form(err={"pw1": "Use at least 12 characters.", "pw2": "The two passwords don’t match."}))
+    S.add("weak", "Sofía’s password contains her email name: the shared policy refuses it.", main=auth_head("Choose a new password", "For sofia@harbourview.example") + form(err={"pw1": "Don’t use your email in your password."}))
     S.add("submitting", "Saving.", main=auth_head("Choose a new password", "For jaylen@harbourview.example") + form(busy=True))
-    S.add("success", "Done and signed in.", main=auth_head("Password changed", "Other devices were signed out.") + btn("Go to Today", "primary", href=page("today"), size="lg", block=True))
-    S.add("error", "The link expired.", main=auth_head("This link has expired", "Links work for one hour.") + btn("Send a new link", "primary", href=page("forgot-password"), size="lg", block=True))
+    S.add("success", "Saved: signed in, other devices signed out, and the role home opens with a toast.", main=auth_head("Password updated", "Other devices were signed out. Opening Learning…"),
+          toast_html=toast_region(toast("success", "Password updated", "Other devices were signed out.")),
+          notes=note("The toast stays on screen as Learning (or Mentoring, or Today) opens.", "top: 5rem; right: 1rem;"))
+    S.add("error", "The link expired, was used, was replaced by a newer one, or the account was turned off.", main=auth_head("This link has expired", "Links work once, for one hour, and a newer link replaces older ones.") + btn("Send a new link", "primary", href=page("forgot-password"), size="lg", block=True))
+    S.add("failed", "The save failed: the form stays with an alert.", main=auth_head("Choose a new password", "For sofia@harbourview.example") + alert("danger", "That didn’t save", "Try again in a moment.") + form())
 
 
 @screen("accept-invite", "page", "Accept invitation", route="/invite/:token", reqs=[R_SEC, R_TTV, "L1-023", "L1-024"], shell="auth", na={"loading": "The form is static.", "empty": "A form has no collection to be empty of."})

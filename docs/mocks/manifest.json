@@ -862,9 +862,11 @@
       ],
       "states": [
         "default",
+        "youth",
         "invalid",
         "submitting",
         "success",
+        "resent",
         "error"
       ],
       "not_applicable": {
@@ -878,17 +880,23 @@
       "title": "Reset password",
       "route": "/reset-password",
       "requirements": [
-        "L1-016"
+        "L1-016",
+        "L1-023",
+        "L1-024"
       ],
       "states": [
         "default",
+        "youth",
+        "mentor",
+        "loading",
         "invalid",
+        "weak",
         "submitting",
         "success",
-        "error"
+        "error",
+        "failed"
       ],
       "not_applicable": {
-        "loading": "The form is static.",
         "empty": "A form has no collection to be empty of."
       }
     },

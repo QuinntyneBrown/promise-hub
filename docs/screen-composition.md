@@ -69,8 +69,8 @@ Each screen from `docs/mocks/` and the components-library components it is compo
 | Set up: modules | `onboard-modules` (default, invalid, custom, blocked, submitting, error) | `ph-page-header`, `ph-card`, `ph-radio-group` (presets), `ph-list`, `ph-list-item`, `ph-switch`, `ph-button` | Dependency captions from `MODULE_CATALOG`; not built yet (setup reuses Settings › Modules, ADR 0033) |
 | Set up: organization | `onboard-org` (default, invalid) | `ph-page-header`, `ph-card`, `ph-text-field`, `ph-error-summary`, `ph-alert`, `ph-button` | — |
 | Search | `search` (default, loading, empty, error, no-results) | `ph-page-header`, `ph-text-field` (search), `ph-list`, `ph-list-item`, `ph-card`, `ph-empty-state`, `ph-button`, `ph-skeleton` | Result group headings |
-| Forgot password | `forgot-password` (default, invalid, submitting, success, error) | `ph-skip-link`, `ph-auth-card`, `ph-text-field`, `ph-button`, `ph-alert` | — |
-| Reset password | `reset-password` (default, invalid, submitting, success, error) | `ph-skip-link`, `ph-auth-card`, `ph-text-field`, `ph-button`, `ph-alert` | — |
+| Forgot password | `forgot-password` (default, youth, invalid, submitting, success, resent, error) | `ph-skip-link`, `ph-auth-card`, `ph-text-field`, `ph-button`, `ph-alert`; resent: `ToastService` | — |
+| Reset password | `reset-password` (default, youth, mentor, loading, invalid, weak, submitting, success, error, failed) | `ph-skip-link`, `ph-auth-card`, `ph-text-field`, `ph-button`, `ph-alert`; success: `ToastService` | — |
 | Not found | `not-found` | `ph-error-page`, `ph-button` | — |
 | Forbidden | `forbidden` | `ph-error-page`, `ph-button` | — |
 | Server error | `server-error` | `ph-error-page`, `ph-button` | Retry reloads; Go to Today; the reference from the failed request, passed by the shell in navigation state, in the `phEmptyStateDetail` slot with `.text-caption` |
