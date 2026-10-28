@@ -166,7 +166,7 @@ def person(S):
     S.add("child-deleted", "Nadia’s household was deleted, so her youth account was deactivated with her child record and can’t be reactivated.", **KW,
           main=record_hdr(YOUTH["nadia"], "Youth", "Deactivated", actions=acts("Nadia", deactivated=True, youth=True, blocked=True))
           + alert("info", "The child record was deleted", "A youth account follows its child record, so Nadia’s stays off. Nothing else was removed.")
-          + f'<div class="split"><div class="stack">{account("nadia@harbourview.example", "Youth", "Deactivated", "Tue 3 Nov", [("Deactivated", "Today, 2:10 pm with her child record")])}</div>'
+          + f'<div class="split"><div class="stack">{account("nadia@harbourview.example", "Youth", "Deactivated", "Tue 3 Nov", [("Deactivated", "Today, 2:10 pm by Tom Nguyen")])}</div>'
           + f'<div class="stack">{history([("Nadia Haddad’s account deactivated with the child record by Tom Nguyen", "Tom Nguyen · Today, 2:10 pm")])}</div></div>')
     S.add("you", "Tom opens his own record: no Change role or Deactivate; another admin does that.", **KW,
           main=record_hdr(T, "Admin", "Active") + alert("info", "This is you", "Another admin changes your role or turns off your account.")
