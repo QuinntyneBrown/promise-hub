@@ -30,6 +30,12 @@ Backend:
 
 The fake API overlays a saved name and mobile per membership and answers `/me` and `/me/account` from it.
 
+## Built so far
+
+Prompt 78 delivered everything above: `PUT /me/profile` with `ProfileHandler`, `Membership.Rename`, `ProfilePage` with the read-only email, role and youth name, and the read-only state of `PhTextField`; the session refreshes after a save so the top bar shows the new name. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/ProfileTests.cs`, `e2e/tests/account/edit-profile.spec.ts`.
+
+Deferred (ADR 0072): the profile photo, pronouns and changing the email through a verified flow.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

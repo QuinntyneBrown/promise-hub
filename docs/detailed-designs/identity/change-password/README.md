@@ -26,6 +26,12 @@ Backend:
 - **`SessionEndpoints`** — `POST /me/password` for any member; on success calls `SessionCookie.ReissueAsync` with the active membership and answers 204.
 - **`ChangePasswordHandler.ChangeAsync(userId, request)`** — finds the `StaffUser`; a wrong current password answers 422 `current` "That isn’t your current password."; then `PasswordPolicy.Check(password, email)` (`password`) and the repeat (`repeat`, "The two passwords don’t match."); then `ChangePassword(hasher.Hash(password))`, `EndOtherSessions()` and the audit entry "Changed their password" (`AuditAction.Updated`, `StaffUser`) in the active organization only. The password never reaches the log or the audit entry.
 
+## Built so far
+
+Prompt 78 delivered everything above. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/ChangePasswordTests.cs`, `e2e/tests/account/change-password.spec.ts`.
+
+Deferred (ADR 0072): counting wrong current passwords toward the sign-in lock.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

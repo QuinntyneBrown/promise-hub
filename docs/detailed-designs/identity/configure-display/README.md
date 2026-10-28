@@ -28,6 +28,12 @@ Backend:
 - **`DisplayPreferencesHandler`** — reads and writes only the signed-in person's `StaffUser`; a theme outside `DisplayOptions.Themes` or a size outside `DisplayOptions.TextSizes` answers 422 (`theme`, `textSize`). Not audited: display choices are not sensitive.
 - **`StaffUser`** — gains `Theme` (default `system`), `TextSize` (default `default`) and `ReduceMotion`, with `ChangeDisplay`. Migration `DisplayPreferences`.
 
+## Built so far
+
+Prompt 78 delivered everything above, plus the top bar's container queries, which move its links into More and hide the search and the brand name when a larger text size narrows it. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/DisplayPreferencesTests.cs`, `e2e/tests/account/display-and-theme.spec.ts`.
+
+Deferred (ADR 0072): high contrast, underline links and the reading font.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

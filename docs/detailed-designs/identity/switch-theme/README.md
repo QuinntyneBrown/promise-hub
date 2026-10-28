@@ -22,6 +22,10 @@ Ported from Waypoint `platform-services/switch-theme` (`L2-PLATFORM-013`), store
 - **`DisplayPreferencesHandler`** — accepts only `system`, `light` and `dark` (`DisplayOptions.Themes`); anything else answers 422 and stores nothing.
 - **`StaffUser.Theme`** — default `system`; migration `DisplayPreferences`.
 
+## Built so far
+
+Prompt 78 delivered everything above. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/DisplayPreferencesTests.cs`, `e2e/tests/account/display-and-theme.spec.ts` (Sofía on a device that prefers light: Dark, Light and System previewed, Dark saved and applied after a reload, the device's theme again after sign-out).
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |
