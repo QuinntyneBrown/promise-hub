@@ -1,0 +1,45 @@
+@startuml
+title Class structure — Receive notifications
+hide empty members
+class Notification {
+  +Id : Guid
+  +OrganizationId : Guid
+  +MembershipId : Guid
+  +Kind : string
+  +Text : string
+  +Link : string
+  +CreatedAt : DateTimeOffset
+  +ReadAt : DateTimeOffset?
+  +Read(now)
+}
+class NotificationKind {
+  +Kind : string
+  +Modules : ModuleId[]
+  +Name : string
+  +Hint : string
+  +Receives(role) : bool
+}
+class NotificationKinds {
+  +All : NotificationKind[]
+  +VisibleAsync() : HashSet<string>
+  +OfferedAsync(role) : NotificationKind[]
+}
+class NotificationWriter {
+  +NotifyAsync(permission, kind, text, link)
+  +NotifyMembersAsync(membershipIds, kind, text, link)
+}
+class NotificationsHandler {
+  +ListAsync() : NotificationListDto
+  +ReadAsync(id) : Result
+  +ReadAllAsync() : Result
+}
+class NotificationEvents {
+  +SavingChanges()
+  +SavedChanges()
+}
+NotificationKinds *-- NotificationKind
+NotificationWriter ..> Notification : creates
+NotificationWriter --> NotificationKinds
+NotificationsHandler --> NotificationKinds
+NotificationEvents ..> Notification : observes
+@enduml

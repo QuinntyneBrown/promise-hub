@@ -1,0 +1,14 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Configure notifications
+Person(user, "Signed-in member")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular 22", "account library, api client")
+  Container(api, "PromiseHub API", "ASP.NET Core, .NET 10", "notification endpoints")
+  ContainerDb(db, "PromiseHub database", "EF Core", "NotificationPreferences, AuditEvents")
+}
+Rel(user, web, "uses", "HTTPS")
+Rel(web, api, "GET/PUT /notifications/preferences", "JSON, cookie session")
+Rel(api, db, "reads and writes, filtered by organization")
+@enduml

@@ -1,0 +1,28 @@
+@startuml
+title UML sequence behaviour — Sofía turns announcements off
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Youth (Sofía)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "NotificationPreferencesPage" as page
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "NotificationPreferencesHandler" as h
+  participant "NotificationWriter" as writer
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : opens /account/notifications
+page -> h : GET /notifications/preferences
+h --> page : Grades and badges, Assigned work, Messages, Announcements; all on (L2-111 c1)
+actor -> page : turns Announcements off, Save changes
+page -> h : PUT /notifications/preferences
+h -> h : every kind offered? else 422 (L2-111 c3)
+h -> db : upsert her row; audit Updated (L2-111 c2)
+h --> page : 204; toast (L2-111 c5)
+writer -> db : next announcement: her row says off, no notice for her (L2-111 c2)
+@enduml

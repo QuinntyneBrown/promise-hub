@@ -1,0 +1,15 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Receive notifications
+Person(user, "Signed-in member", "Staff, mentor or youth")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular 22", "shell bell, today library's center, api client")
+  Container(api, "PromiseHub API", "ASP.NET Core, .NET 10", "notification endpoints, producers, event stream")
+  ContainerDb(db, "PromiseHub database", "EF Core", "Notifications, NotificationPreferences")
+}
+Rel(user, web, "uses", "HTTPS")
+Rel(web, api, "GET /notifications, POST read", "JSON, cookie session")
+Rel(api, web, "notification events on GET /realtime", "text/event-stream")
+Rel(api, db, "reads and writes, filtered by organization")
+@enduml

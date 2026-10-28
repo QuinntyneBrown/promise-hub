@@ -1,0 +1,22 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Configure notifications
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "NotificationPreferencesPage", "account library", "switches per kind")
+  Component(papi, "NotificationPreferencesApi", "api client", "load, save")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "NotificationEndpoints", "Minimal API", "any member")
+  Component(h, "NotificationPreferencesHandler", "Application", "offered kinds, 422, audit")
+  Component(kinds, "NotificationKinds", "Application", "kinds, modules, recipients")
+  Component(writer, "NotificationWriter", "Application", "skips kinds turned off")
+  ComponentDb(db, "PromiseHub database", "EF Core", "NotificationPreferences")
+}
+Rel(page, papi, "load, save")
+Rel(papi, ep, "GET/PUT /notifications/preferences")
+Rel(ep, h, "calls")
+Rel(h, kinds, "offered kinds")
+Rel(h, db, "upserts")
+Rel(writer, db, "reads preferences")
+@enduml

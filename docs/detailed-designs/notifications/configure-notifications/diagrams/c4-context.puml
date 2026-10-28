@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Configure notifications
+Person(m, "Signed-in member", "Youth, mentor or staff")
+System(ph, "PromiseHub", "Notification center and preferences")
+Rel(m, ph, "chooses which kinds reach them")
+@enduml

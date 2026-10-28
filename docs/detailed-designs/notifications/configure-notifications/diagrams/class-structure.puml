@@ -1,0 +1,28 @@
+@startuml
+title Class structure — Configure notifications
+hide empty members
+class NotificationPreference {
+  +Id : Guid
+  +OrganizationId : Guid
+  +MembershipId : Guid
+  +Kind : string
+  +InApp : bool
+  +Change(inApp)
+}
+class NotificationPreferencesHandler {
+  +GetAsync() : NotificationPreferencesDto
+  +SaveAsync(SaveNotificationPreferencesRequest) : Result
+}
+class NotificationPreferenceDto {
+  +Kind : string
+  +Name : string
+  +Hint : string
+  +InApp : bool
+}
+class NotificationKinds {
+  +OfferedAsync(membership) : NotificationKind[]
+}
+NotificationPreferencesHandler --> NotificationKinds
+NotificationPreferencesHandler ..> NotificationPreference : upserts
+NotificationPreferencesHandler ..> NotificationPreferenceDto : answers
+@enduml

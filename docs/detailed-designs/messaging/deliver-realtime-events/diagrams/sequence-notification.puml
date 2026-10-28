@@ -1,0 +1,35 @@
+@startuml
+title UML sequence behaviour — A notification and a read reach every device
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Youth (Sofía)" as actor
+box "Frontend — PromiseHub web app (phone and laptop)" #E0F2FE
+  participant "Shell bell" as bell
+  participant "RealtimeEvents" as src
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "SendDirectMessageHandler" as sh
+  participant "NotificationsHandler" as nh
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  participant "NotificationEvents" as ev
+  participant "RealtimeHub" as hub
+  database "PromiseHub database" as db
+end box
+bell -> src : events() (one EventSource per tab)
+sh -> db : message and Sofía's notice saved
+db -> ev : SavedChanges: notice added for Sofía
+ev -> hub : Publish(Harbourview, [Sofía], notification {}) (L2-110 c2)
+sh -> hub : Publish(Harbourview, [Sofía, Daniel], conversation {youthId})
+hub --> src : notification (both of her tabs)
+src --> bell : refetch GET /notifications: count + 1 (L2-110 c1)
+actor -> nh : reads it on her phone
+nh -> db : ReadAt set
+db -> ev : SavedChanges: notice read
+ev -> hub : Publish(Harbourview, [Sofía], notification {}) (L2-110 c3)
+hub --> src : notification (laptop)
+src --> bell : refetch: count - 1
+@enduml

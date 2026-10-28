@@ -61,6 +61,8 @@ Slice 35 delivered `Notification`, `NotificationWriter` (incident reports notify
 
 Prompt 68 added the `mentoring` kind: raising an at-risk flag (`mentoring/manage-at-risk-flags`, `L2-091`) notifies every holder of `ReviewAtRiskFlags` (admins and program directors) through `NotificationWriter`, linking to `/mentoring/flags`, without the reason. `NotificationsHandler` maps `mentoring` to the Mentoring module, so those notices are hidden while it is off and come back when it is on.
 
+Prompt 75 (`receive-notifications`, `configure-notifications`, ADR 0069) extended the center to youth, mentors and volunteers, added the `assignments`, `messages` and `announcements` kinds, moved every producer onto `NotificationWriter` (which now skips a member who turned a kind off), made a kind follow every module it needs (`NotificationKinds`), and replaced the planned `GET /notifications/stream` and `NotificationStreamHub` with `notification` events on the shared stream `GET /realtime`, published by the `NotificationEvents` save interceptor. Personal in-app preferences per kind live at `/account/notifications`; email per kind and digests remain unbuilt.
+
 Slice 36 added `NotificationSettings` with `GET`/`PUT /settings/notifications`, the no-show delay, supervisor incident emails and the SMS cap honoured by the jobs, and `SettingsNotificationsPage` (ADR 0030).
 
 ## Requirements
