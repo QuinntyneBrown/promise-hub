@@ -12,7 +12,7 @@
   @switch (r?.status) {
     @case (undefined) {
       <p>
-        <a [routerLink]="['/g/home', token()]">← {{ p().back }}</a>
+        <a [routerLink]="['/g/home', token()]"><span aria-hidden="true">←</span> {{ p().back }}</a>
       </p>
       <h1>{{ text.loading }}</h1>
       <div class="stack" aria-busy="true" [attr.aria-label]="p().loadingChild">
@@ -101,7 +101,9 @@
       @if (r?.status === 'loaded') {
         @let child = r.value;
         <p>
-          <a [routerLink]="['/g/home', token()]">← {{ p().back }}</a>
+          <a [routerLink]="['/g/home', token()]"
+            ><span aria-hidden="true">←</span> {{ p().back }}</a
+          >
         </p>
         <div>
           <h1>{{ child.firstName }}</h1>

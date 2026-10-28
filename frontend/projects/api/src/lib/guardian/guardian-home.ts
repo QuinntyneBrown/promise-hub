@@ -33,6 +33,8 @@ export interface GuardianHome {
     event: string;
     requestedAt: string;
   }[];
+  /** How many announcements the household has not read; null while Messages is off (L2-103). */
+  announcements?: number | null;
   /** How the family page reaches the primary guardian, for them to correct. */
   contact?: { name: string; mobile: string | null; email: string | null; language: string } | null;
 }

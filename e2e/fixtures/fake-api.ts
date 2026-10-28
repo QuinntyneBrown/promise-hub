@@ -128,6 +128,10 @@ type ChannelChoice = 'TextWithEmailFallback' | 'EmailOnly' | 'TextOnly';
 
 interface FakeDelivery {
   household: string;
+  /** The household's id, for its guardian announcements (L2-103). */
+  householdId?: string;
+  /** When the household marked it read on the guardian pages. */
+  readAt?: string | null;
   guardian: string | null;
   channel: 'Sms' | 'Email';
   language: string;
@@ -576,6 +580,15 @@ export class FakeApi {
     }
   }
 
+  /** A message staff sent from Messages to households, already delivered, as the guardian's announcements read it (L2-103). */
+  announce(householdIds: string[], body: string, at: string, by = 'Marisol Delgado', read = false): void {
+    const households = this.households.filter((h) => householdIds.includes(h.id));
+    this.messages.push({
+      id: `msg-${this.nextId++}`, organizationId: households[0]!.organizationId, title: titleOf(body), body, sentAt: at, sentBy: by, audience: 'After-School Tutoring', channel: 'TextWithEmailFallback',
+      deliveries: households.map((h) => ({ household: h.name, householdId: h.id, guardian: null, channel: 'Sms', language: h.language, status: 'Sent', reason: null, at, readAt: read ? at : null })),
+    });
+  }
+
   /** Changes a household's language, as the guardian's Update your details would (L2-027). */
   setHouseholdLanguage(householdId: string, language: 'English' | 'Spanish' | 'French'): void {
     this.households.find((h) => h.id === householdId)!.language = language;
@@ -910,6 +923,8 @@ export class FakeApi {
     ['POST', /^\/api\/incidents\/(?<id>[^/]+)\/reopen$/, (route, p) => this.reopenIncident(route, p['id']!)],
     ['POST', /^\/api\/incidents\/(?<id>[^/]+)\/notes$/, (route, p) => this.addIncidentNote(route, p['id']!)],
     ['GET', /^\/api\/g\/home\/(?<token>[^/]+)$/, (route, p) => this.guardianHome(route, p['token']!)],
+    ['GET', /^\/api\/g\/home\/(?<token>[^/]+)\/announcements$/, (route, p) => this.guardianAnnouncements(route, p['token']!)],
+    ['POST', /^\/api\/g\/home\/(?<token>[^/]+)\/announcements\/read$/, (route, p) => this.markAnnouncementsRead(route, p['token']!)],
     ['GET', /^\/api\/g\/home\/(?<token>[^/]+)\/children\/(?<child>[^/]+)$/, (route, p) => this.guardianChild(route, p['token']!, p['child']!)],
     ['POST', /^\/api\/g\/home\/(?<token>[^/]+)\/no-show$/, (route, p) => this.answerNoShow(route, p['token']!)],
     ['GET', /^\/api\/g\/slips\/(?<token>[^/]+)$/, (route, p) => this.guardianSlip(route, p['token']!)],
@@ -3800,7 +3815,7 @@ export class FakeApi {
         const g = this.sortedGuardians(h)[0];
         const mobile = g?.mobile || null;
         const email = g?.email && !g.emailBounced ? g.email : null;
-        const base = { household: h.name.replace(/ household$/, ''), guardian: g?.name ?? null, language: h.language };
+        const base = { household: h.name.replace(/ household$/, ''), householdId: h.id, guardian: g?.name ?? null, language: h.language };
         if (b.channel === 'TextOnly') return { ...base, channel: 'Sms' as const, to: mobile, fallback: null, unreachable: mobile ? null : 'No mobile number' };
         if (b.channel === 'EmailOnly') return { ...base, channel: 'Email' as const, to: email, fallback: null, unreachable: email ? null : 'No email address' };
         return mobile
@@ -3853,7 +3868,7 @@ export class FakeApi {
     const segments = segmentsOf(`${org.name}: ${body}`);
     const now = NOW.toISOString();
     const deliveries: FakeDelivery[] = recipients.map((r) => {
-      const base = { household: r.household, guardian: r.guardian, language: r.language, at: null as string | null };
+      const base = { household: r.household, householdId: r.householdId, guardian: r.guardian, language: r.language, at: null as string | null };
       if (r.unreachable) return { ...base, channel: r.channel, status: 'Failed', reason: r.unreachable };
       if (r.channel === 'Email') return { ...base, channel: 'Email', status: 'Sent', reason: null, at: now };
       const { remaining, used } = this.capOf(m);
@@ -4605,7 +4620,8 @@ export class FakeApi {
       });
     const primary = this.sortedGuardians(household)[0];
     return route.fulfill({ json: { language: this.guardianLanguage(household.language), organization: org.name, phone: '905-555-0100', firstName: primary?.name.split(' ')[0] ?? '', children, noShows: this.openNoShows(household),
-          contact: primary ? { name: primary.name, mobile: primary.mobile, email: primary.email, language: household.language } : null, pickupRequests: this.pickupRequests
+          contact: primary ? { name: primary.name, mobile: primary.mobile, email: primary.email, language: household.language } : null,
+          announcements: this.modules.get(org.id)!.includes('Messages') ? this.announcementsOf(household.id).filter((a) => !a.read).length : null, pickupRequests: this.pickupRequests
           .filter((r) => r.householdId === household.id && r.status === 'Pending')
           .map((r) => ({ id: r.id, child: household.children.find((c) => c.id === r.childId)!.firstName, collector: r.collector, event: this.events.find((x) => x.id === r.eventId)?.name ?? '', requestedAt: NOW.toISOString() })) } });
   }
@@ -4673,6 +4689,37 @@ export class FakeApi {
         learning: this.modules.get(org.id)!.includes('Learning') ? this.guardianLearning(org.id, child.id) : null,
       },
     });
+  }
+
+  /** The Messages-module messages delivered to a household, newest first, with read flags (L2-103). Slip texts are not announcements. */
+  private announcementsOf(householdId: string) {
+    return this.messages
+      .filter((m) => !m.title.startsWith('Permission slip:'))
+      .flatMap((m) => {
+        const mine = m.deliveries.filter((d) => d.householdId === householdId && d.at);
+        return mine.length ? [{ id: m.id, title: m.title, body: m.body, from: m.sentBy, sentAt: mine[0]!.at!, read: mine.every((d) => d.readAt), deliveries: mine }] : [];
+      })
+      .sort((a, z) => z.sentAt.localeCompare(a.sentAt));
+  }
+
+  /** GET /g/home/{token}/announcements: Roster and Messages on, a verified device (L2-103). */
+  private async guardianAnnouncements(route: Route, token: string): Promise<void> {
+    const scope = await this.homeScope(route, token);
+    if (!scope) return;
+    if (!this.modules.get(scope.org.id)!.includes('Messages')) return route.fulfill({ status: 404 });
+    const items = this.announcementsOf(scope.household.id).map(({ deliveries: _, ...a }) => a);
+    return route.fulfill({
+      json: { language: this.guardianLanguage(scope.household.language), organization: scope.org.name, phone: '905-555-0100', unread: items.filter((a) => !a.read).length, announcements: items },
+    });
+  }
+
+  /** POST /g/home/{token}/announcements/read: every delivery to the household is read (L2-103 criterion 3). */
+  private async markAnnouncementsRead(route: Route, token: string): Promise<void> {
+    const scope = await this.homeScope(route, token);
+    if (!scope) return;
+    if (!this.modules.get(scope.org.id)!.includes('Messages')) return route.fulfill({ status: 404 });
+    for (const a of this.announcementsOf(scope.household.id)) for (const d of a.deliveries) d.readAt ??= NOW.toISOString();
+    return route.fulfill({ status: 204 });
   }
 
   /** A child's marks for the guardian page: counts and the five most recent sessions (L2-102 criterion 3). */

@@ -1,0 +1,146 @@
+@let r = result();
+@let text = t();
+<ph-guardian-shell
+  [organization]="organization()"
+  [phone]="phone()"
+  [contactText]="text.footer(organization() ?? '')"
+  [skipLabel]="text.skip"
+>
+  @if (failed()) {
+    <ph-alert tone="danger" [title]="text.errorHeading" [text]="text.tryAgain" />
+  }
+  @switch (r?.status) {
+    @case (undefined) {
+      <p>
+        <a [routerLink]="['/g/home', token()]"><span aria-hidden="true">←</span> {{ p().back }}</a>
+      </p>
+      <h1>{{ text.loading }}</h1>
+      <div class="stack" aria-busy="true" [attr.aria-label]="p().loadingAnnouncements">
+        <ph-skeleton shape="card" />
+      </div>
+    }
+    @case ('verify') {
+      @if (step() === 'locked') {
+        <h1>{{ text.verifyHeading }}</h1>
+        <ph-alert tone="danger" [title]="text.locked" />
+      } @else if (step() === 'code') {
+        <h1>{{ text.codeHeading }}</h1>
+        <p>{{ text.codeText }}</p>
+        <form class="stack" novalidate (ngSubmit)="verify()">
+          <ph-text-field
+            inputId="code"
+            [label]="text.codeLabel"
+            name="code"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            [error]="errors()['code'] ?? null"
+            [(ngModel)]="code"
+          />
+          <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
+            text.continue
+          }}</ph-button>
+          <ph-button variant="ghost" (click)="step.set('contact')">{{
+            text.differentContact
+          }}</ph-button>
+        </form>
+      } @else {
+        <h1>{{ text.verifyHeading }}</h1>
+        <p>{{ text.verifyText(organization() ?? '') }}</p>
+        <form class="stack" novalidate (ngSubmit)="requestCode()">
+          <ph-text-field
+            inputId="contact"
+            [label]="text.contactLabel"
+            name="contact"
+            autocomplete="tel"
+            [(ngModel)]="contact"
+          />
+          <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
+            text.sendCode
+          }}</ph-button>
+        </form>
+      }
+    }
+    @case ('gone') {
+      <h1>{{ text.expiredHeading }}</h1>
+      <ph-card>
+        <div class="stack">
+          <p>{{ text.expiredText(organization() ?? 'the organization') }}</p>
+          @if (phone(); as number) {
+            <div>
+              <ph-button variant="primary" icon="phone" [href]="'tel:' + number">{{
+                text.call(number)
+              }}</ph-button>
+            </div>
+          }
+        </div>
+      </ph-card>
+    }
+    @case ('not-found') {
+      <ph-empty-state
+        icon="lock"
+        [title]="text.notAvailable"
+        [text]="text.notAvailableText"
+        [headingLevel]="1"
+      />
+    }
+    @case ('error') {
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        [title]="text.errorHeading"
+        [text]="text.tryAgain"
+        [headingLevel]="1"
+      >
+        <ph-button variant="primary" (click)="load(token())">{{ text.tryAgain }}</ph-button>
+      </ph-empty-state>
+    }
+    @case ('loaded') {
+      @if (r?.status === 'loaded') {
+        @let page = r.value;
+        <p>
+          <a [routerLink]="['/g/home', token()]"
+            ><span aria-hidden="true">←</span> {{ p().back }}</a
+          >
+        </p>
+        <div>
+          <h1>{{ p().announcements }}</h1>
+          <p class="text-muted">{{ p().announcementsIntro(page.organization) }}</p>
+        </div>
+        @if (markFailed()) {
+          <ph-alert tone="danger" [title]="p().markFailed" [text]="p().markFailedText" />
+        }
+        @if (allRead() && !page.unread) {
+          <ph-alert tone="success" [title]="p().allRead" />
+        }
+        @if (page.announcements.length) {
+          @if (page.unread) {
+            <div>
+              <ph-button icon="check" [busy]="marking()" (click)="markAllRead()">{{
+                p().markAllRead
+              }}</ph-button>
+            </div>
+          }
+          <ph-card [flush]="true">
+            <ph-list [label]="p().announcements">
+              @for (a of page.announcements; track a.id) {
+                <ph-list-item [title]="a.title" [meta]="from(a.from, a.sentAt)" [text]="a.body">
+                  @if (!a.read) {
+                    <ph-badge tone="info">{{ p().newBadge }}</ph-badge>
+                  }
+                </ph-list-item>
+              }
+            </ph-list>
+          </ph-card>
+        } @else {
+          <ph-card [flush]="true">
+            <ph-empty-state
+              icon="messages"
+              [title]="p().noAnnouncements"
+              [text]="p().noAnnouncementsText(page.organization)"
+            />
+          </ph-card>
+        }
+      }
+    }
+  }
+</ph-guardian-shell>

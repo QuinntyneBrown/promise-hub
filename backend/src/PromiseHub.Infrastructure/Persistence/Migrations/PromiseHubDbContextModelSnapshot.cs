@@ -2665,6 +2665,9 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTimeOffset?>("ReadAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Reason")
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");

@@ -1,6 +1,7 @@
 import { test, expect } from '../../fixtures/test';
 import { GuardianHomePage } from '../../pages/guardian-home.page';
 import { GuardianChildPage } from '../../pages/guardian-child.page';
+import { GuardianAnnouncementsPage } from '../../pages/guardian-announcements.page';
 
 // Acceptance Test
 // Traces to: L2-102, L2-104, L2-026, L2-027, L2-005, L2-001, L2-035, L2-036
@@ -145,5 +146,84 @@ test.describe('Use the guardian portal in the household’s language', () => {
     await expect(child.schedule).toBeVisible();
     await expect(child.session('Tutoring night')).toContainText('Hoy');
     expect(await child.language).toBe('es');
+  });
+});
+
+// Acceptance Test
+// Traces to: L2-103, L2-026, L2-027, L2-005, L2-035, L2-036
+// Description: A guardian reads the announcements sent to the household and marks them all read.
+test.describe('Read guardian announcements', () => {
+  test.use({ signedInAs: null });
+
+  test.beforeEach(({ api }) => {
+    api.setHouseholdLanguage('hh-rivera', 'English');
+    api.trustGuardianDevice('hh-rivera');
+  });
+
+  test('Given two new announcements and one read, when Carmen opens Announcements from her family page and marks all read, then the New badges and the count go', async ({ page, api }) => {
+    api.announce(['hh-rivera'], 'Halloween party photos are on the board in the lobby.', '2026-10-31T15:00:00Z', 'Priya Raman', true);
+    api.announce(['hh-rivera', 'hh-thompson'], 'Royal Botanical Gardens trip: slips due Friday. Lunch is provided.', '2026-11-02T14:00:00Z');
+    api.announce(['hh-rivera'], 'Tutoring night moves to Room 2 this Thursday. Same time, 4:00 pm.', '2026-11-05T14:30:00Z');
+    api.announce(['hh-tran'], 'Saturday Sports is in the gym this week.', '2026-11-05T15:00:00Z');
+    const home = new GuardianHomePage(page);
+    await home.open('tok-home-rivera');
+    await expect(home.announcements).toContainText('2 new from Harbourview Youth Collective.');
+
+    await home.openAnnouncements();
+    const news = new GuardianAnnouncementsPage(page);
+    await news.expectLoaded();
+
+    await expect(news.heading).toHaveText('Announcements');
+    await expect(news.list.getByRole('listitem')).toHaveCount(3);
+    await expect(news.list.getByRole('listitem').first()).toContainText('Tutoring night moves to Room 2 this Thursday.');
+    await expect(news.item('Tutoring night moves')).toContainText('Marisol Delgado');
+    await expect(news.newBadges).toHaveCount(2);
+    await expect(news.item('Saturday Sports')).toHaveCount(0);
+    await news.expectAccessible();
+    await news.expectNoHorizontalScroll();
+
+    await news.markAllRead.click();
+
+    await expect(news.status('All caught up.')).toBeVisible();
+    await expect(news.newBadges).toHaveCount(0);
+    await expect(news.markAllRead).toHaveCount(0);
+    await news.expectAccessible();
+    await news.back();
+    await expect(home.announcements).toContainText('No new announcements.');
+  });
+
+  test('Given marking read fails, when Carmen tries, then nothing changes and the New badges stay', async ({ page, api }) => {
+    api.announce(['hh-rivera'], 'Tutoring night moves to Room 2 this Thursday. Same time, 4:00 pm.', '2026-11-05T14:30:00Z');
+    api.failNext('/api/g/home/tok-home-rivera/announcements/read', 500);
+    const news = new GuardianAnnouncementsPage(page);
+    await news.open('tok-home-rivera');
+
+    await news.markAllRead.click();
+
+    await expect(news.alert).toContainText('That didn’t go through');
+    await expect(news.newBadges).toHaveCount(1);
+  });
+
+  test('Given no announcement, when Carmen opens the page, then it says so; in Spanish it is in Spanish', async ({ page, api }) => {
+    const news = new GuardianAnnouncementsPage(page);
+    await news.open('tok-home-rivera');
+    await expect(news.text('No announcements yet')).toBeVisible();
+    await news.expectAccessible();
+
+    api.setHouseholdLanguage('hh-rivera', 'Spanish');
+    await news.open('tok-home-rivera');
+    await expect(news.heading).toHaveText('Anuncios');
+  });
+
+  test('Given Messages is off, when Carmen opens her family page or Announcements, then there is no card and the page is not available', async ({ page, api }) => {
+    api.setModules('org-harbourview', ['Roster', 'Slips', 'RollCall']);
+    const home = new GuardianHomePage(page);
+    await home.open('tok-home-rivera');
+    await expect(home.child('Sofía Rivera')).toBeVisible();
+    await expect(home.announcements).toHaveCount(0);
+
+    const news = new GuardianAnnouncementsPage(page);
+    await news.open('tok-home-rivera');
+    await expect(news.heading).toHaveText('This page isn’t available');
   });
 });

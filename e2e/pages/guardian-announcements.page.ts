@@ -44,6 +44,14 @@ export class GuardianAnnouncementsPage extends BasePage {
       .filter({ hasText: text });
   }
 
+  async back(): Promise<void> {
+    await this.page.getByRole('link', { name: /^(Back to your family|Volver a su familia|Retour à votre famille)$/ }).click();
+  }
+
+  get alert(): Locator {
+    return this.page.getByRole('main').getByRole('alert');
+  }
+
   text(content: string | RegExp): Locator {
     return this.page.getByRole("main").getByText(content);
   }

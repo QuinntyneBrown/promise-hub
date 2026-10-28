@@ -5,6 +5,7 @@ import type { WriteOutcome } from '../write-outcome';
 import type { GuardianAnswers } from './guardian-answers';
 import type { GuardianHome } from './guardian-home';
 import type { GuardianChild } from './guardian-child';
+import type { GuardianAnnouncements } from './guardian-announcements';
 import type { GuardianPageResult } from './guardian-page-result';
 import type { GuardianSlipResult } from './guardian-slip-result';
 import type { GuardianVerifyOutcome } from './guardian-verify-outcome';
@@ -22,6 +23,10 @@ export interface GuardianApi {
   home(token: string): Observable<GuardianPageResult<GuardianHome>>;
   /** One child of the link's household, read only (L2-102). */
   child(token: string, childId: string): Observable<GuardianPageResult<GuardianChild>>;
+  /** The Messages-module messages sent to the household (L2-103). */
+  announcements(token: string): Observable<GuardianPageResult<GuardianAnnouncements>>;
+  /** Marks every announcement of the household read. */
+  markAnnouncementsRead(token: string): Observable<WriteOutcome>;
   survey(token: string): Observable<GuardianPageResult<GuardianSurvey>>;
   /** Asks for a copy (Export) or deletion (Delete) of the household's data (L2-030 criterion 4). */
   requestData(token: string, kind: 'Export' | 'Delete', email: string): Observable<WriteOutcome>;

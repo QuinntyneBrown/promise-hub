@@ -58,7 +58,13 @@ public sealed class Delivery : ITenantOwned
     /// <summary>This household's own text, such as the message with its children's slip links; the message body otherwise.</summary>
     public string? Text { get; private set; }
 
+    /// <summary>When the household marked it read on the guardian pages (L2-103 criterion 3); null while it is new to them.</summary>
+    public DateTimeOffset? ReadAt { get; private set; }
+
     public void Personalize(string text) => Text = text;
+
+    /// <summary>Marks it read for the household; the first time counts.</summary>
+    public void MarkRead(DateTimeOffset at) => ReadAt ??= at;
 
     public void Sent(DateTimeOffset at)
     {

@@ -148,6 +148,27 @@
             <p phCardFooter>{{ p().childrenFooter }}</p>
           </ph-card>
         }
+        @if (home.announcements !== null && home.announcements !== undefined) {
+          <ph-card [title]="p().announcements">
+            <div class="stack">
+              <p>
+                {{
+                  home.announcements
+                    ? p().newAnnouncements(home.announcements, home.organization)
+                    : p().noNewAnnouncements
+                }}
+              </p>
+              <div>
+                <ph-button
+                  [variant]="home.announcements ? 'primary' : 'default'"
+                  icon="messages"
+                  [link]="['/g/home', token(), 'announcements']"
+                  >{{ p().readAnnouncements }}</ph-button
+                >
+              </div>
+            </div>
+          </ph-card>
+        }
         @let items = rows(home);
         @if (items.length) {
           <ph-list [label]="h().list">

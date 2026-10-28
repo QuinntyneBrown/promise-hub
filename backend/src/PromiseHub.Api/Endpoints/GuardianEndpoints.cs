@@ -59,6 +59,10 @@ public static class GuardianEndpoints
             ToHttp(await handler.GetAsync(Request(token, http), ct)));
         g.MapGet("/home/{token}/children/{childId:guid}", async (string token, Guid childId, GuardianChildHandler handler, HttpContext http, CancellationToken ct) =>
             ToHttp(await handler.GetAsync(Request(token, http), childId, ct)));
+        g.MapGet("/home/{token}/announcements", async (string token, GuardianAnnouncementsHandler handler, HttpContext http, CancellationToken ct) =>
+            ToHttp(await handler.GetAsync(Request(token, http), ct)));
+        g.MapPost("/home/{token}/announcements/read", async (string token, GuardianAnnouncementsHandler handler, HttpContext http, CancellationToken ct) =>
+            ToHttp(await handler.MarkReadAsync(Request(token, http), ct)));
         g.MapPost("/home/{token}/no-show", async (string token, AnswerNoShowRequest body, GuardianHomeHandler handler, HttpContext http, CancellationToken ct) =>
             ToHttp(await handler.AnswerNoShowAsync(Request(token, http), body, ct)));
         g.MapPost("/home/{token}/children/{childId:guid}/pickups", async (string token, Guid childId, AddPickupCommand body, GuardianHomeHandler handler, HttpContext http, CancellationToken ct) =>
