@@ -230,7 +230,7 @@ test.describe('Take quizzes', () => {
     await expect(quiz.question('In Pick Up the Towel, what did the captain do before the big game?')).toBeVisible();
     attempt.status = 'Scored';
 
-    await quiz.choose('Went home early');
+    await quiz.tryToChoose('Went home early');
 
     await expect(quiz.alreadySubmitted).toBeVisible();
   });

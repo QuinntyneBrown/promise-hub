@@ -33,6 +33,14 @@ export class LearnQuizPage extends BasePage {
     await this.option(label).check();
   }
 
+  /**
+   * Picks an answer when the server may refuse it: the page can replace the question with the refusal before the radio
+   * settles as checked, so this clicks once instead of insisting on the checked state as `check()` does.
+   */
+  async tryToChoose(label: string): Promise<void> {
+    await this.option(label).click();
+  }
+
   get shortAnswer(): Locator {
     return this.page.getByRole('textbox', { name: 'Your answer' });
   }
