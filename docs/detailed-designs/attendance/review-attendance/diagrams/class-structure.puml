@@ -1,0 +1,43 @@
+@startuml
+title Class structure — Review attendance
+skinparam classAttributeIconSize 0
+class AttendanceHistoryPage {
+  #result : signal<LoadResult<AttendanceHistory>>
+  #view : 'session' | 'youth'
+  #correct(session) : void
+}
+class CorrectAttendanceDialog {
+  #childId : string
+  #status : string
+  #reason : string
+  #save() : void
+}
+class AttendanceHistoryHandler {
+  +HandleAsync(programId) : (ResultStatus, AttendanceHistoryDto?)
+}
+class CorrectAttendanceHandler {
+  +HandleAsync(eventId, childId, request) : Result
+}
+class AttendanceHistoryDto <<record>> {
+  +Cohorts : IReadOnlyList<CohortOptionDto>
+  +ProgramId : Guid?
+  +Rate : int?
+  +SessionsRecorded, SessionsHeld, BelowThreshold : int
+  +Sessions : IReadOnlyList<SessionAttendanceDto>
+  +Youth : IReadOnlyList<YouthAttendanceDto>
+  +CanCorrect : bool
+}
+class AttendanceRecord {
+  +Correct(mark, sessionStart, actor) : void
+}
+enum AttendanceMark {
+  Present
+  Late
+  Excused
+  Absent
+}
+AttendanceHistoryPage --> CorrectAttendanceDialog : opens
+AttendanceHistoryHandler ..> AttendanceHistoryDto : builds
+CorrectAttendanceHandler ..> AttendanceRecord : corrects
+AttendanceRecord ..> AttendanceMark
+@enduml

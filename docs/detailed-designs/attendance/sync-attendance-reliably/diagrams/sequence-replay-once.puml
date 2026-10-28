@@ -1,0 +1,32 @@
+@startuml
+title UML sequence behaviour — A replayed mark applies once
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Device" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "HttpAttendanceApi" as aapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "AttendanceEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "AttendanceWriter" as w
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> aapi : sync()
+aapi -> ep : POST check-ins {late: true, clientActionId: A}
+ep -> w : ApplyAsync
+w -> db : no event with A: record late, event, audit
+ep --> aapi : 200 (answer lost)
+aapi -> ep : POST check-ins {late: true, clientActionId: A} (retry)
+ep -> w : ApplyAsync
+w -> db : event with A exists
+w --> ep : Done, nothing changes (L2-098 c2)
+ep --> aapi : 200
+aapi -> aapi : remove A from the queue
+@enduml

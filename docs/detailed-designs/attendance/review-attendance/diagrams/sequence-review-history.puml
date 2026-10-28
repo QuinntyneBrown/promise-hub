@@ -1,0 +1,37 @@
+@startuml
+title UML sequence behaviour — A director reviews a cohort
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Program director (Marisol)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "AttendanceHistoryPage" as page
+  participant "AttendanceApi" as aapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "AttendanceEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "AttendanceHistoryHandler" as h
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : Attendance history
+page -> aapi : history(programId?)
+aapi -> ep : GET /attendance?programId=
+ep -> ep : Roll Call on, ReviewAttendance
+ep -> h : HandleAsync
+h -> db : cohorts the caller may choose (mentor: CohortMentor)
+alt another organization's program
+  h --> page : 404
+else a mentor outside the cohort
+  h -> db : audit AccessDenied on Program
+  h --> page : 403 (L2-097 c3)
+else
+  h -> db : started, not cancelled sessions; their records; active roster
+  h --> page : sessions newest first, youth, rates, canCorrect (L2-097 c1, c2)
+end
+@enduml

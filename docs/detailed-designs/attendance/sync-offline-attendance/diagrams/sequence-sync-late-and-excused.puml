@@ -1,0 +1,41 @@
+@startuml
+title UML sequence behaviour — Late and excused marks sync
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Mentor (Daniel)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "CheckInPage" as page
+  participant "HttpAttendanceApi" as aapi
+  participant "OfflineStore" as store
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "AttendanceEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "AttendanceWriter" as w
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : Late for Yusuf (no signal)
+page -> aapi : checkIn(..., late)
+aapi -> ep : POST check-ins
+ep --> aapi : network failure (status 0)
+aapi -> store : enqueue(check-in, late) (L2-096 c1)
+aapi --> page : queued
+page -> actor : "2 queued", rows waiting to sync
+== the browser reports online ==
+page -> aapi : sync()
+loop each queued action in order
+  aapi -> ep : POST with late or excused and its client action id
+  ep -> w : ApplyAsync (once per action id)
+  w -> db : record, event, audit
+  ep --> aapi : 200
+  aapi -> store : remove(action)
+end
+aapi --> page : n sent
+page -> actor : toast "n check-ins synced", roster reloads (L2-096 c2)
+@enduml

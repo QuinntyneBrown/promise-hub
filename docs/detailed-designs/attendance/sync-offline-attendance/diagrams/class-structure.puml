@@ -1,0 +1,26 @@
+@startuml
+title Class structure — Sync offline attendance
+skinparam classAttributeIconSize 0
+class QueuedAttendance <<interface>> {
+  +clientActionId : string
+  +sessionId : string
+  +childId : string
+  +kind : 'check-in' | 'absent'
+  +late? : boolean
+  +excused? : boolean
+  +at : string
+}
+class OfflineStore {
+  +queue() : QueuedAttendance[]
+  +enqueue(action) : void
+  +remove(clientActionId) : void
+  +clear() : void
+}
+class HttpAttendanceApi {
+  +checkIn(...) : Observable<WriteOutcome>
+  +markAbsent(...) : Observable<WriteOutcome>
+  +sync() : Observable<number>
+}
+HttpAttendanceApi ..> OfflineStore
+OfflineStore o-- QueuedAttendance
+@enduml

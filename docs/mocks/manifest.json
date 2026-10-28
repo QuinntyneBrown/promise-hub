@@ -53,7 +53,11 @@
       "requirements": [
         "L1-007",
         "L1-009",
-        "L1-014"
+        "L1-014",
+        "L2-095",
+        "L2-096",
+        "L2-098",
+        "L2-099"
       ],
       "states": [
         "default",
@@ -64,6 +68,8 @@
         "offline",
         "day-of",
         "complete",
+        "mentor",
+        "all-marked",
         "long"
       ]
     },
@@ -476,24 +482,6 @@
       ]
     },
     {
-      "id": "attendance",
-      "kind": "page",
-      "title": "Attendance",
-      "route": "/programs/:id/attendance",
-      "requirements": [
-        "L1-007",
-        "L1-012"
-      ],
-      "states": [
-        "default",
-        "loading",
-        "empty",
-        "error",
-        "no-results",
-        "long"
-      ]
-    },
-    {
       "id": "import-roster",
       "kind": "page",
       "title": "Import roster",
@@ -768,7 +756,8 @@
       "route": "/offline",
       "requirements": [
         "L1-014",
-        "L1-007"
+        "L1-007",
+        "L2-099"
       ],
       "states": [
         "default"
@@ -2489,6 +2478,34 @@
       ]
     },
     {
+      "id": "attendance-history",
+      "kind": "page",
+      "title": "Attendance history",
+      "route": "/check-in/history",
+      "requirements": [
+        "L2-097",
+        "L2-095",
+        "L2-018",
+        "L2-007",
+        "L2-032",
+        "L2-005",
+        "L2-001",
+        "L1-007",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "by-youth",
+        "mentor",
+        "corrected",
+        "loading",
+        "empty",
+        "error",
+        "forbidden"
+      ]
+    },
+    {
       "id": "applications",
       "kind": "page",
       "title": "Applications",
@@ -2539,7 +2556,8 @@
       "opens_from": "check-in",
       "requirements": [
         "L1-007",
-        "L1-008"
+        "L1-008",
+        "L2-095"
       ],
       "states": [
         "default",
@@ -3429,7 +3447,10 @@
       "opens_from": "check-in",
       "requirements": [
         "L1-014",
-        "L1-007"
+        "L1-007",
+        "L2-096",
+        "L2-098",
+        "L2-099"
       ],
       "states": [
         "default",
@@ -4056,6 +4077,30 @@
         "busy",
         "failed",
         "closed"
+      ]
+    },
+    {
+      "id": "correct-attendance",
+      "kind": "dialog",
+      "title": "Correct attendance",
+      "opens_from": "attendance-history",
+      "requirements": [
+        "L2-097",
+        "L2-095",
+        "L2-018",
+        "L2-007",
+        "L2-032",
+        "L2-005",
+        "L2-001",
+        "L1-007",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "busy",
+        "failed"
       ]
     },
     {

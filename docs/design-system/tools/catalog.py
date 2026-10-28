@@ -49,7 +49,7 @@ skeleton|Skeleton|.skeleton|display|Reserve the shape of expected content while 
 empty-state|Empty state|.empty|feedback|Explain a first run, filtered result or unavailable state and offer one next action.
 error-page|Error page|.error-page|feedback|Explain why a destination is unavailable while keeping a safe way back.
 brand-mark|Brand mark|.ph-mark|display|Identify PromiseHub without replacing the accessible organization or application name.
-roster|Attendance roster|.roster|display|Keep each child's identity, medical flag and attendance action on one readable row.
+roster|Attendance roster|.roster|display|Keep each child's identity, medical flag and attendance action on one readable row. Late reads as checked in and excused as absent, each said in words in the row's meta, never by colour alone.
 medical-flag|Medical flag|.flag|display|Signal that allergy or medication information is available on the child's Quick Card.
 quick-card|Quick Card|.quick-card|display|Put emergency information first with readable contact and pickup details.
 call-list|Call list|.call-list|display|List authorized contacts in their intended calling order with explicit phone actions.
@@ -133,7 +133,7 @@ EXTRA_STATES = {
  'date-picker':['invalid'], 'tabs':['selected'], 'menu':['open','checked'],
  'dialog':['open','busy','invalid','failed'], 'drawer':['open','busy'],
  'chip':['selected'], 'card':['selected'], 'table':['loading','empty','error','selected'],
- 'accordion':['expanded'], 'roster':['in','out','missing','absent','queued'],
+ 'accordion':['expanded'], 'roster':['in','out','missing','absent','queued','late','excused'],
  'sync-status':['queued','synced','failed'], 'signature':['empty','signed'],
  'notification-panel':['unread','read','empty'], 'wizard':['busy','invalid','failed'],
  'quiz-option':['selected','correct','wrong','missed'],

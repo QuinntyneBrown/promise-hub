@@ -52,6 +52,11 @@ One folder per subsystem, one folder per vertically sliced feature, each with a 
 | attendance | show-quick-card | L2-019 |
 | attendance | manage-approved-pickups | L2-020 |
 | attendance | sync-offline-queue | L2-028 |
+| attendance | record-attendance | L2-095, L2-017, L2-062 |
+| attendance | review-attendance | L2-097, L2-018, L2-032 |
+| attendance | sync-offline-attendance | L2-096, L2-028 |
+| attendance | sync-attendance-reliably | L2-098, L2-048 |
+| attendance | show-offline-sync-state | L2-099, L2-028 |
 | messaging | compose-and-send-message | L2-021 |
 | messaging | enforce-sms-cap | L2-022 |
 | reports | compute-report | L2-024 |

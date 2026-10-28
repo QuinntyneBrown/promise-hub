@@ -1,0 +1,32 @@
+@startuml
+title UML sequence behaviour — Mark the rest present
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Site lead or mentor" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "CheckInPage" as page
+  participant "AttendanceApi" as aapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "AttendanceEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "AttendanceWriter" as w
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : Mark the rest present
+page -> page : rows not yet here become Checked in (L2-095 c3)
+loop each child not yet here
+  page -> aapi : checkIn(session, child, null, new action id)
+  aapi -> ep : POST /sessions/{id}/check-ins
+  ep -> w : ApplyAsync(CheckedIn)
+  w -> db : record, event, audit
+  w --> page : 200 saved (or queued without signal)
+end
+page -> actor : toast "n marked present"
+@enduml

@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Record attendance
+Person(m, "Mentor", "Runs his cohorts' sessions")
+Person(s, "Site lead", "Runs any session")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(m, ph, "Marks his cohort's youth", "HTTPS")
+Rel(s, ph, "Marks any session's children", "HTTPS")
+@enduml

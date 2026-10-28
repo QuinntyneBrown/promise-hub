@@ -1,0 +1,18 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Sync attendance reliably
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(aapi, "HttpAttendanceApi", "HTTP client", "sync(), drops refused actions")
+  Component(store, "OfflineStore", "Service", "queue, clear on sign-out")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "AttendanceEndpoints", "Minimal API", "POST check-ins, POST absences")
+  Component(w, "AttendanceWriter", "Service", "client action id check first")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "AttendanceRecords, AttendanceEvents, Events, Enrollments, CohortMentors, AuditEntries")
+}
+Rel(aapi, store, "remove, clear")
+Rel(aapi, ep, "JSON/HTTPS")
+Rel(ep, w, "applies")
+Rel(w, db, "reads and writes")
+@enduml
