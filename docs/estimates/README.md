@@ -1,7 +1,7 @@
 # Estimates
 
-- Overall effort: 375 days
-- Complete: 78%
+- Overall effort: 379 days
+- Complete: 77%
 
 | Subsystem | Effort | Complete |
 |---|---|---|
@@ -27,7 +27,7 @@
 | [search](search.md) | 4 days | 70% |
 | [learning](learning.md) | 48 days | 100% |
 | [curriculum](curriculum.md) | 27 days | 97% |
-| [mentoring](mentoring.md) | 33 days | 100% |
+| [mentoring](mentoring.md) | 37 days | 89% |
 | [website](website.md) | 1 day | 100% |
 
 ## Roadmap

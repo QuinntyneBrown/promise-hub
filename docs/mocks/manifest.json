@@ -1579,6 +1579,7 @@
         "rollcall-off",
         "learning-off",
         "no-follow-ups",
+        "assigned",
         "forbidden"
       ]
     },
@@ -1975,11 +1976,14 @@
       "requirements": [
         "L2-068",
         "L2-069",
+        "L2-092",
         "L1-023",
         "L1-002"
       ],
       "states": [
         "default",
+        "nothing-assigned",
+        "mentoring-off",
         "loading",
         "empty",
         "error",
@@ -3951,6 +3955,31 @@
         "already-resolved",
         "busy",
         "failed"
+      ]
+    },
+    {
+      "id": "assign-work",
+      "kind": "dialog",
+      "title": "Assign work",
+      "opens_from": "mentor-dashboard",
+      "requirements": [
+        "L2-092",
+        "L2-065",
+        "L2-068",
+        "L2-007",
+        "L2-032",
+        "L1-024",
+        "L1-023"
+      ],
+      "states": [
+        "default",
+        "chosen-youth",
+        "empty",
+        "invalid",
+        "not-followed",
+        "busy",
+        "failed",
+        "nothing-to-assign"
       ]
     },
     {

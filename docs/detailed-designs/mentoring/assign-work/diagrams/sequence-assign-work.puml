@@ -1,0 +1,53 @@
+@startuml
+title UML sequence behaviour — Assigning work
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Mentor (Daniel)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "AssignWorkDialog" as dlg
+  participant "MentoringApi" as mapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "MentoringEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "AssignWorkHandler" as h
+  participant "MentorScope" as scope
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> dlg : Assign work
+dlg -> mapi : assignOptions()
+mapi -> ep : GET /mentoring/assign-work
+ep -> h : OptionsAsync
+h -> scope : CohortsAsync, YouthIdsAsync
+h -> db : published items of the tracks they follow
+h --> dlg : items, youth, cohorts (L2-092 c1)
+actor -> dlg : Assign
+dlg -> mapi : assignWork(body)
+mapi -> ep : POST /mentoring/assigned-work
+alt Mentoring or Learning off
+  ep --> dlg : 404 (c6)
+else not MentorYouth
+  ep --> dlg : 403 (c7)
+else
+  ep -> h : AssignAsync(request)
+  alt child, cohort or item of another organization or unknown
+    h --> dlg : 404 (c7)
+  else youth outside his scope or a cohort he is not on
+    h -> db : audit AccessDenied
+    h --> dlg : 403 (c7)
+  else invalid fields, or a youth not following the track
+    h --> dlg : 422 errors by field (c3)
+  else
+    h -> db : insert or update AssignedWork per youth
+    h -> db : audit Created with kind, due date and count, no message (c4)
+    h --> dlg : 201 count, title, due date
+    dlg --> actor : closes; toast Work assigned (c2)
+  end
+end
+@enduml

@@ -53,8 +53,9 @@ def feed(rows) -> str:
 # ---------------------------------------------------------------- mentor-dashboard
 @screen("mentor-dashboard", "page", "Mentoring", route="/mentoring", reqs=["L2-063", "L2-065", R_MENTOR])
 def mentor_dashboard(S):
+    assign = btn("Assign work", "primary", icon_name="plus", data_href=dialog("assign-work"))
     hdr = page_header("Mentoring", "Welcome back, Daniel. Here’s how your youth are doing.",
-                      btn("Reviews · 4", "", icon_name="check", href=page("mentor-reviews")) + btn("At-risk flags", "", icon_name="flag", href=page("mentor-flags")) + btn("Mentor check-ins", "", icon_name="message", href=page("mentor-check-in-history"))
+                      assign + btn("Reviews · 4", "", icon_name="check", href=page("mentor-reviews")) + btn("At-risk flags", "", icon_name="flag", href=page("mentor-flags")) + btn("Mentor check-ins", "", icon_name="message", href=page("mentor-check-in-history"))
                       + btn("My youth", "", icon_name="users", href=page("mentor-youth")))
     hdr_no_learning = page_header("Mentoring", "Welcome back, Daniel. Here’s how your youth are doing.",
                                   btn("At-risk flags", "", icon_name="flag", href=page("mentor-flags")) + btn("Mentor check-ins", "", icon_name="message", href=page("mentor-check-in-history")) + btn("My youth", "", icon_name="users", href=page("mentor-youth")))
@@ -78,10 +79,13 @@ def mentor_dashboard(S):
     S.add("rollcall-off", "Roll Call is off for Harbourview: no attendance number and no Recent activity card; nothing about check-in is mentioned.", **KW,
           main=hdr + kpis([("My youth", "6", "Across 2 cohorts"), ("My cohorts", "2", "Lead mentor on 1")])
           + f'<div class="split"><div class="stack">{youth}</div><div class="stack">{follow}{cohorts}</div></div>')
-    S.add("learning-off", "Learning is off: no Reviews, because there is nothing to grade; everything else stays.", **KW,
+    S.add("learning-off", "Learning is off: no Assign work and no Reviews, because there is nothing to assign or grade; everything else stays.", **KW,
           main=hdr_no_learning + numbers + f'<div class="split"><div class="stack">{youth}</div><div class="stack">{follow}{cohorts}{activity}</div></div>')
     S.add("no-follow-ups", "No mentor check-in of his has a follow-up date: the Follow-ups card says how to plan one.", **KW,
           main=hdr + numbers + f'<div class="split"><div class="stack">{youth}</div><div class="stack">{followups_card([])}{cohorts}{activity}</div></div>')
+    S.add("assigned", "Daniel just assigned Last in Line to After‑School Tutoring: a toast says how many youth it went to and when it’s due.", **KW,
+          main=hdr + numbers + f'<div class="split"><div class="stack">{youth}</div><div class="stack">{follow}{cohorts}{activity}</div></div>',
+          toast_html=toast_region(toast("success", "Work assigned", "Last in Line · 4 youth · Due Fri 13 Nov")))
     S.add("forbidden", "Marisol (Program director) opens /mentoring directly: the dashboard is for mentors; the server answers 403.", nav="today", user=STAFF["marisol"],
           main=page_header("Mentoring", "") + forbidden("Mentoring is for mentors", "Program directors assign mentors from a cohort’s page in Programs."))
 
