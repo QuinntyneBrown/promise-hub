@@ -6,7 +6,8 @@ import { AvatarTint } from '../avatar/avatar-tint';
 
 /**
  * List row (design system: list): an optional avatar, a title, a line of meta, an optional paragraph of
- * text, an optional caption and error, and trailing content (projected) such as a switch, badge or button. With `link` the
+ * text, an optional caption and error, actions under the text (projected with phListActions, for rows without a link) and trailing
+ * content (projected) such as a switch, badge or button. With `link` the
  * avatar and text are one link. `muted` dims the title, as for a module that is off.
  */
 @Component({

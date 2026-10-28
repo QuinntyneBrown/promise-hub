@@ -16,6 +16,7 @@
     @if (error()) {
       <div class="error" data-testid="list-error">{{ error() }}</div>
     }
+    <div class="actions"><ng-content select="[phListActions]" /></div>
   </div>
 </ng-template>
 <ng-content select="[phListLead]" />

@@ -5,6 +5,7 @@ import { MentorYouthDetailPage } from './mentor-youth-detail-page/mentor-youth-d
 import { MentorYouthPage } from './mentor-youth-page/mentor-youth-page';
 import { CompetenciesPage } from './competencies-page/competencies-page';
 import { MentorCheckInsPage } from './mentor-check-ins-page/mentor-check-ins-page';
+import { AtRiskFlagsPage } from './at-risk-flags-page/at-risk-flags-page';
 import { GradePage } from './grade-page/grade-page';
 import { QuizApprovalsPage } from './quiz-approvals-page/quiz-approvals-page';
 import { ReviewsPage } from './reviews-page/reviews-page';
@@ -14,6 +15,7 @@ export const routes: Routes = [
   { path: '', component: MentorDashboardPage, title: 'Mentoring · PromiseHub' },
   { path: 'youth', component: MentorYouthPage, title: 'My youth · PromiseHub' },
   { path: 'check-ins', component: MentorCheckInsPage, title: 'Mentor check-ins · PromiseHub' },
+  { path: 'flags', component: AtRiskFlagsPage, title: 'At-risk flags · PromiseHub' },
   { path: 'youth/:childId', component: MentorYouthDetailPage, title: 'Youth record · PromiseHub' },
   {
     path: 'youth/:childId/competencies',

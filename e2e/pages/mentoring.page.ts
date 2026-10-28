@@ -11,6 +11,10 @@ export class MentoringPage extends BasePage {
     await expect(this.page.getByRole('heading', { level: 1, name: 'Mentoring' })).toBeVisible();
   }
 
+  async openFlags(): Promise<void> {
+    await this.page.getByRole('link', { name: 'At-risk flags' }).click();
+  }
+
   async openCheckIns(): Promise<void> {
     await this.page.getByRole('link', { name: 'Mentor check-ins' }).click();
   }

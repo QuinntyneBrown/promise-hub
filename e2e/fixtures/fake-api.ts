@@ -8,6 +8,7 @@ import { FakeReflections } from './fake-reflections';
 import { FakeLearning } from './fake-learning';
 import { FakeReviews, type YouthAccounts } from './fake-reviews';
 import { FakeMentorCheckIns, type FakeMentorCheckIn, TODAY } from './fake-mentor-check-ins';
+import { FakeAtRiskFlags } from './fake-at-risk-flags';
 import { type FakeEvent, type FakeProgram, NOW, seedEvents, seedPrograms } from './programs';
 import { type Membership, type ModuleId, moduleCatalog, memberships, organizations, seededMfaCode, seededPassword } from './seed';
 
@@ -33,6 +34,7 @@ const can = {
   useStaffApp: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker', 'VolunteerCoordinator'].includes(m.role),
   learn: (m: Membership) => m.role === 'Youth',
   mentorYouth: (m: Membership) => m.role === 'Mentor',
+  reviewAtRiskFlags: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
   authorCurriculum: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
 };
 
@@ -583,6 +585,8 @@ export class FakeApi {
   readonly reflectionsState = new FakeReflections();
   /** Mentor check-ins (L2-090). */
   readonly mentorCheckIns = new FakeMentorCheckIns();
+  /** At-risk flags (L2-091). */
+  readonly atRiskFlags = new FakeAtRiskFlags();
 
   /** Badges and their awards (L2-084, L2-085); tests read and change it, such as clear. */
   readonly badges = new FakeBadges(this.curriculumState, () => this.reviews.competencies, () => memberships);
@@ -704,6 +708,8 @@ export class FakeApi {
     ['POST', /^\/api\/mentoring\/submissions\/(?<id>[^/]+)\/grade$/, (route, p) => this.mentorReviews(route, (m, youth) => this.afterReview(youth, this.reviews.grade(route, youth, p['id']!, m.personName)))],
     ['GET', /^\/api\/mentoring\/check-ins$/, (route) => this.mentorCheckInHistory(route)],
     ['POST', /^\/api\/mentoring\/check-ins$/, (route) => this.logMentorCheckIn(route)],
+    ['GET', /^\/api\/mentoring\/flags$/, (route) => this.listAtRiskFlags(route)],
+    ['POST', /^\/api\/mentoring\/flags$/, (route) => this.raiseAtRiskFlag(route)],
     ['GET', /^\/api\/mentoring\/youth\/(?<id>[^/]+)$/, (route, p) => this.mentorYouthRecord(route, p['id']!)],
     ['GET', /^\/api\/mentoring\/youth\/(?<id>[^/]+)\/reflections$/, (route, p) => this.mentorReflections(route, p['id']!)],
     ['GET', /^\/api\/mentoring\/youth\/(?<id>[^/]+)\/competencies$/, (route, p) => this.mentorCompetencies(route, p['id']!, false)],
@@ -1382,6 +1388,38 @@ export class FakeApi {
     await this.mentorCheckIns.log(route, m.organizationId, m.id, child);
     if (this.mentorCheckIns.rows.length > before) {
       this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'Created', record: 'MentorCheckIn', summary: `Mentor check-in with ${child!.name} by ${m.personName}`, device: null });
+    }
+  }
+
+  /** GET /mentoring/flags (L2-091 criterion 4): a mentor reads the flags on youth in his scope; admins and program directors every flag. */
+  private async listAtRiskFlags(route: Route): Promise<void> {
+    const m = await this.participantModuleCaller(route, 'Mentoring', (x) => can.mentorYouth(x) || can.reviewAtRiskFlags(x));
+    if (!m) return;
+    const mentor = can.mentorYouth(m);
+    const scope = mentor ? this.mentorScope(m).youth : [];
+    const ids = new Set(scope.map((c) => c.id));
+    const visible = this.atRiskFlags.rows.filter((f) => f.organizationId === m.organizationId && (!mentor || ids.has(f.childId)));
+    const { items, openCount, resolvedCount } = this.atRiskFlags.list(visible, new URL(route.request().url()).searchParams.get('status'));
+    const youth = scope.map((c) => ({ id: c.id, name: `${c.firstName} ${c.lastName}` })).sort((a, b) => a.name.localeCompare(b.name));
+    return route.fulfill({ json: { items: items.map((f) => this.atRiskFlags.view(f)), openCount, resolvedCount, youth, canRaise: mentor } });
+  }
+
+  /** POST /mentoring/flags (L2-091 criteria 1, 2, 3, 6 and 8): mentors only, a youth in his scope; audited without the reason, readers notified. */
+  private async raiseAtRiskFlag(route: Route): Promise<void> {
+    const m = await this.participantModuleCaller(route, 'Mentoring', (x) => can.mentorYouth(x) || can.reviewAtRiskFlags(x));
+    if (!m) return;
+    if (!can.mentorYouth(m)) return route.fulfill({ status: 403, json: { code: 'forbidden' } });
+    const childId = (route.request().postDataJSON() as { childId?: string | null }).childId;
+    let child: { id: string; name: string } | null = null;
+    if (childId) {
+      const found = await this.mentorCheckInChild(route, m, childId);
+      if (found === undefined) return;
+      child = found;
+    }
+    const before = this.atRiskFlags.rows.length;
+    await this.atRiskFlags.raise(route, m.organizationId, { id: m.id, name: m.personName }, child);
+    if (this.atRiskFlags.rows.length > before) {
+      this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'Created', record: 'AtRiskFlag', summary: `At-risk flag on ${child!.name} by ${m.personName}`, device: null });
     }
   }
 
