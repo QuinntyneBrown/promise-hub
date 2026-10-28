@@ -44,6 +44,7 @@ import {
 } from '@promisehub/components';
 import { EMPTY, Observable, catchError, forkJoin } from 'rxjs';
 import { AddWalkInDialog } from '../add-walk-in-dialog/add-walk-in-dialog';
+import { CheckInSheetData } from '../check-in-sheet-dialog/check-in-sheet-data';
 import { SignOutDialog, SignOutData, SignOutResult } from '../sign-out-dialog/sign-out-dialog';
 import {
   CheckInSheetDialog,
@@ -130,6 +131,22 @@ export class CheckInPage {
   /** Sign out is offered only while the Pickup module is on, and only to staff. */
   protected readonly pickup = computed(
     () => this.staff() && !!this.me()?.modules.includes('Pickup'),
+  );
+  /** Late and excused are for staff and mentors; volunteers mark Present or Absent only (L2-100). */
+  protected readonly qualifies = computed(
+    () => !!this.me() && can(this.me()!.role, 'qualifyAttendance'),
+  );
+  /** Why a session is closed to the caller, in words for the role (L2-007 criterion 6, L2-100 criterion 5). */
+  protected readonly forbiddenCopy = computed(() =>
+    this.me()?.role === 'Volunteer'
+      ? {
+          title: 'You’re not assigned to this session',
+          text: 'Volunteers open the sessions they’re assigned to. Ask your volunteer coordinator to add you.',
+        }
+      : {
+          title: 'You’re not on this session',
+          text: 'Youth workers open the sessions they work. Ask a site lead to add you.',
+        },
   );
   /** Who is still to be marked while the session is open (L2-095 criterion 3). */
   protected readonly notYet = computed(() =>
@@ -394,7 +411,10 @@ export class CheckInPage {
 
   protected options(entry: RosterEntry): void {
     this.dialogs
-      .open<CheckInSheetResult, RosterEntry, CheckInSheetDialog>(CheckInSheetDialog, entry)
+      .open<CheckInSheetResult, CheckInSheetData, CheckInSheetDialog>(CheckInSheetDialog, {
+        entry,
+        qualifiers: this.qualifies(),
+      })
       .closed.subscribe((result) => {
         if (result?.kind === 'check-in') this.checkIn(entry, result.arrivedAt, result.late);
         if (result?.kind === 'absent') this.markAbsent(entry, result.excused);

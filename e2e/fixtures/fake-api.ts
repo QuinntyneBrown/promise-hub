@@ -49,6 +49,7 @@ const can = {
   authorCurriculum: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
   reviewAttendance: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead', 'Mentor'].includes(m.role),
   correctAttendance: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
+  qualifyAttendance: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker', 'Mentor'].includes(m.role),
 };
 
 /**
@@ -3210,10 +3211,12 @@ export class FakeApi {
     const m = await this.rollCallCaller(route);
     if (!m) return;
     if (!can.runSessions(m)) return this.forbidden(route);
+    const b = route.request().postDataJSON() as { childId: string; arrivedAt?: string | null; clientActionId: string; late?: boolean; excused?: boolean };
+    // Volunteers mark Present or Absent only (L2-100, ADR 0066). Mirrors CheckInHandler and MarkAbsentHandler.
+    if ((b.late || b.excused) && !can.qualifyAttendance(m)) return this.forbidden(route);
     const e = this.ownEvent(m, id);
     if (!e) return route.fulfill({ status: 404 });
     if (!this.mayRun(m, e.id)) return this.forbidden(route);
-    const b = route.request().postDataJSON() as { childId: string; arrivedAt?: string | null; clientActionId: string; late?: boolean; excused?: boolean };
     if (this.actions.has(b.clientActionId)) return route.fulfill({ json: { status: 'saved' } });
     if (e.status === 'Cancelled') return route.fulfill({ status: 422, json: { errors: { session: 'This session is cancelled.' } } });
     if (e.status === 'Ended') return route.fulfill({ status: 422, json: { errors: { session: 'This session has ended.' } } });

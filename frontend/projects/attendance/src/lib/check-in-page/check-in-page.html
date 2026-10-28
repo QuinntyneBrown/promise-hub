@@ -22,11 +22,7 @@
     </ph-card>
   }
   @case ('forbidden') {
-    <ph-error-page
-      icon="lock"
-      title="You’re not on this session"
-      text="Youth workers open the sessions they work. Ask a site lead to add you."
-    >
+    <ph-error-page icon="lock" [title]="forbiddenCopy().title" [text]="forbiddenCopy().text">
       <ph-button variant="primary" link="/check-in">Your sessions today</ph-button>
     </ph-error-page>
   }

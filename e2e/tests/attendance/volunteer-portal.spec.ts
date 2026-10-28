@@ -158,3 +158,46 @@ test.describe('A youth on a volunteer’s schedule', () => {
     await schedule.expectAccessible();
   });
 });
+
+// Acceptance Test
+// Traces to: L2-100 criteria 3 to 7
+// Description: a volunteer takes attendance for his assigned session with names and Present or Absent only; any other session is forbidden.
+test.describe('A volunteer takes attendance', () => {
+  test.use({ signedInAs: 'm-leo' });
+
+  test('Given Leo opens his session, when he checks Yusuf in and marks the rest present, then he sees names only and the sheet offers Present or Absent only', async ({ page, api }) => {
+    const checkIn = new CheckInPage(page);
+    await checkIn.open('/check-in/e-tutoring-today');
+
+    await expect(checkIn.heading).toHaveText('Tutoring night');
+    expect(await checkIn.names()).toEqual(['Jordan Thompson', 'Mateo Rivera', 'Sofía Rivera', 'Yusuf Haddad']);
+    await expect(checkIn.roster.getByTestId('medical-flag')).toHaveCount(0);
+    await expect(checkIn.roster.getByRole('link')).toHaveCount(0);
+    await expect(checkIn.historyLink).toHaveCount(0);
+    await checkIn.expectAccessible();
+    await checkIn.expectNoHorizontalScroll();
+
+    await checkIn.openOptions('Yusuf Haddad');
+    expect(await checkIn.sheetChoices()).toEqual([expect.stringMatching(/^Now, /), 'Earlier', 'Mark absent instead']);
+    await checkIn.expectAccessible();
+    await checkIn.checkInNow();
+
+    await expect(checkIn.total('Checked in')).toHaveText('1');
+    await expect(checkIn.signOutButton('Yusuf Haddad')).toHaveCount(0);
+    await checkIn.markRestPresent();
+
+    await expect(page.getByTestId('toast').filter({ hasText: '3 marked present' })).toBeVisible();
+    await expect(checkIn.total('Not yet')).toHaveText('0');
+    expect(api.attendanceRecord('e-tutoring-today', 'c-yusuf')).toMatchObject({ status: 'Present' });
+  });
+
+  test('Given a session Leo is not assigned to, when he opens it, then the page says so and who can add him', async ({ page }) => {
+    const checkIn = new CheckInPage(page);
+    await checkIn.open('/check-in/e-tutoring-yesterday');
+
+    await expect(page.getByRole('heading', { name: 'You’re not assigned to this session' })).toBeVisible();
+    await expect(checkIn.forbiddenText).toHaveText('Volunteers open the sessions they’re assigned to. Ask your volunteer coordinator to add you.');
+    await expect(page.getByRole('link', { name: 'Your sessions today' })).toBeVisible();
+    await checkIn.expectAccessible();
+  });
+});
