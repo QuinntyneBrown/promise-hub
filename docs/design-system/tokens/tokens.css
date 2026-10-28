@@ -648,6 +648,26 @@
   }
 }
 
+/* A person's saved display preferences (L2-119, ADR 0072), set on <html> by the app:
+   data-motion="reduce" stops motion like the OS setting does; data-text-size scales
+   every rem-based size (large: 112.5%, larger: 125%). */
+:root[data-motion='reduce'] {
+  --duration-fast: 0.01ms;
+  --duration-base: 0.01ms;
+  --duration-slow: 0.01ms;
+  --duration-deliberate: 0.01ms;
+  --duration-loop: 0.01ms;
+  scroll-behavior: auto;
+}
+
+:root[data-text-size='large'] {
+  font-size: 112.5%;
+}
+
+:root[data-text-size='larger'] {
+  font-size: 125%;
+}
+
 @media (prefers-contrast: more) {
   :root {
     --color-border-default: var(--color-border-strong);

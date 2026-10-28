@@ -658,27 +658,6 @@
       }
     },
     {
-      "id": "account",
-      "kind": "page",
-      "title": "Your account",
-      "route": "/account",
-      "requirements": [
-        "L1-016"
-      ],
-      "states": [
-        "default",
-        "loading",
-        "error",
-        "invalid",
-        "submitting",
-        "success",
-        "mfa-off"
-      ],
-      "not_applicable": {
-        "empty": "An account always has a profile."
-      }
-    },
-    {
       "id": "notifications",
       "kind": "page",
       "title": "Notifications",
@@ -2888,6 +2867,89 @@
       }
     },
     {
+      "id": "account",
+      "kind": "page",
+      "title": "Your account",
+      "route": "/account",
+      "requirements": [
+        "L1-016",
+        "L2-006",
+        "L2-117",
+        "L2-118",
+        "L2-119",
+        "L2-121",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "youth",
+        "mentor",
+        "password-changed",
+        "loading",
+        "error"
+      ],
+      "not_applicable": {
+        "empty": "An account always has a profile."
+      }
+    },
+    {
+      "id": "settings-profile",
+      "kind": "page",
+      "title": "Profile",
+      "route": "/account/profile",
+      "requirements": [
+        "L2-117",
+        "L2-001",
+        "L2-032",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "youth",
+        "mentor",
+        "loading",
+        "error",
+        "invalid",
+        "submitting",
+        "success",
+        "failed"
+      ],
+      "not_applicable": {
+        "empty": "Every account has a profile.",
+        "forbidden": "Everyone edits their own; nobody opens another person’s profile here."
+      }
+    },
+    {
+      "id": "settings-display",
+      "kind": "page",
+      "title": "Display",
+      "route": "/account/display",
+      "requirements": [
+        "L2-119",
+        "L2-120",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "dark",
+        "light",
+        "large-text",
+        "loading",
+        "error",
+        "submitting",
+        "success",
+        "failed"
+      ],
+      "not_applicable": {
+        "empty": "There are always three themes and three text sizes.",
+        "invalid": "Every choice is valid; a refused save shows the failed state.",
+        "forbidden": "Everyone sets their own display."
+      }
+    },
+    {
       "id": "check-in-sheet",
       "kind": "dialog",
       "title": "Check in Kevin Tran",
@@ -3752,6 +3814,30 @@
       ],
       "not_applicable": {
         "invalid": "The dialog has no inputs to validate."
+      }
+    },
+    {
+      "id": "change-password",
+      "kind": "dialog",
+      "title": "Change password",
+      "opens_from": "account",
+      "requirements": [
+        "L2-118",
+        "L2-053",
+        "L2-031",
+        "L2-032",
+        "L2-035"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "weak",
+        "busy",
+        "failed",
+        "saved"
+      ],
+      "not_applicable": {
+        "success": "Saving closes the dialog: Your account shows the toast (`account/password-changed`)."
       }
     },
     {
