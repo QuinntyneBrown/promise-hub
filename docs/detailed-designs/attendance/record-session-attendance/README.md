@@ -29,6 +29,10 @@ Backend:
 
 Open questions: none. Deferred: Waypoint's per-session volunteer hours; whether volunteers add walk-ins and end sessions stays as Roll Call has it today (they may, as youth workers do).
 
+## Built so far
+
+Prompt 72 delivered everything above: `Permission.QualifyAttendance` enforced in `CheckInHandler` and `MarkAbsentHandler`, `can(role, 'qualifyAttendance')`, `CheckInSheetData` and the sheet without Late and Excused, and the volunteer's words on a session he is not assigned to; a volunteer's checked-in rows show their check-in time with no sign-out. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/VolunteerAttendanceTests.cs` and `e2e/tests/attendance/volunteer-portal.spec.ts` (A volunteer takes attendance).
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

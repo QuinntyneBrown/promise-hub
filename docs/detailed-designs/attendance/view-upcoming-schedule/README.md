@@ -28,6 +28,10 @@ Backend:
 
 Open questions: none. Deferred: Waypoint's volunteer hours, the profile card and confirming an assignment.
 
+## Built so far
+
+Prompt 72 delivered everything above: `GET /sessions/mine` (`MyScheduleHandler`, `MyScheduleDto`, `MySessionDto`), `AttendanceApi.mine()`, `MySchedulePage` at `/my-schedule`, Schedule in the volunteer's navigation, and Leo seeded onto Saturday Sports. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/VolunteerScheduleTests.cs` and `e2e/tests/attendance/volunteer-portal.spec.ts` (A volunteer’s schedule, A youth on a volunteer’s schedule).
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

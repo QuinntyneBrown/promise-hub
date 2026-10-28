@@ -25,6 +25,10 @@ Backend (unchanged by this slice): `GET /sessions/today` (`TodaySessionsHandler`
 
 Open questions: none. Deferred: Waypoint's lead-mentor line ("With Marcus Bello") and room-change notices.
 
+## Built so far
+
+Prompt 72 delivered everything above: the volunteer's session cards, No session today, the skeleton and Try again on `TodayPage`, and Your schedule in Your work. Acceptance tests: `e2e/tests/attendance/volunteer-portal.spec.ts` (A volunteer’s Today) and the volunteer navigation in `e2e/tests/shell/participant-shell.spec.ts`; the server side is proven by `backend/tests/PromiseHub.Api.Tests/ParticipantRoleTests.cs`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

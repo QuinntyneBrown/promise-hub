@@ -261,10 +261,12 @@ def check_in(S):
              + roster_row(dict(CHILD["mateo"], flag=""), "in", "Checked in 4:02 pm", kind)
              + roster_row(dict(CHILD["sofia"], flag=""), "absent", "Absent", kind)
              + roster_row(dict(CHILD["yusuf"], flag=""), "none", "Not yet here", kind) + "</ul></div>")
-    # Sign-out is staff only: a volunteer's checked-in rows say so instead of offering it.
-    vrows = vrows.replace(btn("Sign out", "", size="sm", data_href=rel(kind, "dialog", "confirm-pickup")), status("Checked in", "success"))
+    # Sign-out is staff only: a volunteer's checked-in rows offer nothing but the row's check-in time.
+    vrows = vrows.replace(btn("Sign out", "", size="sm", data_href=rel(kind, "dialog", "confirm-pickup")), "")
+    vhdr = page_header("Tutoring night", "Today, 4:00–6:00 pm · Harbourview Community Centre, Room 2 · 4 on roster",
+                       btn("Session notes", "", data_href=rel(kind, "dialog", "session-notes")) + btn("End session", "primary", data_href=rel(kind, "dialog", "end-session")))
     S.add("volunteer", "Leo takes attendance for the session he is assigned to: names only, Check in or Mark absent from the sheet, and Mark the rest present. No medical flags, Quick Cards, sign-out, late, excused or attendance history.", **VKW,
-          main=mhdr + checkin_summary(2, 1, 1, 4, late=0, excused=0, cleared=False) + vrows +
+          main=vhdr + checkin_summary(2, 1, 1, 4, late=0, excused=0, cleared=False) + vrows +
           f'<div class="cluster" style="margin-top: var(--space-3);">{btn("Mark the rest present", "", icon_name="check", aria_label="Mark the rest present, 1 not yet here")}{btn("Add walk-in", "ghost")}</div>',
           notes=note("A volunteer runs only the sessions he is assigned to (L2-007 criterion 6). Late and Excused are refused for volunteers on the server (403).", "top: 5rem; right: 1rem;"))
     S.add("volunteer-forbidden", "Leo opens a session he is not assigned to: the roster answers 403 and the page says why and who can add him.", **VKW,
