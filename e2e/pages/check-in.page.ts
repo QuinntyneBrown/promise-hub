@@ -32,6 +32,18 @@ export class CheckInPage extends BasePage {
     return this.page.getByRole('group', { name: 'Session totals' }).getByTestId(`total-${label}`).getByTestId('stat-value');
   }
 
+  /** The caption under a total: how many of the checked in were late, how many of the absent were excused. */
+  caption(label: 'Checked in' | 'Absent'): Locator {
+    return this.page.getByRole('group', { name: 'Session totals' }).getByTestId(`total-${label}`).getByTestId('stat-caption');
+  }
+
+  /** Chooses Late or Excused in the open check-in sheet and saves it. */
+  async mark(choice: 'Late' | 'Excused'): Promise<void> {
+    await this.dialog.getByRole('radio', { name: new RegExp(`^${choice}`) }).check();
+    await this.dialog.getByRole('button', { name: choice === 'Late' ? 'Check in late' : 'Mark excused' }).click();
+    await expect(this.dialog).toBeHidden();
+  }
+
   get offlineBanner(): Locator {
     return this.page.getByRole('main').getByRole('status').filter({ hasText: 'You’re offline' });
   }

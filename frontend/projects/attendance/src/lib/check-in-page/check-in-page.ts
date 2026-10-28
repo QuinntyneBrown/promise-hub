@@ -123,7 +123,18 @@ export class CheckInPage {
     const list = this.entries();
     const checkedIn = list.filter((e) => e.status === 'Present' || e.status === 'SignedOut').length;
     const absent = list.filter((e) => e.status === 'Absent').length;
-    return { all: list.length, checkedIn, absent, notYet: list.length - checkedIn - absent };
+    const late = list.filter(
+      (e) => (e.status === 'Present' || e.status === 'SignedOut') && e.late,
+    ).length;
+    const excused = list.filter((e) => e.status === 'Absent' && e.excused).length;
+    return {
+      all: list.length,
+      checkedIn,
+      absent,
+      late,
+      excused,
+      notYet: list.length - checkedIn - absent,
+    };
   });
   protected readonly visible = computed(() => {
     const q = this.query().trim().toLowerCase();
@@ -238,11 +249,14 @@ export class CheckInPage {
   protected meta(e: RosterEntry): string {
     const status =
       e.status === 'Present' && e.checkedInAt
-        ? `Checked in ${formatTime(new Date(e.checkedInAt))}`
+        ? `${e.late ? 'Late · checked' : 'Checked'} in ${formatTime(new Date(e.checkedInAt))}`
         : e.status === 'Absent'
-          ? 'Absent'
+          ? e.excused
+            ? 'Excused'
+            : 'Absent'
           : e.status === 'SignedOut'
             ? [
+                e.late ? 'Late' : null,
                 e.signedOutAt ? `Signed out ${formatTime(new Date(e.signedOutAt))}` : 'Signed out',
                 e.collectedBy,
               ]
@@ -314,15 +328,24 @@ export class CheckInPage {
   }
 
   /** One tap: the row and totals change now; the server confirms or the change is undone. */
-  protected checkIn(entry: RosterEntry, arrivedAt: string | null = null): void {
-    this.apply(entry, 'Present', arrivedAt ?? new Date().toISOString(), (session, action) =>
-      this.api.checkIn(session, entry.id, arrivedAt, action),
+  protected checkIn(entry: RosterEntry, arrivedAt: string | null = null, late = false): void {
+    this.apply(
+      entry,
+      {
+        status: 'Present',
+        checkedInAt: arrivedAt ?? new Date().toISOString(),
+        late,
+        excused: false,
+      },
+      (session, action) => this.api.checkIn(session, entry.id, arrivedAt, action, late),
     );
   }
 
-  protected markAbsent(entry: RosterEntry): void {
-    this.apply(entry, 'Absent', null, (session, action) =>
-      this.api.markAbsent(session, entry.id, action),
+  protected markAbsent(entry: RosterEntry, excused = false): void {
+    this.apply(
+      entry,
+      { status: 'Absent', checkedInAt: null, late: false, excused },
+      (session, action) => this.api.markAbsent(session, entry.id, action, excused),
     );
   }
 
@@ -330,8 +353,8 @@ export class CheckInPage {
     this.dialogs
       .open<CheckInSheetResult, RosterEntry, CheckInSheetDialog>(CheckInSheetDialog, entry)
       .closed.subscribe((result) => {
-        if (result?.kind === 'check-in') this.checkIn(entry, result.arrivedAt);
-        if (result?.kind === 'absent') this.markAbsent(entry);
+        if (result?.kind === 'check-in') this.checkIn(entry, result.arrivedAt, result.late);
+        if (result?.kind === 'absent') this.markAbsent(entry, result.excused);
       });
   }
 
@@ -377,14 +400,19 @@ export class CheckInPage {
 
   private apply(
     entry: RosterEntry,
-    status: AttendanceStatus,
-    checkedInAt: string | null,
+    mark: Pick<RosterEntry, 'status' | 'checkedInAt' | 'late' | 'excused'>,
     send: (sessionId: string, actionId: string) => Observable<{ status: string }>,
   ): void {
     const session = this.session();
     if (!session) return;
-    const previous = { status: entry.status, checkedInAt: entry.checkedInAt };
-    this.patch(entry.id, { status, checkedInAt });
+    const status: AttendanceStatus = mark.status;
+    const previous = {
+      status: entry.status,
+      checkedInAt: entry.checkedInAt,
+      late: entry.late,
+      excused: entry.excused,
+    };
+    this.patch(entry.id, mark);
     send(session.id, crypto.randomUUID()).subscribe((outcome) => {
       if (outcome.status === 'queued') {
         this.queue.set(this.api.queued());
@@ -398,11 +426,14 @@ export class CheckInPage {
           const t = this.totals();
           this.toasts.show({
             tone: 'success',
-            title: `${entry.name} checked in`,
+            title: `${entry.name} checked in${mark.late ? ' late' : ''}`,
             text: `${t.checkedIn} of ${t.all} now here`,
           });
         } else {
-          this.toasts.show({ tone: 'info', title: `${entry.name} marked absent` });
+          this.toasts.show({
+            tone: 'info',
+            title: `${entry.name} marked ${mark.excused ? 'excused' : 'absent'}`,
+          });
         }
       } else {
         this.patch(entry.id, previous);

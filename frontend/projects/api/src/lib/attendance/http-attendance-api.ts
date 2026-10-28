@@ -73,8 +73,8 @@ export class HttpAttendanceApi implements AttendanceApi {
   private send(a: QueuedAttendance): Observable<WriteOutcome> {
     const body =
       a.kind === 'check-in'
-        ? { childId: a.childId, arrivedAt: a.at, clientActionId: a.clientActionId }
-        : { childId: a.childId, clientActionId: a.clientActionId };
+        ? { childId: a.childId, arrivedAt: a.at, clientActionId: a.clientActionId, late: !!a.late }
+        : { childId: a.childId, clientActionId: a.clientActionId, excused: !!a.excused };
     const path = a.kind === 'check-in' ? 'check-ins' : 'absences';
     return this.offlineAware(
       this.http.post<null>(`${this.baseUrl}/sessions/${a.sessionId}/${path}`, body),
@@ -104,12 +104,14 @@ export class HttpAttendanceApi implements AttendanceApi {
     childId: string,
     arrivedAt: string | null,
     clientActionId: string,
+    late = false,
   ): Observable<WriteOutcome> {
     return this.offlineAware(
       this.http.post<null>(`${this.baseUrl}/sessions/${sessionId}/check-ins`, {
         childId,
         arrivedAt,
         clientActionId,
+        late,
       }),
       {
         clientActionId,
@@ -117,6 +119,7 @@ export class HttpAttendanceApi implements AttendanceApi {
         childId,
         childName: '',
         kind: 'check-in',
+        late,
         at: arrivedAt ?? new Date().toISOString(),
       },
     );
@@ -139,11 +142,17 @@ export class HttpAttendanceApi implements AttendanceApi {
     return toWrite(this.http.put<null>(`${this.baseUrl}/sessions/${sessionId}/notes`, { notes }));
   }
 
-  markAbsent(sessionId: string, childId: string, clientActionId: string): Observable<WriteOutcome> {
+  markAbsent(
+    sessionId: string,
+    childId: string,
+    clientActionId: string,
+    excused = false,
+  ): Observable<WriteOutcome> {
     return this.offlineAware(
       this.http.post<null>(`${this.baseUrl}/sessions/${sessionId}/absences`, {
         childId,
         clientActionId,
+        excused,
       }),
       {
         clientActionId,
@@ -151,6 +160,7 @@ export class HttpAttendanceApi implements AttendanceApi {
         childId,
         childName: '',
         kind: 'absent',
+        excused,
         at: new Date().toISOString(),
       },
     );

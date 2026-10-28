@@ -16,4 +16,6 @@ public sealed record RosterEntryDto(
     string? CollectedBy = null,
     string? NoShow = null,
     DateTimeOffset? NoShowAt = null,
-    bool Conflict = false);
+    bool Conflict = false,
+    bool Late = false,
+    bool Excused = false);

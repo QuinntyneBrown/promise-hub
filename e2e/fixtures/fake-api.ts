@@ -184,6 +184,10 @@ function titleOf(body: string): string {
 interface FakeAttendance {
   status: 'NotYet' | 'Present' | 'Absent' | 'SignedOut';
   checkedInAt: string | null;
+  /** A check-in after the start, kept through sign-out (L2-095). */
+  late?: boolean;
+  /** An absence the organization accepts (L2-095). */
+  excused?: boolean;
   signedOutAt?: string | null;
   collectedBy?: string | null;
 }
@@ -950,6 +954,11 @@ export class FakeApi {
   /** Whether the fake recorded this child as checked in at this session (to check a synced action). */
   attendanceOf(eventId: string, childId: string): string {
     return this.sessionRecords(eventId).get(childId)?.status ?? 'NotYet';
+  }
+
+  /** The fake's attendance record of this child at this session, with its late and excused flags (L2-095). */
+  attendanceRecord(eventId: string, childId: string): FakeAttendance | undefined {
+    return this.sessionRecords(eventId).get(childId);
   }
 
   private async handle(route: Route): Promise<void> {
@@ -2937,6 +2946,8 @@ export class FakeApi {
     const ids = [...p.roster, ...walkIns.map((w) => w.id)];
     const checkedIn = ids.filter((id) => ['Present', 'SignedOut'].includes(records.get(id)?.status ?? '')).length;
     const absent = ids.filter((id) => records.get(id)?.status === 'Absent').length;
+    const late = ids.filter((id) => ['Present', 'SignedOut'].includes(records.get(id)?.status ?? '') && records.get(id)?.late).length;
+    const excused = ids.filter((id) => records.get(id)?.status === 'Absent' && records.get(id)?.excused).length;
     return {
       id: e.id,
       name: e.name,
@@ -2949,6 +2960,8 @@ export class FakeApi {
       checkedIn,
       absent,
       notYet: ids.length - checkedIn - absent,
+      late,
+      excused,
       status: e.status,
       endedAt: e.endedAt ?? null,
       endedBy: e.endedBy ?? null,
@@ -2994,6 +3007,8 @@ export class FakeApi {
         signedOutAt: records.get(child.id)?.signedOutAt ?? null,
         collectedBy: records.get(child.id)?.collectedBy ?? null,
         conflict: this.conflicts.has(`${e.id}:${child.id}`),
+        late: records.get(child.id)?.late ?? false,
+        excused: records.get(child.id)?.excused ?? false,
         noShow: this.noShows.get(`${e.id}:${child.id}`)?.state ?? null,
         noShowAt: this.noShows.get(`${e.id}:${child.id}`)?.at ?? null,
       }));
@@ -3012,6 +3027,8 @@ export class FakeApi {
         walkIn: true,
         signedOutAt: records.get(w.id)?.signedOutAt ?? null,
         collectedBy: records.get(w.id)?.collectedBy ?? null,
+        late: records.get(w.id)?.late ?? false,
+        excused: records.get(w.id)?.excused ?? false,
       }));
     return route.fulfill({ json: { session: this.sessionSummary(e), children: [...children, ...walkIns].sort((a, b) => a.name.localeCompare(b.name)) } });
   }
@@ -3067,7 +3084,7 @@ export class FakeApi {
     const e = this.ownEvent(m, id);
     if (!e) return route.fulfill({ status: 404 });
     if (!this.mayRun(m, e.id)) return this.forbidden(route);
-    const b = route.request().postDataJSON() as { childId: string; arrivedAt?: string | null; clientActionId: string };
+    const b = route.request().postDataJSON() as { childId: string; arrivedAt?: string | null; clientActionId: string; late?: boolean; excused?: boolean };
     if (this.actions.has(b.clientActionId)) return route.fulfill({ json: { status: 'saved' } });
     if (e.status === 'Cancelled') return route.fulfill({ status: 422, json: { errors: { session: 'This session is cancelled.' } } });
     if (e.status === 'Ended') return route.fulfill({ status: 422, json: { errors: { session: 'This session has ended.' } } });
@@ -3076,7 +3093,12 @@ export class FakeApi {
       return route.fulfill({ status: 422, json: { errors: { childId: 'This child is not on tonight’s roster. Add a walk-in instead.' } } });
     }
     this.actions.add(b.clientActionId);
-    this.sessionRecords(e.id).set(b.childId, { status, checkedInAt: status === 'Present' ? (b.arrivedAt ?? NOW.toISOString()) : null });
+    this.sessionRecords(e.id).set(b.childId, {
+      status,
+      checkedInAt: status === 'Present' ? (b.arrivedAt ?? NOW.toISOString()) : null,
+      late: status === 'Present' && !!b.late,
+      excused: status === 'Absent' && !!b.excused,
+    });
     return route.fulfill({ json: { status: 'saved' } });
   }
 

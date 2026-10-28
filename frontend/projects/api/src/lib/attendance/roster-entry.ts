@@ -21,4 +21,8 @@ export interface RosterEntry {
   noShowAt: string | null;
   /** An offline check-in arrived after another device marked the child absent; present was kept. */
   conflict?: boolean;
+  /** Checked in after the start; kept through sign-out (L2-095). */
+  late?: boolean;
+  /** Absent, and the organization accepts the reason (L2-095). */
+  excused?: boolean;
 }

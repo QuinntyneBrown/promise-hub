@@ -12,9 +12,11 @@ import {
 } from '@promisehub/components';
 
 export type CheckInSheetResult =
-  { kind: 'check-in'; arrivedAt: string | null } | { kind: 'absent' } | undefined;
+  | { kind: 'check-in'; arrivedAt: string | null; late: boolean }
+  | { kind: 'absent'; excused: boolean }
+  | undefined;
 
-/** Check in a child (dialog: check-in-sheet): now, at an earlier time, or mark absent instead. */
+/** Check in a child (dialog: check-in-sheet): now, at an earlier time, late, excused, or mark absent instead (L2-095). */
 @Component({
   selector: 'ph-check-in-sheet-dialog',
   imports: [FormsModule, PhButton, PhDialog, PhRadioGroup, PhTextField],
@@ -31,12 +33,25 @@ export class CheckInSheetDialog {
   protected readonly options: RadioOption[] = [
     { value: 'now', label: `Now, ${formatTime(new Date())}` },
     { value: 'earlier', label: 'Earlier', hint: 'Pick a time' },
+    { value: 'late', label: 'Late', hint: 'Arrived after the start; counts as here' },
+    { value: 'excused', label: 'Excused', hint: 'Not coming, and the reason is accepted' },
     { value: 'absent', label: 'Mark absent instead' },
   ];
 
+  protected submitLabel(): string {
+    const labels: Record<string, string> = {
+      absent: 'Mark absent',
+      excused: 'Mark excused',
+      late: 'Check in late',
+    };
+    return labels[this.arrived] ?? 'Check in';
+  }
+
   protected submit(): void {
-    if (this.arrived === 'absent') {
-      this.ref.close({ kind: 'absent' });
+    if (this.arrived === 'absent' || this.arrived === 'excused') {
+      this.ref.close({ kind: 'absent', excused: this.arrived === 'excused' });
+    } else if (this.arrived === 'late') {
+      this.ref.close({ kind: 'check-in', arrivedAt: null, late: true });
     } else if (this.arrived === 'earlier') {
       if (!this.earlier) {
         this.error.set('Pick the time they arrived.');
@@ -45,9 +60,9 @@ export class CheckInSheetDialog {
       const [h, m] = this.earlier.split(':').map(Number);
       const at = new Date();
       at.setHours(h!, m!, 0, 0);
-      this.ref.close({ kind: 'check-in', arrivedAt: at.toISOString() });
+      this.ref.close({ kind: 'check-in', arrivedAt: at.toISOString(), late: false });
     } else {
-      this.ref.close({ kind: 'check-in', arrivedAt: null });
+      this.ref.close({ kind: 'check-in', arrivedAt: null, late: false });
     }
   }
 }

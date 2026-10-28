@@ -13,9 +13,7 @@
     }
     <ng-container ngProjectAs="[phDialogFooter]">
       <ph-button (click)="ref.close()">Cancel</ph-button>
-      <ph-button variant="primary" type="submit">{{
-        arrived === 'absent' ? 'Mark absent' : 'Check in'
-      }}</ph-button>
+      <ph-button variant="primary" type="submit">{{ submitLabel() }}</ph-button>
     </ng-container>
   </ph-dialog>
 </form>

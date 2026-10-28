@@ -38,13 +38,16 @@ public sealed class GetSessionRosterHandler(IPromiseHubDb db, ITenantContext ten
                 (record?.Status ?? AttendanceStatus.NotYet).ToString(), record?.CheckedInAt, WalkIn: false, record?.SignedOutAt, record?.CollectedBy,
                 alerts.FirstOrDefault(a => a.ChildId == c.Id) is { } alert ? (alert.Reply == NoShowReply.None ? "TextSent" : alert.Reply.ToString()) : null,
                 alerts.FirstOrDefault(a => a.ChildId == c.Id)?.SentAt,
-                record?.HasConflict ?? false);
+                record?.HasConflict ?? false,
+                record?.Late ?? false,
+                record?.Excused ?? false);
         }).Concat(walkIns.Select(w =>
         {
             var record = records.FirstOrDefault(r => r.WalkInId == w.Id);
             var flag = medical && !string.IsNullOrWhiteSpace(w.MedicalNotes) ? "Medical note" : null;
             return new RosterEntryDto(w.Id, null, null, w.ChildName, null, null, flag,
-                (record?.Status ?? AttendanceStatus.NotYet).ToString(), record?.CheckedInAt, WalkIn: true, record?.SignedOutAt, record?.CollectedBy);
+                (record?.Status ?? AttendanceStatus.NotYet).ToString(), record?.CheckedInAt, WalkIn: true, record?.SignedOutAt, record?.CollectedBy,
+                Late: record?.Late ?? false, Excused: record?.Excused ?? false);
         }));
         return (ResultStatus.Done, new SessionRosterDto(await reader.SummaryAsync(e, cancellationToken), [.. rows.OrderBy(r => r.Name, StringComparer.CurrentCulture)]));
     }

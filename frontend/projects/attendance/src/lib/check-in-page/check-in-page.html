@@ -93,8 +93,18 @@
         </ph-card>
       }
       <div class="kpis" role="group" aria-label="Session totals">
-        <ph-stat label="Checked in" [value]="'' + t.checkedIn" data-testid="total-Checked in" />
-        <ph-stat label="Absent" [value]="'' + t.absent" data-testid="total-Absent" />
+        <ph-stat
+          label="Checked in"
+          [value]="'' + t.checkedIn"
+          [caption]="t.late ? t.late + ' late' : null"
+          data-testid="total-Checked in"
+        />
+        <ph-stat
+          label="Absent"
+          [value]="'' + t.absent"
+          [caption]="t.excused ? t.excused + ' excused' : null"
+          data-testid="total-Absent"
+        />
         <ph-stat label="Not yet" [value]="'' + t.notYet" data-testid="total-Not yet" />
         <ph-stat label="On roster" [value]="'' + t.all" />
       </div>

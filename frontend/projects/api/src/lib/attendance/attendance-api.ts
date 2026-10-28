@@ -11,14 +11,21 @@ import type { SessionSummary } from './session-summary';
 export interface AttendanceApi {
   today(): Observable<LoadResult<{ sessions: SessionSummary[] }>>;
   roster(sessionId: string): Observable<LoadResult<SessionRoster>>;
-  /** `arrivedAt` is null for now. The client action id makes a repeated tap harmless. */
+  /** `arrivedAt` is null for now; `late` marks a check-in after the start. The client action id makes a repeated tap harmless. */
   checkIn(
     sessionId: string,
     childId: string,
     arrivedAt: string | null,
     clientActionId: string,
+    late?: boolean,
   ): Observable<WriteOutcome>;
-  markAbsent(sessionId: string, childId: string, clientActionId: string): Observable<WriteOutcome>;
+  /** `excused` marks an absence the organization accepts. */
+  markAbsent(
+    sessionId: string,
+    childId: string,
+    clientActionId: string,
+    excused?: boolean,
+  ): Observable<WriteOutcome>;
   /** Check-ins and absences made without signal, in the order they will send. */
   queued(): QueuedAttendance[];
   /** Sends the queue in order and stops at the first network failure; emits how many were sent. */

@@ -42,8 +42,14 @@ public sealed class AttendanceRecord : ITenantOwned
     /// </summary>
     public bool HasConflict { get; private set; }
 
-    /// <summary>Checks the child in; allowed from not-yet or absent, which clears the absence.</summary>
-    public void CheckIn(DateTimeOffset at, string actor)
+    /// <summary>The check-in came after the start (L2-095, ADR 0065); kept through sign-out so the history still counts it late.</summary>
+    public bool Late { get; private set; }
+
+    /// <summary>The absence is one the organization accepts (L2-095, ADR 0065).</summary>
+    public bool Excused { get; private set; }
+
+    /// <summary>Checks the child in, late or not; allowed from not-yet or absent, which clears the absence.</summary>
+    public void CheckIn(DateTimeOffset at, string actor, bool late = false)
     {
         if (Status == AttendanceStatus.Absent && MarkedAbsentAt > at)
         {
@@ -52,12 +58,16 @@ public sealed class AttendanceRecord : ITenantOwned
         Status = AttendanceStatus.Present;
         CheckedInAt = at;
         MarkedAbsentAt = null;
+        Late = late;
+        Excused = false;
         UpdatedBy = actor;
     }
 
-    public void MarkAbsent(DateTimeOffset at, string actor)
+    public void MarkAbsent(DateTimeOffset at, string actor, bool excused = false)
     {
         Status = AttendanceStatus.Absent;
+        Late = false;
+        Excused = excused;
         CheckedInAt = null;
         MarkedAbsentAt = at;
         UpdatedBy = actor;
