@@ -61,6 +61,11 @@
                       >
                     }
                     <ph-button icon="check" (click)="resolve(flag)">Resolve</ph-button>
+                    @if (canReportIncident()) {
+                      <ph-button variant="ghost" icon="flag" link="/incidents/new"
+                        >Report an incident</ph-button
+                      >
+                    }
                   </div>
                 }
                 <ph-badge [tone]="tone(flag.severity)">{{ flag.severity }}</ph-badge>

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
-import { AtRiskFlag, AtRiskFlags, LoadResult, MENTORING_API } from '@promisehub/api';
+import { AtRiskFlag, AtRiskFlags, LoadResult, MENTORING_API, SESSION_API } from '@promisehub/api';
 import {
   PhBadge,
   PhBreadcrumb,
@@ -17,7 +17,7 @@ import {
   TabItem,
   ToastService,
 } from '@promisehub/components';
-import { Subject, startWith, switchMap } from 'rxjs';
+import { EMPTY, Subject, catchError, map, startWith, switchMap } from 'rxjs';
 import { raisedLine, resolvedLine, severityTone } from '../flag-words';
 import { RaiseFlagDialog } from '../raise-flag-dialog/raise-flag-dialog';
 import { RaiseFlagDialogData } from '../raise-flag-dialog-data';
@@ -82,10 +82,26 @@ export class AtRiskFlagsPage {
     const r = this.result();
     return r?.status === 'loaded' ? r.value : null;
   });
+  /** Whether the Incident log is on, so admins and program directors can report an incident from a flag (L2-091 criterion 7). */
+  private readonly incidentsOn = toSignal(
+    inject(SESSION_API)
+      .current()
+      .pipe(
+        map((session) => session.modules.includes('Incidents')),
+        catchError(() => EMPTY),
+      ),
+    { initialValue: false },
+  );
   protected readonly canRaise = computed(() => this.loaded()?.canRaise ?? false);
+  /** Mentors never report incidents; staff who read every flag do while the Incident log is on. */
+  protected readonly canReportIncident = computed(
+    () => this.loaded()?.canRaise === false && this.incidentsOn(),
+  );
   protected readonly subtitle = computed(() =>
     this.loaded()?.canRaise === false
-      ? 'Every at-risk flag at your organization. Mentors raise them; you can resolve them.'
+      ? this.canReportIncident()
+        ? 'Every at-risk flag at your organization. Mentors raise them; you can resolve them or report an incident.'
+        : 'Every at-risk flag at your organization. Mentors raise them; you can resolve them.'
       : 'Youth you’re worried about. Program directors are told when you raise a flag.',
   );
   protected readonly tabs = computed<TabItem[]>(() => [

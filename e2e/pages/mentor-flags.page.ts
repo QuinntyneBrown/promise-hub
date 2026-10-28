@@ -51,6 +51,19 @@ export class AtRiskFlagsPage extends BasePage {
     return this.item(youth).getByRole('link', { name: 'Report an incident' });
   }
 
+  /** Every Report an incident link on the page. */
+  get reportIncidentLinks(): Locator {
+    return this.page.getByRole('link', { name: 'Report an incident' });
+  }
+
+  get main(): Locator {
+    return this.page.getByRole('main');
+  }
+
+  text(words: string): Locator {
+    return this.page.getByText(words);
+  }
+
   get empty(): Locator {
     return this.page.getByRole('heading', { name: 'No youth flagged' });
   }

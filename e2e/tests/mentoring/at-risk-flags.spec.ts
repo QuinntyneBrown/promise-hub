@@ -3,6 +3,7 @@ import type { FakeApi } from '../../fixtures/fake-api';
 import type { ModuleId } from '../../fixtures/seed';
 import { AtRiskFlagsPage } from '../../pages/mentor-flags.page';
 import { MentoringPage } from '../../pages/mentoring.page';
+import { NewIncidentPage } from '../../pages/new-incident.page';
 import { NotificationsPage } from '../../pages/notifications.page';
 import { RaiseFlagDialog } from '../../pages/raise-flag.page';
 import { ResolveFlagDialog } from '../../pages/resolve-flag.page';
@@ -71,7 +72,7 @@ test.describe('At-risk flags for a mentor', () => {
     await expect(flags.items.nth(1)).toContainText('Medium');
     await expect(flags.items.nth(1)).toContainText('Raised by Hana Kim');
     await expect(flags.tab(/^Open\s+2$/)).toBeVisible();
-    await expect(page.getByText('Not one of Daniel’s youth.')).toHaveCount(0);
+    await expect(flags.text('Not one of Daniel’s youth.')).toHaveCount(0);
     await expect(flags.viewRecord('Yusuf Haddad')).toHaveAttribute('href', '/mentoring/youth/c-yusuf');
     await flags.expectNoHorizontalScroll();
     await flags.expectAccessible();
@@ -269,7 +270,7 @@ test.describe('At-risk flags for a program director', () => {
     await shell.closeMenuWithEscape();
     await notifications.open();
 
-    await expect(page.getByText('flagged Mateo Rivera as at risk')).toHaveCount(0);
+    await expect(notifications.mentioning('flagged Mateo Rivera as at risk')).toHaveCount(0);
   });
 });
 
@@ -375,6 +376,57 @@ test.describe('Resolving at-risk flags', () => {
       await expect(flags.toast('Flag resolved')).toBeVisible();
       await flags.showResolved();
       await expect(flags.items.first()).toContainText('Handed to the program director · Resolved by Marisol Delgado');
+    });
+  });
+});
+
+// Acceptance test. Traces to: L2-091 criterion 7 (an at-risk flag is not an incident: while the Incident log is on, admins and program
+// directors can report one from an open flag; with it off nothing offers or mentions it; mentors never get the link), L2-023.
+test.describe('Reporting an incident from an at-risk flag', () => {
+  test.describe('as a program director', () => {
+    test.use({ signedInAs: 'm-marisol' });
+
+    test('Given the Incident log is on, when Marisol chooses Report an incident on a flag, then the incident report form opens', async ({ page, api }) => {
+      api.setModules('org-harbourview', ALL);
+      seedFlags(api);
+      const flags = new AtRiskFlagsPage(page);
+      await flags.open();
+      await expect(flags.items).toHaveCount(3);
+      await expect(flags.reportIncident('Yusuf Haddad')).toHaveAttribute('href', '/incidents/new');
+      await expect(flags.text('you can resolve them or report an incident')).toBeVisible();
+      await flags.expectAccessible();
+
+      await flags.reportIncident('Yusuf Haddad').click();
+
+      await expect(page).toHaveURL(/\/incidents\/new$/);
+      await expect(new NewIncidentPage(page).heading).toHaveText('Report an incident');
+    });
+
+    test('Given the Incident log is off, when Marisol opens At-risk flags, then no flag offers or mentions an incident', async ({ page, api }) => {
+      api.setModules('org-harbourview', ALL.filter((m) => m !== 'Incidents'));
+      seedFlags(api);
+      const flags = new AtRiskFlagsPage(page);
+      await flags.open();
+
+      await expect(flags.items).toHaveCount(3);
+      await expect(flags.reportIncidentLinks).toHaveCount(0);
+      await expect(flags.main).not.toContainText(/incident/i);
+    });
+  });
+
+  test.describe('as a mentor', () => {
+    test.use({ signedInAs: 'm-daniel' });
+
+    test('Given the Incident log is on, when Daniel opens At-risk flags, then no flag offers to report an incident', async ({ page, api }) => {
+      api.setModules('org-harbourview', ALL);
+      api.assignYouthMentor('c-mateo', 'm-daniel');
+      api.setCohortTeam('p-tutoring', 'm-hana', ['m-daniel']);
+      seedFlags(api);
+      const flags = new AtRiskFlagsPage(page);
+      await flags.open();
+
+      await expect(flags.items).toHaveCount(2);
+      await expect(flags.reportIncidentLinks).toHaveCount(0);
     });
   });
 });
