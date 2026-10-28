@@ -126,7 +126,7 @@ def learning(t: dict, *, empty_: bool = False) -> str:
                     title=t["learning"], tid="learning")
     mods = "".join(f'<li class="list__item"><div class="list__body"><div class="list__title">{esc(n)}</div>{progress(d, tot, f"{n}: {d} {t["of"]} {tot} {t["lessons"]}", show=f"{d} {t["of"]} {tot}")}</div>{badge(s, k)}</li>'
                    for n, d, tot, s, k in t["m"])
-    earned = medals([medal(n, ic, desc) for n, ic, desc, _ in EARNED], t["earned"])
+    earned = medals([medal(n, ic, "") for n, ic, _, _ in EARNED], t["earned"])
     return (f'<section class="stack" aria-labelledby="learning"><h2 id="learning">{t["learning"]}</h2>'
             + kpis([(t["overall"], "44%" if t["_lang"] == "en" else "44 %", t["overall_cap"]), (t["badges_label"], t["badges_value"], t["badges_cap"])])
             + card(f'<ul class="list" aria-label="{esc(t["modules"])}">{mods}</ul>', title=t["modules"], tid="modules", cls="card--flush")
@@ -167,17 +167,17 @@ def guardian_child(S):
 # ------------------------------------------------------------------ announcements
 N = {
     "en": dict(heading="Announcements", intro="Updates for your family from Harbourview Youth Collective.", mark="Mark all read", new="New",
-               items=[("Tutoring night moves to Room 2 this Thursday", "The gym floor is being redone. Same time, 4:00 pm. Pickup is at the main entrance.", "Marisol Delgado · Today, 9:30 am", True),
+               items=[("Tutoring night moves to Room 2 this Thursday", "The gym floor is being redone. Same time, 4:00 pm. Pickup is at the main entrance.", "Marisol Delgado · Thu 5 Nov", True),
                       ("Royal Botanical Gardens trip: slips due Friday", "Please sign the permission slip we texted by Friday 13 November. Lunch is provided.", "Marisol Delgado · Mon 2 Nov", True),
                       ("Halloween party photos", "Thanks to every family who came. Photos are on the board in the lobby.", "Priya Raman · Sat 31 Oct", False)],
                read_all="All caught up. New announcements show here."),
     "es": dict(heading="Anuncios", intro="Novedades para su familia de Harbourview Youth Collective.", mark="Marcar todos como leídos", new="Nuevo",
-               items=[("Tutoring night moves to Room 2 this Thursday", "The gym floor is being redone. Same time, 4:00 pm. Pickup is at the main entrance.", "Marisol Delgado · hoy, 9:30 a. m.", True),
+               items=[("Tutoring night moves to Room 2 this Thursday", "The gym floor is being redone. Same time, 4:00 pm. Pickup is at the main entrance.", "Marisol Delgado · jue 5 nov", True),
                       ("Royal Botanical Gardens trip: slips due Friday", "Please sign the permission slip we texted by Friday 13 November. Lunch is provided.", "Marisol Delgado · lun 2 nov", True),
                       ("Halloween party photos", "Thanks to every family who came. Photos are on the board in the lobby.", "Priya Raman · sáb 31 oct", False)],
                read_all="Está al día. Los anuncios nuevos aparecerán aquí."),
     "fr": dict(heading="Annonces", intro="Les nouvelles de Harbourview Youth Collective pour votre famille.", mark="Tout marquer comme lu", new="Nouveau",
-               items=[("Tutoring night moves to Room 2 this Thursday", "The gym floor is being redone. Same time, 4:00 pm. Pickup is at the main entrance.", "Marisol Delgado · aujourd’hui, 9 h 30", True),
+               items=[("Tutoring night moves to Room 2 this Thursday", "The gym floor is being redone. Same time, 4:00 pm. Pickup is at the main entrance.", "Marisol Delgado · jeu. 5 nov.", True),
                       ("Royal Botanical Gardens trip: slips due Friday", "Please sign the permission slip we texted by Friday 13 November. Lunch is provided.", "Marisol Delgado · lun. 2 nov.", True),
                       ("Halloween party photos", "Thanks to every family who came. Photos are on the board in the lobby.", "Priya Raman · sam. 31 oct.", False)],
                read_all="Vous êtes à jour. Les nouvelles annonces s’afficheront ici."),

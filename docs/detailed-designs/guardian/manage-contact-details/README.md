@@ -27,7 +27,7 @@ Open questions: none. Deferred: Waypoint's media consent options and emailing th
 
 ## Built so far
 
-Not started.
+Prompt 73 delivered the Consents card: `GuardianConsentsDto`, `GuardianParticipationDto` and `GuardianSlipConsentDto` from `GuardianChildHandler`, shown read only on `GuardianChildPage`; contact editing is prompt 28's Update your details, unchanged. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/GuardianPortalTests.cs` (consents, Slips off, refusals), `e2e/tests/guardian/portal.spec.ts` and `e2e/tests/guardian/update-household.spec.ts`.
 
 ## Requirements
 

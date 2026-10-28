@@ -30,7 +30,7 @@ Open questions: none. Deferred: Waypoint's per-announcement read on open and coh
 
 ## Built so far
 
-Not started.
+Prompt 73 delivered everything above: `Delivery.ReadAt` with the migration `GuardianAnnouncementReads`, `GuardianAnnouncementsHandler` (`GuardianAnnouncementsDto`, `GuardianAnnouncementDto`), `GET /g/home/{token}/announcements`, `POST /g/home/{token}/announcements/read`, the family page's `announcements` count and card, `GuardianApi.announcements()` and `markAnnouncementsRead()`, and `GuardianAnnouncementsPage`. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/GuardianAnnouncementsTests.cs` and `e2e/tests/guardian/portal.spec.ts` (Read guardian announcements).
 
 ## Requirements
 

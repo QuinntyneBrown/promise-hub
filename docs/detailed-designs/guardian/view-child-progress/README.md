@@ -31,7 +31,7 @@ Open questions: none. Deferred: Waypoint's shared mentor check-ins, quiz history
 
 ## Built so far
 
-Not started.
+Prompt 73 delivered everything above: `GET /g/home/{token}/children/{childId}` (`GuardianChildHandler`, `GuardianChildDto`, `GuardianSessionDto`, `GuardianAttendanceDto`, `GuardianAttendanceRowDto`, `GuardianLearningDto`, `GuardianModuleDto`, `GuardianBadgeDto`), `LearnerProgress.ForMembership` and `LearnerBadges.ForMembership`, the family page's `programs` per child and Your children, `GuardianApi.child()`, `GuardianChildPage` with `portal-text.ts`, and `ph-progress-bar` filling a list row's actions. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/GuardianPortalTests.cs` and `e2e/tests/guardian/portal.spec.ts` (Use the guardian portal; Use the guardian portal in the household’s language).
 
 ## Requirements
 
