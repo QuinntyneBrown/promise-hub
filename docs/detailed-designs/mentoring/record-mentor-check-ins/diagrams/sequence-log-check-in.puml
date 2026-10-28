@@ -1,0 +1,48 @@
+@startuml
+title UML sequence behaviour — Logging a mentor check-in
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Mentor (Daniel)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "MentorCheckInDialog" as dlg
+  participant "MentoringApi" as mapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "MentoringEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "MentorCheckInsHandler" as h
+  participant "MentorScope" as scope
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> dlg : Save check-in
+dlg -> mapi : logCheckIn(body)
+mapi -> ep : POST /mentoring/check-ins
+alt Mentoring off
+  ep --> dlg : 404 (L2-090 c8)
+else not a Mentor
+  ep --> dlg : 403 (c8)
+else
+  ep -> h : LogAsync(request)
+  alt child of another organization or unknown
+    h --> dlg : 404
+  else outside his scope
+    h -> scope : CanSeeYouthAsync
+    h -> db : audit AccessDenied on Child
+    h --> dlg : 403
+  else invalid fields
+    h --> dlg : 422 errors by field (c2)
+    dlg --> actor : summary and field errors
+  else
+    h -> db : insert MentorCheckIn (organization, child, author)
+    h -> db : audit Created, no content (c7)
+    h --> dlg : 201 mentor check-in
+    dlg --> actor : closes; toast Mentor check-in saved (c1)
+  end
+end
+@enduml

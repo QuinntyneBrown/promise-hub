@@ -54,8 +54,12 @@ def feed(rows) -> str:
 @screen("mentor-dashboard", "page", "Mentoring", route="/mentoring", reqs=["L2-063", "L2-065", R_MENTOR])
 def mentor_dashboard(S):
     hdr = page_header("Mentoring", "Welcome back, Daniel. Here’s how your youth are doing.",
-                      btn("Reviews · 4", "", icon_name="check", href=page("mentor-reviews")) + btn("My youth", "", icon_name="users", href=page("mentor-youth")))
-    hdr_no_learning = page_header("Mentoring", "Welcome back, Daniel. Here’s how your youth are doing.", btn("My youth", "", icon_name="users", href=page("mentor-youth")))
+                      btn("Reviews · 4", "", icon_name="check", href=page("mentor-reviews")) + btn("Mentor check-ins", "", icon_name="message", href=page("mentor-check-in-history"))
+                      + btn("My youth", "", icon_name="users", href=page("mentor-youth")))
+    hdr_no_learning = page_header("Mentoring", "Welcome back, Daniel. Here’s how your youth are doing.",
+                                  btn("Mentor check-ins", "", icon_name="message", href=page("mentor-check-in-history")) + btn("My youth", "", icon_name="users", href=page("mentor-youth")))
+    from pages_checkins import followups_card
+    follow = followups_card()
     numbers = kpis([("My youth", "6", "Across 2 cohorts"), ("My cohorts", "2", "Lead mentor on 1"), ("Checked in this week", "4", "of your 6 youth")])
     youth = card(ul_list([youth_item(c, p, a) for c, p, a in MY_YOUTH[:5]], card=False, label="Your youth"),
                  title="My youth", tid="my-youth", cls="card--flush", footer=btn("View all 6", "ghost", href=page("mentor-youth")))
@@ -63,8 +67,8 @@ def mentor_dashboard(S):
                    title="My cohorts", tid="my-cohorts", cls="card--flush")
     activity = card(feed(ACTIVITY), title="Recent activity", tid="activity")
     S.add("default", "Daniel opens Mentoring: his six youth (Mateo directly, the rest through the two cohorts he is on), his cohorts and their latest check-ins.", **KW,
-          main=hdr + numbers + f'<div class="split"><div class="stack">{youth}</div><div class="stack">{cohorts}{activity}</div></div>',
-          notes=note("Every number and row is computed on the server over Daniel’s assigned youth only; recent activity is the last five attendance changes in 14 days.", "top: 5rem; right: 1rem;"))
+          main=hdr + numbers + f'<div class="split"><div class="stack">{youth}</div><div class="stack">{follow}{cohorts}{activity}</div></div>',
+          notes=note("Follow-ups come from the latest mentor check-in of each of his youth that has a follow-up date, soonest first; overdue ones say so. Every number and row is computed on the server over Daniel’s assigned youth only; recent activity is the last five attendance changes in 14 days.", "top: 5rem; right: 1rem;"))
     S.add("loading", "The dashboard loading: skeletons in the same layout.", **KW,
           main=hdr + skeleton_kpis(3) + f'<div class="split"><div class="stack">{skeleton_list(5, "Loading your youth")}</div><div class="stack">{skeleton_list(2, "Loading your cohorts")}</div></div>')
     S.add("empty", "Hana, a mentor nobody has assigned yet: one calm empty state instead of zeros.", **(KW | {"user": HANA}),
@@ -73,9 +77,11 @@ def mentor_dashboard(S):
     S.add("error", "The dashboard failed to load; the shell stays.", **KW, main=hdr + failed("We couldn’t load your dashboard"))
     S.add("rollcall-off", "Roll Call is off for Harbourview: no attendance number and no Recent activity card; nothing about check-in is mentioned.", **KW,
           main=hdr + kpis([("My youth", "6", "Across 2 cohorts"), ("My cohorts", "2", "Lead mentor on 1")])
-          + f'<div class="split"><div class="stack">{youth}</div><div class="stack">{cohorts}</div></div>')
+          + f'<div class="split"><div class="stack">{youth}</div><div class="stack">{follow}{cohorts}</div></div>')
     S.add("learning-off", "Learning is off: no Reviews, because there is nothing to grade; everything else stays.", **KW,
-          main=hdr_no_learning + numbers + f'<div class="split"><div class="stack">{youth}</div><div class="stack">{cohorts}{activity}</div></div>')
+          main=hdr_no_learning + numbers + f'<div class="split"><div class="stack">{youth}</div><div class="stack">{follow}{cohorts}{activity}</div></div>')
+    S.add("no-follow-ups", "No mentor check-in of his has a follow-up date: the Follow-ups card says how to plan one.", **KW,
+          main=hdr + numbers + f'<div class="split"><div class="stack">{youth}</div><div class="stack">{followups_card([])}{cohorts}{activity}</div></div>')
     S.add("forbidden", "Marisol (Program director) opens /mentoring directly: the dashboard is for mentors; the server answers 403.", nav="today", user=STAFF["marisol"],
           main=page_header("Mentoring", "") + forbidden("Mentoring is for mentors", "Program directors assign mentors from a cohort’s page in Programs."))
 
@@ -108,7 +114,7 @@ def mentor_youth_detail(S):
     m = CHILD["mateo"]
     crumbs = lambda cur: breadcrumb([("Mentoring", page("mentor-dashboard")), ("My youth", page("mentor-youth"))], cur)
     back = crumbs("Youth record")
-    head = crumbs("Mateo Rivera") + page_header("Mateo Rivera", "Age 9 · Bennetto Elementary, Grade 4", btn("Competencies", "", icon_name="star", href=page("mentor-competency")))
+    head = crumbs("Mateo Rivera") + page_header("Mateo Rivera", "Age 9 · Bennetto Elementary, Grade 4", btn("Log a mentor check-in", "", icon_name="plus", data_href=dialog("mentor-check-in", "from-record")) + btn("Competencies", "", icon_name="star", href=page("mentor-competency")))
     about = card(facts([("Programs", "After‑School Tutoring"), ("Mentor", "Daniel Osei"), ("Goes by", "Not set"), ("Pronouns", "Not set")]), title="About", tid="about")
     contacts = card('<ol class="call-list" aria-label="Guardian contacts">'
                     f'<li class="call-list__item">{avatar(GUARDIANS["carmen"])}<div class="call-list__body"><div class="call-list__name">Carmen Rivera · mother</div><div class="call-list__meta">Primary contact · carmen.rivera@example.com</div></div><a class="btn btn--primary" href="tel:905-555-0142" aria-label="Call Carmen Rivera, 905-555-0142">905-555-0142</a></li>'
@@ -120,7 +126,8 @@ def mentor_youth_detail(S):
         ["Tutoring night", "Tue 3 Nov, 4:00 pm", badge("Absent", "danger")],
     ]).replace("table-wrap card card--flush", "table-wrap"), title="Recent attendance", tid="attendance", cls="card--flush")
     restricted = alert("info", "Medical details stay with staff on site", "Allergies, medication, the date of birth and the Quick Card are not part of a mentor’s view.")
-    body = f'<div class="split"><div class="stack">{about}{attendance}</div><div class="stack">{contacts}{restricted}</div></div>'
+    from pages_checkins import CHECKINS, record_card
+    body = f'<div class="split"><div class="stack">{about}{record_card(CHECKINS[:1])}{attendance}</div><div class="stack">{contacts}{restricted}</div></div>'
     S.add("default", "Daniel opens Mateo, whom he mentors: what a mentor may see, nothing more. The open is audited.", **KW, main=head + body,
           notes=note("The API never sends the date of birth, medical fields, health card, notes or approved pickups to a mentor; the page has nothing to hide.", "top: 5rem; right: 1rem;"))
     S.add("onboarded", "Sofía finished her first-run setup: the record shows the name she goes by and her pronouns.", **KW,
@@ -141,6 +148,10 @@ def mentor_youth_detail(S):
           main=sofia_head + f'<div class="split"><div class="stack">{about}' + card(empty("No shared reflections yet", "When Sofía shares a reflection on a lesson, it appears here.", icon_name="book", heading="h3"),
                                                                                     title="Shared reflections", tid="reflections", cls="card--flush")
           + f'</div><div class="stack">{contacts}{restricted}</div></div>')
+    S.add("check-ins", "Daniel’s mentor check-ins with Mateo on his record, newest first, with Log a mentor check-in and a link to all of them. Only Daniel’s own check-ins show.", **KW,
+          main=head + f'<div class="split"><div class="stack">{about}{record_card(CHECKINS[:1])}{attendance}</div><div class="stack">{contacts}{restricted}</div></div>')
+    S.add("no-check-ins", "Daniel hasn’t logged a mentor check-in with Mateo: the card says so and offers the action.", **KW,
+          main=head + f'<div class="split"><div class="stack">{about}{record_card([])}{attendance}</div><div class="stack">{contacts}{restricted}</div></div>')
     S.add("rollcall-off", "Roll Call is off: the attendance card is gone.", **KW,
           main=head + f'<div class="split"><div class="stack">{about}</div><div class="stack">{contacts}{restricted}</div></div>')
     S.add("loading", "The record loading.", **KW, main=back + page_header("Youth record") + f'<div class="split"><div class="stack">{skeleton_list(4, "Loading the record")}</div><div class="stack">{skeleton_list(2, "Loading contacts")}</div></div>')

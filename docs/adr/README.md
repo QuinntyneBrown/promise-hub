@@ -64,3 +64,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0058](0058-badges-are-evaluated-after-learning-events-and-stages-group-competencies.md) | Badges are evaluated after each learning event and awarded once; stages group the existing competencies |
 | [0059](0059-the-journey-is-computed-on-read-with-a-weekly-streak-and-stages-from-assessments.md) | The journey, badges and progress are computed on read, with a weekly lesson streak and stages earned from the latest assessments |
 | [0060](0060-a-reflection-is-one-row-per-youth-and-lesson-shared-only-with-her-mentor.md) | A reflection is one row per youth and lesson, private unless she shares it, read only by her and her mentor; drafts stay on the device |
+| [0061](0061-a-mentor-check-in-is-read-only-by-the-mentor-who-wrote-it.md) | A mentor check-in belongs to the mentor who wrote it, private notes never leave him, and follow-ups come from the latest one |

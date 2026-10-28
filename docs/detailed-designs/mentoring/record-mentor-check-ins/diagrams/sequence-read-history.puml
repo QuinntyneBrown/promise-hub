@@ -1,0 +1,44 @@
+@startuml
+title UML sequence behaviour — Reading mentor check-ins and follow-ups
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Mentor (Daniel)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "MentorCheckInsPage" as page
+  participant "MentorDashboardPage" as dash
+  participant "MentoringApi" as mapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "MentoringEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "MentorCheckInsHandler" as h
+  participant "MentorDashboardHandler" as dh
+  participant "MentorScope" as scope
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : open Mentor check-ins, filter
+page -> mapi : checkIns({ childId?, kind? })
+mapi -> ep : GET /mentoring/check-ins
+ep -> h : HistoryAsync
+h -> scope : YouthIdsAsync
+alt childId outside scope
+  h -> db : audit AccessDenied
+  h --> page : 403
+else
+  h -> db : his check-ins of youth in scope, newest first (L2-090 c4)
+  h --> page : 200 items (his private notes included, only to him) and youth options
+end
+actor -> dash : open Mentoring
+dash -> mapi : dashboard()
+mapi -> ep : GET /mentoring/dashboard
+ep -> dh : HandleAsync
+dh -> db : latest check-in of his per youth with a follow-up (c6)
+dh --> dash : followUps soonest first
+dash --> actor : Follow-ups, Overdue before today
+@enduml

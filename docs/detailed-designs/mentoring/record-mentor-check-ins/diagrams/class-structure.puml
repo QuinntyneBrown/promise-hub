@@ -1,0 +1,75 @@
+@startuml
+title Class structure — Record mentor check-ins
+skinparam classAttributeIconSize 0
+class MentorCheckInsPage {
+  #youthFilter : signal<string>
+  #kindFilter : signal<string>
+  #log() : void
+}
+class MentorCheckInDialog {
+  #childId, date, kind, engagement : signal<string>
+  #topics, actionItems, privateNotes, followUpOn : signal<string>
+  #shared, guardianInformed : signal<boolean>
+  #save() : void
+}
+interface MentoringApi {
+  +checkIns(filter) : Observable<LoadResult<MentorCheckInHistory>>
+  +logCheckIn(body) : Observable<WriteOutcome>
+  +dashboard() : Observable<LoadResult<MentorDashboard>>
+}
+class MentorCheckInsHandler {
+  +HistoryAsync(childId, kind, ct) : (Result, MentorCheckInHistoryDto?)
+  +LogAsync(request, ct) : (Result, MentorCheckInDto?)
+}
+class MentorDashboardHandler {
+  +HandleAsync(ct) : MentorDashboardDto
+}
+class MentorScope {
+  +YouthIdsAsync(ct)
+  +CanSeeYouthAsync(childId, ct)
+}
+class MentorCheckIn <<entity>> {
+  +Id : Guid
+  +OrganizationId : Guid
+  +ChildId : Guid
+  +MentorMembershipId : Guid
+  +Date : DateOnly
+  +Kind : MentorCheckInKind
+  +Engagement : MentorCheckInEngagement
+  +Topics : string?
+  +ActionItems : string?
+  +PrivateNotes : string?
+  +FollowUpOn : DateOnly?
+  +Shared : bool
+  +GuardianInformed : bool
+  +CreatedAt : DateTimeOffset
+}
+enum MentorCheckInKind {
+  OneToOne
+  Call
+  Session
+}
+enum MentorCheckInEngagement {
+  Struggling
+  Low
+  Steady
+  Engaged
+  Thriving
+}
+class LogMentorCheckInRequest <<record>>
+class MentorCheckInDto <<record>>
+class MentorCheckInHistoryDto <<record>>
+class MentorFollowUpDto <<record>>
+MentorCheckInsPage --> MentoringApi
+MentorCheckInsPage ..> MentorCheckInDialog : opens
+MentorCheckInDialog --> MentoringApi
+MentorCheckInsHandler --> MentorScope
+MentorDashboardHandler --> MentorScope
+MentorCheckInsHandler ..> LogMentorCheckInRequest
+MentorCheckInsHandler ..> MentorCheckInHistoryDto
+MentorCheckInHistoryDto *-- MentorCheckInDto
+MentorDashboardHandler ..> MentorFollowUpDto
+MentorCheckInsHandler o-- MentorCheckIn : persists
+MentorCheckIn --> MentorCheckInKind
+MentorCheckIn --> MentorCheckInEngagement
+@enduml
