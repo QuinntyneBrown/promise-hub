@@ -22,9 +22,9 @@ Frontend:
 
 - **`AssignWorkDialog`** (`frontend/projects/mentoring/`, mock `assign-work`) — CDK Dialog through `PhDialogs`, opened from the dashboard. Loads `MENTORING_API.assignOptions()`, then offers What are you assigning? (`ph-radio-group` Lesson, Quiz, Assignment with hints), the item of that kind (`ph-select`, "title · module"), Who is it for? (`ph-radio-group` A whole cohort, Youth I choose), the cohort (`ph-select`, "name · n youth") or his youth (`ph-checkbox-group`, each with the cohort and At risk as its hint), Due date (`ph-text-field` type date) and Message (`ph-textarea`, optional, counter to 500). It checks the required fields, then shows the server's 422 errors beside each field and in `ph-error-summary`; busy and failed states; with no item, "Nothing to assign yet" and Close. It closes with the server's count, title and due date.
 - **`MentorDashboardPage`** — Assign work (primary) in the header while Learning is on; after assigning, the toast "Work assigned" with "Last in Line · 4 youth · Due Fri 13 Nov".
-- **`LearningPage`** (`frontend/projects/learning/`, mock `learn-home`) — the Assigned to you card when `assigned` is not empty: one `ph-list-item` link per item with the kind, module, due date and mentor as meta, the message as the text variant and a `ph-badge` (info Due in n days or Due tomorrow, warning Due today, danger Overdue). Words in `assigned-words.ts`.
+- **`LearningPage`** (`frontend/projects/learning/`, mock `learn-home`) — the Assigned to you card when `assigned` is not empty: one `ph-list-item` link per item with the kind, module, due date (Was due once overdue) and mentor as meta, the message as the text variant and a `ph-badge` (info Due in n days or Due tomorrow, warning Due today, danger Overdue). Words in `assigned-words.ts`.
 
-API client (`frontend/projects/api/`): `MENTORING_API.assignOptions()` answering `LoadResult<AssignWorkOptions>` (items, youth, cohorts) and `assignWork(AssignWork)` answering `WriteOutcome<AssignedWorkResult>`; `LearningHome.assigned: AssignedWorkItem[]`.
+API client (`frontend/projects/api/`): `MENTORING_API.assignOptions()` answering `LoadResult<AssignWorkOptions>` (items, youth, cohorts) and `assignWork(AssignWork)` answering `WriteOutcome<AssignedWorkResult>`; `LearningHome.assigned: AssignedWorkItem[]` (with `lessonKind`, so a coding lesson opens in the coding page).
 
 Backend:
 
@@ -37,6 +37,10 @@ Backend:
 - **Persistence** — `AssignedWork` set with the tenant query filter, a unique index on organization, child, kind and item; migration `AssignedWork`.
 
 Open questions: none. Deferred: assigning a whole module, reminders before the due date, notifying the youth, the message as a message thread, program directors assigning, and a mentor's list of what he assigned and who has done it.
+
+## Built so far
+
+Prompt 69 delivered everything above in four slices: assigning to chosen youth (`GET /mentoring/assign-work`, `POST /mentoring/assigned-work`, `AssignWorkDialog` from the dashboard's Assign work, the Work assigned toast); assigning to a whole cohort; the youth's Assigned to you card on the Learning home (`LearningHomeDto.Assigned`, with the lesson's kind so a coding lesson opens in the coding page); and the Learning and Mentoring gates. The dialog keeps one `ph-dialog` for every state (loading, nothing to assign, failed to load, the form) so its accessible name holds. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/AssignWorkTests.cs`, `backend/tests/PromiseHub.Api.Tests/LearningAssignedWorkTests.cs`, `e2e/tests/mentoring/assign-work.spec.ts`, `e2e/tests/learning/assigned-work.spec.ts`.
 
 ## Requirements
 

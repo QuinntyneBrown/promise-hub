@@ -5,7 +5,7 @@
 | approve-quiz-assessments | 3 days | 100% |
 | assess-competencies | 3 days | 100% |
 | assign-mentors | 5 days | 100% |
-| assign-work | 4 days | 0% |
+| assign-work | 4 days | 100% |
 | grade-submissions | 6 days | 100% |
 | list-assigned-youth | 1 day | 100% |
 | manage-at-risk-flags | 5 days | 100% |

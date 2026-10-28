@@ -847,7 +847,7 @@ def assign_body(err=None, *, blank: bool = False, chosen: bool = False) -> str:
     summary = form_summary(list(err.items())) if err else ""
     kind = fieldset("What are you assigning?", "".join(choice("kind", k, small=d, checked=(k == "Lesson")) for k, d in WORK_KINDS), fid="kind")
     item = select("item", "Lesson", WORK_ITEMS, selected="Choose a lesson" if (blank or "item" in err) else "Last in Line · Leading by Serving",
-                  error=err.get("item", ""), help_="Published lessons of the tracks your cohorts follow.", attrs=" required")
+                  error=err.get("item", ""), help_="Published work of the tracks your youth follow.", attrs=" required")
     who_cohort = not chosen and not blank and "who" not in err
     who = fieldset("Who is it for?", choice("who", "A whole cohort", small="Everyone on its roster today", checked=who_cohort, invalid="who" in err)
                    + choice("who", "Youth I choose", small="One or more of your youth", checked=chosen, invalid="who" in err), error=err.get("who", ""), fid="who")
@@ -886,6 +886,6 @@ def assign_work(S):
     S.add("busy", "Assigning: Assign is busy and cannot be pressed twice; Cancel still works.", **over("mentor-dashboard", "default", overlays=assign_box(busy=True)))
     S.add("failed", "The save failed: everything he chose stays to try again.",
           **over("mentor-dashboard", "default", overlays=assign_box(alert_html=failed_alert("That didn’t go through", "Nothing was assigned. Everything is still here; try again."))))
-    S.add("nothing-to-assign", "None of the tracks his cohorts follow has published content yet: the dialog says so and offers only Close.",
-          **over("mentor-dashboard", "default", overlays=dialog_box("Assign work", "", card(empty("Nothing to assign yet", "When a track your cohorts follow publishes lessons, quizzes or assignments, you can assign them here.", icon_name="list"), cls="card--flush"),
+    S.add("nothing-to-assign", "None of the tracks his youth follow has published work yet: the dialog says so and offers only Close.",
+          **over("mentor-dashboard", "default", overlays=dialog_box("Assign work", "Pick a lesson, quiz or assignment, who it’s for and when it’s due.", card(empty("Nothing to assign yet", "When a track your cohorts follow publishes lessons, quizzes or assignments, you can assign them here.", icon_name="list"), cls="card--flush"),
                                                                     btn("Close", "", attrs=" autofocus"), icon_name="plus")))
