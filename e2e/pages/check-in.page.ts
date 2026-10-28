@@ -37,6 +37,14 @@ export class CheckInPage extends BasePage {
     return this.page.getByRole('group', { name: 'Session totals' }).getByTestId(`total-${label}`).getByTestId('stat-caption');
   }
 
+  get markRestPresentButton(): Locator {
+    return this.page.getByRole('button', { name: /^Mark the rest present, \d+ not yet here$/ });
+  }
+
+  async markRestPresent(): Promise<void> {
+    await this.markRestPresentButton.click();
+  }
+
   /** Chooses Late or Excused in the open check-in sheet and saves it. */
   async mark(choice: 'Late' | 'Excused'): Promise<void> {
     await this.dialog.getByRole('radio', { name: new RegExp(`^${choice}`) }).check();

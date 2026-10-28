@@ -32,7 +32,7 @@ const can = {
   managePrograms: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
   manageEvents: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
   cancelEvents: (m: Membership) => ['Admin', 'ProgramDirector'].includes(m.role),
-  runSessions: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker', 'Volunteer'].includes(m.role),
+  runSessions: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead', 'YouthWorker', 'Volunteer', 'Mentor'].includes(m.role),
   runAnySession: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
   sendMessages: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
   manageSlips: (m: Membership) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(m.role),
@@ -54,7 +54,8 @@ const can = {
  * endpoint to them unless it opts in (ADR 0043). Volunteers also open their assigned sessions.
  */
 const PARTICIPANT_PATHS = [/^\/api\/me(\/|$)/, /^\/api\/notifications(\/|$)/, /^\/api\/auth\//, /^\/api\/learning\//, /^\/api\/mentoring\//, /^\/api\/curriculum(\/|$)/, /^\/api\/schedule(\/|$)/];
-const VOLUNTEER_PATHS = [/^\/api\/sessions\/today$/, /^\/api\/sessions\/[^/]+\/roster$/];
+/** Volunteers and mentors run sessions without the staff app (ADR 0043, ADR 0065): the session endpoints that need RunSessions. */
+const RUNNER_PATHS = [/^\/api\/sessions\/today$/, /^\/api\/sessions\/[^/]+\/(roster|check-ins|absences|end|notes|walk-ins)$/];
 
 type ImportField = 'ChildName' | 'DateOfBirth' | 'School' | 'GuardianName' | 'GuardianPhone' | 'GuardianEmail' | 'Allergies' | 'Language' | 'Notes' | 'Skip';
 
@@ -983,7 +984,7 @@ export class FakeApi {
       return route.fulfill({ status: 403, json: { code: 'suspended' } });
     }
     if (caller && !can.useStaffApp(caller) && !url.pathname.startsWith('/api/website/')) {
-      const allowed = PARTICIPANT_PATHS.some((p) => p.test(url.pathname)) || (caller.role === 'Volunteer' && VOLUNTEER_PATHS.some((p) => p.test(url.pathname)));
+      const allowed = PARTICIPANT_PATHS.some((p) => p.test(url.pathname)) || (can.runSessions(caller) && RUNNER_PATHS.some((p) => p.test(url.pathname)));
       if (!allowed) return route.fulfill({ status: 403, json: { code: 'forbidden' } });
     }
     for (const [method, pattern, handler] of this.routes) {
@@ -2702,9 +2703,14 @@ export class FakeApi {
     return route.fulfill({ status: 204 });
   }
 
-  /** Roles that run sessions without running any session (youth workers) open only the ones they are assigned to. */
+  /** Roles that run sessions without running any session (youth workers, volunteers) open only the ones they are assigned to; a mentor also the sessions of the cohorts on his team (ADR 0065). */
   private mayRun(m: Membership, eventId: string): boolean {
-    return !can.runSessions(m) || can.runAnySession(m) || (this.sessionStaff.get(eventId) ?? []).includes(m.id);
+    if (!can.runSessions(m) || can.runAnySession(m) || (this.sessionStaff.get(eventId) ?? []).includes(m.id)) return true;
+    if (m.role !== 'Mentor') return false;
+    const e = this.events.find((x) => x.id === eventId);
+    const team = e && this.cohortMentors.get(e.programId);
+    const program = e && this.programs.find((p) => p.id === e.programId);
+    return !!team && program?.status !== 'Archived' && (team.lead === m.id || team.supporting.includes(m.id));
   }
 
   private ownEvent(m: Membership, id: string): FakeEvent | undefined {

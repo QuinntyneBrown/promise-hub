@@ -226,14 +226,14 @@ def check_in(S):
               + roster_row(dict(CHILD["sofia"], flag=""), "absent", "Excused · Grade 7", kind)
               + roster_row(dict(CHILD["yusuf"], flag=""), "none", "Not yet here · Grade 8", kind) + "</ul></div>")
     mhdr = page_header("Tutoring night", "Today, 4:00–6:00 pm · Room 2 · 4 on roster · After‑School Tutoring",
-                       btn("Attendance history", "", icon_name="chart", href=page("attendance-history", "mentor")) + btn("Mark the rest present", "", icon_name="check", aria_label="Mark the 1 not yet here present")
+                       btn("Attendance history", "", icon_name="chart", href=page("attendance-history", "mentor")) + btn("Mark the rest present", "", icon_name="check", aria_label="Mark the rest present, 1 not yet here")
                        + btn("Session notes", "", icon_name="edit", data_href=rel(kind, "dialog", "session-notes")))
     S.add("mentor", "Daniel takes attendance for his cohort’s session: the same roster, Late and Excused beside Checked in and Absent, and Mark the rest present for everyone not yet marked.", **MKW,
           main=mhdr + checkin_summary(2, 1, 1, 4, late=1, excused=1, cleared=False) + cohort,
           notes=note("A mentor runs the sessions of the cohorts he leads or supports (ADR 0065). Mentors don’t see medical flags. Each mark saves at once and queues on the phone without signal.", "top: 5rem; right: 1rem;"))
     allin = cohort.replace(roster_row(dict(CHILD["yusuf"], flag=""), "none", "Not yet here · Grade 8", kind), roster_row(dict(CHILD["yusuf"], flag=""), "in", "Checked in 4:30 pm · Grade 8", kind))
     S.add("all-marked", "Mark the rest present: Yusuf, the one not yet here, is checked in and a toast says how many.", **MKW,
-          main=mhdr.replace(btn("Mark the rest present", "", icon_name="check", aria_label="Mark the 1 not yet here present"), "") + checkin_summary(3, 1, 0, 4, late=1, excused=1, cleared=False) + allin,
+          main=mhdr.replace(btn("Mark the rest present", "", icon_name="check", aria_label="Mark the rest present, 1 not yet here"), "") + checkin_summary(3, 1, 0, 4, late=1, excused=1, cleared=False) + allin,
           toast_html=toast_region(toast("success", "1 marked present", "Everyone on the roster is marked.")))
     S.add("long", "A camp day with 212 children: search and filters first, the list virtualizes, nothing breaks.", nav="check-in", user=J,
           main=page_header("Summer Camp · Week 3, Monday", "Mon 20 Jul, 8:00 am–5:00 pm · 212 on roster", btn("End session", "", icon_name="check-circle", data_href=dialog("end-session"))) +

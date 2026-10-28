@@ -17,6 +17,7 @@ import {
   RosterEntry,
   SESSION_API,
   SLIPS_API,
+  PARTICIPANT_ROLES,
   SessionSummary,
   SlipClearance,
   can,
@@ -41,7 +42,7 @@ import {
   formatTime,
   formatWhen,
 } from '@promisehub/components';
-import { EMPTY, Observable, catchError } from 'rxjs';
+import { EMPTY, Observable, catchError, forkJoin } from 'rxjs';
 import { AddWalkInDialog } from '../add-walk-in-dialog/add-walk-in-dialog';
 import { SignOutDialog, SignOutData, SignOutResult } from '../sign-out-dialog/sign-out-dialog';
 import {
@@ -114,10 +115,22 @@ export class CheckInPage {
   /** Check-in actions are offered only while the session is open; an ended session is read-only. */
   protected readonly live = computed(() => this.canRun() && this.session()?.status === 'Scheduled');
   protected readonly incidents = computed(() => !!this.me()?.modules.includes('Incidents'));
-  /** Names open the Quick Card only while that module is on. */
-  protected readonly quickCards = computed(() => !!this.me()?.modules.includes('QuickCards'));
-  /** Sign out is offered only while the Pickup module is on. */
-  protected readonly pickup = computed(() => !!this.me()?.modules.includes('Pickup'));
+  /** Mentors and volunteers run sessions without the staff app: no Quick Cards or approved pickups (ADR 0065). */
+  protected readonly staff = computed(
+    () => !!this.me() && !PARTICIPANT_ROLES.includes(this.me()!.role),
+  );
+  /** Names open the Quick Card only while that module is on, and only for staff. */
+  protected readonly quickCards = computed(
+    () => this.staff() && !!this.me()?.modules.includes('QuickCards'),
+  );
+  /** Sign out is offered only while the Pickup module is on, and only to staff. */
+  protected readonly pickup = computed(
+    () => this.staff() && !!this.me()?.modules.includes('Pickup'),
+  );
+  /** Who is still to be marked while the session is open (L2-095 criterion 3). */
+  protected readonly notYet = computed(() =>
+    this.live() ? this.entries().filter((e) => e.status === 'NotYet') : [],
+  );
 
   protected readonly totals = computed(() => {
     const list = this.entries();
@@ -339,6 +352,32 @@ export class CheckInPage {
       },
       (session, action) => this.api.checkIn(session, entry.id, arrivedAt, action, late),
     );
+  }
+
+  /** Checks in everyone not yet here, one action each, then says how many in one toast (L2-095 criterion 3). */
+  protected markRestPresent(): void {
+    const session = this.session();
+    const rest = this.notYet();
+    if (!session || !rest.length) return;
+    const at = new Date().toISOString();
+    for (const e of rest) this.patch(e.id, { status: 'Present', checkedInAt: at, late: false });
+    forkJoin(
+      rest.map((e) => this.api.checkIn(session.id, e.id, null, crypto.randomUUID())),
+    ).subscribe((outcomes) => {
+      const failed = rest.filter((_, i) => !['saved', 'queued'].includes(outcomes[i]!.status));
+      for (const e of failed) this.patch(e.id, { status: e.status, checkedInAt: e.checkedInAt });
+      this.queue.set(this.api.queued());
+      const done = rest.length - failed.length;
+      if (done)
+        this.toasts.show({
+          tone: 'success',
+          title: `${done} marked present`,
+          text: failed.length
+            ? `${failed.length} could not be checked in. Try again.`
+            : 'Everyone on the roster is marked.',
+        });
+      else this.toasts.show({ tone: 'danger', title: 'No one was checked in', text: 'Try again.' });
+    });
   }
 
   protected markAbsent(entry: RosterEntry, excused = false): void {

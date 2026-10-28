@@ -70,6 +70,13 @@
         @if (queue().length) {
           <ph-sync-chip data-testid="sync-chip">{{ queue().length }} queued</ph-sync-chip>
         }
+        @if (notYet().length) {
+          <ph-button
+            [label]="'Mark the rest present, ' + notYet().length + ' not yet here'"
+            (click)="markRestPresent()"
+            >Mark the rest present</ph-button
+          >
+        }
         @if (canRun()) {
           <ph-button hasPopup="dialog" (click)="editNotes(s)">Session notes</ph-button>
         }

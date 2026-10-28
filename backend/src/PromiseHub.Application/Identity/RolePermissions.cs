@@ -16,8 +16,8 @@ public static class RolePermissions
         Permission.ManagePrograms => role is Role.Admin or Role.ProgramDirector,
         Permission.ManageEvents => role is Role.Admin or Role.ProgramDirector or Role.SiteLead,
         Permission.CancelEvents => role is Role.Admin or Role.ProgramDirector,
-        // Volunteers run only the sessions they are assigned to, like youth workers (ADR 0043).
-        Permission.RunSessions => role is Role.Admin or Role.ProgramDirector or Role.SiteLead or Role.YouthWorker or Role.Volunteer,
+        // Volunteers run only the sessions they are assigned to, like youth workers (ADR 0043); mentors the sessions of their cohorts (ADR 0065).
+        Permission.RunSessions => role is Role.Admin or Role.ProgramDirector or Role.SiteLead or Role.YouthWorker or Role.Volunteer or Role.Mentor,
         // Youth workers run only the sessions they are assigned to (L2-007 criterion 6).
         Permission.RunAnySession => role is Role.Admin or Role.ProgramDirector or Role.SiteLead,
         Permission.SendMessages => role is Role.Admin or Role.ProgramDirector or Role.SiteLead,

@@ -125,6 +125,14 @@ export class TodayPage {
     if (s.role === 'Mentor' && s.modules.includes('Mentoring')) {
       items.push({ title: 'Mentoring', meta: 'The youth assigned to you', link: '/mentoring' });
     }
+    // Mentors take attendance for their cohorts' sessions in Roll Call (L2-095, ADR 0065).
+    if (s.role === 'Mentor' && s.modules.includes('RollCall')) {
+      items.push({
+        title: 'Check-in',
+        meta: 'Take attendance for your cohorts’ sessions today',
+        link: '/check-in',
+      });
+    }
     if (s.role === 'Volunteer') {
       for (const session of this.sessions() ?? []) {
         items.push({
