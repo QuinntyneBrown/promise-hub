@@ -40,7 +40,7 @@ Open questions: none. The youth and guardian view of shared check-ins waits for 
 
 ## Built so far
 
-Nothing yet; prompt 67 builds it in three slices: logging a mentor check-in, the history on its page and the youth record, and follow-ups on the dashboard.
+Prompt 67 delivered everything above in three slices: logging a mentor check-in from the youth record (`POST /mentoring/check-ins`, `MentorCheckInDialog`); the history (`GET /mentoring/check-ins`, `MentorCheckInsPage` with its filters, reached from the dashboard's Mentor check-ins, and the record's Mentor check-ins card); and follow-ups on the dashboard (`MentorDashboardDto.FollowUps`, the Follow-ups card). The dialog's sharing switch reads "Share with the youth and guardian" wherever it opens; Recent activity's empty line now speaks of attendance so nothing calls Roll Call a mentor check-in. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/MentorCheckInsTests.cs`, `e2e/tests/mentoring/mentor-check-in.spec.ts`, `e2e/tests/mentoring/mentor-check-in-history.spec.ts`, `e2e/tests/mentoring/mentor-follow-ups.spec.ts`.
 
 ## Requirements
 

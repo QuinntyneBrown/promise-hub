@@ -736,11 +736,11 @@ def checkin_body(err=None, *, fixed: bool = False, shared: bool = False, blank: 
                        help_="Only you can read these, even when the check-in is shared.")
     follow = field("follow-up", "Next follow-up", type_="date", value="2026-11-01" if "follow-up" in err else ("" if blank else "2026-11-12"), optional=True,
                    error=err.get("follow-up", ""), help_="It shows on your Mentoring dashboard.")
-    share_desc = ("On: marked shared for Mateo and his guardian. Your private notes stay yours." if shared
+    share_desc = ("On: marked shared for the youth and their guardian. Your private notes stay yours." if shared
                   else "Off: a private mentor note. Only you can read it.")
-    share = switch("shared", "Share with Mateo and his guardian", checked=shared, desc=share_desc)
+    share = switch("shared", "Share with the youth and guardian", checked=shared, desc=share_desc)
     informed = choice("guardian-informed", "Guardian was informed", type_="checkbox", checked=shared)
-    return (summary + youth + f'<div class="cluster">{when}</div>' + kind + how + topics + actions + private + follow + share + informed)
+    return (summary + youth + when + kind + how + topics + actions + private + follow + share + informed)
 
 
 def checkin_box(err=None, *, busy=False, alert_html="", fixed=False, shared=False, blank=False) -> str:
