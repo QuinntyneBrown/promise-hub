@@ -27,6 +27,8 @@ Open questions: none. Deferred: presence and typing indicators, scale-out across
 
 Prompt 74 delivered everything above: `IRealtimeEvents`, `RealtimeEvent`, `RealtimeHub` and `RealtimeSubscription`, `RealtimeEndpoints`, `REALTIME_EVENTS` with `EventSourceRealtimeEvents`, and the quiet refetch on the conversation, conversations and announcements pages. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/RealtimeTests.cs` and `e2e/tests/messaging/realtime.spec.ts` (the fake API answers the stream as a long poll, so every response ends with a reconnection). It is estimated at 90%, not 100%, because two parts are deferred by ADR 0068: no event fires at a scheduled announcement's send time (its readers see it on their next fetch), and the stream runs on one API instance only (scale-out needs a shared broker).
 
+Prompt 75 added the `notification` event through the `NotificationEvents` save interceptor, shared the `EventSource` between subscribers and made the bell and the notification center follow it (`RealtimeTests.cs`, `e2e/tests/notifications/receive-notifications.spec.ts`).
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

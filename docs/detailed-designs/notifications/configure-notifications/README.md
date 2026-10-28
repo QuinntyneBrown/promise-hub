@@ -28,6 +28,10 @@ Ported from Waypoint `platform-services/configure-notifications` (`L2-PLATFORM-0
 
 Open questions: none. Deferred by ADR 0069: email per kind, push, quiet hours and youth onboarding defaults.
 
+## Built so far
+
+Prompt 75 delivered everything above: `NotificationPreference` (migration `NotificationPreferences`), `NotificationPreferencesHandler` with `GET` and `PUT /notifications/preferences`, the writer's check, `NOTIFICATION_PREFERENCES_API`, `NotificationPreferencesPage` at `/account/notifications`, the Notifications card on Your account and the center's Settings link. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/NotificationPreferencesTests.cs` and `e2e/tests/notifications/notification-preferences.spec.ts`. It is estimated at 90%, not 100%, because ADR 0069 defers email per kind, push and quiet hours.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

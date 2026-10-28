@@ -30,6 +30,10 @@ Notifications are not a module. A kind follows its modules: a notice is never cr
 
 Open questions: none. Deferred by ADR 0069: due-soon and session reminders, notices to a mentor on a submission or a quiz to approve, a notice at a scheduled announcement's send time.
 
+## Built so far
+
+Prompt 75 delivered everything above: `NotificationKinds`, `NotificationWriter.NotifyMembersAsync` with every producer moved onto it, the `assignments`, `messages` and `announcements` producers, `NotificationEvents`, the shared `EventSource`, and the center's kind names, New badges, Settings link and quiet refetch, with the bell following the stream. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/ReceiveNotificationsTests.cs`, `RealtimeTests.cs` and `e2e/tests/notifications/receive-notifications.spec.ts`. It is estimated at 90%, not 100%, because ADR 0069 defers reminders, a mentor's notices on submissions and quizzes to approve, and a notice at a scheduled announcement's send time.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

@@ -26,8 +26,8 @@ YOUTH_ITEMS = [
     ("Message", "New message from Daniel Osei", "Today, 4:05 pm", True, "conversation"),
     ("Announcement", "Marisol Delgado posted an announcement: Tutoring night moves to Room 2", "Today, 3:30 pm", True, "youth-announcements"),
     ("Assigned work", "Daniel Osei assigned you the Servant Leadership quiz, due Fri 13 Nov.", "Today, 1:15 pm", True, "learn-home"),
-    ("Grade", "Daniel Osei approved Pick Up the Towel: 9 of 10 points.", "Yesterday, 6:20 pm", False, "learn-submission"),
-    ("Badge", "You earned the Faithful Five badge.", "Mon 2 Nov, 5:00 pm", False, "learn-badges"),
+    ("Learning", "Daniel Osei approved Pick Up the Towel: 9 of 10 points.", "Yesterday, 6:20 pm", False, "learn-submission"),
+    ("Learning", "You earned the Faithful Five badge.", "Mon 2 Nov, 5:00 pm", False, "learn-badges"),
 ]
 MENTOR_ITEMS = [
     ("Message", "New message from Sofía Rivera", "Today, 3:58 pm", True, "conversation"),
@@ -77,6 +77,7 @@ MENTOR_TOPICS = [YOUTH_TOPICS[2], YOUTH_TOPICS[3]]
 STAFF_TOPICS = [
     ("incidents", "Incidents to review", "When an incident is reported.", True),
     ("mentoring", "At-risk flags", "When a mentor flags a youth as at risk.", True),
+    ("requests", "Family data requests", "When a household asks for a copy or deletion of its data.", True),
 ]
 
 
@@ -100,7 +101,7 @@ def account_notifications(S):
           main=prefs_hdr() + prefs_form(YOUTH_TOPICS),
           notes=note("GET /notifications/preferences offers only the kinds her role receives whose module is on. Everything starts on. Email for these is not offered yet.", "top: 5rem; right: 1rem;"))
     S.add("mentor", "Daniel’s choices: messages and announcements.", **MKW, unread=1, main=prefs_hdr() + prefs_form([(k, t, d, True) for k, t, d, _ in MENTOR_TOPICS]))
-    S.add("staff", "Marisol (Program director): incidents to review and at-risk flags.", nav="", user=MARISOL, unread=2, main=prefs_hdr() + prefs_form(STAFF_TOPICS))
+    S.add("staff", "Marisol (Program director): incidents to review, at-risk flags and family data requests.", nav="", user=MARISOL, unread=2, main=prefs_hdr() + prefs_form(STAFF_TOPICS))
     S.add("module-off", "Messages is off: no choice is offered for messages or announcements.", **(YKW | {"modules": ["today", "learning", "schedule"]}), unread=1,
           main=prefs_hdr() + prefs_form(YOUTH_TOPICS[:2]))
     S.add("empty", "Leo (Volunteer) receives none of these kinds: the page says so.", nav="", role="volunteer", user=STAFF["leo"], unread=0,

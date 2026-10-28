@@ -78,7 +78,7 @@
 | Platform admin | Create an organization | Add a tenant and prepare its onboarding. | [3 days](detailed-designs/organizations/manage-organizations/README.md) | 85% |
 | Platform admin | Suspend an organization | Block access and outbound messages while retaining tenant data. | [3 days](detailed-designs/organizations/manage-organizations/README.md) | 85% |
 | Platform admin | Manage organizations | Review tenants across the deployment with platform-only access. | [3 days](detailed-designs/organizations/manage-organizations/README.md) | 85% |
-| Everyone | Receive notifications in real time | Get near-real-time in-app alerts for relevant activity. | [8 days](detailed-designs/notifications/receive-notifications/README.md) | 0% |
+| Everyone | Receive notifications in real time | Get near-real-time in-app alerts for relevant activity. | [8 days](detailed-designs/notifications/receive-notifications/README.md) | 90% |
 | Everyone | Manage personal settings | Update profile, notifications, theme and password. | [18 days](prompts/78-manage-personal-settings.md) | 0% |
 | Everyone | Walking skeleton | Tenancy, migrate and seed, the shell and audit recording that every journey builds on. | [supporting](prompts/01-walking-skeleton.md) | 100% · [video](videos/01-walking-skeleton/README.md) |
 | Everyone | Operational readiness | Structured request logs, per-tenant metrics and on-call alerts, and the performance budgets measured in CI. | [supporting](prompts/48-operational-readiness.md) | 40% · [video](videos/48-operational-readiness/README.md) |
