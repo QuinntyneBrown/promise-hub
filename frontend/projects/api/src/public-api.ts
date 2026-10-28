@@ -145,6 +145,7 @@ export * from './lib/learning/answers-outcome';
 export * from './lib/learning/review-question';
 export * from './lib/learning/quiz-result';
 export * from './lib/learning/assignment-item';
+export * from './lib/learning/assigned-work-item';
 export * from './lib/learning/rubric-line';
 export * from './lib/learning/submission-ref';
 export * from './lib/learning/assignment-brief';

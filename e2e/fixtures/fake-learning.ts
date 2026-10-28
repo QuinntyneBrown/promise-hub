@@ -6,6 +6,7 @@ import type { FakeQuiz } from './fake-assessments';
 import { FakeQuizTaking, type QuizPlace } from './fake-quiz-taking';
 import type { FakeAssignment } from './fake-assessments';
 import { FakeSubmissions, type AssignmentPlace } from './fake-submissions';
+import type { FakeAssignedWork } from './fake-assigned-work';
 
 export interface LessonState {
   lesson: FakeLesson;
@@ -193,8 +194,43 @@ export class FakeLearning {
     return null;
   }
 
-  /** GET /learning/home. */
-  home(route: Route, membershipId: string, programs: FakeProgram[]): Promise<void> {
+  /**
+   * The work assigned to her that she can still open and has not done (L2-092 criterion 5, ADR 0063): a lesson not completed, a quiz with
+   * no attempt scored or awaiting approval, an assignment not handed in; soonest due first, with days left from today (5 Nov 2026).
+   */
+  assigned(membershipId: string, tracks: TrackState[], rows: FakeAssignedWork[]) {
+    const open = new Map<string, { title: string; module: string; lessonKind: string | null }>();
+    for (const m of tracks.flatMap((t) => t.modules)) {
+      m.lessons.filter((l) => !l.done).forEach((l) => open.set(`Lesson:${l.lesson.id}`, { title: l.lesson.title, module: m.module.title, lessonKind: l.lesson.kind }));
+      m.quizzes
+        .filter((q) => !this.quizzes.mine(membershipId, q.quiz.id).some((a) => a.status === 'Scored' || a.status === 'AwaitingApproval'))
+        .forEach((q) => open.set(`Quiz:${q.quiz.id}`, { title: q.quiz.title, module: m.module.title, lessonKind: null }));
+      m.assignments
+        .filter((a) => !this.work.mine(membershipId, a.assignment.id))
+        .forEach((a) => open.set(`Assignment:${a.assignment.id}`, { title: a.assignment.title, module: m.module.title, lessonKind: null }));
+    }
+    const day = (iso: string) => Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10)) / 86_400_000;
+    return rows
+      .filter((r) => open.has(`${r.kind}:${r.itemId}`))
+      .map((r) => {
+        const item = open.get(`${r.kind}:${r.itemId}`)!;
+        return {
+          kind: r.kind,
+          itemId: r.itemId,
+          lessonKind: item.lessonKind,
+          title: item.title,
+          moduleTitle: item.module,
+          dueOn: r.dueOn,
+          daysLeft: day(r.dueOn) - day('2026-11-05'),
+          assignedBy: r.assignedBy,
+          message: r.message,
+        };
+      })
+      .sort((a, b) => a.dueOn.localeCompare(b.dueOn) || a.title.localeCompare(b.title));
+  }
+
+  /** GET /learning/home; assigned is her assigned work while Mentoring is on, otherwise empty. */
+  home(route: Route, membershipId: string, programs: FakeProgram[], assigned: FakeAssignedWork[] = []): Promise<void> {
     const tracks = this.tracks(membershipId, programs);
     let next = null;
     for (const t of tracks) {
@@ -228,6 +264,7 @@ export class FakeLearning {
           completedLessons: trackDone(t),
           totalLessons: trackTotal(t),
         })),
+        assigned: this.assigned(membershipId, tracks, assigned),
       },
     });
   }

@@ -34,6 +34,22 @@
     } @else {
       <div class="split">
         <div class="stack">
+          @if (h.assigned.length) {
+            <ph-card title="Assigned to you" [flush]="true">
+              <ph-list label="Work assigned to you, soonest due first">
+                @for (a of h.assigned; track a.kind + a.itemId) {
+                  <ph-list-item
+                    [title]="a.title"
+                    [meta]="assignedMeta(a)"
+                    [text]="a.message"
+                    [link]="assignedLink(a)"
+                  >
+                    <ph-badge [tone]="dueTone(a)">{{ dueLabel(a) }}</ph-badge>
+                  </ph-list-item>
+                }
+              </ph-list>
+            </ph-card>
+          }
           @if (h.next; as n) {
             <ph-card title="Continue where you left off">
               <div class="stack">

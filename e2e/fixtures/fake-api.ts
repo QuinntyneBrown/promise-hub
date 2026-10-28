@@ -627,7 +627,7 @@ export class FakeApi {
     ['GET', /^\/api\/learning\/progress$/, (route) => this.youthWork(route, (m, programs) => this.journey.progress(route, m, programs, this.youthLinks.get(m.id) ?? null, this.youthAttendance(m)))],
     ['GET', /^\/api\/learning\/badges$/, (route) => this.youthWork(route, (m, programs) => this.journey.badges(route, m, programs))],
     ['GET', /^\/api\/learning\/journey$/, (route) => this.youthWork(route, (m, programs) => this.journey.journey(route, m, programs, this.youthLinks.get(m.id) ?? null))],
-    ['GET', /^\/api\/learning\/home$/, (route) => this.youthWork(route, (m, programs) => this.learningState.home(route, m.id, programs))],
+    ['GET', /^\/api\/learning\/home$/, (route) => this.youthWork(route, (m, programs) => this.learningState.home(route, m.id, programs, this.assignedTo(m)))],
     ['GET', /^\/api\/learning\/tracks\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.track(route, m.id, programs, p['id']!))],
     ['GET', /^\/api\/learning\/modules\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.module(route, m.id, programs, p['id']!))],
     ['GET', /^\/api\/learning\/lessons\/(?<id>[^/]+)$/, (route, p) => this.youthWork(route, (m, programs) => this.learningState.lesson(route, m.id, programs, p['id']!))],
@@ -1442,6 +1442,13 @@ export class FakeApi {
     if (wasOpen && flag.status === 'Resolved') {
       this.auditEntries.push({ organizationId: m.organizationId, when: NOW.toISOString(), who: m.personName, action: 'Updated', record: 'AtRiskFlag', summary: `At-risk flag on ${flag.youthName} resolved by ${m.personName}`, device: null });
     }
+  }
+
+  /** The work assigned to a youth's own child, only while Mentoring is on (L2-092 criteria 5 and 6). */
+  private assignedTo(m: Membership) {
+    const childId = this.youthLinks.get(m.id);
+    if (!childId || !this.modules.get(m.organizationId)!.includes('Mentoring')) return [];
+    return this.assignedWork.rows.filter((r) => r.organizationId === m.organizationId && r.childId === childId);
   }
 
   /** The caller when a mentor with Mentoring and Learning on (L2-092 criterion 6); otherwise answers 401, 403 or 404. */

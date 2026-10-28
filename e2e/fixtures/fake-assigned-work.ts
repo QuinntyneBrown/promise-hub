@@ -51,6 +51,11 @@ export class FakeAssignedWorkStore {
 
   constructor(private readonly curriculum: FakeCurriculum) {}
 
+  /** Work a mentor assigned earlier. */
+  seed(row: Pick<FakeAssignedWork, 'childId' | 'kind' | 'itemId' | 'dueOn'> & Partial<FakeAssignedWork>): void {
+    this.rows.push({ organizationId: 'org-harbourview', programId: null, message: null, assignedBy: 'Daniel Osei', ...row, id: row.id ?? `aw-${this.next++}` });
+  }
+
   /** Every lesson, quiz and assignment of the tracks, in the order the dialog lists them. */
   items(trackIds: string[]): WorkItem[] {
     const c = this.curriculum;

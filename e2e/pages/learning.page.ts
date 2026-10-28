@@ -16,6 +16,19 @@ export class LearningPage extends BasePage {
     await this.page.getByRole('region', { name: 'Your journey' }).getByRole('link', { name: /^Your journey/ }).click();
   }
 
+  /** Assigned to you: the work her mentors assigned that she has not done, soonest due first (L2-092 criterion 5). */
+  get assigned(): Locator {
+    return this.page.getByRole('list', { name: 'Work assigned to you, soonest due first' }).getByRole('listitem');
+  }
+
+  get assignedHeading(): Locator {
+    return this.page.getByRole('heading', { name: 'Assigned to you' });
+  }
+
+  async openAssigned(title: string): Promise<void> {
+    await this.assigned.getByRole('link', { name: new RegExp(`^${title}`) }).click();
+  }
+
   get emptyState(): Locator {
     return this.page.getByRole('heading', { name: 'No lessons yet' });
   }
