@@ -77,6 +77,9 @@ export class EventPage {
       { key: 'when', term: 'When', value: formatWhen(e.startsAt, e.endsAt) },
       { key: 'program', term: 'Program', value: e.programName },
       { key: 'where', term: 'Where', value: e.place ?? 'Not given' },
+      ...(e.seriesSize
+        ? [{ key: 'repeats', term: 'Repeats', value: `Weekly · ${e.seriesSize} sessions` }]
+        : []),
       { key: 'roster', term: 'Roster', value: `${e.rosterSize} children` },
       {
         key: 'no-show',

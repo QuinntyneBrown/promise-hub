@@ -58,6 +58,14 @@ export class EventsPage extends BasePage {
     await this.page.getByRole('radio', { name: values.slip ? /^Required/ : /^Not needed/ }).check();
   }
 
+  get repeatWeekly(): Locator {
+    return this.page.getByRole('switch', { name: 'Repeat weekly' });
+  }
+
+  get toast(): Locator {
+    return this.page.getByTestId('toast');
+  }
+
   async submitEvent(label = 'Create event'): Promise<void> {
     await this.page.getByRole('button', { name: label }).click();
   }

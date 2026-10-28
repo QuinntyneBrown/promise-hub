@@ -31,7 +31,7 @@ export class HttpEventsApi implements EventsApi {
   }
 
   create(fields: EventFields): Observable<WriteOutcome> {
-    return toWrite(this.http.post<{ id: string }>(`${this.baseUrl}/events`, fields));
+    return toWrite(this.http.post<{ id: string; count: number }>(`${this.baseUrl}/events`, fields));
   }
 
   update(id: string, fields: EventFields): Observable<WriteOutcome> {

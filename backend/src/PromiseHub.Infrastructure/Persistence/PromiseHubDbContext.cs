@@ -522,6 +522,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(x => x.EndsAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.Property(x => x.CancelledAt).HasConversion(v => v.HasValue ? v.Value.UtcTicks : (long?)null, v => v.HasValue ? new DateTimeOffset(v.Value, TimeSpan.Zero) : null);
             e.HasOne<Domain.Programs.Program>().WithMany().HasForeignKey(x => x.ProgramId);
+            e.HasIndex(x => x.SeriesId);
         });
         modelBuilder.Entity<PermissionSlip>(e =>
         {

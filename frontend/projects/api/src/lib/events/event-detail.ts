@@ -18,4 +18,6 @@ export interface EventDetail {
   cancelledBy: string | null;
   cancellationMessage: string | null;
   guardiansTold: boolean;
+  /** How many sessions share this one's weekly series; null for a single event. */
+  seriesSize: number | null;
 }

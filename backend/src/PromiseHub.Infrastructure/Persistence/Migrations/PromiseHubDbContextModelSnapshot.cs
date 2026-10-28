@@ -1128,6 +1128,9 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.Property<bool>("RequiresSlip")
                         .HasColumnType("INTEGER");
 
+                    b.Property<Guid?>("SeriesId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("SessionNotes")
                         .HasColumnType("TEXT");
 
@@ -1148,6 +1151,8 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.HasIndex("OrganizationId");
 
                     b.HasIndex("ProgramId");
+
+                    b.HasIndex("SeriesId");
 
                     b.ToTable("Events");
                 });

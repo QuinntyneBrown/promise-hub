@@ -10,7 +10,7 @@ import { FakeReviews, type YouthAccounts } from './fake-reviews';
 import { FakeMentorCheckIns, type FakeMentorCheckIn, TODAY } from './fake-mentor-check-ins';
 import { FakeAtRiskFlags } from './fake-at-risk-flags';
 import { FakeAssignedWorkStore, type Recipient } from './fake-assigned-work';
-import { type FakeEvent, type FakeProgram, NOW, seedEvents, seedPrograms } from './programs';
+import { type FakeEvent, type FakeProgram, NOW, seedEvents, seedPrograms, weeklyStarts } from './programs';
 import { type Membership, type ModuleId, moduleCatalog, memberships, organizations, seededMfaCode, seededPassword } from './seed';
 
 /** Mirrors backend RolePermissions. */
@@ -2695,7 +2695,9 @@ export class FakeApi {
     const e = this.ownEvent(m, id);
     if (!e) return route.fulfill({ status: 404 });
     const { organizationId: _, ...rest } = e;
-    return route.fulfill({ json: { ...rest, programName: this.eventSummary(e).programName, rosterSize: this.eventSummary(e).rosterSize } });
+    const { seriesId, ...detail } = rest;
+    const seriesSize = seriesId ? this.events.filter((x) => x.seriesId === seriesId).length : null;
+    return route.fulfill({ json: { ...detail, programName: this.eventSummary(e).programName, rosterSize: this.eventSummary(e).rosterSize, seriesSize } });
   }
 
   private async saveEvent(route: Route, id: string | null): Promise<void> {
@@ -2704,7 +2706,7 @@ export class FakeApi {
     if (!can.manageEvents(m)) return this.forbidden(route);
     const existing = id ? this.ownEvent(m, id) : undefined;
     if (id && !existing) return route.fulfill({ status: 404 });
-    const b = route.request().postDataJSON() as { name: string; programId: string; startsAt: string | null; endsAt: string | null; place: string; requiresSlip: boolean; noShowAlert: boolean; staffNotes: string };
+    const b = route.request().postDataJSON() as { name: string; programId: string; startsAt: string | null; endsAt: string | null; place: string; requiresSlip: boolean; noShowAlert: boolean; staffNotes: string; repeatsWeekly?: boolean };
     const errors: Record<string, string> = {};
     if (!b.name?.trim()) errors['name'] = 'Enter the event name.';
     const program = this.ownProgram(m, b.programId);
@@ -2712,6 +2714,13 @@ export class FakeApi {
     if (!b.startsAt) errors['startsAt'] = 'Enter when it starts.';
     if (!b.endsAt) errors['endsAt'] = 'Enter when it ends.';
     else if (b.startsAt && new Date(b.endsAt) <= new Date(b.startsAt)) errors['endsAt'] = 'End after it starts.';
+    // Repeat weekly applies only when creating: one session a week through the program's last day, at most 60 (L2-093, mirrors EventRules).
+    const weekly = !id && !!b.repeatsWeekly && !!program && !!b.startsAt;
+    const starts = weekly ? weeklyStarts(new Date(b.startsAt!).toISOString(), program!.endsOn) : [];
+    if (weekly && starts.length === 0) {
+      const last = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${program!.endsOn}T12:00:00Z`)).replace(',', '');
+      errors['startsAt'] = `Start on or before the program’s last day, ${last}.`;
+    } else if (starts.length > 60) errors['repeatsWeekly'] = 'A weekly series can have at most 60 sessions.';
     if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
     const values = {
       name: b.name.trim(),
@@ -2727,19 +2736,27 @@ export class FakeApi {
       Object.assign(existing, values, { slipStatus: values.requiresSlip ? (existing.slipStatus === 'NotNeeded' ? 'Draft' : existing.slipStatus) : 'NotNeeded' });
       return route.fulfill({ status: 204 });
     }
-    const newId = `e-new-${this.nextId++}`;
-    this.events.push({
-      id: newId,
-      organizationId: m.organizationId,
-      ...values,
-      status: 'Scheduled',
-      slipStatus: values.requiresSlip ? 'Draft' : 'NotNeeded',
-      cancelledAt: null,
-      cancelledBy: null,
-      cancellationMessage: null,
-      guardiansTold: false,
+    const length = new Date(values.endsAt).getTime() - new Date(values.startsAt).getTime();
+    const seriesId = weekly ? `series-${this.nextId++}` : null;
+    const ids = (weekly ? starts : [values.startsAt]).map((startsAt) => {
+      const newId = `e-new-${this.nextId++}`;
+      this.events.push({
+        id: newId,
+        organizationId: m.organizationId,
+        ...values,
+        startsAt,
+        endsAt: new Date(new Date(startsAt).getTime() + length).toISOString(),
+        status: 'Scheduled',
+        slipStatus: values.requiresSlip ? 'Draft' : 'NotNeeded',
+        cancelledAt: null,
+        cancelledBy: null,
+        cancellationMessage: null,
+        guardiansTold: false,
+        seriesId,
+      });
+      return newId;
     });
-    return route.fulfill({ status: 201, json: { id: newId } });
+    return route.fulfill({ status: 201, json: { id: ids[0], count: ids.length } });
   }
 
   private async cancelEvent(route: Route, id: string): Promise<void> {
