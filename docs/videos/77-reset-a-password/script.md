@@ -24,7 +24,7 @@ Daniel Osei mentors Sofía's cohort. He resets on a laptop the same way and land
 
 ## Modules off and other states
 
-Identity belongs to no module and is always on, but the home it opens follows the modules. Lucía Rivera is a youth at Northgate, where Learning and Mentoring are off. After her reset she lands on Today, and nothing from Learning is fetched; Learning answers not found for her. An address without an at sign is refused inline. An earlier link that a newer one replaced, a link older than an hour, a used link, or one whose account was deactivated after it was sent says This link has expired, with Send a new link. A save that fails keeps the form and says it didn't save.
+Identity belongs to no module and is always on, but the home it opens follows the modules. Lucía Rivera is a youth at Northgate, where Learning and Mentoring are off. After her reset she lands on Today, and nothing from Learning is fetched; Learning answers not found for her. An address without an at sign is refused inline. An earlier link that a newer one replaced, a link older than an hour, a used link, or one whose account was deactivated after it was sent says This link has expired, with Send a new link. A save that fails keeps the form and says it didn't save. Here are Lucía's Today, the expired link and the failed save, side by side.
 
 ## Secrets stay secret
 
