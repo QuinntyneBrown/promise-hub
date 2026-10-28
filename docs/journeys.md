@@ -61,7 +61,7 @@
 | Youth | Submit assignments | Submit work and follow it through review and revision. | [9 days](detailed-designs/learning/submit-assignments/README.md) | 100% · [video](videos/62-submit-assignments/README.md) |
 | Youth | View journey and progress | See badges, the journey roadmap and overall progress. | [10 days](detailed-designs/learning/view-learning-journey/README.md) | 100% · [video](videos/65-view-journey-and-progress/README.md) |
 | Youth | Write reflections | Write private-by-default reflections after a lesson. | [4 days](detailed-designs/learning/write-reflections/README.md) | 100% · [video](videos/66-write-reflections/README.md) |
-| Youth | Reset a password as a youth or mentor | Recover a youth or mentor account through an emailed link. | [4 days](prompts/77-reset-a-password.md) | 0% |
+| Youth | Reset a password as a youth or mentor | Recover a youth or mentor account through an emailed link. | [3 days](detailed-designs/identity/recover-password/README.md) | 90% |
 | Mentor | Use the mentor dashboard | See the roster of assigned youth and each youth's record. | [7 days](detailed-designs/mentoring/manage-mentor-roster/README.md) | 100% · [video](videos/55-use-the-mentor-dashboard/README.md) |
 | Mentor | Grade and assess | Grade submissions, approve quiz results and assess competencies. | [13 days](detailed-designs/mentoring/grade-submissions/README.md) | 100% · [video](videos/63-grade-and-assess/README.md) |
 | Mentor | Record mentor check-ins | Log check-ins with assigned youth. | [5 days](detailed-designs/mentoring/record-mentor-check-ins/README.md) | 100% · [video](videos/67-record-mentor-check-ins/README.md) |

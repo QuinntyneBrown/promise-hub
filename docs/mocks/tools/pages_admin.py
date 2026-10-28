@@ -299,7 +299,7 @@ def forgot_password(S):
     def sent(masked):
         return (auth_head("Check your email", f"If {masked} has an account, a link is on its way. It works once, for one hour.")
                 + btn("Back to sign in", "primary", href=page("sign-in"), size="lg", block=True)
-                + f'<p class="text-center text-muted">Didn’t get it? Check spam, or {btn("Resend the email", "ghost", size="sm")}</p>')
+                + '<p class="text-center text-muted">Didn’t get it? Check spam, or</p>' + btn("Resend the email", "ghost"))
     S.add("default", "Ask for a reset link.", main=auth_head("Reset your password", "The link works for one hour.") + form())
     S.add("youth", "Sofía (Youth) asks with her own email; the same form serves youth, mentors and staff.", main=auth_head("Reset your password", "The link works for one hour.") + form(who="sofia@harbourview.example"),
           notes=note("Same 202 and the same page for an unknown, deactivated or removed address; no email goes to them. At most three emails per address in an hour; a fourth request looks identical and sends nothing.", "top: 5rem; right: 1rem;"))

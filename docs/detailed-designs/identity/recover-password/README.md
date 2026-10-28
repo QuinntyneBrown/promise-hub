@@ -30,16 +30,18 @@ Backend:
 
 - **`AuthEndpoints`** — `POST /auth/forgot-password` (always 202), `GET /auth/reset-password/{token}` (the email, or 410) and `POST /auth/reset-password` (422 per field, 410, or a session through `SessionCookie`); all anonymous, unchanged.
 - **`PasswordResetHandler.RequestAsync`** — sends nothing when the address has no account or no current membership (`ActiveMembership` skips removed and deactivated memberships, ADR 0070), or when `PasswordReset.PerHour` (3) links were created for the account in the last hour; otherwise stores the new link's hash and emails it.
-- **`PasswordResetHandler.FindAsync`** — a link is usable when it is unused, under an hour old and the newest of its account. **`CheckAsync`** also answers null (410) when the account no longer has a current membership, as `ResetAsync` already did.
+- **`PasswordResetHandler.FindAsync`** — a link is usable when it is unused and under an hour old; sending a new link marks the earlier ones used, so only the newest works. **`CheckAsync`** also answers null (410) when the account no longer has a current membership, as `ResetAsync` already did.
 - **`PasswordResetHandler.ResetAsync`** — `PasswordPolicy.Check` with the account's email (`set-secure-password`), the repeat, then the new hash, the link used, `StaffUser.EndOtherSessions()` (the session version is per person, so sessions in every organization end), the tenant resolved from the first current membership and the audit entry "Reset password by emailed link" in that organization only.
-- **`PasswordReset`** — `PromiseHub.Domain/Identity/`; gains the `PerHour` constant. Not tenant-owned, like `StaffUser`: a password belongs to the person, not to an organization. No migration.
+- **`PasswordReset`** — `PromiseHub.Domain/Identity/`; gains the `PerHour` constant and `Replace(now)`, which a newer link calls on every earlier one. Not tenant-owned, like `StaffUser`: a password belongs to the person, not to an organization. No migration.
 - **`RequestLoggingMiddleware`** — logs the route template, so neither the token nor the password reaches the log (`L2-116`).
 
 The fake API in `e2e/fixtures/fake-api.ts` mirrors the throttle, the newest-link rule and the role home.
 
 ## Built so far
 
-<TO SUPPLY> after implementation.
+Prompt 77 delivered everything above: the throttle and the newest-link rule in `PasswordResetHandler` (`PasswordReset.PerHour`, `PasswordReset.Replace`, which marks an earlier link used when a newer one is sent), the current-membership check on `CheckAsync`, `maskEmail`, Resend the email with the Sent again toast, the "Email" label and the Password updated toast on the role home. The fake API mirrors the throttle, the newest link and the current-membership check. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/PasswordResetForEveryRoleTests.cs`, `e2e/tests/account/reset-a-password.spec.ts`.
+
+Deferred (ADR 0071): an admin sending a reset from the person record, change password while signed in, and clearing the token from the address bar once read.
 
 ## Requirements
 
