@@ -32,7 +32,7 @@ Backend:
 
 ## Built so far
 
-Slice 46 delivered everything above (ADR 0040). Throttling requests per address is not built.
+Slice 46 delivered everything above (ADR 0040). Prompt 77 (ADR 0071) added the throttle of three links per account an hour, made only the newest link work and opened the pages to every role (`recover-password`).
 
 ## Requirements
 

@@ -2,9 +2,19 @@ import { ChangeDetectionStrategy, Component, effect, inject, input, signal } fro
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AUTH_API, ResetCheck, SESSION_API, roleHome } from '@promisehub/api';
-import { PhAlert, PhAuthCard, PhButton, PhSkipLink, PhTextField } from '@promisehub/components';
+import {
+  PhAlert,
+  PhAuthCard,
+  PhButton,
+  PhSkipLink,
+  PhTextField,
+  ToastService,
+} from '@promisehub/components';
 
-/** Reset password (mock: reset-password): from the emailed link, choose a new password and carry on signed in. */
+/**
+ * Reset password (mock: reset-password): from the emailed link, anyone with an account chooses a new password and carries on
+ * signed in on the home of their role (L2-044, L2-115).
+ */
 @Component({
   selector: 'ph-reset-password-page',
   imports: [FormsModule, PhAlert, PhAuthCard, PhButton, PhSkipLink, PhTextField],
@@ -15,6 +25,7 @@ export class ResetPasswordPage {
   private readonly auth = inject(AUTH_API);
   private readonly router = inject(Router);
   private readonly session = inject(SESSION_API);
+  private readonly toasts = inject(ToastService);
 
   /** The token from the emailed link's query string. */
   readonly token = input<string>('');
@@ -42,6 +53,12 @@ export class ResetPasswordPage {
       this.busy.set(false);
       switch (r.status) {
         case 'signed-in':
+          // The toast region lives in the app root, so this stays as the role home opens (L2-115 criterion 5).
+          this.toasts.show({
+            tone: 'success',
+            title: 'Password updated',
+            text: 'Other devices were signed out.',
+          });
           // The home of the person's role, as after signing in (L2-046).
           this.session.current().subscribe({
             next: (session) => void this.router.navigateByUrl(roleHome(session)),

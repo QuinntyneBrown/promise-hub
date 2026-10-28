@@ -52,6 +52,8 @@ Slice 45 added the account page (`GET /me/account`), recovery codes stored as ha
 
 Slice 02 delivered `SignInPage` (default, invalid, submitting, error, expired and locked) and `MfaPage` in `account`, the auth guard and account-menu sign-out in the shell, `POST /auth/sign-in`, `/auth/mfa` and `/auth/sign-out`, `SignInHandler`, `CompleteMfaHandler`, the attempt-based lockout, TOTP verification and audited sign-ins. Sessions are cookie tickets (ADR 0005), so `SessionMiddleware`, `ISessionStore`, `StaffSession`, recovery codes, trusted devices, sign-out-everywhere and the session-expired dialog that replays a form are deferred to `manage-sessions` and `recover-account-access`; today an expired session returns to sign-in with the destination kept.
 
+Prompt 77 (ADR 0071) opened "Forgot your password?" to every role: youth and mentors reset through the same pages and land on their role home (`recover-password`).
+
 Passwords set through an invitation or a reset follow one rule, `PasswordPolicy` (`set-secure-password`, `L2-053`); sign-in itself only verifies the stored hash.
 
 ## Requirements

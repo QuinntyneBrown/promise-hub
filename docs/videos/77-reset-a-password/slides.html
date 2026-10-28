@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 77 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="77" data-video-title="Reset a password as a youth or mentor" data-parts="Introduction|Ask|Same answer|Resend|New password|Mentor|States|Secrets|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 77</div>
+  <h1>Reset a password as a youth or mentor</h1>
+  <p class="lead">A link that reveals nothing, works once, and opens the home of your role</p>
+</section>
+
+<section id="ask" data-part="1" data-cue="Sofía Rivera is twelve and in After-School Tutoring" data-clip="clips/forgot-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Forgot your password?</h3><p>Sofía asks for a link, then resends it.</p></div>
+</section>
+
+<section id="ask-shots" data-part="1" data-cue="The page says Check your email">
+  <h2>One page for every role</h2>
+  <div class="cols">
+    <img class="shot" alt="Reset your password on a phone with the Email field" src="shots/phone-forgot.png">
+    <img class="shot" alt="Check your email with s••••@harbourview.example, Back to sign in and Resend the email" src="shots/phone-sent.png">
+  </div>
+  <p class="muted small">POST /auth/forgot-password · 202 · the address masked on screen · L2-115</p>
+</section>
+
+<section id="same" data-part="2" data-cue="The server answers accepted for every address.">
+  <h2>The same answer for everyone</h2>
+  <ul>
+    <li>No account, a deactivated account, a removed membership: the same 202 and the same page</li>
+    <li>No email to any of them</li>
+    <li>Nothing tells a guesser whether an address has an account</li>
+  </ul>
+</section>
+
+<section id="resend" data-part="3" data-cue="Didn't get it? Sofía taps Resend the email">
+  <h2>Resend, with a limit</h2>
+  <img class="shot" alt="The Sent again toast over Check your email" src="shots/phone-resent.png">
+  <p class="muted small">A new link replaces the earlier ones · at most PasswordReset.PerHour (3) an hour · ADR 0071</p>
+</section>
+
+<section id="reset" data-part="4" data-cue="Sofía opens the emailed link." data-clip="clips/reset-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Choose a new password</h3><p>The policy, then Learning.</p></div>
+</section>
+
+<section id="reset-shots" data-part="4" data-cue="She chooses another one, types it twice">
+  <h2>One rule, then the role home</h2>
+  <div class="cols three">
+    <img class="shot" alt="Choose a new password, for sofia@harbourview.example" src="shots/phone-reset.png">
+    <img class="shot" alt="Don’t use your email in your password." src="shots/phone-weak.png">
+    <img class="shot" alt="Learning with the Password updated toast" src="shots/phone-learning-updated.png">
+  </div>
+  <p class="muted small">PasswordPolicy (L2-053) · session version + 1 · audited in one organization · L2-116</p>
+</section>
+
+<section id="mentor" data-part="5" data-cue="Daniel Osei mentors Sofía's cohort." data-clip="clips/mentor-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Daniel</h3><p>He lands on Mentoring.</p></div>
+</section>
+
+<section id="states" data-part="6" data-cue="Identity belongs to no module and is always on" data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>States</h3><p>Lucía at Northgate, invalid, expired, failed.</p></div>
+</section>
+
+<section id="states-shots" data-part="6" data-cue="Here are Lucía's Today, the expired link">
+  <h2>Off, expired, failed</h2>
+  <div class="cols three">
+    <img class="shot" alt="Lucía lands on Today at Northgate" src="shots/desktop-today-learning-off.png">
+    <img class="shot" alt="This link has expired, with Send a new link" src="shots/desktop-expired.png">
+    <img class="shot" alt="That didn’t save, with the form kept" src="shots/desktop-failed.png">
+  </div>
+  <p class="muted small">Learning off: Today, /learning/me 404 · replaced, used, old or deactivated: 410 · “Enter your email address.” in the clip</p>
+</section>
+
+<section id="secrets" data-part="7" data-cue="Only the hash of each link is stored">
+  <h2>Secrets stay secret</h2>
+  <ul>
+    <li>Links stored as hashes; passwords as salted PBKDF2 hashes</li>
+    <li>The request log keeps <code>/auth/reset-password/{token}</code>, never the token</li>
+    <li>The audit entry names the account, never the token or the password</li>
+    <li>The token in the clear: only in the email</li>
+  </ul>
+</section>
+
+<section id="testing" data-part="8" data-cue="The API tests in PasswordResetForEveryRoleTests">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>PasswordResetForEveryRoleTests</code>: no enumeration, the limit, the newest link, deactivation, policy, sessions, audit, logs</li>
+    <li><code>PasswordResetTests</code> and <code>PasswordPolicyTests</code>: the staff path still holds</li>
+    <li><code>reset-a-password.spec.ts</code>: Sofía, Daniel and Lucía with axe, on a laptop and a phone</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="9" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>The answer never says whether an address has an account</li><li>Three links an hour; only the newest works, once, for an hour</li><li>One rule for everyone; other sessions end; the role home opens</li></ul>
+  <p class="muted">Next: manage personal settings</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

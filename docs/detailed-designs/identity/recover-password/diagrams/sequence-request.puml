@@ -1,0 +1,39 @@
+@startuml
+title UML sequence — Ask for a link (L2-115 criteria 1 to 4)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Sofía (Youth)" as sofia
+box "Frontend — Angular app (account)" #E0F2FE
+participant ForgotPasswordPage as page
+participant AuthApi as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant AuthEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant PasswordResetHandler as handler
+end box
+box "Infrastructure" #FEF0C7
+participant "Database" as db
+participant "Email provider" as mail
+end box
+sofia -> page : Email, Email me a reset link
+page -> client : forgotPassword(email)
+client -> api : POST /auth/forgot-password
+api -> handler : RequestAsync
+handler -> db : account and a current membership?
+alt no account, deactivated or removed (L2-115 c2)
+  handler --> api : nothing sent
+else three links already in the last hour (c3)
+  handler --> api : nothing sent, nothing stored
+else
+  handler -> db : store the new link's hash (it replaces earlier links, c4)
+  handler -> mail : /reset-password?token=…
+end
+api --> client : 202 in every case
+page -> sofia : Check your email, s••••@harbourview.example
+sofia -> page : Resend the email
+page -> client : forgotPassword(email)
+page -> sofia : toast Sent again
+@enduml

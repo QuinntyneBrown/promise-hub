@@ -1,0 +1,15 @@
+@startuml
+!include <C4/C4_Container>
+title C4 containers — Recover a password as a youth or mentor
+Person(youth, "Youth or mentor")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "Angular app", "Angular 22", "account library: forgot-password and reset-password pages")
+  Container(api, "API", ".NET 10", "Anonymous /auth endpoints; PasswordResetHandler")
+  ContainerDb(db, "Database", "EF Core", "StaffUsers, PasswordResets, Memberships, AuditEntries")
+}
+System_Ext(mail, "Email provider")
+Rel(youth, web, "Uses", "HTTPS")
+Rel(web, api, "POST /auth/forgot-password, GET and POST /auth/reset-password", "JSON")
+Rel(api, db, "Reads and writes")
+Rel(api, mail, "Sends the link")
+@enduml
