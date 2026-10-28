@@ -82,6 +82,7 @@ code-sample|Code sample|.code-block|display|Show a read-only, scrollable example
 code-playground|Code playground|.code-playground|form|Edit a small page of code, run it in a sandboxed preview and keep the lesson's checklist nearby.
 quiz-option|Quiz option|.quiz-option|radio|Offer one answer of a quiz question around a native radio or checkbox, and mark it correct, wrong or missed in words in the review.
 achievement-badge|Achievement badge|.achievement-badge|display|Show a badge youth earn as a medal with its name and how it is earned; a locked badge says so in words, not only in grey. A collection (.achievement-badges) lists several as a labelled grid that wraps from one column on a phone.
+calendar|Calendar|.calendar|table|Show a month of sessions by week, Monday first: each day lists its sessions as links with their time, today is marked, and a cancelled session says so in words and is struck through. Below 640px it becomes an agenda of only the days with sessions.
 '''
 
 COMPONENTS = []
@@ -122,6 +123,7 @@ EXTRA_VARIANTS = {
  'quiz-option':['single','multiple','review'],
  'achievement-badge':['earned','locked','small','collection'],
  'list':['link','text'],
+ 'calendar':['month','agenda'],
 }
 
 EXTRA_STATES = {
@@ -136,6 +138,7 @@ EXTRA_STATES = {
  'notification-panel':['unread','read','empty'], 'wizard':['busy','invalid','failed'],
  'quiz-option':['selected','correct','wrong','missed'],
  'achievement-badge':['earned','locked'],
+ 'calendar':['today','outside','cancelled'],
 }
 
 KEYBOARD = {

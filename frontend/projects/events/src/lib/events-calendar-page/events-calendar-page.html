@@ -1,0 +1,76 @@
+@let r = result();
+<ph-breadcrumb [items]="[{ label: 'Events', link: '/events' }, { label: 'Calendar' }]" />
+<ph-page-header title="Calendar" [subtitle]="r?.status === 'loaded' ? subtitle(r.value) : null">
+  <ph-button link="/events" icon="programs">List</ph-button>
+  @if (canCreate()) {
+    <ph-button variant="primary" link="/events/new" icon="plus">New event</ph-button>
+  }
+</ph-page-header>
+<div class="toolbar">
+  <div class="month" role="group" aria-label="Month">
+    <ph-button
+      variant="ghost"
+      icon="arrow-left"
+      [iconOnly]="true"
+      label="Previous month"
+      (click)="go(-1)"
+    />
+    <h2 class="title" aria-live="polite">{{ title() }}</h2>
+    <ph-button
+      variant="ghost"
+      icon="arrow-right"
+      [iconOnly]="true"
+      label="Next month"
+      (click)="go(1)"
+    />
+    <ph-button variant="ghost" size="sm" (click)="thisMonth()">This month</ph-button>
+  </div>
+  <ph-select
+    class="program"
+    inputId="cal-prog"
+    label="Program"
+    name="programId"
+    [labelHidden]="true"
+    [options]="programOptions()"
+    [ngModel]="programId() ?? ''"
+    (ngModelChange)="setProgram($event)"
+  />
+</div>
+@switch (r?.status) {
+  @case ('error') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load the calendar"
+        text="Check your connection and try again."
+      >
+        <ph-button variant="primary" icon="refresh" (click)="reload()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('loaded') {
+    @if (r?.status === 'loaded') {
+      @if (r.value.events.length === 0) {
+        <ph-card [flush]="true">
+          <ph-empty-state
+            icon="events"
+            [title]="'Nothing scheduled in ' + title()"
+            text="Sessions you schedule show up here on their day."
+          >
+            @if (canCreate()) {
+              <ph-button variant="primary" link="/events/new" icon="plus">New event</ph-button>
+            }
+          </ph-empty-state>
+        </ph-card>
+      } @else {
+        <ph-calendar [month]="r.value.month" [today]="r.value.today" [entries]="entries(r.value)" />
+      }
+    }
+  }
+  @default {
+    <div aria-busy="true" aria-label="Loading the calendar">
+      <ph-skeleton shape="card" />
+    </div>
+  }
+}

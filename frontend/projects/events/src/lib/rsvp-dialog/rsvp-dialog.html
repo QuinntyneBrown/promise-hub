@@ -1,0 +1,56 @@
+<ph-dialog
+  title="RSVP"
+  description="Let staff know if you’ll be there. You can change it until the session starts."
+  icon="events"
+>
+  <form class="stack" (ngSubmit)="send()">
+    @if (summary().length) {
+      <ph-error-summary title="Fix these to continue" [items]="summary()" />
+    }
+    @if (failed()) {
+      <ph-alert
+        tone="danger"
+        title="That didn’t go through"
+        text="Your RSVP wasn’t sent. Everything is still here; try again."
+      />
+    }
+    @if (closed()) {
+      <ph-alert
+        tone="warning"
+        title="RSVPs are closed for this session"
+        text="It has started or was cancelled. Close to see your schedule."
+      />
+    }
+    <div data-testid="rsvp-session">
+      <ph-description-list [facts]="facts" />
+    </div>
+    <div id="rsvp-response">
+      <ph-radio-group
+        legend="Will you be there?"
+        name="response"
+        [options]="options"
+        [error]="errors()['response'] ?? null"
+        [ngModel]="response()"
+        (ngModelChange)="response.set($event)"
+      />
+    </div>
+    <ph-textarea
+      inputId="rsvp-note"
+      label="Note for staff"
+      name="note"
+      [rows]="3"
+      [optional]="true"
+      help="Staff running the session can read it."
+      [count]="count(note())"
+      [error]="errors()['note'] ?? null"
+      [ngModel]="note()"
+      (ngModelChange)="note.set($event ?? '')"
+    />
+  </form>
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="close()">{{ closed() ? 'Close' : 'Cancel' }}</ph-button>
+    @if (!closed()) {
+      <ph-button variant="primary" [busy]="busy()" (click)="send()">Send RSVP</ph-button>
+    }
+  </ng-container>
+</ph-dialog>

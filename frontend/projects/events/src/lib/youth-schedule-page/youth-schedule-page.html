@@ -1,0 +1,83 @@
+@let r = result();
+<ph-page-header
+  title="Your schedule"
+  subtitle="Your sessions in the next four weeks. Let staff know if you’ll be there."
+/>
+@switch (r?.status) {
+  @case ('forbidden') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="lock"
+        title="A guardian needs to agree first"
+        text="Once a guardian agrees, your sessions show up here."
+      />
+    </ph-card>
+  }
+  @case ('error') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load your schedule"
+        text="Check your connection and try again."
+      >
+        <ph-button variant="primary" icon="refresh" (click)="reload()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('loaded') {
+    @if (days().length === 0) {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="events"
+          title="Nothing scheduled in the next four weeks"
+          text="When your program adds a session, it’ll show up here."
+        />
+      </ph-card>
+    } @else {
+      <div class="stack">
+        @for (d of days(); track d.day) {
+          <section class="stack" [attr.aria-labelledby]="'day-' + d.day">
+            <h2 class="overline" [id]="'day-' + d.day" data-testid="schedule-day">
+              {{ d.heading }}
+            </h2>
+            <ph-list [label]="'Sessions on ' + d.heading">
+              @for (s of d.sessions; track s.eventId) {
+                <ph-list-item [title]="s.name" [meta]="meta(s)" [text]="noteText(s)">
+                  @if (s.status !== 'Cancelled') {
+                    <div phListActions>
+                      <ph-button
+                        size="sm"
+                        [variant]="s.response ? 'default' : 'primary'"
+                        [label]="
+                          (s.response ? 'Change RSVP' : 'RSVP') +
+                          ' for ' +
+                          s.name +
+                          ', ' +
+                          d.heading
+                        "
+                        hasPopup="dialog"
+                        (click)="rsvp(s)"
+                        >{{ s.response ? 'Change RSVP' : 'RSVP' }}</ph-button
+                      >
+                    </div>
+                    <ph-badge [tone]="badge(s.response).tone">{{
+                      badge(s.response).label
+                    }}</ph-badge>
+                  } @else {
+                    <ph-badge tone="danger">Cancelled</ph-badge>
+                  }
+                </ph-list-item>
+              }
+            </ph-list>
+          </section>
+        }
+      </div>
+    }
+  }
+  @default {
+    <div aria-busy="true" aria-label="Loading your schedule">
+      <ph-skeleton shape="card" />
+    </div>
+  }
+}

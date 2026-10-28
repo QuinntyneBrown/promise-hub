@@ -118,6 +118,9 @@ export const routes: Routes = [
         import('@promisehub/slips').then((m) => m.slipEditorRoutes),
       ),
       ...moduleRoute('events', 'Slips', () => import('@promisehub/events').then((m) => m.routes)),
+      ...moduleRoute('schedule', 'Roster', () =>
+        import('@promisehub/events').then((m) => m.scheduleRoutes),
+      ),
       ...moduleRoute('programs/:programId/roster', 'Roster', () =>
         import('@promisehub/enrollment').then((m) => m.reviewRoutes),
       ),

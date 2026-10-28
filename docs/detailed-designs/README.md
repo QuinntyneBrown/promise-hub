@@ -40,6 +40,9 @@ One folder per subsystem, one folder per vertically sliced feature, each with a 
 | programs | manage-cohorts | L2-061, L2-012 |
 | programs | manage-terms-and-tracks | L2-061 |
 | events | manage-events | L2-012 |
+| events | schedule-sessions | L2-093, L2-012 |
+| events | browse-calendar | L2-093 |
+| events | rsvp-to-session | L2-094 |
 | slips | write-and-send-slip | L2-014 |
 | slips | sign-slip | L2-015 |
 | slips | remind-and-clear | L2-016 |

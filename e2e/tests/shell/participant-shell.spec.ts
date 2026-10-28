@@ -4,13 +4,13 @@ import { ShellPage } from '../../pages/shell.page';
 import { TodayPage } from '../../pages/today.page';
 
 // L2-038 criteria 6 to 9: the shell for youth, mentors and volunteers is composed from their own sections whose module is on.
-// L2-005 criterion 8: a module that is off disappears from their navigation.
+// L2-005 criterion 8: a module that is off disappears from their navigation. L2-094 criterion 1: Schedule is a youth section while Roster is on.
 const SUITE: ModuleId[] = ['Roster', 'Slips', 'RollCall', 'QuickCards', 'Pickup', 'Messages', 'Incidents', 'Reports'];
 
 test.describe('A youth', () => {
   test.use({ signedInAs: 'm-sofia' });
 
-  test('Given Learning is on, when Sofía signs in, then she sees Today and Learning only, with no search', async ({ page, api }) => {
+  test('Given Learning is on, when Sofía signs in, then she sees Today, Learning and Schedule only, with no search', async ({ page, api }) => {
     api.setModules('org-harbourview', [...SUITE, 'Learning', 'Mentoring']);
     const shell = new ShellPage(page);
     const today = new TodayPage(page);
@@ -18,27 +18,27 @@ test.describe('A youth', () => {
     await today.open();
 
     await expect(today.heading).toHaveText('Welcome, Sofía');
-    expect(await shell.visibleNavigationLabels()).toEqual(['Today', 'Learning', 'More']);
+    expect(await shell.visibleNavigationLabels()).toEqual(['Today', 'Learning', 'Schedule', 'More']);
     await expect(shell.search).toBeHidden();
     expect(await today.yourWork()).toEqual(['Learning']);
     await shell.openMenu();
-    expect(await shell.menuLabels()).toEqual(['Today', 'Learning', 'Notifications', 'Your account']);
+    expect(await shell.menuLabels()).toEqual(['Today', 'Learning', 'Schedule', 'Notifications', 'Your account']);
     await shell.expectAccessible();
     await shell.closeMenuWithEscape();
     await shell.expectNoHorizontalScroll();
   });
 
-  test('Given Learning is off, when Sofía signs in, then Learning is gone and Today says there is nothing to do', async ({ page, api }) => {
+  test('Given Learning is off, when Sofía signs in, then Learning is gone, Schedule stays and Today says there is nothing to do', async ({ page, api }) => {
     api.setModules('org-harbourview', [...SUITE, 'Mentoring']);
     const shell = new ShellPage(page);
     const today = new TodayPage(page);
 
     await today.open();
 
-    expect(await shell.visibleNavigationLabels()).toEqual(['Today', 'More']);
+    expect(await shell.visibleNavigationLabels()).toEqual(['Today', 'Schedule', 'More']);
     await expect(today.nothingToDo).toBeVisible();
     await shell.openMenu();
-    expect(await shell.menuLabels()).toEqual(['Today', 'Notifications', 'Your account']);
+    expect(await shell.menuLabels()).toEqual(['Today', 'Schedule', 'Notifications', 'Your account']);
     await shell.closeMenuWithEscape();
     await today.expectAccessible();
   });

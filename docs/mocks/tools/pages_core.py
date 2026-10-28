@@ -106,10 +106,10 @@ def today(S):
             card(empty("Nothing to do here yet", "Your program staff will tell you what comes next.", icon_name="sparkle"), cls="card--flush"))
     learning_card = list_item("Learning", "Your lessons, quizzes and badges", href=page("learn-home"))
     S.add("youth", "Sofía (Youth, 12) signs in: the youth shell shows Today and Learning only; no search, no staff sections.", nav="today", role="youth",
-          user=YOUTH["sofia"], unread=0, modules=["today", "learning"], main=participant("Sofía", [learning_card]),
+          user=YOUTH["sofia"], unread=0, modules=["today", "learning", "schedule"], main=participant("Sofía", [learning_card]),
           notes=note("A youth reaches only their own record: the child linked to their account. Families, events and search are closed to them on the server.", "top: 5rem; right: 1rem;"))
     S.add("youth-learning-off", "The same youth while Learning is off: Learning is gone from the bar, the tab bar and the menu, and Today says there is nothing to do.", nav="today", role="youth",
-          user=YOUTH["sofia"], unread=0, modules=["today"], main=participant("Sofía", []),
+          user=YOUTH["sofia"], unread=0, modules=["today", "schedule"], main=participant("Sofía", []),
           notes=note("Opening /learning while Learning is off redirects here to Today.", "top: 5rem; right: 1rem;"))
     S.add("mentor", "Daniel (Mentor) signs in: Today and Mentoring only; a mentor sees only the youth assigned to them.", nav="today", role="mentor",
           user=STAFF["daniel"], unread=0, modules=["today", "mentor-dashboard"],
@@ -302,7 +302,7 @@ def events_toolbar(q=""):
 
 @screen("events", "page", "Events", route="/events", reqs=[R_SLIPS, R_ROLL], na={})
 def events(S):
-    hdr = page_header("Events", "23 upcoming · 2 need slips · 30 unsigned", btn("New event", "primary", icon_name="plus", href=page("event-form")))
+    hdr = page_header("Events", "23 upcoming · 2 need slips · 30 unsigned", btn("Calendar", "", icon_name="calendar", href=page("events-calendar")) + btn("New event", "primary", icon_name="plus", href=page("event-form")))
     rows = [event_row(EVENTS[0], href_state="default"), event_row(EVENTS[2], href_state="upcoming"), event_row(EVENTS[1]), event_row(EVENTS[4], href_state="upcoming"), event_row(EVENTS[3], href_state="upcoming")]
     S.add("default", "Upcoming events with slip status at a glance.", nav="events", main=hdr + events_toolbar() + ul_list(rows, label="Upcoming events") + f'<div class="list-more">{btn("Show 18 more", "ghost")}</div>')
     S.add("loading", "Events loading.", nav="events", main=page_header("Events", "") + skeleton_list(6, "Loading events"))
@@ -361,6 +361,31 @@ def event(S):
           main=breadcrumb([("Events", page("events"))], "Saturday Sports") + page_header("Saturday Sports <span class=\"badge badge--danger\">Cancelled</span>", "Sat 31 Oct · cancelled by Priya Raman on Fri 30 Oct, 2:14 pm") +
           alert("info", "62 guardians told by text and email", "Delivered to 61 · 1 bounced (Bola Adeyemi)", actions=f'<a class="btn btn--sm" href="{page("message")}">See delivery</a>') +
           f'<div class="split">{card(facts([("When", "Saturday 31 October 2026, 10:00 am–12:00 pm"), ("Where", "Bennetto School gym"), ("Reason", "Gym closed for voting")]), title="Details", tid="details")}</div>')
+
+    # RSVPs (prompt 70, L2-094): the youth on the roster who sign in answer Going, Maybe or Can't make it, with an optional note for staff.
+    def rsvp_card(rows, counts):
+        stats = '<div class="kpis">' + "".join(stat(l, str(v), card=False) for l, v in counts) + "</div>"
+        body = stats + (ul_list(rows, card=False, label="RSVPs, newest first") if rows else
+                        '<p class="text-muted">Nobody has replied yet. Youth on the roster who sign in can RSVP from their schedule.</p>')
+        return card(f'<div class="stack">{body}</div>', title="RSVPs", tid="rsvps")
+
+    def rsvp_row(child, answer, kind, note_, when):
+        text = f'<p class="list__text">{esc(note_)}</p>' if note_ else ""
+        return (f'<li class="list__item">{avatar(child)}<div class="list__body"><div class="list__title">{esc(child["name"])}</div>'
+                f'<div class="list__meta">{esc(when)}</div>{text}</div>{badge(answer, kind)}</li>')
+
+    tutoring_hdr = (breadcrumb([("Events", page("events"))], "Tutoring night") +
+                    page_header("Tutoring night", "Thu 12 Nov, 4:00–6:00 pm · After‑School Tutoring · 48 on roster",
+                                btn("Edit", "", icon_name="edit", href=page("event-form", "edit")) + icon_btn("more", "More actions", data_href=dialog("event-actions"))))
+    tutoring_details = card(facts([("When", "Thursday 12 November 2026, 4:00–6:00 pm"), ("Where", "Harbourview Community Centre, Room 2"),
+                                   ("Program", f'<a href="{page("program")}">After‑School Tutoring</a>'), ("Repeats", "Weekly · 33 sessions, through Thu 24 Jun 2027")]),
+                            title="Details", tid="details")
+    rows = [rsvp_row(CHILD["sofia"], "Going", "success", "I’ll bring my reflection notes.", "Answered today, 3:58 pm"),
+            rsvp_row(dict(name="Nadia Haddad", initials="NH", color="sage"), "Maybe", "info", "I might have a shift at work.", "Answered Wed 4 Nov")]
+    S.add("rsvps", "A weekly Tutoring night: the RSVP counts (Going, Maybe, Can’t make it, No reply) and each reply with its note, beside the details that say it repeats weekly.", nav="events", user=STAFF["marisol"],
+          main=tutoring_hdr + f'<div class="split">{rsvp_card(rows, [("Going", 1), ("Maybe", 1), ("Can’t make it", 0), ("No reply", 0)])}{tutoring_details}</div>')
+    S.add("no-rsvps", "Nobody has replied yet: the counts are zero and the card says who can RSVP.", nav="events", user=STAFF["marisol"],
+          main=tutoring_hdr.replace("Thu 12 Nov", "Thu 3 Dec") + f'<div class="split">{rsvp_card([], [("Going", 0), ("Maybe", 0), ("Can’t make it", 0), ("No reply", 2)])}{tutoring_details.replace("Thursday 12 November", "Thursday 3 December")}</div>')
 
 
 # ------------------------------------------------------------------ Families

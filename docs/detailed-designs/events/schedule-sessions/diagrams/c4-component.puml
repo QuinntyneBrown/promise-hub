@@ -1,0 +1,26 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Schedule sessions
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(form, "EventFormPage", "Angular page", "Repeat weekly switch on a new event")
+  Component(page, "EventPage", "Angular page", "Details: Repeats weekly · n sessions")
+  Component(eapi, "EventsApi", "Contract + HTTP client", "EVENTS_API")
+  Component(lib, "Components library", "Angular", "ph-switch, ph-text-field, ph-select, ph-description-list, toast")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "EventEndpoints", "Minimal API", "POST /events, GET /events/{id}")
+  Component(h, "CreateEventHandler", "Handler", "one event, or a weekly series through the program's last day")
+  Component(rules, "EventRules", "Rules", "fields, the series start and its size")
+  Component(series, "WeeklySeries", "Domain service", "weekly starts in the organization's time zone")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Events, PermissionSlips, Programs, Organizations, AuditEntries")
+}
+Rel(form, eapi, "create(fields)")
+Rel(page, eapi, "get(id)")
+Rel(form, lib, "composes")
+Rel(eapi, ep, "JSON/HTTPS")
+Rel(ep, h, "calls")
+Rel(h, rules, "checks")
+Rel(h, series, "plans the sessions")
+Rel(h, db, "reads and writes")
+@enduml

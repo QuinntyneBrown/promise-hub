@@ -17,4 +17,6 @@ public sealed record EventDto(
     DateTimeOffset? CancelledAt,
     string? CancelledBy,
     string? CancellationMessage,
-    bool GuardiansTold);
+    bool GuardiansTold,
+    int? SeriesSize,
+    EventRsvpsDto Rsvps);

@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Browse the calendar
+Person(s, "Staff member", "Browses every program's sessions by month")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(s, ph, "Reads the month's sessions", "HTTPS")
+@enduml

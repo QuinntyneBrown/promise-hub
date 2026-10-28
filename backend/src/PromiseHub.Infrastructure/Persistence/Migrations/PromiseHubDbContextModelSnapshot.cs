@@ -1128,6 +1128,9 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.Property<bool>("RequiresSlip")
                         .HasColumnType("INTEGER");
 
+                    b.Property<Guid?>("SeriesId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("SessionNotes")
                         .HasColumnType("TEXT");
 
@@ -1149,7 +1152,50 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ProgramId");
 
+                    b.HasIndex("SeriesId");
+
                     b.ToTable("Events");
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Events.EventRsvp", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("AnsweredAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("ChildId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Response")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChildId");
+
+                    b.HasIndex("EventId");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("OrganizationId", "EventId", "ChildId")
+                        .IsUnique();
+
+                    b.ToTable("EventRsvps");
                 });
 
             modelBuilder.Entity("PromiseHub.Domain.Events.SessionStaff", b =>
@@ -3781,6 +3827,27 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.HasOne("PromiseHub.Domain.Programs.Program", null)
                         .WithMany()
                         .HasForeignKey("ProgramId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.Events.EventRsvp", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Households.Child", null)
+                        .WithMany()
+                        .HasForeignKey("ChildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Events.Event", null)
+                        .WithMany()
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

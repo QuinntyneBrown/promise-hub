@@ -1,0 +1,47 @@
+@startuml
+title UML sequence behaviour — A youth RSVPs
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Youth (Sofía)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "YouthSchedulePage" as page
+  participant "RsvpDialog" as dlg
+  participant "ScheduleApi" as sapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "ScheduleEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "RsvpHandler" as h
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> page : Schedule
+page -> sapi : schedule()
+sapi -> ep : GET /schedule
+ep --> page : her sessions in the next 28 days (L2-094 c1)
+actor -> dlg : RSVP: Yes, I'll be there + note
+dlg -> sapi : rsvp(eventId, Going, note)
+sapi -> ep : PUT /schedule/{eventId}/rsvp
+ep -> ep : Roster on, RespondToSessions, consent gate (L2-094 c5)
+ep -> h : HandleAsync
+h -> db : the event (tenant filter) and her child's active enrollment
+alt unknown or another organization
+  h --> dlg : 404
+else not on the program's roster
+  h -> db : audit AccessDenied
+  h --> dlg : 403
+else started, ended or cancelled
+  h --> dlg : 409 RSVPs are closed (L2-094 c3)
+else invalid answer or note
+  h --> dlg : 422 response / note
+else valid
+  h -> db : insert or update EventRsvp; audit Created or Updated without the note
+  h --> dlg : 200 with her answer and note (L2-094 c2)
+  dlg -> actor : toast "RSVP sent"
+end
+@enduml

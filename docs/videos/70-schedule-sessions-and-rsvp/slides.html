@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 70 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="70" data-video-title="Schedule sessions and RSVP" data-parts="Introduction|Weekly|Server|Calendar|Schedule|Checks|Answers|Phone|States|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 70</div>
+  <h1>Schedule sessions and RSVP</h1>
+  <p class="lead">Weekly cohort sessions as events, a month calendar, and youth answering whether they will come</p>
+</section>
+
+<section id="weekly" data-part="1" data-cue="Marisol Delgado is the program director at Harbourview Youth Collective." data-clip="clips/weekly-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Repeat weekly</h3><p>Tutoring night every Thursday through the program’s last day.</p></div>
+</section>
+
+<section id="weekly-shots" data-part="1" data-cue="When she creates it, a toast says thirty-three weekly sessions">
+  <h2>33 weekly sessions</h2>
+  <div class="cols">
+    <img class="shot" alt="The new event form with Tutoring night, After-School Tutoring, Thu 12 Nov 4 to 6 pm and Repeat weekly on" src="shots/desktop-form-weekly.png">
+    <img class="shot" alt="The first Tutoring night with the toast Event created, Tutoring night · 33 weekly sessions" src="shots/desktop-event-created.png">
+  </div>
+</section>
+
+<section id="server" data-part="2" data-cue="A weekly series is not a second kind of calendar.">
+  <h2>What the server does</h2>
+  <table class="facts">
+    <tr><th>Rule</th><th>Answer</th></tr>
+    <tr><td>Each week</td><td>An ordinary event of the program, sharing a series id</td></tr>
+    <tr><td>Time</td><td>The same local time, across the March clock change</td></tr>
+    <tr><td>Last session</td><td>On or before the program’s last day (Thu 24 Jun 2027)</td></tr>
+    <tr><td>Refused</td><td>A start after the last day; more than 60 sessions (422)</td></tr>
+    <tr><td>Slips</td><td>A draft slip for each session that needs one</td></tr>
+    <tr><td>Audit</td><td>Created once, with how many sessions</td></tr>
+  </table>
+  <p class="muted small">POST /events with repeatsWeekly · L2-093 · ADR 0064</p>
+</section>
+
+<section id="calendar" data-part="3" data-cue="From Events, Calendar shows the month by week, Monday first." data-clip="clips/calendar-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>The calendar</h3><p>November by week, the program filter, another month.</p></div>
+</section>
+
+<section id="calendar-shots" data-part="3" data-cue="Program narrows the calendar to one program">
+  <h2>By month, by program</h2>
+  <div class="cols">
+    <img class="shot" alt="The November calendar with Tutoring night every Thursday, the field trip and a cancelled Saturday Sports" src="shots/desktop-calendar.png">
+    <img class="shot" alt="The calendar narrowed to After-School Tutoring" src="shots/desktop-calendar-filtered.png">
+  </div>
+  <p class="muted small">GET /events/calendar?month=2026-11&amp;programId= · ph-calendar</p>
+</section>
+
+<section id="schedule" data-part="4" data-cue="Sofía Rivera is twelve and in After-School Tutoring." data-clip="clips/youth-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Your schedule</h3><p>RSVP to the field trip with a note for staff.</p></div>
+</section>
+
+<section id="schedule-shots" data-part="4" data-cue="When she sends it, a toast says RSVP sent">
+  <h2>RSVP sent</h2>
+  <div class="cols">
+    <img class="shot" alt="The RSVP dialog: Yes, I’ll be there, with the note Can I bring my inhaler on the bus?" src="shots/desktop-rsvp.png">
+    <img class="shot" alt="Sofía’s schedule with the trip showing Going and her note, and the RSVP sent toast" src="shots/desktop-sent.png">
+  </div>
+</section>
+
+<section id="checks" data-part="5" data-cue="The answer is required, and must be going, maybe or can't make it.">
+  <h2>What the server checks</h2>
+  <table class="facts">
+    <tr><th>Case</th><th>Answer</th></tr>
+    <tr><td>No answer, or not one of the three</td><td>422 “Choose whether you’re going.”</td></tr>
+    <tr><td>A note over 500 characters</td><td>422</td></tr>
+    <tr><td>Started, ended or cancelled</td><td>409, RSVPs closed</td></tr>
+    <tr><td>A program she is not on</td><td>403, audited</td></tr>
+    <tr><td>Another organization</td><td>404</td></tr>
+    <tr><td>Under the consent age, no consent</td><td>403 consent-required</td></tr>
+    <tr><td>Audit</td><td>Created or Updated with the answer; never the note</td></tr>
+  </table>
+  <p class="muted small">GET /schedule · PUT /schedule/{eventId}/rsvp · L2-094</p>
+</section>
+
+<section id="answers" data-part="6" data-cue="Back on the field trip, Marisol sees an RSVPs card." data-clip="clips/rsvps-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>RSVPs on the event</h3><p>Counts, then each answer with its note.</p></div>
+</section>
+
+<section id="phone" data-part="7" data-cue="On a phone, the calendar becomes a list" data-clip="clips/phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>One column</h3><p>The agenda, the schedule and the RSVP sheet.</p></div>
+</section>
+
+<section id="states" data-part="8" data-cue="A weekly series that starts after the program ends is refused" data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Refused and failed</h3><p>Invalid, failed, closed, error, consent required, Roster off.</p></div>
+</section>
+
+<section id="states-shots" data-part="8" data-cue="And with Roster off">
+  <h2>Empty, error, closed, consent</h2>
+  <div class="cols">
+    <img class="shot" alt="The calendar for July 2027 saying Nothing scheduled in July 2027, with New event" src="shots/desktop-calendar-empty.png">
+    <img class="shot" alt="Sofía’s schedule saying We couldn’t load your schedule, with Try again" src="shots/desktop-schedule-error.png">
+  </div>
+</section>
+
+<section id="testing" data-part="9" data-cue="The API tests cover the weekly series">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>ScheduleSessionsTests</code> and <code>EventCalendarTests</code>: series, clock change, limits, months, days, filter, tenancy, Roster off</li>
+    <li><code>YouthScheduleTests</code> and <code>EventRsvpsTests</code>: schedule, every RSVP check, counts, consent, roles</li>
+    <li><code>schedule-sessions</code>, <code>calendar</code>, <code>youth-schedule</code> and <code>event-rsvps</code> specs on phone and laptop, with axe</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="10" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>A session can repeat weekly through the program’s last day; each week is an ordinary event</li><li>The calendar shows every program’s sessions by month</li><li>Youth answer with a note; staff see the counts and notes on the event</li></ul>
+  <p class="muted">Next: take attendance for cohort sessions</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

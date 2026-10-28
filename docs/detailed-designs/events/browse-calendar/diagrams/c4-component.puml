@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Browse the calendar
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(page, "EventsCalendarPage", "Angular page", "month, program filter, states")
+  Component(cal, "PhCalendar", "Components library", "month grid by week; agenda below 640px")
+  Component(eapi, "EventsApi", "Contract + HTTP client", "EVENTS_API.calendar(month, programId)")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(ep, "EventEndpoints", "Minimal API", "GET /events/calendar")
+  Component(h, "EventCalendarHandler", "Handler", "the month's events by the organization's calendar day")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Events, Programs, Organizations")
+}
+Rel(page, cal, "composes")
+Rel(page, eapi, "calendar(month, programId)")
+Rel(eapi, ep, "JSON/HTTPS")
+Rel(ep, h, "calls")
+Rel(h, db, "reads")
+@enduml

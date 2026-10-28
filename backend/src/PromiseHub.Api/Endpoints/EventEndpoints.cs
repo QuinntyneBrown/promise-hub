@@ -13,10 +13,19 @@ public static class EventEndpoints
     {
         var events = app.MapGroup("/events").RequireModule(ModuleId.Roster);
         events.MapGet("", (string? filter, Guid? programId, string? q, ListEventsHandler handler, CancellationToken ct) => handler.HandleAsync(filter, programId, q, ct));
+        events.MapGet("/calendar", async (string? month, Guid? programId, EventCalendarHandler handler, CancellationToken ct) =>
+            await handler.HandleAsync(month, programId, ct) is { } calendar
+                ? Results.Ok(calendar)
+                : Results.Json(new { errors = new { month = "Choose a month." } }, statusCode: StatusCodes.Status422UnprocessableEntity));
         events.MapGet("/{id:guid}", async (Guid id, GetEventHandler handler, CancellationToken ct) =>
             await handler.HandleAsync(id, ct) is { } e ? Results.Ok(e) : Results.NotFound());
         events.MapPost("", async (SaveEventCommand command, CreateEventHandler handler, CancellationToken ct) =>
-            (await handler.HandleAsync(command, ct)).ToHttp("/events")).RequirePermission(Permission.ManageEvents);
+        {
+            var created = await handler.HandleAsync(command, ct);
+            return created.Result.Status == Application.ResultStatus.Created
+                ? Results.Created($"/events/{created.Result.Id}", new { id = created.Result.Id, count = created.Count })
+                : created.Result.ToHttp();
+        }).RequirePermission(Permission.ManageEvents);
         events.MapPut("/{id:guid}", async (Guid id, SaveEventCommand command, UpdateEventHandler handler, CancellationToken ct) =>
             (await handler.HandleAsync(id, command, ct)).ToHttp()).RequirePermission(Permission.ManageEvents);
         events.MapPost("/{id:guid}/cancel", async (Guid id, CancelEventCommand command, CancelEventHandler handler, CancellationToken ct) =>

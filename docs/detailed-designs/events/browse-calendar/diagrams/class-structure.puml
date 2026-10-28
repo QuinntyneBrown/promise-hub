@@ -1,0 +1,43 @@
+@startuml
+title Class structure — Browse the calendar
+skinparam classAttributeIconSize 0
+class EventsCalendarPage {
+  #month : signal<string>
+  #programId : string
+  #go(month) : void
+}
+class PhCalendar {
+  +month : input<string>
+  +today : input<string|null>
+  +entries : input<CalendarEntry[]>
+  #weeks : computed<CalendarDay[][]>
+}
+class CalendarEntry <<interface>> {
+  +key, day, time, label : string
+  +link : string[]
+  +cancelled : boolean
+}
+interface EventsApi {
+  +calendar(month, programId) : Observable<LoadResult<EventCalendar>>
+}
+class EventCalendarHandler {
+  +HandleAsync(month?, programId?) : Result<EventCalendarDto>
+}
+class EventCalendarDto <<record>> {
+  +Month : string
+  +Today : DateOnly
+  +Events : IReadOnlyList<CalendarEventDto>
+}
+class CalendarEventDto <<record>> {
+  +Id, ProgramId : Guid
+  +Name, ProgramName, Status : string
+  +Day : DateOnly
+  +StartsAt, EndsAt : DateTimeOffset
+  +Place : string?
+}
+EventsCalendarPage --> PhCalendar
+PhCalendar ..> CalendarEntry
+EventsCalendarPage ..> EventsApi
+EventCalendarHandler ..> EventCalendarDto : answers
+EventCalendarDto *-- CalendarEventDto
+@enduml

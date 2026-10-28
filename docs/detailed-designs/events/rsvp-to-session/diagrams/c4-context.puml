@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — RSVP to a session
+Person(y, "Youth", "Answers Going, Maybe or Can't make it")
+Person(d, "Program director", "Reads the RSVP counts and notes")
+System(ph, "PromiseHub", "Multi-tenant system of record for youth-serving organizations")
+Rel(y, ph, "Reads her schedule and RSVPs", "HTTPS")
+Rel(d, ph, "Reads RSVPs on the event", "HTTPS")
+@enduml

@@ -29,6 +29,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Programs.Program> Programs => Set<Domain.Programs.Program>();
     public DbSet<Enrollment> Enrollments => Set<Enrollment>();
     public DbSet<Event> Events => Set<Event>();
+    public DbSet<Domain.Events.EventRsvp> EventRsvps => Set<Domain.Events.EventRsvp>();
     public DbSet<PermissionSlip> PermissionSlips => Set<PermissionSlip>();
     public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
     public DbSet<AttendanceEvent> AttendanceEvents => Set<AttendanceEvent>();
@@ -522,6 +523,16 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(x => x.EndsAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.Property(x => x.CancelledAt).HasConversion(v => v.HasValue ? v.Value.UtcTicks : (long?)null, v => v.HasValue ? new DateTimeOffset(v.Value, TimeSpan.Zero) : null);
             e.HasOne<Domain.Programs.Program>().WithMany().HasForeignKey(x => x.ProgramId);
+            e.HasIndex(x => x.SeriesId);
+        });
+        modelBuilder.Entity<Domain.Events.EventRsvp>(e =>
+        {
+            e.HasIndex(r => new { r.OrganizationId, r.EventId, r.ChildId }).IsUnique();
+            e.Property(r => r.Response).HasConversion<string>().HasMaxLength(20);
+            e.Property(r => r.Note).HasMaxLength(Domain.Events.EventRsvp.MaximumNote);
+            e.Property(r => r.AnsweredAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.HasOne<Event>().WithMany().HasForeignKey(r => r.EventId);
+            e.HasOne<Child>().WithMany().HasForeignKey(r => r.ChildId);
         });
         modelBuilder.Entity<PermissionSlip>(e =>
         {

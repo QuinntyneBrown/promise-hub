@@ -1,0 +1,14 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Schedule sessions
+Person(d, "Program director", "Phone or laptop browser")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "PromiseHub web app", "Angular 22", "events library, api client, components")
+  Container(api, "PromiseHub API", "ASP.NET Core, .NET 10", "Roster gate, permissions, consent gate, events handlers, audit")
+  ContainerDb(db, "PromiseHub database", "SQLite via EF Core", "Tenant-filtered Events, EventRsvps, Programs, Enrollments, Memberships, AuditEntries")
+}
+Rel(d, web, "Uses", "HTTPS")
+Rel(web, api, "Calls", "JSON/HTTPS")
+Rel(api, db, "Reads and writes", "EF Core")
+@enduml

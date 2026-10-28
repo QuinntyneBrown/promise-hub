@@ -1,0 +1,39 @@
+@startuml
+title UML sequence behaviour — Scheduling a weekly session
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Program director (Marisol)" as actor
+box "Frontend — PromiseHub web app" #E0F2FE
+  participant "EventFormPage" as form
+  participant "EventsApi" as eapi
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+  participant "EventEndpoints" as ep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+  participant "CreateEventHandler" as h
+  participant "WeeklySeries" as ws
+end box
+box "Backend — PromiseHub.Infrastructure" #FFF4E5
+  database "PromiseHub database" as db
+end box
+actor -> form : Tutoring night, Thu 12 Nov 4–6 pm, Repeat weekly
+form -> eapi : create(fields, repeatsWeekly)
+eapi -> ep : POST /events
+ep -> ep : Roster on, ManageEvents (L2-007)
+ep -> h : HandleAsync
+h -> db : the program (active, last day) and the organization's time zone
+alt start after the last day or more than 60 sessions
+  h --> form : 422 startsAt / repeatsWeekly (L2-093 c2)
+else valid
+  h -> ws : Starts(start, 24 Jun 2027, zone)
+  ws --> h : 33 weekly starts at 4:00 pm local
+  h -> db : 33 Events with one SeriesId, a draft slip each when needed
+  h -> db : audit Created on Event once, with the count (L2-093 c1)
+  h --> form : 201 with the first id and count 33
+  form -> actor : toast "Event created · Tutoring night · 33 weekly sessions"
+end
+@enduml

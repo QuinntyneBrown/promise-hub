@@ -15,7 +15,9 @@ public sealed class UpdateEventHandler(IPromiseHubDb db, ITenantContext tenant, 
         {
             return Result.NotFound;
         }
-        var errors = await EventRules.CheckAsync(db, command, cancellationToken);
+        // Repeat weekly applies only when creating; an edit changes this session only (L2-093 criterion 2).
+        command = command with { RepeatsWeekly = false };
+        var errors = await EventRules.CheckAsync(db, tenant, command, cancellationToken);
         if (errors.Count > 0)
         {
             return Result.Invalid(errors);

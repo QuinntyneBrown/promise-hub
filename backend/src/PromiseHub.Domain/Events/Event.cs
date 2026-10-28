@@ -32,6 +32,10 @@ public sealed class Event : ITenantOwned
     public bool NoShowAlert { get; private set; }
 
     public string? StaffNotes { get; private set; }
+
+    /// <summary>The weekly series this session was created in (L2-093, ADR 0064); null for a single event.</summary>
+    public Guid? SeriesId { get; private set; }
+
     public EventStatus Status { get; private set; }
     public DateTimeOffset? CancelledAt { get; private set; }
     public string? CancelledBy { get; private set; }
@@ -49,6 +53,8 @@ public sealed class Event : ITenantOwned
         NoShowAlert = noShowAlert;
         StaffNotes = staffNotes;
     }
+
+    public void JoinSeries(Guid seriesId) => SeriesId = seriesId;
 
     public DateTimeOffset? EndedAt { get; private set; }
     public string? EndedBy { get; private set; }

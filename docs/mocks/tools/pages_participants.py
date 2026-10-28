@@ -31,7 +31,7 @@ def website(S):
 NADIA = YOUTH["nadia"]
 PRONOUNS = ["Prefer not to say", "She / her", "He / him", "They / them"]
 WELCOME_STEPS = ["You", "Preferences", "Your program"]
-YKW = dict(nav="learning", role="youth", user=SOFIA, unread=0, modules=["today", "learning"])
+YKW = dict(nav="learning", role="youth", user=SOFIA, unread=0, modules=["today", "learning", "schedule"])
 
 
 def steps(cur: int, total: int = 3) -> str:

@@ -48,6 +48,15 @@
             [(ngModel)]="endsAt"
           />
         </div>
+        @if (!editing) {
+          <ph-switch
+            label="Repeat weekly"
+            name="repeatsWeekly"
+            [description]="repeatDescription()"
+            [error]="errors()['repeatsWeekly'] ?? null"
+            [(ngModel)]="fields.repeatsWeekly"
+          />
+        }
         <ph-text-field
           inputId="place"
           label="Where"

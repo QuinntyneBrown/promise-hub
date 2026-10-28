@@ -70,6 +70,7 @@ export class EventFormPage {
     requiresSlip: false,
     noShowAlert: true,
     staffNotes: '',
+    repeatsWeekly: false,
   };
   protected startsAt = '';
   protected endsAt = '';
@@ -118,6 +119,17 @@ export class EventFormPage {
     });
   }
 
+  /** The Repeat weekly description: the weekday of the start when on (L2-093). */
+  protected repeatDescription(): string {
+    if (!this.fields.repeatsWeekly) {
+      return 'Off: one session. Turn it on to repeat it every week until the program ends.';
+    }
+    const weekday = this.startsAt
+      ? new Intl.DateTimeFormat('en-GB', { weekday: 'long' }).format(new Date(this.startsAt))
+      : 'week';
+    return `Every ${weekday} at this time, until the program’s last day.`;
+  }
+
   protected submit(): void {
     this.busy.set(true);
     this.failed.set(false);
@@ -126,15 +138,17 @@ export class EventFormPage {
       startsAt: fromLocalInput(this.startsAt),
       endsAt: fromLocalInput(this.endsAt),
       requiresSlip: this.slip === 'yes',
+      repeatsWeekly: !this.eventId() && !!this.fields.repeatsWeekly,
     };
     const id = this.eventId();
     (id ? this.api.update(id, fields) : this.api.create(fields)).subscribe((outcome) => {
       this.busy.set(false);
       if (outcome.status === 'saved') {
+        const weekly = !id && (outcome.count ?? 1) > 1;
         this.toasts.show({
           tone: 'success',
           title: id ? 'Event saved' : 'Event created',
-          text: fields.name,
+          text: weekly ? `${fields.name} · ${outcome.count} weekly sessions` : fields.name,
         });
         void this.router.navigate(['/events', id ?? outcome.id]);
       } else if (outcome.status === 'invalid') {

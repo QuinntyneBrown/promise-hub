@@ -1,0 +1,34 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — RSVP to a session
+Container_Boundary(web, "PromiseHub web app (Angular)") {
+  Component(sched, "YouthSchedulePage", "Angular page", "/schedule, sessions by day")
+  Component(dlg, "RsvpDialog", "CDK Dialog", "answer and note")
+  Component(event, "EventPage", "Angular page", "RSVPs card")
+  Component(sapi, "ScheduleApi", "Contract + HTTP client", "SCHEDULE_API")
+  Component(eapi, "EventsApi", "Contract + HTTP client", "EVENTS_API")
+}
+Container_Boundary(api, "PromiseHub API (ASP.NET Core)") {
+  Component(sep, "ScheduleEndpoints", "Minimal API", "GET /schedule, PUT /schedule/{eventId}/rsvp")
+  Component(eep, "EventEndpoints", "Minimal API", "GET /events/{id}")
+  Component(sh, "YouthScheduleHandler", "Handler", "her sessions in the next 28 days with her answers")
+  Component(rh, "RsvpHandler", "Handler", "checks, saves one RSVP per event and youth, audits")
+  Component(gh, "GetEventHandler", "Handler", "adds the RSVP counts and answers")
+  Component(gate, "GuardianConsentFilter", "Endpoint filter", "consent-required for a gated youth")
+  ComponentDb(db, "PromiseHub database", "SQLite via EF Core", "Events, EventRsvps, Enrollments, Memberships, AuditEntries")
+}
+Rel(sched, dlg, "opens")
+Rel(sched, sapi, "schedule()")
+Rel(dlg, sapi, "rsvp(eventId, answer, note)")
+Rel(event, eapi, "get(id)")
+Rel(sapi, sep, "JSON/HTTPS")
+Rel(eapi, eep, "JSON/HTTPS")
+Rel(sep, gate, "filters")
+Rel(sep, sh, "calls")
+Rel(sep, rh, "calls")
+Rel(eep, gh, "calls")
+Rel(sh, db, "reads")
+Rel(rh, db, "reads and writes")
+Rel(gh, db, "reads")
+@enduml

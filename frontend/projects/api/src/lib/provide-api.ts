@@ -6,6 +6,8 @@ import { AUTH_API } from './auth/auth-api.token';
 import { HttpAuthApi } from './auth/http-auth-api';
 import { EVENTS_API } from './events/events-api.token';
 import { HttpEventsApi } from './events/http-events-api';
+import { HttpScheduleApi } from './schedule/http-schedule-api';
+import { SCHEDULE_API } from './schedule/schedule-api.token';
 import { HOUSEHOLDS_API } from './households/households-api.token';
 import { HttpProgramsApi } from './programs/http-programs-api';
 import { HttpQuickCardApi } from './quick-cards/http-quick-card-api';
@@ -83,6 +85,7 @@ export function provideApi(): EnvironmentProviders {
     { provide: HOUSEHOLDS_API, useClass: HttpHouseholdsApi },
     { provide: PROGRAMS_API, useClass: HttpProgramsApi },
     { provide: EVENTS_API, useClass: HttpEventsApi },
+    { provide: SCHEDULE_API, useClass: HttpScheduleApi },
     { provide: ATTENDANCE_API, useClass: HttpAttendanceApi },
     { provide: QUICK_CARD_API, useClass: HttpQuickCardApi },
     { provide: MESSAGING_API, useClass: HttpMessagingApi },

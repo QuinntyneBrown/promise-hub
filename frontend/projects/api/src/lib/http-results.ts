@@ -16,9 +16,11 @@ export function toLoad<T>(call: Observable<T>): Observable<LoadResult<T>> {
 }
 
 /** Maps an HTTP write to a WriteOutcome; a 422 body carries { errors: { field: message } }. */
-export function toWrite(call: Observable<{ id?: string } | null>): Observable<WriteOutcome> {
+export function toWrite(
+  call: Observable<{ id?: string; count?: number } | null>,
+): Observable<WriteOutcome> {
   return call.pipe(
-    map((body): WriteOutcome => ({ status: 'saved', id: body?.id })),
+    map((body): WriteOutcome => ({ status: 'saved', id: body?.id, count: body?.count })),
     catchError((error: HttpErrorResponse) =>
       of<WriteOutcome>(
         error.status === 422
