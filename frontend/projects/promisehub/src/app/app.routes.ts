@@ -111,6 +111,9 @@ export const routes: Routes = [
       ...moduleRoute('check-in', 'RollCall', () =>
         import('@promisehub/attendance').then((m) => m.routes),
       ),
+      ...moduleRoute('my-schedule', 'RollCall', () =>
+        import('@promisehub/attendance').then((m) => m.myScheduleRoutes),
+      ),
       ...moduleRoute('quick-cards', 'QuickCards', () =>
         import('@promisehub/attendance').then((m) => m.quickCardRoutes),
       ),

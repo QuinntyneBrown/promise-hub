@@ -1,0 +1,79 @@
+@let r = result();
+<ph-page-header
+  title="Your schedule"
+  subtitle="The sessions you’re assigned to in the next four weeks."
+/>
+@switch (r?.status) {
+  @case ('forbidden') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="lock"
+        title="This schedule is for people who run sessions"
+        text="Your own sessions are in Schedule."
+      />
+    </ph-card>
+  }
+  @case ('loaded') {
+    @if (days().length === 0) {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="events"
+          title="No sessions scheduled"
+          text="You’re not assigned to any session in the next four weeks. Your volunteer coordinator will add you."
+        />
+      </ph-card>
+    } @else {
+      <div class="stack">
+        @for (d of days(); track d.day) {
+          <section class="stack" [attr.aria-labelledby]="'day-' + d.day">
+            <h2 class="overline" [id]="'day-' + d.day" data-testid="schedule-day">
+              {{ d.heading }}
+            </h2>
+            <ph-list [label]="'Sessions on ' + d.heading">
+              @for (s of d.sessions; track s.id) {
+                <ph-list-item [title]="s.name" [meta]="meta(s)">
+                  @if (takesAttendance(s)) {
+                    <div phListActions>
+                      <ph-button
+                        size="sm"
+                        variant="primary"
+                        icon="check-in"
+                        [link]="['/check-in', s.id]"
+                        [label]="'Take attendance for ' + s.name + ', today'"
+                        >Take attendance</ph-button
+                      >
+                    </div>
+                  }
+                  @if (s.status === 'Cancelled') {
+                    <ph-badge tone="danger">Cancelled</ph-badge>
+                  } @else if (s.today) {
+                    <ph-badge tone="info">Today</ph-badge>
+                  } @else {
+                    <ph-badge>Assigned</ph-badge>
+                  }
+                </ph-list-item>
+              }
+            </ph-list>
+          </section>
+        }
+      </div>
+    }
+  }
+  @case (null) {
+    <div aria-busy="true" aria-label="Loading your schedule">
+      <ph-skeleton shape="card" />
+    </div>
+  }
+  @default {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load your schedule"
+        text="Check your connection and try again."
+      >
+        <ph-button variant="primary" icon="refresh" (click)="reload()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+}

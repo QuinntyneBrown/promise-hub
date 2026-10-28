@@ -62,6 +62,15 @@ export const NAVIGATION: Section[] = [
     roles: [...STAFF, 'Mentor', 'Volunteer'],
   },
   {
+    label: 'Schedule',
+    link: '/my-schedule',
+    icon: 'events',
+    placement: 'primary',
+    tab: true,
+    module: 'RollCall',
+    roles: ['Volunteer'],
+  },
+  {
     label: 'Families',
     link: '/families',
     icon: 'families',

@@ -4,6 +4,7 @@ import type { LoadResult } from '../load-result';
 import type { WriteOutcome } from '../write-outcome';
 import type { AttendanceCorrection } from './attendance-correction';
 import type { AttendanceHistory } from './attendance-history';
+import type { MySchedule } from './my-schedule';
 import type { NewWalkIn } from './new-walk-in';
 import type { PickupOptions } from './pickup-options';
 import type { SignOut } from './sign-out';
@@ -12,6 +13,8 @@ import type { SessionSummary } from './session-summary';
 
 export interface AttendanceApi {
   today(): Observable<LoadResult<{ sessions: SessionSummary[] }>>;
+  /** The sessions the caller is assigned to in the next four weeks (L2-101). */
+  mine(): Observable<LoadResult<MySchedule>>;
   roster(sessionId: string): Observable<LoadResult<SessionRoster>>;
   /** `arrivedAt` is null for now; `late` marks a check-in after the start. The client action id makes a repeated tap harmless. */
   checkIn(

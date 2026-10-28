@@ -57,7 +57,7 @@ const can = {
  */
 const PARTICIPANT_PATHS = [/^\/api\/me(\/|$)/, /^\/api\/notifications(\/|$)/, /^\/api\/auth\//, /^\/api\/learning\//, /^\/api\/mentoring\//, /^\/api\/curriculum(\/|$)/, /^\/api\/schedule(\/|$)/];
 /** Volunteers and mentors run sessions without the staff app (ADR 0043, ADR 0065): the session endpoints that need RunSessions. */
-const RUNNER_PATHS = [/^\/api\/attendance$/, /^\/api\/sessions\/today$/, /^\/api\/sessions\/[^/]+\/(roster|check-ins|absences|end|notes|walk-ins)$/];
+const RUNNER_PATHS = [/^\/api\/attendance$/, /^\/api\/sessions\/(today|mine)$/, /^\/api\/sessions\/[^/]+\/(roster|check-ins|absences|end|notes|walk-ins)$/];
 
 type ImportField = 'ChildName' | 'DateOfBirth' | 'School' | 'GuardianName' | 'GuardianPhone' | 'GuardianEmail' | 'Allergies' | 'Language' | 'Notes' | 'Skip';
 
@@ -361,7 +361,10 @@ export class FakeApi {
   /** Notification settings per organization, when saved; otherwise the defaults. */
   private notificationSettings = new Map<string, { noShowDelayMinutes: number; emailSupervisorsOnIncidents: boolean; smsCap: number }>();
   /** Who works each session; youth workers run only these (as seeded: Jaylen and Aisha tonight). */
-  private sessionStaff = new Map<string, string[]>([['e-tutoring-today', ['m-jaylen', 'm-aisha', 'm-leo']]]);
+  private sessionStaff = new Map<string, string[]>([
+    ['e-tutoring-today', ['m-jaylen', 'm-aisha', 'm-leo']],
+    ['e-sports', ['m-leo']],
+  ]);
   /** Youth accounts and the child each links to (L2-045), as the seed links them. */
   private youthLinks = new Map<string, string>([
     ['m-sofia', 'c-sofia'],
@@ -841,6 +844,7 @@ export class FakeApi {
     ['PUT', /^\/api\/events\/(?<id>[^/]+)$/, (route, p) => this.saveEvent(route, p['id']!)],
     ['POST', /^\/api\/events\/(?<id>[^/]+)\/cancel$/, (route, p) => this.cancelEvent(route, p['id']!)],
     ['GET', /^\/api\/sessions\/today$/, (route) => this.todaySessions(route)],
+    ['GET', /^\/api\/sessions\/mine$/, (route) => this.mySchedule(route)],
     ['GET', /^\/api\/attendance$/, (route) => this.attendanceHistory(route)],
     ['PUT', /^\/api\/sessions\/(?<id>[^/]+)\/attendance\/(?<childId>[^/]+)$/, (route, p) => this.correctAttendance(route, p['id']!, p['childId']!)],
     ['GET', /^\/api\/sessions\/(?<id>[^/]+)\/roster$/, (route, p) => this.sessionRoster(route, p['id']!)],
@@ -3083,6 +3087,28 @@ export class FakeApi {
       .filter((e) => this.mayRun(m, e.id))
       .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
       .map((e) => this.sessionSummary(e));
+    return route.fulfill({ json: { sessions } });
+  }
+
+  /** GET /sessions/mine (L2-101): the sessions the caller is assigned to that have not ended and start within 28 days. Mirrors MyScheduleHandler. */
+  private async mySchedule(route: Route): Promise<void> {
+    const m = await this.rollCallCaller(route);
+    if (!m) return;
+    if (!can.runSessions(m)) return this.forbidden(route);
+    const now = NOW.toISOString();
+    const until = new Date(NOW.getTime() + 28 * 86_400_000).toISOString();
+    const today = hamiltonDay(now);
+    const sessions = this.events
+      .filter((e) => e.organizationId === m.organizationId && (this.sessionStaff.get(e.id) ?? []).includes(m.id))
+      .filter((e) => e.endsAt > now && e.startsAt <= until)
+      .sort((a, b) => a.startsAt.localeCompare(b.startsAt) || a.name.localeCompare(b.name))
+      .map((e) => {
+        const summary = this.sessionSummary(e);
+        return {
+          id: e.id, name: e.name, programName: summary.programName, day: hamiltonDay(e.startsAt), startsAt: e.startsAt, endsAt: e.endsAt,
+          place: e.place, expected: summary.expected, status: e.status, today: hamiltonDay(e.startsAt) === today,
+        };
+      });
     return route.fulfill({ json: { sessions } });
   }
 
