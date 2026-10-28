@@ -18,6 +18,7 @@ public sealed class MentorCheckInsTests : IAsyncLifetime
     private static readonly Guid Hana = DatabaseSeeder.MembershipId(DatabaseSeeder.Harbourview, "hana@harbourview.example");
     private static readonly Guid Nadia = DatabaseSeeder.MembershipId(DatabaseSeeder.Harbourview, "nadia@harbourview.example");
     private static readonly Guid Samuel = DatabaseSeeder.MembershipId(DatabaseSeeder.Northgate, "samuel@northgate.example");
+    private static readonly Guid Grace = DatabaseSeeder.MembershipId(DatabaseSeeder.Northgate, "grace@northgate.example");
     private static readonly Guid Tutoring = DatabaseSeeder.ProgramId(DatabaseSeeder.Harbourview, "After-School Tutoring");
     private static readonly Guid Mateo = DatabaseSeeder.ChildId(DatabaseSeeder.Harbourview, "Mateo Rivera");
     private static readonly Guid Sofia = DatabaseSeeder.ChildId(DatabaseSeeder.Harbourview, "Sofía Rivera");
@@ -127,6 +128,22 @@ public sealed class MentorCheckInsTests : IAsyncLifetime
 
         Assert.True((await _factory.ClientFor(Tom).PutAsJsonAsync("/settings/modules", new { on = new[] { "Roster", "RollCall", "Learning" } })).IsSuccessStatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await Log(Daniel, Body(Mateo))).StatusCode);
+    }
+
+    [Fact]
+    public async Task With_Mentoring_on_at_Northgate_its_mentor_never_reaches_Harbourview_check_ins_or_youth()
+    {
+        await Log(Daniel, Body(Mateo));
+        Assert.True((await _factory.ClientFor(Grace).PutAsJsonAsync("/settings/modules", new { on = new[] { "Roster", "RollCall", "QuickCards", "Mentoring" } })).IsSuccessStatusCode);
+
+        var history = await History(Samuel, "");
+        Assert.Empty(history.GetProperty("items").EnumerateArray());
+        Assert.DoesNotContain("Mateo", history.GetRawText());
+        Assert.Equal(HttpStatusCode.NotFound, (await _factory.ClientFor(Samuel).GetAsync($"/mentoring/check-ins?childId={Mateo}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await Log(Samuel, Body(Mateo))).StatusCode);
+        var dashboard = await (await _factory.ClientFor(Samuel).GetAsync("/mentoring/dashboard")).Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Empty(dashboard.GetProperty("followUps").EnumerateArray());
+        Assert.Single(_db.Query("SELECT Id FROM MentorCheckIns"));
     }
 
     // ---- criterion 4: his own history, newest first, filtered by youth or type
