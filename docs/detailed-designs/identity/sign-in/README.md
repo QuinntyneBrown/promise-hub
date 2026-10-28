@@ -54,6 +54,8 @@ Slice 02 delivered `SignInPage` (default, invalid, submitting, error, expired an
 
 Prompt 77 (ADR 0071) opened "Forgot your password?" to every role: youth and mentors reset through the same pages and land on their role home (`recover-password`).
 
+Prompt 78 (ADR 0072) added change password while signed in (`change-password`): `POST /me/password` proves the current password, applies the same policy, raises the session version and reissues this device's cookie. `GET /me` also carries the person's display preferences (`configure-display`, `switch-theme`).
+
 Passwords set through an invitation or a reset follow one rule, `PasswordPolicy` (`set-secure-password`, `L2-053`); sign-in itself only verifies the stored hash.
 
 ## Requirements

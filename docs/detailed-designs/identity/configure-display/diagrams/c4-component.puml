@@ -1,0 +1,23 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Configure display preferences
+Container_Boundary(web, "Angular app") {
+  Component(shell, "Shell", "promisehub", "Applies the session's display once")
+  Component(page, "DisplayPage", "account", "/account/display: theme, text size, reduce motion")
+  Component(client, "DISPLAY_API / HttpDisplayApi", "api", "load, save")
+  Component(root, "PhDisplayRoot", "components", "data-theme, data-text-size, data-motion on <html>")
+  Component(tokens, "tokens.css", "components", "What each root attribute means")
+}
+Container_Boundary(api, "API") {
+  Component(ep, "SessionEndpoints", "PromiseHub.Api", "GET /me (display), GET and PUT /me/display")
+  Component(handler, "DisplayPreferencesHandler", "PromiseHub.Application/Identity", "Validates and stores the caller's own")
+  Component(user, "StaffUser", "PromiseHub.Domain/Identity", "Theme, TextSize, ReduceMotion")
+}
+Rel(shell, root, "apply(session.display)")
+Rel(page, root, "preview, then saved")
+Rel(page, client, "load, save")
+Rel(root, tokens, "selects")
+Rel(client, ep, "HTTP")
+Rel(ep, handler, "GetAsync, SaveAsync")
+Rel(handler, user, "ChangeDisplay")
+@enduml

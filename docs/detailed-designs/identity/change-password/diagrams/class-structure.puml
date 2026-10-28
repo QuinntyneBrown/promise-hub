@@ -1,0 +1,17 @@
+@startuml
+title UML classes — Change a password
+class ChangePasswordDialog { +submit() -errors }
+interface AccountApi { +changePassword(current, password, repeat): WriteOutcome }
+class ChangePasswordHandler { +ChangeAsync(userId, ChangePasswordRequest): Result }
+class ChangePasswordRequest <<record>> { Current: string? Password: string? Repeat: string? }
+class PasswordPolicy <<static>> { +Check(password, email): string? }
+class StaffUser { PasswordHash SessionVersion +ChangePassword(hash) +EndOtherSessions() }
+interface IPasswordHasher { +Hash(p) +Verify(p, hash) }
+class SessionCookie <<static>> { +ReissueAsync(http, membershipId) }
+ChangePasswordDialog --> AccountApi
+ChangePasswordHandler ..> ChangePasswordRequest
+ChangePasswordHandler --> PasswordPolicy
+ChangePasswordHandler --> IPasswordHasher
+ChangePasswordHandler --> StaffUser
+SessionCookie ..> StaffUser : reads SessionVersion
+@enduml

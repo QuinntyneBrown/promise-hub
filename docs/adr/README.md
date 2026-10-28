@@ -75,3 +75,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0069](0069-notifications-follow-their-modules-reach-the-stream-on-save-and-are-chosen-per-person-and-kind.md) | Notifications follow their modules, reach the stream on save, and are chosen per person and kind |
 | [0070](0070-people-are-memberships-deactivation-is-reversible-and-a-youth-account-follows-its-child.md) | People are memberships, deactivation is reversible, and a youth account follows its child |
 | [0071](0071-password-reset-serves-every-role-with-a-per-account-throttle-and-only-the-newest-link.md) | Password reset serves every role, with a per-account throttle and only the newest link |
+| [0072](0072-personal-settings-hang-off-your-account-display-belongs-to-the-person.md) | Personal settings hang off Your account; the profile belongs to the membership, display to the person |

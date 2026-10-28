@@ -1,0 +1,15 @@
+@startuml
+title UML classes — Edit a profile
+class ProfilePage { +load() +save() -errors: Record<string,string> }
+interface AccountApi { +load(): LoadResult<Account> +saveProfile(name, mobile): WriteOutcome }
+class ProfileHandler { +SaveAsync(SaveProfileRequest): Result }
+class SaveProfileRequest <<record>> { Name: string? Mobile: string? }
+class Membership { PersonName: string Mobile: string? Role: Role +Rename(name) +SetMobile(mobile?) }
+interface ITenantContext { MembershipId Role }
+interface IAuditWriter { +Record(AuditEvent) }
+ProfilePage --> AccountApi
+ProfileHandler ..> SaveProfileRequest
+ProfileHandler --> Membership
+ProfileHandler --> ITenantContext
+ProfileHandler --> IAuditWriter
+@enduml

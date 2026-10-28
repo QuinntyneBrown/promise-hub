@@ -1,0 +1,7 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — Change a password
+Person(person, "Person", "Anyone signed in: staff, youth, mentor or volunteer")
+System(ph, "PromiseHub", "Verifies the current password and ends other sessions")
+Rel(person, ph, "Opens Your account and changes their own settings", "HTTPS")
+@enduml

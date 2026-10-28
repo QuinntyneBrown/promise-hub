@@ -49,6 +49,8 @@ Guardian pages use `GuardianShellComponent` from the library: one column, a thin
 
 ## Built so far
 
+Prompt 78 (ADR 0072) replaced the planned `ThemeService` and its `localStorage` key: the theme, text size and reduce motion are saved with the person (`StaffUser`) and carried by `GET /me`, and the library's `PhDisplayRoot` sets `data-theme`, `data-text-size` and `data-motion` on the root; the shell applies them once per session and resets them on sign-out, so signed-out and guardian pages follow the device. The choice is made on Display (`configure-display`, `switch-theme`), not in the account menu.
+
 Slice 01 delivered tokens and foundations in the components library, the Today empty state, the five error pages and axe checks on every screen at desktop and phone widths.
 
 ## Requirements

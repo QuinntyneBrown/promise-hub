@@ -1,0 +1,9 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — Switch theme
+Person(person, "Signed-in person")
+System(ph, "PromiseHub", "Renders every page from one set of tokens, light or dark")
+System_Ext(device, "Device", "Reports prefers-color-scheme")
+Rel(person, ph, "Chooses System, Light or Dark")
+Rel(device, ph, "Light or dark preference")
+@enduml

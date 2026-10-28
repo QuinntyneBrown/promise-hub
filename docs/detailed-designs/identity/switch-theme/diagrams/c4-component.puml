@@ -1,0 +1,17 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Switch theme
+Container_Boundary(web, "Angular app") {
+  Component(shell, "Shell", "promisehub", "Applies the saved theme on session load; resets on sign-out")
+  Component(page, "DisplayPage", "account", "Theme: System, Light, Dark")
+  Component(root, "PhDisplayRoot", "components", "data-theme on <html>, or none for System")
+  Component(tokens, "tokens.css", "components", "Light :root, [data-theme=dark], prefers-color-scheme guarded by :not([data-theme=light])")
+}
+Container_Boundary(api, "API") {
+  Component(handler, "DisplayPreferencesHandler", "PromiseHub.Application/Identity", "system, light or dark; else 422")
+}
+Rel(shell, root, "apply")
+Rel(page, root, "preview")
+Rel(root, tokens, "selects a theme")
+Rel(page, handler, "PUT /me/display")
+@enduml

@@ -1,0 +1,13 @@
+@startuml
+title UML classes — Switch theme
+class PhDisplayRoot { +apply(DisplaySettings) +reset() }
+interface DisplaySettings { theme: 'system'|'light'|'dark' textSize reduceMotion }
+class Shell { -session +signOut() }
+class DisplayPage
+class StaffUser { Theme: string }
+class DisplayOptions <<static>> { Themes = system, light, dark }
+Shell --> PhDisplayRoot
+DisplayPage --> PhDisplayRoot
+PhDisplayRoot ..> DisplaySettings
+StaffUser ..> DisplayOptions
+@enduml
