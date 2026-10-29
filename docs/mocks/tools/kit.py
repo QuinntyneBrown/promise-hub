@@ -412,8 +412,10 @@ def page_header(title: str, subtitle: str = "", actions: str = "", *, h1_attrs: 
     return f'<div class="page-header"><div><h1{(" " + h1_attrs) if h1_attrs else ""}>{title}</h1>{sub}</div>{act}</div>'
 
 
-def table(caption: str, head: list[str], rows: list[list[str]], *, cls: str = "", selectable: bool = False, selected: set | None = None, hide_sm: set | None = None) -> str:
-    """Columns listed in hide_sm (0-based) are dropped below 640px; the row must still make sense without them."""
+def table(caption: str, head: list[str], rows: list[list[str]], *, cls: str = "", selectable: bool = False, selected: set | None = None, hide_sm: set | None = None,
+          foot: list[str] | None = None) -> str:
+    """Columns listed in hide_sm (0-based) are dropped below 640px; the row must still make sense without them. A foot row (an average or a
+    total) sits in tfoot with its first cell as the row header."""
     selected = selected or set()
     hide_sm = hide_sm or set()
     th = "".join(f'<th scope="col"{" class=\"" + " ".join(c for c in ["num" if h.startswith("#") else "", "hide-sm" if j in hide_sm else ""] if c) + "\"" if (h.startswith("#") or j in hide_sm) else ""}>{h.lstrip("#") if h not in ("", "Actions") else ("<span class=\"visually-hidden\">Actions</span>" if h == "Actions" else "")}</th>' for j, h in enumerate(head))
@@ -429,7 +431,19 @@ def table(caption: str, head: list[str], rows: list[list[str]], *, cls: str = ""
             sel = f'<td class="select-col"><label class="visually-hidden" for="sel-{i}">Select row {i + 1}</label><input type="checkbox" id="sel-{i}"{" checked" if on else ""}></td>'
         body.append(f'<tr{" aria-selected=\"true\"" if i in selected else ""}>{sel}{cells}</tr>')
     return (f'<div class="table-wrap card card--flush{(" " + cls) if cls else ""}"><table class="table"><caption class="visually-hidden">{esc(caption)}</caption>'
-            f'<thead><tr>{th}</tr></thead><tbody>{"".join(body)}</tbody></table></div>')
+            f'<thead><tr>{th}</tr></thead><tbody>{"".join(body)}</tbody>{_tfoot(foot, num_cols, hide_sm)}</table></div>')
+
+
+def _tfoot(foot: list[str] | None, num_cols: list[bool], hide_sm: set) -> str:
+    if not foot:
+        return ""
+    cells = []
+    for j, c in enumerate(foot):
+        cls = " ".join(x for x in ["num" if (j < len(num_cols) and num_cols[j]) else "", "hide-sm" if j in hide_sm else ""] if x)
+        tag = "th" if j == 0 else "td"
+        scope = ' scope="row"' if j == 0 else ""
+        cells.append(f'<{tag}{scope}{(" class=\"" + cls + "\"") if cls else ""}>{c}</{tag}>')
+    return f'<tfoot><tr>{"".join(cells)}</tr></tfoot>'
 
 
 def facts(pairs: list[tuple[str, str]]) -> str:
