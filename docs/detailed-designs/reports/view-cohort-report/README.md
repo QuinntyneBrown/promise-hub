@@ -29,7 +29,9 @@ Backend:
 
 ## Built so far
 
-Prompt 80 is building this design; this section lists what is delivered when it merges. <TO SUPPLY>
+Prompt 80 delivered everything above: `DetailedReportsHandler.CohortAsync`, `GET /reports/cohorts/{programId}`, `CohortReportPage` with the cohort select, the numbers, completion by module, the comparison card ("Compared with the organization") and the youth table, and the fake API's cohort report. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/CohortReportTests.cs`, `e2e/tests/reports/cohort-report.spec.ts`.
+
+Deferred (ADR 0074): date ranges, the comparison with another cohort or the previous term, charts by week.
 
 ## Requirements
 

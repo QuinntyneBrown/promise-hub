@@ -23,7 +23,9 @@ Backend:
 
 ## Built so far
 
-Prompt 80 is building this design; this section lists what is delivered when it merges. <TO SUPPLY>
+Prompt 80 delivered everything above: `DetailedReportsHandler.YouthAsync`, `GET /reports/youth/{childId}`, `YouthReportPage` with the no-account alert, Print, not found, error and forbidden, and the fake API's youth report. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/YouthReportTests.cs`, `e2e/tests/reports/youth-report.spec.ts`.
+
+Deferred (ADR 0074): competency levels, a printable layout of its own and a youth picker outside the cohort report.
 
 ## Requirements
 

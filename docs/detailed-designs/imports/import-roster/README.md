@@ -30,6 +30,8 @@ Slice 14 delivered `ImportRosterPage` at `/import` (upload with `ph-file-upload`
 - **`RunImportHandler`** — enrols a row's child in its matched cohort, else in the program chosen for everyone, once only; after saving, issues one youth invitation per invitable row through **`InvitationIssuer`** (audited, emailed); the summary gains `Invited`, `NotPlaced` and `NotInvited`; the import's audit entry adds the cohort places and invitations.
 - **`ImportRosterPage`** — offers Cohort, and Youth email only while Learning is on; the review shows the cohort places and invitations; the results show Placed in cohorts and Youth invited with the rows not placed or not invited.
 
+Prompt 80 delivered all of the above; acceptance tests `backend/tests/PromiseHub.Api.Tests/ImportCohortsTests.cs` and `e2e/tests/enrollment/import-cohorts.spec.ts`.
+
 Behaviour of a run with both columns:
 
 ![Sequence for placing youth in cohorts and inviting them](diagrams/sequence-place-and-invite.png)

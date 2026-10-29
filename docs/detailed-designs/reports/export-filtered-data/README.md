@@ -25,7 +25,9 @@ Backend:
 
 ## Built so far
 
-Prompt 80 is building this design; this section lists what is delivered when it merges. <TO SUPPLY>
+Prompt 80 delivered everything above: `ReportsHandler.ExportAsync` by kind, `ReportCsv`, `ExportReportDialog` on the cohort report, the progress board and staff activity, and the fake API's detailed exports. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/FilteredExportTests.cs`, the export cases in `e2e/tests/reports/cohort-report.spec.ts`, `progress-board.spec.ts` and `staff-report.spec.ts`.
+
+Deferred (ADR 0074): PDF and Google Sheets formats and the audit-log export.
 
 ## Requirements
 

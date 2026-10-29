@@ -56,9 +56,9 @@ def cohort_filters(cohort: str = "After‑School Tutoring") -> str:
 
 
 def cohort_body(*, learning: bool = True, mentoring: bool = True) -> str:
-    numbers = [("Youth enrolled", "48", "46 active · 2 ended"), ("Attendance", "89%", "present of present and absent"), ("Retention", "96%", "still enrolled")]
+    numbers = [("Youth enrolled", "48", "46 active · 2 ended"), ("Attendance", "89%", "attended of marked"), ("Retention", "96%", "still enrolled")]
     if learning:
-        numbers.insert(1, ("Average completion", "64%", "program average 58%"))
+        numbers.insert(1, ("Average completion", "64%", "organization 58%"))
     if mentoring:
         numbers.append(("At risk", "1", "open flags"))
     out = kpis(numbers)
@@ -68,7 +68,8 @@ def cohort_body(*, learning: bool = True, mentoring: bool = True) -> str:
                           + progress(41, 100, "Leading by Serving completion", show="41%").replace('<div class="progress-row">', '<div class="progress-row"><span class="progress-row__label">Leading by Serving</span>', 1)
                           + progress(0, 100, "Speaking Up completion", show="0%").replace('<div class="progress-row">', '<div class="progress-row"><span class="progress-row__label">Speaking Up</span>', 1)
                           + '</div><p class="hint" style="margin-top: var(--space-3);">Leadership Foundations · youth with an account only.</p>', title="Completion by module", tid="modules"))
-    split.append(card(facts([("This cohort", "89% · 64% completion · 96% retention"), ("Program average", "87% · 58% completion · 93% retention")]), title="Compared with the program average", tid="compare"))
+    line = lambda a, r, c: " · ".join(x for x in [f"Attendance {a}", f"Retention {r}", f"Completion {c}" if learning else None] if x)
+    split.append(card(facts([("This cohort", line("89%", "96%", "64%")), ("Every active program", line("87%", "93%", "58%"))]), title="Compared with the organization", tid="compare"))
     out += f'<div class="split">{"".join(split)}</div>'
     head = ["Youth", "Learning", "#Attendance", "#Check-ins", "Status"] if mentoring else ["Youth", "#Attendance", "Status"]
     rows = COHORT_ROWS if mentoring else [[r[0], r[2], r[4]] for r in COHORT_ROWS]
@@ -117,7 +118,7 @@ def youth_body(*, learning: bool = True, mentoring: bool = True, attendance: boo
     if attendance:
         cards.append(card(facts([("Present", "22"), ("Late", "1"), ("Excused", "1"), ("Absent", "1")]), title="Attendance", tid="attendance"))
     if mentoring:
-        cards.append(card(facts([("Mentor", "Daniel Osei"), ("Check-ins", "4"), ("Latest", "Tue 3 Nov · Engaged"), ("Open flag", "None")]), title="Mentoring", tid="mentoring"))
+        cards.append(card(facts([("Mentor", "Daniel Osei"), ("Check-ins", "4"), ("Latest", "Tue 3 Nov · Engaged"), ("At-risk flag", "None")]), title="Mentoring", tid="mentoring"))
     return out + f'<div class="split">{"".join(cards)}</div>'
 
 
@@ -130,7 +131,7 @@ def report_youth(S):
     S.add("loading", "Building Sofía’s report.", nav="reports", user=M, main=crumbs("Youth report") + page_header("Youth report", "") + skeleton_kpis() + skeleton_list(4, "Loading sections"))
     S.add("empty", "Mateo (9) has no youth account, so there is no learning to show; attendance and mentoring still are.",
           nav="reports", user=M, main=crumbs("Youth report") + page_header("Mateo Rivera", "Youth report · After‑School Tutoring · 9") +
-          alert("info", "Mateo has no youth account", "Learning shows here once he has one. Youth accounts are for ages 12 to 18.") + youth_body(learning=False))
+          alert("info", "Mateo has no youth account", "Learning shows here once they have one. Youth accounts are for ages 12 to 18.") + youth_body(learning=False))
     S.add("error", "The youth report failed to load.", nav="reports", user=M, main=crumbs("Youth report") + page_header("Youth report", "") + failed_load("We couldn’t build the youth report"))
     S.add("forbidden", "A youth worker opening a youth report.", nav="reports", user=A, main=FORBIDDEN)
     S.add("not-found", "A child of another organization, or one that doesn’t exist: the same answer either way.", nav="reports", user=M,
@@ -141,9 +142,8 @@ def report_youth(S):
 
 # ------------------------------------------------------------------ Staff activity report
 STAFF_ROWS = [
-    ["Daniel Osei", "Saturday Sports (lead)", "9", "14", "6", badge("Overloaded", "warning")],
-    ["Hana Kim", "After‑School Tutoring (lead)", "5", "11", "4", badge("Balanced", "success")],
-    ["Samira Khan", "—", "1", "0", "0", badge("Underloaded")],
+    ["Daniel Osei", "After‑School Tutoring (supporting), Saturday Sports (lead)", "9", "14", "6", badge("Overloaded", "warning")],
+    ["Hana Kim", "After‑School Tutoring (lead)", "1", "4", "2", badge("Underloaded")],
 ]
 
 
@@ -151,8 +151,8 @@ STAFF_ROWS = [
 def report_staff(S):
     hdr = crumbs("Staff activity") + page_header("Staff activity", "Mentor caseloads, check-ins and reviews", export_btn())
     filters = f'<div class="toolbar">{select("rs-range", "Period", ["All time", "Last 30 days", "Last 90 days"], visually_hidden_label=True)}</div>'
-    body = (kpis([("Active mentors", "3", ""), ("Check-ins logged", "25", "all time"), ("Reviews completed", "10", "graded work"), ("Youth per mentor", "5", "target 4 to 8")])
-            + alert("warning", "Daniel Osei has 9 youth", "Above the target of 4 to 8. Samira Khan has 1 and can take more.")
+    body = (kpis([("Active mentors", "2", ""), ("Check-ins logged", "18", "all time"), ("Reviews completed", "8", "graded work"), ("Youth per mentor", "5", "target 4 to 8")])
+            + alert("warning", "Daniel Osei has 9 youth", "Above the target of 4 to 8. Hana Kim has 1 and can take more.")
             + table("Mentor activity", ["Mentor", "Cohorts", "#Youth", "#Check-ins", "#Reviews", "Load"], STAFF_ROWS, hide_sm={1})
             + '<p class="hint" style="margin-top: var(--space-2);">Overloaded: more than 8 youth. Underloaded: fewer than 4.</p>')
     S.add("default", "Marisol’s staff activity report: each mentor’s caseload, check-ins and reviews in the period, and the load against the 4 to 8 target.",

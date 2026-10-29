@@ -22,7 +22,7 @@ Backend: no change; each detailed report has its own design (`view-cohort-report
 
 ## Built so far
 
-Prompt 80 is building this design; this section lists what is delivered when it merges. <TO SUPPLY>
+Prompt 80 delivered the Detailed reports card on `ReportsPage` (cohort report always; progress board while Learning is on; staff activity while Mentoring is on) and the `moduleRoute` entries for `reports/staff` and `reports/progress`. Acceptance tests: `e2e/tests/reports/cohort-report.spec.ts`, `staff-report.spec.ts`, `progress-board.spec.ts` (the card and the redirects).
 
 ## Requirements
 

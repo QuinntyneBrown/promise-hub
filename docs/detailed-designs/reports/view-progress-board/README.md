@@ -24,7 +24,9 @@ Backend:
 
 ## Built so far
 
-Prompt 80 is building this design; this section lists what is delivered when it merges. <TO SUPPLY>
+Prompt 80 delivered everything above: `DetailedReportsHandler.ProgressAsync`, `GET /reports/progress/{programId}` behind the Reports and Learning gates, `ProgressBoardPage` with the cohort in the address, the key, no track, empty, error and forbidden, and `PhTable`'s footer row. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/ProgressBoardTests.cs`, `e2e/tests/reports/progress-board.spec.ts`.
+
+Deferred (ADR 0074): live updates; the board refreshes when reopened.
 
 ## Requirements
 

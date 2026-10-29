@@ -27,7 +27,7 @@ Backend:
 
 ## Built so far
 
-Prompt 80 is building this design; this section lists what is delivered when it merges. <TO SUPPLY>
+Prompt 80 delivered everything above: `DetailedReportsHandler.StaffAsync`, `GET /reports/staff` behind the Reports and Mentoring gates, `StaffReportPage` with the period, the overloaded warning, no mentors, error and forbidden, and the fake API's staff report. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/StaffReportTests.cs`, `e2e/tests/reports/staff-report.spec.ts`.
 
 ## Requirements
 
