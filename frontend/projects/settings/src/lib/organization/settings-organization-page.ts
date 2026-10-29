@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import {
+  ConsentPolicy,
   ORGANIZATION_SETTINGS_API,
   OrganizationDetails,
   OrganizationLogo,
@@ -22,6 +23,8 @@ import {
   ToastService,
   formatDay,
 } from '@promisehub/components';
+import { ConsentPolicyDialog } from '../consent-policy-dialog/consent-policy-dialog';
+import { ConsentPolicyDialogData } from '../consent-policy-dialog-data';
 import { OrganizationProfileDialog } from '../organization-profile-dialog/organization-profile-dialog';
 import { SETTINGS_SECTIONS } from '../settings-sections';
 import { timeZoneLabel } from '../time-zones';
@@ -57,6 +60,8 @@ export class SettingsOrganizationPage {
   protected readonly sections = SETTINGS_SECTIONS;
   protected readonly state = signal<'loading' | 'loaded' | 'forbidden' | 'error'>('loading');
   protected readonly profile = signal<OrganizationDetails | null>(null);
+  /** Learning's consent policy; null while Learning is off (never requested) or before it loads. */
+  protected readonly learning = signal<ConsentPolicy | null>(null);
   protected readonly subtitle = computed(() => this.profile()?.name ?? '');
   protected readonly uploading = signal(false);
   protected readonly removing = signal(false);
@@ -78,10 +83,47 @@ export class SettingsOrganizationPage {
       if (r.status === 'loaded') {
         this.profile.set(r.value);
         this.state.set('loaded');
+        this.loadModuleDefaults();
       } else {
         this.state.set(r.status === 'forbidden' ? 'forbidden' : 'error');
       }
     });
+  }
+
+  /** Loads the card of each module default whose module is on in this session; an off module's settings are never requested. */
+  private loadModuleDefaults(): void {
+    this.sessions.current().subscribe((session) => {
+      if (session.modules.includes('Learning')) this.loadLearning();
+    });
+  }
+
+  private loadLearning(): void {
+    this.api.learning().subscribe((r) => this.learning.set(r.status === 'loaded' ? r.value : null));
+  }
+
+  protected learningFacts(policy: ConsentPolicy): Fact[] {
+    return [
+      { key: 'consent-age', term: 'Consent needed under', value: `${policy.consentAge} years` },
+      { key: 'consent-wording', term: 'Wording guardians sign', value: policy.wording },
+    ];
+  }
+
+  /** Edits the consent policy from the Learning card (dialog: consent-policy, L2-124). */
+  protected editConsent(policy: ConsentPolicy): void {
+    this.dialogs
+      .open<boolean, ConsentPolicyDialogData, ConsentPolicyDialog>(ConsentPolicyDialog, {
+        policy,
+        save: (p) => this.api.saveLearning(p),
+      })
+      .closed.subscribe((saved) => {
+        if (!saved) return;
+        this.toasts.show({
+          tone: 'success',
+          title: 'Consent policy saved',
+          text: 'It applies from each youth’s next request.',
+        });
+        this.loadLearning();
+      });
   }
 
   protected profileFacts(p: OrganizationDetails): Fact[] {

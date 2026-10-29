@@ -5,6 +5,7 @@ import { API_BASE_URL } from '../api-base-url';
 import { toLoad, toWrite } from '../http-results';
 import { LoadResult } from '../load-result';
 import { WriteOutcome } from '../write-outcome';
+import { ConsentPolicy } from '../privacy/consent-policy';
 import { OrganizationDetails } from './organization-details';
 import { OrganizationSettingsApi } from './organization-settings-api';
 import { SaveOrganizationDetails } from './save-organization-details';
@@ -36,5 +37,13 @@ export class HttpOrganizationSettingsApi implements OrganizationSettingsApi {
 
   logoUrl(version: string): string {
     return `${this.baseUrl}/settings/organization/logo?v=${encodeURIComponent(version)}`;
+  }
+
+  learning(): Observable<LoadResult<ConsentPolicy>> {
+    return toLoad(this.http.get<ConsentPolicy>(`${this.baseUrl}/settings/learning`));
+  }
+
+  saveLearning(policy: ConsentPolicy): Observable<WriteOutcome> {
+    return toWrite(this.http.put<null>(`${this.baseUrl}/settings/learning`, policy));
   }
 }

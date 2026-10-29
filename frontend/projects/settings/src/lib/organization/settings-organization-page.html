@@ -91,6 +91,21 @@
           </div>
         </ph-card>
       }
+      @if (learning(); as policy) {
+        <ph-card title="Learning">
+          <div class="card-body">
+            <ph-description-list [facts]="learningFacts(policy)" />
+            <ph-inline-message>
+              Youth under this age need a guardian’s consent before they use Learning.
+            </ph-inline-message>
+            <div>
+              <ph-button icon="edit" hasPopup="dialog" (click)="editConsent(policy)"
+                >Edit consent policy</ph-button
+              >
+            </div>
+          </div>
+        </ph-card>
+      }
     </div>
   }
 }

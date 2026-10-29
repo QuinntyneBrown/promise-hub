@@ -2324,6 +2324,16 @@ export class FakeApi {
     ],
     [
       "GET",
+      /^\/api\/settings\/learning$/,
+      (route) => this.getConsentPolicy(route, "Learning"),
+    ],
+    [
+      "PUT",
+      /^\/api\/settings\/learning$/,
+      (route) => this.saveConsentPolicy(route, "Learning"),
+    ],
+    [
+      "GET",
       /^\/api\/settings\/notifications$/,
       (route) => this.getNotificationSettings(route),
     ],
@@ -5885,18 +5895,25 @@ export class FakeApi {
     );
   }
 
-  private async getConsentPolicy(route: Route): Promise<void> {
+  /** GET /settings/consent (Roster) and /settings/learning (Learning, L2-124): the one consent policy behind either module gate. */
+  private async getConsentPolicy(
+    route: Route,
+    module: ModuleId = "Roster",
+  ): Promise<void> {
     const organizationId = await this.settingsCaller(route);
     if (!organizationId) return;
-    if (!this.modules.get(organizationId)!.includes("Roster"))
+    if (!this.modules.get(organizationId)!.includes(module))
       return route.fulfill({ status: 404 });
     return route.fulfill({ json: this.consentPolicyOf(organizationId) });
   }
 
-  private async saveConsentPolicy(route: Route): Promise<void> {
+  private async saveConsentPolicy(
+    route: Route,
+    module: ModuleId = "Roster",
+  ): Promise<void> {
     const organizationId = await this.settingsCaller(route);
     if (!organizationId) return;
-    if (!this.modules.get(organizationId)!.includes("Roster"))
+    if (!this.modules.get(organizationId)!.includes(module))
       return route.fulfill({ status: 404 });
     const b = route.request().postDataJSON() as {
       consentAge: number;

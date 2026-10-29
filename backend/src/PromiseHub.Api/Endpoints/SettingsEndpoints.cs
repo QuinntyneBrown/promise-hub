@@ -59,6 +59,9 @@ public static class SettingsEndpoints
         settings.MapGet("/consent", (ConsentPolicyHandler handler, CancellationToken ct) => handler.GetAsync(ct)).RequireModule(ModuleId.Roster);
         settings.MapPut("/consent", async (SaveConsentPolicyCommand command, ConsentPolicyHandler handler, CancellationToken ct) =>
             (await handler.SaveAsync(command, ct)).ToHttp()).RequireModule(ModuleId.Roster);
+        settings.MapGet("/learning", (ConsentPolicyHandler handler, CancellationToken ct) => handler.GetAsync(ct)).RequireModule(ModuleId.Learning);
+        settings.MapPut("/learning", async (SaveConsentPolicyCommand command, ConsentPolicyHandler handler, CancellationToken ct) =>
+            (await handler.SaveAsync(command, ct)).ToHttp()).RequireModule(ModuleId.Learning);
         settings.MapGet("/notifications", (NotificationSettingsHandler handler, CancellationToken ct) => handler.GetAsync(ct));
         settings.MapPut("/notifications", async (SaveNotificationSettingsCommand command, NotificationSettingsHandler handler, CancellationToken ct) =>
             (await handler.SaveAsync(command, ct)).ToHttp());

@@ -109,6 +109,21 @@ export class SettingsOrganizationPage extends BasePage {
     await this.card('Profile').getByRole('button', { name: 'Remove logo' }).click();
   }
 
+  get consentPolicyDialog(): Locator {
+    return this.page.getByRole('dialog', { name: 'Edit consent policy' });
+  }
+
+  async editConsentPolicy(): Promise<void> {
+    await this.card('Learning').getByRole('button', { name: 'Edit consent policy' }).click();
+    await expect(this.consentPolicyDialog).toBeVisible();
+  }
+
+  async saveConsentPolicy(age: string, wording: string): Promise<void> {
+    await this.consentPolicyDialog.getByLabel('Consent needed under').selectOption({ label: age });
+    await this.consentPolicyDialog.getByLabel('Wording guardians sign').fill(wording);
+    await this.consentPolicyDialog.getByRole('button', { name: 'Save policy' }).click();
+  }
+
   /** What the API answers this signed-in person for a settings path. */
   async apiStatus(
     path: string,
