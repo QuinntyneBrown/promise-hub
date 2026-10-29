@@ -239,7 +239,9 @@ type ImportField =
   | "Allergies"
   | "Language"
   | "Notes"
-  | "Skip";
+  | "Skip"
+  | "Cohort"
+  | "YouthEmail";
 
 interface FakeImport {
   id: string;
@@ -308,6 +310,8 @@ const IMPORT_SYNONYMS: [ImportField, string[]][] = [
   ],
   ["Language", ["lang", "language", "home language"]],
   ["Notes", ["notes", "note", "comments"]],
+  ["Cohort", ["cohort", "group", "program", "class"]],
+  ["YouthEmail", ["youth email", "student email", "teen email"]],
 ];
 
 interface FakeEnrollChild {
@@ -10481,7 +10485,66 @@ export class FakeApi {
       guardian: value(row, "GuardianName"),
       phone: value(row, "GuardianPhone"),
       email: value(row, "GuardianEmail"),
+      cohort: value(row, "Cohort"),
+      youthEmail: value(row, "YouthEmail")?.toLowerCase() ?? null,
     }));
+  }
+
+  /** The organization's active programs by name without regard to case, spacing or hyphen style (L2-130). */
+  private importCohorts(m: Membership): Map<string, FakeProgram> {
+    return new Map(
+      this.programs
+        .filter((p) => p.organizationId === m.organizationId && p.status === "Active")
+        .map((p) => [this.cohortKey(p.name), p]),
+    );
+  }
+
+  private cohortKey(name: string): string {
+    return name
+      .replace(/[\u2010-\u2014\u2212]/g, "-")
+      .trim()
+      .toLowerCase()
+      .split(/\s+/)
+      .join(" ");
+  }
+
+  /** Mirrors backend ImportRows.InvitationsAsync: why each row with a youth email is not invited, or null when it is. */
+  private importInvitations(m: Membership, imp: FakeImport): Map<number, string | null> {
+    const result = new Map<number, string | null>();
+    const first = new Map<string, number>();
+    const existing = new Map(
+      this.childrenOf(m).map(({ child }) => [
+        `${child.firstName} ${child.lastName}`.toLowerCase() + "|" + child.dateOfBirth,
+        child,
+      ]),
+    );
+    for (const r of this.importRows(imp)) {
+      const problem = this.importProblem(r);
+      if (!r.youthEmail || problem === "No child name" || problem === "No phone or email") continue;
+      const child = existing.get(`${r.child.toLowerCase()}|${r.dob}`) ?? null;
+      const age = ageOf(r.dob ?? child?.dateOfBirth ?? null);
+      const holder = memberships.find(
+        (x) => x.email === r.youthEmail && !this.removedMemberships.has(x.id),
+      );
+      const why = !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(r.youthEmail)
+        ? "Enter an email like name@example.org; not invited"
+        : first.has(r.youthEmail)
+          ? `Used on row ${first.get(r.youthEmail)}; not invited`
+          : age === null
+            ? "Add a date of birth to invite; not invited"
+            : age < 12 || age > 18
+              ? "Youth accounts are for ages 12 to 18; not invited"
+              : child && [...this.youthLinks.values()].includes(child.id)
+                ? `${child.firstName} ${child.lastName} already has a youth account; not invited`
+                : child && this.youthInvitationFor(child.id)
+                  ? "An invitation is already waiting; not invited again"
+                  : holder
+                    ? `${holder.personName} already has access; not invited`
+                    : null;
+      if (!first.has(r.youthEmail)) first.set(r.youthEmail, r.line);
+      result.set(r.line, why);
+    }
+    return result;
   }
 
   private importProblem(r: {
@@ -10536,11 +10599,19 @@ export class FakeApi {
       errors["GuardianName"] = "Map the guardian’s name.";
     if (!fields.includes("GuardianPhone") && !fields.includes("GuardianEmail"))
       errors["GuardianContact"] = "Map the guardian’s phone or email.";
+    if (fields.includes("YouthEmail")) {
+      if (!this.modules.get(m.organizationId)!.includes("Learning"))
+        errors["YouthEmail"] = "Youth invitations need Learning, which is off.";
+      else if (m.role !== "Admin")
+        errors["YouthEmail"] = "Only an admin sends youth invitations.";
+    }
     if (Object.keys(errors).length)
       return route.fulfill({ status: 422, json: { errors } });
     Object.assign(imp, { mapping, programId: b.programId ?? null });
     const rows = this.importRows(imp);
     const duplicates = this.importDuplicates(m, imp);
+    const cohorts = this.importCohorts(m);
+    const invitations = this.importInvitations(m, imp);
     return route.fulfill({
       json: {
         rows: rows.length,
@@ -10551,15 +10622,27 @@ export class FakeApi {
             child: r.child,
             reason: "Already in PromiseHub: same name and date of birth",
           })),
-        needLook: rows
-          .filter((r) => this.importProblem(r))
-          .map((r) => ({
-            row: r.line,
-            child: r.child,
-            reason: this.importProblem(r),
-          })),
+        needLook: rows.flatMap((r) => {
+          const problem = this.importProblem(r);
+          const importable = problem !== "No child name" && problem !== "No phone or email";
+          const why = invitations.get(r.line);
+          return [
+            ...(problem ? [{ row: r.line, child: r.child, reason: problem }] : []),
+            ...(importable && r.cohort && !cohorts.has(this.cohortKey(r.cohort))
+              ? [{ row: r.line, child: r.child, reason: `No cohort called “${r.cohort}”; imported, not placed` }]
+              : []),
+            ...(why ? [{ row: r.line, child: r.child, reason: why }] : []),
+          ];
+        }),
         programName:
           this.programs.find((p) => p.id === b.programId)?.name ?? null,
+        placements: rows.filter(
+          (r) =>
+            !["No child name", "No phone or email"].includes(this.importProblem(r) ?? "") &&
+            r.cohort &&
+            cohorts.has(this.cohortKey(r.cohort)),
+        ).length,
+        invitations: [...invitations.values()].filter((v) => v === null).length,
       },
     });
   }
@@ -10583,6 +10666,15 @@ export class FakeApi {
     let imported = 0;
     let children = 0;
     let skipped = 0;
+    let enrolled = 0;
+    const cohorts = this.importCohorts(m);
+    const inviting =
+      Object.values(imp.mapping).includes("YouthEmail") &&
+      this.modules.get(m.organizationId)!.includes("Learning");
+    const invitations = inviting ? this.importInvitations(m, imp) : new Map<number, string | null>();
+    const notPlaced: { row: number; child: string; reason: string }[] = [];
+    const notInvited: { row: number; child: string; reason: string }[] = [];
+    let invited = 0;
     for (const r of this.importRows(imp)) {
       const problem = this.importProblem(r);
       if (problem === "No child name" || problem === "No phone or email") {
@@ -10601,6 +10693,28 @@ export class FakeApi {
       if (onFile) updated.add(onFile.id);
       else created.add(r.phone ?? r.email ?? r.guardian ?? r.child);
       if (!duplicates.has(r.line)) children++;
+      const match = r.cohort ? cohorts.get(this.cohortKey(r.cohort)) : undefined;
+      if (r.cohort && !match)
+        notPlaced.push({ row: r.line, child: r.child, reason: `No cohort called “${r.cohort}”; imported, not placed` });
+      const target = r.cohort ? (match?.id ?? null) : imp.programId;
+      // A merged child already on the program is not enrolled again (mirrors the backend's check).
+      if (target && !duplicates.has(r.line)) enrolled++;
+      if (invitations.has(r.line)) {
+        const why = invitations.get(r.line);
+        if (why) notInvited.push({ row: r.line, child: r.child, reason: why });
+        else {
+          invited++;
+          this.invitations.push({
+            id: `inv-${this.nextId++}`,
+            organizationId: m.organizationId,
+            email: r.youthEmail!,
+            role: "Youth",
+            invitedBy: m.personName,
+            withdrawn: false,
+            childName: r.child,
+          });
+        }
+      }
       imported++;
     }
     imp.done = true;
@@ -10612,12 +10726,15 @@ export class FakeApi {
         familiesCreated: created.size,
         familiesUpdated: updated.size,
         children,
-        enrolled: imp.programId ? children : 0,
+        enrolled,
         skipped,
         needFix: toFix.length,
         toFix,
         programName:
           this.programs.find((p) => p.id === imp.programId)?.name ?? null,
+        invited,
+        notPlaced,
+        notInvited,
       },
     });
   }

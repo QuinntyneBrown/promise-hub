@@ -43,6 +43,8 @@ const FIELDS: SelectOption[] = [
   { value: 'Allergies', label: 'Allergies and medication' },
   { value: 'Language', label: 'Language' },
   { value: 'Notes', label: 'Notes' },
+  { value: 'Cohort', label: 'Cohort' },
+  { value: 'YouthEmail', label: 'Youth email' },
   { value: 'Skip', label: 'Skip' },
 ];
 
@@ -77,7 +79,12 @@ export class ImportRosterPage {
       .pipe(catchError(() => EMPTY)),
   );
 
-  protected readonly fields = FIELDS;
+  /** Youth email is offered only while Learning is on and to an admin, who alone invites youth (L2-130). */
+  protected readonly fields = computed<SelectOption[]>(() => {
+    const me = this.me();
+    const invites = !!me && me.modules.includes('Learning') && can(me.role, 'manageStaff');
+    return FIELDS.filter((f) => f.value !== 'YouthEmail' || invites);
+  });
   protected readonly programs = toSignal(
     inject(PROGRAMS_API)
       .list('active')
@@ -130,8 +137,8 @@ export class ImportRosterPage {
           r.value.columns.map((c) => ({
             column: c.name,
             sample: c.sample,
-            value: c.field ?? 'Skip',
-            matched: !!c.field,
+            value: this.offered(c.field) ?? 'Skip',
+            matched: !!this.offered(c.field),
           })),
         );
         this.step.set('mapping');
@@ -141,6 +148,16 @@ export class ImportRosterPage {
         this.errors.set({ file: `We couldn’t read ${file.name}. Try again.` });
       }
     });
+  }
+
+  /** The matched field when it is offered here, else none. */
+  private offered(field: string | null): string | null {
+    return field && this.fields().some((f) => f.value === field) ? field : null;
+  }
+
+  /** Whether the mapping uses a field, to show its counts. */
+  protected mapped(field: string): boolean {
+    return this.rows().some((r) => r.value === field);
   }
 
   protected remap(change: { column: string; value: string }): void {

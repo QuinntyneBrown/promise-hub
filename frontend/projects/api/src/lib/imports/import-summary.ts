@@ -12,4 +12,10 @@ export interface ImportSummary {
   needFix: number;
   toFix: ImportRowIssue[];
   programName: string | null;
+  /** Youth invitations sent (L2-130). */
+  invited: number;
+  /** Rows whose cohort names no program of the organization. */
+  notPlaced: ImportRowIssue[];
+  /** Rows with a youth email that were not invited, and why. */
+  notInvited: ImportRowIssue[];
 }

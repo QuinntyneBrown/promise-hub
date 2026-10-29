@@ -13,4 +13,8 @@ public enum ImportField
     Language,
     Notes,
     Skip,
+
+    // After Skip, so mappings stored as numbers keep their meaning (ADR 0074).
+    Cohort,
+    YouthEmail,
 }

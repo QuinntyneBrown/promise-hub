@@ -13,9 +13,11 @@ namespace PromiseHub.Application.Imports;
 /// <summary>
 /// Creates the households, guardians and children of an import in one go: rows of the same guardian share a household, a
 /// guardian whose phone is already on file updates that household, duplicates are skipped unless merged, rows without a
-/// child name or any contact are left to fix, and the whole import is one audit entry (L2-010 criteria 2, 3 and 5).
+/// child name or any contact are left to fix, and the whole import is one audit entry (L2-010 criteria 2, 3 and 5). A Cohort column
+/// enrols the row's child in the program it names and a Youth email column invites the child, once each (L2-130).
 /// </summary>
-public sealed class RunImportHandler(IPromiseHubDb db, ITenantContext tenant, ImportRows rows, IAuditWriter audit, TimeProvider clock)
+public sealed class RunImportHandler(IPromiseHubDb db, ITenantContext tenant, ImportRows rows, IAuditWriter audit, IModuleGate modules, Staff.InvitationIssuer invitations,
+    TimeProvider clock)
 {
     public async Task<(Result Result, ImportSummaryDto? Summary)> HandleAsync(Guid id, RunImportCommand command, CancellationToken cancellationToken = default)
     {
@@ -32,9 +34,17 @@ public sealed class RunImportHandler(IPromiseHubDb db, ITenantContext tenant, Im
         var read = ImportRows.Read(session);
         var duplicates = await rows.DuplicatesAsync(read, cancellationToken);
         var guardians = await db.Guardians.Where(g => g.Mobile != null).ToListAsync(cancellationToken);
-        var enrolled = session.ProgramId is { } pid
-            ? (await db.Enrollments.Where(e => e.ProgramId == pid && e.EndedAt == null).Select(e => e.ChildId).ToListAsync(cancellationToken)).ToHashSet()
+        var enrolled = (await db.Enrollments.Where(e => e.EndedAt == null).Select(e => new { e.ProgramId, e.ChildId }).ToListAsync(cancellationToken))
+            .Select(e => (e.ProgramId, e.ChildId)).ToHashSet();
+        var cohorts = await rows.CohortsAsync(cancellationToken);
+        var inviting = ImportRows.MappingOf(session).ContainsValue(ImportField.YouthEmail) && await modules.IsOnAsync(Domain.Organizations.ModuleId.Learning, cancellationToken);
+        var invitable = inviting
+            ? await rows.InvitationsAsync([.. read.Where(r => !duplicates.ContainsKey(r.Line) || merge.Contains(r.Line))], duplicates, cancellationToken)
             : [];
+        var notPlaced = new List<ImportRowIssueDto>();
+        var notInvited = new List<ImportRowIssueDto>();
+        var toInvite = new List<(string Email, Guid ChildId, string Name)>();
+        var placedInCohorts = 0;
         var now = clock.GetUtcNow();
         var created = new Dictionary<string, Household>();
         var updated = new HashSet<Guid>();
@@ -102,20 +112,54 @@ public sealed class RunImportHandler(IPromiseHubDb db, ITenantContext tenant, Im
                 childId = child.Id;
                 children++;
             }
-            if (session.ProgramId is { } programId && enrolled.Add(childId))
+            Guid? target = session.ProgramId;
+            if (row.Cohort is { } cohort)
+            {
+                if (cohorts.TryGetValue(ImportRows.CohortKey(cohort), out var match))
+                {
+                    target = match.Id;
+                    placedInCohorts++;
+                }
+                else
+                {
+                    target = null;
+                    notPlaced.Add(new ImportRowIssueDto(row.Line, row.ChildName, $"No cohort called “{cohort}”; imported, not placed"));
+                }
+            }
+            if (target is { } programId && enrolled.Add((programId, childId)))
             {
                 db.Enrollments.Add(new Domain.Programs.Enrollment(Guid.NewGuid(), tenant.OrganizationId, programId, childId, now));
                 enrolments++;
+            }
+            if (invitable.TryGetValue(row.Line, out var why))
+            {
+                if (why is null)
+                {
+                    toInvite.Add((row.YouthEmail!, childId, row.ChildName));
+                }
+                else
+                {
+                    notInvited.Add(new ImportRowIssueDto(row.Line, row.ChildName, why));
+                }
             }
             imported++;
         }
 
         var programName = session.ProgramId is { } p ? (await db.Programs.AsNoTracking().FirstOrDefaultAsync(x => x.Id == p, cancellationToken))?.Name : null;
-        var summary = new ImportSummaryDto(session.FileName, read.Count, imported, created.Count, updated.Count, children, enrolments, skipped, toFix.Count, toFix, programName);
+        var summary = new ImportSummaryDto(session.FileName, read.Count, imported, created.Count, updated.Count, children, enrolments, skipped, toFix.Count, toFix, programName,
+            toInvite.Count, notPlaced, notInvited);
         session.Complete(JsonSerializer.Serialize(summary));
+        var placed = ImportRows.MappingOf(session).ContainsValue(ImportField.Cohort) || inviting
+            ? $" · {placedInCohorts} placed in cohorts, {toInvite.Count} youth invited"
+            : string.Empty;
         audit.Record(new AuditEvent(AuditAction.Imported, "Import", session.Id,
-            $"{session.FileName} · {read.Count} rows · imported by {tenant.ActorName} · {imported} imported, {skipped} skipped, {toFix.Count} to fix"));
+            $"{session.FileName} · {read.Count} rows · imported by {tenant.ActorName} · {imported} imported, {skipped} skipped, {toFix.Count} to fix{placed}"));
         await db.SaveChangesAsync(cancellationToken);
+        // Invitations go once the children exist; each is audited and emailed as from the child record (L2-051, ADR 0045).
+        foreach (var (email, childId, name) in toInvite)
+        {
+            await invitations.IssueAsync(email, Domain.Organizations.Role.Youth, childId, $"{email} invited as Youth for {name} by {tenant.ActorName} (import)", cancellationToken);
+        }
         return (Result.Done, summary);
     }
 

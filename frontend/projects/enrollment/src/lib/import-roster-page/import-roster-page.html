@@ -30,7 +30,31 @@
             [caption]="s.programName"
             data-testid="kpi-Enrolled"
           />
+          @if (s.invited || s.notInvited.length) {
+            <ph-stat
+              label="Youth invited"
+              [value]="'' + s.invited"
+              caption="emailed, link lasts 14 days"
+              data-testid="kpi-Youth invited"
+            />
+          }
         </div>
+        @if (s.notPlaced.length) {
+          <h2>Not placed in a cohort</h2>
+          <ul class="stack" aria-label="Not placed in a cohort">
+            @for (r of s.notPlaced; track r.row) {
+              <li>Row {{ r.row }} · {{ r.child }} · {{ r.reason }}</li>
+            }
+          </ul>
+        }
+        @if (s.notInvited.length) {
+          <h2>Not invited</h2>
+          <ul class="stack" aria-label="Not invited">
+            @for (r of s.notInvited; track r.row) {
+              <li>Row {{ r.row }} · {{ r.child }} · {{ r.reason }}</li>
+            }
+          </ul>
+        }
         @if (s.skipped) {
           <p>{{ s.skipped }} already in PromiseHub and skipped.</p>
         }
@@ -104,7 +128,7 @@
             "
             text="Check the rest, then choose a program."
           />
-          <ph-roster-mapping [rows]="rows()" [options]="fields" (changed)="remap($event)" />
+          <ph-roster-mapping [rows]="rows()" [options]="fields()" (changed)="remap($event)" />
           <ph-select
             inputId="program"
             label="Enroll everyone in"
@@ -124,6 +148,26 @@
         <ph-card>
           <div class="stack">
             <p>{{ p.rows }} rows{{ p.programName ? ', enrolled in ' + p.programName : '' }}.</p>
+            @if (mapped('Cohort') || mapped('YouthEmail')) {
+              <div class="kpis" role="group" aria-label="Cohorts and invitations">
+                @if (mapped('Cohort')) {
+                  <ph-stat
+                    label="Cohort places"
+                    [value]="'' + p.placements"
+                    caption="matched by name"
+                    data-testid="kpi-Cohort places"
+                  />
+                }
+                @if (mapped('YouthEmail')) {
+                  <ph-stat
+                    label="Youth invitations"
+                    [value]="'' + p.invitations"
+                    caption="ages 12 to 18"
+                    data-testid="kpi-Youth invitations"
+                  />
+                }
+              </div>
+            }
             @if (p.duplicates.length) {
               <h2>Already in PromiseHub</h2>
               <ul class="stack" aria-label="Already in PromiseHub">
