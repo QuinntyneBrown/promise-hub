@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 80 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="80" data-video-title="Report, export and import learning data" data-parts="Introduction|Detailed reports|Cohort report|Youth|Youth report|Progress board|Exports|Staff activity|Import|Server rules|Off and states|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 80</div>
+  <h1>Report, export and import learning data</h1>
+  <p class="lead">Cohort, youth and staff reports, the progress board, exports of exactly what they show, and an import that places and invites</p>
+</section>
+
+<section id="detailed" data-part="1" data-cue="Marisol Delgado is the program director at Harbourview Youth Collective.">
+  <h2>Detailed reports</h2>
+  <img class="shot" alt="Reports with the Detailed reports card" src="shots/desktop-detailed.png">
+  <p class="muted small">Cohort report always · Progress board while Learning is on · Staff activity while Mentoring is on · ADR 0074</p>
+</section>
+
+<section id="cohort-clip" data-part="2" data-cue="Marisol opens the cohort report for After-School Tutoring." data-clip="clips/cohort-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>The cohort report</h3><p>From Detailed reports to Nadia’s youth report.</p></div>
+</section>
+
+<section id="cohort" data-part="2" data-cue="Average completion is how many of the track's published lessons">
+  <h2>Enrolment, attendance, learning, at risk</h2>
+  <img class="shot" alt="The cohort report for After-School Tutoring" src="shots/desktop-cohort.png">
+  <p class="muted small">GET /reports/cohorts/{programId} · DetailedReportsHandler.CohortAsync · L2-127</p>
+</section>
+
+<section id="youth-table" data-part="3" data-cue="The table lists every youth enrolled now or before.">
+  <h2>Each youth</h2>
+  <img class="shot" alt="The youth table with learning, attendance, check-ins and status" src="shots/desktop-cohort-youth.png">
+  <p class="muted small">No account, not zero · check-ins since the program started · computed on read</p>
+</section>
+
+<section id="youth" data-part="4" data-cue="Marisol chooses Nadia.">
+  <h2>The youth report</h2>
+  <img class="shot" alt="Nadia Haddad's youth report" src="shots/desktop-youth.png">
+  <p class="muted small">GET /reports/youth/{childId} · best quiz scores · check-ins counted, never quoted (ADR 0061)</p>
+</section>
+
+<section id="board-clip" data-part="5" data-cue="The progress board is the spreadsheet itself, replaced." data-clip="clips/board-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Progress board</h3><p>Every youth, every module; export; staff activity.</p></div>
+</section>
+
+<section id="board" data-part="5" data-cue="The last columns are the quiz average and overall completion">
+  <h2>Every youth, every module</h2>
+  <div class="cols">
+    <img class="shot" alt="The progress board with the cohort average row" src="shots/desktop-board.png">
+    <img class="shot" alt="The progress board on a phone" src="shots/phone-board.png">
+  </div>
+  <p class="muted small">GET /reports/progress/{programId} · Learning only · PhTable footer row · L2-131</p>
+</section>
+
+<section id="phone" data-part="5" data-cue="On a phone the board scrolls sideways inside its own frame" data-clip="clips/reports-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>On a phone</h3><p>The cohort report, and the board scrolling in its own frame.</p></div>
+</section>
+
+<section id="exports" data-part="6" data-cue="Every detailed report has Export CSV.">
+  <h2>Exactly what the report shows</h2>
+  <img class="shot" alt="Export ready in the export dialog" src="shots/desktop-export.png">
+  <p class="muted small">POST /reports/exports { kind: Cohort | Progress | Staff } · 7 days, then 410 · audited with the kind · L2-129</p>
+</section>
+
+<section id="staff" data-part="7" data-cue="Staff activity shows each mentor's cohorts">
+  <h2>Staff activity</h2>
+  <img class="shot" alt="Staff activity with Daniel overloaded" src="shots/desktop-staff.png">
+  <p class="muted small">GET /reports/staff?days=30|90 · Mentoring only · Overloaded above 8, Underloaded below 4 · L2-128</p>
+</section>
+
+<section id="import-clip" data-part="8" data-cue="Tom Nguyen, the admin, imports a roster" data-clip="clips/import-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Import</h3><p>Group and Youth email columns.</p></div>
+</section>
+
+<section id="import" data-part="8" data-cue="The review counts the cohort places and the invitations">
+  <h2>Placed and invited, once</h2>
+  <div class="cols three">
+    <img class="shot" alt="Group mapped to Cohort and Youth email to Youth email" src="shots/desktop-import-mapping.png">
+    <img class="shot" alt="The review with cohort places and youth invitations" src="shots/desktop-import-review.png">
+    <img class="shot" alt="The results with rows not placed and not invited" src="shots/desktop-import-done.png">
+  </div>
+  <p class="muted small">ImportField.Cohort, ImportField.YouthEmail · InvitationIssuer · idempotent · L2-130</p>
+</section>
+
+<section id="rules" data-part="9" data-cue="Every report needs the Reports module">
+  <h2>Rules on the server</h2>
+  <ul>
+    <li>Reports module and <code>ViewReports</code>: admins, program directors, site leads; others 403</li>
+    <li>Staff activity needs Mentoring, the progress board Learning: off answers 404</li>
+    <li>A Youth email column needs Learning and an admin (<code>ManageStaff</code>), else 422</li>
+    <li>Another organization’s cohort or child: 404, never counted</li>
+  </ul>
+</section>
+
+<section id="states-clip" data-part="10" data-cue="At Northgate, Learning and Mentoring are off." data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Off, forbidden, empty, failed</h3><p>Northgate, Aisha, Winter Camp, a failed load.</p></div>
+</section>
+
+<section id="states" data-part="10" data-cue="A cohort with nobody enrolled says so">
+  <div class="cols">
+    <img class="shot" alt="Northgate's cohort report without learning or mentoring" src="shots/desktop-northgate.png">
+    <img class="shot" alt="Reports are for directors and site leads" src="shots/desktop-forbidden.png">
+  </div>
+  <div class="cols">
+    <img class="shot" alt="No youth in this cohort yet" src="shots/desktop-empty.png">
+    <img class="shot" alt="We couldn't build the youth report" src="shots/desktop-error.png">
+  </div>
+</section>
+
+<section id="testing" data-part="11" data-cue="The API tests CohortReportTests">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>CohortReportTests</code>, <code>YouthReportTests</code>, <code>StaffReportTests</code>, <code>ProgressBoardTests</code>: numbers, gates, roles, tenancy</li>
+    <li><code>FilteredExportTests</code>, <code>ImportCohortsTests</code>: columns, audit, invitations, re-runs</li>
+    <li><code>cohort-report</code>, <code>youth-report</code>, <code>staff-report</code>, <code>progress-board</code>, <code>import-cohorts</code> specs with axe, laptop and phone</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="12" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Detailed reports list only what the modules allow</li><li>Learning from youth accounts; mentors’ notes never shown</li><li>Exports are exactly what the report shows, logged, 7 days</li><li>Import places youth in cohorts and invites them, once</li></ul>
+  <p class="muted">Next: the public website</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
