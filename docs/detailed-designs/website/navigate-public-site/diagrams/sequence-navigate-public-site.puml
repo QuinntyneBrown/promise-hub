@@ -1,0 +1,34 @@
+@startuml
+title UML sequence — Navigate the public site (L2-132, L2-005)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Visitor" as v
+box "Frontend — Angular app" #E0F2FE
+participant SiteLayout as page
+participant WEBSITE_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant WebsiteEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant PublicSiteResolver as r
+participant PublicWebsiteHandler as h
+end box
+database "Database" as db
+v -> page : opens the page
+page -> client : site(slug)
+client -> api : GET /website/harbourview
+api -> r : ResolveAsync(address)
+r -> db : organization by WebsiteSlug, not suspended (L2-132 c4)
+r -> db : ModuleConfiguration of that organization
+alt unknown, suspended or Public website off
+  r --> api : null
+  api --> page : 404, nothing stored (L2-132 c4)
+else published
+  r -> r : tenant resolved for a visitor (actor "Website visitor")
+  api -> h : HandleAsync
+  h --> page : PublicSiteDto
+  page -> v : site nav, page, site footer (L2-132 c2)
+end
+@enduml

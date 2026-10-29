@@ -1,0 +1,13 @@
+@startuml
+title UML classes — Start a donation
+class WebsiteRequestsHandler { +DonateAsync(address, DonationRequest): WebsiteResult }
+class DonationRequest <<record>> { MonthlyAmount Name Email }
+interface IPaymentProvider { +StartCheckoutAsync(organizationId, amount, email): PaymentCheckout? }
+class PaymentCheckout <<record>> { Reference Url }
+class DonationPledge { Id OrganizationId MonthlyAmount Name Email ProviderReference CreatedAt }
+class DonationCheckoutDto <<record>> { CheckoutUrl }
+WebsiteRequestsHandler --> IPaymentProvider
+IPaymentProvider ..> PaymentCheckout
+WebsiteRequestsHandler ..> DonationPledge
+WebsiteRequestsHandler ..> DonationCheckoutDto
+@enduml

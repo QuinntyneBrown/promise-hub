@@ -1,0 +1,38 @@
+@startuml
+title UML sequence — Browse current cohorts (L2-133, L2-132)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Visitor" as v
+box "Frontend — Angular app" #E0F2FE
+participant SiteProgramsPage as page
+participant WEBSITE_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant WebsiteEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant PublicSiteResolver as r
+participant PublicContentHandler as h
+end box
+database "Database" as db
+v -> page : opens the page
+page -> client : content(slug)
+client -> api : GET /website/harbourview/content
+api -> r : ResolveAsync(address)
+r -> db : organization by WebsiteSlug, not suspended (L2-132 c4)
+r -> db : ModuleConfiguration of that organization
+alt unknown, suspended or Public website off
+  r --> api : null
+  api --> page : 404, nothing stored (L2-132 c4)
+else published
+  r -> r : tenant resolved for a visitor (actor "Website visitor")
+  api -> h : HandleAsync
+  h -> db : programs Active and EndsOn >= today, this organization only (L2-133 c1, c7)
+  h -> h : status, apply path while open, track and lead mentor per module (L2-133 c1 to c3)
+  h --> page : programs
+  page -> v : cards with Apply
+  v -> page : Apply on After-School Tutoring
+  page -> v : /g/enroll/{link} (prompt 58)
+end
+@enduml

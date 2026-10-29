@@ -1,0 +1,18 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Explore programs
+Container_Boundary(web, "Angular app") {
+  Component(page, "SiteProgramsPage", "website", "programs, tracks, mentorship")
+  Component(client, "WEBSITE_API", "api", "content(slug)")
+}
+Container_Boundary(api, "API") {
+  Component(ep, "WebsiteEndpoints", "PromiseHub.Api", "GET /website/{slug}/content")
+  Component(res, "PublicSiteResolver", "Application/Website", "organization and modules")
+  Component(h, "PublicContentHandler", "Application/Website", "published content only")
+}
+
+Rel(page, client, "content(slug)")
+Rel(client, ep, "GET")
+Rel(ep, h, "HandleAsync")
+Rel(h, res, "ResolveAsync")
+@enduml

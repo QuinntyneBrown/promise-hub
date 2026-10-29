@@ -1,0 +1,10 @@
+@startuml
+title UML classes — Navigate the public site
+class PublicSiteResolver { +ResolveAsync(address): Organization? }
+class PublicWebsiteHandler { +HandleAsync(address): PublicSiteDto? }
+class PublicSiteDto <<record>> { Name City Tagline? About? Email? }
+class TenantContext { +ResolveForVisitor(organizationId) }
+PublicWebsiteHandler --> PublicSiteResolver
+PublicSiteResolver ..> TenantContext
+PublicWebsiteHandler ..> PublicSiteDto
+@enduml

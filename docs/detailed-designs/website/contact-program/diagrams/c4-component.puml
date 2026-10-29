@@ -1,0 +1,18 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Contact the program
+Container_Boundary(web, "Angular app") {
+  Component(page, "SiteContactPage", "website", "form, sent")
+  Component(client, "WEBSITE_API", "api", "contact")
+}
+Container_Boundary(api, "API") {
+  Component(ep, "WebsiteEndpoints", "PromiseHub.Api", "POST /website/{slug}/contact")
+  Component(h, "WebsiteRequestsHandler", "Application/Website", "validate, limit, store, audit")
+  Component(audit, "IAuditWriter", "Application/Audit", "Created")
+}
+
+Rel(page, client, "contact")
+Rel(client, ep, "POST")
+Rel(ep, h, "ContactAsync")
+Rel(h, audit, "Record")
+@enduml

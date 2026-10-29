@@ -1,0 +1,22 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Navigate the public site
+Container_Boundary(web, "Angular app") {
+  Component(guard, "websiteOn", "promisehub", "canMatch")
+  Component(layout, "SiteLayout", "website", "frame, SiteState")
+  Component(nav, "PhSiteNav / PhSiteFooter", "components", "links")
+  Component(client, "WEBSITE_API", "api", "site(slug)")
+}
+Container_Boundary(api, "API") {
+  Component(ep, "WebsiteEndpoints", "PromiseHub.Api", "AllowAnonymous")
+  Component(res, "PublicSiteResolver", "Application/Website", "address to organization")
+  Component(h, "PublicWebsiteHandler", "Application/Website", "public profile")
+}
+
+Rel(guard, client, "site(slug)")
+Rel(layout, client, "site(slug)")
+Rel(layout, nav, "renders")
+Rel(client, ep, "GET /website/{slug}")
+Rel(ep, h, "HandleAsync")
+Rel(h, res, "ResolveAsync")
+@enduml

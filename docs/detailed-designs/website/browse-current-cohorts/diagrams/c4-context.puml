@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — Browse current cohorts
+Person(visitor, "Visitor", "Dana Thompson")
+System(ph, "PromiseHub", "Public website of one organization")
+
+Rel(visitor, ph, "Finds a program and follows its link to apply", "HTTPS, no sign-in")
+@enduml

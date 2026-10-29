@@ -1,0 +1,7 @@
+@startuml
+title UML classes — View journey and impact
+class PublicImpactDto <<record>> { Programs Open Tracks? Modules? }
+class PublicContentDto <<record>> { Programs Tracks Mentorship Impact }
+class PublicSiteDto <<record>> { Name City Tagline? About? Email? }
+PublicContentDto *-- PublicImpactDto
+@enduml

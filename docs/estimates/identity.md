@@ -4,7 +4,7 @@
 |---|---|---|
 | accept-invitation | 2 days | 100% |
 | authorize-request | 5 days | 70% |
-| change-password | 2 days | 95% |
+| change-password | 2 days | 90% |
 | configure-display | 3 days | 90% |
 | edit-profile | 2 days | 90% |
 | end-user-session | 2 days | 90% |

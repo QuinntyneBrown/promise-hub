@@ -1,0 +1,18 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Browse current cohorts
+Container_Boundary(web, "Angular app") {
+  Component(page, "SiteProgramsPage", "website", "program cards, Apply")
+  Component(enroll, "GuardianEnrollPage", "guardian", "/g/enroll/{link}")
+  Component(client, "WEBSITE_API", "api", "content(slug)")
+}
+Container_Boundary(api, "API") {
+  Component(ep, "WebsiteEndpoints", "PromiseHub.Api", "GET /website/{slug}/content")
+  Component(h, "PublicContentHandler", "Application/Website", "current programs")
+}
+
+Rel(page, client, "content(slug)")
+Rel(page, enroll, "Apply")
+Rel(client, ep, "GET")
+Rel(ep, h, "HandleAsync")
+@enduml

@@ -1,0 +1,14 @@
+@startuml
+!include <C4/C4_Container>
+title C4 containers — Contact the program
+Person(visitor, "Visitor")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "Angular app", "Angular 22", "website, api, components")
+  Container(api, "API", ".NET 10 minimal APIs", "Anonymous website endpoints, PublicSiteResolver, handlers")
+  ContainerDb(db, "Database", "SQL (SQLite in tests)", "ContactMessages, AuditEntries")
+}
+
+Rel(visitor, web, "Uses", "HTTPS")
+Rel(web, api, "JSON over HTTPS, no session")
+Rel(api, db, "EF Core, tenant filter for the resolved organization")
+@enduml

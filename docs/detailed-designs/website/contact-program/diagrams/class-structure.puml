@@ -1,0 +1,12 @@
+@startuml
+title UML classes — Contact the program
+class WebsiteRequestsHandler { +ContactAsync(address, ContactRequest): WebsiteResult }
+class ContactRequest <<record>> { Name Email Topic Message }
+class ContactMessage { Id OrganizationId Name Email Topic Message CreatedAt }
+class WebsiteRequestLimit { +ReachedAsync(kind, email): bool }
+class WebsiteResult <<record>> { Outcome Errors? Value? }
+WebsiteRequestsHandler ..> ContactRequest
+WebsiteRequestsHandler ..> ContactMessage
+WebsiteRequestsHandler --> WebsiteRequestLimit
+WebsiteRequestsHandler ..> WebsiteResult
+@enduml
