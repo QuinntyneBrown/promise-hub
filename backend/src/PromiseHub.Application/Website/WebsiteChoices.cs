@@ -7,6 +7,6 @@ public static class WebsiteChoices
 
     public static readonly IReadOnlyList<string> Areas = ["Homework help", "Coaching a sports team", "Camp helper", "Driving and setup", "Wherever I’m needed"];
 
-    /// <summary>Monthly donation amounts in dollars (Waypoint decision 13).</summary>
+    /// <summary>Monthly donation amounts in dollars (ADR 0075).</summary>
     public static readonly IReadOnlyList<int> MonthlyAmounts = [20, 50, 100];
 }

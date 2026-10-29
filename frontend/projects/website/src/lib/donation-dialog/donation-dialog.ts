@@ -20,7 +20,7 @@ const FIELD: Record<string, string> = {
   email: 'don-email',
 };
 
-/** The monthly tiers (Waypoint decision 13). */
+/** The monthly tiers (ADR 0075). */
 const TIERS: RadioOption[] = [
   { value: '20', label: '$20 a month · Friend', hint: 'Lesson supplies for one child for a term.' },
   {
