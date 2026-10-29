@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 82 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="82" data-video-title="The Waypoint merge, start to finish" data-parts="Introduction|Waypoint|Mapping|Modules and roles|Sign-in and consent|Cohorts and mentors|Learning|Mentoring tools|Sessions|Messages|People and settings|Public website|Deferred|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 82</div>
+  <h1>The Waypoint merge, start to finish</h1>
+  <p class="lead">Prompts 49 to 81: what came across, where it landed, and what waited</p>
+</section>
+
+<section id="numbers" data-part="0" data-cue="This closing video tells the whole story in one place">
+  <h2>The merge in numbers</h2>
+  <div class="cols">
+    <ul>
+      <li>33 prompts, 49 to 81, each with its own video</li>
+      <li>33 decision records, ADR 0043 to 0075</li>
+      <li>4 new feature libraries: <code>learning</code>, <code>curriculum</code>, <code>mentoring</code>, <code>website</code></li>
+    </ul>
+    <table class="facts">
+      <tr><th>Estimate</th><th>Effort</th><th>Complete</th></tr>
+      <tr><td>Learning</td><td>48 days</td><td>100%</td></tr>
+      <tr><td>Curriculum</td><td>27 days</td><td>97%</td></tr>
+      <tr><td>Mentoring</td><td>37 days</td><td>100%</td></tr>
+      <tr><td>Website</td><td>23 days</td><td>94%</td></tr>
+    </table>
+  </div>
+  <p class="muted small">docs/estimates/README.md</p>
+</section>
+
+<section id="waypoint" data-part="1" data-cue="Waypoint had lessons, quizzes, assignments, reflections and badges">
+  <h2>What Waypoint brought</h2>
+  <div class="cols three">
+    <div class="card"><h3>Youth</h3><p>Lessons, quizzes, assignments, reflections, badges, a journey</p></div>
+    <div class="card"><h3>Mentors</h3><p>A dashboard, grading, check-ins, at-risk flags</p></div>
+    <div class="card"><h3>Everyone else</h3><p>Cohorts and sessions, volunteers, guardians, messages, a public site</p></div>
+  </div>
+  <p class="muted small">Its own apps, requirements and tests; read only, nothing loaded at build or run time</p>
+</section>
+
+<section id="mapping" data-part="2" data-cue="Prompt forty-nine decided, once, where each part would land">
+  <h2>Where Waypoint landed</h2>
+  <table class="facts">
+    <tr><th>Waypoint</th><th>PromiseHub</th></tr>
+    <tr><td>Cohort</td><td>A program with a term</td></tr>
+    <tr><td>Session</td><td>An event, with RSVP</td></tr>
+    <tr><td>Attendance</td><td>Roll Call: one attendance system</td></tr>
+    <tr><td>Application, referral</td><td>Enrollment, through the open enrollment link</td></tr>
+    <tr><td>Announcements, direct messages</td><td>Messages</td></tr>
+    <tr><td>Guardian accounts</td><td>None: verified-link guardian pages</td></tr>
+  </table>
+  <p class="muted small">ADR 0043 · docs/adr/0043-merge-waypoint.md</p>
+</section>
+
+<section id="conventions" data-part="2" data-cue="And Waypoint's code followed PromiseHub's conventions as it moved">
+  <h2>PromiseHub’s conventions, not Waypoint’s</h2>
+  <table class="facts">
+    <tr><th>Waypoint</th><th>PromiseHub</th></tr>
+    <tr><td>MediatR, FluentValidation, controllers</td><td>Plain handlers, minimal API endpoints</td></tr>
+    <tr><td><code>portal</code> and <code>public-site</code> apps</td><td>One app, one library per feature</td></tr>
+    <tr><td>NUnit against SQL Server</td><td>xUnit against the fake database</td></tr>
+    <tr><td>Playwright against the real API</td><td>Playwright against the fake API, Chromium only</td></tr>
+    <tr><td>JWT with refresh tokens</td><td>Cookie sessions</td></tr>
+  </table>
+</section>
+
+<section id="modules" data-part="3" data-cue="What was new became three modules">
+  <h2>Three modules that start off</h2>
+  <div class="cols three">
+    <div class="card"><span class="tag">Learning</span><p>Lessons, quizzes, assignments, badges, the journey; authoring in Curriculum</p></div>
+    <div class="card"><span class="tag">Mentoring</span><p>The dashboard, grading, check-ins, at-risk flags, assigned work</p></div>
+    <div class="card"><span class="tag">Public website</span><p>Anonymous pages at <code>/site/{address}</code>, published content only</p></div>
+  </div>
+  <p class="muted small">Each needs Roster · off until an admin turns it on · an off module answers 404</p>
+</section>
+
+<section id="roles" data-part="3" data-cue="Three participant roles joined the five staff roles.">
+  <h2>Three roles that see only what is theirs</h2>
+  <ul>
+    <li><strong>Youth</strong>: one account, one child record, <code>Learn</code></li>
+    <li><strong>Mentor</strong>: only assigned youth and cohorts, <code>MentorYouth</code></li>
+    <li><strong>Volunteer</strong>: only assigned sessions, <code>RunSessions</code> without <code>RunAnySession</code></li>
+    <li>Staff endpoints need <code>UseStaffApp</code>; every new endpoint names its module and permission</li>
+  </ul>
+</section>
+
+<section id="sign-in" data-part="4" data-cue="The first group gave participants a way in.">
+  <h2>Sign-in, invitations and consent</h2>
+  <div class="cols three">
+    <img class="shot" alt="Yusuf accepts his invitation on a phone" src="../51-accept-an-invitation/shots/phone-accept-youth.png">
+    <img class="shot" alt="Carmen reads the consent in Spanish" src="../52-give-guardian-consent/shots/phone-consent-es.png">
+    <img class="shot" alt="Sofía's first-run step about her" src="../53-complete-first-run-onboarding/shots/phone-welcome-you.png">
+  </div>
+  <p class="muted small">Videos 50 to 53 · ADR 0044 to 0047</p>
+</section>
+
+<section id="cohorts" data-part="5" data-cue="Next, cohorts.">
+  <h2>A cohort is a program with a term and mentors</h2>
+  <img class="shot" alt="After-School Tutoring with its lead and supporting mentors" src="../54-manage-cohorts/shots/desktop-mentors.png">
+  <p class="muted small">Video 54 · ADR 0048</p>
+</section>
+
+<section id="dashboard-clip" data-part="5" data-cue="Daniel opens Mentoring on a dashboard of his own youth" data-clip="clips/mentor-dashboard-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>The mentor dashboard</h3><p>Daniel’s youth, cohorts and check-ins; then My youth and a search.</p></div>
+</section>
+
+<section id="applicants" data-part="5" data-cue="Young people reach a cohort through the same enrollment link">
+  <h2>One intake, one pipeline</h2>
+  <div class="cols">
+    <img class="shot" alt="Who is applying" src="../58-apply-or-refer/shots/desktop-who.png">
+    <img class="shot" alt="The applications pipeline" src="../59-review-and-place-applicants/shots/desktop-applications.png">
+  </div>
+  <p class="muted small">Videos 58 and 59 · ADR 0052, 0053</p>
+</section>
+
+<section id="authoring" data-part="6" data-cue="The biggest group is Learning.">
+  <h2>Authored, then published</h2>
+  <div class="cols">
+    <img class="shot" alt="Curriculum tracks" src="../56-author-curriculum/shots/desktop-tracks.png">
+    <img class="shot" alt="A quiz's questions" src="../60-author-quizzes-and-assignments/shots/desktop-quiz-questions.png">
+  </div>
+  <p class="muted small">Videos 56, 60 and 64 · tracks, modules, lessons, quizzes, assignments, rubrics, badges</p>
+</section>
+
+<section id="learning-clip" data-part="6" data-cue="Sofía opens Learning on what is assigned to her" data-clip="clips/learning-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Sofía’s Learning</h3><p>Assigned to you, continue where you left off, and the lesson it opens.</p></div>
+</section>
+
+<section id="graded" data-part="6" data-cue="Her quiz attempts are scored on the server">
+  <h2>Scored on the server, graded by her mentor</h2>
+  <div class="cols">
+    <img class="shot" alt="A passed quiz result" src="../61-take-quizzes/shots/desktop-result-passed.png">
+    <img class="shot" alt="A submission scored against its rubric" src="../63-grade-and-assess/shots/desktop-grade-scored.png">
+  </div>
+  <p class="muted small">Videos 57, 61 to 63 · ADR 0051, 0055 to 0058</p>
+</section>
+
+<section id="journey-clip" data-part="6" data-cue="Her journey shows her roadmap" data-clip="clips/journey-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Journey and progress</h3><p>Badges earned and still to unlock, then quizzes and attendance.</p></div>
+</section>
+
+<section id="flags-clip" data-part="7" data-cue="Mentoring adds three tools." data-clip="clips/at-risk-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>At-risk flags</h3><p>Daniel raises a flag on Mateo, how serious and why.</p></div>
+</section>
+
+<section id="assigned" data-part="7" data-cue="And he assigns a published lesson">
+  <h2>Check-ins, flags and assigned work</h2>
+  <div class="cols">
+    <img class="shot" alt="Daniel's mentor check-in history" src="../67-record-mentor-check-ins/shots/desktop-history.png">
+    <img class="shot" alt="Work assigned to a cohort" src="../69-assign-work/shots/desktop-assigned.png">
+  </div>
+  <p class="muted small">Videos 67 to 69 · ADR 0061 to 0063</p>
+</section>
+
+<section id="rsvp-clip" data-part="8" data-cue="Sessions became events." data-clip="clips/rsvp-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>RSVP</h3><p>Sofía is going to the field trip, with a note for staff.</p></div>
+</section>
+
+<section id="portals" data-part="8" data-cue="Leo, a volunteer, sees tonight's session on his Today">
+  <h2>Volunteers and guardians, in the same app</h2>
+  <div class="cols">
+    <img class="shot" alt="Leo's Today with tonight's session" src="../72-use-the-volunteer-portal/shots/desktop-today.png">
+    <img class="shot" alt="Sofía's read-only page for Carmen" src="../73-use-the-guardian-portal/shots/desktop-child.png">
+  </div>
+  <p class="muted small">Videos 70 to 73 · ADR 0064 to 0067</p>
+</section>
+
+<section id="messages" data-part="9" data-cue="Announcements and direct messages are Messages">
+  <h2>Messages and notifications</h2>
+  <div class="cols">
+    <img class="shot" alt="Daniel and Sofía's conversation" src="../74-announce-and-message/shots/desktop-conversation.png">
+    <img class="shot" alt="Sofía's notification center" src="../75-receive-notifications/shots/desktop-center.png">
+  </div>
+  <p class="muted small">Videos 74 and 75 · ADR 0068, 0069</p>
+</section>
+
+<section id="people" data-part="10" data-cue="Then the running of the organization.">
+  <h2>People</h2>
+  <img class="shot" alt="People with every account of Harbourview" src="../76-manage-people/shots/desktop-people.png">
+  <p class="muted small">Video 76 · ADR 0070</p>
+</section>
+
+<section id="reset-clip" data-part="10" data-cue="Every role can reset a forgotten password" data-clip="clips/reset-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Reset a password</h3><p>Sofía’s email name is refused, then she lands on Learning.</p></div>
+</section>
+
+<section id="settings" data-part="10" data-cue="Settings opens on the organization">
+  <h2>Settings and reports</h2>
+  <div class="cols">
+    <img class="shot" alt="Settings on Organization" src="../79-configure-the-organization/shots/desktop-organization.png">
+    <img class="shot" alt="The progress board" src="../80-report-export-and-import/shots/desktop-board.png">
+  </div>
+  <p class="muted small">Videos 77 to 80 · ADR 0071 to 0074</p>
+</section>
+
+<section id="site-clip" data-part="11" data-cue="The last journey opened PromiseHub to the public." data-clip="clips/site-landing-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>The public website</h3><p>Harbourview’s home page, chosen by its address.</p></div>
+</section>
+
+<section id="programs-clip" data-part="11" data-cue="Dana sees Harbourview's home page" data-clip="clips/site-programs-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Programs and open cohorts</h3><p>The learning track, mentorship, then Apply.</p></div>
+</section>
+
+<section id="deferred" data-part="12" data-cue="Not everything came across">
+  <h2>What was deferred</h2>
+  <table class="facts">
+    <tr><th>Area</th><th>Waiting</th><th>Where</th></tr>
+    <tr><td>Public website</td><td>A staff inbox; a real payment provider</td><td>ADR 0075</td></tr>
+    <tr><td>Curriculum</td><td>Authoring a lesson’s kind, passage, starter code; chunked upload, transcoding</td><td>Video 57 · ADR 0050</td></tr>
+    <tr><td>Mentoring</td><td>Automatic at-risk flags; reminders on assigned work</td><td>ADR 0062, 0063</td></tr>
+    <tr><td>Sessions</td><td>Editing a whole series at once</td><td>ADR 0064</td></tr>
+    <tr><td>Notifications</td><td>Email and push per kind, quiet hours</td><td>ADR 0069</td></tr>
+    <tr><td>People</td><td>Profile editing on the record; an admin sending a reset</td><td>ADR 0070, 0071</td></tr>
+    <tr><td>Reports</td><td>Date ranges, comparisons, PDF exports</td><td>ADR 0074</td></tr>
+  </table>
+</section>
+
+<section id="recap" data-part="13" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Waypoint mapped onto programs, events, Roll Call, enrollment and Messages</li><li>Learning, Mentoring and Public website start off; Youth, Mentor and Volunteer see only theirs</li><li>Every journey: requirement, design, mock, tests and video</li><li>Off answers 404, other organizations answer nothing, and what waited is written down</li></ul>
+  <p class="muted">That is the Waypoint merge, start to finish</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
