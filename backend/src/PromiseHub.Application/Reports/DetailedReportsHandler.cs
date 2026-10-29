@@ -165,7 +165,7 @@ public sealed class DetailedReportsHandler(IPromiseHubDb db, LearnerProgress pro
                 Average(withAccount.Select(r => r.QuizAverage)), Average(withAccount.Select(r => r.Overall))));
     }
 
-    /// <summary>A mentor carrying more youth than this is overloaded; fewer than <see cref="UnderloadedBelow"/>, underloaded (Waypoint's target of 4 to 8).</summary>
+    /// <summary>A mentor carrying more youth than this is overloaded; fewer than <see cref="UnderloadedBelow"/>, underloaded (the target is 4 to 8 youth per mentor).</summary>
     public const int OverloadedAbove = 8;
 
     public const int UnderloadedBelow = 4;
