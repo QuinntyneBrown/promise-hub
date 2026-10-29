@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 79 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="79" data-video-title="Configure the organization" data-parts="Introduction|Organization|Profile|Server rules|Logo|Learning|Mentoring|Website|Modules off|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 79</div>
+  <h1>Configure the organization</h1>
+  <p class="lead">The profile, the logo and the defaults of the modules that are on, all on Settings › Organization</p>
+</section>
+
+<section id="organization" data-part="1" data-cue="Tom Nguyen is the admin at Harbourview Youth Collective.">
+  <h2>Settings opens on Organization</h2>
+  <img class="shot" alt="Settings › Organization with the Profile card" src="shots/desktop-organization.png">
+  <p class="muted small">/settings → /settings/organization · a card per module default while it is on · every Edit opens a dialog · ADR 0073</p>
+</section>
+
+<section id="profile" data-part="2" data-cue="Tom chooses Edit profile." data-clip="clips/profile-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Edit profile</h3><p>Contact email, phone and time zone.</p></div>
+</section>
+
+<section id="profile-shots" data-part="2" data-cue="The phone is what every guardian page shows">
+  <h2>Saved, and every screen follows</h2>
+  <div class="cols">
+    <img class="shot" alt="The organization-profile dialog" src="shots/desktop-profile-dialog.png">
+    <img class="shot" alt="Organization profile saved toast" src="shots/desktop-profile-saved.png">
+  </div>
+  <p class="muted small">PUT /settings/organization/profile · OrganizationProfileHandler · L2-122</p>
+</section>
+
+<section id="rules" data-part="3" data-cue="The server checks each field.">
+  <h2>Rules on the server</h2>
+  <ul>
+    <li>Name and city, an email, ten digits, a time zone from the list: 422 per field</li>
+    <li>The organization comes from the membership, never the request</li>
+    <li>Grace saves Northgate; Harbourview never changes</li>
+    <li>Audited with the changed fields · admins and program directors only</li>
+  </ul>
+</section>
+
+<section id="logo" data-part="4" data-cue="The logo uploads straight from the Profile card." data-clip="clips/logo-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>The logo</h3><p>A PNG accepted, a PDF refused.</p></div>
+</section>
+
+<section id="logo-shots" data-part="4" data-cue="The server does not trust the file name.">
+  <h2>Checked by its content</h2>
+  <div class="cols three">
+    <img class="shot" alt="No logo yet: the initials and the drop zone" src="shots/desktop-no-logo.png">
+    <img class="shot" alt="The uploaded logo with Remove logo" src="shots/desktop-logo.png">
+    <img class="shot" alt="The PDF refused under the drop zone" src="shots/desktop-logo-invalid.png">
+  </div>
+  <p class="muted small">PNG or JPEG by first bytes · 1 MB · logos/{organization}/{random} · SVG refused · L2-123</p>
+</section>
+
+<section id="learning" data-part="5" data-cue="Below the profile sit the defaults the modules bring." data-clip="clips/defaults-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Module defaults</h3><p>Consent, cadence, website.</p></div>
+</section>
+
+<section id="cadence" data-part="6" data-cue="Mentoring's card holds how often mentors should check in">
+  <h2>How often mentors check in</h2>
+  <div class="cols">
+    <img class="shot" alt="The mentoring-defaults dialog with Every 7 days" src="shots/desktop-mentoring-dialog.png">
+    <img class="shot" alt="Learning at 16 years and Mentoring at every 7 days" src="shots/desktop-defaults-saved.png">
+  </div>
+  <p class="muted small">PUT /settings/mentoring · 7, 14, 21 or 30 days · Mentoring only · L2-125</p>
+</section>
+
+<section id="due" data-part="6" data-cue="Daniel Osei is a mentor" data-clip="clips/mentor-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Check-ins due</h3><p>Every 14 days, then every 7.</p></div>
+</section>
+
+<section id="due-shots" data-part="6" data-cue="When the cadence drops from fourteen days to seven">
+  <h2>The cadence decides who is due</h2>
+  <div class="cols">
+    <img class="shot" alt="Check-ins due at every 14 days" src="shots/phone-check-ins-due.png">
+    <img class="shot" alt="Check-ins due at every 7 days, with Jordan" src="shots/phone-check-ins-due-7.png">
+  </div>
+  <p class="muted small">GET /mentoring/dashboard · checkInEveryDays · checkInsDue · his own check-ins only</p>
+</section>
+
+<section id="website" data-part="7" data-cue="When Harbourview turns Public website on">
+  <h2>The public website profile</h2>
+  <div class="cols">
+    <img class="shot" alt="The website-profile dialog" src="shots/desktop-website-dialog.png">
+    <img class="shot" alt="Website profile saved at /site/harbourview-youth" src="shots/desktop-website-saved.png">
+  </div>
+  <p class="muted small">PUT /settings/website · unique address · GET /website/{address} · L2-126</p>
+</section>
+
+<section id="off" data-part="8" data-cue="At Northgate, Learning, Mentoring and Public website are off." data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Off, forbidden, invalid</h3><p>Northgate, Jaylen, the dialogs.</p></div>
+</section>
+
+<section id="states" data-part="8" data-cue="Here are Northgate, the forbidden page">
+  <h2>Not found, forbidden, invalid, taken</h2>
+  <div class="cols">
+    <img class="shot" alt="Northgate with only the profile" src="shots/desktop-northgate.png">
+    <img class="shot" alt="Admins set up the organization" src="shots/desktop-forbidden.png">
+  </div>
+  <div class="cols">
+    <img class="shot" alt="The invalid profile with the summary" src="shots/desktop-profile-invalid.png">
+    <img class="shot" alt="The website address another organization uses" src="shots/desktop-website-taken.png">
+  </div>
+</section>
+
+<section id="testing" data-part="9" data-cue="The API tests OrganizationProfileTests">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>OrganizationProfileTests</code>, <code>OrganizationLogoTests</code>: fields, files, audit, roles, tenancy</li>
+    <li><code>LearningSettingsTests</code>, <code>MentoringSettingsTests</code>, <code>WebsiteProfileTests</code>: module gates, Check-ins due, the unique address</li>
+    <li><code>organization-profile</code>, <code>organization-logo</code>, <code>organization-module-defaults</code>, <code>mentor-check-ins-due</code> specs with axe</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="10" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Settings opens on Organization; every card edits in a dialog</li><li>Everything belongs to the membership's organization alone</li><li>A module's defaults show only while it is on; off answers 404</li><li>The cadence decides who is due a mentor check-in</li></ul>
+  <p class="muted">Next: report, export and import learning data</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
