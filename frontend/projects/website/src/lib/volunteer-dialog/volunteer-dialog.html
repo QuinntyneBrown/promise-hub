@@ -1,0 +1,84 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    title="Sign up to volunteer"
+    description="We’ll follow up by email about next steps."
+    icon="heart"
+  >
+    <div class="stack">
+      @if (summary().length) {
+        <ph-error-summary title="Fix these to continue" [items]="summary()" />
+      }
+      @if (problem() === 'failed') {
+        <ph-alert
+          tone="danger"
+          title="Your sign-up didn’t send"
+          text="Nothing was lost. Try again."
+        />
+      }
+      @if (problem() === 'too-many') {
+        <ph-alert
+          tone="warning"
+          title="You’ve signed up already"
+          text="We’ve got your details. Please wait an hour before sending again."
+        />
+      }
+      <ph-text-field
+        inputId="vol-name"
+        label="Your name"
+        name="name"
+        autocomplete="name"
+        [error]="errors()['name'] ?? null"
+        [(ngModel)]="name"
+      />
+      <ph-text-field
+        inputId="vol-email"
+        label="Email"
+        name="email"
+        type="email"
+        autocomplete="email"
+        [error]="errors()['email'] ?? null"
+        [(ngModel)]="email"
+      />
+      <ph-text-field
+        inputId="vol-phone"
+        label="Phone"
+        name="phone"
+        type="tel"
+        autocomplete="tel"
+        [optional]="true"
+        [error]="errors()['phone'] ?? null"
+        [(ngModel)]="phone"
+      />
+      <ph-select
+        inputId="vol-area"
+        label="How would you like to help?"
+        name="area"
+        [options]="areas"
+        [error]="errors()['area'] ?? null"
+        [(ngModel)]="area"
+      />
+      <ph-textarea
+        inputId="vol-about"
+        label="A bit about you"
+        name="about"
+        [rows]="3"
+        [optional]="true"
+        [count]="count()"
+        [error]="errors()['about'] ?? null"
+        [ngModel]="about()"
+        (ngModelChange)="about.set($event)"
+      />
+      <ph-checkbox
+        inputId="vol-ack"
+        name="screeningAcknowledged"
+        label="I understand that volunteers who work with children are screened and reference checked before they start."
+        [error]="errors()['screeningAcknowledged'] ?? null"
+        [(ngModel)]="acknowledged"
+      />
+    </div>
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Sign up</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

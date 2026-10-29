@@ -34,7 +34,13 @@ import {
 } from "./fake-announcements";
 import { FakeAtRiskFlags } from "./fake-at-risk-flags";
 import { FakeReports, type ReportSource } from "./fake-reports";
-import { FakeWebsite, type WebsiteSource } from "./fake-website";
+import {
+  FakeWebsite,
+  FakeWebsiteRequests,
+  type FakeWebsiteRequest,
+  type WebsiteRequestKind,
+  type WebsiteSource,
+} from "./fake-website";
 import { FakeAssignedWorkStore, type Recipient } from "./fake-assigned-work";
 import {
   type FakeEvent,
@@ -2256,6 +2262,11 @@ export class FakeApi {
       "GET",
       /^\/api\/website\/(?<slug>[^/]+)\/content$/,
       (route, p) => this.websiteContent(route, p["slug"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/website\/(?<slug>[^/]+)\/(?<kind>contact|volunteer)$/,
+      (route, p) => this.websiteRequest(route, p["slug"]!, p["kind"] as "contact" | "volunteer"),
     ],
     ["POST", /^\/api\/auth\/sign-in$/, (route) => this.signIn(route)],
     ["POST", /^\/api\/auth\/mfa$/, (route) => this.mfa(route)],
@@ -4994,6 +5005,29 @@ export class FakeApi {
   }
 
   private readonly websiteState = new FakeWebsite();
+  private readonly websiteRequestState = new FakeWebsiteRequests(() => NOW);
+
+  /** The requests visitors sent to an organization's public website, oldest first (L2-134). */
+  websiteRequests(organizationId: string, kind: WebsiteRequestKind): FakeWebsiteRequest[] {
+    return this.websiteRequestState.of(organizationId, kind);
+  }
+
+  /** A request a visitor sent earlier, to reach the hourly limit. */
+  addWebsiteRequest(organizationId: string, kind: WebsiteRequestKind, email: string): void {
+    this.websiteRequestState.add(organizationId, kind, email);
+  }
+
+  /** POST /website/{slug}/contact and /volunteer: anonymous, mirrors WebsiteRequestsHandler. */
+  private async websiteRequest(route: Route, slug: string, kind: "contact" | "volunteer"): Promise<void> {
+    const organization = this.publishedSite(slug);
+    if (!organization) return route.fulfill({ status: 404 });
+    const body = (route.request().postDataJSON() ?? {}) as Record<string, unknown>;
+    const answer =
+      kind === "contact"
+        ? this.websiteRequestState.contact(organization.id, body)
+        : this.websiteRequestState.volunteer(organization.id, body);
+    return route.fulfill(answer.json === undefined ? { status: answer.status } : { status: answer.status, json: answer.json });
+  }
 
   /** GET /website/{slug}/content: anonymous, published content only (L2-133). */
   private async websiteContent(route: Route, slug: string): Promise<void> {

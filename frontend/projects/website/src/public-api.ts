@@ -4,3 +4,6 @@ export { SiteLandingPage } from './lib/site-landing-page/site-landing-page';
 export { SiteProgramsPage } from './lib/site-programs-page/site-programs-page';
 export { SiteAboutPage } from './lib/site-about-page/site-about-page';
 export { SitePrivacyPage } from './lib/site-privacy-page/site-privacy-page';
+export { SiteGetInvolvedPage } from './lib/site-get-involved-page/site-get-involved-page';
+export { SiteContactPage } from './lib/site-contact-page/site-contact-page';
+export { VolunteerDialog } from './lib/volunteer-dialog/volunteer-dialog';

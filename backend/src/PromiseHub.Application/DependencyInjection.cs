@@ -239,6 +239,8 @@ public static class DependencyInjection
         services.AddScoped<Website.PublicSiteResolver>();
         services.AddScoped<Website.PublicWebsiteHandler>();
         services.AddScoped<Website.PublicContentHandler>();
+        services.AddScoped<Website.WebsiteRequestLimit>();
+        services.AddScoped<Website.WebsiteRequestsHandler>();
         return services;
     }
 }

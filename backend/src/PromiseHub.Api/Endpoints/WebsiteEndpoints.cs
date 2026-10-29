@@ -15,6 +15,10 @@ public static class WebsiteEndpoints
             await handler.HandleAsync(slug, ct) is { } profile ? Results.Ok(profile) : Results.NotFound());
         site.MapGet("/content", async (string slug, PublicContentHandler handler, CancellationToken ct) =>
             await handler.HandleAsync(slug, ct) is { } content ? Results.Ok(content) : Results.NotFound());
+        site.MapPost("/contact", async (string slug, ContactRequest request, WebsiteRequestsHandler handler, CancellationToken ct) =>
+            WebsiteHttp.ToHttp(await handler.ContactAsync(slug, request, ct)));
+        site.MapPost("/volunteer", async (string slug, VolunteerRequest request, WebsiteRequestsHandler handler, CancellationToken ct) =>
+            WebsiteHttp.ToHttp(await handler.VolunteerAsync(slug, request, ct)));
         return app;
     }
 }
