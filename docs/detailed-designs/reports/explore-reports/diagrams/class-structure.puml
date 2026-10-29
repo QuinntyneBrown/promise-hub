@@ -1,0 +1,10 @@
+@startuml
+title UML classes — Explore reports
+class ReportsPage { #detailed(): DetailedReportLink[] }
+class DetailedReportLink <<interface>> { label link description }
+interface SessionApi { +current(): Observable<Session> }
+class Session <<interface>> { modules: ModuleId[] }
+ReportsPage ..> SessionApi
+ReportsPage *-- DetailedReportLink
+SessionApi ..> Session
+@enduml

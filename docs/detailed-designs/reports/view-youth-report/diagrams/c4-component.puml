@@ -1,0 +1,19 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — View the youth report
+Container_Boundary(web, "Angular app") {
+  Component(page, "YouthReportPage", "reports", "sections per module")
+  Component(client, "REPORTS_API", "api", "youth()")
+}
+Container_Boundary(api, "API") {
+  Component(gate, "RequireModule + RequirePermission(ViewReports)", "PromiseHub.Api", "404 while a module is off, 403 without ViewReports")
+  Component(h, "DetailedReportsHandler", "Application/Reports", "YouthAsync")
+  Component(lp, "LearnerProgress", "Application/Learning", "ForMembership")
+  Component(mg, "IModuleGate", "Application/Organizations", "OnAsync")
+}
+Rel(page, client, "youth(childId)")
+Rel(client, gate, "GET /reports/youth/{id}")
+Rel(gate, h, "YouthAsync")
+Rel(h, lp, "tracks")
+Rel(h, mg, "modules on")
+@enduml

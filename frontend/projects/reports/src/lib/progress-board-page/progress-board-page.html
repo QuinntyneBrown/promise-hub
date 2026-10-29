@@ -1,0 +1,99 @@
+@let r = result();
+@let b = board();
+@if (r?.status === 'forbidden') {
+  <ph-error-page
+    icon="lock"
+    title="Reports are for directors and site leads"
+    text="Ask a program director for the numbers you need."
+  >
+    <ph-button variant="primary" link="/">Go to Today</ph-button>
+  </ph-error-page>
+} @else {
+  <ph-breadcrumb [items]="crumbs" />
+  <ph-page-header
+    title="Progress board"
+    subtitle="Every youth, every module · the spreadsheet, replaced"
+  >
+    @if (b && b.youth.length && b.modules.length) {
+      <ph-button variant="primary" icon="download" hasPopup="dialog" (click)="openExport(b)"
+        >Export CSV</ph-button
+      >
+    }
+  </ph-page-header>
+  @if (programs(); as options) {
+    @if (options.length) {
+      <div class="toolbar">
+        <ph-select
+          inputId="pb-cohort"
+          label="Cohort"
+          name="cohort"
+          [options]="options"
+          [ngModel]="chosen()"
+          (ngModelChange)="choose($event)"
+        />
+      </div>
+    }
+  }
+  @if (b) {
+    @if (b.youth.length === 0) {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="families"
+          title="No youth in this cohort yet"
+          text="Enrol youth and invite them to see their progress here."
+        >
+          <ph-button variant="primary" [link]="['/programs', b.programId, 'roster']"
+            >Open the roster</ph-button
+          >
+        </ph-empty-state>
+      </ph-card>
+    } @else if (b.modules.length === 0) {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="curriculum"
+          title="This cohort follows no track"
+          text="Choose a track for it in Curriculum to see module progress."
+        >
+          <ph-button variant="primary" link="/curriculum">Open Curriculum</ph-button>
+        </ph-empty-state>
+      </ph-card>
+    } @else {
+      <ul class="legend" aria-label="Key">
+        @for (l of legend; track l.text) {
+          <li>
+            <ph-badge [tone]="l.tone">{{ l.text }}</ph-badge>
+          </li>
+        }
+      </ul>
+      <ph-table
+        [caption]="'Progress board: ' + b.programName + (b.trackName ? ' on ' + b.trackName : '')"
+        [columns]="columns()"
+        [rows]="rows()"
+        [footer]="footer()"
+      />
+    }
+  } @else if (r === null) {
+    <div aria-busy="true" aria-label="Loading the progress board">
+      <ph-skeleton shape="card" />
+    </div>
+  } @else if (r.status === 'not-found') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="search"
+        title="We couldn’t find that cohort"
+        text="Choose a cohort from the list."
+      />
+    </ph-card>
+  } @else {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load the progress board"
+        text="Your data is safe. Try again."
+      >
+        <ph-button variant="primary" (click)="load()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+}

@@ -1,0 +1,26 @@
+@startuml
+title UML sequence — View the cohort report (L2-127)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Marisol (Program director)" as p
+box "Frontend — Angular app" #E0F2FE
+participant CohortReportPage as page
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant "ReportEndpoints" as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant DetailedReportsHandler as h
+end box
+p -> page : chooses After-School Tutoring
+page -> api : GET /reports/cohorts/{programId}
+api -> api : Reports on or 404; ViewReports or 403 (c5, c6)
+api -> h : CohortAsync
+h -> h : program in this organization or 404 (c5)
+h -> h : enrollments, retention, attendance marks (c1)
+h -> h : Learning on? completion per youth and module (c2, c4)
+h -> h : Mentoring on? open flags, check-ins (c1, c4)
+api --> page : CohortReportDto
+page -> p : numbers, modules, comparison, youth
+@enduml

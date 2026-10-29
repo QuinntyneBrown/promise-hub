@@ -1,0 +1,144 @@
+@let r = result();
+@let v = report();
+@if (r?.status === 'forbidden') {
+  <ph-error-page
+    icon="lock"
+    title="Reports are for directors and site leads"
+    text="Ask a program director for the numbers you need."
+  >
+    <ph-button variant="primary" link="/">Go to Today</ph-button>
+  </ph-error-page>
+} @else if (r?.status === 'not-found') {
+  <ph-breadcrumb [items]="crumbs" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="search"
+      title="We couldn’t find that cohort"
+      text="It may have been removed, or the link is wrong."
+      [headingLevel]="1"
+    >
+      <ph-button variant="primary" link="/reports">Back to Reports</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-breadcrumb [items]="crumbs" />
+  @if (v) {
+    <ph-page-header
+      [title]="v.name"
+      [subtitle]="
+        'Cohort report · since the program started' + (v.trackName ? ' · ' + v.trackName : '')
+      "
+    >
+      @if (v.enrolled + v.ended > 0) {
+        <ph-button variant="primary" icon="download" hasPopup="dialog" (click)="openExport(v)"
+          >Export CSV</ph-button
+        >
+      }
+    </ph-page-header>
+    <div class="toolbar">
+      <ph-select
+        inputId="rc-cohort"
+        label="Cohort"
+        name="cohort"
+        [options]="cohortOptions()"
+        [ngModel]="v.programId"
+        (ngModelChange)="choose($event)"
+      />
+    </div>
+    @if (v.enrolled + v.ended === 0) {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="families"
+          title="No youth in this cohort yet"
+          text="Enrol youth to see enrolment, attendance and learning here."
+        >
+          <ph-button variant="primary" [link]="['/programs', v.programId, 'roster']"
+            >Open the roster</ph-button
+          >
+        </ph-empty-state>
+      </ph-card>
+    } @else {
+      <section class="numbers" aria-label="Cohort numbers">
+        <ph-stat
+          data-testid="stat-Youth enrolled"
+          label="Youth enrolled"
+          [value]="'' + v.enrolled"
+          [caption]="v.ended ? v.ended + ' ended' : null"
+        />
+        @if (v.learning) {
+          <ph-stat
+            data-testid="stat-Average completion"
+            label="Average completion"
+            [value]="percent(v.learning.averageCompletion)"
+            [caption]="
+              v.comparison.averageCompletion === null
+                ? null
+                : 'organization ' + v.comparison.averageCompletion + '%'
+            "
+          />
+        }
+        @if (rollCallOn()) {
+          <ph-stat
+            data-testid="stat-Attendance"
+            label="Attendance"
+            [value]="percent(v.attendanceRate)"
+            caption="attended of marked"
+          />
+        }
+        <ph-stat
+          data-testid="stat-Retention"
+          label="Retention"
+          [value]="percent(v.retentionRate)"
+          caption="still enrolled"
+        />
+        @if (v.atRisk !== null) {
+          <ph-stat
+            data-testid="stat-At risk"
+            label="At risk"
+            [value]="'' + v.atRisk"
+            caption="open flags"
+          />
+        }
+      </section>
+      <div class="split">
+        @if (v.learning && v.learning.modules.length) {
+          <ph-card title="Completion by module">
+            <div class="stack">
+              @for (m of v.learning.modules; track m.moduleId) {
+                <ph-progress-bar
+                  [value]="m.completion"
+                  [max]="100"
+                  [label]="m.title + ' completion'"
+                  [caption]="m.title + ' · ' + m.completion + '%'"
+                />
+              }
+            </div>
+          </ph-card>
+        }
+        <ph-card title="Compared with the organization">
+          <ph-description-list [facts]="comparison()" />
+        </ph-card>
+      </div>
+      <h2 class="section-title">Youth · {{ v.youth.length }}</h2>
+      <ph-table [caption]="'Youth in ' + v.name" [columns]="columns()" [rows]="rows()" />
+    }
+  } @else if (r === null) {
+    <div class="numbers" aria-busy="true" aria-label="Building the cohort report">
+      <ph-skeleton shape="card" />
+      <ph-skeleton shape="card" />
+      <ph-skeleton shape="card" />
+    </div>
+  } @else {
+    <ph-page-header title="Cohort report" />
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t build the cohort report"
+        text="Your data is safe. Try again."
+      >
+        <ph-button variant="primary" (click)="load()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+}

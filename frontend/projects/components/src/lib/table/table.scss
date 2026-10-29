@@ -37,6 +37,14 @@ th {
 tbody tr:last-child td {
   border-bottom: 0;
 }
+tfoot th,
+tfoot td {
+  border-top: var(--border-width-thick) solid var(--color-border-strong);
+  border-bottom: 0;
+  background: var(--color-bg-surface-sunken);
+  font: var(--text-label);
+  color: var(--color-fg-default);
+}
 .visually-hidden {
   position: absolute;
   width: 1px;

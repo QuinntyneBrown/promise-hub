@@ -1,0 +1,18 @@
+@startuml
+title UML classes — View the cohort report
+class DetailedReportsHandler { +CohortAsync(programId): CohortReportDto? }
+class CohortReportDto <<record>> { ProgramId Name TrackName? Enrolled Ended RetentionRate? AttendanceRate? AtRisk? }
+class CohortLearningDto <<record>> { AverageCompletion? }
+class ModuleCompletionDto <<record>> { ModuleId Title Completion }
+class CohortComparisonDto <<record>> { AttendanceRate? RetentionRate? AverageCompletion? }
+class CohortYouthDto <<record>> { ChildId Name HasAccount Learning? AttendanceRate? CheckIns? Status }
+class LearnerProgress { +ForMembership(id): LearnerProgress +TracksAsync(): TrackStatus[] }
+interface IModuleGate { +OnAsync(): ModuleId[] }
+DetailedReportsHandler ..> CohortReportDto
+CohortReportDto *-- CohortLearningDto
+CohortLearningDto *-- ModuleCompletionDto
+CohortReportDto *-- CohortComparisonDto
+CohortReportDto *-- CohortYouthDto
+DetailedReportsHandler --> LearnerProgress
+DetailedReportsHandler --> IModuleGate
+@enduml

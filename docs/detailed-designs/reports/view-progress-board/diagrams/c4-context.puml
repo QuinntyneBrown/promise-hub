@@ -1,0 +1,9 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — View the progress board
+Person(staff, "Program director, admin or site lead", "Marisol Delgado")
+
+System(ph, "PromiseHub", "Progress board")
+Rel(staff, ph, "Reads every youth against every module", "HTTPS")
+
+@enduml

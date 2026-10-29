@@ -1,0 +1,26 @@
+@startuml
+title UML sequence — View the youth report (L2-127)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Marisol (Program director)" as p
+box "Frontend — Angular app" #E0F2FE
+participant YouthReportPage as page
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant "ReportEndpoints" as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant DetailedReportsHandler as h
+end box
+p -> page : chooses Sofía Rivera
+page -> api : GET /reports/youth/{childId}
+api -> api : Reports on or 404; ViewReports or 403
+api -> h : YouthAsync
+h -> h : child in this organization or 404 (c5)
+h -> h : Learning on and a youth account? tracks, quizzes, badges (c3, c4)
+h -> h : Roll Call on? attendance marks (c3, c4)
+h -> h : Mentoring on? mentor, check-in count and latest, open flag; never notes (c3)
+api --> page : YouthReportDto
+page -> p : the sections that are on
+@enduml

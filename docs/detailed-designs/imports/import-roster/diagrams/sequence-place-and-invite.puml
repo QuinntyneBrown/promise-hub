@@ -1,0 +1,36 @@
+@startuml
+title UML sequence — Place youth in cohorts and invite them (L2-130)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Tom (Admin)" as p
+box "Frontend — Angular app" #E0F2FE
+participant ImportRosterPage as page
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant "ImportEndpoints + RequireModule(Roster)" as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant SaveMappingHandler as map
+participant RunImportHandler as run
+participant InvitationIssuer as inv
+end box
+p -> page : maps Group to Cohort, Youth email to Youth email
+page -> api : PUT /imports/{id}/mapping
+api -> map : HandleAsync
+map -> map : YouthEmail needs Learning and ManageStaff or 422 (c5)
+map -> map : cohorts matched by name in this organization (c2, c6)
+map -> map : who can be invited, and why not (c2)
+api --> page : placements, invitations, rows that need a look
+p -> page : Import
+page -> api : POST /imports/{id}/run
+api -> run : HandleAsync
+run -> run : households and children; enrol in the matched cohort once (c3, c4)
+run -> run : save; audit the import with places and invitations (c3)
+loop each invitable row
+run -> inv : IssueAsync(email, Youth, child)
+inv -> inv : audit Created on StaffInvitation; email the link (c3)
+end
+api --> page : enrolled, invited, notPlaced, notInvited
+page -> p : Placed in cohorts, Youth invited
+@enduml

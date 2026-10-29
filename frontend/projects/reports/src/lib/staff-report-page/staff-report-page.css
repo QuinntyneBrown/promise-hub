@@ -1,0 +1,18 @@
+.toolbar {
+  max-width: var(--layout-control-width);
+  margin-block-end: var(--layout-gutter);
+}
+.numbers {
+  display: grid;
+  gap: var(--layout-gutter);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 12rem), 1fr));
+  margin-block-end: var(--layout-gutter);
+}
+.warning {
+  margin-block-end: var(--layout-gutter);
+}
+.hint {
+  font: var(--text-body-sm);
+  color: var(--color-fg-muted);
+  margin-block-start: var(--space-2);
+}

@@ -1,0 +1,23 @@
+@startuml
+title UML sequence — Explore reports (L2-127, L2-128, L2-131)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Marisol (Program director)" as p
+box "Frontend — Angular app" #E0F2FE
+participant ReportsPage as page
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant "ReportEndpoints" as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant ReportsHandler as h
+end box
+p -> page : opens Reports
+page -> api : GET /reports
+api -> api : Reports on or 404; ViewReports or 403
+api -> h : GetAsync
+api --> page : numbers
+page -> page : modules from the session: Learning? Mentoring?
+page -> p : Detailed reports: Cohort report, Progress board (Learning), Staff activity (Mentoring)
+@enduml

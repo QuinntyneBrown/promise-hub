@@ -1,0 +1,25 @@
+@startuml
+title UML sequence — Export filtered data (L2-129)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Marisol (Program director)" as p
+box "Frontend — Angular app" #E0F2FE
+participant ExportReportDialog as page
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant "ReportEndpoints" as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant ReportsHandler as h
+end box
+p -> page : Export CSV on the cohort report
+page -> api : POST /reports/exports { kind: Cohort, programId }
+api -> api : Reports on or 404; ViewReports or 403 (c5)
+api -> h : ExportAsync
+h -> h : kind known, programId given or 422; program or 404; module on or 404 (c5)
+h -> h : the report rows as CSV (c1, c2)
+h -> h : store ReportExport for 7 days; audit Created with the kind and rows (c4)
+api --> page : 201 { id, fileName, rows, expiresAt }
+page -> p : Download CSV
+@enduml

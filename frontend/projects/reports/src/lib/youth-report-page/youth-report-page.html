@@ -1,0 +1,117 @@
+@let r = result();
+@let v = report();
+@if (r?.status === 'forbidden') {
+  <ph-error-page
+    icon="lock"
+    title="Reports are for directors and site leads"
+    text="Ask a program director for the numbers you need."
+  >
+    <ph-button variant="primary" link="/">Go to Today</ph-button>
+  </ph-error-page>
+} @else if (r?.status === 'not-found') {
+  <ph-breadcrumb [items]="crumbs" />
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="search"
+      title="We couldn’t find that youth"
+      text="They may have been removed, or the link is wrong."
+      [headingLevel]="1"
+    >
+      <ph-button variant="primary" link="/reports">Back to Reports</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <ph-breadcrumb [items]="crumbs" />
+  @if (v) {
+    <ph-page-header [title]="v.name" [subtitle]="subtitle(v)">
+      <ph-button (click)="print()">Print</ph-button>
+    </ph-page-header>
+    @if (!v.hasAccount && learningOn()) {
+      <ph-alert
+        [title]="firstName(v) + ' has no youth account'"
+        text="Learning shows here once they have one. Youth accounts are for ages 12 to 18."
+      />
+    }
+    <section class="numbers" aria-label="Youth numbers">
+      @if (v.learning; as l) {
+        <ph-stat
+          data-testid="stat-Lessons done"
+          label="Lessons done"
+          [value]="l.completedLessons + ' of ' + l.totalLessons"
+          [caption]="percent(l.completion)"
+        />
+        <ph-stat
+          data-testid="stat-Quiz average"
+          label="Quiz average"
+          [value]="percent(l.quizAverage)"
+          [caption]="l.quizzes.length + (l.quizzes.length === 1 ? ' quiz' : ' quizzes')"
+        />
+        <ph-stat
+          data-testid="stat-Badges"
+          label="Badges"
+          [value]="'' + l.badges.length"
+          [caption]="l.badges.join(', ') || null"
+        />
+      }
+      @if (v.attendance; as a) {
+        <ph-stat
+          data-testid="stat-Attendance"
+          label="Attendance"
+          [value]="percent(a.rate)"
+          [caption]="
+            a.present + a.late + ' of ' + (a.present + a.late + a.excused + a.absent) + ' sessions'
+          "
+        />
+      }
+    </section>
+    <div class="split">
+      @if (v.learning; as l) {
+        <ph-card title="Learning" [flush]="true">
+          <ph-table
+            caption="Module completion"
+            [columns]="moduleColumns"
+            [rows]="moduleRows()"
+            [flush]="true"
+          />
+        </ph-card>
+        @if (l.quizzes.length) {
+          <ph-card title="Quizzes" [flush]="true">
+            <ph-table
+              caption="Quiz scores"
+              [columns]="quizColumns"
+              [rows]="quizRows()"
+              [flush]="true"
+            />
+          </ph-card>
+        }
+      }
+      @if (v.attendance) {
+        <ph-card title="Attendance">
+          <ph-description-list [facts]="attendanceFacts()" />
+        </ph-card>
+      }
+      @if (v.mentoring) {
+        <ph-card title="Mentoring">
+          <ph-description-list [facts]="mentoringFacts()" />
+        </ph-card>
+      }
+    </div>
+  } @else if (r === null) {
+    <div class="numbers" aria-busy="true" aria-label="Building the youth report">
+      <ph-skeleton shape="card" />
+      <ph-skeleton shape="card" />
+    </div>
+  } @else {
+    <ph-page-header title="Youth report" />
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t build the youth report"
+        text="Your data is safe. Try again."
+      >
+        <ph-button variant="primary" (click)="load()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+}

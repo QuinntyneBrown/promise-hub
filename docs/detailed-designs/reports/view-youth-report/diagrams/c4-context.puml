@@ -1,0 +1,9 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — View the youth report
+Person(staff, "Program director, admin or site lead", "Marisol Delgado")
+
+System(ph, "PromiseHub", "Youth report")
+Rel(staff, ph, "Reads and prints a youth report", "HTTPS")
+
+@enduml

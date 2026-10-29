@@ -1,0 +1,21 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — View the cohort report
+Container_Boundary(web, "Angular app") {
+  Component(page, "CohortReportPage", "reports", "numbers, modules, youth")
+  Component(dlg, "ExportReportDialog", "reports", "kind Cohort")
+  Component(client, "REPORTS_API", "api", "cohort(), exportReport()")
+}
+Container_Boundary(api, "API") {
+  Component(gate, "RequireModule + RequirePermission(ViewReports)", "PromiseHub.Api", "404 while a module is off, 403 without ViewReports")
+  Component(h, "DetailedReportsHandler", "Application/Reports", "CohortAsync")
+  Component(lp, "LearnerProgress", "Application/Learning", "ForMembership")
+  Component(mg, "IModuleGate", "Application/Organizations", "OnAsync")
+}
+Rel(page, client, "cohort(programId)")
+Rel(page, dlg, "opens")
+Rel(client, gate, "GET /reports/cohorts/{id}")
+Rel(gate, h, "CohortAsync")
+Rel(h, lp, "tracks per youth")
+Rel(h, mg, "modules on")
+@enduml

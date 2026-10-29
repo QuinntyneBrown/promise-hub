@@ -66,6 +66,27 @@ export class ImportRosterPage extends BasePage {
     await this.duplicate(row).getByRole('switch').check();
   }
 
+  /** The fields a column can be mapped to, as offered. */
+  async fieldsFor(column: string): Promise<string[]> {
+    return (await this.mapping(column).locator('option').allTextContents()).map((t) => t.trim());
+  }
+
+  get placements(): Locator {
+    return this.page.getByTestId('kpi-Cohort places').getByTestId('stat-value');
+  }
+
+  get invitations(): Locator {
+    return this.page.getByTestId('kpi-Youth invitations').getByTestId('stat-value');
+  }
+
+  notPlaced(row: number): Locator {
+    return this.page.getByRole('list', { name: 'Not placed in a cohort' }).getByRole('listitem').filter({ hasText: `Row ${row}` });
+  }
+
+  notInvited(row: number): Locator {
+    return this.page.getByRole('list', { name: 'Not invited' }).getByRole('listitem').filter({ hasText: `Row ${row}` });
+  }
+
   async importRows(): Promise<void> {
     await this.page.getByRole('button', { name: /^Import \d+ rows?$/ }).click();
   }

@@ -55,6 +55,7 @@ public static class DependencyInjection
         services.AddScoped<Reports.TodayHandler>();
         services.AddScoped<Reports.ReportCalculator>();
         services.AddScoped<Reports.ReportsHandler>();
+        services.AddScoped<Reports.DetailedReportsHandler>();
         services.AddScoped<Surveys.SendSurveyHandler>();
         services.AddScoped<SetupHandler>();
         services.AddScoped<SwitchOrganizationHandler>();

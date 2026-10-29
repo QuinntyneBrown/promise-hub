@@ -476,10 +476,12 @@
       "route": "/reports",
       "requirements": [
         "L1-012",
-        "L1-015"
+        "L1-015",
+        "L2-127"
       ],
       "states": [
         "default",
+        "modules-off",
         "forbidden",
         "loading",
         "empty",
@@ -497,11 +499,16 @@
       "requirements": [
         "L1-004",
         "L1-004",
-        "L1-005"
+        "L1-005",
+        "L2-130"
       ],
       "states": [
         "default",
         "mapping",
+        "mapping-learning",
+        "review-learning",
+        "success-learning",
+        "invalid-learning",
         "invalid",
         "submitting",
         "success",
@@ -2970,6 +2977,120 @@
       }
     },
     {
+      "id": "report-cohort",
+      "kind": "page",
+      "title": "Cohort report",
+      "route": "/reports/cohorts/:programId",
+      "requirements": [
+        "L2-127",
+        "L2-128",
+        "L2-129",
+        "L2-131",
+        "L2-024",
+        "L2-025",
+        "L2-001",
+        "L2-005",
+        "L2-007",
+        "L2-032",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "forbidden",
+        "modules-off",
+        "exported"
+      ]
+    },
+    {
+      "id": "report-youth",
+      "kind": "page",
+      "title": "Youth report",
+      "route": "/reports/youth/:childId",
+      "requirements": [
+        "L2-127",
+        "L2-128",
+        "L2-129",
+        "L2-131",
+        "L2-024",
+        "L2-025",
+        "L2-001",
+        "L2-005",
+        "L2-007",
+        "L2-032",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "forbidden",
+        "not-found",
+        "modules-off"
+      ]
+    },
+    {
+      "id": "report-staff",
+      "kind": "page",
+      "title": "Staff activity report",
+      "route": "/reports/staff",
+      "requirements": [
+        "L2-127",
+        "L2-128",
+        "L2-129",
+        "L2-131",
+        "L2-024",
+        "L2-025",
+        "L2-001",
+        "L2-005",
+        "L2-007",
+        "L2-032",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "forbidden"
+      ]
+    },
+    {
+      "id": "progress-board",
+      "kind": "page",
+      "title": "Progress board",
+      "route": "/reports/progress",
+      "requirements": [
+        "L2-127",
+        "L2-128",
+        "L2-129",
+        "L2-131",
+        "L2-024",
+        "L2-025",
+        "L2-001",
+        "L2-005",
+        "L2-007",
+        "L2-032",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "no-track",
+        "error",
+        "forbidden",
+        "exported"
+      ]
+    },
+    {
       "id": "check-in-sheet",
       "kind": "dialog",
       "title": "Check in Kevin Tran",
@@ -3672,6 +3793,26 @@
       ],
       "not_applicable": {
         "invalid": "Format has a default; includes are optional."
+      }
+    },
+    {
+      "id": "export-report",
+      "kind": "dialog",
+      "title": "Export cohort report",
+      "opens_from": "report-cohort",
+      "requirements": [
+        "L2-129",
+        "L2-025",
+        "L2-032"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed",
+        "success"
+      ],
+      "not_applicable": {
+        "invalid": "The dialog has no inputs to validate."
       }
     },
     {

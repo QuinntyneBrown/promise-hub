@@ -1,0 +1,9 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — View the cohort report
+Person(staff, "Program director, admin or site lead", "Marisol Delgado")
+
+System(ph, "PromiseHub", "Cohort report")
+Rel(staff, ph, "Reads a cohort report and exports it", "HTTPS")
+
+@enduml

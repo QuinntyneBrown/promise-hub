@@ -26,6 +26,8 @@ export class PhTable {
   readonly rows = input.required<Record<string, TableCell>[]>();
   /** Inside a flush card: no border of its own. */
   readonly flush = input(false);
+  /** An average or a total under the rows (design system: table, footer row); its first cell is the row header. */
+  readonly footer = input<Record<string, TableCell> | null>(null);
   /** Heading of the last column when the page gives a `#rowActions` template; the template gets the row's index. */
   readonly actionsLabel = input('Actions');
   protected readonly rowActions = contentChild<TemplateRef<{ $implicit: number }>>('rowActions');

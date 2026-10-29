@@ -1,0 +1,9 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — Export filtered data
+Person(staff, "Program director, admin or site lead", "Marisol Delgado")
+
+System(ph, "PromiseHub", "Report exports")
+Rel(staff, ph, "Exports a detailed report as CSV", "HTTPS")
+
+@enduml

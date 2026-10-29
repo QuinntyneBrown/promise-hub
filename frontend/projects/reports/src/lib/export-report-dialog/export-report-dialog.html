@@ -1,0 +1,29 @@
+<ph-dialog [title]="data.title" [description]="data.description">
+  @if (failed()) {
+    <ph-alert
+      tone="danger"
+      title="The export didn’t finish"
+      text="Nothing was written. Try again."
+    />
+  }
+  @if (ready(); as e) {
+    <ph-alert
+      tone="success"
+      [title]="'Export ready: ' + e.fileName"
+      [text]="e.rows + (e.rows === 1 ? ' row' : ' rows') + ' · the link works for 7 days.'"
+    />
+  } @else {
+    <p>
+      A CSV of exactly what the report shows. Sections whose module is off are left out. Names are
+      included, so the export is recorded in the audit log.
+    </p>
+  }
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close()">Close</ph-button>
+    @if (ready(); as e) {
+      <ph-button variant="primary" icon="download" [href]="url(e.id)">Download CSV</ph-button>
+    } @else {
+      <ph-button variant="primary" [busy]="busy()" (click)="exportCsv()">Export CSV</ph-button>
+    }
+  </ng-container>
+</ph-dialog>

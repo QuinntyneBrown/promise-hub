@@ -1,7 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { LoadResult, REPORTS_API, Report, SurveySent } from '@promisehub/api';
+import {
+  LoadResult,
+  ModuleId,
+  REPORTS_API,
+  Report,
+  SESSION_API,
+  SurveySent,
+} from '@promisehub/api';
 import {
   PhButton,
   PhCard,
@@ -18,8 +25,10 @@ import {
   TableColumn,
   ToastService,
   PhInlineMessage,
+  PhList,
+  PhListItem,
 } from '@promisehub/components';
-import { Subject, merge, startWith, switchMap } from 'rxjs';
+import { EMPTY, Subject, catchError, map, merge, startWith, switchMap } from 'rxjs';
 import { ExportDialog, ExportDialogData } from '../export-dialog/export-dialog';
 import { SendSurveyDialog } from '../send-survey-dialog/send-survey-dialog';
 
@@ -28,6 +37,8 @@ import { SendSurveyDialog } from '../send-survey-dialog/send-survey-dialog';
   selector: 'ph-reports-page',
   imports: [
     PhInlineMessage,
+    PhList,
+    PhListItem,
     FormsModule,
     PhButton,
     PhCard,
@@ -50,6 +61,49 @@ export class ReportsPage {
   private readonly toasts = inject(ToastService);
   private readonly retry$ = new Subject<void>();
   private programs: SelectOption[] = [];
+  private readonly modules = toSignal(
+    inject(SESSION_API)
+      .current()
+      .pipe(
+        map((s) => s.modules),
+        catchError(() => EMPTY),
+      ),
+    { initialValue: [] as ModuleId[] },
+  );
+  /** Detailed reports (L2-127, L2-128, L2-131): only those whose modules are on are listed. */
+  protected readonly detailed = computed(() => {
+    const on = this.modules();
+    const first = this.report()?.programs[0]?.id ?? null;
+    return [
+      ...(first
+        ? [
+            {
+              title: 'Cohort report',
+              text: 'Enrolment, attendance, retention and learning by cohort',
+              link: ['/reports/cohorts', first],
+            },
+          ]
+        : []),
+      ...(on.includes('Learning')
+        ? [
+            {
+              title: 'Progress board',
+              text: 'Every youth, every module, at a glance',
+              link: ['/reports/progress'],
+            },
+          ]
+        : []),
+      ...(on.includes('Mentoring')
+        ? [
+            {
+              title: 'Staff activity',
+              text: 'Mentor caseloads, check-ins and reviews',
+              link: ['/reports/staff'],
+            },
+          ]
+        : []),
+    ];
+  });
 
   protected readonly program = signal('');
   protected readonly result = toSignal(

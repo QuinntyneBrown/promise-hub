@@ -1,0 +1,16 @@
+@startuml
+title UML classes — View the youth report
+class DetailedReportsHandler { +YouthAsync(childId): YouthReportDto? }
+class YouthReportDto <<record>> { ChildId Name Age? Programs HasAccount }
+class YouthLearningDto <<record>> { CompletedLessons TotalLessons Completion? QuizAverage? Badges }
+class YouthModuleDto <<record>> { Title Done Total State }
+class YouthQuizDto <<record>> { Title BestScore }
+class YouthAttendanceSummaryDto <<record>> { Present Late Excused Absent Rate? }
+class YouthMentoringDto <<record>> { MentorName? CheckIns LatestOn? LatestEngagement? OpenFlag }
+DetailedReportsHandler ..> YouthReportDto
+YouthReportDto *-- YouthLearningDto
+YouthLearningDto *-- YouthModuleDto
+YouthLearningDto *-- YouthQuizDto
+YouthReportDto *-- YouthAttendanceSummaryDto
+YouthReportDto *-- YouthMentoringDto
+@enduml

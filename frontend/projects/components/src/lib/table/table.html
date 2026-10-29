@@ -26,18 +26,9 @@
         <tr>
           @for (c of columns(); track c.key) {
             <td [class.num]="c.numeric" [class.hide-sm]="c.hideOnPhone">
-              @if (badge(row[c.key] ?? null); as b) {
-                <ph-badge [tone]="b.tone">{{ b.text }}</ph-badge>
-              } @else if (linked(row[c.key] ?? null); as l) {
-                <a [routerLink]="l.link">{{ l.text }}</a>
-                @if (l.suffix) {
-                  {{ l.suffix }}
-                }
-              } @else if (tagged(row[c.key] ?? null); as t) {
-                {{ t.text }} <ph-badge [tone]="t.badge.tone">{{ t.badge.text }}</ph-badge>
-              } @else {
-                {{ text(row[c.key] ?? null) }}
-              }
+              <ng-container
+                *ngTemplateOutlet="cellTemplate; context: { $implicit: row[c.key] ?? null }"
+              />
             </td>
           }
           @if (rowActions(); as actions) {
@@ -48,5 +39,43 @@
         </tr>
       }
     </tbody>
+    @if (footer(); as foot) {
+      <tfoot>
+        <tr>
+          @for (c of columns(); track c.key; let first = $first) {
+            @if (first) {
+              <th scope="row" [class.num]="c.numeric" [class.hide-sm]="c.hideOnPhone">
+                <ng-container
+                  *ngTemplateOutlet="cellTemplate; context: { $implicit: foot[c.key] ?? null }"
+                />
+              </th>
+            } @else {
+              <td [class.num]="c.numeric" [class.hide-sm]="c.hideOnPhone">
+                <ng-container
+                  *ngTemplateOutlet="cellTemplate; context: { $implicit: foot[c.key] ?? null }"
+                />
+              </td>
+            }
+          }
+          @if (rowActions()) {
+            <td></td>
+          }
+        </tr>
+      </tfoot>
+    }
   </table>
 </div>
+<ng-template #cellTemplate let-cell>
+  @if (badge(cell); as b) {
+    <ph-badge [tone]="b.tone">{{ b.text }}</ph-badge>
+  } @else if (linked(cell); as l) {
+    <a [routerLink]="l.link">{{ l.text }}</a>
+    @if (l.suffix) {
+      {{ l.suffix }}
+    }
+  } @else if (tagged(cell); as t) {
+    {{ t.text }} <ph-badge [tone]="t.badge.tone">{{ t.badge.text }}</ph-badge>
+  } @else {
+    {{ text(cell) }}
+  }
+</ng-template>

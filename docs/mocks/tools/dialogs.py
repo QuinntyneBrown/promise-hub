@@ -319,6 +319,12 @@ simple("export-data", "Export", "reports", [R_REPORTS, R_PRIVACY], "For the peri
        "Export", icon_name="download", na={"invalid": "Format has a default; includes are optional."},
        success_body=f'<p>harbourview-otf-2026-27-season.xlsx is ready (184 children, 312 sessions). Emailed to marisol@harbourview.example.</p><div class="cluster">{btn("Download", "primary", icon_name="download")}</div>')
 
+simple("export-report", "Export cohort report", "report-cohort", ["L2-129", "L2-025", "L2-032"], "After‑School Tutoring",
+       lambda e: '<p>A CSV with one row per youth and the columns on screen: learning, attendance, check-ins and status. Sections whose module is off are left out.</p>'
+                 + alert("info", "Names are included", "The export is recorded in the audit log, and the link lasts 7 days.", role="status"),
+       "Export CSV", icon_name="download",
+       success_body=f'<p>harbourview-youth-collective-cohort-after-school-tutoring-2026-11-05.csv is ready: 48 rows.</p><div class="cluster">{btn("Download", "primary", icon_name="download")}</div>')
+
 simple("invite-staff", "Invite staff", "staff", [R_SEC, R_PRIVACY], "Email link, valid 14 days.",
        lambda e: field("em", "Work email", type_="email", value="" if e else "sam.lee@example.org", required=True, autofocus=True, error=(e or {}).get("em", "")) + select("role", "Role", ["Youth worker", "Site lead", "Volunteer coordinator", "Admin", "Program director", "Mentor", "Volunteer"], selected="Youth worker", help_="Youth workers see medical cards and report incidents. Mentor shows while Mentoring is on.", error=(e or {}).get("role", "")) + fieldset("Programs", choice("p", "After‑School Tutoring", type_="checkbox", checked=True, attrs=' name="p1"') + choice("p", "Saturday Sports", type_="checkbox", attrs=' name="p2"') + choice("p", "Winter Camp 2026", type_="checkbox", attrs=' name="p3"')),
        "Send invitation", icon_name="mail", invalid_err={"em": "Enter a work email."},

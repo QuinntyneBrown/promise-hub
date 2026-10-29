@@ -16,6 +16,8 @@ public static class ColumnMatcher
         (ImportField.Allergies, ["allergies", "allergy", "medical", "allergies/meds", "allergies and medication"]),
         (ImportField.Language, ["lang", "language", "home language"]),
         (ImportField.Notes, ["notes", "note", "comments"]),
+        (ImportField.Cohort, ["cohort", "group", "program", "class"]),
+        (ImportField.YouthEmail, ["youth email", "student email", "teen email"]),
     ];
 
     public static ImportField? Match(string header)

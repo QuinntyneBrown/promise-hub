@@ -147,6 +147,13 @@ export const routes: Routes = [
       ...moduleRoute('incidents', 'Incidents', () =>
         import('@promisehub/incidents').then((m) => m.routes),
       ),
+      // Staff activity needs Mentoring and the progress board Learning as well as Reports (L2-128, L2-131, ADR 0074).
+      ...moduleRoute('reports/staff', ['Reports', 'Mentoring'], () =>
+        import('@promisehub/reports').then((m) => m.staffRoutes),
+      ),
+      ...moduleRoute('reports/progress', ['Reports', 'Learning'], () =>
+        import('@promisehub/reports').then((m) => m.progressRoutes),
+      ),
       ...moduleRoute('reports', 'Reports', () =>
         import('@promisehub/reports').then((m) => m.routes),
       ),

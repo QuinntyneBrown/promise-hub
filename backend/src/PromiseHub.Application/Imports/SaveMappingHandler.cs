@@ -4,8 +4,11 @@ using PromiseHub.Domain.Imports;
 
 namespace PromiseHub.Application.Imports;
 
-/// <summary>Stores the mapping and target program and previews duplicates and rows that need a look (L2-010 criteria 2 and 3).</summary>
-public sealed class SaveMappingHandler(IPromiseHubDb db, ImportRows rows)
+/// <summary>
+/// Stores the mapping and target program and previews duplicates and rows that need a look (L2-010 criteria 2 and 3), cohort places and youth
+/// invitations (L2-130): a Youth email column needs Learning and an admin.
+/// </summary>
+public sealed class SaveMappingHandler(IPromiseHubDb db, ImportRows rows, Organizations.ITenantContext tenant, Organizations.IModuleGate modules)
 {
     public async Task<(Result Result, ImportPreviewDto? Preview)> HandleAsync(Guid id, SaveMappingCommand command, CancellationToken cancellationToken = default)
     {
@@ -40,6 +43,17 @@ public sealed class SaveMappingHandler(IPromiseHubDb db, ImportRows rows)
         {
             errors["GuardianContact"] = "Map the guardian’s phone or email.";
         }
+        if (mapping.ContainsValue(ImportField.YouthEmail))
+        {
+            if (!await modules.IsOnAsync(Domain.Organizations.ModuleId.Learning, cancellationToken))
+            {
+                errors["YouthEmail"] = "Youth invitations need Learning, which is off.";
+            }
+            else if (!Identity.RolePermissions.Has(tenant.Role, Identity.Permission.ManageStaff))
+            {
+                errors["YouthEmail"] = "Only an admin sends youth invitations.";
+            }
+        }
         string? programName = null;
         if (command.ProgramId is { } programId)
         {
@@ -58,10 +72,31 @@ public sealed class SaveMappingHandler(IPromiseHubDb db, ImportRows rows)
 
         var read = ImportRows.Read(session);
         var duplicates = await rows.DuplicatesAsync(read, cancellationToken);
+        var cohorts = await rows.CohortsAsync(cancellationToken);
+        var invitations = await rows.InvitationsAsync(read, duplicates, cancellationToken);
+        var importable = read.Where(r => ImportRows.Problem(r) is not ("No child name" or "No phone or email")).ToList();
+        var needLook = new List<ImportRowIssueDto>();
+        foreach (var row in read)
+        {
+            if (ImportRows.Problem(row) is { } problem)
+            {
+                needLook.Add(new ImportRowIssueDto(row.Line, row.ChildName, problem));
+            }
+            if (importable.Contains(row) && row.Cohort is { } cohort && !cohorts.ContainsKey(ImportRows.CohortKey(cohort)))
+            {
+                needLook.Add(new ImportRowIssueDto(row.Line, row.ChildName, $"No cohort called “{cohort}”; imported, not placed"));
+            }
+            if (invitations.TryGetValue(row.Line, out var why) && why is not null)
+            {
+                needLook.Add(new ImportRowIssueDto(row.Line, row.ChildName, why));
+            }
+        }
         return (Result.Done, new ImportPreviewDto(
             read.Count,
             [.. read.Where(r => duplicates.ContainsKey(r.Line)).Select(r => new ImportRowIssueDto(r.Line, r.ChildName, "Already in PromiseHub: same name and date of birth"))],
-            [.. read.Where(r => ImportRows.Problem(r) is not null).Select(r => new ImportRowIssueDto(r.Line, r.ChildName, ImportRows.Problem(r)!))],
-            programName));
+            needLook,
+            programName,
+            importable.Count(r => r.Cohort is { } c && cohorts.ContainsKey(ImportRows.CohortKey(c))),
+            invitations.Count(i => i.Value is null)));
     }
 }

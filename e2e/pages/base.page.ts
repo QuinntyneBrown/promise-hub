@@ -19,6 +19,11 @@ export abstract class BasePage {
     return paths;
   }
 
+  /** The status the API answers a GET from this page's session, to prove an off module answers 404. */
+  async apiStatus(path: string): Promise<number> {
+    return this.page.evaluate(async (p) => (await fetch(`/api${p}`)).status, path);
+  }
+
   get isPhone(): boolean {
     return (this.page.viewportSize()?.width ?? 1024) < 768;
   }

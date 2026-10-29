@@ -1,0 +1,9 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — View the staff activity report
+Person(staff, "Program director, admin or site lead", "Marisol Delgado")
+
+System(ph, "PromiseHub", "Staff activity report")
+Rel(staff, ph, "Reads mentor caseloads and activity", "HTTPS")
+
+@enduml

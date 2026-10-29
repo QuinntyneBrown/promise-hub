@@ -1,6 +1,6 @@
 namespace PromiseHub.Application.Imports;
 
-/// <summary>One mapped row: its line in the file and its values by field.</summary>
+/// <summary>One mapped row: its line in the file and its values by field; the cohort and youth email only when mapped (L2-130).</summary>
 public sealed record ImportRow(
     int Line,
     string ChildName,
@@ -11,4 +11,6 @@ public sealed record ImportRow(
     string? Email,
     string? Allergies,
     string? Language,
-    string? Notes);
+    string? Notes,
+    string? Cohort = null,
+    string? YouthEmail = null);

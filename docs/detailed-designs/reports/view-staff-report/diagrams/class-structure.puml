@@ -1,0 +1,8 @@
+@startuml
+title UML classes — View the staff activity report
+class DetailedReportsHandler { +StaffAsync(days?): Gated<StaffReportDto> }
+class StaffReportDto <<record>> { ActiveMentors CheckIns Reviews? AverageCaseload }
+class MentorActivityRowDto <<record>> { MembershipId Name Cohorts Caseload CheckIns Reviews? Load }
+DetailedReportsHandler ..> StaffReportDto
+StaffReportDto *-- MentorActivityRowDto
+@enduml

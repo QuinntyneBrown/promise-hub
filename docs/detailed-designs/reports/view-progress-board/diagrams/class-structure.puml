@@ -1,0 +1,13 @@
+@startuml
+title UML classes — View the progress board
+class DetailedReportsHandler { +ProgressAsync(programId): ProgressBoardDto? }
+class ProgressBoardDto <<record>> { ProgramId ProgramName TrackName? }
+class ProgressModuleDto <<record>> { ModuleId Title }
+class ProgressRowDto <<record>> { ChildId Name Cells: string[] QuizAverage? Overall? }
+class ProgressAverageDto <<record>> { Modules: int?[] QuizAverage? Overall? }
+class PhTable { caption columns rows footer }
+DetailedReportsHandler ..> ProgressBoardDto
+ProgressBoardDto *-- ProgressModuleDto
+ProgressBoardDto *-- ProgressRowDto
+ProgressBoardDto *-- ProgressAverageDto
+@enduml

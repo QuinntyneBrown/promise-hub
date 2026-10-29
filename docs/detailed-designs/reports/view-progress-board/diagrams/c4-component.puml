@@ -1,0 +1,19 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — View the progress board
+Container_Boundary(web, "Angular app") {
+  Component(page, "ProgressBoardPage", "reports", "matrix")
+  Component(table, "PhTable", "components", "footer row")
+  Component(client, "REPORTS_API", "api", "progress()")
+}
+Container_Boundary(api, "API") {
+  Component(gate, "RequireModule + RequirePermission(ViewReports)", "PromiseHub.Api", "404 while a module is off, 403 without ViewReports")
+  Component(h, "DetailedReportsHandler", "Application/Reports", "ProgressAsync")
+  Component(lp, "LearnerProgress", "Application/Learning", "ForMembership")
+}
+Rel(page, table, "renders")
+Rel(page, client, "progress(programId)")
+Rel(client, gate, "GET /reports/progress/{id}")
+Rel(gate, h, "ProgressAsync")
+Rel(h, lp, "TracksAsync")
+@enduml

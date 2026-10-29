@@ -17,6 +17,8 @@ Local terms:
 
 The slice spans the `reports` screen and its default, loading, empty, error and no-results states. Submitting and success states of the same screen belong to `reports/export-report`.
 
+The detailed reports (the cohort, youth and staff activity reports and the progress board, L2-127, L2-128, L2-131) are designed in `view-cohort-report`, `view-youth-report`, `view-staff-report` and `view-progress-board` and computed by `DetailedReportsHandler` beside `ReportCalculator` (ADR 0074).
+
 ## Description
 
 ### Frontend
