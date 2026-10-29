@@ -1,0 +1,32 @@
+@startuml
+title UML sequence — Save the check-in cadence (L2-125)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Tom (Admin)" as p
+actor "Daniel (Mentor)" as d
+box "Frontend — Angular app" #E0F2FE
+participant MentoringDefaultsDialog as dlg
+participant MentorDashboardPage as dash
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant "SettingsEndpoints + RequireModule(Mentoring)" as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant MentoringSettingsHandler as ms
+participant MentorDashboardHandler as mdh
+end box
+p -> dlg : Every 7 days, Save defaults
+dlg -> api : PUT /settings/mentoring { checkInEveryDays: 7 }
+api -> api : Mentoring on or 404; ManageSettings or 403 (c5)
+api -> ms : SaveAsync
+ms -> ms : 7, 14, 21 or 30 or 422; audit (c2)
+api --> dlg : 204
+dlg -> p : toast Mentoring defaults saved
+d -> dash : opens Mentoring
+dash -> api : GET /mentoring/dashboard
+api -> mdh : HandleAsync
+mdh -> mdh : youth with no check-in from Daniel within 7 days (c3, c4)
+api --> dash : checkInEveryDays, checkInsDue
+dash -> d : Check-ins due
+@enduml

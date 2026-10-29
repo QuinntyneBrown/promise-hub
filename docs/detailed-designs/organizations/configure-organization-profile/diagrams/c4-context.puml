@@ -1,0 +1,9 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — Configure the organization profile
+Person(admin, "Admin or program director", "Tom Nguyen")
+System(ph, "PromiseHub", "Keeps each organization's profile and logo")
+System_Ext(store, "File storage", "Logo files by key (ADR 0050)")
+Rel(admin, ph, "Edits the profile and uploads the logo", "HTTPS")
+Rel(ph, store, "Saves, reads and deletes the logo")
+@enduml

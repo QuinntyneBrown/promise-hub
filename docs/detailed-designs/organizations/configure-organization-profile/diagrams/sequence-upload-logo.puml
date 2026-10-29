@@ -1,0 +1,30 @@
+@startuml
+title UML sequence — Upload the organization logo (L2-123)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Tom (Admin)" as p
+box "Frontend — Angular app (settings, api)" #E0F2FE
+participant SettingsOrganizationPage as page
+participant HttpOrganizationSettingsApi as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant SettingsEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant OrganizationLogoHandler as handler
+end box
+box "Backend — PromiseHub.Infrastructure" #FEF3C7
+participant IFileStore as store
+end box
+p -> page : chooses harbourview-logo.png
+page -> client : uploadLogo(file)
+client -> api : POST /settings/organization/logo (multipart)
+api -> handler : UploadAsync
+handler -> handler : PNG or JPEG by first bytes, 1 MB at most (c3)
+handler -> store : SaveAsync(logos/{org}/{random}.png)
+handler -> store : DeleteAsync(previous key)
+handler -> handler : audit Created on OrganizationLogo (c2)
+api --> client : 201 { fileName, uploadedAt, uploadedBy } or 422
+page -> p : the logo with Replace and Remove; toast Logo saved
+@enduml

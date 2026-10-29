@@ -1,0 +1,15 @@
+@startuml
+!include <C4/C4_Container>
+title C4 containers — Configure the organization profile
+Person(admin, "Admin or program director")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "Angular app", "Angular 22", "settings, api and components libraries")
+  Container(api, "API", ".NET 10 minimal APIs", "Permissions, handlers")
+  ContainerDb(db, "Database", "SQL (SQLite in tests)", "Organizations, AuditEntries")
+}
+System_Ext(store, "File storage", "Local disk or blob store")
+Rel(admin, web, "Uses", "HTTPS")
+Rel(web, api, "JSON and multipart over HTTPS with the session cookie")
+Rel(api, db, "EF Core")
+Rel(api, store, "IFileStore")
+@enduml

@@ -1,0 +1,25 @@
+@startuml
+title UML sequence — Save the website profile (L2-126)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Tom (Admin)" as p
+box "Frontend — Angular app (settings, api)" #E0F2FE
+participant WebsiteProfileDialog as dlg
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant "SettingsEndpoints + RequireModule(PublicWebsite)" as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant WebsiteProfileHandler as ws
+end box
+p -> dlg : address, tagline, about, email; Save
+dlg -> api : PUT /settings/website
+api -> api : Public website on or 404; ManageSettings or 403 (c4)
+api -> ws : SaveAsync
+ws -> ws : address rule, tagline, about, email by field (c3)
+ws -> ws : address unused by any other organization, else 422 taken (c3)
+ws -> ws : change the active organization; audit Website profile (c2)
+api --> dlg : 204 or 422 { errors }
+dlg -> p : toast Website profile saved, or inline errors
+@enduml

@@ -1,0 +1,17 @@
+@startuml
+title UML classes — Configure module defaults
+class MentoringSettingsHandler { +GetAsync(): MentoringSettingsDto +SaveAsync(SaveMentoringSettingsRequest): Result }
+class WebsiteProfileHandler { +GetAsync(): WebsiteProfileDto +SaveAsync(SaveWebsiteProfileRequest): Result }
+class MentorDashboardHandler { +HandleAsync(): MentorDashboardDto }
+class MentorDashboardDto <<record>> { CheckInEveryDays: int CheckInsDue: List<MentorCheckInDueDto> }
+class MentorCheckInDueDto <<record>> { ChildId YouthName LastCheckIn: string? }
+class Organization { MentorCheckInDays: int WebsiteSlug? WebsiteTagline? WebsiteAbout? WebsiteEmail? +ChangeCheckInCadence(days) +ChangeWebsiteProfile(...) }
+interface IAuditWriter
+MentoringSettingsHandler --> Organization
+WebsiteProfileHandler --> Organization
+MentorDashboardHandler --> Organization : reads cadence
+MentorDashboardHandler ..> MentorDashboardDto
+MentorDashboardDto *-- MentorCheckInDueDto
+MentoringSettingsHandler --> IAuditWriter
+WebsiteProfileHandler --> IAuditWriter
+@enduml

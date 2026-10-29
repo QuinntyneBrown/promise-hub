@@ -41,6 +41,8 @@ Admins change the configuration on `settings-modules` or pick a preset on `onboa
 - **`ModuleConfigurationCache`** — per-organization cache read by the endpoint filter in `enforce-module-gates`; the save handler invalidates it.
 - **`AuditLog`** — records each module change with before and after flags (L2-032).
 
+Settings opens on Organization (ADR 0073), so Modules is the second Settings tab. Turning Learning, Mentoring or Public website off also hides their cards on Settings › Organization, and their settings endpoints answer 404 (`configure-module-defaults`, `configure-consent-policy`); turning them back on shows what was saved.
+
 ## Built so far
 
 Slice 03 delivered `SettingsModulesPage` in `frontend/projects/settings/` (default, invalid, error and forbidden states, presets applied in the page from `MODULE_PRESETS`), `MODULES_API`, `GET`/`PUT /settings/modules` (ADR 0006), `ModuleRules` (the validator), `SaveModulesHandler` with an audit entry per change, `ModuleConfiguration` and the seeded configurations. The onboarding preset tiles and `POST /modules/preset` arrive with `set-up-organization`; there is no cache to invalidate (ADR 0006).
