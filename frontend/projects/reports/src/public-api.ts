@@ -1,1 +1,1 @@
-export { routes, staffRoutes } from './lib/reports.routes';
+export { progressRoutes, routes, staffRoutes } from './lib/reports.routes';

@@ -6,6 +6,7 @@ import { toLoad } from '../http-results';
 import { LoadResult } from '../load-result';
 import { CohortReport } from './cohort-report';
 import { Report } from './report';
+import { ProgressBoard } from './progress-board';
 import { StaffReport } from './staff-report';
 import { YouthReport } from './youth-report';
 import { ReportExport } from './report-export';
@@ -33,6 +34,10 @@ export class HttpReportsApi implements ReportsApi {
   staff(days: 30 | 90 | null): Observable<LoadResult<StaffReport>> {
     const params = days ? new HttpParams().set('days', days) : undefined;
     return toLoad(this.http.get<StaffReport>(`${this.baseUrl}/reports/staff`, { params }));
+  }
+
+  progress(programId: string): Observable<LoadResult<ProgressBoard>> {
+    return toLoad(this.http.get<ProgressBoard>(`${this.baseUrl}/reports/progress/${programId}`));
   }
 
   export(programId: string | null): Observable<LoadResult<ReportExport>> {

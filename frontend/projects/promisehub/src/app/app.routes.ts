@@ -151,6 +151,9 @@ export const routes: Routes = [
       ...moduleRoute('reports/staff', ['Reports', 'Mentoring'], () =>
         import('@promisehub/reports').then((m) => m.staffRoutes),
       ),
+      ...moduleRoute('reports/progress', ['Reports', 'Learning'], () =>
+        import('@promisehub/reports').then((m) => m.progressRoutes),
+      ),
       ...moduleRoute('reports', 'Reports', () =>
         import('@promisehub/reports').then((m) => m.routes),
       ),

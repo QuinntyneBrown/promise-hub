@@ -131,6 +131,40 @@ public sealed class DetailedReportsHandler(IPromiseHubDb db, LearnerProgress pro
             learning, attendance, mentoring);
     }
 
+    /// <summary>The progress board of one program of the organization, or null when there is no such program (L2-131).</summary>
+    public async Task<ProgressBoardDto?> ProgressAsync(Guid programId, CancellationToken cancellationToken = default)
+    {
+        var program = await db.Programs.AsNoTracking().FirstOrDefaultAsync(p => p.Id == programId, cancellationToken);
+        if (program is null)
+        {
+            return null;
+        }
+        var facts = await CohortFactsAsync(program, learningOn: true, cancellationToken);
+        var active = facts.Enrollments.Where(e => e.EndedAt == null).Select(e => e.ChildId).ToHashSet();
+        var children = (await db.Children.AsNoTracking().Where(c => active.Contains(c.Id)).ToListAsync(cancellationToken))
+            .OrderBy(c => c.FullName, StringComparer.CurrentCulture).ToList();
+        var rows = children.Select(c =>
+        {
+            if (!facts.Accounts.ContainsKey(c.Id))
+            {
+                return new ProgressRowDto(c.Id, c.FullName, [.. facts.Modules.Select(_ => "NoAccount")], null, null);
+            }
+            facts.Learning.TryGetValue(c.Id, out var learning);
+            var states = learning?.Track.Modules.ToDictionary(m => m.Module.Id) ?? [];
+            var scores = learning?.Track.Modules.SelectMany(m => m.Quizzes).Select(q => q.BestScore) ?? [];
+            return new ProgressRowDto(c.Id, c.FullName,
+                [.. facts.Modules.Select(m => states.TryGetValue(m.Id, out var state) ? ModuleState(state) : "NotStarted")],
+                Average(scores), learning?.Completion ?? 0);
+        }).ToList();
+        var withAccount = rows.Where(r => facts.Accounts.ContainsKey(r.ChildId)).ToList();
+        var learned = facts.Learning.Where(l => active.Contains(l.Key)).Select(l => l.Value).ToList();
+        return new ProgressBoardDto(program.Id, program.Name, facts.TrackName,
+            [.. facts.Modules.Select(m => new ProgressModuleDto(m.Id, m.Title))],
+            rows,
+            new ProgressAverageDto([.. facts.Modules.Select(m => Average(learned.Select(l => l.Modules.GetValueOrDefault(m.Id))))],
+                Average(withAccount.Select(r => r.QuizAverage)), Average(withAccount.Select(r => r.Overall))));
+    }
+
     /// <summary>A mentor carrying more youth than this is overloaded; fewer than <see cref="UnderloadedBelow"/>, underloaded (Waypoint's target of 4 to 8).</summary>
     public const int OverloadedAbove = 8;
 

@@ -2408,6 +2408,11 @@ export class FakeApi {
     ["GET", /^\/api\/reports\/staff$/, (route) => this.staffReport(route)],
     [
       "GET",
+      /^\/api\/reports\/progress\/(?<id>[^/]+)$/,
+      (route, p) => this.progressBoard(route, p["id"]!),
+    ],
+    [
+      "GET",
       /^\/api\/reports\/youth\/(?<id>[^/]+)$/,
       (route, p) => this.youthReport(route, p["id"]!),
     ],
@@ -12777,6 +12782,15 @@ export class FakeApi {
         .map((e) => ({ actor: e.actor, at: e.at })),
       today: TODAY,
     };
+  }
+
+  private async progressBoard(route: Route, id: string): Promise<void> {
+    const m = await this.reportsCaller(route);
+    if (!m) return;
+    if (!this.modules.get(m.organizationId)!.includes("Learning"))
+      return route.fulfill({ status: 404 });
+    const board = this.reports.progress(this.reportSource(m), id);
+    return board ? route.fulfill({ json: board }) : route.fulfill({ status: 404 });
   }
 
   private async staffReport(route: Route): Promise<void> {

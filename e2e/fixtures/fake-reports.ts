@@ -55,6 +55,13 @@ const average = (values: (number | null)[]): number | null => {
     : null;
 };
 
+/** Done when every lesson is done and every required quiz passed, InProgress with some lessons done, else NotStarted. */
+function moduleState(m: TrackState["modules"][number]): string {
+  const done = m.lessons.filter((l) => l.done).length;
+  const complete = m.lessons.length > 0 && done === m.lessons.length && m.quizzes.filter((q) => q.quiz.requiredToComplete).every((q) => q.passed);
+  return complete ? "Done" : done > 0 ? "InProgress" : "NotStarted";
+}
+
 /** Attended (present or late) of marked records, as AttendanceMarks counts them. */
 function rate(records: ReportRecord[]): number | null {
   const marked = records.filter((r) => r.status !== "NotYet");
@@ -71,10 +78,14 @@ interface CohortFacts {
   records: { childId: string; record: ReportRecord }[];
   track: TrackState["track"] | null;
   modules: { id: string; title: string }[];
-  learning: Map<
-    string,
-    { completion: number | null; modules: Map<string, number> }
-  >;
+  learning: Map<string, YouthLearning>;
+}
+
+interface YouthLearning {
+  completion: number | null;
+  modules: Map<string, number>;
+  states: Map<string, string>;
+  quizAverage: number | null;
 }
 
 /** Mirrors backend DetailedReportsHandler (L2-127, L2-128, L2-131, ADR 0074). */
@@ -102,10 +113,7 @@ export class FakeReports {
           .sort((a, b) => a.position - b.position)
           .map((m) => ({ id: m.id, title: m.title }))
       : [];
-    const learning = new Map<
-      string,
-      { completion: number | null; modules: Map<string, number> }
-    >();
+    const learning = new Map<string, YouthLearning>();
     if (s.modules.includes("Learning") && track) {
       for (const childId of [...program.roster, ...s.ended(program.id)]) {
         const membership = s.youthAccount(childId);
@@ -134,6 +142,12 @@ export class FakeReports {
                 m.lessons.length,
               ) ?? 0,
             ]),
+          ),
+          states: new Map(state.modules.map((m) => [m.module.id, moduleState(m)])),
+          quizAverage: average(
+            state.modules
+              .flatMap((m) => m.quizzes)
+              .map((q) => s.learning.quizzes.best(membership, q.quiz.id)?.score ?? null),
           ),
         });
       }
@@ -321,6 +335,40 @@ export class FakeReports {
       reviews: learningOn ? mentors.reduce((n, m) => n + (m.reviews ?? 0), 0) : null,
       averageCaseload: mentors.length ? Math.round((mentors.reduce((n, m) => n + m.caseload, 0) / mentors.length) * 10) / 10 : 0,
       mentors,
+    };
+  }
+
+  /** GET /reports/progress/{id} (L2-131) once Learning is on and the caller may read reports; null when the program is not the organization's. */
+  progress(s: ReportSource, programId: string) {
+    const program = s.programs.find((p) => p.id === programId && p.organizationId === s.organizationId);
+    if (!program) return null;
+    const f = this.facts(s, program);
+    const youth = f.active
+      .map((id) => {
+        const account = s.youthAccount(id);
+        const l = f.learning.get(id);
+        return {
+          childId: id,
+          name: s.children.get(id)?.name ?? id,
+          cells: f.modules.map((m) => (!account ? "NoAccount" : (l?.states.get(m.id) ?? "NotStarted"))),
+          quizAverage: account ? (l?.quizAverage ?? null) : null,
+          overall: account ? (l?.completion ?? 0) : null,
+        };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+    const withAccount = youth.filter((y) => !!s.youthAccount(y.childId));
+    const learned = f.active.map((id) => f.learning.get(id)).filter((l) => !!l);
+    return {
+      programId: program.id,
+      programName: program.name,
+      trackName: f.track?.name ?? null,
+      modules: f.modules.map((m) => ({ moduleId: m.id, title: m.title })),
+      youth,
+      average: {
+        modules: f.modules.map((m) => average(learned.map((l) => l.modules.get(m.id) ?? null))),
+        quizAverage: average(withAccount.map((y) => y.quizAverage)),
+        overall: average(withAccount.map((y) => y.overall)),
+      },
     };
   }
 
