@@ -20,6 +20,7 @@ public sealed class PublicWebsiteHandler(IPromiseHubDb db)
         }
         var configuration = await db.ModuleConfigurations.IgnoreQueryFilters().AsNoTracking()
             .FirstOrDefaultAsync(c => c.OrganizationId == organization.Id, cancellationToken);
-        return configuration?.On.Contains(ModuleId.PublicWebsite) == true ? new PublicSiteDto(organization.Name, organization.City) : null;
+        return configuration?.On.Contains(ModuleId.PublicWebsite) == true ? new PublicSiteDto(organization.Name, organization.City, organization.WebsiteTagline, organization.WebsiteAbout, organization.WebsiteEmail)
+            : null;
     }
 }

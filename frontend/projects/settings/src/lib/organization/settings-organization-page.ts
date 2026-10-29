@@ -6,6 +6,7 @@ import {
   OrganizationDetails,
   OrganizationLogo,
   SESSION_API,
+  WebsiteProfile,
 } from '@promisehub/api';
 import {
   Fact,
@@ -29,6 +30,7 @@ import { ConsentPolicyDialogData } from '../consent-policy-dialog-data';
 import { MentoringDefaultsDialog } from '../mentoring-defaults-dialog/mentoring-defaults-dialog';
 import { OrganizationProfileDialog } from '../organization-profile-dialog/organization-profile-dialog';
 import { SETTINGS_SECTIONS } from '../settings-sections';
+import { WebsiteProfileDialog } from '../website-profile-dialog/website-profile-dialog';
 import { timeZoneLabel } from '../time-zones';
 
 /**
@@ -66,6 +68,8 @@ export class SettingsOrganizationPage {
   protected readonly learning = signal<ConsentPolicy | null>(null);
   /** Mentoring's defaults; null while Mentoring is off (never requested) or before they load. */
   protected readonly mentoring = signal<MentoringSettings | null>(null);
+  /** Public website's profile; null while Public website is off (never requested) or before it loads. */
+  protected readonly website = signal<WebsiteProfile | null>(null);
   protected readonly subtitle = computed(() => this.profile()?.name ?? '');
   protected readonly uploading = signal(false);
   protected readonly removing = signal(false);
@@ -99,11 +103,44 @@ export class SettingsOrganizationPage {
     this.sessions.current().subscribe((session) => {
       if (session.modules.includes('Learning')) this.loadLearning();
       if (session.modules.includes('Mentoring')) this.loadMentoring();
+      if (session.modules.includes('PublicWebsite')) this.loadWebsite();
     });
   }
 
   private loadLearning(): void {
     this.api.learning().subscribe((r) => this.learning.set(r.status === 'loaded' ? r.value : null));
+  }
+
+  private loadWebsite(): void {
+    this.api.website().subscribe((r) => this.website.set(r.status === 'loaded' ? r.value : null));
+  }
+
+  protected websiteFacts(w: WebsiteProfile): Fact[] {
+    return [
+      {
+        key: 'site-address',
+        term: 'Address',
+        value: w.slug ? `/site/${w.slug}` : 'Not chosen yet',
+      },
+      { key: 'site-tagline', term: 'Tagline', value: w.tagline ?? 'Not written yet' },
+      { key: 'site-about', term: 'About', value: w.about ?? 'Not written yet' },
+      { key: 'site-email', term: 'Public email', value: w.contactEmail ?? 'Not given' },
+    ];
+  }
+
+  /** Edits the public website profile (dialog: website-profile, L2-126). */
+  protected editWebsite(w: WebsiteProfile): void {
+    this.dialogs
+      .open<string, WebsiteProfile, WebsiteProfileDialog>(WebsiteProfileDialog, w)
+      .closed.subscribe((slug) => {
+        if (!slug) return;
+        this.toasts.show({
+          tone: 'success',
+          title: 'Website profile saved',
+          text: `Your site is at /site/${slug}.`,
+        });
+        this.loadWebsite();
+      });
   }
 
   private loadMentoring(): void {

@@ -96,6 +96,23 @@ public sealed class Organization
 
     public void ChangeWebsiteSlug(string slug) => WebsiteSlug = slug;
 
+    /// <summary>One line visitors read under the name on the public website (L2-126); null until written.</summary>
+    public string? WebsiteTagline { get; private set; }
+
+    /// <summary>What visitors read about the organization on the public website; optional.</summary>
+    public string? WebsiteAbout { get; private set; }
+
+    /// <summary>The email visitors see on the public website; optional.</summary>
+    public string? WebsiteEmail { get; private set; }
+
+    public void ChangeWebsiteProfile(string slug, string tagline, string? about, string? email)
+    {
+        WebsiteSlug = slug;
+        WebsiteTagline = tagline;
+        WebsiteAbout = about;
+        WebsiteEmail = email;
+    }
+
     public void Suspend(string reason, DateTimeOffset now)
     {
         SuspendedAt = now;

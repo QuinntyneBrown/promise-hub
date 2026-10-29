@@ -312,6 +312,7 @@ export * from './lib/privacy/data-request';
 export * from './lib/organization-settings/organization-details';
 export * from './lib/organization-settings/organization-logo';
 export * from './lib/organization-settings/mentoring-settings';
+export * from './lib/organization-settings/website-profile';
 export * from './lib/organization-settings/save-organization-details';
 export * from './lib/organization-settings/organization-settings-api';
 export * from './lib/organization-settings/organization-settings-api.token';

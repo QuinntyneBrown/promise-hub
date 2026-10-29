@@ -5,6 +5,7 @@ import type { ConsentPolicy } from '../privacy/consent-policy';
 import type { MentoringSettings } from './mentoring-settings';
 import type { OrganizationDetails } from './organization-details';
 import type { SaveOrganizationDetails } from './save-organization-details';
+import type { WebsiteProfile } from './website-profile';
 
 /** Settings › Organization (ADR 0073): the organization's profile and logo and the defaults of the modules it has on. */
 export interface OrganizationSettingsApi {
@@ -21,4 +22,7 @@ export interface OrganizationSettingsApi {
   /** Mentoring's defaults; not found while Mentoring is off. */
   mentoring(): Observable<LoadResult<MentoringSettings>>;
   saveMentoring(settings: MentoringSettings): Observable<WriteOutcome>;
+  /** Public website's defaults; not found while Public website is off. */
+  website(): Observable<LoadResult<WebsiteProfile>>;
+  saveWebsite(profile: WebsiteProfile): Observable<WriteOutcome>;
 }

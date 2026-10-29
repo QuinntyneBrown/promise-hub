@@ -790,6 +790,16 @@ export class FakeApi {
   >();
   /** How often mentors check in, in days, by organization (L2-125); 14 until changed. */
   private readonly mentorCheckInDays = new Map<string, number>();
+  /** Website profiles saved on Settings › Organization (L2-126), by organization; the address starts as the seeded slug. */
+  private readonly websiteProfiles = new Map<
+    string,
+    {
+      slug: string;
+      tagline: string | null;
+      about: string | null;
+      contactEmail: string | null;
+    }
+  >();
   /** Logos uploaded on Settings › Organization (L2-123), by organization. */
   private readonly organizationLogos = new Map<
     string,
@@ -2348,6 +2358,16 @@ export class FakeApi {
       "PUT",
       /^\/api\/settings\/mentoring$/,
       (route) => this.saveMentoringSettings(route),
+    ],
+    [
+      "GET",
+      /^\/api\/settings\/website$/,
+      (route) => this.getWebsiteProfile(route),
+    ],
+    [
+      "PUT",
+      /^\/api\/settings\/website$/,
+      (route) => this.saveWebsiteProfile(route),
     ],
     [
       "GET",
@@ -4901,7 +4921,7 @@ export class FakeApi {
   /** GET /website/{slug}: anonymous; unknown, suspended and module-off all answer 404 (L2-005 criterion 7). */
   private async website(route: Route, slug: string): Promise<void> {
     const organization = organizations.find(
-      (o) => o.slug === slug.toLowerCase(),
+      (o) => this.websiteProfileOf(o.id).slug === slug.toLowerCase(),
     );
     if (
       !organization ||
@@ -4910,8 +4930,15 @@ export class FakeApi {
     ) {
       return route.fulfill({ status: 404 });
     }
+    const profile = this.websiteProfileOf(organization.id);
     return route.fulfill({
-      json: { name: organization.name, city: organization.city },
+      json: {
+        name: organization.name,
+        city: organization.city,
+        tagline: profile.tagline,
+        about: profile.about,
+        email: profile.contactEmail,
+      },
     });
   }
 
@@ -5640,6 +5667,77 @@ export class FakeApi {
           : null,
       },
     });
+  }
+
+  /** An organization's website profile as saved, or its seeded address with nothing written. */
+  private websiteProfileOf(organizationId: string) {
+    const org = organizations.find((o) => o.id === organizationId)!;
+    return (
+      this.websiteProfiles.get(organizationId) ?? {
+        slug: org.slug ?? "",
+        tagline: null,
+        about: null,
+        contactEmail: null,
+      }
+    );
+  }
+
+  /** Mirrors backend WebsiteProfileHandler, behind the Public website module. */
+  private async getWebsiteProfile(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    if (!this.modules.get(organizationId)!.includes("PublicWebsite"))
+      return route.fulfill({ status: 404 });
+    return route.fulfill({ json: this.websiteProfileOf(organizationId) });
+  }
+
+  private async saveWebsiteProfile(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    if (!this.modules.get(organizationId)!.includes("PublicWebsite"))
+      return route.fulfill({ status: 404 });
+    const b = route.request().postDataJSON() as Record<string, string | null>;
+    const slug = (b["slug"] ?? "").trim();
+    const tagline = (b["tagline"] ?? "").trim();
+    const about = b["about"]?.trim() || null;
+    const contactEmail = b["contactEmail"]?.trim().toLowerCase() || null;
+    const errors: Record<string, string> = {};
+    if (!/^[a-z][a-z0-9-]{2,39}$/.test(slug))
+      errors["slug"] =
+        "Use 3 to 40 lowercase letters, numbers and hyphens, starting with a letter.";
+    else if (
+      organizations.some(
+        (o) =>
+          o.id !== organizationId && this.websiteProfileOf(o.id).slug === slug,
+      )
+    )
+      errors["slug"] =
+        "Another organization uses this address. Choose another.";
+    if (!tagline || tagline.length > 120)
+      errors["tagline"] = "Write a tagline of up to 120 characters.";
+    if (about && about.length > 1000)
+      errors["about"] = "Use at most 1,000 characters.";
+    if (contactEmail && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(contactEmail))
+      errors["contactEmail"] = "Enter an email like hello@example.org.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
+    this.websiteProfiles.set(organizationId, {
+      slug,
+      tagline,
+      about,
+      contactEmail,
+    });
+    const who = memberships.find((m) => m.id === this.membershipId)!.personName;
+    this.auditEntries.push({
+      organizationId,
+      when: NOW.toISOString(),
+      who,
+      action: "Updated",
+      record: "Organization",
+      summary: `Website profile at /site/${slug} saved by ${who}`,
+      device: null,
+    });
+    return route.fulfill({ status: 204 });
   }
 
   /** Mirrors backend MentoringSettingsHandler: 7, 14, 21 or 30 days, behind the Mentoring module. */

@@ -122,6 +122,21 @@
           </div>
         </ph-card>
       }
+      @if (website(); as w) {
+        <ph-card title="Public website">
+          <div class="card-body">
+            <ph-description-list [facts]="websiteFacts(w)" />
+            <ph-inline-message
+              >Visitors see these on your public website without signing in.</ph-inline-message
+            >
+            <div>
+              <ph-button icon="edit" hasPopup="dialog" (click)="editWebsite(w)"
+                >Edit website profile</ph-button
+              >
+            </div>
+          </div>
+        </ph-card>
+      }
     </div>
   }
 }

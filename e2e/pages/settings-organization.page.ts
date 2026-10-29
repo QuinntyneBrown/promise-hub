@@ -140,6 +140,37 @@ export class SettingsOrganizationPage extends BasePage {
     await this.mentoringDialog.getByRole('button', { name: 'Save defaults' }).click();
   }
 
+  get websiteDialog(): Locator {
+    return this.page.getByRole('dialog', { name: 'Edit website profile' });
+  }
+
+  async editWebsiteProfile(): Promise<void> {
+    await this.card('Public website').getByRole('button', { name: 'Edit website profile' }).click();
+    await expect(this.websiteDialog).toBeVisible();
+  }
+
+  async fillWebsiteProfile(p: {
+    slug?: string;
+    tagline?: string;
+    about?: string;
+    email?: string;
+  }): Promise<void> {
+    const d = this.websiteDialog;
+    if (p.slug !== undefined) await d.getByLabel('Website address').fill(p.slug);
+    if (p.tagline !== undefined) await d.getByLabel('Tagline').fill(p.tagline);
+    if (p.about !== undefined) await d.getByLabel(/^About/).fill(p.about);
+    if (p.email !== undefined) await d.getByLabel(/^Public email/).fill(p.email);
+  }
+
+  async saveWebsiteProfile(): Promise<void> {
+    await this.websiteDialog.getByRole('button', { name: 'Save website profile' }).click();
+  }
+
+  /** What a visitor gets from the public website at an address. */
+  async publicSiteStatus(slug: string): Promise<number> {
+    return this.page.evaluate(async (slug) => (await fetch(`/api/website/${slug}`)).status, slug);
+  }
+
   /** What the API answers this signed-in person for a settings path. */
   async apiStatus(
     path: string,

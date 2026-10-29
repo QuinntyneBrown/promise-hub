@@ -10,6 +10,7 @@ import { MentoringSettings } from './mentoring-settings';
 import { OrganizationDetails } from './organization-details';
 import { OrganizationSettingsApi } from './organization-settings-api';
 import { SaveOrganizationDetails } from './save-organization-details';
+import { WebsiteProfile } from './website-profile';
 
 @Injectable()
 export class HttpOrganizationSettingsApi implements OrganizationSettingsApi {
@@ -54,5 +55,13 @@ export class HttpOrganizationSettingsApi implements OrganizationSettingsApi {
 
   saveMentoring(settings: MentoringSettings): Observable<WriteOutcome> {
     return toWrite(this.http.put<null>(`${this.baseUrl}/settings/mentoring`, settings));
+  }
+
+  website(): Observable<LoadResult<WebsiteProfile>> {
+    return toLoad(this.http.get<WebsiteProfile>(`${this.baseUrl}/settings/website`));
+  }
+
+  saveWebsite(profile: WebsiteProfile): Observable<WriteOutcome> {
+    return toWrite(this.http.put<null>(`${this.baseUrl}/settings/website`, profile));
   }
 }

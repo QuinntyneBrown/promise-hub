@@ -65,6 +65,9 @@ public static class SettingsEndpoints
         settings.MapGet("/mentoring", (MentoringSettingsHandler handler, CancellationToken ct) => handler.GetAsync(ct)).RequireModule(ModuleId.Mentoring);
         settings.MapPut("/mentoring", async (SaveMentoringSettingsRequest request, MentoringSettingsHandler handler, CancellationToken ct) =>
             (await handler.SaveAsync(request, ct)).ToHttp()).RequireModule(ModuleId.Mentoring);
+        settings.MapGet("/website", (WebsiteProfileHandler handler, CancellationToken ct) => handler.GetAsync(ct)).RequireModule(ModuleId.PublicWebsite);
+        settings.MapPut("/website", async (SaveWebsiteProfileRequest request, WebsiteProfileHandler handler, CancellationToken ct) =>
+            (await handler.SaveAsync(request, ct)).ToHttp()).RequireModule(ModuleId.PublicWebsite);
         settings.MapGet("/notifications", (NotificationSettingsHandler handler, CancellationToken ct) => handler.GetAsync(ct));
         settings.MapPut("/notifications", async (SaveNotificationSettingsCommand command, NotificationSettingsHandler handler, CancellationToken ct) =>
             (await handler.SaveAsync(command, ct)).ToHttp());

@@ -64,6 +64,7 @@ public static class DependencyInjection
         services.AddScoped<OrganizationProfileHandler>();
         services.AddScoped<OrganizationLogoHandler>();
         services.AddScoped<MentoringSettingsHandler>();
+        services.AddScoped<WebsiteProfileHandler>();
         services.AddScoped<AccountHandler>();
         services.AddScoped<ProfileHandler>();
         services.AddScoped<ChangePasswordHandler>();

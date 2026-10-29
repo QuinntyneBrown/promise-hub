@@ -407,6 +407,9 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(o => o.LogoUploadedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
             e.Property(o => o.LogoUploadedBy).HasMaxLength(200);
             e.Property(o => o.MentorCheckInDays).HasDefaultValue(Organization.DefaultMentorCheckInDays);
+            e.Property(o => o.WebsiteTagline).HasMaxLength(120);
+            e.Property(o => o.WebsiteAbout).HasMaxLength(1000);
+            e.Property(o => o.WebsiteEmail).HasMaxLength(320);
             e.HasIndex(o => o.WebsiteSlug).IsUnique();
         });
         modelBuilder.Entity<Domain.Surveys.Survey>(e =>

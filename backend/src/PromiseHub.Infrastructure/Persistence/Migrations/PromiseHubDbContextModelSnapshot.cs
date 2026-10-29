@@ -3266,8 +3266,20 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .HasMaxLength(60)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("WebsiteAbout")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("WebsiteEmail")
+                        .HasMaxLength(320)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("WebsiteSlug")
                         .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("WebsiteTagline")
+                        .HasMaxLength(120)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
