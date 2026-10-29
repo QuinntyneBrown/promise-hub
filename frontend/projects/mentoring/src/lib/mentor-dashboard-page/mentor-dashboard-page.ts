@@ -5,6 +5,7 @@ import {
   LoadResult,
   MENTORING_API,
   MentorActivity,
+  MentorCheckInDue,
   MentorDashboard,
   MentorFollowUp,
   MentoredYouth,
@@ -16,6 +17,7 @@ import {
   PhCard,
   PhDialogs,
   PhEmptyState,
+  PhInlineMessage,
   PhList,
   PhListItem,
   PhPageHeader,
@@ -48,6 +50,7 @@ const VERBS: Record<MentorActivity['kind'], string> = {
     PhButton,
     PhCard,
     PhEmptyState,
+    PhInlineMessage,
     PhList,
     PhListItem,
     PhPageHeader,
@@ -117,6 +120,12 @@ export class MentorDashboardPage {
 
   protected followUpMeta(f: MentorFollowUp): string {
     return `${f.overdue ? 'Overdue · ' : ''}${formatDay(f.followUpOn)}`;
+  }
+
+  protected checkInDueMeta(c: MentorCheckInDue): string {
+    return c.lastCheckIn
+      ? `Last mentor check-in ${formatDay(c.lastCheckIn)}`
+      : 'No mentor check-in yet';
   }
 
   protected leads(d: MentorDashboard): number {

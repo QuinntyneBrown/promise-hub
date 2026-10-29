@@ -6,6 +6,7 @@ import { toLoad, toWrite } from '../http-results';
 import { LoadResult } from '../load-result';
 import { WriteOutcome } from '../write-outcome';
 import { ConsentPolicy } from '../privacy/consent-policy';
+import { MentoringSettings } from './mentoring-settings';
 import { OrganizationDetails } from './organization-details';
 import { OrganizationSettingsApi } from './organization-settings-api';
 import { SaveOrganizationDetails } from './save-organization-details';
@@ -45,5 +46,13 @@ export class HttpOrganizationSettingsApi implements OrganizationSettingsApi {
 
   saveLearning(policy: ConsentPolicy): Observable<WriteOutcome> {
     return toWrite(this.http.put<null>(`${this.baseUrl}/settings/learning`, policy));
+  }
+
+  mentoring(): Observable<LoadResult<MentoringSettings>> {
+    return toLoad(this.http.get<MentoringSettings>(`${this.baseUrl}/settings/mentoring`));
+  }
+
+  saveMentoring(settings: MentoringSettings): Observable<WriteOutcome> {
+    return toWrite(this.http.put<null>(`${this.baseUrl}/settings/mentoring`, settings));
   }
 }

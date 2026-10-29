@@ -3223,6 +3223,11 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("MentorCheckInDays")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(14);
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)

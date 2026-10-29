@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import {
   ConsentPolicy,
+  MentoringSettings,
   ORGANIZATION_SETTINGS_API,
   OrganizationDetails,
   OrganizationLogo,
@@ -25,6 +26,7 @@ import {
 } from '@promisehub/components';
 import { ConsentPolicyDialog } from '../consent-policy-dialog/consent-policy-dialog';
 import { ConsentPolicyDialogData } from '../consent-policy-dialog-data';
+import { MentoringDefaultsDialog } from '../mentoring-defaults-dialog/mentoring-defaults-dialog';
 import { OrganizationProfileDialog } from '../organization-profile-dialog/organization-profile-dialog';
 import { SETTINGS_SECTIONS } from '../settings-sections';
 import { timeZoneLabel } from '../time-zones';
@@ -62,6 +64,8 @@ export class SettingsOrganizationPage {
   protected readonly profile = signal<OrganizationDetails | null>(null);
   /** Learning's consent policy; null while Learning is off (never requested) or before it loads. */
   protected readonly learning = signal<ConsentPolicy | null>(null);
+  /** Mentoring's defaults; null while Mentoring is off (never requested) or before they load. */
+  protected readonly mentoring = signal<MentoringSettings | null>(null);
   protected readonly subtitle = computed(() => this.profile()?.name ?? '');
   protected readonly uploading = signal(false);
   protected readonly removing = signal(false);
@@ -94,11 +98,39 @@ export class SettingsOrganizationPage {
   private loadModuleDefaults(): void {
     this.sessions.current().subscribe((session) => {
       if (session.modules.includes('Learning')) this.loadLearning();
+      if (session.modules.includes('Mentoring')) this.loadMentoring();
     });
   }
 
   private loadLearning(): void {
     this.api.learning().subscribe((r) => this.learning.set(r.status === 'loaded' ? r.value : null));
+  }
+
+  private loadMentoring(): void {
+    this.api
+      .mentoring()
+      .subscribe((r) => this.mentoring.set(r.status === 'loaded' ? r.value : null));
+  }
+
+  protected mentoringFacts(m: MentoringSettings): Fact[] {
+    return [
+      { key: 'check-in-days', term: 'Mentors check in', value: `Every ${m.checkInEveryDays} days` },
+    ];
+  }
+
+  /** Edits how often mentors check in (dialog: mentoring-defaults, L2-125). */
+  protected editMentoring(m: MentoringSettings): void {
+    this.dialogs
+      .open<boolean, MentoringSettings, MentoringDefaultsDialog>(MentoringDefaultsDialog, m)
+      .closed.subscribe((saved) => {
+        if (!saved) return;
+        this.toasts.show({
+          tone: 'success',
+          title: 'Mentoring defaults saved',
+          text: 'Each mentor’s Check-ins due follows it from now.',
+        });
+        this.loadMentoring();
+      });
   }
 
   protected learningFacts(policy: ConsentPolicy): Fact[] {

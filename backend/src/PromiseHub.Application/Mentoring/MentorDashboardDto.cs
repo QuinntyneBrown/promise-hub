@@ -1,9 +1,14 @@
 namespace PromiseHub.Application.Mentoring;
 
-/// <summary>The mentor dashboard (L2-063): attendance figures are null while Roll Call is off; follow-ups come from his mentor check-ins (L2-090).</summary>
+/// <summary>
+/// The mentor dashboard (L2-063): attendance figures are null while Roll Call is off; follow-ups come from his mentor check-ins (L2-090);
+/// check-ins due follow the organization's cadence (L2-125).
+/// </summary>
 public sealed record MentorDashboardDto(
     IReadOnlyList<MentoredYouthDto> Youth,
     IReadOnlyList<MentorCohortSummaryDto> Cohorts,
     int? CheckedInThisWeek,
     IReadOnlyList<MentorActivityDto>? RecentActivity,
-    IReadOnlyList<MentorFollowUpDto> FollowUps);
+    IReadOnlyList<MentorFollowUpDto> FollowUps,
+    int CheckInEveryDays,
+    IReadOnlyList<MentorCheckInDueDto> CheckInsDue);

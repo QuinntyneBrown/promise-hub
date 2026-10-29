@@ -2,6 +2,7 @@ import type { Observable } from 'rxjs';
 import type { LoadResult } from '../load-result';
 import type { WriteOutcome } from '../write-outcome';
 import type { ConsentPolicy } from '../privacy/consent-policy';
+import type { MentoringSettings } from './mentoring-settings';
 import type { OrganizationDetails } from './organization-details';
 import type { SaveOrganizationDetails } from './save-organization-details';
 
@@ -17,4 +18,7 @@ export interface OrganizationSettingsApi {
   /** Learning's defaults: the guardian consent policy; not found while Learning is off. */
   learning(): Observable<LoadResult<ConsentPolicy>>;
   saveLearning(policy: ConsentPolicy): Observable<WriteOutcome>;
+  /** Mentoring's defaults; not found while Mentoring is off. */
+  mentoring(): Observable<LoadResult<MentoringSettings>>;
+  saveMentoring(settings: MentoringSettings): Observable<WriteOutcome>;
 }

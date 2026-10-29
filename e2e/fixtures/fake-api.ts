@@ -788,6 +788,8 @@ export class FakeApi {
     string,
     FakeOrganizationDetails
   >();
+  /** How often mentors check in, in days, by organization (L2-125); 14 until changed. */
+  private readonly mentorCheckInDays = new Map<string, number>();
   /** Logos uploaded on Settings › Organization (L2-123), by organization. */
   private readonly organizationLogos = new Map<
     string,
@@ -1297,6 +1299,11 @@ export class FakeApi {
   /** The audit entries recorded for a record type, oldest first. */
   auditOf(record: string): { who: string; action: string; summary: string }[] {
     return this.auditEntries.filter((e) => e.record === record);
+  }
+
+  /** Sets how often mentors check in, as Settings › Organization would (L2-125). */
+  setMentorCheckInDays(organizationId: string, days: number): void {
+    this.mentorCheckInDays.set(organizationId, days);
   }
 
   /** Sets the modules on for an organization, as Settings › Modules would. */
@@ -2331,6 +2338,16 @@ export class FakeApi {
       "PUT",
       /^\/api\/settings\/learning$/,
       (route) => this.saveConsentPolicy(route, "Learning"),
+    ],
+    [
+      "GET",
+      /^\/api\/settings\/mentoring$/,
+      (route) => this.getMentoringSettings(route),
+    ],
+    [
+      "PUT",
+      /^\/api\/settings\/mentoring$/,
+      (route) => this.saveMentoringSettings(route),
     ],
     [
       "GET",
@@ -3622,6 +3639,8 @@ export class FakeApi {
             m,
             scope.youth.map((c) => c.id),
           ),
+          checkInEveryDays: this.mentorCheckInDays.get(m.organizationId) ?? 14,
+          checkInsDue: this.mentorCheckInsDue(m, youth),
         },
       });
     }
@@ -3658,6 +3677,8 @@ export class FakeApi {
           m,
           scope.youth.map((c) => c.id),
         ),
+        checkInEveryDays: this.mentorCheckInDays.get(m.organizationId) ?? 14,
+        checkInsDue: this.mentorCheckInsDue(m, youth),
       },
     });
   }
@@ -5619,6 +5640,81 @@ export class FakeApi {
           : null,
       },
     });
+  }
+
+  /** Mirrors backend MentoringSettingsHandler: 7, 14, 21 or 30 days, behind the Mentoring module. */
+  private async getMentoringSettings(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    if (!this.modules.get(organizationId)!.includes("Mentoring"))
+      return route.fulfill({ status: 404 });
+    return route.fulfill({
+      json: {
+        checkInEveryDays: this.mentorCheckInDays.get(organizationId) ?? 14,
+      },
+    });
+  }
+
+  private async saveMentoringSettings(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    if (!this.modules.get(organizationId)!.includes("Mentoring"))
+      return route.fulfill({ status: 404 });
+    const days = (
+      route.request().postDataJSON() as { checkInEveryDays?: number }
+    ).checkInEveryDays;
+    if (![7, 14, 21, 30].includes(days ?? 0))
+      return route.fulfill({
+        status: 422,
+        json: { errors: { checkInEveryDays: "Choose 7, 14, 21 or 30 days." } },
+      });
+    this.mentorCheckInDays.set(organizationId, days!);
+    const who = memberships.find((m) => m.id === this.membershipId)!.personName;
+    this.auditEntries.push({
+      organizationId,
+      when: NOW.toISOString(),
+      who,
+      action: "Updated",
+      record: "MentoringSettings",
+      summary: `Mentors check in every ${days} days, set by ${who}`,
+      device: null,
+    });
+    return route.fulfill({ status: 204 });
+  }
+
+  /** His youth with no mentor check-in from him within the cadence: never-checked-in first, then the oldest, then by name (L2-125). */
+  private mentorCheckInsDue(
+    m: Membership,
+    youth: { id: string; name: string }[],
+  ): { childId: string; youthName: string; lastCheckIn: string | null }[] {
+    const days = this.mentorCheckInDays.get(m.organizationId) ?? 14;
+    const cutoff = new Date(Date.parse(`${TODAY}T12:00:00Z`) - days * 86400000)
+      .toISOString()
+      .slice(0, 10);
+    return youth
+      .map((y) => {
+        const dates = this.mentorCheckIns.rows
+          .filter(
+            (r) =>
+              r.organizationId === m.organizationId &&
+              r.mentorId === m.id &&
+              r.childId === y.id,
+          )
+          .map((r) => r.date)
+          .sort();
+        return {
+          childId: y.id,
+          youthName: y.name,
+          lastCheckIn: dates.at(-1) ?? null,
+        };
+      })
+      .filter((y) => y.lastCheckIn === null || y.lastCheckIn <= cutoff)
+      .sort(
+        (a, b) =>
+          (a.lastCheckIn === null ? 0 : 1) - (b.lastCheckIn === null ? 0 : 1) ||
+          (a.lastCheckIn ?? "").localeCompare(b.lastCheckIn ?? "") ||
+          (a.youthName < b.youthName ? -1 : a.youthName > b.youthName ? 1 : 0),
+      );
   }
 
   /** Mirrors backend OrganizationLogoHandler: a PNG or JPEG by its first bytes, up to 1 MB. */

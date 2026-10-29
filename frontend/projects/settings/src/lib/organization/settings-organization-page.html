@@ -106,6 +106,22 @@
           </div>
         </ph-card>
       }
+      @if (mentoring(); as m) {
+        <ph-card title="Mentoring">
+          <div class="card-body">
+            <ph-description-list [facts]="mentoringFacts(m)" />
+            <ph-inline-message>
+              A youth whose mentor hasn’t logged a mentor check-in in {{ m.checkInEveryDays }} days
+              shows under Check-ins due on that mentor’s dashboard.
+            </ph-inline-message>
+            <div>
+              <ph-button icon="edit" hasPopup="dialog" (click)="editMentoring(m)"
+                >Edit mentoring defaults</ph-button
+              >
+            </div>
+          </div>
+        </ph-card>
+      }
     </div>
   }
 }

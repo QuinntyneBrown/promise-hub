@@ -406,6 +406,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(o => o.LogoContentType).HasMaxLength(40);
             e.Property(o => o.LogoUploadedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
             e.Property(o => o.LogoUploadedBy).HasMaxLength(200);
+            e.Property(o => o.MentorCheckInDays).HasDefaultValue(Organization.DefaultMentorCheckInDays);
             e.HasIndex(o => o.WebsiteSlug).IsUnique();
         });
         modelBuilder.Entity<Domain.Surveys.Survey>(e =>

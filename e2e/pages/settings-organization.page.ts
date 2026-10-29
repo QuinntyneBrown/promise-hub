@@ -124,6 +124,22 @@ export class SettingsOrganizationPage extends BasePage {
     await this.consentPolicyDialog.getByRole('button', { name: 'Save policy' }).click();
   }
 
+  get mentoringDialog(): Locator {
+    return this.page.getByRole('dialog', { name: 'Edit mentoring defaults' });
+  }
+
+  async editMentoringDefaults(): Promise<void> {
+    await this.card('Mentoring').getByRole('button', { name: 'Edit mentoring defaults' }).click();
+    await expect(this.mentoringDialog).toBeVisible();
+  }
+
+  async saveCheckInCadence(label: string): Promise<void> {
+    await this.mentoringDialog
+      .getByLabel('Mentors check in with each youth')
+      .selectOption({ label });
+    await this.mentoringDialog.getByRole('button', { name: 'Save defaults' }).click();
+  }
+
   /** What the API answers this signed-in person for a settings path. */
   async apiStatus(
     path: string,

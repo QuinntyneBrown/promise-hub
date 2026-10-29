@@ -75,6 +75,15 @@ public sealed class Organization
         LogoUploadedBy = null;
     }
 
+    /// <summary>How often, in days, mentors check in with each youth (L2-125): 7, 14, 21 or 30.</summary>
+    public int MentorCheckInDays { get; private set; } = DefaultMentorCheckInDays;
+
+    public const int DefaultMentorCheckInDays = 14;
+
+    public static readonly IReadOnlyList<int> MentorCheckInCadences = [7, 14, 21, 30];
+
+    public void ChangeMentorCheckInDays(int days) => MentorCheckInDays = days;
+
     /// <summary>Changes the profile kept on Settings › Organization (L2-122, ADR 0073); an empty contact email or phone is null.</summary>
     public void ChangeDetails(string name, string city, string? contactEmail, string? phone, string timeZone)
     {

@@ -44,6 +44,53 @@ test.describe('Configure module defaults', () => {
     expect(await settings.apiStatus('/settings/learning')).toBe(404);
   });
 
+  test('Given Mentoring is on, when Tom changes how often mentors check in to every 7 days, then it saves with a toast and is audited', async ({
+    page,
+    api,
+  }) => {
+    const settings = new SettingsOrganizationPage(page);
+    await settings.open();
+    await expect(settings.fact('check-in-days')).toContainText('Every 14 days');
+
+    await settings.editMentoringDefaults();
+    await settings.expectAccessible();
+    await settings.saveCheckInCadence('Every 7 days');
+
+    await expect(settings.toast).toContainText('Mentoring defaults saved');
+    await expect(settings.fact('check-in-days')).toContainText('Every 7 days');
+    expect(api.auditOf('MentoringSettings').at(-1)?.action).toBe('Updated');
+  });
+
+  test('Given the mentoring defaults fail to save, then the dialog says nothing changed', async ({
+    page,
+    api,
+  }) => {
+    const settings = new SettingsOrganizationPage(page);
+    await settings.open();
+    await settings.editMentoringDefaults();
+    api.failNext('/api/settings/mentoring', 500);
+
+    await settings.saveCheckInCadence('Every 21 days');
+
+    await expect(settings.failedIn(settings.mentoringDialog)).toBeVisible();
+  });
+
+  test('Given Mentoring is off, then the Mentoring card is not rendered, its settings are never requested and the API answers 404', async ({
+    page,
+    api,
+  }) => {
+    api.setModules('org-harbourview', ['Roster', 'RollCall', 'Learning']);
+    const settings = new SettingsOrganizationPage(page);
+    const requested = settings.recordApiPaths();
+
+    await settings.open();
+
+    await expect(settings.card('Learning')).toBeVisible();
+    await expect(settings.card('Mentoring')).toHaveCount(0);
+    expect(requested).not.toContain('/api/settings/mentoring');
+    expect(await settings.apiStatus('/settings/mentoring')).toBe(404);
+  });
+
   test.describe('at Northgate', () => {
     test.use({ signedInAs: 'm-grace' });
 

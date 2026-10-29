@@ -37,6 +37,21 @@ export class MentoringPage extends BasePage {
     return this.page.getByRole('list', { name: 'Follow-ups, soonest first' }).getByRole('listitem');
   }
 
+  /** The Check-ins due card's rows: never-checked-in first, then the oldest (L2-125 criterion 3). */
+  get checkInsDue(): Locator {
+    return this.page
+      .getByRole('list', { name: /^Youth without a mentor check-in in \d+ days$/ })
+      .getByRole('listitem');
+  }
+
+  get checkInsDueCard(): Locator {
+    return this.page.getByRole('region', { name: 'Check-ins due' });
+  }
+
+  get noCheckInsDue(): Locator {
+    return this.page.getByRole('heading', { name: 'No check-ins due' });
+  }
+
   get noFollowUps(): Locator {
     return this.page.getByRole('heading', { name: 'No follow-ups planned' });
   }
@@ -97,11 +112,17 @@ export class MentoringPage extends BasePage {
   }
 
   async openYouth(name: string): Promise<void> {
-    await this.page.getByRole('list', { name: 'Your youth' }).getByRole('link', { name: new RegExp(`^${name}`) }).click();
+    await this.page
+      .getByRole('list', { name: 'Your youth' })
+      .getByRole('link', { name: new RegExp(`^${name}`) })
+      .click();
   }
 
   async openCohort(name: string): Promise<void> {
-    await this.page.getByRole('list', { name: 'Your cohorts' }).getByRole('link', { name: new RegExp(`^${name}`) }).click();
+    await this.page
+      .getByRole('list', { name: 'Your cohorts' })
+      .getByRole('link', { name: new RegExp(`^${name}`) })
+      .click();
   }
 
   async apiStatus(path = '/api/mentoring/youth'): Promise<number> {
