@@ -84,6 +84,8 @@ quiz-option|Quiz option|.quiz-option|radio|Offer one answer of a quiz question a
 achievement-badge|Achievement badge|.achievement-badge|display|Show a badge youth earn as a medal with its name and how it is earned; a locked badge says so in words, not only in grey. A collection (.achievement-badges) lists several as a labelled grid that wraps from one column on a phone.
 message-thread|Message thread|.thread|form|Show a conversation between a mentor and a youth as a log of messages, oldest first: theirs on the start side, the reader's own on the end side, each with who and when in words, day separators, a sending or failed message said in words with Try again, and a labelled composer with Send at the end; read only for a supervisor.
 org-logo|Organization logo|.org-logo|display|Show an organization's own uploaded logo in a square frame on a subtle surface, with its written name nearby, or its initials until it has one.
+site-nav|Site nav|.site-nav|navigation|Frame the public website at the top: the organization's name linking home, its public pages as links with the current one marked, and Sign in and Apply at the end; below 768px the links wrap onto their own row and nothing hides behind a menu.
+site-footer|Site footer|.site-footer|navigation|Close every public page with the organization's name, the same pages plus Privacy, and a quiet line with the city and who powers the pages.
 calendar|Calendar|.calendar|table|Show a month of sessions by week, Monday first: each day lists its sessions as links with their time, today is marked, and a cancelled session says so in words and is struck through. Below 640px it becomes an agenda of only the days with sessions.
 '''
 
@@ -128,6 +130,8 @@ EXTRA_VARIANTS = {
  'calendar':['month','agenda'],
  'message-thread':['conversation','read-only','empty'],
  'org-logo':['image','initials','small'],
+ 'site-nav':['links','current-page','wrapped'],
+ 'site-footer':['default'],
 }
 
 EXTRA_STATES = {

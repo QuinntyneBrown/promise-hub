@@ -1,6 +1,5 @@
-"""Learning and the public website (ADR 0043): the first page of each new library, shown while its module is on.
-Learning (youth) moved to pages_learning.py (prompt 57); Curriculum moved to pages_curriculum.py (prompt 56), and the public website
-follows Public website. The journeys of prompts 50 to 81 fill these pages; until then each is its own empty state."""
+"""Participant pages (ADR 0043). Learning (youth) moved to pages_learning.py (prompt 57), Curriculum to pages_curriculum.py (prompt 56) and the
+public website to pages_website.py (prompt 81)."""
 from kit import *  # noqa: F401,F403
 from reg import screen
 
@@ -13,18 +12,6 @@ NA_PLACEHOLDER = "Until the journeys add content, the default state is the empty
 
 def failed(title: str) -> str:
     return card(empty(title, "Check your connection and try again.", action=btn("Try again", "primary", icon_name="refresh"), error=True, icon_name="alert-triangle"), cls="card--flush")
-
-
-@screen("website", "page", "Public website", route="/site/harbourview", reqs=[R_SITE], shell="guardian", na={"empty": NA_PLACEHOLDER})
-def website(S):
-    hero = page_header(ORG, "Hamilton, Ontario · after-school tutoring, sports and mentoring for children and teens")
-    S.add("default", "A visitor opens Harbourview’s public page while Public website is on: published content only, no sign-in.",
-          main=hero + card(empty("Our pages are being written", "Programs, open cohorts and ways to join appear here once they are published.", icon_name="globe"), cls="card--flush"),
-          notes=note("Anonymous and read-only. The organization comes from the slug in the address; the server answers 404 for an unknown slug or while the module is off.", "top: 5rem; right: 1rem;"))
-    S.add("loading", "The public page loading.", main=page_header(ORG, "") + skeleton_list(2, "Loading the page"))
-    S.add("error", "The public page failed to load.", main=hero + failed("We couldn’t load this page"))
-    S.add("not-found", "An unknown slug, or Public website is off: the same not-found page, so a visitor cannot tell which.",
-          main=page_header("Page not found", "") + card(empty("This page isn’t here", "Check the address, or ask the organization for its link.", icon_name="globe"), cls="card--flush"))
 
 
 # ---------------------------------------------------------------- First-run onboarding (prompt 53, L2-059, L2-060)
