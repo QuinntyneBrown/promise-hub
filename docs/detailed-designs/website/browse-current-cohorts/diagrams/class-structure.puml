@@ -1,0 +1,8 @@
+@startuml
+title UML classes — Browse current cohorts
+class PublicContentHandler { +HandleAsync(address): PublicContentDto? }
+class PublicProgramDto <<record>> { Name Schedule? Ages? StartsOn EndsOn Status ApplyPath? Track? LeadMentor? }
+class Program { Status EndsOn EnrollmentOpen EnrollmentSlug TrackId }
+PublicContentHandler ..> PublicProgramDto
+PublicContentHandler ..> Program
+@enduml

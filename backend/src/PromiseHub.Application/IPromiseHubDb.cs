@@ -91,6 +91,9 @@ public interface IPromiseHubDb
     DbSet<Domain.Mentoring.AtRiskFlag> AtRiskFlags { get; }
     DbSet<Domain.Mentoring.AssignedWork> AssignedWork { get; }
     DbSet<Domain.Curriculum.Badge> Badges { get; }
+    DbSet<Domain.Website.ContactMessage> ContactMessages { get; }
+    DbSet<Domain.Website.VolunteerInterest> VolunteerInterests { get; }
+    DbSet<Domain.Website.DonationPledge> DonationPledges { get; }
     DbSet<Domain.Curriculum.BadgeAward> BadgeAwards { get; }
     DbSet<Domain.Curriculum.ProgressionStage> ProgressionStages { get; }
 

@@ -1,0 +1,8 @@
+<section [attr.aria-labelledby]="id">
+  <p class="eyebrow">{{ eyebrow() }}</p>
+  <h2 [id]="id">{{ heading() }}</h2>
+  @if (lead()) {
+    <p class="lead">{{ lead() }}</p>
+  }
+  <div [class.grid]="grid()" class="body"><ng-content /></div>
+</section>

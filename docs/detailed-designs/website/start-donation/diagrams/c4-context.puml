@@ -1,0 +1,9 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — Start a donation
+Person(visitor, "Visitor", "Dana Thompson")
+System(ph, "PromiseHub", "Public website of one organization")
+System_Ext(pay, "Payment provider", "Hosted checkout; takes the card")
+Rel(ph, pay, "Starts a checkout")
+Rel(visitor, ph, "Starts a monthly gift", "HTTPS, no sign-in")
+@enduml

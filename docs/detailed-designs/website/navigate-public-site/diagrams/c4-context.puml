@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — Navigate the public site
+Person(visitor, "Visitor", "Dana Thompson, a parent")
+System(ph, "PromiseHub", "Public website of one organization")
+
+Rel(visitor, ph, "Opens /site/harbourview and moves between its pages", "HTTPS, no sign-in")
+@enduml

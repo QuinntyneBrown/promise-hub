@@ -1,0 +1,88 @@
+<ph-page-header
+  title="Get in touch"
+  subtitle="Questions about programs, volunteering or giving? We’d love to hear from you."
+/>
+@if (sentBy(); as first) {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="check-circle"
+      title="Message sent"
+      [text]="
+        'Thanks, ' +
+        first +
+        '. We’ve got your message and someone from our team will reply by email, usually within two working days.'
+      "
+    >
+      <ph-button variant="primary" [link]="state.link()">Back to home</ph-button>
+    </ph-empty-state>
+  </ph-card>
+} @else {
+  <div class="split">
+    <ph-card title="Send us a message">
+      <form class="stack" novalidate (ngSubmit)="send()">
+        @if (problem() === 'failed') {
+          <ph-alert
+            tone="danger"
+            title="Your message didn’t send"
+            text="Nothing was lost. Check your connection and try again."
+          />
+        }
+        @if (problem() === 'too-many') {
+          <ph-alert
+            tone="warning"
+            title="You’ve sent several messages already"
+            text="We’ve got them. Please wait an hour before sending another."
+          />
+        }
+        @if (summary().length) {
+          <ph-error-summary title="Fix these to continue" [items]="summary()" />
+        }
+        <ph-text-field
+          inputId="contact-name"
+          label="Your name"
+          name="name"
+          autocomplete="name"
+          [error]="errors()['name'] ?? null"
+          [(ngModel)]="name"
+        />
+        <ph-text-field
+          inputId="contact-email"
+          label="Email"
+          name="email"
+          type="email"
+          autocomplete="email"
+          help="We reply to this address."
+          [error]="errors()['email'] ?? null"
+          [(ngModel)]="email"
+        />
+        <ph-select
+          inputId="contact-topic"
+          label="Topic"
+          name="topic"
+          [options]="topics"
+          [error]="errors()['topic'] ?? null"
+          [(ngModel)]="topic"
+        />
+        <ph-textarea
+          inputId="contact-message"
+          label="Message"
+          name="message"
+          [rows]="5"
+          [count]="count()"
+          [error]="errors()['message'] ?? null"
+          [ngModel]="message()"
+          (ngModelChange)="message.set($event)"
+        />
+        <div>
+          <ph-button variant="primary" type="submit" icon="send" [busy]="busy()"
+            >Send message</ph-button
+          >
+        </div>
+        <p class="hint">We use what you send only to reply.</p>
+      </form>
+    </ph-card>
+    <ph-card title="Find us">
+      <ph-description-list [facts]="findUs()" />
+    </ph-card>
+  </div>
+}

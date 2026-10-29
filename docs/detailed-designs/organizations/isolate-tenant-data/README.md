@@ -19,6 +19,7 @@ The design rests on three mechanisms. First, every tenant-owned table carries `O
 
 - **`ITenantContext`** — contract: `Guid OrganizationId`, `Guid MembershipId`, `Role Role`, `bool IsPlatformAdmin`. Every handler and every background job reads the tenant from this contract.
 - **`TenantContext`** — request-scoped implementation set by the middleware.
+- **`TenantContext.ResolveForVisitor`** — the one request scope without a membership: the public website resolves the organization from its address (`PublicSiteResolver`, ADR 0075), then sets the tenant with the actor "Website visitor" so every later query of that request runs inside the ordinary tenant filter and every write lands in that organization.
 - **`TenantScope`** — disposable scope used by the job runner to set the tenant context for one organization while a per-tenant job runs.
 - **`NotFoundOnCrossTenantBehavior`** — pipeline behaviour wrapping every query and command. When a handler loads an entity by id and the filtered query returns nothing, the behaviour returns `NotFound`, which the endpoint maps to 404 (criterion 2). It also writes an `AuditAction.CrossTenantAttempt` entry when the unfiltered lookup shows the id exists in another organization.
 

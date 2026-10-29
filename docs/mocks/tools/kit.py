@@ -676,3 +676,31 @@ def push(kind: str, app: str, when: str, title: str, text: str) -> str:
     mod = "" if kind == "info" else f" push__icon--{kind}"
     return (f'<div class="push"><span class="push__icon{mod}" aria-hidden="true">{icon(ic, "icon--sm")}</span><div class="push__body">'
             f'<div class="push__head"><span>{esc(app)}</span><span>{esc(when)}</span></div><div class="push__title">{esc(title)}</div><div class="push__text">{esc(text)}</div></div></div>')
+
+
+# ---------------------------------------------------------------- public website (prompt 81)
+SITE_LINKS = [("site-programs", "Programs"), ("site-about", "About"), ("site-get-involved", "Get involved"), ("site-contact", "Contact")]
+
+
+def site_nav(kind: str, current: str, org: str = ORG) -> str:
+    links = "".join(f'<a href="{rel(kind, "page", sid)}"{" aria-current=\"page\"" if sid == current else ""}>{esc(label)}</a>' for sid, label in SITE_LINKS)
+    return (f'<header class="site-nav"><a class="site-nav__brand" href="{rel(kind, "page", "site-landing")}"><span class="ph-mark" aria-hidden="true"></span>{esc(org)}</a>'
+            f'<nav class="site-nav__links" aria-label="Site">{links}</nav>'
+            f'<div class="site-nav__actions"><a class="btn btn--ghost btn--sm" href="{rel(kind, "page", "sign-in")}">Sign in</a>'
+            f'<a class="btn btn--primary btn--sm" href="{rel(kind, "page", "site-programs")}#open">Apply</a></div></header>')
+
+
+def site_footer(kind: str, org: str = ORG, city: str = "Hamilton, Ontario") -> str:
+    links = "".join(f'<a href="{rel(kind, "page", sid)}">{esc(label)}</a>' for sid, label in SITE_LINKS + [("site-privacy", "Privacy")])
+    return (f'<footer class="site-footer"><div class="site-footer__row"><span class="site-footer__brand">{esc(org)}</span>'
+            f'<nav aria-label="Footer">{links}</nav></div><p class="site-footer__note">{esc(city)} · Public pages powered by PromiseHub</p></footer>')
+
+
+def site_doc(*, kind: str, sid: str, state: str, title: str, desc: str, reqs: list[str], states: list[str], main: str,
+             current: str = "", overlays: str = "", notes: str = "", inert: bool = False, toast_html: str = "", chrome: bool = True,
+             org: str = ORG, city: str = "Hamilton, Ontario") -> str:
+    """The public website: site nav, one wide column, site footer. Anonymous; no staff navigation. Without chrome (not found) only the main."""
+    inner = (site_nav(kind, current, org) if chrome else "") + f'<main id="main"><div class="site">{main}</div></main>' + (site_footer(kind, org, city) if chrome else "")
+    wrap = f'<div{" inert aria-hidden=\"true\"" if inert else ""}>{inner}</div>'
+    body = '<body>\n<a class="skip-link" href="#main">Skip to content</a>\n' + wrap + (toast_html or toast_region()) + overlays + notes
+    return head(title, kind, sid, state, reqs, desc) + body + mock_bar(title, states, state)

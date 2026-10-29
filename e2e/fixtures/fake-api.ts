@@ -34,6 +34,13 @@ import {
 } from "./fake-announcements";
 import { FakeAtRiskFlags } from "./fake-at-risk-flags";
 import { FakeReports, type ReportSource } from "./fake-reports";
+import {
+  FakeWebsite,
+  FakeWebsiteRequests,
+  type FakeWebsiteRequest,
+  type WebsiteRequestKind,
+  type WebsiteSource,
+} from "./fake-website";
 import { FakeAssignedWorkStore, type Recipient } from "./fake-assigned-work";
 import {
   type FakeEvent,
@@ -1336,6 +1343,27 @@ export class FakeApi {
     this.mentorCheckInDays.set(organizationId, days);
   }
 
+  /** Writes an organization's website profile, as Settings › Organization would (L2-126). */
+  setWebsiteProfile(
+    organizationId: string,
+    profile: { tagline?: string | null; about?: string | null; contactEmail?: string | null },
+  ): void {
+    this.websiteProfiles.set(organizationId, { ...this.websiteProfileOf(organizationId), ...profile });
+  }
+
+  /** Archives a seeded program, as a director would. */
+  archiveSeededProgram(programId: string): void {
+    const program = this.programs.find((p) => p.id === programId)!;
+    program.status = "Archived";
+    program.archivedAt = "2026-11-01T12:00:00Z";
+    program.archivedBy = "Marisol Delgado";
+  }
+
+  /** Publishes a curriculum module, as an author would. */
+  publishModule(moduleId: string): void {
+    this.curriculumState.modules.find((m) => m.id === moduleId)!.status = "Published";
+  }
+
   /** Sets the modules on for an organization, as Settings › Modules would. */
   setModules(organizationId: string, on: ModuleId[]): void {
     this.modules.set(organizationId, on);
@@ -2229,6 +2257,16 @@ export class FakeApi {
       "GET",
       /^\/api\/website\/(?<slug>[^/]+)$/,
       (route, p) => this.website(route, p["slug"]!),
+    ],
+    [
+      "GET",
+      /^\/api\/website\/(?<slug>[^/]+)\/content$/,
+      (route, p) => this.websiteContent(route, p["slug"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/website\/(?<slug>[^/]+)\/(?<kind>contact|volunteer|donations)$/,
+      (route, p) => this.websiteRequest(route, p["slug"]!, p["kind"] as "contact" | "volunteer" | "donations"),
     ],
     ["POST", /^\/api\/auth\/sign-in$/, (route) => this.signIn(route)],
     ["POST", /^\/api\/auth\/mfa$/, (route) => this.mfa(route)],
@@ -4954,16 +4992,81 @@ export class FakeApi {
     return route.fulfill({ status: 204 });
   }
 
-  /** GET /website/{slug}: anonymous; unknown, suspended and module-off all answer 404 (L2-005 criterion 7). */
-  private async website(route: Route, slug: string): Promise<void> {
+  /** Mirrors backend PublicSiteResolver: the organization an address names while it runs and Public website is on, else undefined (ADR 0075). */
+  private publishedSite(slug: string) {
     const organization = organizations.find(
       (o) => this.websiteProfileOf(o.id).slug === slug.toLowerCase(),
     );
-    if (
-      !organization ||
-      this.suspended.has(organization.id) ||
-      !this.modules.get(organization.id)!.includes("PublicWebsite")
-    ) {
+    return organization &&
+      !this.suspended.has(organization.id) &&
+      this.modules.get(organization.id)!.includes("PublicWebsite")
+      ? organization
+      : undefined;
+  }
+
+  private readonly websiteState = new FakeWebsite();
+  private readonly websiteRequestState = new FakeWebsiteRequests(() => NOW);
+
+  /** The requests visitors sent to an organization's public website, oldest first (L2-134). */
+  websiteRequests(organizationId: string, kind: WebsiteRequestKind): FakeWebsiteRequest[] {
+    return this.websiteRequestState.of(organizationId, kind);
+  }
+
+  /** A request a visitor sent earlier, to reach the hourly limit. */
+  addWebsiteRequest(organizationId: string, kind: WebsiteRequestKind, email: string): void {
+    this.websiteRequestState.add(organizationId, kind, email);
+  }
+
+  /** POST /website/{slug}/contact, /volunteer and /donations: anonymous, mirrors WebsiteRequestsHandler. */
+  private paymentProvider = true;
+
+  /** Whether organizations have a payment provider set up; without one a donation answers 503 unavailable (ADR 0075). */
+  setPaymentProvider(configured: boolean): void {
+    this.paymentProvider = configured;
+  }
+
+  private async websiteRequest(route: Route, slug: string, kind: "contact" | "volunteer" | "donations"): Promise<void> {
+    const organization = this.publishedSite(slug);
+    if (!organization) return route.fulfill({ status: 404 });
+    const body = (route.request().postDataJSON() ?? {}) as Record<string, unknown>;
+    const answer =
+      kind === "contact"
+        ? this.websiteRequestState.contact(organization.id, body)
+        : kind === "volunteer"
+          ? this.websiteRequestState.volunteer(organization.id, body)
+          : this.websiteRequestState.donate(organization.id, body, this.paymentProvider);
+    return route.fulfill(answer.json === undefined ? { status: answer.status } : { status: answer.status, json: answer.json });
+  }
+
+  /** GET /website/{slug}/content: anonymous, published content only (L2-133). */
+  private async websiteContent(route: Route, slug: string): Promise<void> {
+    const organization = this.publishedSite(slug);
+    if (!organization) return route.fulfill({ status: 404 });
+    return route.fulfill({ json: this.websiteState.content(this.websiteSource(organization.id)) });
+  }
+
+  private websiteSource(org: string): WebsiteSource {
+    return {
+      modules: this.modules.get(org)!,
+      programs: this.programs.filter((p) => p.organizationId === org),
+      enrollmentSlug: (programId) => this.enrollmentSlugs.get(programId),
+      tracks: this.curriculumState.tracks.filter((t) => t.organizationId === org),
+      curriculumModules: this.curriculumState.modules.filter((m) => m.organizationId === org),
+      programTrack: (programId) => this.curriculumState.programTracks.get(programId),
+      badges: this.badges.badges.filter((b) => b.organizationId === org),
+      leadMentor: (programId) => {
+        const lead = this.cohortMentors.get(programId)?.lead;
+        if (!lead || this.removedMembers.has(lead) || this.deactivatedMembers.has(lead)) return null;
+        return memberships.find((x) => x.id === lead && x.organizationId === org)?.personName ?? null;
+      },
+      today: TODAY,
+    };
+  }
+
+  /** GET /website/{slug}: anonymous; unknown, suspended and module-off all answer 404 (L2-005 criterion 7). */
+  private async website(route: Route, slug: string): Promise<void> {
+    const organization = this.publishedSite(slug);
+    if (!organization) {
       return route.fulfill({ status: 404 });
     }
     const profile = this.websiteProfileOf(organization.id);

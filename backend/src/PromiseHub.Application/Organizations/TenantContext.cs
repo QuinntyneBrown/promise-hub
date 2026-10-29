@@ -28,5 +28,16 @@ public sealed class TenantContext : ITenantContext
         IsResolved = true;
     }
 
+    /// <summary>
+    /// An anonymous visitor of one organization's public website (ADR 0075): the organization comes from the website address, the one place
+    /// a tenant is chosen without a membership, so every later query of the request runs inside the ordinary tenant filter.
+    /// </summary>
+    public void ResolveForVisitor(Guid organizationId)
+    {
+        OrganizationId = organizationId;
+        ActorName = "Website visitor";
+        IsResolved = true;
+    }
+
     public static TenantContext System() => new() { IsSystem = true, ActorName = "System" };
 }

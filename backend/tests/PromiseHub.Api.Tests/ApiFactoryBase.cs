@@ -61,6 +61,8 @@ public abstract class ApiFactoryBase : WebApplicationFactory<Program>
             services.AddSingleton<ISmsSender>(sp => sp.GetRequiredService<FakeSmsSender>());
             services.AddSingleton<FakeEmailSender>();
             services.AddSingleton<IEmailSender>(sp => sp.GetRequiredService<FakeEmailSender>());
+            services.AddSingleton<FakePaymentProvider>();
+            services.AddSingleton<PromiseHub.Application.Website.IPaymentProvider>(sp => sp.GetRequiredService<FakePaymentProvider>());
             services.AddSingleton<FakeFileStore>();
             services.AddSingleton<IFileStore>(sp => sp.GetRequiredService<FakeFileStore>());
             if (!_testAuth)

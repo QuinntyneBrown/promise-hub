@@ -1,0 +1,19 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Start a donation
+Container_Boundary(web, "Angular app") {
+  Component(dlg, "DonationDialog", "website", "tiers, name, email")
+  Component(client, "WEBSITE_API", "api", "donate")
+}
+Container_Boundary(api, "API") {
+  Component(ep, "WebsiteEndpoints", "PromiseHub.Api", "POST /website/{slug}/donations")
+  Component(h, "WebsiteRequestsHandler", "Application/Website", "DonateAsync")
+  Component(prov, "IPaymentProvider", "Application/Website", "StartCheckoutAsync")
+}
+System_Ext(pay, "Payment provider", "Hosted checkout")
+Rel(prov, pay, "checkout")
+Rel(dlg, client, "donate")
+Rel(client, ep, "POST")
+Rel(ep, h, "DonateAsync")
+Rel(h, prov, "StartCheckoutAsync")
+@enduml

@@ -1,0 +1,96 @@
+@let c = state.content();
+<ph-page-header
+  title="Programs and open cohorts"
+  subtitle="Everything we run this season, who it’s for and how to apply."
+/>
+@if (c === null) {
+  <div aria-busy="true" aria-label="Loading programs">
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (c.status === 'loaded') {
+  <ph-site-section eyebrow="Current and upcoming" heading="Cohorts you can join">
+    @if (c.value.programs.length) {
+      <div class="grid">
+        @for (program of c.value.programs; track program.name) {
+          <ph-program-card [program]="program" />
+        }
+      </div>
+    } @else {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="events"
+          title="No programs are open right now"
+          text="New programs open each season. Get in touch and we’ll let you know."
+        >
+          <ph-button variant="primary" [link]="state.link('contact')">Contact us</ph-button>
+        </ph-empty-state>
+      </ph-card>
+    }
+  </ph-site-section>
+  @if (c.value.tracks.length) {
+    <ph-site-section
+      eyebrow="What youth learn"
+      heading="Learning tracks"
+      lead="Published tracks and their modules. Finishing a module earns its badge."
+      [grid]="true"
+    >
+      @for (track of c.value.tracks; track track.name) {
+        <ph-card>
+          <article class="track" [attr.aria-label]="track.name">
+            <h3>{{ track.name }}</h3>
+            @if (track.description) {
+              <p class="muted">{{ track.description }}</p>
+            }
+            <ol class="modules">
+              @for (module of track.modules; track module.title) {
+                <li>
+                  <strong>{{ module.title }}</strong>
+                  @if (module.description) {
+                    <span class="muted"> · {{ module.description }}</span>
+                  }
+                  @if (module.badge) {
+                    <ph-badge tone="success">{{ module.badge }}</ph-badge>
+                  }
+                </li>
+              }
+            </ol>
+          </article>
+        </ph-card>
+      }
+    </ph-site-section>
+  }
+  @if (c.value.mentorship) {
+    <ph-site-section
+      eyebrow="Mentorship"
+      heading="You’re never on your own"
+      lead="Every young person in a mentored program has a mentor who walks with them through the season."
+    >
+      <ph-card [flush]="true">
+        <ph-list label="What mentors do">
+          <ph-list-item
+            title="Weekly check-ins"
+            text="A mentor checks in with each young person every week."
+          />
+          <ph-list-item
+            title="Feedback on their work"
+            text="Encouragement on what they make and write."
+          />
+          <ph-list-item title="Extra support" text="More time when it’s needed." />
+        </ph-list>
+      </ph-card>
+    </ph-site-section>
+  }
+} @else {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load our programs"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" icon="refresh" (click)="state.reloadContent()"
+        >Try again</ph-button
+      >
+    </ph-empty-state>
+  </ph-card>
+}

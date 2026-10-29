@@ -1,0 +1,77 @@
+@let site = state.site();
+@let c = state.content();
+@if (site?.status === 'loaded') {
+  <ph-page-header [title]="site.value.name" [subtitle]="site.value.tagline ?? site.value.city">
+    <ph-button variant="primary" size="lg" [link]="state.link('programs')">See programs</ph-button>
+    <ph-button variant="ghost" size="lg" [link]="state.link('get-involved')"
+      >Get involved</ph-button
+    >
+  </ph-page-header>
+}
+@if (c === null) {
+  <div class="loading" aria-busy="true" aria-label="Loading programs">
+    <ph-skeleton shape="stat" />
+    <ph-skeleton shape="card" />
+  </div>
+} @else if (c.status === 'loaded') {
+  <ph-site-section eyebrow="How it works" heading="From first visit to first day" [grid]="true">
+    @for (step of steps; track step.title; let i = $index) {
+      <ph-card>
+        <p class="step">Step {{ i + 1 }}</p>
+        <h3>{{ step.title }}</h3>
+        <p class="muted">{{ step.text }}</p>
+      </ph-card>
+    }
+  </ph-site-section>
+  <ph-site-section eyebrow="Our programs" heading="What we run" [grid]="true">
+    <ph-stat
+      label="Programs running"
+      [value]="'' + c.value.impact.programs"
+      caption="now or starting soon"
+    />
+    <ph-stat
+      label="Open for enrollment"
+      [value]="'' + c.value.impact.open"
+      caption="apply online"
+    />
+    @if (c.value.impact.tracks !== null) {
+      <ph-stat label="Learning tracks" [value]="'' + c.value.impact.tracks" caption="published" />
+    }
+    @if (c.value.impact.modules !== null) {
+      <ph-stat label="Modules" [value]="'' + c.value.impact.modules" caption="published" />
+    }
+  </ph-site-section>
+  <ph-site-section eyebrow="Open now" heading="Programs taking applications">
+    @if (open().length) {
+      <div class="grid">
+        @for (program of open(); track program.name) {
+          <ph-program-card [program]="program" />
+        }
+      </div>
+      <ph-button icon="arrow-right" [link]="state.link('programs')">See every program</ph-button>
+    } @else {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="events"
+          title="No programs are open right now"
+          text="New programs open each season. Get in touch and we’ll let you know."
+        >
+          <ph-button variant="primary" [link]="state.link('contact')">Contact us</ph-button>
+        </ph-empty-state>
+      </ph-card>
+    }
+  </ph-site-section>
+} @else {
+  <ph-card [flush]="true">
+    <ph-empty-state
+      icon="warning"
+      tone="error"
+      title="We couldn’t load our programs"
+      text="Check your connection and try again."
+    >
+      <ph-button variant="primary" icon="refresh" (click)="state.reloadContent()"
+        >Try again</ph-button
+      >
+    </ph-empty-state>
+  </ph-card>
+}

@@ -48,6 +48,12 @@ export const routes: Routes = [
     title: 'Page not found',
   },
   {
+    path: 'site/:slug/**',
+    loadComponent: () =>
+      import('./errors/site-not-found/site-not-found-page').then((m) => m.SiteNotFoundPage),
+    title: 'Page not found',
+  },
+  {
     path: '',
     component: Shell,
     canActivate: [authGuard],

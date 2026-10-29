@@ -1,0 +1,8 @@
+@startuml
+title UML classes — Register volunteer interest
+class WebsiteRequestsHandler { +VolunteerAsync(address, VolunteerRequest): WebsiteResult }
+class VolunteerRequest <<record>> { Name Email Phone? Area About? ScreeningAcknowledged }
+class VolunteerInterest { Id OrganizationId Name Email Phone? Area About? ScreeningAcknowledged CreatedAt }
+WebsiteRequestsHandler ..> VolunteerRequest
+WebsiteRequestsHandler ..> VolunteerInterest
+@enduml

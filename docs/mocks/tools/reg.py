@@ -1,7 +1,7 @@
 """Screen registry: each screen module registers a function that fills a Builder."""
 from __future__ import annotations
 
-from kit import staff_doc, guardian_doc, auth_doc, wizard_doc
+from kit import staff_doc, guardian_doc, auth_doc, wizard_doc, site_doc
 
 SCREENS: list[dict] = []
 
@@ -25,6 +25,8 @@ class Builder:
                 out[state] = staff_doc(**common, **kw)
             elif shell == "guardian":
                 out[state] = guardian_doc(**common, **kw)
+            elif shell == "site":
+                out[state] = site_doc(**common, **kw)
             elif shell == "wizard":
                 out[state] = wizard_doc(**common, **kw)
             else:

@@ -1,0 +1,18 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — View journey and impact
+Container_Boundary(web, "Angular app") {
+  Component(landing, "SiteLandingPage", "website", "steps, impact, open now")
+  Component(about, "SiteAboutPage", "website", "about, find us, promise")
+  Component(client, "WEBSITE_API", "api", "site, content")
+}
+Container_Boundary(api, "API") {
+  Component(ep, "WebsiteEndpoints", "PromiseHub.Api", "GET /website/{slug}, /content")
+  Component(h, "PublicContentHandler", "Application/Website", "impact counts")
+}
+
+Rel(landing, client, "content(slug)")
+Rel(about, client, "site(slug)")
+Rel(client, ep, "GET")
+Rel(ep, h, "HandleAsync")
+@enduml

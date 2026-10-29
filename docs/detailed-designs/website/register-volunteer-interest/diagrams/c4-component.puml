@@ -1,0 +1,18 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Register volunteer interest
+Container_Boundary(web, "Angular app") {
+  Component(page, "SiteGetInvolvedPage", "website", "three ways to help")
+  Component(dlg, "VolunteerDialog", "website", "CDK Dialog")
+  Component(client, "WEBSITE_API", "api", "volunteer")
+}
+Container_Boundary(api, "API") {
+  Component(ep, "WebsiteEndpoints", "PromiseHub.Api", "POST /website/{slug}/volunteer")
+  Component(h, "WebsiteRequestsHandler", "Application/Website", "VolunteerAsync")
+}
+
+Rel(page, dlg, "opens")
+Rel(dlg, client, "volunteer")
+Rel(client, ep, "POST")
+Rel(ep, h, "VolunteerAsync")
+@enduml

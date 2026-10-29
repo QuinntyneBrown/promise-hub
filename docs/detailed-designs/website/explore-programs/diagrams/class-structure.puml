@@ -1,0 +1,10 @@
+@startuml
+title UML classes — Explore programs
+class PublicContentHandler { +HandleAsync(address): PublicContentDto? }
+class PublicContentDto <<record>> { Programs Tracks Mentorship Impact }
+class PublicTrackDto <<record>> { Name Description? Modules }
+class PublicModuleDto <<record>> { Title Description? Badge? }
+PublicContentHandler ..> PublicContentDto
+PublicContentDto *-- PublicTrackDto
+PublicTrackDto *-- PublicModuleDto
+@enduml

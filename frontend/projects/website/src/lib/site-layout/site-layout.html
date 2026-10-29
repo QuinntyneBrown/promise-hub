@@ -1,0 +1,36 @@
+@let s = state.site();
+<ph-skip-link />
+@if (s?.status === 'loaded') {
+  <ph-site-nav
+    [organization]="s.value.name"
+    [home]="state.link()"
+    [links]="links()"
+    signIn="/sign-in"
+    [apply]="state.link('programs')"
+  />
+  <main id="main" class="site" tabindex="-1">
+    <router-outlet />
+  </main>
+  <ph-site-footer
+    [organization]="s.value.name"
+    [links]="footerLinks()"
+    [note]="s.value.city + ' · Public pages powered by PromiseHub'"
+  />
+} @else if (s === null) {
+  <main id="main" class="site" aria-busy="true" aria-label="Loading the page">
+    <ph-skeleton shape="title" />
+    <ph-skeleton shape="card" />
+  </main>
+} @else {
+  <main id="main" class="site">
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        [headingLevel]="1"
+        title="We couldn’t load this page"
+        text="Check your connection and try again."
+      />
+    </ph-card>
+  </main>
+}

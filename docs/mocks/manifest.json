@@ -1486,24 +1486,6 @@
       }
     },
     {
-      "id": "website",
-      "kind": "page",
-      "title": "Public website",
-      "route": "/site/harbourview",
-      "requirements": [
-        "L1-025"
-      ],
-      "states": [
-        "default",
-        "loading",
-        "error",
-        "not-found"
-      ],
-      "not_applicable": {
-        "empty": "Until the journeys add content, the default state is the empty state."
-      }
-    },
-    {
       "id": "youth-welcome",
       "kind": "page",
       "title": "Youth welcome",
@@ -3089,6 +3071,156 @@
         "forbidden",
         "exported"
       ]
+    },
+    {
+      "id": "site-landing",
+      "kind": "page",
+      "title": "Public website: home",
+      "route": "/site/:slug",
+      "requirements": [
+        "L2-132",
+        "L2-133",
+        "L2-134",
+        "L1-025",
+        "L2-005",
+        "L2-001",
+        "L2-031",
+        "L2-033"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "modules-off",
+        "not-found"
+      ]
+    },
+    {
+      "id": "site-programs",
+      "kind": "page",
+      "title": "Public website: programs",
+      "route": "/site/:slug/programs",
+      "requirements": [
+        "L2-132",
+        "L2-133",
+        "L2-134",
+        "L1-025",
+        "L2-005",
+        "L2-001",
+        "L2-031",
+        "L2-033"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "closed",
+        "modules-off"
+      ]
+    },
+    {
+      "id": "site-about",
+      "kind": "page",
+      "title": "Public website: about",
+      "route": "/site/:slug/about",
+      "requirements": [
+        "L2-132",
+        "L2-133",
+        "L2-134",
+        "L1-025",
+        "L2-005",
+        "L2-001",
+        "L2-031",
+        "L2-033"
+      ],
+      "states": [
+        "default",
+        "empty"
+      ],
+      "not_applicable": {
+        "loading": "The page has no data of its own: the site loads once with its frame (`site-landing/loading`, `site-landing/error`).",
+        "error": "The page has no data of its own: the site loads once with its frame (`site-landing/loading`, `site-landing/error`)."
+      }
+    },
+    {
+      "id": "site-get-involved",
+      "kind": "page",
+      "title": "Public website: get involved",
+      "route": "/site/:slug/get-involved",
+      "requirements": [
+        "L2-132",
+        "L2-133",
+        "L2-134",
+        "L1-025",
+        "L2-005",
+        "L2-001",
+        "L2-031",
+        "L2-033"
+      ],
+      "states": [
+        "default",
+        "volunteered"
+      ],
+      "not_applicable": {
+        "loading": "The page has no data of its own: the site loads once with its frame (`site-landing/loading`, `site-landing/error`).",
+        "error": "The page has no data of its own: the site loads once with its frame (`site-landing/loading`, `site-landing/error`).",
+        "empty": "The page has no collection to be empty of."
+      }
+    },
+    {
+      "id": "site-contact",
+      "kind": "page",
+      "title": "Public website: contact",
+      "route": "/site/:slug/contact",
+      "requirements": [
+        "L2-132",
+        "L2-133",
+        "L2-134",
+        "L1-025",
+        "L2-005",
+        "L2-001",
+        "L2-031",
+        "L2-033"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "busy",
+        "sent",
+        "failed",
+        "too-many"
+      ],
+      "not_applicable": {
+        "loading": "The page has no data of its own: the site loads once with its frame (`site-landing/loading`, `site-landing/error`).",
+        "error": "A failed send is `failed`; the page itself loads with the site.",
+        "empty": "The page has no collection to be empty of."
+      }
+    },
+    {
+      "id": "site-privacy",
+      "kind": "page",
+      "title": "Public website: privacy",
+      "route": "/site/:slug/privacy",
+      "requirements": [
+        "L2-132",
+        "L2-133",
+        "L2-134",
+        "L1-025",
+        "L2-005",
+        "L2-001",
+        "L2-031",
+        "L2-033"
+      ],
+      "states": [
+        "default"
+      ],
+      "not_applicable": {
+        "loading": "The page has no data of its own: the site loads once with its frame (`site-landing/loading`, `site-landing/error`).",
+        "error": "The page has no data of its own: the site loads once with its frame (`site-landing/loading`, `site-landing/error`).",
+        "empty": "The privacy page is fixed text with the organization’s name."
+      }
     },
     {
       "id": "check-in-sheet",
@@ -4782,6 +4914,52 @@
       "not_applicable": {
         "success": "Saving closes the dialog: the page shows the toast (`settings-organization/website-saved`)."
       }
+    },
+    {
+      "id": "volunteer-interest",
+      "kind": "dialog",
+      "title": "Sign up to volunteer",
+      "opens_from": "site-get-involved",
+      "requirements": [
+        "L2-134",
+        "L1-025",
+        "L2-005",
+        "L2-001",
+        "L2-031",
+        "L2-032"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "busy",
+        "failed",
+        "too-many"
+      ],
+      "not_applicable": {
+        "success": "Sending closes the dialog: the page shows the toast (`site-get-involved/volunteered`)."
+      }
+    },
+    {
+      "id": "start-donation",
+      "kind": "dialog",
+      "title": "Give monthly",
+      "opens_from": "site-get-involved",
+      "requirements": [
+        "L2-134",
+        "L1-025",
+        "L2-005",
+        "L2-001",
+        "L2-031",
+        "L2-032"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "busy",
+        "confirmed",
+        "failed",
+        "unavailable"
+      ]
     },
     {
       "id": "toast",

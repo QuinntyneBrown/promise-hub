@@ -82,6 +82,7 @@ app.MapPeopleEndpoints();
 app.MapInvitationEndpoints();
 app.MapSettingsEndpoints();
 app.MapParticipantModuleEndpoints();
+app.MapWebsiteEndpoints();
 app.MapLearningEndpoints();
 app.MapCurriculumEndpoints();
 app.MapMentoringEndpoints();

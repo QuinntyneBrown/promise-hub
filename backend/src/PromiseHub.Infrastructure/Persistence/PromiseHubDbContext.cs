@@ -86,6 +86,9 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Mentoring.AtRiskFlag> AtRiskFlags => Set<Domain.Mentoring.AtRiskFlag>();
     public DbSet<Domain.Mentoring.AssignedWork> AssignedWork => Set<Domain.Mentoring.AssignedWork>();
     public DbSet<Domain.Curriculum.Badge> Badges => Set<Domain.Curriculum.Badge>();
+    public DbSet<Domain.Website.ContactMessage> ContactMessages => Set<Domain.Website.ContactMessage>();
+    public DbSet<Domain.Website.VolunteerInterest> VolunteerInterests => Set<Domain.Website.VolunteerInterest>();
+    public DbSet<Domain.Website.DonationPledge> DonationPledges => Set<Domain.Website.DonationPledge>();
     public DbSet<Domain.Curriculum.BadgeAward> BadgeAwards => Set<Domain.Curriculum.BadgeAward>();
     public DbSet<Domain.Curriculum.ProgressionStage> ProgressionStages => Set<Domain.Curriculum.ProgressionStage>();
     public DbSet<DataRequest> DataRequests => Set<DataRequest>();
@@ -313,6 +316,34 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(c => c.CreatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.HasOne<Domain.Households.Child>().WithMany().HasForeignKey(c => c.ChildId);
             e.HasOne<Membership>().WithMany().HasForeignKey(c => c.MentorMembershipId);
+        });
+        // Visitor requests from the public website (L2-134, ADR 0075); CreatedAt as ticks so the hourly limit compares in SQL.
+        modelBuilder.Entity<Domain.Website.ContactMessage>(e =>
+        {
+            e.HasIndex(m => new { m.OrganizationId, m.Email, m.CreatedAt });
+            e.Property(m => m.Name).HasMaxLength(Domain.Website.ContactMessage.MaximumName);
+            e.Property(m => m.Email).HasMaxLength(Domain.Website.ContactMessage.MaximumEmail);
+            e.Property(m => m.Topic).HasMaxLength(40);
+            e.Property(m => m.Message).HasMaxLength(Domain.Website.ContactMessage.MaximumMessage);
+            e.Property(m => m.CreatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+        });
+        modelBuilder.Entity<Domain.Website.VolunteerInterest>(e =>
+        {
+            e.HasIndex(v => new { v.OrganizationId, v.Email, v.CreatedAt });
+            e.Property(v => v.Name).HasMaxLength(Domain.Website.ContactMessage.MaximumName);
+            e.Property(v => v.Email).HasMaxLength(Domain.Website.ContactMessage.MaximumEmail);
+            e.Property(v => v.Phone).HasMaxLength(Domain.Website.VolunteerInterest.MaximumPhone);
+            e.Property(v => v.Area).HasMaxLength(40);
+            e.Property(v => v.About).HasMaxLength(Domain.Website.VolunteerInterest.MaximumAbout);
+            e.Property(v => v.CreatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+        });
+        modelBuilder.Entity<Domain.Website.DonationPledge>(e =>
+        {
+            e.HasIndex(d => new { d.OrganizationId, d.Email, d.CreatedAt });
+            e.Property(d => d.Name).HasMaxLength(Domain.Website.ContactMessage.MaximumName);
+            e.Property(d => d.Email).HasMaxLength(Domain.Website.ContactMessage.MaximumEmail);
+            e.Property(d => d.ProviderReference).HasMaxLength(Domain.Website.DonationPledge.MaximumReference);
+            e.Property(d => d.CreatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
         });
         modelBuilder.Entity<Domain.Mentoring.AtRiskFlag>(e =>
         {

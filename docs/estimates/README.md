@@ -1,11 +1,11 @@
 # Estimates
 
-- Overall effort: 495 days
-- Complete: 82%
+- Overall effort: 517 days
+- Complete: 83%
 
 | Subsystem | Effort | Complete |
 |---|---|---|
-| [identity](identity.md) | 39 days | 89% |
+| [identity](identity.md) | 39 days | 88% |
 | [organizations](organizations.md) | 46 days | 75% |
 | [platform](platform.md) | 29 days | 47% |
 | [shell](shell.md) | 9 days | 51% |
@@ -28,7 +28,7 @@
 | [learning](learning.md) | 48 days | 100% |
 | [curriculum](curriculum.md) | 27 days | 97% |
 | [mentoring](mentoring.md) | 37 days | 100% |
-| [website](website.md) | 1 day | 100% |
+| [website](website.md) | 23 days | 94% |
 
 ## Roadmap
 
@@ -37,4 +37,4 @@
 3. Enrollment, attendance and imports: guardian enrollment, roster import, session flow, pickup, Quick Cards and offline support.
 4. Messaging, notifications, permission slips and guardian experiences: delivery controls, notification center, signing, reminders, localized guardian pages and incidents.
 5. Reports, billing and audit: computation and export, plan metering and payments, then organization audit search.
-6. Waypoint journeys (prompts 50 to 81): their designs extend learning, curriculum, mentoring and website on the finished merge foundation.
+6. Waypoint journeys (prompts 50 to 81) are delivered on the merge foundation; what remains is their deferred work, such as the public website's staff inbox and a real payment provider (ADR 0075).

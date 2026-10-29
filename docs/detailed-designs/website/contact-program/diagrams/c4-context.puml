@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — Contact the program
+Person(visitor, "Visitor", "Dana Thompson")
+System(ph, "PromiseHub", "Public website of one organization")
+
+Rel(visitor, ph, "Sends a message to the organization", "HTTPS, no sign-in")
+@enduml

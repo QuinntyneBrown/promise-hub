@@ -127,7 +127,7 @@ One folder per subsystem, one folder per vertically sliced feature, each with a 
 | mentoring | manage-at-risk-flags | L2-091, L2-065, L2-040, L2-032, L2-023, L2-007 |
 | mentoring | assign-work | L2-092, L2-068, L2-065, L2-032, L2-007 |
 | identity | scope-data-by-role | L2-065, L2-007 |
-| website | serve-public-site (journey 81 adds more; see [website](website/README.md)) | L2-005 |
+| website | serve-public-site, navigate-public-site, explore-programs, browse-current-cohorts, view-journey-and-impact, contact-program, register-volunteer-interest, start-donation (see [website](website/README.md)) | L2-005, L2-132, L2-133, L2-134 |
 
 Render all diagrams with:
 

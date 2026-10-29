@@ -1102,3 +1102,66 @@ def website_profile(S):
     S.add("busy", "Saving.", **over("settings-organization", overlays=box(busy=True)))
     S.add("failed", "The save failed: what he typed is kept and nothing changed.",
           **over("settings-organization", overlays=box(alert_html=failed_alert("That didn’t go through", "Your website profile is unchanged. Try again."))))
+
+
+# ---------------------------------------------------------------- Public website (prompt 81, L2-134)
+R_SITE_FORMS = ["L2-134", "L1-025", "L2-005", "L2-001", "L2-031", "L2-032"]
+VOLUNTEER_AREAS = ["Homework help", "Coaching a sports team", "Camp helper", "Driving and setup", "Wherever I’m needed"]
+
+
+@screen("volunteer-interest", "dialog", "Sign up to volunteer", opens_from="site-get-involved", reqs=R_SITE_FORMS,
+        na={"success": "Sending closes the dialog: the page shows the toast (`site-get-involved/volunteered`)."})
+def volunteer_interest(S):
+    def box(err=None, busy=False, alert_html="", name="Leo Martins", ack=True):
+        e = err or {}
+        summary = form_summary(list(e.items())) if e else ""
+        body = (summary
+                + field("vol-name", "Your name", value=name, required=True, autocomplete="name", autofocus=not e, error=e.get("vol-name", ""))
+                + field("vol-email", "Email", type_="email", value="leo.martins@example.com", required=True, autocomplete="email", error=e.get("vol-email", ""))
+                + field("vol-phone", "Phone", type_="tel", value="905-555-0120", optional=True, autocomplete="tel")
+                + select("vol-area", "How would you like to help?", VOLUNTEER_AREAS, selected="Homework help")
+                + textarea("vol-about", "A bit about you", value="I tutor maths at McMaster and I’m free on weekday afternoons.", rows=3, optional=True, count="62 / 1,000")
+                + fieldset("Screening", choice("vol-ack", "I understand that volunteers who work with children are screened and reference checked before they start.",
+                                               type_="checkbox", checked=ack, invalid=bool(e.get("vol-ack"))), error=e.get("vol-ack", ""), fid="vol-ack-set"))
+        return dialog_box("Sign up to volunteer", "We’ll follow up by email about next steps.", body, footer("Sign up", busy=busy),
+                          icon_name="heart", alert_html=alert_html, form=True, scroll=True)
+    S.add("default", "Leo offers to help with homework: name, email, an optional phone, how he’d like to help and the screening acknowledgement.",
+          **over("site-get-involved", overlays=box()))
+    S.add("invalid", "Signed up without a name or the screening acknowledgement: inline errors and a summary; nothing is sent.",
+          **over("site-get-involved", overlays=box(err={"vol-name": "Enter your name.", "vol-ack-set": "Tick the box to say you understand volunteers are screened."}, name="", ack=False)))
+    S.add("busy", "Sending.", **over("site-get-involved", overlays=box(busy=True)))
+    S.add("failed", "The send failed: what he typed is kept.", **over("site-get-involved", overlays=box(alert_html=failed_alert("Your sign-up didn’t send", "Nothing was lost. Try again."))))
+    S.add("too-many", "Several sign-ups from the same email within an hour: refused kindly.",
+          **over("site-get-involved", overlays=box(alert_html=alert("warning", "You’ve signed up already", "We’ve got your details. Please wait an hour before sending again."))))
+
+
+TIERS = [("20", "Friend", "Lesson supplies for one child for a term."), ("50", "Builder", "A season of weekly mentoring for one young person."),
+         ("100", "Champion", "Helps run a whole program for a neighbourhood.")]
+
+
+@screen("start-donation", "dialog", "Give monthly", opens_from="site-get-involved", reqs=R_SITE_FORMS, na={})
+def start_donation(S):
+    def box(err=None, busy=False, alert_html="", picked="50", name="Dana Thompson", confirmed=False):
+        e = err or {}
+        summary = form_summary(list(e.items())) if e else ""
+        tiers = "".join(choice("don-tier", f"${amt} a month · {label}", small=desc, checked=amt == picked, invalid=bool(e.get("don-tier-set"))) for amt, label, desc in TIERS)
+        body = (summary
+                + fieldset("Monthly amount", tiers, error=e.get("don-tier-set", ""), fid="don-tier-set")
+                + field("don-name", "Your name", value=name, required=True, autocomplete="name", error=e.get("don-name", ""))
+                + field("don-email", "Email for your receipt", type_="email", value="dana.t@example.com", required=True, autocomplete="email", error=e.get("don-email", ""))
+                + '<p class="hint">Next, our secure payment provider takes your card details. We never see or store them.</p>')
+        foot = footer("Continue to payment", busy=busy)
+        if confirmed:
+            body = (alert("success", "Thank you, Dana", "You’re giving $50 a month. Finish with our secure payment provider; it opens in a new tab.")
+                    + '<p class="hint">Your pledge is saved. If you close the tab you can come back and give again any time.</p>')
+            foot = btn("Close", "") + btn("Open secure payment", "primary", href="#", icon_name="arrow-right", attrs='target="_blank" rel="noopener" autofocus')
+        return dialog_box("Give monthly", "Every gift keeps programs free for families.", body, foot, icon_name="heart", alert_html=alert_html, form=not confirmed, scroll=True)
+    S.add("default", "Dana picks $50 a month and gives her name and email for the receipt.", **over("site-get-involved", overlays=box()))
+    S.add("invalid", "Continued without an amount or a name: inline errors and a summary.",
+          **over("site-get-involved", overlays=box(err={"don-tier-set": "Choose a monthly amount.", "don-name": "Enter your name."}, picked="", name="")))
+    S.add("busy", "Starting the payment.", **over("site-get-involved", overlays=box(busy=True)))
+    S.add("confirmed", "The pledge is saved with the provider’s reference: Open secure payment hands over to the provider.", **over("site-get-involved", overlays=box(confirmed=True)))
+    S.add("failed", "Starting the payment failed: nothing was charged and her choice is kept.",
+          **over("site-get-involved", overlays=box(alert_html=failed_alert("We couldn’t start your payment", "Nothing was charged. Try again."))))
+    S.add("unavailable", "Online giving isn’t set up for this organization: no pledge is saved and the visitor is pointed to Contact.",
+          **over("site-get-involved", overlays=box(alert_html=alert("info", "Online giving isn’t available yet", "Write to us from the contact page and we’ll help you give."))))
