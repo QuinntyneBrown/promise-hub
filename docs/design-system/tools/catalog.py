@@ -109,7 +109,7 @@ PATTERNS = {
 }
 
 EXTRA_VARIANTS = {
- 'button':['primary','secondary','ghost','link','danger','icon','block'],
+ 'button':['primary','secondary','ghost','link','danger','icon','block','new-tab'],
  'text-field':['text','email','password','number','search','prefix','suffix','counter'],
  'textarea':['default','counter'], 'select':['default','placeholder'],
  'checkbox':['single','group','description'], 'radio-group':['vertical','horizontal','card'],

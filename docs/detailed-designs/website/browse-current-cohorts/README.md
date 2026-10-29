@@ -7,7 +7,7 @@ A Waypoint cohort is a PromiseHub program (ADR 0043). The programs section of th
 Terms used in this document:
 
 - **status** — `Running` once the start date has passed, `Upcoming` before; computed once on the server from the organization's today, so every page shows the same status
-- **apply path** — `/g/enroll/{EnrollmentSlug}`, answered only while `EnrollmentOpen`
+- **apply path** — `/g/enroll/{EnrollmentSlug}`, answered only while `EnrollmentOpen` and the link has been made (`EnrollmentSlug`); otherwise the card says enrollment is closed for now
 - **lead mentor** — the first name of the program's `CohortMentor` marked lead, answered only while Mentoring is on
 
 Ported from Waypoint's `public-site/browse-current-cohorts` design (`L2-PUB-002` criteria 2 and 4), with tenancy and the Public website module gate added (ADR 0043, ADR 0075).

@@ -75,7 +75,7 @@ def programs_grid(*, learning: bool = True, mentoring: bool = True, closed_last:
 
 
 def hero(org: str = ORG, tagline: str = TAGLINE, city: str = "Hamilton, Ontario") -> str:
-    return (f'<section class="site-hero" aria-labelledby="site-title">{eyebrow(city)}<h1 id="site-title">{esc(org)}</h1>'
+    return (f'<section class="site-hero" aria-labelledby="site-title"><h1 id="site-title">{esc(org)}</h1>'
             f'<p class="site-hero__lead">{esc(tagline)}</p>'
             f'<div class="cluster">{btn("See programs", "primary", href=page("site-programs"), size="lg")}{btn("Get involved", "ghost", href=page("site-get-involved"), size="lg")}</div></section>')
 
@@ -110,13 +110,13 @@ def site_landing(S):
           main=hero(NORTHGATE, "A Wednesday kids club with games, snacks and homework help.") + steps_section() + impact(learning=False, programs="1", open_="1")
           + section("open-now", "Open now", "Programs taking applications", programs_grid(learning=False, mentoring=False,
                     items=[dict(name="Kids Club", when="Wed, 6–7:30 pm", ages="Ages 5–11", runs="9 Sep 2026 – 16 Jun 2027", status=("Running now", "success"), open=True, track="", mentor="")])))
-    S.add("not-found", "An unknown address, a suspended organization or Public website off: the same page, so a visitor cannot tell which.", chrome=False,
-          main=f'<div class="error-page">{empty("This page isn’t here", "Check the address, or ask the organization for its link.", icon_name="globe", heading="h1")}</div>')
+    S.add("not-found", "An unknown address, a suspended organization or Public website off: the same page, so a visitor cannot tell which. The website library never loads.", chrome=False,
+          main=page_header("Page not found", "") + card(empty("This page isn’t here", "Check the address, or ask the organization for its link.", icon_name="globe"), cls="card--flush"))
 
 
 @screen("site-programs", "page", "Public website: programs", route="/site/:slug/programs", reqs=R_SITE, shell="site", na={})
 def site_programs(S):
-    hdr = (f'<section class="site-hero" aria-labelledby="site-title">{eyebrow("Programs")}<h1 id="site-title">Programs and open cohorts</h1>'
+    hdr = (f'<section class="site-hero" aria-labelledby="site-title"><h1 id="site-title">Programs and open cohorts</h1>'
            '<p class="site-hero__lead">Everything we run this season, who it’s for and how to apply.</p></section>')
     tracks = "".join(
         '<article class="card stack">' + f'<h3 class="card__title">{esc(n)}</h3><p class="text-muted">{esc(d)}</p>'
@@ -142,7 +142,7 @@ def site_programs(S):
 
 @screen("site-about", "page", "Public website: about", route="/site/:slug/about", reqs=R_SITE, shell="site", na={"loading": NA_FRAME, "error": NA_FRAME})
 def site_about(S):
-    hdr = f'<section class="site-hero" aria-labelledby="site-title">{eyebrow("About us")}<h1 id="site-title">About {esc(ORG)}</h1></section>'
+    hdr = f'<section class="site-hero" aria-labelledby="site-title"><h1 id="site-title">About {esc(ORG)}</h1></section>'
     promise = section("promise", "Our promise", "Safe, known and cared for",
                       ul_list([list_item("Screened adults", "Every adult who works with children is screened and reference checked."),
                                list_item("Guardian consent", "We ask a guardian’s consent before a child takes part."),
@@ -174,7 +174,7 @@ def ask_card() -> str:
 
 
 def get_involved_main(extra: str = "") -> str:
-    return (f'<section class="site-hero" aria-labelledby="site-title">{eyebrow("Get involved")}<h1 id="site-title">Help us keep our promises</h1>'
+    return (f'<section class="site-hero" aria-labelledby="site-title"><h1 id="site-title">Help us keep our promises</h1>'
             '<p class="site-hero__lead">Give your time, give monthly, or just ask us how you can help.</p></section>'
             + extra + f'<div class="site-grid">{volunteer_card()}{give_card()}{ask_card()}</div>')
 
@@ -203,7 +203,7 @@ def contact_main(*, err=None, busy=False, alert_html="", name="Dana Thompson", e
             + textarea("contact-message", "Message", value=message, rows=5, error=e.get("contact-message", ""), count=f"{len(message)} / 2,000")
             + f'<div class="cluster">{btn("Sending…" if busy else "Send message", "primary", type_="submit", busy=busy, icon_name="" if busy else "send")}</div>'
             + '<p class="hint">We use what you send only to reply. See <a href="' + page("site-privacy") + '">Privacy</a>.</p></form>')
-    hdr = (f'<section class="site-hero" aria-labelledby="site-title">{eyebrow("Contact")}<h1 id="site-title">Get in touch</h1>'
+    hdr = (f'<section class="site-hero" aria-labelledby="site-title"><h1 id="site-title">Get in touch</h1>'
            '<p class="site-hero__lead">Questions about programs, volunteering or giving? We’d love to hear from you.</p></section>')
     find = card(facts([("Where", "Hamilton, Ontario"), ("Email", '<a href="mailto:hello@harbourview.example">hello@harbourview.example</a>')]), title="Find us", tid="find")
     return hdr + f'<div class="split">{form}{find}</div>'
@@ -217,7 +217,7 @@ def site_contact(S):
           main=contact_main(err={"contact-name": "Enter your name.", "contact-email": "Enter an email like name@example.com.", "contact-message": "Write your message."}, name="", email="dana@", message=""))
     S.add("busy", "Sending.", current="site-contact", main=contact_main(busy=True))
     S.add("sent", "Sent: the form is replaced by an acknowledgement that says what happens next.", current="site-contact",
-          main=(f'<section class="site-hero" aria-labelledby="site-title">{eyebrow("Contact")}<h1 id="site-title">Get in touch</h1></section>'
+          main=(f'<section class="site-hero" aria-labelledby="site-title"><h1 id="site-title">Get in touch</h1></section>'
                 + card(empty("Message sent", "Thanks, Dana. We’ve got your message and someone from our team will reply by email, usually within two working days.",
                              action=btn("Back to home", "primary", href=page("site-landing")), icon_name="check-circle"), cls="card--flush")))
     S.add("failed", "The send failed: everything typed is kept and Try again is one press.", current="site-contact",
@@ -235,5 +235,5 @@ def site_privacy(S):
             '<h2>Safeguarding</h2><p>A guardian consents before a child takes part, and every adult who works with children is screened and reference checked. Donations are handled by our payment provider; we never see or store card details.</p>'
             f'<h2>Questions</h2><p>Write to us from the <a href="{page("site-contact")}">contact page</a>.</p></div>')
     S.add("default", "Privacy and safeguarding in plain words, with the organization’s name.", current="",
-          main=f'<section class="site-hero" aria-labelledby="site-title">{eyebrow("Privacy")}<h1 id="site-title">Privacy and safeguarding</h1>'
+          main=f'<section class="site-hero" aria-labelledby="site-title"><h1 id="site-title">Privacy and safeguarding</h1>'
           f'<p class="site-hero__lead">{esc(ORG)} works with children, so their privacy and safety come first.</p></section>' + body)
