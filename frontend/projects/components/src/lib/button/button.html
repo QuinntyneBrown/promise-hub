@@ -4,17 +4,23 @@
   }
   <ng-content />
 </ng-template>
-@if (link(); as target) {
+@if (link(); as route) {
   <a
     [class]="classes()"
-    [routerLink]="target"
+    [routerLink]="route"
     [attr.aria-label]="label()"
     [attr.aria-current]="current() ? 'page' : null"
   >
     <ng-container *ngTemplateOutlet="content" />
   </a>
 } @else if (href(); as url) {
-  <a [class]="classes()" [href]="url" [attr.aria-label]="label()">
+  <a
+    [class]="classes()"
+    [href]="url"
+    [attr.target]="target()"
+    [attr.rel]="target() ? 'noopener noreferrer' : null"
+    [attr.aria-label]="label()"
+  >
     <ng-container *ngTemplateOutlet="content" />
   </a>
 } @else {

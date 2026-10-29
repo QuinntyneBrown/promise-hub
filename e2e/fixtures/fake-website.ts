@@ -165,6 +165,20 @@ export class FakeWebsiteRequests {
     return { status: 204 };
   }
 
+  /** Mirrors backend DonateAsync with a fake payment provider: a checkout per pledge, or 503 unavailable without one (L2-134 criterion 3). */
+  donate(organizationId: string, b: Record<string, unknown>, provider: boolean): FakeAnswer {
+    const errors: Record<string, string> = {};
+    const amount = b['monthlyAmount'];
+    if (typeof amount !== 'number' || ![20, 50, 100].includes(amount)) errors['monthlyAmount'] = 'Choose a monthly amount.';
+    const { name, email } = this.person(b, errors);
+    if (Object.keys(errors).length) return { status: 422, json: { errors } };
+    if (this.limited(organizationId, 'donation', email!)) return { status: 429, json: { code: 'too-many' } };
+    if (!provider) return { status: 503, json: { code: 'unavailable' } };
+    const providerReference = `chk_${String(this.rows.filter((r) => r.kind === 'donation').length + 1).padStart(3, '0')}`;
+    this.store(organizationId, 'donation', email!, { name, monthlyAmount: amount, providerReference });
+    return { status: 200, json: { checkoutUrl: `https://checkout.example/pay/${providerReference}` } };
+  }
+
   /** A request sent earlier, as a visitor would have. */
   add(organizationId: string, kind: WebsiteRequestKind, email: string): void {
     this.store(organizationId, kind, email.toLowerCase(), {});

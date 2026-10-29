@@ -1,0 +1,94 @@
+@if (checkout(); as c) {
+  <ph-dialog
+    title="Give monthly"
+    description="Every gift keeps programs free for families."
+    icon="heart"
+  >
+    <div class="stack">
+      <ph-alert
+        tone="success"
+        [title]="'Thank you, ' + c.first"
+        [text]="
+          'You’re giving $' +
+          c.amount +
+          ' a month. Finish with our secure payment provider; it opens in a new tab.'
+        "
+      />
+      <p class="hint">
+        Your pledge is saved. If you close the tab you can come back and give again any time.
+      </p>
+    </div>
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Close</ph-button>
+      <ph-button variant="primary" target="_blank" [href]="c.url">Open secure payment</ph-button>
+    </ng-container>
+  </ph-dialog>
+} @else {
+  <form novalidate (ngSubmit)="submit()">
+    <ph-dialog
+      title="Give monthly"
+      description="Every gift keeps programs free for families."
+      icon="heart"
+    >
+      <div class="stack">
+        @if (summary().length) {
+          <ph-error-summary title="Fix these to continue" [items]="summary()" />
+        }
+        @if (problem() === 'failed') {
+          <ph-alert
+            tone="danger"
+            title="We couldn’t start your payment"
+            text="Nothing was charged. Try again."
+          />
+        }
+        @if (problem() === 'too-many') {
+          <ph-alert
+            tone="warning"
+            title="You’ve started several gifts already"
+            text="Please wait an hour before starting another."
+          />
+        }
+        @if (problem() === 'unavailable') {
+          <ph-alert
+            tone="info"
+            title="Online giving isn’t available yet"
+            text="Write to us from the contact page and we’ll help you give."
+          />
+        }
+        <div id="don-tier">
+          <ph-radio-group
+            legend="Monthly amount"
+            name="amount"
+            [options]="tiers"
+            [error]="errors()['monthlyAmount'] ?? null"
+            [(ngModel)]="amount"
+          />
+        </div>
+        <ph-text-field
+          inputId="don-name"
+          label="Your name"
+          name="name"
+          autocomplete="name"
+          [error]="errors()['name'] ?? null"
+          [(ngModel)]="name"
+        />
+        <ph-text-field
+          inputId="don-email"
+          label="Email for your receipt"
+          name="email"
+          type="email"
+          autocomplete="email"
+          [error]="errors()['email'] ?? null"
+          [(ngModel)]="email"
+        />
+        <p class="hint">
+          Next, our secure payment provider takes your card details. We never see or store them.
+        </p>
+      </div>
+      <ng-container ngProjectAs="[phDialogFooter]">
+        <ph-button (click)="ref.close()">Cancel</ph-button>
+        <ph-button variant="primary" type="submit" [busy]="busy()">Continue to payment</ph-button>
+      </ng-container>
+    </ph-dialog>
+  </form>
+}

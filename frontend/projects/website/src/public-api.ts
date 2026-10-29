@@ -7,3 +7,4 @@ export { SitePrivacyPage } from './lib/site-privacy-page/site-privacy-page';
 export { SiteGetInvolvedPage } from './lib/site-get-involved-page/site-get-involved-page';
 export { SiteContactPage } from './lib/site-contact-page/site-contact-page';
 export { VolunteerDialog } from './lib/volunteer-dialog/volunteer-dialog';
+export { DonationDialog } from './lib/donation-dialog/donation-dialog';

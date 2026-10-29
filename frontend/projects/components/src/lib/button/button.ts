@@ -21,6 +21,8 @@ export class PhButton {
   readonly link = input<string | unknown[] | null>(null);
   /** A link outside the router, such as tel: or mailto:. */
   readonly href = input<string | null>(null);
+  /** With `href`: `_blank` opens a new tab, safely (rel="noopener noreferrer"), such as a payment provider's checkout. */
+  readonly target = input<'_blank' | null>(null);
   readonly type = input<'button' | 'submit'>('button');
   readonly icon = input<IconName | null>(null);
   readonly iconOnly = input(false);

@@ -2265,8 +2265,8 @@ export class FakeApi {
     ],
     [
       "POST",
-      /^\/api\/website\/(?<slug>[^/]+)\/(?<kind>contact|volunteer)$/,
-      (route, p) => this.websiteRequest(route, p["slug"]!, p["kind"] as "contact" | "volunteer"),
+      /^\/api\/website\/(?<slug>[^/]+)\/(?<kind>contact|volunteer|donations)$/,
+      (route, p) => this.websiteRequest(route, p["slug"]!, p["kind"] as "contact" | "volunteer" | "donations"),
     ],
     ["POST", /^\/api\/auth\/sign-in$/, (route) => this.signIn(route)],
     ["POST", /^\/api\/auth\/mfa$/, (route) => this.mfa(route)],
@@ -5017,15 +5017,24 @@ export class FakeApi {
     this.websiteRequestState.add(organizationId, kind, email);
   }
 
-  /** POST /website/{slug}/contact and /volunteer: anonymous, mirrors WebsiteRequestsHandler. */
-  private async websiteRequest(route: Route, slug: string, kind: "contact" | "volunteer"): Promise<void> {
+  /** POST /website/{slug}/contact, /volunteer and /donations: anonymous, mirrors WebsiteRequestsHandler. */
+  private paymentProvider = true;
+
+  /** Whether organizations have a payment provider set up; without one a donation answers 503 unavailable (ADR 0075). */
+  setPaymentProvider(configured: boolean): void {
+    this.paymentProvider = configured;
+  }
+
+  private async websiteRequest(route: Route, slug: string, kind: "contact" | "volunteer" | "donations"): Promise<void> {
     const organization = this.publishedSite(slug);
     if (!organization) return route.fulfill({ status: 404 });
     const body = (route.request().postDataJSON() ?? {}) as Record<string, unknown>;
     const answer =
       kind === "contact"
         ? this.websiteRequestState.contact(organization.id, body)
-        : this.websiteRequestState.volunteer(organization.id, body);
+        : kind === "volunteer"
+          ? this.websiteRequestState.volunteer(organization.id, body)
+          : this.websiteRequestState.donate(organization.id, body, this.paymentProvider);
     return route.fulfill(answer.json === undefined ? { status: answer.status } : { status: answer.status, json: answer.json });
   }
 

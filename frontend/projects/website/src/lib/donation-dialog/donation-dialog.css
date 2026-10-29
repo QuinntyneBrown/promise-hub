@@ -1,0 +1,5 @@
+.hint {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--color-fg-muted);
+}

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { PhButton, PhCard, PhDialogs, PhPageHeader, ToastService } from '@promisehub/components';
+import { DonationDialog } from '../donation-dialog/donation-dialog';
 import { SiteState } from '../site-state';
 import { VolunteerDialog } from '../volunteer-dialog/volunteer-dialog';
 
@@ -34,5 +35,9 @@ export class SiteGetInvolvedPage {
           text: 'We’ll be in touch about next steps, including screening.',
         });
       });
+  }
+
+  protected donate(): void {
+    this.dialogs.open<void, string, DonationDialog>(DonationDialog, this.state.slug());
   }
 }

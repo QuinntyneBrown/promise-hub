@@ -19,6 +19,8 @@ public static class WebsiteEndpoints
             WebsiteHttp.ToHttp(await handler.ContactAsync(slug, request, ct)));
         site.MapPost("/volunteer", async (string slug, VolunteerRequest request, WebsiteRequestsHandler handler, CancellationToken ct) =>
             WebsiteHttp.ToHttp(await handler.VolunteerAsync(slug, request, ct)));
+        site.MapPost("/donations", async (string slug, DonationRequest request, WebsiteRequestsHandler handler, CancellationToken ct) =>
+            WebsiteHttp.ToHttp(await handler.DonateAsync(slug, request, ct)));
         return app;
     }
 }

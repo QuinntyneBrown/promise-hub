@@ -8,7 +8,8 @@ namespace PromiseHub.Application.Website;
 /// Requests a visitor sends from an organization's public website (L2-134, ADR 0075): validated on the server, limited per email, stored
 /// for the organization the address names and audited with the actor "Website visitor".
 /// </summary>
-public sealed class WebsiteRequestsHandler(IPromiseHubDb db, PublicSiteResolver sites, WebsiteRequestLimit limit, IAuditWriter audit, TimeProvider clock)
+public sealed class WebsiteRequestsHandler(IPromiseHubDb db, PublicSiteResolver sites, WebsiteRequestLimit limit, IAuditWriter audit, IPaymentProvider payments,
+    TimeProvider clock)
 {
     public async Task<WebsiteResult> ContactAsync(string slug, ContactRequest request, CancellationToken cancellationToken = default)
     {
@@ -93,5 +94,40 @@ public sealed class WebsiteRequestsHandler(IPromiseHubDb db, PublicSiteResolver 
         audit.Record(new AuditEvent(AuditAction.Created, nameof(VolunteerInterest), row.Id, $"Volunteer offer: {area}"));
         await db.SaveChangesAsync(cancellationToken);
         return WebsiteResult.Done;
+    }
+
+    public async Task<WebsiteResult> DonateAsync(string slug, DonationRequest request, CancellationToken cancellationToken = default)
+    {
+        if (await sites.ResolveAsync(slug, cancellationToken) is not { } organization)
+        {
+            return WebsiteResult.NotFound;
+        }
+        var name = WebsiteRules.Clean(request.Name);
+        var email = WebsiteRules.Clean(request.Email)?.ToLowerInvariant();
+        var errors = new Dictionary<string, string>();
+        if (request.MonthlyAmount is not { } amount || !WebsiteChoices.MonthlyAmounts.Contains(amount))
+        {
+            errors["monthlyAmount"] = "Choose a monthly amount.";
+        }
+        WebsiteRules.Name(name, errors);
+        WebsiteRules.Email(email, errors);
+        if (errors.Count > 0)
+        {
+            return WebsiteResult.Invalid(errors);
+        }
+        if (await limit.ReachedAsync(WebsiteRequestKind.Donation, email!, cancellationToken))
+        {
+            return WebsiteResult.TooMany;
+        }
+        var monthly = request.MonthlyAmount!.Value;
+        if (await payments.StartCheckoutAsync(organization.Id, monthly, email!, cancellationToken) is not { } checkout)
+        {
+            return WebsiteResult.Unavailable;
+        }
+        var row = new DonationPledge(Guid.NewGuid(), organization.Id, monthly, name!, email!, checkout.Reference, clock.GetUtcNow());
+        db.DonationPledges.Add(row);
+        audit.Record(new AuditEvent(AuditAction.Created, nameof(DonationPledge), row.Id, $"Monthly pledge of ${monthly} started"));
+        await db.SaveChangesAsync(cancellationToken);
+        return WebsiteResult.Ok(new DonationCheckoutDto(checkout.Url));
     }
 }

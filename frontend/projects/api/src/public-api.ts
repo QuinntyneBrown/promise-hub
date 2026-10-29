@@ -454,6 +454,8 @@ export * from './lib/website/contact-message';
 export * from './lib/website/volunteer-offer';
 export * from './lib/website/website-submit-outcome';
 export * from './lib/website/website-choices';
+export * from './lib/website/donation-pledge';
+export * from './lib/website/donation-outcome';
 export * from './lib/website/website-api';
 export * from './lib/website/website-api.token';
 export * from './lib/session/participant-roles';

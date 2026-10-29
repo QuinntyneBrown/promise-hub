@@ -5,6 +5,8 @@ import { API_BASE_URL } from '../api-base-url';
 import { toLoad } from '../http-results';
 import { LoadResult } from '../load-result';
 import { ContactMessage } from './contact-message';
+import { DonationOutcome } from './donation-outcome';
+import { DonationPledge } from './donation-pledge';
 import { PublicContent } from './public-content';
 import { PublicSite } from './public-site';
 import { VolunteerOffer } from './volunteer-offer';
@@ -32,6 +34,15 @@ export class HttpWebsiteApi implements WebsiteApi {
     return this.submit(this.http.post<null>(`${this.url(slug)}/volunteer`, offer));
   }
 
+  donate(slug: string, pledge: DonationPledge): Observable<DonationOutcome> {
+    return this.http.post<{ checkoutUrl: string }>(`${this.url(slug)}/donations`, pledge).pipe(
+      map((body): DonationOutcome => ({ status: 'checkout', checkoutUrl: body.checkoutUrl })),
+      catchError((error: HttpErrorResponse) =>
+        of<DonationOutcome>(error.status === 503 ? { status: 'unavailable' } : outcome(error)),
+      ),
+    );
+  }
+
   private submit(call: Observable<null>): Observable<WebsiteSubmitOutcome> {
     return call.pipe(
       map((): WebsiteSubmitOutcome => ({ status: 'sent' })),
@@ -45,7 +56,7 @@ export class HttpWebsiteApi implements WebsiteApi {
 }
 
 /** Maps a failed request to its outcome: 422 field errors, 429 too many, 404 not found, anything else an error. */
-function outcome(error: HttpErrorResponse): WebsiteSubmitOutcome {
+function outcome(error: HttpErrorResponse): Exclude<WebsiteSubmitOutcome, { status: 'sent' }> {
   if (error.status === 422) return { status: 'invalid', errors: error.error?.errors ?? {} };
   if (error.status === 429) return { status: 'too-many' };
   if (error.status === 404) return { status: 'not-found' };
