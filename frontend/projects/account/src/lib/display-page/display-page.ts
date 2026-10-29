@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, inject, signal } from '@angular/core';
+import { ViewportScroller } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DISPLAY_API, DisplayPreferences, SESSION_API } from '@promisehub/api';
 import {
@@ -44,6 +45,7 @@ export class DisplayPage implements OnDestroy {
   private readonly sessions = inject(SESSION_API);
   private readonly root = inject(PhDisplayRoot);
   private readonly toasts = inject(ToastService);
+  private readonly scroller = inject(ViewportScroller);
 
   protected readonly crumbs: BreadcrumbItem[] = [
     { label: 'Your account', link: '/account' },
@@ -107,6 +109,8 @@ export class DisplayPage implements OnDestroy {
         this.sessions.refresh();
       } else {
         this.failed.set(true);
+        // The alert sits at the top of the form; bring it into view from the Save button (L2-035).
+        this.scroller.scrollToPosition([0, 0]);
       }
     });
   }

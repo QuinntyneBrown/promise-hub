@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ViewportScroller } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ACCOUNT_API, Account, ROLE_LABELS, Role, SESSION_API } from '@promisehub/api';
 import {
@@ -45,6 +46,7 @@ export class ProfilePage {
   private readonly api = inject(ACCOUNT_API);
   private readonly sessions = inject(SESSION_API);
   private readonly toasts = inject(ToastService);
+  private readonly scroller = inject(ViewportScroller);
 
   protected readonly crumbs: BreadcrumbItem[] = [
     { label: 'Your account', link: '/account' },
@@ -101,6 +103,8 @@ export class ProfilePage {
         this.errors.set(outcome.errors);
       } else {
         this.failed.set(true);
+        // The alert sits at the top of the form; bring it into view from the Save button (L2-035).
+        this.scroller.scrollToPosition([0, 0]);
       }
     });
   }
