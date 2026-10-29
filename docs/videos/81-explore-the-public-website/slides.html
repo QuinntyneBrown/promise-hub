@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 81 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="81" data-video-title="Explore the public website" data-parts="Introduction|Address|Home|Programs|Learning and mentoring|Apply|About and contact|Volunteer|Give monthly|Server rules|Phone|Off and states|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 81</div>
+  <h1>Explore the public website</h1>
+  <p class="lead">Published programs with a way to apply, and three ways to help, for anyone, without an account</p>
+</section>
+
+<section id="address" data-part="1" data-cue="Dana Thompson is a parent in Hamilton.">
+  <h2>The address is the organization</h2>
+  <ul>
+    <li><code>/site/harbourview</code> names Harbourview Youth Collective</li>
+    <li><code>PublicSiteResolver</code>: the one place a tenant is chosen without a membership</li>
+    <li>Not suspended, Public website on, then the tenant is resolved for a visitor</li>
+    <li>Unknown, suspended and off all answer 404: a page that isn’t here</li>
+  </ul>
+  <p class="muted small">ADR 0043 · ADR 0075 · L2-132</p>
+</section>
+
+<section id="landing-clip" data-part="2" data-cue="The home page shows the name and the tagline" data-clip="clips/landing-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>The home page</h3><p>Four steps, what we run, open now.</p></div>
+</section>
+
+<section id="landing" data-part="2" data-cue="PromiseHub never publishes how many children or staff">
+  <h2>Counts of programs, never of people</h2>
+  <div class="cols">
+    <img class="shot" alt="Harbourview's public home page" src="shots/desktop-landing.png">
+    <img class="shot" alt="Programs taking applications" src="shots/desktop-open-now.png">
+  </div>
+  <p class="muted small">GET /website/{slug}/content · PublicContentHandler · L2-133</p>
+</section>
+
+<section id="programs-clip" data-part="3" data-cue="Dana opens Programs." data-clip="clips/programs-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Programs and open cohorts</h3><p>Cards, the learning track, mentorship, Apply.</p></div>
+</section>
+
+<section id="programs" data-part="3" data-cue="Archived programs and programs that have ended never appear.">
+  <h2>Current programs only</h2>
+  <img class="shot" alt="Programs and open cohorts" src="shots/desktop-programs.png">
+  <p class="muted small">Active, not ended, by start date · Running or Upcoming · Apply only while open</p>
+</section>
+
+<section id="tracks" data-part="4" data-cue="Because Learning is on at Harbourview">
+  <h2>Each module adds its section only while it is on</h2>
+  <img class="shot" alt="Learning tracks with the Servant Heart badge" src="shots/desktop-tracks.png">
+  <p class="muted small">Learning: published tracks, modules and badges · Mentoring: lead mentor’s first name, the mentorship model</p>
+</section>
+
+<section id="apply" data-part="5" data-cue="Apply on After-School Tutoring opens the program's own enrollment link">
+  <h2>Apply is the enrollment link</h2>
+  <img class="shot" alt="The After-School Tutoring enrollment page" src="shots/desktop-apply.png">
+  <p class="muted small">/g/enroll/after-school-tutoring · one intake, one review queue (prompt 58)</p>
+</section>
+
+<section id="contact-clip" data-part="6" data-cue="About shows the organization's own words" data-clip="clips/contact-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>About and contact</h3><p>Errors inline, then Dana’s question sent.</p></div>
+</section>
+
+<section id="contact" data-part="6" data-cue="Dana writes her question and sends it">
+  <div class="cols">
+    <img class="shot" alt="The contact page with errors and a summary" src="shots/desktop-contact-invalid.png">
+    <img class="shot" alt="Message sent" src="shots/desktop-contact-sent.png">
+  </div>
+  <p class="muted small">POST /website/{slug}/contact · ContactMessage · 204 · 422 by field</p>
+</section>
+
+<section id="involved-clip" data-part="7" data-cue="Get involved offers three ways to help." data-clip="clips/involved-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Get involved</h3><p>Leo volunteers; Dana gives monthly.</p></div>
+</section>
+
+<section id="donate" data-part="8" data-cue="Dana chooses fifty dollars a month">
+  <div class="cols">
+    <img class="shot" alt="Give monthly with $50 chosen" src="shots/desktop-donate.png">
+    <img class="shot" alt="Open secure payment" src="shots/desktop-donate-confirmed.png">
+  </div>
+  <p class="muted small">Volunteer: VolunteerInterest with the screening acknowledgement · IPaymentProvider · DonationPledge stores the provider’s reference only · 503 unavailable without a provider</p>
+</section>
+
+<section id="rules" data-part="9" data-cue="Every website endpoint is anonymous by explicit opt-in">
+  <h2>Rules on the server</h2>
+  <ul>
+    <li><code>WebsiteEndpoints</code>: every route <code>AllowAnonymous()</code>, one resolver</li>
+    <li>Fixed topics, areas and tiers; lengths; plain text, shown escaped</li>
+    <li>Five per kind, email and hour, then 429 <code>too-many</code></li>
+    <li>Audited as Created by “Website visitor”; stored per organization</li>
+  </ul>
+  <p class="muted small">WebsiteRequestsHandler · WebsiteRequestLimit · L2-134 · L2-031 · L2-032</p>
+</section>
+
+<section id="phone-clip" data-part="10" data-cue="On a phone the links wrap onto their own row" data-clip="clips/site-phone.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>On a phone</h3><p>Links wrap, cards stack, nothing scrolls sideways.</p></div>
+</section>
+
+<section id="states-clip" data-part="11" data-cue="At Northgate, Learning and Mentoring are off" data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Off, empty and failed</h3><p>Northgate, nothing open, Try again, not found.</p></div>
+</section>
+
+<section id="states" data-part="11" data-cue="When the content fails to load">
+  <div class="cols">
+    <img class="shot" alt="Northgate's programs without tracks or mentors" src="shots/desktop-northgate.png">
+    <img class="shot" alt="No programs are open right now" src="shots/desktop-empty.png">
+  </div>
+  <div class="cols">
+    <img class="shot" alt="We couldn't load our programs" src="shots/desktop-error.png">
+    <img class="shot" alt="This page isn't here" src="shots/desktop-not-found.png">
+  </div>
+</section>
+
+<section id="testing" data-part="12" data-cue="The API tests PublicContentTests">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>PublicContentTests</code>: published only, module gates, 404s, a second organization</li>
+    <li><code>WebsiteRequestsTests</code>, <code>WebsiteDonationsTests</code>: validation, limit, audit, provider, tenancy</li>
+    <li><code>landing</code>, <code>programs</code>, <code>about</code>, <code>navigate</code>, <code>contact</code>, <code>get-involved</code>, <code>donate</code> specs with axe, laptop and phone</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="13" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>The address chooses the organization; unknown, suspended and off look the same</li><li>Published content only; each module adds its section while on</li><li>Apply is the program’s enrollment link</li><li>Requests validated, limited, audited, kept per organization; cards go to the provider</li></ul>
+  <p class="muted">That completes the Waypoint journeys</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
