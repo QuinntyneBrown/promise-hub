@@ -1,5 +1,5 @@
 .toolbar {
-  max-width: var(--layout-control-width);
+  max-width: var(--layout-card-min);
   margin-block-end: var(--layout-gutter);
 }
 .legend {
