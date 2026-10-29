@@ -1,1 +1,1 @@
-export { routes } from './lib/reports.routes';
+export { routes, staffRoutes } from './lib/reports.routes';

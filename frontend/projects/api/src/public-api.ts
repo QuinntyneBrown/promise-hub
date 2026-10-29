@@ -298,6 +298,8 @@ export * from './lib/reports/youth-report';
 export * from './lib/reports/youth-learning';
 export * from './lib/reports/youth-attendance-summary';
 export * from './lib/reports/youth-mentoring';
+export * from './lib/reports/staff-report';
+export * from './lib/reports/mentor-activity-row';
 export * from './lib/reports/report-export';
 export * from './lib/reports/reports-api';
 export * from './lib/reports/reports-api.token';

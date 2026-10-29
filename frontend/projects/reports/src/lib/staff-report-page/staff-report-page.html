@@ -1,0 +1,92 @@
+@let r = result();
+@let v = report();
+@if (r?.status === 'forbidden') {
+  <ph-error-page
+    icon="lock"
+    title="Reports are for directors and site leads"
+    text="Ask a program director for the numbers you need."
+  >
+    <ph-button variant="primary" link="/">Go to Today</ph-button>
+  </ph-error-page>
+} @else {
+  <ph-breadcrumb [items]="crumbs" />
+  <ph-page-header title="Staff activity" subtitle="Mentor caseloads, check-ins and reviews" />
+  <div class="toolbar">
+    <ph-select
+      inputId="rs-period"
+      label="Period"
+      name="period"
+      [options]="periods"
+      [ngModel]="period()"
+      (ngModelChange)="choose($event)"
+    />
+  </div>
+  @if (v) {
+    @if (v.mentors.length === 0) {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="mentoring"
+          title="No mentors yet"
+          text="Invite a mentor to see caseloads and check-ins here."
+        >
+          <ph-button variant="primary" link="/settings/staff">Invite staff</ph-button>
+        </ph-empty-state>
+      </ph-card>
+    } @else {
+      <section class="numbers" aria-label="Staff numbers">
+        <ph-stat
+          data-testid="stat-Active mentors"
+          label="Active mentors"
+          [value]="'' + v.activeMentors"
+        />
+        <ph-stat
+          data-testid="stat-Check-ins logged"
+          label="Check-ins logged"
+          [value]="'' + v.checkIns"
+          [caption]="period() ? 'last ' + period() + ' days' : 'all time'"
+        />
+        @if (v.reviews !== null) {
+          <ph-stat
+            data-testid="stat-Reviews completed"
+            label="Reviews completed"
+            [value]="'' + v.reviews"
+            caption="graded work"
+          />
+        }
+        <ph-stat
+          data-testid="stat-Youth per mentor"
+          label="Youth per mentor"
+          [value]="'' + v.averageCaseload"
+          caption="target 4 to 8"
+        />
+      </section>
+      @for (m of overloaded(); track m.membershipId) {
+        <div class="warning">
+          <ph-alert
+            tone="warning"
+            [title]="m.name + ' has ' + m.caseload + ' youth'"
+            [text]="warningText()"
+          />
+        </div>
+      }
+      <ph-table caption="Mentor activity" [columns]="columns()" [rows]="rows()" />
+      <p class="hint">Overloaded: more than 8 youth. Underloaded: fewer than 4.</p>
+    }
+  } @else if (r === null) {
+    <div class="numbers" aria-busy="true" aria-label="Building the staff report">
+      <ph-skeleton shape="card" />
+      <ph-skeleton shape="card" />
+    </div>
+  } @else {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t build the staff report"
+        text="Your data is safe. Try again."
+      >
+        <ph-button variant="primary" (click)="load()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+}

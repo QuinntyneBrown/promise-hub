@@ -34,6 +34,16 @@ export interface ReportSource {
   badges(membershipId: string): string[];
   /** The name of a child's mentor, or null. */
   mentorName(childId: string): string | null;
+  /** The organization's active mentors by id and name. */
+  mentors: { id: string; name: string }[];
+  /** Each youth's mentor, child id to mentor id. */
+  youthMentors: Map<string, string>;
+  /** Each program's mentor team. */
+  teams: Map<string, { lead: string | null; supporting: string[] }>;
+  /** Accepted or sent-back reviews: who and when. */
+  reviews: { actor: string; at: string }[];
+  /** The organization's today (yyyy-mm-dd). */
+  today: string;
 }
 
 const percent = (part: number, whole: number): number | null =>
@@ -278,6 +288,39 @@ export class FakeReports {
       learning,
       attendance,
       mentoring,
+    };
+  }
+
+  /** GET /reports/staff (L2-128) once Mentoring is on and the caller may read reports. */
+  staff(s: ReportSource, days: number | null) {
+    const from = days ? new Date(new Date(`${s.today}T12:00:00Z`).getTime() - days * 86_400_000).toISOString().slice(0, 10) : null;
+    const learningOn = s.modules.includes('Learning');
+    const mentors = [...s.mentors]
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((m) => {
+        const caseload = [...s.youthMentors.values()].filter((id) => id === m.id).length;
+        const cohorts = s.programs
+          .filter((p) => p.status === 'Active')
+          .map((p) => ({ p, team: s.teams.get(p.id) }))
+          .filter(({ team }) => team && (team.lead === m.id || team.supporting.includes(m.id)))
+          .map(({ p, team }) => ({ programId: p.id, name: p.name, lead: team!.lead === m.id }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+        return {
+          membershipId: m.id,
+          name: m.name,
+          cohorts,
+          caseload,
+          checkIns: s.checkIns.filter((c) => c.organizationId === s.organizationId && c.mentorId === m.id && (!from || c.date > from)).length,
+          reviews: learningOn ? s.reviews.filter((r) => r.actor === m.name && (!from || r.at.slice(0, 10) >= from)).length : null,
+          load: caseload > 8 ? 'Overloaded' : caseload < 4 ? 'Underloaded' : 'Balanced',
+        };
+      });
+    return {
+      activeMentors: mentors.length,
+      checkIns: mentors.reduce((n, m) => n + m.checkIns, 0),
+      reviews: learningOn ? mentors.reduce((n, m) => n + (m.reviews ?? 0), 0) : null,
+      averageCaseload: mentors.length ? Math.round((mentors.reduce((n, m) => n + m.caseload, 0) / mentors.length) * 10) / 10 : 0,
+      mentors,
     };
   }
 

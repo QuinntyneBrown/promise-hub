@@ -1,6 +1,7 @@
 import type { Observable } from 'rxjs';
 import type { LoadResult } from '../load-result';
 import type { CohortReport } from './cohort-report';
+import type { StaffReport } from './staff-report';
 import type { YouthReport } from './youth-report';
 import type { Report } from './report';
 import type { ReportExport } from './report-export';
@@ -13,6 +14,8 @@ export interface ReportsApi {
   cohort(programId: string): Observable<LoadResult<CohortReport>>;
   /** The youth report of one child (L2-127). */
   youth(childId: string): Observable<LoadResult<YouthReport>>;
+  /** The staff activity report for the last 30 or 90 days, or all time (L2-128). */
+  staff(days: 30 | 90 | null): Observable<LoadResult<StaffReport>>;
   export(programId: string | null): Observable<LoadResult<ReportExport>>;
   /** Where the browser downloads an export from. */
   downloadUrl(id: string): string;

@@ -131,6 +131,52 @@ public sealed class DetailedReportsHandler(IPromiseHubDb db, LearnerProgress pro
             learning, attendance, mentoring);
     }
 
+    /// <summary>A mentor carrying more youth than this is overloaded; fewer than <see cref="UnderloadedBelow"/>, underloaded (Waypoint's target of 4 to 8).</summary>
+    public const int OverloadedAbove = 8;
+
+    public const int UnderloadedBelow = 4;
+
+    /// <summary>The staff activity report (L2-128): every active mentor of the organization; a period of 30 or 90 days, or all time.</summary>
+    public async Task<Gated<StaffReportDto>> StaffAsync(int? days, CancellationToken cancellationToken = default)
+    {
+        if (days is not (null or 30 or 90))
+        {
+            return Gated<StaffReportDto>.Invalid(new Dictionary<string, string> { ["days"] = "Choose 30 or 90 days, or all time." });
+        }
+        var learningOn = await modules.IsOnAsync(ModuleId.Learning, cancellationToken);
+        var from = days is { } d ? (await today.GetAsync(cancellationToken)).AddDays(-d) : (DateOnly?)null;
+        var mentors = (await db.Memberships.AsNoTracking()
+            .Where(m => m.Role == Role.Mentor && m.RemovedAt == null && m.DeactivatedAt == null).ToListAsync(cancellationToken))
+            .OrderBy(m => m.PersonName, StringComparer.CurrentCulture).ToList();
+        var teams = await (from c in db.CohortMentors.AsNoTracking()
+                           join p in db.Programs.AsNoTracking() on c.ProgramId equals p.Id
+                           where p.Status == ProgramStatus.Active
+                           select new { c.MentorMembershipId, c.ProgramId, p.Name, c.IsLead }).ToListAsync(cancellationToken);
+        var caseloads = (await db.YouthMentors.AsNoTracking().Select(y => y.MentorMembershipId).ToListAsync(cancellationToken))
+            .GroupBy(id => id).ToDictionary(g => g.Key, g => g.Count());
+        var checkIns = (await db.MentorCheckIns.AsNoTracking().Select(c => new { c.MentorMembershipId, c.Date }).ToListAsync(cancellationToken))
+            .Where(c => from is null || c.Date > from).GroupBy(c => c.MentorMembershipId).ToDictionary(g => g.Key, g => g.Count());
+        var reviews = new Dictionary<string, int>();
+        if (learningOn)
+        {
+            var since = from is { } f ? new DateTimeOffset(f.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero) : DateTimeOffset.MinValue;
+            reviews = (await db.SubmissionEvents.AsNoTracking()
+                    .Where(e => e.Kind == Domain.Learning.SubmissionEventKind.Accepted || e.Kind == Domain.Learning.SubmissionEventKind.RevisionRequested)
+                    .Select(e => new { e.ActorName, e.At }).ToListAsync(cancellationToken))
+                .Where(e => e.At >= since).GroupBy(e => e.ActorName).ToDictionary(g => g.Key, g => g.Count());
+        }
+        var rows = mentors.Select(m =>
+        {
+            var caseload = caseloads.GetValueOrDefault(m.Id);
+            return new MentorActivityRowDto(m.Id, m.PersonName,
+                [.. teams.Where(t => t.MentorMembershipId == m.Id).OrderBy(t => t.Name).Select(t => new StaffCohortDto(t.ProgramId, t.Name, t.IsLead))],
+                caseload, checkIns.GetValueOrDefault(m.Id), learningOn ? reviews.GetValueOrDefault(m.PersonName) : null,
+                caseload > OverloadedAbove ? "Overloaded" : caseload < UnderloadedBelow ? "Underloaded" : "Balanced");
+        }).ToList();
+        return Gated<StaffReportDto>.Found(new StaffReportDto(rows.Count, rows.Sum(r => r.CheckIns), learningOn ? rows.Sum(r => r.Reviews ?? 0) : null,
+            rows.Count == 0 ? 0 : Math.Round(rows.Average(r => r.Caseload), 1, MidpointRounding.AwayFromZero), rows));
+    }
+
     /// <summary>Done when every lesson is done and every required quiz passed, InProgress with some lessons done, else NotStarted.</summary>
     private static string ModuleState(ModuleStatus module) =>
         module.Lessons.Count > 0 && module.Complete ? "Done" : module.Done > 0 ? "InProgress" : "NotStarted";

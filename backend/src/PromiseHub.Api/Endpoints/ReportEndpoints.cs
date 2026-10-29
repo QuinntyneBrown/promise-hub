@@ -21,6 +21,8 @@ public static class ReportEndpoints
             await handler.CohortAsync(programId, ct) is { } report ? Results.Ok(report) : Results.NotFound());
         reports.MapGet("/youth/{childId:guid}", async (Guid childId, DetailedReportsHandler handler, CancellationToken ct) =>
             await handler.YouthAsync(childId, ct) is { } report ? Results.Ok(report) : Results.NotFound());
+        reports.MapGet("/staff", async (int? days, DetailedReportsHandler handler, CancellationToken ct) =>
+            (await handler.StaffAsync(days, ct)).ToHttp()).RequireModule(ModuleId.Mentoring);
         reports.MapPost("/exports", async (ExportReportCommand command, ReportsHandler handler, CancellationToken ct) =>
         {
             var created = await handler.ExportAsync(command, ct);

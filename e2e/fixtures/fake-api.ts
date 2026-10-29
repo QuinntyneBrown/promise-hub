@@ -2405,6 +2405,7 @@ export class FakeApi {
       /^\/api\/reports\/cohorts\/(?<id>[^/]+)$/,
       (route, p) => this.cohortReport(route, p["id"]!),
     ],
+    ["GET", /^\/api\/reports\/staff$/, (route) => this.staffReport(route)],
     [
       "GET",
       /^\/api\/reports\/youth\/(?<id>[^/]+)$/,
@@ -12757,7 +12758,40 @@ export class FakeApi {
         const id = this.youthMentors.get(childId);
         return memberships.find((x) => x.id === id)?.personName ?? null;
       },
+      mentors: this.activeMentors(org),
+      youthMentors: new Map(
+        [...this.youthMentors].filter(([, mentor]) =>
+          memberships.some((x) => x.id === mentor && x.organizationId === org),
+        ),
+      ),
+      teams: new Map(
+        [...this.cohortMentors].map(([programId, team]) => [
+          programId,
+          { lead: team.lead ?? null, supporting: team.supporting ?? [] },
+        ]),
+      ),
+      reviews: this.learningState.work
+        .all()
+        .flatMap((w) => w.history)
+        .filter((e) => e.kind === "Accepted" || e.kind === "RevisionRequested")
+        .map((e) => ({ actor: e.actor, at: e.at })),
+      today: TODAY,
     };
+  }
+
+  private async staffReport(route: Route): Promise<void> {
+    const m = await this.reportsCaller(route);
+    if (!m) return;
+    if (!this.modules.get(m.organizationId)!.includes("Mentoring"))
+      return route.fulfill({ status: 404 });
+    const raw = new URL(route.request().url()).searchParams.get("days");
+    const days = raw === null ? null : Number(raw);
+    if (days !== null && days !== 30 && days !== 90)
+      return route.fulfill({
+        status: 422,
+        json: { errors: { days: "Choose 30 or 90 days, or all time." } },
+      });
+    return route.fulfill({ json: this.reports.staff(this.reportSource(m), days) });
   }
 
   private async youthReport(route: Route, id: string): Promise<void> {

@@ -6,6 +6,7 @@ import { toLoad } from '../http-results';
 import { LoadResult } from '../load-result';
 import { CohortReport } from './cohort-report';
 import { Report } from './report';
+import { StaffReport } from './staff-report';
 import { YouthReport } from './youth-report';
 import { ReportExport } from './report-export';
 import { ReportsApi } from './reports-api';
@@ -27,6 +28,11 @@ export class HttpReportsApi implements ReportsApi {
 
   youth(childId: string): Observable<LoadResult<YouthReport>> {
     return toLoad(this.http.get<YouthReport>(`${this.baseUrl}/reports/youth/${childId}`));
+  }
+
+  staff(days: 30 | 90 | null): Observable<LoadResult<StaffReport>> {
+    const params = days ? new HttpParams().set('days', days) : undefined;
+    return toLoad(this.http.get<StaffReport>(`${this.baseUrl}/reports/staff`, { params }));
   }
 
   export(programId: string | null): Observable<LoadResult<ReportExport>> {
