@@ -1,0 +1,28 @@
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-gutter);
+}
+.form {
+  max-width: var(--layout-form-medium);
+}
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.meta {
+  color: var(--color-fg-muted);
+}

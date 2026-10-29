@@ -2,8 +2,10 @@
 
 | Design | Effort | Complete |
 |---|---|---|
-| configure-consent-policy | 1 day | 100% |
+| configure-consent-policy | 2 days | 90% |
+| configure-module-defaults | 5 days | 90% |
 | configure-modules | 4 days | 80% |
+| configure-organization-profile | 5 days | 90% |
 | enforce-module-gates | 5 days | 60% |
 | isolate-tenant-data | 5 days | 50% |
 | manage-organizations | 5 days | 80% |

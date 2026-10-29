@@ -43,7 +43,75 @@ public sealed class Organization
     /// <summary>The lower-case name in the public website's address (<c>/site/{slug}</c>); null until chosen (ADR 0043).</summary>
     public string? WebsiteSlug { get; private set; }
 
+    /// <summary>Where families and youth can write to the organization; null until given (L2-122).</summary>
+    public string? ContactEmail { get; private set; }
+
+    /// <summary>The stored logo's file-storage key; null until a logo is uploaded (L2-123, ADR 0050).</summary>
+    public string? LogoKey { get; private set; }
+
+    public string? LogoFileName { get; private set; }
+
+    public string? LogoContentType { get; private set; }
+
+    public DateTimeOffset? LogoUploadedAt { get; private set; }
+
+    public string? LogoUploadedBy { get; private set; }
+
+    public void AttachLogo(string key, string fileName, string contentType, DateTimeOffset at, string by)
+    {
+        LogoKey = key;
+        LogoFileName = fileName;
+        LogoContentType = contentType;
+        LogoUploadedAt = at;
+        LogoUploadedBy = by;
+    }
+
+    public void RemoveLogo()
+    {
+        LogoKey = null;
+        LogoFileName = null;
+        LogoContentType = null;
+        LogoUploadedAt = null;
+        LogoUploadedBy = null;
+    }
+
+    /// <summary>How often, in days, mentors check in with each youth (L2-125): 7, 14, 21 or 30.</summary>
+    public int MentorCheckInDays { get; private set; } = DefaultMentorCheckInDays;
+
+    public const int DefaultMentorCheckInDays = 14;
+
+    public static readonly IReadOnlyList<int> MentorCheckInCadences = [7, 14, 21, 30];
+
+    public void ChangeMentorCheckInDays(int days) => MentorCheckInDays = days;
+
+    /// <summary>Changes the profile kept on Settings › Organization (L2-122, ADR 0073); an empty contact email or phone is null.</summary>
+    public void ChangeDetails(string name, string city, string? contactEmail, string? phone, string timeZone)
+    {
+        Name = name;
+        City = city;
+        ContactEmail = contactEmail;
+        Phone = phone;
+        TimeZone = timeZone;
+    }
+
     public void ChangeWebsiteSlug(string slug) => WebsiteSlug = slug;
+
+    /// <summary>One line visitors read under the name on the public website (L2-126); null until written.</summary>
+    public string? WebsiteTagline { get; private set; }
+
+    /// <summary>What visitors read about the organization on the public website; optional.</summary>
+    public string? WebsiteAbout { get; private set; }
+
+    /// <summary>The email visitors see on the public website; optional.</summary>
+    public string? WebsiteEmail { get; private set; }
+
+    public void ChangeWebsiteProfile(string slug, string tagline, string? about, string? email)
+    {
+        WebsiteSlug = slug;
+        WebsiteTagline = tagline;
+        WebsiteAbout = about;
+        WebsiteEmail = email;
+    }
 
     public void Suspend(string reason, DateTimeOffset now)
     {

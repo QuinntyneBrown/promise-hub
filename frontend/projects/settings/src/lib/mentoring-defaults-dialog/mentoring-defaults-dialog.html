@@ -1,0 +1,30 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    title="Edit mentoring defaults"
+    description="Applies to every mentor at once. Saving is logged."
+    icon="mentoring"
+  >
+    <div class="stack">
+      @if (failed()) {
+        <ph-alert
+          tone="danger"
+          title="That didn’t go through"
+          text="Your mentoring defaults are unchanged. Try again."
+        />
+      }
+      <ph-select
+        inputId="checkin-days"
+        label="Mentors check in with each youth"
+        name="checkInEveryDays"
+        help="A youth with no mentor check-in from their mentor in this time shows under Check-ins due on the mentor’s dashboard."
+        [options]="cadences"
+        [error]="errors()['checkInEveryDays'] ?? null"
+        [(ngModel)]="days"
+      />
+    </div>
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Save defaults</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

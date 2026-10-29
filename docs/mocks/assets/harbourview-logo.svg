@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Harbourview Youth Collective logo">
+  <rect width="256" height="256" rx="40" fill="#0f3d5c"/>
+  <circle cx="128" cy="104" r="44" fill="#f5b942"/>
+  <path d="M24 168c26-18 52-18 78 0s52 18 78 0 36-14 52-6v54H24z" fill="#5fb7d4"/>
+  <path d="M24 196c26-14 52-14 78 0s52 14 78 0 36-10 52-4v28H24z" fill="#ffffff" opacity="0.85"/>
+</svg>

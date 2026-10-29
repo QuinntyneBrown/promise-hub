@@ -473,6 +473,27 @@ export interface FakeOnboarding {
   completed: boolean;
 }
 
+/** An organization's profile on Settings › Organization (L2-122). */
+interface FakeOrganizationDetails {
+  name: string;
+  city: string;
+  contactEmail: string | null;
+  phone: string | null;
+  timeZone: string;
+}
+
+/** Mirrors backend OrganizationTimeZones. */
+const FAKE_TIME_ZONES = [
+  "America/St_Johns",
+  "America/Halifax",
+  "America/Toronto",
+  "America/Winnipeg",
+  "America/Regina",
+  "America/Edmonton",
+  "America/Vancouver",
+  "America/Whitehorse",
+];
+
 export class FakeApi {
   readonly unrouted: string[] = [];
   private failures = new Map<string, number>();
@@ -670,7 +691,10 @@ export class FakeApi {
   /** Recovery codes left per person, and whether the other devices were signed out. */
   private recoveryCodes = new Map<string, number>();
   /** Saved profiles by membership (L2-117); a membership without one shows its seeded name. */
-  private readonly profiles = new Map<string, { name: string; mobile: string | null }>();
+  private readonly profiles = new Map<
+    string,
+    { name: string; mobile: string | null }
+  >();
   /** Display preferences by person (email), as saved on Display (L2-119, L2-120). */
   private readonly displays = new Map<string, FakeDisplay>();
   /** Passwords changed by their owner (L2-118), by email; everyone else signs in with the seeded one. */
@@ -759,6 +783,34 @@ export class FakeApi {
       { name: "Harbourview Youth Collective", city: "Hamilton, Ontario" },
     ],
   ]);
+  /** Profiles saved on Settings › Organization (L2-122), by organization; others show their seeded profile. */
+  private readonly organizationDetails = new Map<
+    string,
+    FakeOrganizationDetails
+  >();
+  /** How often mentors check in, in days, by organization (L2-125); 14 until changed. */
+  private readonly mentorCheckInDays = new Map<string, number>();
+  /** Website profiles saved on Settings › Organization (L2-126), by organization; the address starts as the seeded slug. */
+  private readonly websiteProfiles = new Map<
+    string,
+    {
+      slug: string;
+      tagline: string | null;
+      about: string | null;
+      contactEmail: string | null;
+    }
+  >();
+  /** Logos uploaded on Settings › Organization (L2-123), by organization. */
+  private readonly organizationLogos = new Map<
+    string,
+    {
+      fileName: string;
+      uploadedAt: string;
+      uploadedBy: string;
+      contentType: string;
+      bytes: Buffer;
+    }
+  >();
   /** Report exports by id: organization, file name and CSV. */
   private reportExports = new Map<
     string,
@@ -1257,6 +1309,11 @@ export class FakeApi {
   /** The audit entries recorded for a record type, oldest first. */
   auditOf(record: string): { who: string; action: string; summary: string }[] {
     return this.auditEntries.filter((e) => e.record === record);
+  }
+
+  /** Sets how often mentors check in, as Settings › Organization would (L2-125). */
+  setMentorCheckInDays(organizationId: string, days: number): void {
+    this.mentorCheckInDays.set(organizationId, days);
   }
 
   /** Sets the modules on for an organization, as Settings › Modules would. */
@@ -2230,6 +2287,31 @@ export class FakeApi {
       /^\/api\/settings\/organization$/,
       (route) => this.saveOrganizationProfile(route),
     ],
+    [
+      "POST",
+      /^\/api\/settings\/organization\/logo$/,
+      (route) => this.uploadOrganizationLogo(route),
+    ],
+    [
+      "GET",
+      /^\/api\/settings\/organization\/logo$/,
+      (route) => this.organizationLogo(route),
+    ],
+    [
+      "DELETE",
+      /^\/api\/settings\/organization\/logo$/,
+      (route) => this.removeOrganizationLogo(route),
+    ],
+    [
+      "GET",
+      /^\/api\/settings\/organization\/profile$/,
+      (route) => this.getOrganizationDetails(route),
+    ],
+    [
+      "PUT",
+      /^\/api\/settings\/organization\/profile$/,
+      (route) => this.saveOrganizationDetails(route),
+    ],
     ["GET", /^\/api\/settings\/privacy$/, (route) => this.getPrivacy(route)],
     [
       "GET",
@@ -2256,6 +2338,36 @@ export class FakeApi {
       "PUT",
       /^\/api\/settings\/consent$/,
       (route) => this.saveConsentPolicy(route),
+    ],
+    [
+      "GET",
+      /^\/api\/settings\/learning$/,
+      (route) => this.getConsentPolicy(route, "Learning"),
+    ],
+    [
+      "PUT",
+      /^\/api\/settings\/learning$/,
+      (route) => this.saveConsentPolicy(route, "Learning"),
+    ],
+    [
+      "GET",
+      /^\/api\/settings\/mentoring$/,
+      (route) => this.getMentoringSettings(route),
+    ],
+    [
+      "PUT",
+      /^\/api\/settings\/mentoring$/,
+      (route) => this.saveMentoringSettings(route),
+    ],
+    [
+      "GET",
+      /^\/api\/settings\/website$/,
+      (route) => this.getWebsiteProfile(route),
+    ],
+    [
+      "PUT",
+      /^\/api\/settings\/website$/,
+      (route) => this.saveWebsiteProfile(route),
     ],
     [
       "GET",
@@ -3013,7 +3125,7 @@ export class FakeApi {
         personName: this.profileOf(membership.id).name,
         role: membership.role,
         organizationId: organization.id,
-        organizationName: organization.name,
+        organizationName: this.organizationDetailsOf(organization.id).name,
         plan: organization.plan,
         modules: this.modules.get(organization.id),
         membershipId: membership.id,
@@ -3547,6 +3659,8 @@ export class FakeApi {
             m,
             scope.youth.map((c) => c.id),
           ),
+          checkInEveryDays: this.mentorCheckInDays.get(m.organizationId) ?? 14,
+          checkInsDue: this.mentorCheckInsDue(m, youth),
         },
       });
     }
@@ -3583,6 +3697,8 @@ export class FakeApi {
           m,
           scope.youth.map((c) => c.id),
         ),
+        checkInEveryDays: this.mentorCheckInDays.get(m.organizationId) ?? 14,
+        checkInsDue: this.mentorCheckInsDue(m, youth),
       },
     });
   }
@@ -4805,7 +4921,7 @@ export class FakeApi {
   /** GET /website/{slug}: anonymous; unknown, suspended and module-off all answer 404 (L2-005 criterion 7). */
   private async website(route: Route, slug: string): Promise<void> {
     const organization = organizations.find(
-      (o) => o.slug === slug.toLowerCase(),
+      (o) => this.websiteProfileOf(o.id).slug === slug.toLowerCase(),
     );
     if (
       !organization ||
@@ -4814,8 +4930,15 @@ export class FakeApi {
     ) {
       return route.fulfill({ status: 404 });
     }
+    const profile = this.websiteProfileOf(organization.id);
     return route.fulfill({
-      json: { name: organization.name, city: organization.city },
+      json: {
+        name: organization.name,
+        city: organization.city,
+        tagline: profile.tagline,
+        about: profile.about,
+        email: profile.contactEmail,
+      },
     });
   }
 
@@ -5304,7 +5427,9 @@ export class FakeApi {
   /** The name and mobile of a membership, as saved from its profile (L2-117). */
   profileOf(membershipId: string): { name: string; mobile: string | null } {
     const m = memberships.find((x) => x.id === membershipId)!;
-    return this.profiles.get(membershipId) ?? { name: m.personName, mobile: null };
+    return (
+      this.profiles.get(membershipId) ?? { name: m.personName, mobile: null }
+    );
   }
 
   /** Mirrors backend ProfileHandler: the active membership only; a youth's name is read-only; audited without values. */
@@ -5322,7 +5447,8 @@ export class FakeApi {
     if (!name) errors["name"] = "Enter your name.";
     else if (name.length > 100) errors["name"] = "Use at most 100 characters.";
     else if (m.role === "Youth" && name !== current.name)
-      errors["name"] = "Your name comes from your record. Ask staff to change it.";
+      errors["name"] =
+        "Your name comes from your record. Ask staff to change it.";
     if (mobile && mobile.replace(/\D/g, "").length !== 10)
       errors["mobile"] = "Include the area code, like 905-555-0101.";
     if (Object.keys(errors).length)
@@ -5342,7 +5468,13 @@ export class FakeApi {
 
   /** A person's display preferences; System, Default and motion on until saved (L2-119, L2-120). */
   displayOf(email: string): FakeDisplay {
-    return this.displays.get(email) ?? { theme: "system", textSize: "default", reduceMotion: false };
+    return (
+      this.displays.get(email) ?? {
+        theme: "system",
+        textSize: "default",
+        reduceMotion: false,
+      }
+    );
   }
 
   /** Mirrors backend DisplayPreferencesHandler: the caller's own, by person. */
@@ -5503,6 +5635,323 @@ export class FakeApi {
     return route.fulfill({ status: 204 });
   }
 
+  /** The organization's profile as saved on Settings › Organization, or as seeded (mirrors backend OrganizationProfileHandler). */
+  organizationDetailsOf(organizationId: string): FakeOrganizationDetails {
+    const org = organizations.find((o) => o.id === organizationId)!;
+    return (
+      this.organizationDetails.get(organizationId) ?? {
+        name: org.name,
+        city: org.city ?? "",
+        contactEmail: null,
+        phone:
+          organizationId === "org-northgate" ? "289-555-0190" : "905-555-0100",
+        timeZone: "America/Toronto",
+      }
+    );
+  }
+
+  private async getOrganizationDetails(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    const logo = this.organizationLogos.get(organizationId);
+    return route.fulfill({
+      json: {
+        ...this.organizationDetailsOf(organizationId),
+        hasLogo: !!logo,
+        logo: logo
+          ? {
+              fileName: logo.fileName,
+              uploadedAt: logo.uploadedAt,
+              uploadedBy: logo.uploadedBy,
+            }
+          : null,
+      },
+    });
+  }
+
+  /** An organization's website profile as saved, or its seeded address with nothing written. */
+  private websiteProfileOf(organizationId: string) {
+    const org = organizations.find((o) => o.id === organizationId)!;
+    return (
+      this.websiteProfiles.get(organizationId) ?? {
+        slug: org.slug ?? "",
+        tagline: null,
+        about: null,
+        contactEmail: null,
+      }
+    );
+  }
+
+  /** Mirrors backend WebsiteProfileHandler, behind the Public website module. */
+  private async getWebsiteProfile(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    if (!this.modules.get(organizationId)!.includes("PublicWebsite"))
+      return route.fulfill({ status: 404 });
+    return route.fulfill({ json: this.websiteProfileOf(organizationId) });
+  }
+
+  private async saveWebsiteProfile(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    if (!this.modules.get(organizationId)!.includes("PublicWebsite"))
+      return route.fulfill({ status: 404 });
+    const b = route.request().postDataJSON() as Record<string, string | null>;
+    const slug = (b["slug"] ?? "").trim();
+    const tagline = (b["tagline"] ?? "").trim();
+    const about = b["about"]?.trim() || null;
+    const contactEmail = b["contactEmail"]?.trim().toLowerCase() || null;
+    const errors: Record<string, string> = {};
+    if (!/^[a-z][a-z0-9-]{2,39}$/.test(slug))
+      errors["slug"] =
+        "Use 3 to 40 lowercase letters, numbers and hyphens, starting with a letter.";
+    else if (
+      organizations.some(
+        (o) =>
+          o.id !== organizationId && this.websiteProfileOf(o.id).slug === slug,
+      )
+    )
+      errors["slug"] =
+        "Another organization uses this address. Choose another.";
+    if (!tagline || tagline.length > 120)
+      errors["tagline"] = "Write a tagline of up to 120 characters.";
+    if (about && about.length > 1000)
+      errors["about"] = "Use at most 1,000 characters.";
+    if (contactEmail && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(contactEmail))
+      errors["contactEmail"] = "Enter an email like hello@example.org.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
+    this.websiteProfiles.set(organizationId, {
+      slug,
+      tagline,
+      about,
+      contactEmail,
+    });
+    const who = memberships.find((m) => m.id === this.membershipId)!.personName;
+    this.auditEntries.push({
+      organizationId,
+      when: NOW.toISOString(),
+      who,
+      action: "Updated",
+      record: "Organization",
+      summary: `Website profile at /site/${slug} saved by ${who}`,
+      device: null,
+    });
+    return route.fulfill({ status: 204 });
+  }
+
+  /** Mirrors backend MentoringSettingsHandler: 7, 14, 21 or 30 days, behind the Mentoring module. */
+  private async getMentoringSettings(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    if (!this.modules.get(organizationId)!.includes("Mentoring"))
+      return route.fulfill({ status: 404 });
+    return route.fulfill({
+      json: {
+        checkInEveryDays: this.mentorCheckInDays.get(organizationId) ?? 14,
+      },
+    });
+  }
+
+  private async saveMentoringSettings(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    if (!this.modules.get(organizationId)!.includes("Mentoring"))
+      return route.fulfill({ status: 404 });
+    const days = (
+      route.request().postDataJSON() as { checkInEveryDays?: number }
+    ).checkInEveryDays;
+    if (![7, 14, 21, 30].includes(days ?? 0))
+      return route.fulfill({
+        status: 422,
+        json: { errors: { checkInEveryDays: "Choose 7, 14, 21 or 30 days." } },
+      });
+    this.mentorCheckInDays.set(organizationId, days!);
+    const who = memberships.find((m) => m.id === this.membershipId)!.personName;
+    this.auditEntries.push({
+      organizationId,
+      when: NOW.toISOString(),
+      who,
+      action: "Updated",
+      record: "MentoringSettings",
+      summary: `Mentors check in every ${days} days, set by ${who}`,
+      device: null,
+    });
+    return route.fulfill({ status: 204 });
+  }
+
+  /** His youth with no mentor check-in from him within the cadence: never-checked-in first, then the oldest, then by name (L2-125). */
+  private mentorCheckInsDue(
+    m: Membership,
+    youth: { id: string; name: string }[],
+  ): { childId: string; youthName: string; lastCheckIn: string | null }[] {
+    const days = this.mentorCheckInDays.get(m.organizationId) ?? 14;
+    const cutoff = new Date(Date.parse(`${TODAY}T12:00:00Z`) - days * 86400000)
+      .toISOString()
+      .slice(0, 10);
+    return youth
+      .map((y) => {
+        const dates = this.mentorCheckIns.rows
+          .filter(
+            (r) =>
+              r.organizationId === m.organizationId &&
+              r.mentorId === m.id &&
+              r.childId === y.id,
+          )
+          .map((r) => r.date)
+          .sort();
+        return {
+          childId: y.id,
+          youthName: y.name,
+          lastCheckIn: dates.at(-1) ?? null,
+        };
+      })
+      .filter((y) => y.lastCheckIn === null || y.lastCheckIn <= cutoff)
+      .sort(
+        (a, b) =>
+          (a.lastCheckIn === null ? 0 : 1) - (b.lastCheckIn === null ? 0 : 1) ||
+          (a.lastCheckIn ?? "").localeCompare(b.lastCheckIn ?? "") ||
+          (a.youthName < b.youthName ? -1 : a.youthName > b.youthName ? 1 : 0),
+      );
+  }
+
+  /** Mirrors backend OrganizationLogoHandler: a PNG or JPEG by its first bytes, up to 1 MB. */
+  private async uploadOrganizationLogo(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    const body = route.request().postDataBuffer() ?? Buffer.alloc(0);
+    const text = body.toString("latin1");
+    const fileName = /filename="([^"]*)"/.exec(text)?.[1] ?? "";
+    const start = text.indexOf("\r\n\r\n", text.indexOf("filename=")) + 4;
+    const end = text.indexOf("\r\n--", start);
+    const bytes = body.subarray(start, end);
+    const png = bytes
+      .subarray(0, 8)
+      .equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+    const jpeg = bytes.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff]));
+    if (bytes.length < 1 || bytes.length > 1024 * 1024 || (!png && !jpeg))
+      return route.fulfill({
+        status: 422,
+        json: { errors: { file: "Choose a PNG or JPEG of up to 1 MB." } },
+      });
+    const who = memberships.find((m) => m.id === this.membershipId)!.personName;
+    const logo = {
+      fileName,
+      uploadedAt: NOW.toISOString(),
+      uploadedBy: who,
+      contentType: png ? "image/png" : "image/jpeg",
+      bytes: Buffer.from(bytes),
+    };
+    this.organizationLogos.set(organizationId, logo);
+    this.auditEntries.push({
+      organizationId,
+      when: NOW.toISOString(),
+      who,
+      action: "Created",
+      record: "OrganizationLogo",
+      summary: `Logo ${fileName} uploaded by ${who}`,
+      device: null,
+    });
+    return route.fulfill({
+      status: 201,
+      json: { fileName, uploadedAt: logo.uploadedAt, uploadedBy: who },
+    });
+  }
+
+  private async organizationLogo(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    const logo = this.organizationLogos.get(organizationId);
+    if (!logo) return route.fulfill({ status: 404 });
+    return route.fulfill({
+      status: 200,
+      contentType: logo.contentType,
+      body: logo.bytes,
+    });
+  }
+
+  private async removeOrganizationLogo(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    const logo = this.organizationLogos.get(organizationId);
+    if (!logo) return route.fulfill({ status: 404 });
+    this.organizationLogos.delete(organizationId);
+    const who = memberships.find((m) => m.id === this.membershipId)!.personName;
+    this.auditEntries.push({
+      organizationId,
+      when: NOW.toISOString(),
+      who,
+      action: "Deleted",
+      record: "OrganizationLogo",
+      summary: `Logo ${logo.fileName} removed by ${who}`,
+      device: null,
+    });
+    return route.fulfill({ status: 204 });
+  }
+
+  private async saveOrganizationDetails(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    const b = route
+      .request()
+      .postDataJSON() as Partial<FakeOrganizationDetails>;
+    const name = (b.name ?? "").trim();
+    const city = (b.city ?? "").trim();
+    const contactEmail = b.contactEmail?.trim().toLowerCase() || null;
+    const phone = b.phone?.trim() || null;
+    const timeZone = (b.timeZone ?? "").trim();
+    const errors: Record<string, string> = {};
+    const required = (value: string, field: string, empty: string) => {
+      if (!value) errors[field] = empty;
+      else if (value.length > 100)
+        errors[field] = "Use at most 100 characters.";
+    };
+    required(name, "name", "Enter your organization’s name.");
+    required(city, "city", "Enter the city you work in.");
+    if (contactEmail && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(contactEmail))
+      errors["contactEmail"] = "Enter an email like hello@example.org.";
+    if (phone && phone.replace(/\D/g, "").slice(-10).length !== 10)
+      errors["phone"] = "Include the area code, like 905-555-0100.";
+    if (!FAKE_TIME_ZONES.includes(timeZone))
+      errors["timeZone"] = "Choose a time zone from the list.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
+    const before = this.organizationDetailsOf(organizationId);
+    const after: FakeOrganizationDetails = {
+      name,
+      city,
+      contactEmail,
+      phone,
+      timeZone,
+    };
+    const labels: Record<keyof FakeOrganizationDetails, string> = {
+      name: "name",
+      city: "city",
+      contactEmail: "contact email",
+      phone: "phone",
+      timeZone: "time zone",
+    };
+    const changed = (Object.keys(labels) as (keyof FakeOrganizationDetails)[])
+      .filter((k) => before[k] !== after[k])
+      .map((k) => labels[k]);
+    this.organizationDetails.set(organizationId, after);
+    if (changed.length) {
+      const who = memberships.find(
+        (m) => m.id === this.membershipId,
+      )!.personName;
+      this.auditEntries.push({
+        organizationId,
+        when: NOW.toISOString(),
+        who,
+        action: "Updated",
+        record: "Organization",
+        summary: `Organization profile: ${changed.join(", ")} changed by ${who}`,
+        device: null,
+      });
+    }
+    return route.fulfill({ status: 204 });
+  }
+
   /** A request a guardian already sent (seeded as the API would store it). */
   askedForData(
     householdId: string,
@@ -5640,18 +6089,25 @@ export class FakeApi {
     );
   }
 
-  private async getConsentPolicy(route: Route): Promise<void> {
+  /** GET /settings/consent (Roster) and /settings/learning (Learning, L2-124): the one consent policy behind either module gate. */
+  private async getConsentPolicy(
+    route: Route,
+    module: ModuleId = "Roster",
+  ): Promise<void> {
     const organizationId = await this.settingsCaller(route);
     if (!organizationId) return;
-    if (!this.modules.get(organizationId)!.includes("Roster"))
+    if (!this.modules.get(organizationId)!.includes(module))
       return route.fulfill({ status: 404 });
     return route.fulfill({ json: this.consentPolicyOf(organizationId) });
   }
 
-  private async saveConsentPolicy(route: Route): Promise<void> {
+  private async saveConsentPolicy(
+    route: Route,
+    module: ModuleId = "Roster",
+  ): Promise<void> {
     const organizationId = await this.settingsCaller(route);
     if (!organizationId) return;
-    if (!this.modules.get(organizationId)!.includes("Roster"))
+    if (!this.modules.get(organizationId)!.includes(module))
       return route.fulfill({ status: 404 });
     const b = route.request().postDataJSON() as {
       consentAge: number;

@@ -76,3 +76,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0070](0070-people-are-memberships-deactivation-is-reversible-and-a-youth-account-follows-its-child.md) | People are memberships, deactivation is reversible, and a youth account follows its child |
 | [0071](0071-password-reset-serves-every-role-with-a-per-account-throttle-and-only-the-newest-link.md) | Password reset serves every role, with a per-account throttle and only the newest link |
 | [0072](0072-personal-settings-hang-off-your-account-display-belongs-to-the-person.md) | Personal settings hang off Your account; the profile belongs to the membership, display to the person |
+| [0073](0073-settings-open-on-organization-with-module-defaults-only-while-their-module-is-on.md) | Settings open on Organization; module defaults show only while their module is on |

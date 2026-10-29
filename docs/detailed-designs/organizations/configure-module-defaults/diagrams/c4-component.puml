@@ -1,0 +1,25 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Configure module defaults
+Container_Boundary(web, "Angular app") {
+  Component(page, "SettingsOrganizationPage", "settings", "Mentoring and Public website cards while on")
+  Component(md, "MentoringDefaultsDialog", "settings", "cadence")
+  Component(wp, "WebsiteProfileDialog", "settings", "address, tagline, about, email")
+  Component(dash, "MentorDashboardPage", "mentoring", "Check-ins due")
+  Component(client, "ORGANIZATION_SETTINGS_API / MENTORING_API", "api", "mentoring, website, dashboard")
+}
+Container_Boundary(api, "API") {
+  Component(gate, "RequireModule", "PromiseHub.Api/Modules", "404 while the module is off")
+  Component(ms, "MentoringSettingsHandler", "Application/Organizations", "7, 14, 21 or 30 days")
+  Component(ws, "WebsiteProfileHandler", "Application/Organizations", "address unique across organizations")
+  Component(mdh, "MentorDashboardHandler", "Application/Mentoring", "CheckInsDue")
+}
+Rel(page, md, "opens")
+Rel(page, wp, "opens")
+Rel(page, client, "mentoring(), website()")
+Rel(dash, client, "dashboard()")
+Rel(client, gate, "HTTP")
+Rel(gate, ms, "GET/PUT /settings/mentoring")
+Rel(gate, ws, "GET/PUT /settings/website")
+Rel(gate, mdh, "GET /mentoring/dashboard")
+@enduml

@@ -1,0 +1,11 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — Configure module defaults
+Person(admin, "Admin or program director", "Tom Nguyen")
+Person(mentor, "Mentor", "Daniel Osei")
+Person(visitor, "Visitor", "No account")
+System(ph, "PromiseHub", "Module defaults per organization")
+Rel(admin, ph, "Sets the check-in cadence and the website profile", "HTTPS")
+Rel(mentor, ph, "Sees Check-ins due", "HTTPS")
+Rel(visitor, ph, "Reads the public website", "HTTPS")
+@enduml

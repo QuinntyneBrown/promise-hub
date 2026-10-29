@@ -1,0 +1,23 @@
+@startuml
+title UML classes — Configure the organization profile
+class SettingsOrganizationPage { +load() +editProfile() +uploadLogo(file) +removeLogo() }
+class OrganizationProfileDialog { +save() -errors: Record<string,string> }
+interface OrganizationSettingsApi { +profile() +saveProfile(p) +uploadLogo(file) +removeLogo() +logoUrl() }
+class OrganizationProfileHandler { +GetAsync(): OrganizationProfileDto +SaveAsync(SaveOrganizationProfileRequest): Result }
+class OrganizationLogoHandler { +UploadAsync(fileName, length, stream) +OpenAsync() +RemoveAsync(): Result }
+class OrganizationTimeZones <<static>> { All: IReadOnlyList<string> }
+class Organization { Name City ContactEmail? Phone? TimeZone LogoKey? +ChangeDetails(...) +AttachLogo(...) +RemoveLogo() }
+interface ITenantContext { OrganizationId ActorName }
+interface IAuditWriter { +Record(AuditEvent) }
+interface IFileStore { +SaveAsync() +OpenReadAsync() +DeleteAsync() }
+SettingsOrganizationPage --> OrganizationSettingsApi
+OrganizationProfileDialog --> OrganizationSettingsApi
+SettingsOrganizationPage ..> OrganizationProfileDialog
+OrganizationProfileHandler --> Organization
+OrganizationProfileHandler ..> OrganizationTimeZones
+OrganizationProfileHandler --> ITenantContext
+OrganizationProfileHandler --> IAuditWriter
+OrganizationLogoHandler --> Organization
+OrganizationLogoHandler --> IFileStore
+OrganizationLogoHandler --> IAuditWriter
+@enduml

@@ -20,6 +20,7 @@ import {
   PhInlineMessage,
 } from '@promisehub/components';
 import { ConsentPolicyDialog } from '../consent-policy-dialog/consent-policy-dialog';
+import { ConsentPolicyDialogData } from '../consent-policy-dialog-data';
 import { SETTINGS_SECTIONS } from '../settings-sections';
 
 /** Settings › Privacy and data (mock: settings-privacy): the region, consent retention and guardian requests. */
@@ -113,7 +114,10 @@ export class SettingsPrivacyPage {
   /** Edits the consent age and wording in a dialog (dialog: consent-policy). */
   protected editConsent(policy: ConsentPolicy): void {
     this.dialogs
-      .open<boolean, ConsentPolicy, ConsentPolicyDialog>(ConsentPolicyDialog, policy)
+      .open<boolean, ConsentPolicyDialogData, ConsentPolicyDialog>(ConsentPolicyDialog, {
+        policy,
+        save: (p) => this.api.saveConsentPolicy(p),
+      })
       .closed.subscribe((saved) => {
         if (!saved) return;
         this.toasts.show({

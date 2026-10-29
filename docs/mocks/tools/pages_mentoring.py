@@ -51,7 +51,7 @@ def feed(rows) -> str:
 
 
 # ---------------------------------------------------------------- mentor-dashboard
-@screen("mentor-dashboard", "page", "Mentoring", route="/mentoring", reqs=["L2-063", "L2-065", R_MENTOR])
+@screen("mentor-dashboard", "page", "Mentoring", route="/mentoring", reqs=["L2-063", "L2-065", "L2-125", R_MENTOR])
 def mentor_dashboard(S):
     assign = btn("Assign work", "primary", icon_name="plus", data_href=dialog("assign-work"))
     hdr = page_header("Mentoring", "Welcome back, Daniel. Here’s how your youth are doing.",
@@ -59,8 +59,9 @@ def mentor_dashboard(S):
                       + btn("My youth", "", icon_name="users", href=page("mentor-youth")))
     hdr_no_learning = page_header("Mentoring", "Welcome back, Daniel. Here’s how your youth are doing.",
                                   btn("At-risk flags", "", icon_name="flag", href=page("mentor-flags")) + btn("Mentor check-ins", "", icon_name="message", href=page("mentor-check-in-history")) + btn("My youth", "", icon_name="users", href=page("mentor-youth")))
-    from pages_checkins import followups_card
-    follow = followups_card()
+    from pages_checkins import followups_card, checkins_due_card
+    due = checkins_due_card()
+    follow = followups_card() + due
     numbers = kpis([("My youth", "6", "Across 2 cohorts"), ("My cohorts", "2", "Lead mentor on 1"), ("Checked in this week", "4", "of your 6 youth")])
     youth = card(ul_list([youth_item(c, p, a) for c, p, a in MY_YOUTH[:5]], card=False, label="Your youth"),
                  title="My youth", tid="my-youth", cls="card--flush", footer=btn("View all 6", "ghost", href=page("mentor-youth")))
@@ -82,7 +83,9 @@ def mentor_dashboard(S):
     S.add("learning-off", "Learning is off: no Assign work and no Reviews, because there is nothing to assign or grade; everything else stays.", **KW,
           main=hdr_no_learning + numbers + f'<div class="split"><div class="stack">{youth}</div><div class="stack">{follow}{cohorts}{activity}</div></div>')
     S.add("no-follow-ups", "No mentor check-in of his has a follow-up date: the Follow-ups card says how to plan one.", **KW,
-          main=hdr + numbers + f'<div class="split"><div class="stack">{youth}</div><div class="stack">{followups_card([])}{cohorts}{activity}</div></div>')
+          main=hdr + numbers + f'<div class="split"><div class="stack">{youth}</div><div class="stack">{followups_card([])}{due}{cohorts}{activity}</div></div>')
+    S.add("no-check-ins-due", "Daniel has logged a mentor check-in with each of his youth in the last 14 days: Check-ins due says so.", **KW,
+          main=hdr + numbers + f'<div class="split"><div class="stack">{youth}</div><div class="stack">{followups_card()}{checkins_due_card([])}{cohorts}{activity}</div></div>')
     S.add("assigned", "Daniel just assigned Last in Line to After‑School Tutoring: a toast says how many youth it went to and when it’s due.", **KW,
           main=hdr + numbers + f'<div class="split"><div class="stack">{youth}</div><div class="stack">{follow}{cohorts}{activity}</div></div>',
           toast_html=toast_region(toast("success", "Work assigned", "Last in Line · 4 youth · Due Fri 13 Nov")))

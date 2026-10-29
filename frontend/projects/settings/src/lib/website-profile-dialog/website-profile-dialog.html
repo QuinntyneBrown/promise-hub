@@ -1,0 +1,62 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    title="Edit website profile"
+    description="Visitors see this without signing in. Saving is logged."
+    icon="globe"
+  >
+    <div class="stack">
+      @if (summary().length) {
+        <ph-error-summary title="Fix these to continue" [items]="summary()" />
+      }
+      @if (failed()) {
+        <ph-alert
+          tone="danger"
+          title="That didn’t go through"
+          text="Your website profile is unchanged. Try again."
+        />
+      }
+      <ph-text-field
+        inputId="site-slug"
+        label="Website address"
+        name="slug"
+        help="Your site is at /site/ and this name: 3 to 40 lowercase letters, numbers and hyphens. Changing it stops the old address working."
+        [error]="errors()['slug'] ?? null"
+        [(ngModel)]="slug"
+      />
+      <ph-text-field
+        inputId="site-tagline"
+        label="Tagline"
+        name="tagline"
+        help="One line under your name, up to 120 characters."
+        [error]="errors()['tagline'] ?? null"
+        [(ngModel)]="tagline"
+      />
+      <ph-textarea
+        inputId="site-about"
+        label="About"
+        name="about"
+        help="Up to 1,000 characters."
+        [rows]="4"
+        [optional]="true"
+        [count]="count()"
+        [error]="errors()['about'] ?? null"
+        [ngModel]="about()"
+        (ngModelChange)="about.set($event)"
+      />
+      <ph-text-field
+        inputId="site-email"
+        label="Public email"
+        name="contactEmail"
+        type="email"
+        help="Shown to visitors. Leave it empty to show none."
+        [optional]="true"
+        [error]="errors()['contactEmail'] ?? null"
+        [(ngModel)]="contactEmail"
+      />
+    </div>
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Save website profile</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

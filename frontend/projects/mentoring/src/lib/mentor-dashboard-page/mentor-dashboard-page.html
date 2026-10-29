@@ -115,6 +115,39 @@
             />
           }
         </ph-card>
+        <ph-card title="Check-ins due" [flush]="true">
+          @if (d.checkInsDue.length) {
+            <ph-list [label]="'Youth without a mentor check-in in ' + d.checkInEveryDays + ' days'">
+              @for (c of d.checkInsDue; track c.childId) {
+                <ph-list-item
+                  [title]="c.youthName"
+                  [meta]="checkInDueMeta(c)"
+                  [avatar]="c.youthName"
+                  avatarTint="peach"
+                  [link]="['/mentoring/youth', c.childId]"
+                >
+                  <ph-badge tone="warning">Due</ph-badge>
+                </ph-list-item>
+              }
+            </ph-list>
+          } @else {
+            <ph-empty-state
+              icon="check-circle"
+              title="No check-ins due"
+              [text]="
+                'You’ve logged a mentor check-in with each of your youth in the last ' +
+                d.checkInEveryDays +
+                ' days.'
+              "
+            />
+          }
+          @if (d.checkInsDue.length) {
+            <span phCardFooter
+              >Your organization asks for a mentor check-in every
+              {{ d.checkInEveryDays }} days.</span
+            >
+          }
+        </ph-card>
         @if (d.cohorts.length) {
           <ph-card title="My cohorts" [flush]="true">
             <ph-list label="Your cohorts">

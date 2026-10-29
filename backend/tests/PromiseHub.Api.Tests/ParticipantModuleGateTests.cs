@@ -90,7 +90,7 @@ public sealed class ParticipantModuleGateTests : IAsyncLifetime
         var site = await visitor.GetFromJsonAsync<JsonElement>("/website/harbourview");
         Assert.Equal("Harbourview Youth Collective", site.GetProperty("name").GetString());
         Assert.Equal("Hamilton, Ontario", site.GetProperty("city").GetString());
-        Assert.Equal(2, site.EnumerateObject().Count());
+        Assert.Equal(["name", "city", "tagline", "about", "email"], site.EnumerateObject().Select(p => p.Name));
         Assert.Equal(HttpStatusCode.NotFound, (await visitor.GetAsync("/website/northgate")).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await visitor.GetAsync("/website/nowhere")).StatusCode);
     }

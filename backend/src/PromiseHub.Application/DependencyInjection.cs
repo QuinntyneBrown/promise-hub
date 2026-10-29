@@ -61,6 +61,10 @@ public static class DependencyInjection
         services.AddScoped<Billing.PlanLimit>();
         services.AddScoped<PrivacyHandler>();
         services.AddScoped<ConsentPolicyHandler>();
+        services.AddScoped<OrganizationProfileHandler>();
+        services.AddScoped<OrganizationLogoHandler>();
+        services.AddScoped<MentoringSettingsHandler>();
+        services.AddScoped<WebsiteProfileHandler>();
         services.AddScoped<AccountHandler>();
         services.AddScoped<ProfileHandler>();
         services.AddScoped<ChangePasswordHandler>();

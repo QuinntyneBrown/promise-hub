@@ -1,0 +1,25 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Configure the organization profile
+Container_Boundary(web, "Angular app") {
+  Component(page, "SettingsOrganizationPage", "settings", "/settings/organization: Profile card")
+  Component(dialog, "OrganizationProfileDialog", "settings", "name, city, contact email, phone, time zone")
+  Component(client, "ORGANIZATION_SETTINGS_API", "api", "profile, saveProfile, uploadLogo, removeLogo")
+  Component(logo, "PhOrgLogo / PhFileUpload", "components", "logo or initials; drop zone")
+}
+Container_Boundary(api, "API") {
+  Component(ep, "SettingsEndpoints", "PromiseHub.Api", "/settings/organization/profile and /logo (ManageSettings)")
+  Component(profile, "OrganizationProfileHandler", "PromiseHub.Application/Organizations", "Validates, audits")
+  Component(logoh, "OrganizationLogoHandler", "PromiseHub.Application/Organizations", "PNG or JPEG, 1 MB, audits")
+  Component(org, "Organization", "PromiseHub.Domain/Organizations", "profile and logo columns")
+}
+Rel(page, dialog, "opens via PhDialogs")
+Rel(page, logo, "composes")
+Rel(page, client, "profile, uploadLogo, removeLogo")
+Rel(dialog, client, "saveProfile")
+Rel(client, ep, "HTTP")
+Rel(ep, profile, "GetAsync, SaveAsync")
+Rel(ep, logoh, "UploadAsync, OpenAsync, RemoveAsync")
+Rel(profile, org, "ChangeDetails (active organization only)")
+Rel(logoh, org, "AttachLogo, RemoveLogo")
+@enduml

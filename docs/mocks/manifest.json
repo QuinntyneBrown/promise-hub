@@ -513,27 +513,6 @@
       }
     },
     {
-      "id": "settings",
-      "kind": "page",
-      "title": "Settings",
-      "route": "/settings",
-      "requirements": [
-        "L1-015",
-        "L1-004"
-      ],
-      "states": [
-        "default",
-        "loading",
-        "error",
-        "invalid",
-        "submitting",
-        "success"
-      ],
-      "not_applicable": {
-        "empty": "Settings always have values."
-      }
-    },
-    {
       "id": "coverage",
       "kind": "page",
       "title": "Staff coverage",
@@ -1569,6 +1548,7 @@
       "requirements": [
         "L2-063",
         "L2-065",
+        "L2-125",
         "L1-024"
       ],
       "states": [
@@ -1579,6 +1559,7 @@
         "rollcall-off",
         "learning-off",
         "no-follow-ups",
+        "no-check-ins-due",
         "assigned",
         "forbidden"
       ]
@@ -2947,6 +2928,45 @@
         "empty": "There are always three themes and three text sizes.",
         "invalid": "Every choice is valid; a refused save shows the failed state.",
         "forbidden": "Everyone sets their own display."
+      }
+    },
+    {
+      "id": "settings-organization",
+      "kind": "page",
+      "title": "Organization",
+      "route": "/settings/organization",
+      "requirements": [
+        "L2-122",
+        "L2-123",
+        "L2-124",
+        "L2-125",
+        "L2-126",
+        "L2-001",
+        "L2-005",
+        "L2-007",
+        "L2-032",
+        "L2-035",
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "modules-off",
+        "no-logo",
+        "logo-uploading",
+        "logo-invalid",
+        "logo-failed",
+        "logo-saved",
+        "profile-saved",
+        "learning-saved",
+        "mentoring-saved",
+        "website-saved",
+        "loading",
+        "error",
+        "forbidden"
+      ],
+      "not_applicable": {
+        "empty": "An organization always has a name, city and time zone.",
+        "invalid": "Nothing is edited on the page; each dialog shows its own invalid state."
       }
     },
     {
@@ -4554,6 +4574,73 @@
         "busy",
         "failed"
       ]
+    },
+    {
+      "id": "organization-profile",
+      "kind": "dialog",
+      "title": "Edit organization profile",
+      "opens_from": "settings-organization",
+      "requirements": [
+        "L2-122",
+        "L2-001",
+        "L2-032",
+        "L2-035"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "success": "Saving closes the dialog: the page shows the toast (`settings-organization/profile-saved`)."
+      }
+    },
+    {
+      "id": "mentoring-defaults",
+      "kind": "dialog",
+      "title": "Edit mentoring defaults",
+      "opens_from": "settings-organization",
+      "requirements": [
+        "L2-125",
+        "L1-024",
+        "L2-005",
+        "L2-032",
+        "L2-035"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "invalid": "The choice is a list of four; any other value is refused by the server and shows the failed state.",
+        "success": "Saving closes the dialog: the page shows the toast (`settings-organization/mentoring-saved`)."
+      }
+    },
+    {
+      "id": "website-profile",
+      "kind": "dialog",
+      "title": "Edit website profile",
+      "opens_from": "settings-organization",
+      "requirements": [
+        "L2-126",
+        "L1-025",
+        "L2-005",
+        "L2-001",
+        "L2-032",
+        "L2-035"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "taken",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "success": "Saving closes the dialog: the page shows the toast (`settings-organization/website-saved`)."
+      }
     },
     {
       "id": "toast",

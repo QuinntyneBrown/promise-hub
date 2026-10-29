@@ -1,0 +1,15 @@
+@startuml
+!include <C4/C4_Container>
+title C4 containers — Configure module defaults
+Person(admin, "Admin")
+Person(mentor, "Mentor")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "Angular app", "Angular 22", "settings, mentoring, api, components")
+  Container(api, "API", ".NET 10 minimal APIs", "Module gates, permissions, handlers")
+  ContainerDb(db, "Database", "SQL (SQLite in tests)", "Organizations, ModuleConfigurations, MentorCheckIns, AuditEntries")
+}
+Rel(admin, web, "Uses", "HTTPS")
+Rel(mentor, web, "Uses", "HTTPS")
+Rel(web, api, "JSON over HTTPS with the session cookie")
+Rel(api, db, "EF Core")
+@enduml

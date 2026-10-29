@@ -1,0 +1,67 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog title="Edit organization profile" description="Saving is logged." icon="edit">
+    <div class="stack">
+      @if (summary().length) {
+        <ph-error-summary title="Fix these to continue" [items]="summary()" />
+      }
+      @if (failed()) {
+        <ph-alert
+          tone="danger"
+          title="That didn’t go through"
+          text="Your organization’s profile is unchanged. Try again."
+        />
+      }
+      <ph-text-field
+        inputId="org-name"
+        label="Organization name"
+        name="name"
+        help="Shown in the top bar, on guardian pages and in every message."
+        [error]="errors()['name'] ?? null"
+        [(ngModel)]="name"
+      />
+      <ph-text-field
+        inputId="org-city"
+        label="City"
+        name="city"
+        [error]="errors()['city'] ?? null"
+        [(ngModel)]="city"
+      />
+      <ph-text-field
+        inputId="org-email"
+        label="Contact email"
+        name="contactEmail"
+        type="email"
+        autocomplete="email"
+        help="Where families and youth can write to you."
+        [optional]="true"
+        [error]="errors()['contactEmail'] ?? null"
+        [(ngModel)]="contactEmail"
+      />
+      <ph-text-field
+        inputId="org-phone"
+        label="Phone"
+        name="phone"
+        type="tel"
+        inputmode="tel"
+        autocomplete="tel"
+        help="Shown on every guardian page."
+        [optional]="true"
+        [error]="errors()['phone'] ?? null"
+        [(ngModel)]="phone"
+      />
+      <ph-select
+        inputId="org-tz"
+        label="Time zone"
+        name="timeZone"
+        help="Today’s sessions, due dates and reminders follow it."
+        [options]="zones"
+        [error]="errors()['timeZone'] ?? null"
+        [(ngModel)]="timeZone"
+      />
+    </div>
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Save profile</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

@@ -9,7 +9,7 @@ namespace PromiseHub.Application.Mentoring;
 /// <summary>
 /// The mentor dashboard (L2-063): the mentor's youth and cohorts and, while Roll Call is on, how many of their youth were checked in during
 /// the last 7 days and the last five attendance changes of their youth at sessions that started in the last 14 days; and his follow-ups from
-/// his mentor check-ins (L2-090).
+/// his mentor check-ins (L2-090); and the youth due a mentor check-in under the organization's cadence (L2-125).
 /// </summary>
 public sealed class MentorDashboardHandler(IPromiseHubDb db, ITenantContext tenant, MentorScope scope, MentoredYouthReader reader, IModuleGate modules,
     OrganizationToday today, TimeProvider clock)
@@ -22,9 +22,11 @@ public sealed class MentorDashboardHandler(IPromiseHubDb db, ITenantContext tena
         var youth = await reader.ReadAsync(ids, cancellationToken);
         var cohorts = await CohortsAsync(cancellationToken);
         var followUps = await FollowUpsAsync(ids, youth, cancellationToken);
+        var cadence = await db.Organizations.AsNoTracking().Where(o => o.Id == tenant.OrganizationId).Select(o => o.MentorCheckInDays).SingleAsync(cancellationToken);
+        var due = await CheckInsDueAsync(ids, youth, cadence, cancellationToken);
         if (!await modules.IsOnAsync(ModuleId.RollCall, cancellationToken))
         {
-            return new MentorDashboardDto(youth, cohorts, null, null, followUps);
+            return new MentorDashboardDto(youth, cohorts, null, null, followUps, cadence, due);
         }
         var now = clock.GetUtcNow();
         var since = now.AddDays(-14);
@@ -46,7 +48,7 @@ public sealed class MentorDashboardHandler(IPromiseHubDb db, ITenantContext tena
                 _ => new MentorActivityDto(r.ChildId, names[r.ChildId], "CheckedIn", r.Session, r.CheckedInAt ?? r.StartsAt),
             })
             .OrderByDescending(a => a.At).Take(ActivityRows).ToList();
-        return new MentorDashboardDto(youth, cohorts, checkedIn, activity, followUps);
+        return new MentorDashboardDto(youth, cohorts, checkedIn, activity, followUps, cadence, due);
     }
 
     /// <summary>For each youth, his latest mentor check-in (by date, then when logged) when it has a follow-up date, soonest first (L2-090 criterion 6).</summary>
@@ -63,6 +65,25 @@ public sealed class MentorDashboardHandler(IPromiseHubDb db, ITenantContext tena
             .OrderBy(c => c.FollowUpOn).ThenBy(c => names[c.ChildId], StringComparer.Ordinal)
             .Select(c => new MentorFollowUpDto(c.ChildId, names[c.ChildId], c.FollowUpOn!.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
                 c.FollowUpOn < now))];
+    }
+
+    /// <summary>
+    /// His youth whose latest mentor check-in from him is dated on or before today minus the cadence, or who have none (L2-125 criterion 3):
+    /// never-checked-in first, then the oldest, then by name. Another mentor's check-ins never count.
+    /// </summary>
+    private async Task<IReadOnlyList<MentorCheckInDueDto>> CheckInsDueAsync(IReadOnlyList<Guid> ids, IReadOnlyList<MentoredYouthDto> youth, int cadence,
+        CancellationToken cancellationToken)
+    {
+        var me = tenant.MembershipId;
+        var latest = (await db.MentorCheckIns.AsNoTracking().Where(c => c.MentorMembershipId == me && ids.Contains(c.ChildId))
+                .Select(c => new { c.ChildId, c.Date }).ToListAsync(cancellationToken))
+            .GroupBy(c => c.ChildId).ToDictionary(g => g.Key, g => g.Max(c => c.Date));
+        var cutoff = (await today.GetAsync(cancellationToken)).AddDays(-cadence);
+        return [.. youth
+            .Select(y => new { y.Id, y.Name, Last = latest.TryGetValue(y.Id, out var d) ? d : (DateOnly?)null })
+            .Where(y => y.Last is null || y.Last <= cutoff)
+            .OrderBy(y => y.Last is null ? 0 : 1).ThenBy(y => y.Last).ThenBy(y => y.Name, StringComparer.Ordinal)
+            .Select(y => new MentorCheckInDueDto(y.Id, y.Name, y.Last?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)))];
     }
 
     private async Task<IReadOnlyList<MentorCohortSummaryDto>> CohortsAsync(CancellationToken cancellationToken)

@@ -113,7 +113,7 @@ def organizations(S):
     S.add("error", "Organizations failed to load.", nav="settings", user=T, unread=0, main=page_header("Organizations", "") + card(empty("We couldn’t load organizations", "Try again.", action=btn("Try again", "primary", icon_name="refresh"), error=True, icon_name="alert-triangle"), cls="card--flush"))
     S.add("no-results", "A search with no match.", nav="settings", user=T, unread=0, main=hdr + tb.replace('placeholder="Find an organization"', 'value="Kitchener"') +
           card(empty("No organization matches “Kitchener”", "Check the spelling.", action=btn("Clear search", "") + btn("Add organization", "primary", icon_name="plus", data_href=dialog("add-organization")), icon_name="search"), cls="card--flush"))
-    S.add("forbidden", "An organization admin opening the platform list.", nav="settings", user=M, main=page_header("Organizations", "") + card(empty("Platform admins only", "Your organization’s settings are under Settings.", action=btn("Open Settings", "", href=page("settings")), icon_name="lock"), cls="card--flush"))
+    S.add("forbidden", "An organization admin opening the platform list.", nav="settings", user=M, main=page_header("Organizations", "") + card(empty("Platform admins only", "Your organization’s settings are under Settings.", action=btn("Open Settings", "", href=page("settings-organization")), icon_name="lock"), cls="card--flush"))
 
 
 # ------------------------------------------------------------------ Switch organization (a person who covers two tenants)

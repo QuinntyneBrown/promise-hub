@@ -1,0 +1,142 @@
+<ph-page-header title="Organization" [subtitle]="subtitle()" />
+@switch (state()) {
+  @case ('forbidden') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="lock"
+        title="Admins set up the organization"
+        text="Ask an admin or a program director."
+      >
+        <ph-button link="/">Back to Today</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('error') {
+    <div class="stack">
+      <ph-tabs label="Settings sections" [links]="sections" />
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="warning"
+          tone="error"
+          title="We couldn’t load your organization’s settings"
+          text="Check your connection and try again."
+        >
+          <ph-button variant="primary" (click)="load()">Try again</ph-button>
+        </ph-empty-state>
+      </ph-card>
+    </div>
+  }
+  @case ('loading') {
+    <div class="stack" aria-busy="true" aria-label="Loading your organization’s settings">
+      <ph-tabs label="Settings sections" [links]="sections" />
+      <ph-skeleton shape="card" />
+    </div>
+  }
+  @default {
+    <div class="stack form">
+      <ph-tabs label="Settings sections" [links]="sections" />
+      @if (profile(); as p) {
+        <ph-card title="Profile">
+          <div class="card-body">
+            @if (p.logo; as logo) {
+              <div class="logo">
+                <ph-org-logo [name]="p.name" [src]="logoSrc()" />
+                <div class="logo-text">
+                  <strong>{{ logo.fileName }}</strong>
+                  <span class="meta">{{ logoMeta(logo) }}</span>
+                  <div>
+                    <ph-button
+                      size="sm"
+                      variant="ghost"
+                      icon="trash"
+                      [busy]="removing()"
+                      (click)="removeLogo()"
+                      >Remove logo</ph-button
+                    >
+                  </div>
+                </div>
+              </div>
+            } @else {
+              <div class="logo">
+                <ph-org-logo [name]="p.name" />
+              </div>
+            }
+            @if (logoFailed()) {
+              <ph-alert
+                tone="danger"
+                title="The upload didn’t finish"
+                text="Your logo is unchanged. Check your connection and choose the image again."
+              />
+            }
+            <ph-file-upload
+              inputId="logo-file"
+              [title]="p.logo ? 'Replace your logo' : 'Add your logo'"
+              text="A PNG or JPEG, square, up to 1 MB."
+              accept="image/png,image/jpeg"
+              buttonLabel="Choose image"
+              [busy]="uploading()"
+              [error]="logoError()"
+              (fileSelected)="uploadLogo($event)"
+            />
+            <ph-description-list [facts]="profileFacts(p)" />
+            <ph-inline-message>
+              The phone is on every guardian page. Today’s sessions and every date follow the time
+              zone.
+            </ph-inline-message>
+            <div>
+              <ph-button icon="edit" hasPopup="dialog" (click)="editProfile(p)"
+                >Edit profile</ph-button
+              >
+            </div>
+          </div>
+        </ph-card>
+      }
+      @if (learning(); as policy) {
+        <ph-card title="Learning">
+          <div class="card-body">
+            <ph-description-list [facts]="learningFacts(policy)" />
+            <ph-inline-message>
+              Youth under this age need a guardian’s consent before they use Learning.
+            </ph-inline-message>
+            <div>
+              <ph-button icon="edit" hasPopup="dialog" (click)="editConsent(policy)"
+                >Edit consent policy</ph-button
+              >
+            </div>
+          </div>
+        </ph-card>
+      }
+      @if (mentoring(); as m) {
+        <ph-card title="Mentoring">
+          <div class="card-body">
+            <ph-description-list [facts]="mentoringFacts(m)" />
+            <ph-inline-message>
+              A youth whose mentor hasn’t logged a mentor check-in in {{ m.checkInEveryDays }} days
+              shows under Check-ins due on that mentor’s dashboard.
+            </ph-inline-message>
+            <div>
+              <ph-button icon="edit" hasPopup="dialog" (click)="editMentoring(m)"
+                >Edit mentoring defaults</ph-button
+              >
+            </div>
+          </div>
+        </ph-card>
+      }
+      @if (website(); as w) {
+        <ph-card title="Public website">
+          <div class="card-body">
+            <ph-description-list [facts]="websiteFacts(w)" />
+            <ph-inline-message
+              >Visitors see these on your public website without signing in.</ph-inline-message
+            >
+            <div>
+              <ph-button icon="edit" hasPopup="dialog" (click)="editWebsite(w)"
+                >Edit website profile</ph-button
+              >
+            </div>
+          </div>
+        </ph-card>
+      }
+    </div>
+  }
+}

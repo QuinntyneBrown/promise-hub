@@ -510,7 +510,7 @@ NAV_STAFF = [
 ]
 NAV_SECONDARY = [
     ("incidents", "Incidents", "flag", "incidents"),
-    ("settings", "Settings", "settings", "settings"),
+    ("settings-organization", "Settings", "settings", "settings"),
 ]
 TABBAR = [("today", "Today", "home"), ("check-in", "Check-in", "clipboard"), ("families", "Families", "users"), ("events", "Events", "calendar")]
 
