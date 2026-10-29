@@ -1,0 +1,31 @@
+@startuml
+title UML sequence — Choose Not now or I'm not interested (L2-144 c4)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Guardian" as g
+box "Frontend — Angular app" #E0F2FE
+participant GuardianLearningBondPage as page
+participant LEARNING_BOND_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondGuardianEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant GuardianLearningBondHandler as h
+end box
+database "Database" as db
+g -> page : Not now | I'm not interested
+page -> client : choose(token, choice)
+client -> api : POST /g/learning-bond/{token}/choice
+api -> h : ChooseAsync (GuardianAccess, module gate and trust as on open)
+alt NotNow
+  h -> db : audit LearningBondDeclined; nothing else written
+  h --> page : 204; status stays Invited, the link keeps working
+else NotInterested
+  h -> db : LearningBondInvitation.DeclinedAt = now; audit LearningBondNotInterested
+  h --> page : 204; LearningBondStatus reads Not interested
+  note right of db : LearningBondReminderJob and follow-up texts skip a household whose invitation is declined
+end
+page -> g : confirmation alert
+@enduml

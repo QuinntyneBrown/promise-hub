@@ -1,0 +1,23 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Give and withdraw Learning Bond consent
+Container_Boundary(web, "Angular app") {
+  Component(page, "LearningBondConsentPage", "learning-bond", "boxes per child, typed name, Agree")
+  Component(dlg, "WithdrawLearningBondConsentDialog", "learning-bond", "what stops, what stays")
+  Component(client, "LEARNING_BOND_API", "api", "giveConsent, withdrawConsent")
+}
+Container_Boundary(api, "API") {
+  Component(ep, "LearningBondGuardianEndpoints", "PromiseHub.Api", "POST .../consents, DELETE .../consents/{id}")
+  Component(access, "GuardianAccess", "Application/Guardian", "scope and trusted device")
+  Component(h, "LearningBondConsentHandler", "Application/LearningBond", "GiveAsync, WithdrawAsync")
+  Component(texts, "LearningBondTexts", "Application/LearningBond", "wording by language and version")
+  Component(audit, "IAuditWriter", "Application/Audit", "ConsentGiven, ConsentWithdrawn")
+}
+Rel(page, client, "giveConsent")
+Rel(dlg, client, "withdrawConsent")
+Rel(client, ep, "POST, DELETE")
+Rel(ep, h, "GiveAsync, WithdrawAsync")
+Rel(h, access, "ResolveAsync")
+Rel(h, texts, "WordingVersion")
+Rel(h, audit, "Record")
+@enduml

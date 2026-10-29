@@ -1,0 +1,31 @@
+@startuml
+title UML sequence — Destruction job (L2-159 c4, L2-151 c5)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+box "Infrastructure" #FEF0C7
+participant JobRunnerHostedService as runner
+participant LearningBondDestructionJob as job
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant TenantScope as scope
+participant IAuditWriter as audit
+end box
+database "Database" as db
+runner -> job : Handle(payload, scope) daily, per organization
+job -> scope : LearningBond on and organization not suspended?
+alt module off or suspended
+  job --> runner : exits without effect
+else on
+  job -> db : claims whose every application is Received or Cancelled for 24 h or more
+  loop each such claim
+    job -> db : ChildSin.Ciphertext = null; Last3 kept
+    job -> db : when no claim of the household still needs it: LearningBondIntake.GuardianSin.Ciphertext = null
+    job -> audit : LearningBondSinDestroyed(claim id)
+  end
+  job -> db : LearningBondDocuments with SentAt older than 24 h: content deleted, name kept
+  job -> db : claims Paused or Started with no activity for 180 days -> Not completed; ciphertext nulled
+  job -> audit : LearningBondClaimClosed(claim id, reason Idle180Days)
+  job --> runner : done
+end
+@enduml

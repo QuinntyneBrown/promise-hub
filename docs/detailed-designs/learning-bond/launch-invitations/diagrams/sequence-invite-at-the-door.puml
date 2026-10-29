@@ -1,0 +1,45 @@
+@startuml
+title UML sequence — Staff invite a household at the door (L2-140 c4, c5)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Staff" as s
+box "Frontend — Angular app" #E0F2FE
+participant "Household Learning Bond card" as card
+participant InviteHouseholdDialog as dlg
+participant LEARNING_BOND_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant InviteHouseholdHandler as h
+participant LearningBondCoverage as cov
+participant LearningBondTexts as texts
+participant MessageWriter as mw
+participant IAuditWriter as audit
+end box
+database "Database" as db
+s -> card : opens household; the card shows "Not invited yet"
+s -> card : Invite to Learning Bond
+card -> dlg : open (SMS preview naming the child)
+s -> dlg : Send invitation
+dlg -> client : inviteHousehold(id)
+client -> api : POST /learning-bond/households/{id}/invitations (RequireModule; role in statusRoles)
+api -> h : HandleAsync(id)
+h -> db : household under the tenant filter; 404 if absent (L2-162)
+h -> cov : covered? else 404
+h -> db : LearningBondInvitation of the household in the last 7 days
+alt invited within 7 days
+  api --> dlg : 200 invitedAt; nothing sent (c5)
+  dlg -> s : "Invited {date}"
+else not invited
+  h -> texts : Invitation(language, sender, children, link)
+  h -> mw : Queue(MessageSource.LearningBond, one household, due now) (c4)
+  h -> db : LearningBondInvitation(household, now, channel)
+  h -> audit : Created on LearningBondInvitation (L2-032)
+  h -> db : SaveChanges
+  api --> dlg : 201
+  dlg -> s : toast "{household} invited" (learning-bond-staff-notice invited)
+end
+@enduml

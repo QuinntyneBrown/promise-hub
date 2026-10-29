@@ -1,0 +1,41 @@
+@startuml
+title UML sequence — Save the sender name (L2-139, L2-027)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Admin" as a
+box "Frontend — Angular app" #E0F2FE
+participant LearningBondInvitationPage as page
+participant LEARNING_BOND_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant GetInvitationHandler as get
+participant LearningBondTexts as texts
+participant SaveInvitationHandler as h
+participant IAuditWriter as audit
+end box
+database "Database" as db
+a -> page : opens learning-bond-invitation
+page -> client : getInvitation()
+client -> api : GET /learning-bond/invitation
+api -> get : HandleAsync()
+get -> db : SenderName; distinct household languages of the tenant
+get -> texts : Invitation(language, sender, sample children, link) per language in use
+api --> page : previews in English and Spanish with segment counts (L2-139 c1, L2-027)
+a -> page : types "Harbourview hbv.ph/join"; Save
+client -> api : PUT /learning-bond/invitation
+api -> h : HandleAsync
+h -> h : SenderNameRule: contains a link
+api --> page : 422 "Use 1 to 30 letters, numbers and spaces." (c3)
+a -> page : types "Harbourview After-School"; Save
+client -> api : PUT /learning-bond/invitation
+api -> h : HandleAsync
+h -> db : LearningBondSettings.SetSenderName
+h -> audit : Updated on LearningBondSettings: "SenderName" (c2, L2-032)
+h -> db : SaveChanges
+api --> page : 204
+page -> a : every preview shows the new name; the body stays fixed (c4)
+@enduml

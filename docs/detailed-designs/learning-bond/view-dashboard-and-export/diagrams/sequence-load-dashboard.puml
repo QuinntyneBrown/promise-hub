@@ -1,0 +1,40 @@
+@startuml
+title UML sequence — Load the dashboard (L2-141, L2-024, L2-033)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Program director" as d
+box "Frontend — Angular app" #E0F2FE
+participant LearningBondDashboardPage as page
+participant LEARNING_BOND_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant LearningBondDashboardHandler as h
+participant LearningBondCoverage as cov
+participant LearningBondFigures as fig
+end box
+database "Database" as db
+d -> page : opens learning-bond-dashboard
+page -> page : skeletons in the final layout (L2-141 c5)
+page -> client : getDashboard(program: all, period: all time)
+client -> api : GET /learning-bond/dashboard (RequireModule)
+api -> api : ViewReports? else 403 (c4)
+api -> h : HandleAsync(filter)
+h -> cov : covered programs of the tenant
+h -> db : invitations, consents, claims, applications in the period (tenant filter, one aggregate query each, L2-001)
+h -> fig : Compute(rows) overall and per program
+fig -> fig : Suppress a program under 5 households: "Fewer than 5", dollars null (c3, L2-024)
+alt nothing started
+  api --> page : all six figures 0
+  page -> d : "Families will appear here as they start." (c1)
+else claims under way
+  api --> page : six figures, each split Learning Bond and benefits; rows by program (c2)
+  page -> d : stats, table, filters by program and period
+end
+alt request fails
+  page -> d : Try again (c5)
+end
+@enduml

@@ -1,0 +1,30 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Gate the Learning Bond module
+Container_Boundary(web, "Angular app") {
+  Component(modules, "SettingsModulesPage", "settings", "switches, Needs Roster and Messages, inline 422 errors")
+  Component(hub, "SettingsLearningBondPage", "learning-bond", "agreement, coverage, invitation, launch cards")
+  Component(shell, "Shell routes", "promisehub", "lazy-loads learning-bond only while on; else redirects to Today")
+  Component(client, "LEARNING_BOND_API", "api", "getOverview")
+}
+Container_Boundary(api, "API") {
+  Component(modep, "ModuleEndpoints", "PromiseHub.Api", "GET, PUT /settings/modules")
+  Component(lbep, "LearningBondEndpoints", "PromiseHub.Api", "/learning-bond, RequireModule(LearningBond)")
+  Component(gep, "LearningBondGuardianEndpoints", "PromiseHub.Api", "/g/learning-bond/{token}")
+  Component(save, "SaveModulesHandler", "Application/Organizations", "ModuleRules.Check + LearningBondAgreementGate")
+  Component(agate, "LearningBondAgreementGate", "Application/LearningBond", "IsAcceptedAsync")
+  Component(mgate, "IModuleGate", "Application/Organizations", "IsOnAsync(LearningBond)")
+  Component(ga, "GuardianAccess", "Application/Guardian", "tenant from the link")
+  Component(overview, "GetLearningBondOverviewHandler", "Application/LearningBond", "counts and states only")
+}
+Rel(modules, modep, "PUT")
+Rel(modep, save, "HandleAsync")
+Rel(save, agate, "when turning Learning Bond on")
+Rel(hub, client, "getOverview")
+Rel(client, lbep, "GET /learning-bond/overview")
+Rel(lbep, mgate, "RequireModule")
+Rel(lbep, overview, "HandleAsync")
+Rel(gep, ga, "ResolveAsync")
+Rel(gep, mgate, "IsOnAsync after the link resolves")
+Rel(shell, modules, "configuration read once per session")
+@enduml

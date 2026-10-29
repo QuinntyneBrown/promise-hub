@@ -1,0 +1,52 @@
+@startuml
+title UML sequence — Agent reply with a tool call (L2-160, L2-027, L2-033)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Guardian" as g
+box "Frontend — Angular app" #E0F2FE
+participant "ph-agent-bubble" as bubble
+participant AgentFacade as facade
+participant LEARNING_BOND_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondGuardianEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant LearningBondAgent as agent
+participant AgentRedactor as redactor
+participant AgentTools as tools
+end box
+box "Backend — PromiseHub.Infrastructure" #FEF0C7
+participant ILanguageModel as llm
+end box
+database "Database" as db
+g -> bubble : "How much will Sofía get?"
+bubble -> facade : send(step Estimate, message)
+facade -> client : agent(token, request)
+client -> api : POST /g/learning-bond/{token}/agent
+api -> api : household by GuardianAccess, module on, else 404
+api -> agent : ReplyAsync(scope, request)
+agent -> db : children's first names and ages, statuses, computed estimates of this household
+agent -> redactor : Redact(message), Redact(context): no SIN, DOB, address, phone, email, income, documents (L2-160 c1)
+agent -> llm : CompleteAsync(step prompt, redacted context, five tools, 10 s)
+llm --> agent : ToolCall GetEstimate(childId)
+agent -> tools : GetEstimate(scope, childId)
+alt childId not in the link's household
+  tools --> agent : 404, audit Cross-household tool call (L2-160 c2)
+  agent --> api : declines in plain words
+else own child
+  tools -> db : LearningBondClaim estimate and rule version
+  tools --> agent : $1,700 from the rules (L2-160 c3)
+  agent -> llm : tool result
+  llm --> agent : text in the household's language
+  agent -> agent : cap at 60 words; amount equals the tool result, else fallback line (L2-160 c3, c6)
+  agent -> db : AgentMessage on the household's AgentConversation; audit Agent reply by step and tool, never content
+  agent --> api : AgentReplyDto
+end
+api --> facade : 200, first words within 3 s p95 (L2-033)
+facade -> bubble : reply in Spanish (L2-027)
+alt reply says it cannot answer
+  bubble -> g : I'd rather talk to someone (learning-bond-callback) (L2-160 c5)
+end
+@enduml

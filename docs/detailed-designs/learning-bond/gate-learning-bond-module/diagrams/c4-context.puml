@@ -1,0 +1,11 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — Gate the Learning Bond module
+Person(admin, "Admin", "Tom Nguyen")
+Person(guardian, "Guardian", "Carmen Rivera, from a text link")
+System(ph, "PromiseHub", "Modules per organization; Learning Bond off until accepted and turned on")
+System_Ext(vendor, "RESP provider or benefit program", "Sends webhooks about applications")
+Rel(admin, ph, "Turns Learning Bond on in Settings › Modules", "HTTPS")
+Rel(guardian, ph, "Opens /g/learning-bond/{token}", "HTTPS, no account")
+Rel(vendor, ph, "POST /learning-bond/webhooks/...", "signed")
+@enduml

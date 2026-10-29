@@ -1,0 +1,33 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — List and apply for benefits
+Container_Boundary(web, "Angular app") {
+  Component(list, "BenefitsPage", "learning-bond", "one state per benefit")
+  Component(doc, "BenefitDocumentDialog", "learning-bond", "upload the named document")
+  Component(review, "BenefitReviewPage", "learning-bond", "Edit per field, Submit to {program}, PDF form")
+  Component(client, "LEARNING_BOND_API", "api", "listBenefits, uploadBenefitDocument, submitApplication, markSent")
+}
+Container_Boundary(api, "API") {
+  Component(ep, "LearningBondGuardianEndpoints", "PromiseHub.Api", "/g/learning-bond/{token}/benefits, /applications/{id}")
+  Component(lh, "ListBenefitsHandler", "Application/LearningBond", "province, city, rules")
+  Component(eval, "BenefitRuleEvaluator", "Application/LearningBond", "state, estimate, version")
+  Component(uh, "UploadBenefitDocumentHandler", "Application/LearningBond", "one document, one application")
+  Component(sh, "SubmitApplicationHandler", "Application/LearningBond", "ReviewVersion, idempotent 202")
+  Component(chan, "IBenefitProgramChannel", "Application/LearningBond", "SubmitAsync")
+  Component(pdf, "IBenefitFormRenderer", "Infrastructure/LearningBond", "filled PDF")
+  Component(store, "IFileStore", "Infrastructure", "encrypted documents")
+}
+System_Ext(program, "Benefit program", "API or PDF form")
+Rel(list, client, "listBenefits")
+Rel(doc, client, "uploadBenefitDocument")
+Rel(review, client, "submitApplication, markSent")
+Rel(client, ep, "GET, POST, PATCH")
+Rel(ep, lh, "benefits")
+Rel(lh, eval, "Evaluate")
+Rel(ep, uh, "documents")
+Rel(uh, store, "Save")
+Rel(ep, sh, "submit")
+Rel(sh, chan, "SubmitAsync")
+Rel(sh, pdf, "Render")
+Rel(chan, program, "application")
+@enduml

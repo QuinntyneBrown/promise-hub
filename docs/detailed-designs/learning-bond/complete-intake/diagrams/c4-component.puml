@@ -1,0 +1,29 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Complete the intake
+Container_Boundary(web, "Angular app") {
+  Component(page, "LearningBondIntakePage", "learning-bond", "confirm record, two SIN fields, tax question")
+  Component(client, "LEARNING_BOND_API", "api", "getIntake, saveIntake, requestRecordFix")
+}
+Container_Boundary(api, "API") {
+  Component(ep, "LearningBondGuardianEndpoints", "PromiseHub.Api", "GET, PUT .../children/{childId}/intake")
+  Component(h, "LearningBondIntakeHandler", "Application/LearningBond", "GetAsync, SaveAsync, RequestRecordFixAsync")
+  Component(val, "SinValidator", "Domain/LearningBond", "9 digits, Luhn, first digit")
+  Component(cipher, "ILearningBondCipher", "Application/LearningBond", "Encrypt, Decrypt, Unavailable")
+  Component(redactor, "AgentRedactor", "Application/LearningBond", "strips 9-digit runs")
+  Component(audit, "IAuditWriter", "Application/Audit", "field names only")
+}
+Container_Boundary(infra, "Infrastructure") {
+  Component(impl, "LearningBondCipher", "Infrastructure/LearningBond", "AES-GCM, key from configuration or vault")
+  Component(job, "LearningBondDestructionJob", "Infrastructure/LearningBond", "daily per tenant")
+}
+Rel(page, client, "getIntake, saveIntake")
+Rel(client, ep, "GET, PUT")
+Rel(ep, h, "GetAsync, SaveAsync")
+Rel(h, val, "Check")
+Rel(h, cipher, "Encrypt")
+Rel(h, redactor, "Redact free text")
+Rel(h, audit, "Record")
+Rel(impl, cipher, "implements")
+Rel(job, audit, "Record destruction per claim")
+@enduml

@@ -1,0 +1,27 @@
+@startuml
+title UML classes — Open the guardian's Learning Bond page
+class GuardianLearningBondHandler { +OpenAsync(GuardianRequest): GuardianResult
++ChooseAsync(GuardianRequest, LearningBondChoice): GuardianResult }
+enum LearningBondChoice { NotNow
+NotInterested }
+class LearningBondInvitation { Id OrganizationId HouseholdId SentAt Channel DeclinedAt }
+class LearningBondSettings { OrganizationId Coverage ProgramIds StatusRoles SenderName }
+class LearningBondStatus <<domain service>> { +ForChild(claim, applications): ChildStatus
++ForHousehold(invitation, consents, claims): HouseholdStatus }
+class GuardianLearningBondDto <<record>> { Language Organization Explanation Children HouseholdStatus Consents Total }
+class ChildClaimDto <<record>> { ChildId FirstName Age Programs EstimateUpTo Status CanClaim SelfClaimNote }
+class LearningBondSummaryDto <<record>> { Sentence HouseholdStatus }
+class GuardianAccess
+interface IModuleGate
+class LearningBondAgent
+class GuardianHomeHandler
+GuardianLearningBondHandler --> GuardianAccess
+GuardianLearningBondHandler --> IModuleGate
+GuardianLearningBondHandler --> LearningBondStatus
+GuardianLearningBondHandler --> LearningBondAgent
+GuardianLearningBondHandler ..> LearningBondInvitation
+GuardianLearningBondHandler ..> LearningBondSettings
+GuardianLearningBondHandler ..> GuardianLearningBondDto
+GuardianLearningBondDto *-- ChildClaimDto
+GuardianHomeHandler ..> LearningBondSummaryDto
+@enduml

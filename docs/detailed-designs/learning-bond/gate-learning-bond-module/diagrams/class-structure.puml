@@ -1,0 +1,26 @@
+@startuml
+title UML classes — Gate the Learning Bond module
+enum ModuleId { Roster Slips RollCall QuickCards Pickup Messages Incidents Reports Learning Mentoring PublicWebsite LearningBond }
+class ModuleCatalog <<static>> { +Name(ModuleId): string
++Needs(ModuleId): ModuleId[]
++Suite: ModuleId[] }
+class ModuleConfiguration { Id OrganizationId On: ISet<ModuleId> UpdatedAt
++Set(on, at) }
+class ModuleRules <<static>> { +Check(on): ModuleViolation[] }
+class ModuleViolation <<record>> { Module Message }
+class SaveModulesHandler { +HandleAsync(on): SaveModulesResult }
+class LearningBondAgreementGate { +IsAcceptedAsync(): bool
++PendingVersionAsync(): int? }
+class LearningBondAgreement <<platform>> { Id Version EffectiveDate WhatWeCollect WhereItGoes WhatYourOrganizationSees }
+class LearningBondAgreementAcceptance { Id OrganizationId Version AcceptedBy MembershipId SignerTitle SignerEmail AcceptedAt }
+interface IModuleGate { +IsOnAsync(ModuleId): bool }
+class GuardianAccess { +ResolveAsync(GuardianRequest): GuardianScope? }
+class LearningBondOverviewDto <<record>> { AgreementVersion AcceptedBy AcceptedAt PendingVersion Coverage StatusRoles SenderName LaunchMode LaunchDate HouseholdsCovered }
+ModuleRules ..> ModuleCatalog
+SaveModulesHandler --> ModuleRules
+SaveModulesHandler --> LearningBondAgreementGate
+SaveModulesHandler ..> ModuleConfiguration
+LearningBondAgreementGate ..> LearningBondAgreement
+LearningBondAgreementGate ..> LearningBondAgreementAcceptance
+IModuleGate ..> ModuleConfiguration
+@enduml

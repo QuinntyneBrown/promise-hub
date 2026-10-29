@@ -1,0 +1,9 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — Offer the benefits check
+Person(guardian, "Guardian", "Carmen Rivera, from a text link, no account")
+System(ph, "PromiseHub", "Learning Bond module of one organization")
+System_Ext(sms, "SMS and email providers", "Deliver the link and the follow-ups")
+Rel(guardian, ph, "Accepts the offer, consents, answers three facts", "HTTPS")
+Rel(ph, sms, "Sends texts and emails")
+@enduml

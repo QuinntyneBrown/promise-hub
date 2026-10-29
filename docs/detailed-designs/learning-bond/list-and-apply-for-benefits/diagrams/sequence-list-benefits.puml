@@ -1,0 +1,47 @@
+@startuml
+title UML sequence — List benefits (L2-155, L2-156, L2-033)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Guardian" as g
+box "Frontend — Angular app" #E0F2FE
+participant BenefitsPage as page
+participant LEARNING_BOND_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondGuardianEndpoints as api
+participant BenefitsConsentFilter as filter
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant ListBenefitsHandler as h
+participant BenefitRuleEvaluator as eval
+end box
+box "Backend — PromiseHub.Infrastructure" #FEF0C7
+participant ILearningBondCipher as cipher
+end box
+database "Database" as db
+g -> page : opens learning-bond-benefits
+page -> client : listBenefits(token)
+client -> api : GET /g/learning-bond/{token}/benefits
+api -> filter : household resolved by GuardianAccess, module on, Benefits consent, else 404 or 403
+api -> h : HandleAsync
+h -> db : household province from its address; organization city from Settings › Organization
+h -> db : BenefitCatalogueEntry where Province matches and Municipality is null or equals the city (L2-155 c1)
+h -> db : LearningBondIntake facts, ChildBenefitsFact per child
+h -> cipher : Decrypt facts in memory only
+loop each entry
+  h -> eval : Evaluate(entry, facts, children not claimed by the other parent)
+  eval --> h : state, one-line reason, whole-dollar estimate; no formula reads "Amount varies" and counts $0 (L2-155 c2)
+  h -> db : BenefitEstimate with the entry's RuleVersion; earlier estimates keep theirs (L2-155 c4)
+end
+h -> db : audit Benefits checked naming the entries, never the amounts
+alt city matches no municipality
+  api --> page : 200 federal and provincial only, "We don't know local programs for {city} yet." (L2-155 c3)
+else
+  api --> page : 200 BenefitDto[] within 500 ms p95 (L2-033)
+end
+page -> g : Apply now, Need a document with Upload, or Not eligible with a reason; You already get these (L2-156 c1)
+alt every likely benefit already received
+  page -> g : "You're already getting every benefit we know about."; reminders still set (L2-156 c4)
+end
+@enduml

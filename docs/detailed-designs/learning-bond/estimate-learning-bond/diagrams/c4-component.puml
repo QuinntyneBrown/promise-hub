@@ -1,0 +1,21 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Estimate the Learning Bond
+Container_Boundary(web, "Angular app") {
+  Component(page, "LearningBondEstimatePage", "learning-bond", "one number, the explanation, Next")
+  Component(client, "LEARNING_BOND_API", "api", "getEstimate")
+}
+Container_Boundary(api, "API") {
+  Component(ep, "LearningBondGuardianEndpoints", "PromiseHub.Api", "GET .../children/{childId}/estimate")
+  Component(h, "LearningBondEstimateHandler", "Application/LearningBond", "GetAsync")
+  Component(rule, "LearningBondRule", "Domain/LearningBond", "Estimate(birthYear, currentYear)")
+  Component(agent, "LearningBondAgent", "Application/LearningBond", "GetEstimate tool reads the stored figure")
+  Component(audit, "IAuditWriter", "Application/Audit", "LearningBondEstimated")
+}
+Rel(page, client, "getEstimate")
+Rel(client, ep, "GET")
+Rel(ep, h, "GetAsync")
+Rel(h, rule, "Estimate")
+Rel(h, audit, "Record")
+Rel(agent, h, "stored estimate for the household's child")
+@enduml

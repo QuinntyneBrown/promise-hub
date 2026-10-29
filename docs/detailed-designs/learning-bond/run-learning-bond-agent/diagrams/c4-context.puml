@@ -1,0 +1,9 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — Run the Learning Bond agent
+Person(guardian, "Guardian", "Carmen Rivera, from a text link, no account")
+System(ph, "PromiseHub", "Learning Bond module of one organization; the agent and its tools")
+System_Ext(llm, "Language model", "Vendor behind ILanguageModel; sees redacted context only")
+Rel(guardian, ph, "Reads the agent's line, asks a question, acts on each page", "HTTPS")
+Rel(ph, llm, "Step prompt, language, first names, ages, statuses, computed figures; 10 s budget")
+@enduml

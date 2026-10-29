@@ -1,0 +1,13 @@
+@startuml
+!include <C4/C4_Container>
+title C4 containers — View the dashboard and export for funders
+Person(director, "Program director")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "Angular app", "Angular 22", "learning-bond (dashboard page, export dialog), api, components")
+  Container(api, "API", ".NET 10 minimal APIs", "GET /learning-bond/dashboard, POST /learning-bond/exports; RequireModule, ViewReports")
+  ContainerDb(db, "Database", "SQL (SQLite in tests)", "LearningBondInvitations, LearningBondConsents, LearningBondClaims, LearningBondApplications, ReportExports, AuditEntries")
+}
+Rel(director, web, "Uses", "HTTPS")
+Rel(web, api, "JSON over HTTPS; CSV download from the export link")
+Rel(api, db, "EF Core, tenant filter; aggregate queries")
+@enduml

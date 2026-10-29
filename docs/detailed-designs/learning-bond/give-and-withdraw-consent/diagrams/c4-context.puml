@@ -1,0 +1,9 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — Give and withdraw Learning Bond consent
+Person(guardian, "Guardian", "Carmen Rivera, consenting for Mateo")
+System(ph, "PromiseHub", "Learning Bond module of one organization")
+System_Ext(provider, "RESP provider", "Named in the wording; receives nothing at this step")
+Rel(guardian, ph, "Ticks a child, types a name, agrees or withdraws", "HTTPS, verified device")
+Rel(ph, provider, "Nothing until the guardian submits")
+@enduml

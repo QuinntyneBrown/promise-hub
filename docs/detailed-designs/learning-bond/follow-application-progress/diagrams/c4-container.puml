@@ -1,0 +1,21 @@
+@startuml
+!include <C4/C4_Container>
+title C4 containers — Follow the application's progress
+Person(guardian, "Guardian")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "Angular app", "Angular 22", "learning-bond, api, components")
+  Container(api, "API", ".NET 10 minimal APIs", "LearningBondEndpoints (webhook), LearningBondGuardianEndpoints, handlers, IWebhookSignatureVerifier")
+  Container(jobs, "Job runner", "Hosted service in the API process", "LearningBondReminderJob, LearningBondDestructionJob, message send job")
+  ContainerDb(db, "Database", "SQL (SQLite in tests)", "LearningBondApplications, LearningBondClaims, LearningBondDocuments, LearningBondReminders, Messages, AuditEntries")
+  Container(files, "File store", "IFileStore", "Encrypted document content until sent")
+}
+System_Ext(provider, "RESP provider", "Webhook source and document recipient")
+System_Ext(sms, "SMS provider", "Texts")
+Rel(guardian, web, "Uses", "HTTPS")
+Rel(web, api, "JSON over HTTPS, link token and device token")
+Rel(provider, api, "POST /learning-bond/webhooks/providers/{provider}, signed")
+Rel(api, db, "EF Core, tenant filter; webhook resolves the tenant from the application")
+Rel(api, files, "Encrypted upload")
+Rel(jobs, db, "Due reminders, idle claims, documents older than 24 h")
+Rel(jobs, sms, "Send job with SMS cap and STOP")
+@enduml

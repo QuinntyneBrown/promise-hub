@@ -1,0 +1,55 @@
+@startuml
+title UML sequence — Provider webhook (L2-150, L2-021, L2-022, L2-032)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+participant "RESP provider" as provider
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant ProviderWebhookHandler as h
+participant IWebhookSignatureVerifier as verifier
+participant TenantContext as tenant
+participant IModuleGate as gate
+participant MessageWriter as writer
+participant IAuditWriter as audit
+end box
+box "Infrastructure" #FEF0C7
+participant "Message send job" as send
+end box
+database "Database" as db
+provider -> api : POST /learning-bond/webhooks/providers/northfield {EventId, Reference, Kind, Amount}
+api -> h : HandleAsync
+h -> verifier : Verify(provider, headers, body)
+alt signature invalid
+  h --> provider : 401; nothing changes (L2-150 c3)
+else valid
+  h -> db : application by ProviderReference and provider, ignoring the tenant filter
+  alt unknown reference or another provider's application
+    h --> provider : 404; nothing changes (L2-150 c3)
+  else found
+    h -> tenant : ResolveForJob(application.OrganizationId)
+    h -> gate : LearningBond on for that organization?
+    alt module off
+      h --> provider : 404
+    else EventId already in AppliedEventIds
+      h --> provider : 200; nothing changes, no text (L2-150 c4)
+    else new event
+      alt Received
+        h -> db : status Received, ReceivedAt
+      else Deposited
+        h -> db : status Deposited, DepositedAt, DepositAmount (counts in dashboard and total, L2-150 c5)
+      else DocumentNeeded
+        h -> db : LearningBondDocument request with the name
+      end
+      h -> db : AppliedEventIds += EventId
+      h -> writer : Queue(MessageSource.LearningBond, LearningBondTexts line, household language)
+      note right of writer : skipped when consent is withdrawn or the invitation declined
+      h -> audit : LearningBondApplicationStatusChanged(application id, status); no amount in the entry for staff views
+      h --> provider : 200
+      send -> db : due message; SMS cap, STOP and email fallback apply (L2-021, L2-022)
+    end
+  end
+end
+@enduml

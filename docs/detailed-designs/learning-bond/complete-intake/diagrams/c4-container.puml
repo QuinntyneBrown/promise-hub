@@ -1,0 +1,17 @@
+@startuml
+!include <C4/C4_Container>
+title C4 containers — Complete the intake
+Person(guardian, "Guardian")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "Angular app", "Angular 22", "learning-bond, api, components")
+  Container(api, "API", ".NET 10 minimal APIs", "LearningBondGuardianEndpoints, LearningBondIntakeHandler, SinValidator, ILearningBondCipher, AgentRedactor")
+  Container(jobs, "Job runner", "Hosted service in the API process", "LearningBondDestructionJob, daily per tenant")
+  ContainerDb(db, "Database", "SQL (SQLite in tests)", "LearningBondIntakes, LearningBondClaims (ciphertext and Last3), LearningBondApplications, LearningBondDocuments, AuditEntries")
+}
+System_Ext(vault, "Key vault", "Learning Bond key")
+Rel(guardian, web, "Uses", "HTTPS")
+Rel(web, api, "JSON over HTTPS; a SIN travels once, inbound only")
+Rel(api, db, "EF Core, tenant filter; ciphertext only")
+Rel(api, vault, "Key read at startup or per call")
+Rel(jobs, db, "Nulls ciphertext 24 h after Received or Cancelled")
+@enduml

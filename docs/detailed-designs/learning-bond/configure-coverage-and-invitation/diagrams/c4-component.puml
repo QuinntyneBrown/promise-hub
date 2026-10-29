@@ -1,0 +1,27 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Configure coverage and the invitation
+Container_Boundary(web, "Angular app") {
+  Component(cov, "LearningBondCoveragePage", "learning-bond", "programs with counts, status roles")
+  Component(inv, "LearningBondInvitationPage", "learning-bond", "sender name, previews per language")
+  Component(client, "LEARNING_BOND_API", "api", "getSettings, saveSettings, getInvitation, saveInvitation")
+}
+Container_Boundary(api, "API") {
+  Component(ep, "LearningBondEndpoints", "PromiseHub.Api", "GET, PUT /learning-bond/settings; GET, PUT /learning-bond/invitation")
+  Component(gets, "GetLearningBondSettingsHandler", "Application/LearningBond", "coverage, roles, programs with counts")
+  Component(saves, "SaveLearningBondSettingsHandler", "Application/LearningBond", "422 rules, fixed roles, audit")
+  Component(coverage, "LearningBondCoverage", "Application/LearningBond", "covered households and children")
+  Component(geti, "GetInvitationHandler", "Application/LearningBond", "previews, segment counts")
+  Component(savei, "SaveInvitationHandler", "Application/LearningBond", "SenderNameRule, audit")
+  Component(texts, "LearningBondTexts", "Application/LearningBond", "fixed wording per language")
+}
+Rel(cov, client, "getSettings, saveSettings")
+Rel(inv, client, "getInvitation, saveInvitation")
+Rel(client, ep, "HTTPS")
+Rel(ep, gets, "HandleAsync")
+Rel(ep, saves, "HandleAsync")
+Rel(ep, geti, "HandleAsync")
+Rel(ep, savei, "HandleAsync")
+Rel(gets, coverage, "households per program")
+Rel(geti, texts, "wording for each language in use")
+@enduml

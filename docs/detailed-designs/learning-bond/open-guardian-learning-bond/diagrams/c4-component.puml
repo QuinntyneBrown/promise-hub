@@ -1,0 +1,25 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Open the guardian's Learning Bond page
+Container_Boundary(web, "Angular app") {
+  Component(page, "GuardianLearningBondPage", "learning-bond", "landing and returning view")
+  Component(home, "GuardianHomePage", "guardian", "Learning Bond card when present")
+  Component(client, "LEARNING_BOND_API", "api", "open, choose")
+}
+Container_Boundary(api, "API") {
+  Component(ep, "LearningBondGuardianEndpoints", "PromiseHub.Api", "GET /g/learning-bond/{token}, POST .../choice")
+  Component(access, "GuardianAccess", "Application/Guardian", "ResolveAsync: link, household, organization, trusted")
+  Component(gate, "IModuleGate", "Application/Organizations", "LearningBond on for the organization")
+  Component(h, "GuardianLearningBondHandler", "Application/LearningBond", "OpenAsync, ChooseAsync")
+  Component(status, "LearningBondStatus", "Domain/LearningBond", "computed status")
+  Component(agent, "LearningBondAgent", "Application/LearningBond", "ExplainStep(Welcome), AgentFallbackCopy")
+}
+Rel(page, client, "open, choose")
+Rel(home, client, "home card")
+Rel(client, ep, "GET, POST")
+Rel(ep, h, "OpenAsync, ChooseAsync")
+Rel(h, access, "ResolveAsync")
+Rel(h, gate, "IsOn")
+Rel(h, status, "ForChild, ForHousehold")
+Rel(h, agent, "ExplainStep")
+@enduml

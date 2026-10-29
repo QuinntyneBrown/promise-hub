@@ -1,0 +1,37 @@
+@startuml
+title UML sequence — A request while Learning Bond is off (L2-135 c5, L2-162, L2-005)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Guardian" as g
+actor "Staff" as s
+box "Frontend — Angular app" #E0F2FE
+participant "Shell routes" as shell
+participant LEARNING_BOND_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondEndpoints as lb
+participant LearningBondGuardianEndpoints as gep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant GuardianAccess as ga
+participant IModuleGate as gate
+end box
+database "Database" as db
+s -> shell : opens /learning-bond
+shell -> shell : Learning Bond not in the session's modules
+shell --> s : redirect to Today; library never downloaded (L2-005)
+s -> client : GET /learning-bond/households (direct call)
+client -> lb : request
+lb -> gate : RequireModule(LearningBond)
+gate -> db : ModuleConfiguration of the membership's organization (L2-001)
+gate --> lb : off
+lb --> client : 404, nothing read (L2-135 c5)
+g -> gep : GET /g/learning-bond/{token}
+gep -> ga : ResolveAsync(token)
+ga -> db : GuardianLink by hash; organization not suspended
+ga --> gep : scope in the link's organization (L2-162 c1)
+gep -> gate : IsOnAsync(LearningBond)
+gate --> gep : off
+gep --> g : 404 "Learning Bond isn't available"; nothing deleted (L2-162 c3)
+@enduml

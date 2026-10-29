@@ -1,0 +1,34 @@
+@startuml
+title UML classes — Complete the intake
+class LearningBondIntakeHandler { +GetAsync(GuardianRequest, childId): GuardianResult
++SaveAsync(GuardianRequest, childId, SaveIntakeRequest): GuardianResult
++RequestRecordFixAsync(GuardianRequest, childId, fields): GuardianResult }
+class SaveIntakeRequest <<record>> { GuardianSin ChildSin TaxFiled RecordConfirmed }
+class LearningBondIntakeDto <<record>> { ChildName ChildBirthDate GuardianSinLast3 ChildSinLast3 TaxFiled ReusedFromEarlierChild ResumeAt }
+class SinValidator <<domain service>> { +Check(text): SinCheck }
+enum SinCheck { Valid
+WrongLength
+FailsLuhn
+BadFirstDigit }
+class EncryptedSin <<value object>> { Ciphertext Last3
++Destroyed }
+interface ILearningBondCipher { +Encrypt(digits): CipherResult
++Decrypt(EncryptedSin): CipherResult }
+class CipherResult <<record>> { Value Unavailable }
+class AgentRedactor { +Redact(text): string }
+class LearningBondIntake { Id OrganizationId HouseholdId GuardianSin: EncryptedSin TaxFiled TaxYear }
+class LearningBondClaim { Id OrganizationId ChildId ChildSin: EncryptedSin Status PausedReason }
+class LearningBondDestructionJob { +Handle(payload, TenantScope) }
+LearningBondIntakeHandler ..> SaveIntakeRequest
+LearningBondIntakeHandler ..> LearningBondIntakeDto
+LearningBondIntakeHandler --> SinValidator
+LearningBondIntakeHandler --> ILearningBondCipher
+LearningBondIntakeHandler --> AgentRedactor
+LearningBondIntakeHandler ..> LearningBondIntake
+LearningBondIntakeHandler ..> LearningBondClaim
+LearningBondIntake *-- EncryptedSin
+LearningBondClaim *-- EncryptedSin
+ILearningBondCipher ..> CipherResult
+LearningBondDestructionJob ..> LearningBondIntake
+LearningBondDestructionJob ..> LearningBondClaim
+@enduml

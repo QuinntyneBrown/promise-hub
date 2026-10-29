@@ -1,0 +1,27 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Run the Learning Bond agent
+Container_Boundary(web, "Angular app") {
+  Component(bubble, "ph-agent-bubble", "components", "reply, hint, message field")
+  Component(facade, "AgentFacade", "learning-bond", "step, message, 10 s timeout, fallback")
+  Component(client, "LEARNING_BOND_API", "api", "agent(token, request)")
+}
+Container_Boundary(api, "API") {
+  Component(ep, "LearningBondGuardianEndpoints", "PromiseHub.Api", "POST /g/learning-bond/{token}/agent")
+  Component(agent, "LearningBondAgent", "Application/LearningBond", "ReplyAsync, 60-word cap")
+  Component(redactor, "AgentRedactor", "Application/LearningBond", "removes SIN, DOB, address, phone, email, income, documents")
+  Component(tools, "AgentTools", "Application/LearningBond", "GetStatus, GetEstimate, ListBenefits, ExplainStep, OfferCallback")
+  Component(fallback, "AgentFallbackCopy", "Application/LearningBond", "approved line per step and language")
+  Component(llm, "ILanguageModel", "Infrastructure/LearningBond", "CompleteAsync; FakeLanguageModel in tests")
+}
+System_Ext(vendor, "Language model", "Vendor API")
+Rel(bubble, facade, "send")
+Rel(facade, client, "agent")
+Rel(client, ep, "POST")
+Rel(ep, agent, "ReplyAsync")
+Rel(agent, redactor, "Redact context and message")
+Rel(agent, llm, "CompleteAsync, 10 s")
+Rel(agent, tools, "authorized against the link's household")
+Rel(agent, fallback, "on timeout or error")
+Rel(llm, vendor, "redacted prompt")
+@enduml

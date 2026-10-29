@@ -1,0 +1,28 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Offer the benefits check
+Container_Boundary(web, "Angular app") {
+  Component(offer, "BenefitsOfferCard", "learning-bond", "Check benefits, Not now")
+  Component(dlg, "BenefitsConsentDialog", "learning-bond", "wording, typed name")
+  Component(intake, "BenefitsIntakePage", "learning-bond", "three facts, custody branch")
+  Component(client, "LEARNING_BOND_API", "api", "giveConsent, declineBenefitsOffer, saveBenefitsIntake")
+}
+Container_Boundary(api, "API") {
+  Component(ep, "LearningBondGuardianEndpoints", "PromiseHub.Api", "/g/learning-bond/{token}/consents, /benefits/*")
+  Component(filter, "BenefitsConsentFilter", "PromiseHub.Api", "403 without a Benefits consent")
+  Component(consent, "GiveConsentHandler", "Application/LearningBond", "scope Benefits")
+  Component(decline, "DeclineBenefitsOfferHandler", "Application/LearningBond", "remembers Not now")
+  Component(save, "SaveBenefitsIntakeHandler", "Application/LearningBond", "422 per field, custody")
+  Component(cipher, "ILearningBondCipher", "Infrastructure/LearningBond", "encrypts the facts")
+}
+Rel(offer, dlg, "opens")
+Rel(offer, client, "declineBenefitsOffer")
+Rel(dlg, client, "giveConsent")
+Rel(intake, client, "saveBenefitsIntake")
+Rel(client, ep, "POST, PUT")
+Rel(ep, consent, "Benefits consent")
+Rel(ep, decline, "Not now")
+Rel(ep, filter, "benefits routes")
+Rel(filter, save, "intake")
+Rel(save, cipher, "Encrypt")
+@enduml

@@ -1,0 +1,11 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — Remind and total dollars
+Person(guardian, "Guardian", "Carmen Rivera, from a text link, no account")
+System(ph, "PromiseHub", "Learning Bond module of one organization")
+System_Ext(sms, "SMS and email providers", "Deliver reminders and the benefit-started text")
+System_Ext(program, "Benefit programs", "Report a started benefit by signed webhook")
+Rel(guardian, ph, "Reads reminders and the running total, turns reminders off", "HTTPS")
+Rel(ph, sms, "Sends one text or email per due reminder")
+Rel(program, ph, "POST /learning-bond/webhooks/programs/{program}", "signed")
+@enduml

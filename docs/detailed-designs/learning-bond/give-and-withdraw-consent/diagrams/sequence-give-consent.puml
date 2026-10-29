@@ -1,0 +1,39 @@
+@startuml
+title UML sequence — Give consent for a child (L2-145, L2-055)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Guardian" as g
+box "Frontend — Angular app" #E0F2FE
+participant LearningBondConsentPage as page
+participant LEARNING_BOND_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondGuardianEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant GuardianAccess as access
+participant LearningBondConsentHandler as h
+participant IAuditWriter as audit
+end box
+database "Database" as db
+g -> page : ticks Mateo, types "Carmen Rivera", Agree
+page -> client : giveConsent(token, {childIds, typedName, wordingVersion})
+client -> api : POST /g/learning-bond/{token}/consents
+api -> h : GiveAsync
+h -> access : ResolveAsync; module on; trusted device
+alt no child ticked or empty name
+  h --> page : 422 "Tick at least one child." / "Type your full name to sign."; nothing stored (L2-145 c3)
+else valid
+  h -> db : guardian is a Guardian of each ticked child's household
+  alt not a guardian of the child
+    h --> page : 403; nothing stored (L2-145 c5)
+  else guardian of the child
+    h -> db : LearningBondConsent(Mateo, scope LearningBond, typed name, wording version, language, now)
+    h -> db : LearningBondClaim(Mateo, Started)
+    h -> audit : LearningBondConsentGiven(child id, wording version, language)
+    h --> page : 201 LearningBondConsentDto[]; no record for Sofia (L2-145 c2)
+    page -> g : "Consent recorded for Mateo", Continue to the intake
+  end
+end
+@enduml

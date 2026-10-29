@@ -1,0 +1,29 @@
+@startuml
+title UML classes — Support families with status only
+enum HouseholdStatus { NotInvited Invited Started PausedNeedsSin PausedNeedsTaxReturn PausedNeedsDocument Submitted Deposited CallRequested NotCompleted NotInterested }
+class LearningBondCallRequest { Id OrganizationId HouseholdId Phone TimeOfDay RequestedAt Outcome? ResolvedAt? ResolvedBy?
++Resolve(outcome, by, at) }
+enum CallOutcome { Resumed NotInterested NoAnswer }
+enum TimeOfDay { Mornings Afternoons Evenings }
+class LearningBondHouseholdDto <<record>> { HouseholdId Name Guardian Language Programs Status ChangedAt CallRequest?: CallRequestDto }
+class CallRequestDto <<record>> { Phone TimeOfDay RequestedAt }
+class HouseholdsFilter <<record>> { Status? ProgramId? Query Page }
+class HouseholdsPageDto <<record>> { Items Total Covered Started Completed CallRequested }
+class CallbackRequest <<record>> { Phone TimeOfDay }
+class CallOutcomeRequest <<record>> { Outcome }
+class LearningBondStatus <<static>> { +Compute(invitations, consents, claims, applications, callRequest): HouseholdStatus
++ChangedAt(...): DateTimeOffset? }
+class StatusRolesPolicy { +AuthorizeAsync(role): bool }
+class LearningBondHouseholdsHandler { +HandleAsync(HouseholdsFilter): HouseholdsPageDto }
+class RequestCallbackHandler { +HandleAsync(GuardianScope, CallbackRequest): Result }
+class RecordCallOutcomeHandler { +HandleAsync(householdId, CallOutcomeRequest): Result }
+LearningBondCallRequest --> CallOutcome
+LearningBondCallRequest --> TimeOfDay
+LearningBondHouseholdDto --> HouseholdStatus
+LearningBondHouseholdsHandler --> StatusRolesPolicy
+LearningBondHouseholdsHandler --> LearningBondStatus
+LearningBondHouseholdsHandler ..> LearningBondHouseholdDto
+RequestCallbackHandler ..> LearningBondCallRequest
+RecordCallOutcomeHandler ..> LearningBondCallRequest
+RecordCallOutcomeHandler --> StatusRolesPolicy
+@enduml

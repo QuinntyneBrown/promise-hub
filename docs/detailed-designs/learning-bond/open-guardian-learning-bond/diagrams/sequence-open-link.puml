@@ -1,0 +1,46 @@
+@startuml
+title UML sequence — Open the invitation link (L2-144, L2-026, L2-005)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Guardian" as g
+box "Frontend — Angular app" #E0F2FE
+participant GuardianLearningBondPage as page
+participant LEARNING_BOND_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondGuardianEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant GuardianAccess as access
+participant IModuleGate as gate
+participant GuardianLearningBondHandler as h
+participant LearningBondAgent as agent
+end box
+database "Database" as db
+g -> page : taps the link
+page -> client : open(token, deviceToken)
+client -> api : GET /g/learning-bond/{token}
+api -> h : OpenAsync
+h -> access : ResolveAsync(link, device)
+access -> db : GuardianLink by hash, household, organization, trusted device (L2-026)
+alt revoked or unknown link, or organization suspended
+  h --> page : 410 link-expired body (L2-144 c5)
+else resolved
+  h -> gate : IsOn(LearningBond) for the organization
+  alt module off
+    h --> page : 404 unavailable (L2-005, L2-144 c5)
+  else module on, device not trusted
+    h --> page : verification-required; no child in the body (L2-144 c2)
+    page -> g : code step first
+  else module on, device trusted
+    h -> db : covered children under 18, claims, applications, invitation
+    h -> h : LearningBondStatus per child; 18 to 20 get the self-claim note; 21 and over dropped (L2-144 c6)
+    h -> agent : ExplainStep(Welcome, language)
+    agent --> h : three sentences, or AgentFallbackCopy after 10 s
+    h -> db : audit LearningBondPageOpened (household id only)
+    h --> page : GuardianLearningBondDto in the household's language (L2-027)
+    page -> g : children, Continue, Not now, I'm not interested
+  end
+end
+@enduml

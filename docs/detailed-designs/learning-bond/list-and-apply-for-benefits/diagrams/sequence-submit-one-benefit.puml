@@ -1,0 +1,59 @@
+@startuml
+title UML sequence — Submit one benefit (L2-156, L2-032)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Guardian" as g
+box "Frontend — Angular app" #E0F2FE
+participant BenefitReviewPage as page
+participant LEARNING_BOND_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondGuardianEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant SubmitApplicationHandler as h
+participant MarkSentHandler as ms
+end box
+box "Backend — PromiseHub.Infrastructure" #FEF0C7
+participant IBenefitProgramChannel as chan
+participant IBenefitFormRenderer as pdf
+participant ILearningBondCipher as cipher
+end box
+database "Database" as db
+g -> page : opens learning-bond-benefit-review; every field with Edit (L2-156 c2)
+alt API channel
+  g -> page : Submit to Ontario Child Benefit
+  page -> client : submitApplication(token, id, reviewVersion)
+  client -> api : POST /g/learning-bond/{token}/applications/{id}/submit
+  api -> api : household by GuardianAccess, module on, trusted device; another household's id answers 404
+  api -> h : HandleAsync
+  h -> db : application by id; ReviewVersion matches, else 409
+  alt idempotency key already recorded
+    h --> page : the same 202, nothing sent again
+  else first submit
+    h -> db : Status=Submitted, idempotency key, audit Submitted (L2-032)
+    h -> cipher : Decrypt fields and this application's documents in memory
+    h -> chan : SubmitAsync(application, its documents only) (L2-156 c3, c5)
+    alt refused or unreachable
+      chan --> h : failure
+      h -> db : Status=ReadyToSubmit
+      api --> page : 502 "We couldn't send it. Nothing was sent. Try again."
+    else accepted
+      chan --> h : program reference
+      api --> page : 202; "Sent Thu 5 Nov 2026, 4:41 pm"; reminders set
+    end
+  end
+else PDF form channel
+  page -> client : GET .../applications/{id}/form.pdf
+  api -> pdf : RenderAsync(application)
+  api --> page : the filled PDF with how to send it
+  g -> g : sends the form to the program
+  g -> page : Mark as sent
+  page -> client : markSent(token, id)
+  client -> api : POST .../applications/{id}/sent
+  api -> ms : HandleAsync
+  ms -> db : Status=Submitted on the guardian's act, audit Marked sent
+  api --> page : 200
+end
+@enduml

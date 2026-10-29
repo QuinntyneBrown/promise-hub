@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — Support families with status only
+Person(staff, "Staff in a status role", "Jaylen Brooks, site lead")
+Person(guardian, "Guardian", "Linh Tran, from the guardian page")
+System(ph, "PromiseHub", "Computes each household's Learning Bond status; routes call requests to staff")
+Rel(staff, ph, "Reads covered households and statuses; records call outcomes", "HTTPS")
+Rel(guardian, ph, "Asks for a call with a number and a time of day", "HTTPS, no account")
+Rel(staff, guardian, "Calls back; sees steps, never a SIN")
+@enduml

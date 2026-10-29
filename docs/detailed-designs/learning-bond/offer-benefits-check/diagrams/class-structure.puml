@@ -1,0 +1,28 @@
+@startuml
+title UML classes — Offer the benefits check
+enum ConsentScope { LearningBond Benefits }
+enum ClaimedBy { Me OtherParent Shared NotSure }
+class LearningBondConsent { Id OrganizationId HouseholdId ChildId? GuardianId Scope TypedName WordingVersion Language GivenAt WithdrawnAt? }
+class LearningBondIntake { Id OrganizationId HouseholdId GuardianSin: EncryptedSin TaxFiling HouseholdSize MaritalStatus ReceivesCanadaChildBenefit IncomeChanged BenefitsOfferDeclinedAt? }
+class ChildBenefitsFact { ChildId ClaimedBy CheckStopped }
+class BenefitsConsentRequest <<record>> { Scope TypedName }
+class BenefitsIntakeRequest <<record>> { HouseholdSize MaritalStatus ReceivesCanadaChildBenefit IncomeChanged ClaimedBy[] }
+class BenefitsIntakeDto <<record>> { HouseholdSize MaritalStatus ReceivesCanadaChildBenefit IncomeChanged StoppedChildren[] }
+class GiveConsentHandler { +HandleAsync(scope, BenefitsConsentRequest) }
+class DeclineBenefitsOfferHandler { +HandleAsync(scope) }
+class SaveBenefitsIntakeHandler { +HandleAsync(scope, BenefitsIntakeRequest): BenefitsIntakeDto }
+class BenefitsOfferPolicy { +Placement(household): OfferPlacement }
+interface ILearningBondCipher { +Encrypt(value) +Decrypt(ciphertext) }
+interface IAuditWriter { +Record(AuditEvent) }
+LearningBondConsent --> ConsentScope
+LearningBondIntake "1" *-- "0..*" ChildBenefitsFact
+ChildBenefitsFact --> ClaimedBy
+GiveConsentHandler ..> LearningBondConsent
+GiveConsentHandler --> IAuditWriter
+DeclineBenefitsOfferHandler ..> LearningBondIntake
+SaveBenefitsIntakeHandler ..> LearningBondIntake
+SaveBenefitsIntakeHandler --> ILearningBondCipher
+SaveBenefitsIntakeHandler --> IAuditWriter
+SaveBenefitsIntakeHandler ..> BenefitsIntakeDto
+BenefitsOfferPolicy ..> LearningBondConsent
+@enduml

@@ -1,0 +1,11 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — View the dashboard and export for funders
+Person(director, "Program director", "Marisol Vega")
+Person(funder, "Funder", "Receives the CSV outside PromiseHub")
+System(ph, "PromiseHub", "Aggregates Learning Bond figures per organization; suppresses small counts")
+System_Ext(vendor, "RESP provider or benefit program", "Reports deposits and started benefits by webhook")
+Rel(director, ph, "Reads the dashboard; exports for funders", "HTTPS")
+Rel(vendor, ph, "Deposited and started events", "signed webhooks")
+Rel(director, funder, "Sends the CSV")
+@enduml

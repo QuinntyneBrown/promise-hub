@@ -1,0 +1,17 @@
+@startuml
+!include <C4/C4_Container>
+title C4 containers — Accept the data-handling agreement
+Person(admin, "Admin")
+Person(signer, "Named signer")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "Angular app", "Angular 22", "learning-bond (agreement page, signer dialog, signer page), api, components")
+  Container(api, "API", ".NET 10 minimal APIs", "/learning-bond/agreement (ManageSettings), /sign/learning-bond/{token} (anonymous)")
+  ContainerDb(db, "Database", "SQL (SQLite in tests)", "LearningBondAgreements (platform), LearningBondAgreementAcceptances, LearningBondSignerRequests, Notifications, AuditEntries")
+}
+System_Ext(mail, "Email provider", "IEmailSender")
+Rel(admin, web, "Uses", "HTTPS")
+Rel(signer, web, "Opens the emailed link", "HTTPS")
+Rel(web, api, "JSON over HTTPS")
+Rel(api, db, "EF Core, tenant filter; the signer token is looked up across tenants by hash")
+Rel(api, mail, "Signer link; acceptance notice")
+@enduml
