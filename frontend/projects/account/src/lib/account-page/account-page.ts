@@ -1,5 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { ACCOUNT_API, Account, LoadResult, ROLE_LABELS, Role } from '@promisehub/api';
+import { toSignal } from '@angular/core/rxjs-interop';
+import {
+  ACCOUNT_API,
+  Account,
+  DisplayPreferences,
+  LoadResult,
+  ROLE_LABELS,
+  Role,
+  SESSION_API,
+} from '@promisehub/api';
 import {
   Fact,
   PhBadge,
@@ -12,10 +21,11 @@ import {
   PhSkeleton,
   ToastService,
 } from '@promisehub/components';
+import { ChangePasswordDialog } from '../change-password-dialog/change-password-dialog';
 import { RecoveryCodesDialog } from '../recovery-codes-dialog/recovery-codes-dialog';
 import { SignOutAllDialog } from '../sign-out-all-dialog/sign-out-all-dialog';
 
-/** Your account (mock: account): profile, two-step sign-in with recovery codes, and signing out other devices. */
+/** Your account (mock: account): the hub of personal settings: profile, password, display, two-step sign-in, notifications and devices. */
 @Component({
   selector: 'ph-account-page',
   imports: [PhBadge, PhButton, PhCard, PhDescriptionList, PhEmptyState, PhPageHeader, PhSkeleton],
@@ -28,7 +38,20 @@ export class AccountPage {
   private readonly dialogs = inject(PhDialogs);
   private readonly toasts = inject(ToastService);
 
+  private readonly session = toSignal(inject(SESSION_API).current());
+
   protected readonly result = signal<LoadResult<Account> | null>(null);
+
+  /** The saved display in words, such as “System theme · Default text · Motion on”. */
+  protected readonly displaySummary = computed(() => {
+    const d: DisplayPreferences = this.session()?.display ?? {
+      theme: 'system',
+      textSize: 'default',
+      reduceMotion: false,
+    };
+    const word = (v: string) => v.charAt(0).toUpperCase() + v.slice(1);
+    return `${word(d.theme)} theme · ${word(d.textSize)} text · Motion ${d.reduceMotion ? 'reduced' : 'on'}`;
+  });
   protected readonly account = computed(() => {
     const r = this.result();
     return r?.status === 'loaded' ? r.value : null;
@@ -59,6 +82,19 @@ export class AccountPage {
     this.dialogs
       .open<boolean, void, RecoveryCodesDialog>(RecoveryCodesDialog)
       .closed.subscribe(() => this.load());
+  }
+
+  protected changePassword(): void {
+    this.dialogs
+      .open<boolean, void, ChangePasswordDialog>(ChangePasswordDialog)
+      .closed.subscribe((done) => {
+        if (done)
+          this.toasts.show({
+            tone: 'success',
+            title: 'Password changed',
+            text: 'Your other devices were signed out.',
+          });
+      });
   }
 
   protected signOutOthers(): void {

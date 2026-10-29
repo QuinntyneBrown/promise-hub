@@ -1,0 +1,17 @@
+@startuml
+title UML classes — Configure display preferences
+class DisplayPage { -saved: DisplayPreferences -choice: DisplayPreferences +pick() +save() +ngOnDestroy() }
+class PhDisplayRoot { +apply(DisplaySettings) +reset() }
+interface DisplaySettings { theme textSize reduceMotion }
+interface DisplayApi { +load(): LoadResult<DisplayPreferences> +save(DisplayPreferences): WriteOutcome }
+class DisplayPreferencesHandler { +GetAsync(userId): DisplayPreferencesDto +SaveAsync(userId, request): Result }
+class DisplayPreferencesDto <<record>> { Theme TextSize ReduceMotion }
+class DisplayOptions <<static>> { Themes TextSizes }
+class StaffUser { Theme: string TextSize: string ReduceMotion: bool +ChangeDisplay(theme, size, reduce) }
+DisplayPage --> DisplayApi
+DisplayPage --> PhDisplayRoot
+PhDisplayRoot ..> DisplaySettings
+DisplayPreferencesHandler --> StaffUser
+DisplayPreferencesHandler ..> DisplayOptions
+DisplayPreferencesHandler ..> DisplayPreferencesDto
+@enduml

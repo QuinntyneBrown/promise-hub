@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, map, of, shareReplay } from 'rxjs';
+import { Observable, Subject, catchError, map, of, shareReplay } from 'rxjs';
 import { API_BASE_URL } from '../api-base-url';
 import { toWrite } from '../http-results';
 import { WriteOutcome } from '../write-outcome';
@@ -13,6 +13,8 @@ export class HttpSessionApi implements SessionApi {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL);
   private session$: Observable<Session> | null = null;
+  private readonly refreshed = new Subject<void>();
+  readonly changed = this.refreshed.asObservable();
 
   current(): Observable<Session> {
     this.session$ ??= this.http
@@ -36,5 +38,10 @@ export class HttpSessionApi implements SessionApi {
 
   reset(): void {
     this.session$ = null;
+  }
+
+  refresh(): void {
+    this.session$ = null;
+    this.refreshed.next();
   }
 }

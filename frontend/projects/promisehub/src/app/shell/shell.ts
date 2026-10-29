@@ -15,11 +15,12 @@ import {
 import {
   NavDrawerService,
   OrgOption,
+  PhDisplayRoot,
   PhBottomNavigation,
   PhSkipLink,
   PhTopBar,
 } from '@promisehub/components';
-import { EMPTY, catchError, filter, map, merge, startWith, switchMap } from 'rxjs';
+import { EMPTY, catchError, filter, map, merge, startWith, switchMap, tap } from 'rxjs';
 import { navigationFor } from './navigation';
 
 /** The staff shell: skip link, top bar, main, phone tab bar and the More drawer. */
@@ -37,11 +38,19 @@ export class Shell {
   private readonly notifications = inject(NOTIFICATIONS_API);
   private readonly sessions = inject(SESSION_API);
   private readonly document = inject(DOCUMENT);
+  private readonly displayRoot = inject(PhDisplayRoot);
 
   protected readonly menuOpen = signal(false);
   protected readonly session = toSignal(
-    inject(SESSION_API)
-      .current()
+    this.sessions.changed
+      .pipe(
+        startWith(null),
+        switchMap(() => this.sessions.current()),
+        // The person's saved theme, text size and motion apply to every page (L2-119, L2-120).
+        tap((s) => {
+          if (s.display) this.displayRoot.apply(s.display);
+        }),
+      )
       .pipe(
         catchError((error: HttpErrorResponse) => {
           if (error.status !== 401) {
@@ -108,7 +117,10 @@ export class Shell {
   }
 
   protected signOut(): void {
-    this.auth.signOut().subscribe(() => void this.router.navigateByUrl('/signed-out'));
+    this.auth.signOut().subscribe(() => {
+      // Signed-out pages follow the device again (L2-120 criterion 6).
+      void this.router.navigateByUrl('/signed-out').then(() => this.displayRoot.reset());
+    });
   }
 
   /** Only sections whose module is on (L2-005) and that serve the role (L2-038, ADR 0043). */

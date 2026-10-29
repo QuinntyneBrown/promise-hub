@@ -160,28 +160,7 @@ def billing(S):
     S.add("payment-failed", "The card was declined: a grace period, no lockout.", nav="settings", user=T, main=hdr + alert("danger", "Payment didn’t go through", "Visa ···· 4242 declined 1 Nov. Retry 8 Nov; service continues 14 days.", actions=btn("Update card", "primary", size="sm", icon_name="credit-card", data_href=dialog("change-plan"))) + f'<div class="split">{plan}{meter()}</div>')
 
 
-# ------------------------------------------------------------------ Account
-@screen("account", "page", "Your account", route="/account", reqs=[R_SEC], na={"empty": "An account always has a profile."})
-def account(S):
-    def form(err=None, busy=False, saved=False, mfa=True):
-        e = err or {}
-        return (f'<form class="stack form-width--md" action="#" method="post" novalidate>' + (form_summary([(k, m) for k, m in e.items()]) if e else "")
-                + card(f'<div class="cluster">{avatar(J, "lg")}<div><div class="section-title">Jaylen Okafor</div><div class="text-muted">Site lead · After‑School Tutoring, Saturday Sports</div></div></div>'
-                       + field("name", "Name", value="Jaylen Okafor", required=True) + field("email", "Email", type_="email", value="jaylen@harbourview.example", error=e.get("email", "")) + field("phone", "Mobile", type_="tel", value="905-555-0181"), title="Profile", tid="profile")
-                + card(field("pw1", "New password", type_="password", error=e.get("pw1", ""), help_="At least 12 characters.", autocomplete="new-password") + field("pw2", "Repeat it", type_="password", error=e.get("pw2", ""), autocomplete="new-password"), title="Password", tid="pw")
-                + card((f'<div class="cluster cluster--between"><div><div class="section-title">Authenticator app</div><div class="text-muted">Added Tue 2 Sep 2026 · required for admins</div></div>{badge("On", "success")}</div><div class="cluster" style="margin-top: var(--space-3);">{btn("Show recovery codes", "", icon_name="key", data_href=dialog("recovery-codes"))}{btn("Turn off", "ghost", data_href=dialog("recovery-codes"))}</div>' if mfa else
-                        f'<p class="text-muted">Takes two minutes with any authenticator app.</p><div class="cluster" style="margin-top: var(--space-3);">{btn("Set up two-step sign-in", "primary", icon_name="shield", data_href=dialog("recovery-codes"))}</div>'), title="Two-step sign-in", tid="mfa")
-                + card(f'<p class="text-muted">Choose which kinds of notification reach you in the app.</p><div class="cluster" style="margin-top: var(--space-3);">{btn("Choose notifications", "", icon_name="bell", href=page("account-notifications"))}</div>', title="Notifications", tid="notif")
-                + card(ul_list([list_item("Fall on the stairs · Jordan Thompson", "Today, 5:52 pm · needs review", lead=f'<span class="icon-tile icon-tile--sm" aria-hidden="true">{icon("flag", "icon--sm")}</span>', href=page("incident"), end=badge("Needs review", "warning"))], card=False), title="Incidents you reported", tid="inc", cls="card--flush")
-                + f'<div class="form-actions cluster">{f"<p class=\"save-status save-status--saved\" role=\"status\">{icon("check")}Saved just now</p>" if saved else ""}{btn("Sign out everywhere", "ghost", data_href=dialog("sign-out-all"))}{btn("Save changes", "primary", type_="submit", busy=busy)}</div></form>')
-    hdr = page_header("Your account", "2 devices · last sign-in Today, 3:55 pm, this phone")
-    S.add("default", "Profile, password, two-step sign-in, personal notifications and reported incidents.", nav="", main=hdr + form())
-    S.add("loading", "Account loading.", nav="", main=page_header("Your account", "") + skeleton_form(6))
-    S.add("error", "Account failed to load.", nav="", main=page_header("Your account", "") + card(empty("We couldn’t load your account", "Try again.", action=btn("Try again", "primary", icon_name="refresh"), error=True, icon_name="alert-triangle"), cls="card--flush form-width--md"))
-    S.add("invalid", "Passwords don’t match and the email is taken.", nav="", main=hdr + form(err={"email": "Email already in use.", "pw2": "Passwords don’t match."}))
-    S.add("submitting", "Saving.", nav="", main=hdr + form(busy=True))
-    S.add("success", "Saved.", nav="", main=hdr + form(saved=True), toast_html=toast_region(toast("success", "Account saved")))
-    S.add("mfa-off", "An admin without two-step sign-in sees the setup prompt.", nav="", user=T, main=alert("warning", "Admins must turn on two-step sign-in by 1 December", "Takes two minutes.", banner=True) + hdr.replace("2 devices", "1 device").replace("this phone", "a laptop") + form(mfa=False).replace("Jaylen Okafor", "Tom Nguyen").replace("Site lead · After‑School Tutoring, Saturday Sports", "Admin").replace("jaylen@harbourview.example", "tom@harbourview.example").replace(avatar(J, "lg"), avatar(T, "lg")))
+# ------------------------------------------------------------------ Account: see pages_settings.py (prompt 78)
 
 
 # ------------------------------------------------------------------ Notification center

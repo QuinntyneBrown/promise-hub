@@ -1,0 +1,89 @@
+<ph-breadcrumb [items]="crumbs" />
+@let a = account();
+<ph-page-header
+  title="Profile"
+  [subtitle]="a ? 'How you appear to others at ' + a.organization + '.' : ''"
+/>
+@switch (state()) {
+  @case ('loading') {
+    <div aria-busy="true" aria-label="Loading your profile"><ph-skeleton shape="card" /></div>
+  }
+  @case ('error') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load your profile"
+        text="Check your connection and try again."
+      >
+        <ph-button variant="primary" (click)="load()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @default {
+    @if (a) {
+      <form class="stack" novalidate (ngSubmit)="save()">
+        @if (summary().length) {
+          <ph-error-summary title="Fix these to continue" [items]="summary()" />
+        }
+        @if (failed()) {
+          <ph-alert
+            tone="danger"
+            title="That didn’t go through"
+            text="Your profile is unchanged. Try again."
+          />
+        }
+        <ph-card title="About you">
+          <div class="stack">
+            <ph-text-field
+              inputId="name"
+              label="Name"
+              name="name"
+              autocomplete="name"
+              [maxlength]="100"
+              [readonly]="youth()"
+              [help]="
+                youth()
+                  ? 'Your name comes from your record at ' +
+                    a.organization +
+                    '. Ask staff to change it.'
+                  : null
+              "
+              [error]="errors()['name'] ?? null"
+              [(ngModel)]="name"
+            />
+            <ph-text-field
+              inputId="email"
+              label="Email"
+              name="email"
+              type="email"
+              [readonly]="true"
+              help="You sign in with this email in every organization. Ask an admin to change it."
+              [ngModel]="a.email"
+            />
+            <ph-text-field
+              inputId="mobile"
+              label="Mobile"
+              name="mobile"
+              type="tel"
+              inputmode="tel"
+              autocomplete="tel"
+              [optional]="true"
+              [help]="'For alerts from ' + a.organization + '. Families never see it.'"
+              [error]="errors()['mobile'] ?? null"
+              [(ngModel)]="mobile"
+            />
+          </div>
+        </ph-card>
+        <ph-card [title]="'Set by ' + a.organization">
+          <ph-description-list [facts]="managed(a)" />
+          <p class="muted">Your role is set by an admin.</p>
+        </ph-card>
+        <div class="actions">
+          <ph-button variant="ghost" link="/account">Cancel</ph-button>
+          <ph-button variant="primary" type="submit" [busy]="saving()">Save changes</ph-button>
+        </div>
+      </form>
+    }
+  }
+}

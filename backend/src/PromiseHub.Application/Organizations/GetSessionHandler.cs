@@ -1,10 +1,11 @@
 using Microsoft.EntityFrameworkCore;
+using PromiseHub.Application.Identity;
 using PromiseHub.Domain.Organizations;
 
 namespace PromiseHub.Application.Organizations;
 
 
-public sealed class GetSessionHandler(IPromiseHubDb db, ITenantContext tenant, IModuleGate gate)
+public sealed class GetSessionHandler(IPromiseHubDb db, ITenantContext tenant, IModuleGate gate, DisplayPreferencesHandler display)
 {
     public async Task<SessionDto> HandleAsync(CancellationToken cancellationToken = default)
     {
@@ -17,6 +18,7 @@ public sealed class GetSessionHandler(IPromiseHubDb db, ITenantContext tenant, I
             organization.Name,
             organization.Plan.ToString(),
             [.. ModuleCatalog.All.Where(modules.Contains).Select(m => m.ToString())],
-            tenant.MembershipId);
+            tenant.MembershipId,
+            await display.GetAsync(cancellationToken));
     }
 }

@@ -1,0 +1,32 @@
+@startuml
+title UML sequence — Preview and save display preferences (L2-119)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Jaylen" as p
+box "Frontend — Angular app (account, api, components)" #E0F2FE
+participant DisplayPage as page
+participant PhDisplayRoot as root
+participant HttpDisplayApi as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant SessionEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant DisplayPreferencesHandler as handler
+end box
+p -> page : opens /account/display
+page -> client : load()
+client -> api : GET /me/display
+api --> page : theme, textSize, reduceMotion
+p -> page : Larger, Reduce motion on
+page -> root : apply(choice): data-text-size, data-motion (c2, c3)
+p -> page : Save changes
+page -> client : save(choice)
+client -> api : PUT /me/display
+api -> handler : SaveAsync(userId): allowed values only (c5)
+api --> client : 204 or 422
+page -> p : toast Display saved (c4)
+p -> page : leaves without saving
+page -> root : apply(saved)
+@enduml

@@ -1,0 +1,13 @@
+@startuml
+!include <C4/C4_Container>
+title C4 containers — Change a password
+Person(person, "Signed-in person")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "Angular app", "Angular 22", "account, api and components libraries")
+  Container(api, "API", ".NET 10 minimal APIs", "Session, handlers, permissions")
+  ContainerDb(db, "Database", "SQL (SQLite in tests)", "Memberships, StaffUsers, AuditEntries")
+}
+Rel(person, web, "Uses", "HTTPS")
+Rel(web, api, "JSON over HTTPS with the session cookie")
+Rel(api, db, "EF Core")
+@enduml

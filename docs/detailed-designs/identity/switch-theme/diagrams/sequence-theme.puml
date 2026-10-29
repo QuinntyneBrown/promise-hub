@@ -1,0 +1,26 @@
+@startuml
+title UML sequence — Apply, preview and save a theme (L2-120)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Sofía (Youth)" as p
+box "Frontend — Angular app (promisehub, account, components)" #E0F2FE
+participant Shell as shell
+participant DisplayPage as page
+participant PhDisplayRoot as root
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant SessionEndpoints as api
+end box
+p -> shell : signs in
+shell -> api : GET /me
+api --> shell : display.theme = dark
+shell -> root : apply: data-theme="dark" (c3)
+p -> page : picks Light
+page -> root : data-theme="light" at once (c2)
+p -> page : picks System, saves
+page -> root : removes data-theme: the device decides (c1)
+page -> api : PUT /me/display (c4: other values 422)
+p -> shell : signs out
+shell -> root : reset(): signed-out pages follow the device (c6)
+@enduml

@@ -8,7 +8,7 @@ namespace PromiseHub.Application.Notifications;
 
 /// <summary>
 /// The caller's own notification preferences (L2-111, ADR 0069): the kinds their role receives whose modules are on, each on unless they
-/// turned it off. Saving refuses a kind not offered with 422, keeps the rows of kinds no longer offered, and is audited.
+/// turned it off. Saving refuses a kind the role never receives with 422 and a kind whose module is off with 404 (L2-121), keeps the rows of kinds no longer offered, and is audited.
 /// </summary>
 public sealed class NotificationPreferencesHandler(IPromiseHubDb db, ITenantContext tenant, NotificationKinds kinds, IAuditWriter audit)
 {
@@ -24,6 +24,12 @@ public sealed class NotificationPreferencesHandler(IPromiseHubDb db, ITenantCont
     {
         var offered = (await kinds.OfferedAsync(tenant.Role, cancellationToken)).Select(k => k.Key).ToHashSet();
         var choices = request.Kinds ?? [];
+        // A kind the role receives whose module is off answers 404, as every endpoint of an off module does (L2-121).
+        var receivable = NotificationKinds.All.Where(k => k.Receives(tenant.Role)).Select(k => k.Key).ToHashSet();
+        if (choices.Any(c => c.Key is not null && receivable.Contains(c.Key) && !offered.Contains(c.Key)))
+        {
+            return Result.NotFound;
+        }
         if (choices.Any(c => c.Key is null || !offered.Contains(c.Key)))
         {
             return Result.Invalid(new Dictionary<string, string> { ["kinds"] = "Choose only the notifications offered to you." });

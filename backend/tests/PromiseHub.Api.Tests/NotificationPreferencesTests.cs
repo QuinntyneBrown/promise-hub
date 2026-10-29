@@ -5,8 +5,8 @@ using System.Text.Json;
 namespace PromiseHub.Api.Tests;
 
 // Acceptance test. Traces to: L2-111 criteria 1 to 4 (the kinds a member's role receives whose modules are on, all on until changed; saving
-// is audited and a kind turned off creates no notice for that member only; a kind not offered is refused with 422 and a saved choice is kept
-// while its module is off; each member's own choices only), L2-109, L2-032, L2-005, L2-001.
+// is audited and a kind turned off creates no notice for that member only; a kind the role never receives is refused with 422, a kind whose
+// module is off answers 404 and a saved choice is kept while it is off; each member's own choices only), L2-121, L2-109, L2-032, L2-005, L2-001.
 public sealed class NotificationPreferencesTests : IAsyncLifetime
 {
     private static readonly Guid Tom = LearningContent.Tom;
@@ -76,10 +76,20 @@ public sealed class NotificationPreferencesTests : IAsyncLifetime
         await Save(Nadia, ("announcements", false));
         await Modules(AllOn.Except(["Messages"]));
         Assert.Equal(["learning", "assignments"], Keys(await Get(Nadia)));
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, (await Save(Nadia, ("messages", false))).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await Save(Nadia, ("messages", false))).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await Save(Nadia, ("announcements", true))).StatusCode);
 
         await Modules(AllOn);
         Assert.False((await Get(Nadia)).Single(k => k.GetProperty("key").GetString() == "announcements").GetProperty("inApp").GetBoolean());
+    }
+
+    [Fact]
+    public async Task A_kind_of_a_module_that_is_off_answers_404_at_another_organization_too()
+    {
+        // Samuel (Mentor) is at Northgate, where Messages and Mentoring are off (L2-121 criterion 4).
+        Assert.Empty(await Get(Samuel));
+        Assert.Equal(HttpStatusCode.NotFound, (await Save(Samuel, ("messages", false))).StatusCode);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, (await Save(Samuel, ("learning", false))).StatusCode);
     }
 
     [Fact]

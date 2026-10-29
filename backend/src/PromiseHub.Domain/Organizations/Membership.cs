@@ -36,7 +36,9 @@ public sealed class Membership : ITenantOwned
     /// <summary>Not removed and not deactivated: the membership can start or continue a session.</summary>
     public bool IsActive => RemovedAt is null && DeactivatedAt is null;
 
-    public void SetMobile(string mobile) => Mobile = mobile;
+    public void SetMobile(string? mobile) => Mobile = mobile;
+
+    public void Rename(string personName) => PersonName = personName;
 
     public void Deactivate(DateTimeOffset now, string by)
     {

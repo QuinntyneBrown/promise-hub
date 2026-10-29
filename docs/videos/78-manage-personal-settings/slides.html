@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 78 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="78" data-video-title="Manage personal settings" data-parts="Introduction|Your account|Profile|Tenancy|Password|Display|Notifications|States|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 78</div>
+  <h1>Manage personal settings</h1>
+  <p class="lead">Profile, password, display and notifications, all from Your account</p>
+</section>
+
+<section id="hub" data-part="1" data-cue="Jaylen Okafor is a site lead at Harbourview Youth Collective.">
+  <h2>Your account is the hub</h2>
+  <img class="shot" alt="Your account with the Profile and Password cards" src="shots/desktop-account.png">
+  <p class="muted small">Profile · Password · Display · Two-step sign-in · Notifications · Devices · always on, every role · ADR 0072</p>
+</section>
+
+<section id="profile" data-part="2" data-cue="Jaylen chooses Edit profile." data-clip="clips/profile-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Edit profile</h3><p>Name and mobile; the email read-only.</p></div>
+</section>
+
+<section id="profile-shots" data-part="2" data-cue="He adds his middle initial and a new mobile number">
+  <h2>Saved, and the top bar follows</h2>
+  <div class="cols">
+    <img class="shot" alt="Profile with the read-only email and Set by Harbourview Youth Collective" src="shots/desktop-profile.png">
+    <img class="shot" alt="Profile saved toast" src="shots/desktop-profile-saved.png">
+  </div>
+  <p class="muted small">PUT /me/profile · ProfileHandler · 204 or 422 · L2-117</p>
+</section>
+
+<section id="tenancy" data-part="3" data-cue="The name and mobile belong to the membership">
+  <h2>Only this organization</h2>
+  <ul>
+    <li>Priya renames at Harbourview; Northgate keeps its own</li>
+    <li>The membership comes from the session, never the request</li>
+    <li>Empty name, mobile without area code: 422 per field</li>
+    <li>Audited without the values</li>
+  </ul>
+</section>
+
+<section id="youth" data-part="3" data-cue="Sofía Rivera is a youth, and her name comes from her child record">
+  <h2>A youth's name is managed</h2>
+  <div class="cols">
+    <img class="shot" alt="Sofía's profile on a phone with her name read-only" src="shots/phone-youth-profile.png">
+    <ul>
+      <li>Her name comes from her child record</li>
+      <li>Read-only, with a note to ask staff</li>
+      <li>A changed name answers 422</li>
+      <li>She can still add a mobile</li>
+    </ul>
+  </div>
+</section>
+
+<section id="password" data-part="4" data-cue="Back on Your account, Jaylen chooses Change password." data-clip="clips/password-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Change password</h3><p>Prove the current one first.</p></div>
+</section>
+
+<section id="password-shots" data-part="4" data-cue="His session version went up">
+  <h2>Other sessions end, this one stays</h2>
+  <div class="cols three">
+    <img class="shot" alt="The change-password dialog" src="shots/desktop-password.png">
+    <img class="shot" alt="That isn’t your current password." src="shots/desktop-password-invalid.png">
+    <img class="shot" alt="Password changed toast" src="shots/desktop-password-changed.png">
+  </div>
+  <p class="muted small">POST /me/password · PasswordPolicy (L2-053) · session version + 1 · cookie reissued · L2-118</p>
+</section>
+
+<section id="display" data-part="5" data-cue="Sofía opens Change display on her phone." data-clip="clips/display-phone.mp4">
+  <video class="clip phone" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Display</h3><p>Dark and Larger, previewed at once.</p></div>
+</section>
+
+<section id="display-shots" data-part="5" data-cue="She saves, and a toast says Display saved.">
+  <h2>Kept with the person</h2>
+  <div class="cols three">
+    <img class="shot" alt="Display in the light theme" src="shots/phone-display.png">
+    <img class="shot" alt="Display after choosing Dark" src="shots/phone-dark.png">
+    <img class="shot" alt="Your account in Dark after a reload" src="shots/phone-account-dark.png">
+  </div>
+  <p class="muted small">data-theme · data-text-size · data-motion on &lt;html&gt; · GET /me carries them · L2-119, L2-120</p>
+</section>
+
+<section id="notifications" data-part="6" data-cue="The Notifications card opens the choices" data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Notifications and states</h3><p>Messages on and off, invalid, failed.</p></div>
+</section>
+
+<section id="states" data-part="7" data-cue="Here are the notifications with Messages off">
+  <h2>Off, invalid, failed</h2>
+  <div class="cols three">
+    <img class="shot" alt="Notification choices without Messages and Announcements" src="shots/desktop-messages-off.png">
+    <img class="shot" alt="The invalid profile with the summary" src="shots/desktop-profile-invalid.png">
+    <img class="shot" alt="The failed display save" src="shots/desktop-display-failed.png">
+  </div>
+  <p class="muted small">A kind of an off module: 404 · a kind the role never receives: 422 · L2-121</p>
+</section>
+
+<section id="testing" data-part="8" data-cue="The API tests ProfileTests, ChangePasswordTests and DisplayPreferencesTests">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>ProfileTests</code>, <code>ChangePasswordTests</code>, <code>DisplayPreferencesTests</code>: tenancy, youth, sessions, audit, values</li>
+    <li><code>NotificationPreferencesTests</code>: 404 for an off module</li>
+    <li><code>edit-profile</code>, <code>change-password</code>, <code>display-and-theme</code>, <code>notification-preferences-from-settings</code> specs with axe</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="9" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Your account is the one place; each card opens its own screen</li><li>Profile per membership; password, theme and text size per person</li><li>A new password ends every other session</li><li>An off module has no notification choices</li></ul>
+  <p class="muted">Next: configure the organization</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

@@ -54,6 +54,13 @@ import {
 } from "./seed";
 
 /** Mirrors backend RolePermissions. */
+/** A person's display preferences (L2-119, L2-120). Mirrors backend DisplayPreferencesDto. */
+interface FakeDisplay {
+  theme: "system" | "light" | "dark";
+  textSize: "default" | "large" | "larger";
+  reduceMotion: boolean;
+}
+
 /** A youth's answer for a session (L2-094). */
 interface FakeRsvp {
   eventId: string;
@@ -662,6 +669,12 @@ export class FakeApi {
   private resetEmails = new Map<string, number>();
   /** Recovery codes left per person, and whether the other devices were signed out. */
   private recoveryCodes = new Map<string, number>();
+  /** Saved profiles by membership (L2-117); a membership without one shows its seeded name. */
+  private readonly profiles = new Map<string, { name: string; mobile: string | null }>();
+  /** Display preferences by person (email), as saved on Display (L2-119, L2-120). */
+  private readonly displays = new Map<string, FakeDisplay>();
+  /** Passwords changed by their owner (L2-118), by email; everyone else signs in with the seeded one. */
+  private readonly passwords = new Map<string, string>();
   signedOutOthers = false;
   /** The audit log as the API keeps it: organization, when, who, action, record type and summary. */
   private auditEntries: {
@@ -2160,6 +2173,10 @@ export class FakeApi {
       (route) => this.resetPassword(route),
     ],
     ["GET", /^\/api\/me\/account$/, (route) => this.account(route)],
+    ["PUT", /^\/api\/me\/profile$/, (route) => this.saveProfile(route)],
+    ["POST", /^\/api\/me\/password$/, (route) => this.changePassword(route)],
+    ["GET", /^\/api\/me\/display$/, (route) => this.getDisplay(route)],
+    ["PUT", /^\/api\/me\/display$/, (route) => this.saveDisplay(route)],
     [
       "POST",
       /^\/api\/me\/recovery-codes$/,
@@ -2993,13 +3010,14 @@ export class FakeApi {
     )!;
     return route.fulfill({
       json: {
-        personName: membership.personName,
+        personName: this.profileOf(membership.id).name,
         role: membership.role,
         organizationId: organization.id,
         organizationName: organization.name,
         plan: organization.plan,
         modules: this.modules.get(organization.id),
         membershipId: membership.id,
+        display: this.displayOf(membership.email),
       },
     });
   }
@@ -4848,7 +4866,7 @@ export class FakeApi {
     // The right password with every membership removed: told only now, never for a wrong password (L2-050).
     if (
       !membership &&
-      password === seededPassword &&
+      password === this.passwordOf(key) &&
       memberships.some((m) => m.email === key)
     ) {
       return route.fulfill({
@@ -4856,7 +4874,7 @@ export class FakeApi {
         json: { code: "account-deactivated" },
       });
     }
-    if (!membership || password !== seededPassword) {
+    if (!membership || password !== this.passwordOf(key)) {
       this.failSignIn(key, 1);
       return route.fulfill({
         status: 401,
@@ -5272,15 +5290,126 @@ export class FakeApi {
     const org = organizations.find((o) => o.id === m.organizationId)!;
     return route.fulfill({
       json: {
-        name: m.personName,
+        name: this.profileOf(m.id).name,
         email: m.email,
         role: m.role,
         organization: org.name,
-        mobile: null,
+        mobile: this.profileOf(m.id).mobile,
         twoStepOn: ["Admin", "ProgramDirector"].includes(m.role),
         recoveryCodesLeft: this.recoveryCodes.get(m.email) ?? 0,
       },
     });
+  }
+
+  /** The name and mobile of a membership, as saved from its profile (L2-117). */
+  profileOf(membershipId: string): { name: string; mobile: string | null } {
+    const m = memberships.find((x) => x.id === membershipId)!;
+    return this.profiles.get(membershipId) ?? { name: m.personName, mobile: null };
+  }
+
+  /** Mirrors backend ProfileHandler: the active membership only; a youth's name is read-only; audited without values. */
+  private async saveProfile(route: Route): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    const b = route.request().postDataJSON() as {
+      name?: string | null;
+      mobile?: string | null;
+    };
+    const name = (b.name ?? "").trim();
+    const mobile = (b.mobile ?? "").trim();
+    const current = this.profileOf(m.id);
+    const errors: Record<string, string> = {};
+    if (!name) errors["name"] = "Enter your name.";
+    else if (name.length > 100) errors["name"] = "Use at most 100 characters.";
+    else if (m.role === "Youth" && name !== current.name)
+      errors["name"] = "Your name comes from your record. Ask staff to change it.";
+    if (mobile && mobile.replace(/\D/g, "").length !== 10)
+      errors["mobile"] = "Include the area code, like 905-555-0101.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
+    this.profiles.set(m.id, { name, mobile: mobile || null });
+    this.auditEntries.push({
+      organizationId: m.organizationId,
+      when: NOW.toISOString(),
+      who: name,
+      action: "Updated",
+      record: "Membership",
+      summary: `${name} updated their profile`,
+      device: null,
+    });
+    return route.fulfill({ status: 204 });
+  }
+
+  /** A person's display preferences; System, Default and motion on until saved (L2-119, L2-120). */
+  displayOf(email: string): FakeDisplay {
+    return this.displays.get(email) ?? { theme: "system", textSize: "default", reduceMotion: false };
+  }
+
+  /** Mirrors backend DisplayPreferencesHandler: the caller's own, by person. */
+  private async getDisplay(route: Route): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    return route.fulfill({ json: this.displayOf(m.email) });
+  }
+
+  /** Mirrors backend DisplayPreferencesHandler: only the known values; not audited. */
+  private async saveDisplay(route: Route): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    const b = route.request().postDataJSON() as FakeDisplay;
+    const errors: Record<string, string> = {};
+    if (!["system", "light", "dark"].includes(b.theme))
+      errors["theme"] = "Choose System, Light or Dark.";
+    if (!["default", "large", "larger"].includes(b.textSize))
+      errors["textSize"] = "Choose Default, Large or Larger.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
+    this.displays.set(m.email, {
+      theme: b.theme,
+      textSize: b.textSize,
+      reduceMotion: !!b.reduceMotion,
+    });
+    return route.fulfill({ status: 204 });
+  }
+
+  /** The password an address signs in with now (L2-118). */
+  passwordOf(email: string): string {
+    return this.passwords.get(email) ?? seededPassword;
+  }
+
+  /** Mirrors backend ChangePasswordHandler: the current password, the policy, the repeat; other devices signed out; audited. */
+  private async changePassword(route: Route): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    const b = route.request().postDataJSON() as {
+      current?: string;
+      password?: string;
+      repeat?: string;
+    };
+    if (b.current !== this.passwordOf(m.email))
+      return route.fulfill({
+        status: 422,
+        json: { errors: { current: "That isn’t your current password." } },
+      });
+    const errors: Record<string, string> = {};
+    const weak = passwordProblem(b.password, m.email);
+    if (weak) errors["password"] = weak;
+    if (b.repeat !== b.password)
+      errors["repeat"] = "The two passwords don’t match.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
+    this.passwords.set(m.email, b.password!);
+    this.signedOutOthers = true;
+    this.auditEntries.push({
+      organizationId: m.organizationId,
+      when: NOW.toISOString(),
+      who: this.profileOf(m.id).name,
+      action: "Updated",
+      record: "StaffUser",
+      summary: `${this.profileOf(m.id).name} changed their password`,
+      device: null,
+    });
+    return route.fulfill({ status: 204 });
   }
 
   private async newRecoveryCodes(route: Route): Promise<void> {
@@ -11864,7 +11993,7 @@ export class FakeApi {
     return route.fulfill({ json: { kinds } });
   }
 
-  /** PUT /notifications/preferences: a kind not offered is refused with 422; saving is audited. */
+  /** PUT /notifications/preferences: a kind the role never receives is refused with 422, one whose module is off answers 404; saving is audited. */
   private async saveNotificationPreferences(route: Route): Promise<void> {
     const m = memberships.find((x) => x.id === this.membershipId);
     if (!m) return this.unauthenticated(route);
@@ -11873,6 +12002,15 @@ export class FakeApi {
       kinds?: { key: string; inApp: boolean }[];
     };
     const choices = b.kinds ?? [];
+    // A kind the role receives whose module is off answers 404 (L2-121).
+    if (
+      choices.some(
+        (c) =>
+          !offered.includes(c.key) &&
+          NOTIFICATION_KINDS.some((k) => k.key === c.key && k.receives(m)),
+      )
+    )
+      return route.fulfill({ status: 404 });
     if (choices.some((c) => !offered.includes(c.key)))
       return route.fulfill({
         status: 422,

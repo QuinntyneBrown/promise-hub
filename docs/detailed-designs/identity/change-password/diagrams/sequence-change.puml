@@ -1,0 +1,30 @@
+@startuml
+title UML sequence — Change a password (L2-118)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Jaylen" as p
+box "Frontend — Angular app (account, api, components)" #E0F2FE
+participant AccountPage as hub
+participant ChangePasswordDialog as dlg
+participant HttpAccountApi as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant SessionEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant ChangePasswordHandler as handler
+end box
+p -> hub : Change password
+hub -> dlg : PhDialogs.open
+p -> dlg : current, new, repeat
+dlg -> client : changePassword
+client -> api : POST /me/password
+api -> handler : ChangeAsync(userId)
+handler -> handler : Verify current (c3), PasswordPolicy.Check, repeat
+handler -> handler : new hash, SessionVersion + 1, audit in the active organization (c2, c5)
+api -> api : SessionCookie.ReissueAsync: this device stays signed in
+api --> client : 204 or 422 { current, password, repeat }
+dlg --> hub : close(true)
+hub -> p : toast Password changed, Your other devices were signed out
+@enduml

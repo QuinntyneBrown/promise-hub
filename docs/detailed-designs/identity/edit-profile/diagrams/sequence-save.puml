@@ -1,0 +1,30 @@
+@startuml
+title UML sequence — Save a profile (L2-117)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Jaylen (Site lead)" as p
+box "Frontend — Angular app (account, api)" #E0F2FE
+participant ProfilePage as page
+participant HttpAccountApi as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant SessionEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant ProfileHandler as handler
+end box
+p -> page : opens /account/profile
+page -> client : load()
+client -> api : GET /me/account
+api --> page : name, email, mobile, role, organization
+p -> page : new name and mobile, Save changes
+page -> client : saveProfile(name, mobile)
+client -> api : PUT /me/profile
+api -> handler : SaveAsync
+handler -> handler : name 1 to 100 characters, mobile 10 digits or empty (c3)
+handler -> handler : a youth's name unchanged (c4)
+handler -> handler : active membership only, audit without values (c2, c5)
+api --> client : 204 or 422 { errors }
+page -> p : toast Profile saved, or inline errors with a summary
+@enduml

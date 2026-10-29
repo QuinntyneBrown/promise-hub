@@ -1,0 +1,7 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — Configure display preferences
+Person(person, "Person", "Anyone signed in: staff, youth, mentor or volunteer")
+System(ph, "PromiseHub", "Keeps a person's text size and motion choice")
+Rel(person, ph, "Opens Your account and changes their own settings", "HTTPS")
+@enduml

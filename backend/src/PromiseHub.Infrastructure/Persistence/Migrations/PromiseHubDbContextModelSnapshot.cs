@@ -1692,8 +1692,25 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("ReduceMotion")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("SessionVersion")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("TextSize")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("default");
+
+                    b.Property<string>("Theme")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("system");
 
                     b.HasKey("Id");
 

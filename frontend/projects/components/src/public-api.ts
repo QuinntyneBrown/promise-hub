@@ -18,6 +18,8 @@ export * from './lib/description-list/description-list';
 export * from './lib/description-list/fact';
 export * from './lib/dialog/dialog';
 export * from './lib/dialog/dialogs.service';
+export * from './lib/display-root/display-root';
+export * from './lib/display-root/display-settings';
 export * from './lib/drawer/nav-drawer';
 export * from './lib/drawer/nav-drawer-data';
 export * from './lib/drawer/nav-drawer.service';

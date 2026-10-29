@@ -1,0 +1,21 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Edit a profile
+Container_Boundary(web, "Angular app") {
+  Component(hub, "AccountPage", "account", "Your account: Edit profile")
+  Component(page, "ProfilePage", "account", "/account/profile: name, read-only email, mobile, role")
+  Component(client, "ACCOUNT_API / HttpAccountApi", "api", "load, saveProfile")
+  Component(field, "PhTextField", "components", "read-only state for email and a youth's name")
+}
+Container_Boundary(api, "API") {
+  Component(ep, "SessionEndpoints", "PromiseHub.Api", "GET /me/account, PUT /me/profile (any member)")
+  Component(handler, "ProfileHandler", "PromiseHub.Application/Identity", "Validates, refuses a youth's rename, audits")
+  Component(m, "Membership", "PromiseHub.Domain/Organizations", "PersonName, Mobile")
+}
+Rel(hub, page, "navigates")
+Rel(page, client, "load, saveProfile")
+Rel(page, field, "composes")
+Rel(client, ep, "HTTP")
+Rel(ep, handler, "SaveAsync")
+Rel(handler, m, "Rename, SetMobile (active membership only)")
+@enduml

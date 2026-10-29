@@ -385,6 +385,29 @@ simple("recovery-codes", "Recovery codes", "account", [R_SEC], "Each works once.
 simple("sign-out-all", "Sign out everywhere?", "account", [R_SEC], "Every other device is signed out. You stay signed in here.",
        lambda e: "", "Sign out other devices", icon_name="log-out")
 
+@screen("change-password", "dialog", "Change password", opens_from="account", reqs=["L2-118", "L2-053", "L2-031", "L2-032", "L2-035"],
+        na={"success": "Saving closes the dialog: Your account shows the toast (`account/password-changed`)."})
+def change_password(S):
+    def box(err=None, busy=False, alert_html=""):
+        e = err or {}
+        body = (field("current", "Current password", type_="password", autocomplete="current-password", autofocus=not e, error=e.get("current", ""))
+                + field("new", "New password", type_="password", autocomplete="new-password", error=e.get("new", ""),
+                        help_="At least 12 characters, and not your email.")
+                + field("repeat", "Repeat it", type_="password", autocomplete="new-password", error=e.get("repeat", "")))
+        return dialog_box("Change your password", "Your other devices are signed out. You stay signed in here.", body,
+                          footer("Change password", busy=busy), icon_name="lock", alert_html=alert_html, form=True)
+    S.add("default", "From Your account: the current password, then the new one twice; focus on Current password.", **over("account", overlays=box()))
+    S.add("invalid", "The current password is wrong and the repeat doesn’t match: inline errors, nothing changed.",
+          **over("account", overlays=box(err={"current": "That isn’t your current password.", "repeat": "The two passwords don’t match."})))
+    S.add("weak", "The new password contains his email name: the shared policy refuses it.",
+          **over("account", overlays=box(err={"new": "Don’t use your email in your password."})))
+    S.add("busy", "Changing: the button is busy, no second submit.", **over("account", overlays=box(busy=True)))
+    S.add("failed", "The change failed: the fields are kept and the password is unchanged.",
+          **over("account", overlays=box(alert_html=failed_alert("That didn’t go through", "Your password is unchanged. Try again."))))
+    S.add("saved", "Saved: the dialog has closed, a toast says the other devices were signed out.",
+          **(base("account", "password-changed") | {"toast_html": toast_region(toast("success", "Password changed", "Your other devices were signed out."))}))
+
+
 # ------------------------------------------------------------------ Shell: main menu, account menu, session expired, offline queue
 @screen("main-menu", "dialog", "Main menu", opens_from="today", reqs=["L1-014"], na={"busy": "A menu has no submit.", "invalid": "A menu has no inputs."})
 def main_menu(S):

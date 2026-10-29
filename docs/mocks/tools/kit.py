@@ -571,10 +571,11 @@ def tabbar(current: str, kind: str = "page", *, checkin_badge: int = 0, modules:
     return f'<nav class="tabbar" aria-label="Primary, phone">{"".join(items)}</nav>'
 
 
-def head(title: str, kind: str, sid: str, state: str, reqs: list[str], desc: str, depth: int = 2) -> str:
+def head(title: str, kind: str, sid: str, state: str, reqs: list[str], desc: str, depth: int = 2, theme: str = "", root_style: str = "") -> str:
     up = "../" * depth
+    html_attrs = (f' data-theme="{theme}"' if theme else "") + (f' style="{root_style}"' if root_style else "")
     reqm = f'<meta name="mock:requirements" content="{" ".join(reqs)}">' if reqs else ""
-    return (f'<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+    return (f'<!doctype html>\n<html lang="en"{html_attrs}>\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n'
             f'<title>{esc(title)} · {state} — PromiseHub mocks</title>\n<meta name="mock:kind" content="{kind}">\n<meta name="mock:screen" content="{sid}">\n'
             f'<meta name="mock:state" content="{state}">\n{reqm}\n<meta name="description" content="{esc(desc)}">\n'
             f'<link rel="stylesheet" href="{up}../design-system/tokens/tokens.css">\n<link rel="stylesheet" href="{up}../design-system/assets/components.css">\n'
@@ -593,14 +594,14 @@ def mock_bar(title: str, states: list[str], state: str, depth: int = 2) -> str:
 def staff_doc(*, kind: str, sid: str, state: str, title: str, desc: str, reqs: list[str], states: list[str], nav: str,
               main: str, user: dict = STAFF["jaylen"], overlays: str = "", notes: str = "", inert: bool = False,
               unread: int = 2, checkin_badge: int = 0, toast_html: str = "", menu_open: bool = False, show_tabbar: bool = True,
-              modules: list | None = None, switcher: str = "", role: str = "staff") -> str:
+              modules: list | None = None, switcher: str = "", role: str = "staff", theme: str = "", root_style: str = "") -> str:
     inner = topbar(nav, user, unread=unread, kind=kind, menu_open=menu_open, modules=modules, switcher=switcher, role=role) + f'<main id="main" class="container">{main}</main>'
     if show_tabbar:
         inner += tabbar(nav, kind, checkin_badge=checkin_badge, modules=modules, role=role)
     wrap_open = '<div class="has-tabbar"' + (' inert aria-hidden="true"' if inert else "") + ">"
     body = ('<body>\n<a class="skip-link" href="#main">Skip to content</a>\n' + wrap_open + inner + "</div>\n"
             + (toast_html or toast_region()) + overlays + notes)
-    return head(title, kind, sid, state, reqs, desc) + body + mock_bar(title, states, state)
+    return head(title, kind, sid, state, reqs, desc, theme=theme, root_style=root_style) + body + mock_bar(title, states, state)
 
 
 def guardian_bar(kind: str = "page", lang: str = "English", *, help_href: str = "") -> str:

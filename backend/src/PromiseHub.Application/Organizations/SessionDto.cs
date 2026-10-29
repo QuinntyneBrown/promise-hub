@@ -1,3 +1,5 @@
+using PromiseHub.Application.Identity;
+
 namespace PromiseHub.Application.Organizations;
 
 public sealed record SessionDto(
@@ -7,4 +9,5 @@ public sealed record SessionDto(
     string OrganizationName,
     string Plan,
     IReadOnlyList<string> Modules,
-    Guid MembershipId);
+    Guid MembershipId,
+    DisplayPreferencesDto Display);

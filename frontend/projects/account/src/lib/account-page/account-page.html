@@ -4,7 +4,30 @@
   <ph-page-header title="Your account" [subtitle]="a.name" />
   <div class="stack">
     <ph-card title="Profile">
-      <ph-description-list [facts]="facts(a)" />
+      <div class="stack">
+        <ph-description-list [facts]="facts(a)" />
+        <div>
+          <ph-button icon="edit" link="/account/profile">Edit profile</ph-button>
+        </div>
+      </div>
+    </ph-card>
+    <ph-card title="Password">
+      <div class="stack">
+        <p class="muted">Change it any time. Your other devices are signed out when you do.</p>
+        <div>
+          <ph-button icon="lock" hasPopup="dialog" (click)="changePassword()"
+            >Change password</ph-button
+          >
+        </div>
+      </div>
+    </ph-card>
+    <ph-card title="Display">
+      <div class="stack">
+        <p class="muted">{{ displaySummary() }}</p>
+        <div>
+          <ph-button icon="sun" link="/account/display">Change display</ph-button>
+        </div>
+      </div>
     </ph-card>
     <ph-card title="Two-step sign-in">
       <div class="stack">

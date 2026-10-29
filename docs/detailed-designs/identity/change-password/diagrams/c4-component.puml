@@ -1,0 +1,21 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Change a password
+Container_Boundary(web, "Angular app") {
+  Component(hub, "AccountPage", "account", "Change password; the Password changed toast")
+  Component(dialog, "ChangePasswordDialog", "account", "Current, new, repeat")
+  Component(client, "ACCOUNT_API / HttpAccountApi", "api", "changePassword")
+}
+Container_Boundary(api, "API") {
+  Component(ep, "SessionEndpoints", "PromiseHub.Api", "POST /me/password; reissues the cookie")
+  Component(handler, "ChangePasswordHandler", "PromiseHub.Application/Identity", "Current password, policy, session version, audit")
+  Component(policy, "PasswordPolicy", "PromiseHub.Application/Identity", "One rule (L2-053)")
+  Component(user, "StaffUser", "PromiseHub.Domain/Identity", "PasswordHash, SessionVersion")
+}
+Rel(hub, dialog, "opens through PhDialogs")
+Rel(dialog, client, "changePassword")
+Rel(client, ep, "HTTP")
+Rel(ep, handler, "ChangeAsync")
+Rel(handler, policy, "Check")
+Rel(handler, user, "ChangePassword, EndOtherSessions")
+@enduml

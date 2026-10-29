@@ -8,6 +8,8 @@ import { MfaPage } from './mfa/mfa-page';
 import { NotificationPreferencesPage } from './notification-preferences/notification-preferences-page';
 import { OnboardPhonePage } from './onboard-phone/onboard-phone-page';
 import { OnboardReadyPage } from './onboard-ready/onboard-ready-page';
+import { DisplayPage } from './display-page/display-page';
+import { ProfilePage } from './profile-page/profile-page';
 import { SignInPage } from './sign-in/sign-in-page';
 import { SignedOutPage } from './signed-out/signed-out-page';
 
@@ -30,6 +32,8 @@ export const welcomeRoutes: Routes = [
 /** Your account, mounted by the app at /account inside the staff shell. */
 export const accountRoutes: Routes = [
   { path: '', component: AccountPage, title: 'Your account · PromiseHub' },
+  { path: 'profile', component: ProfilePage, title: 'Profile · PromiseHub' },
+  { path: 'display', component: DisplayPage, title: 'Display · PromiseHub' },
   {
     path: 'notifications',
     component: NotificationPreferencesPage,
