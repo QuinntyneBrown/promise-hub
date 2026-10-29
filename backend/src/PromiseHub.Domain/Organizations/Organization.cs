@@ -46,6 +46,35 @@ public sealed class Organization
     /// <summary>Where families and youth can write to the organization; null until given (L2-122).</summary>
     public string? ContactEmail { get; private set; }
 
+    /// <summary>The stored logo's file-storage key; null until a logo is uploaded (L2-123, ADR 0050).</summary>
+    public string? LogoKey { get; private set; }
+
+    public string? LogoFileName { get; private set; }
+
+    public string? LogoContentType { get; private set; }
+
+    public DateTimeOffset? LogoUploadedAt { get; private set; }
+
+    public string? LogoUploadedBy { get; private set; }
+
+    public void AttachLogo(string key, string fileName, string contentType, DateTimeOffset at, string by)
+    {
+        LogoKey = key;
+        LogoFileName = fileName;
+        LogoContentType = contentType;
+        LogoUploadedAt = at;
+        LogoUploadedBy = by;
+    }
+
+    public void RemoveLogo()
+    {
+        LogoKey = null;
+        LogoFileName = null;
+        LogoContentType = null;
+        LogoUploadedAt = null;
+        LogoUploadedBy = null;
+    }
+
     /// <summary>Changes the profile kept on Settings › Organization (L2-122, ADR 0073); an empty contact email or phone is null.</summary>
     public void ChangeDetails(string name, string city, string? contactEmail, string? phone, string timeZone)
     {

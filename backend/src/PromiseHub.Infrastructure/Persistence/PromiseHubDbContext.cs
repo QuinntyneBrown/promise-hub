@@ -401,6 +401,11 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(o => o.SuspensionReason).HasMaxLength(500);
             e.Property(o => o.WebsiteSlug).HasMaxLength(60);
             e.Property(o => o.ContactEmail).HasMaxLength(320);
+            e.Property(o => o.LogoKey).HasMaxLength(300);
+            e.Property(o => o.LogoFileName).HasMaxLength(260);
+            e.Property(o => o.LogoContentType).HasMaxLength(40);
+            e.Property(o => o.LogoUploadedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.Property(o => o.LogoUploadedBy).HasMaxLength(200);
             e.HasIndex(o => o.WebsiteSlug).IsUnique();
         });
         modelBuilder.Entity<Domain.Surveys.Survey>(e =>

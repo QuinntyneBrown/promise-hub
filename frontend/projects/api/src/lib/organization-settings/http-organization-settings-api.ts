@@ -23,4 +23,18 @@ export class HttpOrganizationSettingsApi implements OrganizationSettingsApi {
   saveProfile(profile: SaveOrganizationDetails): Observable<WriteOutcome> {
     return toWrite(this.http.put<null>(`${this.baseUrl}/settings/organization/profile`, profile));
   }
+
+  uploadLogo(file: File): Observable<WriteOutcome> {
+    const form = new FormData();
+    form.append('file', file, file.name);
+    return toWrite(this.http.post<null>(`${this.baseUrl}/settings/organization/logo`, form));
+  }
+
+  removeLogo(): Observable<WriteOutcome> {
+    return toWrite(this.http.delete<null>(`${this.baseUrl}/settings/organization/logo`));
+  }
+
+  logoUrl(version: string): string {
+    return `${this.baseUrl}/settings/organization/logo?v=${encodeURIComponent(version)}`;
+  }
 }

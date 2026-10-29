@@ -38,6 +38,46 @@
       @if (profile(); as p) {
         <ph-card title="Profile">
           <div class="card-body">
+            @if (p.logo; as logo) {
+              <div class="logo">
+                <ph-org-logo [name]="p.name" [src]="logoSrc()" />
+                <div class="logo-text">
+                  <strong>{{ logo.fileName }}</strong>
+                  <span class="meta">{{ logoMeta(logo) }}</span>
+                  <div>
+                    <ph-button
+                      size="sm"
+                      variant="ghost"
+                      icon="trash"
+                      [busy]="removing()"
+                      (click)="removeLogo()"
+                      >Remove logo</ph-button
+                    >
+                  </div>
+                </div>
+              </div>
+            } @else {
+              <div class="logo">
+                <ph-org-logo [name]="p.name" />
+              </div>
+            }
+            @if (logoFailed()) {
+              <ph-alert
+                tone="danger"
+                title="The upload didn’t finish"
+                text="Your logo is unchanged. Check your connection and choose the image again."
+              />
+            }
+            <ph-file-upload
+              inputId="logo-file"
+              [title]="p.logo ? 'Replace your logo' : 'Add your logo'"
+              text="A PNG or JPEG, square, up to 1 MB."
+              accept="image/png,image/jpeg"
+              buttonLabel="Choose image"
+              [busy]="uploading()"
+              [error]="logoError()"
+              (fileSelected)="uploadLogo($event)"
+            />
             <ph-description-list [facts]="profileFacts(p)" />
             <ph-inline-message>
               The phone is on every guardian page. Today’s sessions and every date follow the time

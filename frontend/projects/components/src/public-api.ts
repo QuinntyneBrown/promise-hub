@@ -3,6 +3,7 @@ export * from './lib/action-menu/action-menu-item';
 export * from './lib/alert/alert';
 export * from './lib/auth-card/auth-card';
 export * from './lib/avatar/avatar';
+export * from './lib/org-logo/org-logo';
 export * from './lib/avatar/avatar-tint';
 export * from './lib/badge/badge';
 export * from './lib/bottom-navigation/bottom-navigation';

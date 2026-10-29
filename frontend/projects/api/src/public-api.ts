@@ -310,6 +310,7 @@ export * from './lib/privacy/privacy-settings';
 export * from './lib/privacy/consent-policy';
 export * from './lib/privacy/data-request';
 export * from './lib/organization-settings/organization-details';
+export * from './lib/organization-settings/organization-logo';
 export * from './lib/organization-settings/save-organization-details';
 export * from './lib/organization-settings/organization-settings-api';
 export * from './lib/organization-settings/organization-settings-api.token';

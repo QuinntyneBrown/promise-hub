@@ -16,7 +16,8 @@ public sealed class OrganizationProfileHandler(IPromiseHubDb db, ITenantContext 
     public async Task<OrganizationProfileDto> GetAsync(CancellationToken cancellationToken = default)
     {
         var o = await db.Organizations.AsNoTracking().SingleAsync(o => o.Id == tenant.OrganizationId, cancellationToken);
-        return new OrganizationProfileDto(o.Name, o.City, o.ContactEmail, o.Phone, o.TimeZone, false);
+        var logo = o.LogoKey is null ? null : new OrganizationLogoDto(o.LogoFileName!, o.LogoUploadedAt!.Value, o.LogoUploadedBy!);
+        return new OrganizationProfileDto(o.Name, o.City, o.ContactEmail, o.Phone, o.TimeZone, logo is not null, logo);
     }
 
     public async Task<Result> SaveAsync(SaveOrganizationProfileRequest request, CancellationToken cancellationToken = default)

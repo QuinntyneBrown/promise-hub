@@ -26,8 +26,9 @@ export class SettingsOrganizationPage extends BasePage {
     return this.page.getByTestId(`fact-${key}`);
   }
 
+  /** The newest toast. */
   get toast(): Locator {
-    return this.page.getByTestId('toast');
+    return this.page.getByTestId('toast').last();
   }
 
   get forbidden(): Locator {
@@ -82,6 +83,30 @@ export class SettingsOrganizationPage extends BasePage {
 
   failedIn(dialog: Locator): Locator {
     return dialog.getByRole('alert').filter({ hasText: 'That didn’t go through' });
+  }
+
+  get logoImage(): Locator {
+    return this.card('Profile').getByRole('img', { name: /logo$/ });
+  }
+
+  get logoDropZone(): Locator {
+    return this.card('Profile').getByRole('group', { name: /your logo$/ });
+  }
+
+  get logoError(): Locator {
+    return this.card('Profile').getByTestId('logo-file-error');
+  }
+
+  get logoFailed(): Locator {
+    return this.card('Profile').getByRole('alert').filter({ hasText: 'The upload didn’t finish' });
+  }
+
+  async chooseLogo(name: string, mimeType: string, buffer: Buffer): Promise<void> {
+    await this.card('Profile').getByLabel('Choose image').setInputFiles({ name, mimeType, buffer });
+  }
+
+  async removeLogo(): Promise<void> {
+    await this.card('Profile').getByRole('button', { name: 'Remove logo' }).click();
   }
 
   /** What the API answers this signed-in person for a settings path. */

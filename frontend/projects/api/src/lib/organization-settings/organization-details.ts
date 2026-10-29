@@ -1,3 +1,5 @@
+import type { OrganizationLogo } from './organization-logo';
+
 /** The organization's profile on Settings › Organization (L2-122) and whether a logo is set (L2-123). */
 export interface OrganizationDetails {
   name: string;
@@ -7,4 +9,5 @@ export interface OrganizationDetails {
   /** An IANA time zone, such as America/Toronto. */
   timeZone: string;
   hasLogo: boolean;
+  logo: OrganizationLogo | null;
 }

@@ -43,27 +43,27 @@ def org_logo(*, logo: bool, initials: str = "HY") -> str:
     return f'<span class="org-logo" aria-hidden="true">{initials}</span>'
 
 
-DROPZONE_HELP = "A PNG or JPEG, square, up to 1 MB. It appears on Settings and, later, on your guardian pages and public website."
-
-
 def logo_block(state: str = "logo") -> str:
-    """The logo inside the Profile card: the logo with Replace and Remove, or the drop zone; uploading, invalid and failed states."""
-    zone = (f'<div class="dropzone" role="group" aria-labelledby="logo-title"><span class="icon-tile" aria-hidden="true">{icon("upload")}</span>'
-            f'<h3 class="dropzone__title" id="logo-title">Add your logo</h3><p class="dropzone__text">{DROPZONE_HELP}</p>'
-            f'<label class="btn btn--primary" for="logo">{icon("file")}Choose image<input class="visually-hidden" id="logo" type="file" accept="image/png,image/jpeg"></label></div>')
+    """The logo inside the Profile card: the logo (or the initials) above the drop zone, which replaces it; uploading, invalid and failed."""
+    def zone(title: str, err: str = "", busy: bool = False) -> str:
+        inv = ' aria-invalid="true" aria-describedby="logo-error"' if err else ""
+        return (f'<div class="dropzone{" dropzone--invalid" if err else ""}" role="group" aria-labelledby="logo-title"{" aria-busy=\"true\"" if busy else ""}>'
+                f'<span class="icon-tile" aria-hidden="true">{icon("upload")}</span>'
+                f'<h3 class="dropzone__title" id="logo-title">{title}</h3><p class="dropzone__text">A PNG or JPEG, square, up to 1 MB.</p>'
+                f'<label class="btn btn--primary" for="logo">{icon("file")}Choose image<input class="visually-hidden" id="logo" type="file" accept="image/png,image/jpeg"{inv}></label></div>'
+                + (f'<div class="field__error" id="logo-error">{esc(err)}</div>' if err else ""))
     if state == "logo":
         return (f'<div class="cluster">{org_logo(logo=True)}<div class="stack" style="gap: var(--space-1);"><strong>harbourview-logo.png</strong>'
-                f'{muted("Uploaded Mon 2 Nov by Tom Nguyen")}<div class="cluster">'
-                f'<label class="btn btn--sm" for="logo">{icon("upload")}Replace logo<input class="visually-hidden" id="logo" type="file" accept="image/png,image/jpeg"></label>'
-                f'{btn("Remove logo", "ghost", size="sm", icon_name="trash")}</div></div></div>')
+                f'{muted("Uploaded Mon 2 Nov by Tom Nguyen")}<div>{btn("Remove logo", "ghost", size="sm", icon_name="trash")}</div></div></div>'
+                + zone("Replace your logo"))
+    initials = f'<div class="cluster">{org_logo(logo=False)}</div>'
     if state == "uploading":
-        return (f'<div class="cluster" aria-busy="true">{org_logo(logo=False)}<div class="stack" style="gap: var(--space-1);"><strong>harbourview-logo.png</strong>'
-                f'{muted("Uploading · 184 KB")}</div></div>')
+        return initials + zone("Add your logo", busy=True)
     if state == "invalid":
-        return alert("danger", "That file isn’t a logo we can use", "“harbourview-flyer.pdf” was not uploaded. Choose a PNG or JPEG of up to 1 MB.") + zone
+        return initials + zone("Add your logo", "“harbourview-flyer.pdf” wasn’t uploaded. Choose a PNG or JPEG of up to 1 MB.")
     if state == "failed":
-        return alert("danger", "The upload didn’t finish", "Your logo is unchanged. Check your connection and choose the image again.") + zone
-    return zone
+        return initials + alert("danger", "The upload didn’t finish", "Your logo is unchanged. Check your connection and choose the image again.") + zone("Add your logo")
+    return initials + zone("Add your logo")
 
 
 def profile_card(*, org=ORG, city="Hamilton, Ontario", email="hello@harbourview.example", phone="905-555-0100", tz="Eastern (Toronto)",
@@ -118,7 +118,7 @@ def settings_organization(S):
     S.add("modules-off", "Grace (Admin) at Northgate, where Learning, Mentoring and Public website are off: only the profile, and nothing about them is mentioned.",
           nav="settings", user=GRACE, main=hdr(NORTHGATE) + body(profile_card(org=NORTHGATE, city="Burlington, Ontario", email="", phone="289-555-0190", logo="none", initials="NC")))
     S.add("no-logo", "No logo yet: the drop zone says what it takes.", **kw, main=hdr() + everything(logo="none"))
-    S.add("logo-uploading", "The logo uploading: its name and size; the rest of the page stays usable.", **kw, main=hdr() + everything(logo="uploading"))
+    S.add("logo-uploading", "The logo uploading: the drop zone is busy; the rest of the page stays usable.", **kw, main=hdr() + everything(logo="uploading"))
     S.add("logo-invalid", "A PDF chosen as the logo: refused with what to choose instead; nothing changed.", **kw, main=hdr() + everything(logo="invalid"))
     S.add("logo-failed", "The upload failed partway: the logo is unchanged.", **kw, main=hdr() + everything(logo="failed"))
     S.add("logo-saved", "A new logo uploaded: shown at once with a toast.", **kw, main=hdr() + everything(),

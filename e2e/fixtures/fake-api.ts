@@ -788,6 +788,17 @@ export class FakeApi {
     string,
     FakeOrganizationDetails
   >();
+  /** Logos uploaded on Settings › Organization (L2-123), by organization. */
+  private readonly organizationLogos = new Map<
+    string,
+    {
+      fileName: string;
+      uploadedAt: string;
+      uploadedBy: string;
+      contentType: string;
+      bytes: Buffer;
+    }
+  >();
   /** Report exports by id: organization, file name and CSV. */
   private reportExports = new Map<
     string,
@@ -2258,6 +2269,21 @@ export class FakeApi {
       "PUT",
       /^\/api\/settings\/organization$/,
       (route) => this.saveOrganizationProfile(route),
+    ],
+    [
+      "POST",
+      /^\/api\/settings\/organization\/logo$/,
+      (route) => this.uploadOrganizationLogo(route),
+    ],
+    [
+      "GET",
+      /^\/api\/settings\/organization\/logo$/,
+      (route) => this.organizationLogo(route),
+    ],
+    [
+      "DELETE",
+      /^\/api\/settings\/organization\/logo$/,
+      (route) => this.removeOrganizationLogo(route),
     ],
     [
       "GET",
@@ -5569,9 +5595,94 @@ export class FakeApi {
   private async getOrganizationDetails(route: Route): Promise<void> {
     const organizationId = await this.settingsCaller(route);
     if (!organizationId) return;
+    const logo = this.organizationLogos.get(organizationId);
     return route.fulfill({
-      json: { ...this.organizationDetailsOf(organizationId), hasLogo: false },
+      json: {
+        ...this.organizationDetailsOf(organizationId),
+        hasLogo: !!logo,
+        logo: logo
+          ? {
+              fileName: logo.fileName,
+              uploadedAt: logo.uploadedAt,
+              uploadedBy: logo.uploadedBy,
+            }
+          : null,
+      },
     });
+  }
+
+  /** Mirrors backend OrganizationLogoHandler: a PNG or JPEG by its first bytes, up to 1 MB. */
+  private async uploadOrganizationLogo(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    const body = route.request().postDataBuffer() ?? Buffer.alloc(0);
+    const text = body.toString("latin1");
+    const fileName = /filename="([^"]*)"/.exec(text)?.[1] ?? "";
+    const start = text.indexOf("\r\n\r\n", text.indexOf("filename=")) + 4;
+    const end = text.indexOf("\r\n--", start);
+    const bytes = body.subarray(start, end);
+    const png = bytes
+      .subarray(0, 8)
+      .equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+    const jpeg = bytes.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff]));
+    if (bytes.length < 1 || bytes.length > 1024 * 1024 || (!png && !jpeg))
+      return route.fulfill({
+        status: 422,
+        json: { errors: { file: "Choose a PNG or JPEG of up to 1 MB." } },
+      });
+    const who = memberships.find((m) => m.id === this.membershipId)!.personName;
+    const logo = {
+      fileName,
+      uploadedAt: NOW.toISOString(),
+      uploadedBy: who,
+      contentType: png ? "image/png" : "image/jpeg",
+      bytes: Buffer.from(bytes),
+    };
+    this.organizationLogos.set(organizationId, logo);
+    this.auditEntries.push({
+      organizationId,
+      when: NOW.toISOString(),
+      who,
+      action: "Created",
+      record: "OrganizationLogo",
+      summary: `Logo ${fileName} uploaded by ${who}`,
+      device: null,
+    });
+    return route.fulfill({
+      status: 201,
+      json: { fileName, uploadedAt: logo.uploadedAt, uploadedBy: who },
+    });
+  }
+
+  private async organizationLogo(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    const logo = this.organizationLogos.get(organizationId);
+    if (!logo) return route.fulfill({ status: 404 });
+    return route.fulfill({
+      status: 200,
+      contentType: logo.contentType,
+      body: logo.bytes,
+    });
+  }
+
+  private async removeOrganizationLogo(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    const logo = this.organizationLogos.get(organizationId);
+    if (!logo) return route.fulfill({ status: 404 });
+    this.organizationLogos.delete(organizationId);
+    const who = memberships.find((m) => m.id === this.membershipId)!.personName;
+    this.auditEntries.push({
+      organizationId,
+      when: NOW.toISOString(),
+      who,
+      action: "Deleted",
+      record: "OrganizationLogo",
+      summary: `Logo ${logo.fileName} removed by ${who}`,
+      device: null,
+    });
+    return route.fulfill({ status: 204 });
   }
 
   private async saveOrganizationDetails(route: Route): Promise<void> {

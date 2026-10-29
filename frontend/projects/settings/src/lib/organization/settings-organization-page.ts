@@ -1,17 +1,26 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { ORGANIZATION_SETTINGS_API, OrganizationDetails, SESSION_API } from '@promisehub/api';
+import {
+  ORGANIZATION_SETTINGS_API,
+  OrganizationDetails,
+  OrganizationLogo,
+  SESSION_API,
+} from '@promisehub/api';
 import {
   Fact,
+  PhAlert,
   PhButton,
   PhCard,
   PhDescriptionList,
   PhDialogs,
   PhEmptyState,
+  PhFileUpload,
   PhInlineMessage,
+  PhOrgLogo,
   PhPageHeader,
   PhSkeleton,
   PhTabs,
   ToastService,
+  formatDay,
 } from '@promisehub/components';
 import { OrganizationProfileDialog } from '../organization-profile-dialog/organization-profile-dialog';
 import { SETTINGS_SECTIONS } from '../settings-sections';
@@ -23,11 +32,14 @@ import { timeZoneLabel } from '../time-zones';
 @Component({
   selector: 'ph-settings-organization-page',
   imports: [
+    PhAlert,
     PhButton,
     PhCard,
     PhDescriptionList,
     PhEmptyState,
+    PhFileUpload,
     PhInlineMessage,
+    PhOrgLogo,
     PhPageHeader,
     PhSkeleton,
     PhTabs,
@@ -46,6 +58,15 @@ export class SettingsOrganizationPage {
   protected readonly state = signal<'loading' | 'loaded' | 'forbidden' | 'error'>('loading');
   protected readonly profile = signal<OrganizationDetails | null>(null);
   protected readonly subtitle = computed(() => this.profile()?.name ?? '');
+  protected readonly uploading = signal(false);
+  protected readonly removing = signal(false);
+  protected readonly logoError = signal<string | null>(null);
+  protected readonly logoFailed = signal(false);
+  /** The logo image's address, versioned by when it was uploaded so a new logo is fetched again. */
+  protected readonly logoSrc = computed(() => {
+    const logo = this.profile()?.logo;
+    return logo ? this.api.logoUrl(logo.uploadedAt) : null;
+  });
 
   constructor() {
     this.load();
@@ -73,6 +94,49 @@ export class SettingsOrganizationPage {
     ];
   }
 
+  protected logoMeta(logo: OrganizationLogo): string {
+    return `Uploaded ${formatDay(logo.uploadedAt)} by ${logo.uploadedBy}`;
+  }
+
+  /** Uploads a PNG or JPEG as the logo (L2-123); a refused file says why under the drop zone. */
+  protected uploadLogo(file: File): void {
+    this.uploading.set(true);
+    this.logoError.set(null);
+    this.logoFailed.set(false);
+    this.api.uploadLogo(file).subscribe((outcome) => {
+      this.uploading.set(false);
+      if (outcome.status === 'saved') {
+        this.toasts.show({ tone: 'success', title: 'Logo saved' });
+        this.reloadProfile();
+      } else if (outcome.status === 'invalid') {
+        this.logoError.set(`“${file.name}” wasn’t uploaded. Choose a PNG or JPEG of up to 1 MB.`);
+      } else {
+        this.logoFailed.set(true);
+      }
+    });
+  }
+
+  protected removeLogo(): void {
+    this.removing.set(true);
+    this.api.removeLogo().subscribe((outcome) => {
+      this.removing.set(false);
+      if (outcome.status === 'saved') {
+        this.toasts.show({ tone: 'success', title: 'Logo removed' });
+        this.reloadProfile();
+      } else {
+        this.toasts.show({
+          tone: 'danger',
+          title: 'Logo not removed',
+          text: 'Something went wrong. Try again.',
+        });
+      }
+    });
+  }
+
+  private reloadProfile(): void {
+    this.api.profile().subscribe((r) => r.status === 'loaded' && this.profile.set(r.value));
+  }
+
   /** Edits the profile in a dialog (dialog: organization-profile); the session refreshes so the shell shows a new name. */
   protected editProfile(p: OrganizationDetails): void {
     this.dialogs
@@ -81,7 +145,7 @@ export class SettingsOrganizationPage {
         if (!saved) return;
         this.toasts.show({ tone: 'success', title: 'Organization profile saved' });
         this.sessions.refresh();
-        this.api.profile().subscribe((r) => r.status === 'loaded' && this.profile.set(r.value));
+        this.reloadProfile();
       });
   }
 }
