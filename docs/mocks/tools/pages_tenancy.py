@@ -25,6 +25,8 @@ MODULES = [
     ("learning", "Learning", "Lessons, quizzes, assignments and badges for youth.", "L1-023", ["roster"]),
     ("mentoring", "Mentoring", "Mentors, assigned youth, check-ins and at-risk flags.", "L1-024", ["roster"]),
     ("website", "Public website", "Your organization’s public pages.", "L1-025", ["roster"]),
+    # Learning Bond (L2-135): needs Roster and Messages, off until the data-handling agreement is accepted; no preset turns it on.
+    ("learning-bond", "Learning Bond", "Claims every dollar the government already owes your child, from birth to university.", "L1-026", ["roster", "notify"]),
 ]
 SUITE = {"roster", "slips", "rollcall", "quickcard", "pickup", "notify", "incidents", "reports"}
 ALL_ON = SUITE | {"learning", "mentoring"}
@@ -37,9 +39,9 @@ def module_rows(on: set, *, disabled: set | None = None, errors: dict | None = N
     items = []
     for mid, name, what, _req, needs in MODULES:
         need = ""
-        if needs and set(needs) - on:
-            missing = ", ".join(next(m[1] for m in MODULES if m[0] == n) for n in needs if n not in on)
-            need = f'<span class="text-caption module__needs">Needs {esc(missing)}</span>'
+        if needs:
+            names = " and ".join(next(m[1] for m in MODULES if m[0] == n) for n in needs)
+            need = f'<span class="text-caption module__needs">Needs {esc(names)}</span>'
         err = f'<div class="field__error" id="{mid}-error">{esc(errors[mid])}</div>' if mid in errors else ""
         a = (" checked" if mid in on else "") + (" disabled" if mid in disabled else "") + (f' aria-describedby="{mid}-error" aria-invalid="true"' if mid in errors else "")
         items.append(f'<li class="list__item module"><div class="list__body"><div class="list__title">{esc(name)}</div><div class="list__meta">{esc(what)}</div>{need}{err}</div>'
@@ -60,19 +62,25 @@ def settings_modules(S):
         actions = f'<div class="form-actions cluster">{f"<p class=\"save-status save-status--saved\" role=\"status\">{icon("check")}Saved 2:14 pm</p>" if saved else ""}{btn("Save changes", "primary", type_="submit", busy=busy)}</div>'
         return f'<form class="stack form-width--lg" action="#" method="post" novalidate>{alert_html}{summary}{module_rows(on, errors=errors)}{actions}</form>'
     hdr = page_header("Modules", "The plan covers every module.") + settings_nav("settings-modules")
-    S.add("default", "Harbourview: the whole suite plus Learning and Mentoring on, Public website off; every module listed with its dependency, a preset row and one Save.", nav="settings", user=T, main=hdr + body(ALL_ON, "custom"),
+    S.add("default", "Harbourview: the whole suite plus Learning and Mentoring on, Public website and Learning Bond off; twelve modules, each with what it needs, a preset row and one Save.", nav="settings", user=T, main=hdr + body(ALL_ON, "custom"),
           notes=note("Switching a module off hides it for every role; data is kept.", "top: 5rem; right: 1rem;"))
     S.add("single", "Only Roll Call (and the roster it needs) is on; the app is a check-in tool and nothing else.", nav="settings", user=T, modules=["today", "check-in", "families", "settings"],
-          main=hdr + body(CHECKIN_ONLY, "checkin", alert_html=alert("info", "Harbourview runs PromiseHub as a check-in app", "Nine modules are off. Guardians see only the enrollment form.")))
+          main=hdr + body(CHECKIN_ONLY, "checkin", alert_html=alert("info", "Harbourview runs PromiseHub as a check-in app", "Ten modules are off. Guardians see only the enrollment form.")))
     S.add("invalid", "Pickup switched on without Roll Call, and the roster switched off while others need it.", nav="settings", user=T,
           main=hdr + body({"pickup", "slips"}, "custom", errors={"pickup": "Pickup needs Roll Call.", "roster": "Permission slips and Pickup need the roster."}))
     S.add("blocked", "The roster switched off while Learning and Mentoring are on: the save is refused and the reason sits beside the roster; nothing is deleted.", nav="settings", user=T,
           main=hdr + body({"learning", "mentoring"}, "custom", errors={"roster": "Learning and Mentoring need the roster."}),
           notes=note("The server rejects the same configuration with 422 even if the page is bypassed.", "top: 5rem; right: 1rem;"))
+    S.add("learning-bond-needs-messages", "Learning Bond turned on while Messages is off: the save is refused with the reason beside Learning Bond, the API answers 422 naming Messages (L2-135).", nav="settings", user=T,
+          main=hdr + body((ALL_ON - {"notify"}) | {"learning-bond"}, "custom", errors={"learning-bond": "Learning Bond needs Messages."}))
+    S.add("learning-bond-agreement", "Learning Bond turned on before the data-handling agreement is accepted: 422 and Read the agreement beside the switch (L2-135).", nav="settings", user=T,
+          main=(hdr + body(ALL_ON | {"learning-bond"}, "custom", errors={"learning-bond": "Accept the Learning Bond data-handling agreement first."}))
+          .replace("agreement first.</div>", f'agreement first. <a href="{page("learning-bond-agreement")}">Read the agreement</a></div>'),
+          notes=note("Learning Bond is listed last with “Needs Roster and Messages” and is off for every organization until an admin turns it on; no onboarding preset turns it on.", "top: 5rem; right: 1rem;"))
     S.add("submitting", "Saving the configuration.", nav="settings", user=T, main=hdr + body(ALL_ON, "suite", busy=True))
     S.add("success", "Saved; navigation updates for everyone on next load.", nav="settings", user=T, main=hdr + body(CHECKIN_ONLY | {"quickcard"}, "custom", saved=True),
           toast_html=toast_region(toast("success", "Modules saved", "3 on")))
-    S.add("loading", "Modules loading.", nav="settings", main=page_header("Modules", "") + settings_nav("settings-modules") + skeleton_list(11, "Loading modules"))
+    S.add("loading", "Modules loading.", nav="settings", main=page_header("Modules", "") + settings_nav("settings-modules") + skeleton_list(12, "Loading modules"))
     S.add("error", "Modules failed to load.", nav="settings", main=page_header("Modules", "") + settings_nav("settings-modules") + card(empty("We couldn’t load modules", "Try again.", action=btn("Try again", "primary", icon_name="refresh"), error=True, icon_name="alert-triangle"), cls="card--flush"))
     S.add("forbidden", "A site lead opening Modules.", nav="settings", user=J, main=page_header("Modules", "") + card(empty("Admins configure modules", "Ask Tom Nguyen or Marisol Delgado.", action=btn("Back to Today", "", href=page("today")), icon_name="lock"), cls="card--flush"))
 

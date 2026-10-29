@@ -161,6 +161,14 @@ Rules (MUST be followed):
 - No inline forms in pages. Button-triggered editing opens an Angular CDK Dialog or navigates to a screen.
 - Use Angular CDK Dialog/Overlay for modal behavior; never hand-roll modals.
 
+## Naming (MANDATORY)
+
+**The word "Seedling", in any form (Seedlings, seedling, seedlings, Seedling-, seedlings-), MUST NOT appear anywhere in PromiseHub.**
+
+- It is banned in code, identifiers, file and folder names, routes, URLs, database objects, configuration, mocks, design-system pages, specs, designs, estimates, ADRs, prompts, videos, commit messages and user-facing copy in every language.
+- Do not introduce it as a module, feature, page, dialog or notification name. If a feature needs a name, ask the user; do not pick a substitute.
+- Any file, folder or text that contains it is incomplete and MUST be renamed or rewritten before the work is considered done.
+
 ## Modules are configurable (CRITICAL)
 
 **Every feature of PromiseHub is a module that an organization can switch on or off, from a single module to the entire suite. This is a product rule, not a setting to bolt on later.**

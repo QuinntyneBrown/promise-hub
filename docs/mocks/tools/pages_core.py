@@ -513,7 +513,16 @@ def household(S):
                  '<li class="audit__item"><span class="audit__when">Tue 2 Sep, 7:55 pm</span><span>Carmen Rivera confirmed household details</span></li>'
                  '<li class="audit__item"><span class="audit__when">Tue 2 Sep, 7:52 pm</span><span>Carmen Rivera added Rosa Alvarez as approved pickup</span></li>'
                  f'</ol>', title="Audit trail", tid="audit", footer=f'<a href="{page("audit-log")}">Full log</a>')
-    S.add("default", "The Rivera household: guardians, children with medical flags, consent on file and the audit trail.", nav="families", user=T,
+    learning_bond = card(ul_list([list_item("Mateo Rivera", "Submitted · Thu 5 Nov", person=CHILD["mateo"], end=badge("Submitted", "success")),
+                             list_item("Sofía Rivera", "Started · Thu 5 Nov", person=CHILD["sofia"], end=badge("Started", "info"))], card=False, label="Learning Bond status"),
+                     title="Learning Bond", tid="learning-bond", cls="card--flush", footer=f'Invited Thu 5 Nov · <a href="{page("learning-bond-families")}">All covered households</a>')
+    learning_bond_not_invited = card(f'<p class="text-muted">Not invited yet. Covered through After‑School Tutoring.</p><div>{btn("Invite to Learning Bond", "", icon_name="sprout", data_href=dialog("learning-bond-invite-household"))}</div>', title="Learning Bond", tid="learning-bond")
+    S.add("default", "The Rivera household: guardians, children with medical flags, consent on file, Learning Bond status (completion only, L2-142) and the audit trail.", nav="families", user=T,
+          main=hdr() + f'<div class="split"><div class="stack">{children_card}{guardians_card}</div><div class="stack">{consent}{learning_bond}{audit}</div></div>')
+    S.add("learning-bond-not-invited", "A covered household not yet invited: Jaylen (Site lead, in the status roles) sees Invite to Learning Bond, which texts the invitation at once (L2-140).", nav="families", user=STAFF["jaylen"],
+          main=hdr() + f'<div class="split"><div class="stack">{children_card}{guardians_card}</div><div class="stack">{consent}{learning_bond_not_invited}{audit}</div></div>',
+          notes=note("The card shows where the family is in the steps, never a SIN, income or amount. With Learning Bond off, or for a role outside the status roles, there is no card (L2-162).", "top: 5rem; right: 1rem;"))
+    S.add("learning-bond-off", "Learning Bond off for the organization: nothing about it on the household page.", nav="families", user=T,
           main=hdr() + f'<div class="split"><div class="stack">{children_card}{guardians_card}</div><div class="stack">{consent}{audit}</div></div>')
     S.add("loading", "Household loading.", nav="families", main=breadcrumb([("Families", page("families"))], "Loading") + f'<div class="page-header" aria-busy="true"><div>{skeleton_header()}</div></div><div class="split">{skeleton_list(2, "Loading children")}{skeleton_list(3, "Loading consent")}</div><h1 class="visually-hidden">Household</h1>')
     S.add("empty", "A new household with a guardian but no children yet.", nav="families", user=T,
