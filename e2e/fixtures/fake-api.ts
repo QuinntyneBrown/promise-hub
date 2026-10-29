@@ -1345,6 +1345,14 @@ export class FakeApi {
     this.websiteProfiles.set(organizationId, { ...this.websiteProfileOf(organizationId), ...profile });
   }
 
+  /** Archives a seeded program, as a director would. */
+  archiveSeededProgram(programId: string): void {
+    const program = this.programs.find((p) => p.id === programId)!;
+    program.status = "Archived";
+    program.archivedAt = "2026-11-01T12:00:00Z";
+    program.archivedBy = "Marisol Delgado";
+  }
+
   /** Publishes a curriculum module, as an author would. */
   publishModule(moduleId: string): void {
     this.curriculumState.modules.find((m) => m.id === moduleId)!.status = "Published";

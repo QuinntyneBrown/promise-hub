@@ -1,4 +1,5 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal } from '@angular/core';
+import { Title } from '@angular/platform-browser';
 import { LoadResult, PublicContent, PublicSite, WEBSITE_API } from '@promisehub/api';
 
 /**
@@ -8,6 +9,7 @@ import { LoadResult, PublicContent, PublicSite, WEBSITE_API } from '@promisehub/
 @Injectable()
 export class SiteState {
   private readonly api = inject(WEBSITE_API);
+  private readonly title = inject(Title);
 
   readonly slug = signal('');
   /** Null while loading. */
@@ -22,6 +24,14 @@ export class SiteState {
   /** The absolute router link of a page of this site; empty for home. */
   link(page = ''): string[] {
     return page ? ['/site', this.slug(), page] : ['/site', this.slug()];
+  }
+
+  /** Keeps the document title as "{page} · {organization}", or the organization alone on home. Call from a page's constructor. */
+  useTitle(page: string | null): void {
+    effect(() => {
+      const name = this.name();
+      if (name) this.title.setTitle(page ? `${page} · ${name}` : name);
+    });
   }
 
   load(slug: string): void {

@@ -1,5 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
-import { Title } from '@angular/platform-browser';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import {
   PhButton,
   PhCard,
@@ -56,9 +55,6 @@ export class SiteLandingPage {
   });
 
   constructor() {
-    const title = inject(Title);
-    effect(() => {
-      if (this.state.name()) title.setTitle(this.state.name());
-    });
+    this.state.useTitle(null);
   }
 }

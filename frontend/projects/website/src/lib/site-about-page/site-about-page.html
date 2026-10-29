@@ -1,0 +1,32 @@
+@let s = site();
+@if (s) {
+  <ph-page-header [title]="'About ' + s.name" />
+  <p class="about" data-testid="site-about">
+    {{ s.about ?? 'We’re a youth organization in ' + s.city + '. Our story is coming soon.' }}
+  </p>
+  <ph-card title="Find us">
+    <ph-description-list [facts]="findUs()" />
+  </ph-card>
+  <ph-site-section eyebrow="Our promise" heading="Safe, known and cared for">
+    <ph-card [flush]="true">
+      <ph-list label="Our promise">
+        <ph-list-item
+          title="Screened adults"
+          text="Every adult who works with children is screened and reference checked."
+        />
+        <ph-list-item
+          title="Guardian consent"
+          text="We ask a guardian’s consent before a child takes part."
+        />
+        <ph-list-item
+          title="Health on hand"
+          text="Allergies and medications are on hand at every session."
+        />
+      </ph-list>
+    </ph-card>
+  </ph-site-section>
+  <div class="actions">
+    <ph-button variant="primary" [link]="state.link('programs')">See programs</ph-button>
+    <ph-button variant="ghost" [link]="state.link('contact')">Contact us</ph-button>
+  </div>
+}

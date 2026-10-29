@@ -1,0 +1,13 @@
+.prose {
+  max-width: var(--layout-copy-measure);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+h2 {
+  margin: var(--space-3) 0 0;
+  font: var(--text-h3);
+}
+p {
+  margin: 0;
+}

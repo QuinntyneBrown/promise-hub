@@ -1,0 +1,11 @@
+.about {
+  margin: 0;
+  max-width: var(--layout-copy-measure);
+  font: var(--text-body-lg);
+  white-space: pre-line;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
