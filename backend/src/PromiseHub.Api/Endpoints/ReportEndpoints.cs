@@ -16,6 +16,9 @@ public static class ReportEndpoints
         var reports = app.MapGroup("/reports").RequireModule(ModuleId.Reports).RequirePermission(Permission.ViewReports);
         reports.MapGet(string.Empty, (Guid? programId, DateOnly? from, DateOnly? to, ReportsHandler handler, CancellationToken ct) =>
             handler.GetAsync(new ReportFilter(programId, from, to), ct));
+        // The detailed reports (L2-127, ADR 0074): computed on read, a section per module.
+        reports.MapGet("/cohorts/{programId:guid}", async (Guid programId, DetailedReportsHandler handler, CancellationToken ct) =>
+            await handler.CohortAsync(programId, ct) is { } report ? Results.Ok(report) : Results.NotFound());
         reports.MapPost("/exports", async (ExportReportCommand command, ReportsHandler handler, CancellationToken ct) =>
         {
             var created = await handler.ExportAsync(command, ct);

@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { API_BASE_URL } from '../api-base-url';
 import { toLoad } from '../http-results';
 import { LoadResult } from '../load-result';
+import { CohortReport } from './cohort-report';
 import { Report } from './report';
 import { ReportExport } from './report-export';
 import { ReportsApi } from './reports-api';
@@ -17,6 +18,10 @@ export class HttpReportsApi implements ReportsApi {
   report(programId: string | null): Observable<LoadResult<Report>> {
     const params = programId ? new HttpParams().set('programId', programId) : undefined;
     return toLoad(this.http.get<Report>(`${this.baseUrl}/reports`, { params }));
+  }
+
+  cohort(programId: string): Observable<LoadResult<CohortReport>> {
+    return toLoad(this.http.get<CohortReport>(`${this.baseUrl}/reports/cohorts/${programId}`));
   }
 
   export(programId: string | null): Observable<LoadResult<ReportExport>> {

@@ -1,5 +1,6 @@
 import type { Observable } from 'rxjs';
 import type { LoadResult } from '../load-result';
+import type { CohortReport } from './cohort-report';
 import type { Report } from './report';
 import type { ReportExport } from './report-export';
 import type { SurveySent } from './survey-sent';
@@ -7,6 +8,8 @@ import type { SurveySent } from './survey-sent';
 /** Reports and their exports. */
 export interface ReportsApi {
   report(programId: string | null): Observable<LoadResult<Report>>;
+  /** The cohort report of one program (L2-127). */
+  cohort(programId: string): Observable<LoadResult<CohortReport>>;
   export(programId: string | null): Observable<LoadResult<ReportExport>>;
   /** Where the browser downloads an export from. */
   downloadUrl(id: string): string;

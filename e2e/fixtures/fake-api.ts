@@ -33,6 +33,7 @@ import {
   type FakeAnnouncement,
 } from "./fake-announcements";
 import { FakeAtRiskFlags } from "./fake-at-risk-flags";
+import { FakeReports, type ReportSource } from "./fake-reports";
 import { FakeAssignedWorkStore, type Recipient } from "./fake-assigned-work";
 import {
   type FakeEvent,
@@ -856,6 +857,21 @@ export class FakeApi {
   /** The route answers normally again after failNext. */
   recover(path: string): void {
     this.failures.delete(path);
+  }
+
+  /** Marks a child at a session, as Roll Call would: Present (late when asked) or Absent (excused when asked). */
+  markAttendance(
+    eventId: string,
+    childId: string,
+    status: "Present" | "Absent",
+    flags: { late?: boolean; excused?: boolean } = {},
+  ): void {
+    this.sessionRecords(eventId).set(childId, {
+      status,
+      checkedInAt: status === "Present" ? NOW.toISOString() : null,
+      late: status === "Present" && !!flags.late,
+      excused: status === "Absent" && !!flags.excused,
+    });
   }
 
   /** Puts a child on a program's roster, as staff enrolling them would (the youth's placement, L2-060). */
@@ -2384,6 +2400,11 @@ export class FakeApi {
     ["GET", /^\/api\/today$/, (route) => this.today(route)],
     ["GET", /^\/api\/search$/, (route) => this.search(route)],
     ["GET", /^\/api\/reports$/, (route) => this.report(route)],
+    [
+      "GET",
+      /^\/api\/reports\/cohorts\/(?<id>[^/]+)$/,
+      (route, p) => this.cohortReport(route, p["id"]!),
+    ],
     [
       "POST",
       /^\/api\/events\/(?<id>[^/]+)\/survey$/,
@@ -12675,6 +12696,63 @@ export class FakeApi {
           : null;
       })(),
     };
+  }
+
+  private readonly reports = new FakeReports();
+  /** Children who left a program: ended enrollments, kept for retention (L2-127). */
+  private readonly endedEnrollments = new Map<string, string[]>();
+
+  /** Ends a child's enrollment, as removing them from the roster would; the report counts it against retention. */
+  endEnrollment(programId: string, childId: string): void {
+    const program = this.programs.find((p) => p.id === programId)!;
+    program.roster = program.roster.filter((id) => id !== childId);
+    this.endedEnrollments.set(programId, [
+      ...(this.endedEnrollments.get(programId) ?? []),
+      childId,
+    ]);
+  }
+
+  /** What the detailed reports read, for the caller's organization (mirrors the tenant filter). */
+  private reportSource(m: Membership): ReportSource {
+    const org = m.organizationId;
+    const children = new Map<
+      string,
+      { name: string; dateOfBirth: string | null }
+    >();
+    for (const h of this.households.filter((x) => x.organizationId === org))
+      for (const c of h.children)
+        children.set(c.id, {
+          name: `${c.firstName} ${c.lastName}`,
+          dateOfBirth: c.dateOfBirth,
+        });
+    return {
+      organizationId: org,
+      modules: this.modules.get(org)!,
+      programs: this.programs.filter((p) => p.organizationId === org),
+      events: this.events.filter((e) => e.organizationId === org),
+      records: (eventId) => this.sessionRecords(eventId),
+      children,
+      ended: (programId) => this.endedEnrollments.get(programId) ?? [],
+      youthAccount: (childId) =>
+        [...this.youthLinks].find(
+          ([mid, cid]) =>
+            cid === childId &&
+            memberships.some((x) => x.id === mid && x.organizationId === org),
+        )?.[0] ?? null,
+      flags: this.atRiskFlags.rows,
+      checkIns: this.mentorCheckIns.rows,
+      learning: this.learningState,
+      curriculum: this.curriculumState,
+    };
+  }
+
+  private async cohortReport(route: Route, id: string): Promise<void> {
+    const m = await this.reportsCaller(route);
+    if (!m) return;
+    const report = this.reports.cohort(this.reportSource(m), id);
+    return report
+      ? route.fulfill({ json: report })
+      : route.fulfill({ status: 404 });
   }
 
   private async report(route: Route): Promise<void> {

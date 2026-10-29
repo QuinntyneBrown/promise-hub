@@ -55,6 +55,14 @@ export class ReportsPage extends BasePage {
     await this.dialog.getByRole('button', { name: 'Send survey' }).click();
   }
 
+  get detailed(): Locator {
+    return this.page.getByRole('list', { name: 'Detailed reports' });
+  }
+
+  async openDetailed(name: string): Promise<void> {
+    await this.detailed.getByRole('link', { name: new RegExp(`^${name}`) }).click();
+  }
+
   get toast(): Locator {
     return this.page.getByTestId('toast');
   }

@@ -49,6 +49,16 @@
         </div>
       </ph-card>
       <div class="stack">
+        @if (detailed().length) {
+          <ph-card title="Detailed reports" [flush]="true">
+            <ph-list label="Detailed reports">
+              @for (d of detailed(); track d.title) {
+                <ph-list-item [title]="d.title" [text]="d.text" [link]="d.link" />
+              }
+            </ph-list>
+            <p class="note">A youth report opens from a name on the cohort report.</p>
+          </ph-card>
+        }
         <ph-card title="Attendance by program">
           <div class="stack">
             @for (p of v.programs; track p.id) {
