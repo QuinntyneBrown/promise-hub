@@ -130,10 +130,6 @@
                 </ph-list-item>
               }
             </ph-list>
-            <ph-inline-message phCardFooter
-              >Your organization asks for a mentor check-in every
-              {{ d.checkInEveryDays }} days.</ph-inline-message
-            >
           } @else {
             <ph-empty-state
               icon="check-circle"
@@ -144,6 +140,12 @@
                 ' days.'
               "
             />
+          }
+          @if (d.checkInsDue.length) {
+            <span phCardFooter
+              >Your organization asks for a mentor check-in every
+              {{ d.checkInEveryDays }} days.</span
+            >
           }
         </ph-card>
         @if (d.cohorts.length) {
