@@ -9,33 +9,11 @@ T = STAFF["tom"]
 J = STAFF["jaylen"]
 R_SEC, R_COST, R_TTV, R_COMPL = "L1-016", "L1-020", "L1-004", "L1-015"
 
-SETTINGS_TABS = [("Organization", "settings"), ("Modules", "settings-modules"), ("Staff and roles", "staff"), ("Notifications", "settings-notifications"), ("Privacy and data", "settings-privacy"), ("Billing", "billing")]
+SETTINGS_TABS = [("Organization", "settings-organization"), ("Modules", "settings-modules"), ("Staff and roles", "staff"), ("Notifications", "settings-notifications"), ("Privacy and data", "settings-privacy"), ("Billing", "billing")]
 
 
 def settings_nav(cur: str) -> str:
     return tabs_nav([(t, page(sid), sid == cur) for t, sid in SETTINGS_TABS], "Settings sections")
-
-
-# ------------------------------------------------------------------ Settings: organization
-@screen("settings", "page", "Settings", route="/settings", reqs=[R_COMPL, R_TTV], na={"empty": "Settings always have values."})
-def settings(S):
-    def form(err=None, busy=False, saved=False):
-        e = err or {}
-        return (f'<form class="card stack form-width--md" action="#" method="post" novalidate>' + (form_summary([(k, m) for k, m in e.items()]) if e else "")
-                + field("org", "Organization name", value=ORG, required=True, error=e.get("org", ""), help_="Shown to guardians.")
-                + field("short", "Short name for texts", value="Harbourview Youth", help_="Under 20 characters.", error=e.get("short", ""))
-                + f'<div class="two-col">{select("tz", "Time zone", ["America/Toronto", "America/Vancouver", "America/New_York"], selected="America/Toronto")}{select("country", "Country", ["Canada", "United States"], selected="Canada", help_="Sets data residency.")}</div>'
-                + field("addr", "Main site address", value="100 Harbour St, Hamilton ON L8L 2A1")
-                + field("reply", "Reply-to email", type_="email", value="hello@harbourview.example", error=e.get("reply", ""))
-                + fieldset("Languages offered to guardians", choice("l", "English", type_="checkbox", checked=True, attrs=' name="l-en" disabled') + choice("l", "Spanish", type_="checkbox", checked=True, attrs=' name="l-es"') + choice("l", "French", type_="checkbox", checked=True, attrs=' name="l-fr"'))
-                + f'<div class="form-actions cluster">{f"<p class=\"save-status save-status--saved\" role=\"status\">{icon("check")}Saved 2:10 pm</p>" if saved else ""}{btn("Save changes", "primary", type_="submit", busy=busy)}</div></form>')
-    hdr = page_header("Settings", ORG) + settings_nav("settings")
-    S.add("default", "Organization settings: name, short name, time zone, country, languages.", nav="settings", user=T, main=hdr + form())
-    S.add("loading", "Settings loading.", nav="settings", main=page_header("Settings", "") + settings_nav("settings") + skeleton_form(6))
-    S.add("error", "Settings failed to load.", nav="settings", main=page_header("Settings", "") + settings_nav("settings") + card(empty("We couldn’t load settings", "Try again.", action=btn("Try again", "primary", icon_name="refresh"), error=True, icon_name="alert-triangle"), cls="card--flush form-width--md"))
-    S.add("invalid", "Short name too long and reply-to not an email.", nav="settings", user=T, main=hdr + form(err={"short": "Under 20 characters (yours is 27).", "reply": "Enter a valid email."}).replace('value="Harbourview Youth"', 'value="Harbourview Youth Collective"').replace('value="hello@harbourview.example"', 'value="hello@harbourview"'))
-    S.add("submitting", "Saving settings.", nav="settings", user=T, main=hdr + form(busy=True))
-    S.add("success", "Saved, with an inline saved status.", nav="settings", user=T, main=hdr + form(saved=True), toast_html=toast_region(toast("success", "Settings saved")))
 
 
 # ------------------------------------------------------------------ Staff and roles

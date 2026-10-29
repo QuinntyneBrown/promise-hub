@@ -411,7 +411,7 @@ def change_password(S):
 # ------------------------------------------------------------------ Shell: main menu, account menu, session expired, offline queue
 @screen("main-menu", "dialog", "Main menu", opens_from="today", reqs=["L1-014"], na={"busy": "A menu has no submit.", "invalid": "A menu has no inputs."})
 def main_menu(S):
-    staff_links = [("today", "Today", "home"), ("check-in", "Check-in", "clipboard"), ("quick-card", "Quick Cards", "heart-pulse"), ("families", "Families", "users"), ("events", "Events", "calendar"), ("slips", "Slips", "clipboard"), ("programs", "Programs", "list"), ("messages", "Messages", "message"), ("reports", "Reports", "chart"), ("incidents", "Incidents", "flag"), ("attendance-history", "Attendance", "table"), ("settings", "Settings", "settings"), ("notifications", "Notifications", "bell"), ("account", "Your account", "user")]
+    staff_links = [("today", "Today", "home"), ("check-in", "Check-in", "clipboard"), ("quick-card", "Quick Cards", "heart-pulse"), ("families", "Families", "users"), ("events", "Events", "calendar"), ("slips", "Slips", "clipboard"), ("programs", "Programs", "list"), ("messages", "Messages", "message"), ("reports", "Reports", "chart"), ("incidents", "Incidents", "flag"), ("attendance-history", "Attendance", "table"), ("settings-organization", "Settings", "settings"), ("notifications", "Notifications", "bell"), ("account", "Your account", "user")]
     director_links = staff_links[:10] + [("applications", "Applications", "inbox"), ("curriculum-tracks", "Curriculum", "star")] + staff_links[10:]
     tail = [("notifications", "Notifications", "bell"), ("account", "Your account", "user")]
 
@@ -1021,3 +1021,78 @@ def correct_attendance(S):
     S.add("busy", "Saving: Save correction is busy and cannot be pressed twice; Cancel still works.", **over("attendance-history", "default", overlays=correct_box(busy=True)))
     S.add("failed", "The save failed: the choice and the reason stay to try again.",
           **over("attendance-history", "default", overlays=correct_box(alert_html=failed_alert("That didn’t go through", "The correction wasn’t saved. Everything is still here; try again."))))
+
+
+# ------------------------------------------------------------------ Configure the organization (prompt 79, L2-122 to L2-126, ADR 0073)
+TIME_ZONES = ["Newfoundland (St. John’s)", "Atlantic (Halifax)", "Eastern (Toronto)", "Central (Winnipeg)", "Saskatchewan (Regina)",
+              "Mountain (Edmonton)", "Pacific (Vancouver)", "Yukon (Whitehorse)"]
+
+
+@screen("organization-profile", "dialog", "Edit organization profile", opens_from="settings-organization", reqs=["L2-122", "L2-001", "L2-032", "L2-035"],
+        na={"success": "Saving closes the dialog: the page shows the toast (`settings-organization/profile-saved`)."})
+def organization_profile(S):
+    def box(err=None, busy=False, alert_html="", name=ORG, email="hello@harbourview.example", phone="905-555-0100"):
+        e = err or {}
+        summary = form_summary([(k, m) for k, m in e.items()]) if e else ""
+        body = (summary
+                + field("org-name", "Organization name", value=name, required=True, autofocus=not e, error=e.get("org-name", ""),
+                        help_="Shown in the top bar, on guardian pages and in every message.")
+                + field("org-city", "City", value="Hamilton, Ontario", required=True, error=e.get("org-city", ""))
+                + field("org-email", "Contact email", type_="email", value=email, optional=True, autocomplete="email", error=e.get("org-email", ""),
+                        help_="Where families and youth can write to you.")
+                + field("org-phone", "Phone", type_="tel", value=phone, optional=True, inputmode="tel", autocomplete="tel", error=e.get("org-phone", ""),
+                        help_="Shown on every guardian page.")
+                + select("org-tz", "Time zone", TIME_ZONES, selected="Eastern (Toronto)",
+                         help_="Today’s sessions, due dates and reminders follow it."))
+        return dialog_box("Edit organization profile", "Saving is logged.", body, footer("Save profile", busy=busy), icon_name="edit",
+                          alert_html=alert_html, form=True)
+    S.add("default", "Tom edits the name, city, contact email, phone and time zone; focus on the name.", **over("settings-organization", overlays=box()))
+    S.add("invalid", "An empty name, an email without a domain and a phone without its area code: inline errors and a summary, nothing saved.",
+          **over("settings-organization", overlays=box(err={"org-name": "Enter your organization’s name.", "org-email": "Enter an email like hello@example.org.",
+                                                            "org-phone": "Include the area code, like 905-555-0100."}, name="", email="hello@harbourview", phone="555-0100")))
+    S.add("busy", "Saving: Save profile is busy, no second submit.", **over("settings-organization", overlays=box(busy=True)))
+    S.add("failed", "The save failed: what he typed is kept and nothing changed.",
+          **over("settings-organization", overlays=box(alert_html=failed_alert("That didn’t go through", "Your organization’s profile is unchanged. Try again."))))
+
+
+@screen("mentoring-defaults", "dialog", "Edit mentoring defaults", opens_from="settings-organization", reqs=["L2-125", "L1-024", "L2-005", "L2-032", "L2-035"],
+        na={"invalid": "The choice is a list of four; any other value is refused by the server and shows the failed state.",
+            "success": "Saving closes the dialog: the page shows the toast (`settings-organization/mentoring-saved`)."})
+def mentoring_defaults(S):
+    def box(busy=False, alert_html=""):
+        body = select("checkin-days", "Mentors check in with each youth", ["Every 7 days", "Every 14 days", "Every 21 days", "Every 30 days"], selected="Every 14 days",
+                      help_="A youth with no mentor check-in from their mentor in this time shows under Check-ins due on the mentor’s dashboard.")
+        return dialog_box("Edit mentoring defaults", "Applies to every mentor at once. Saving is logged.", body, footer("Save defaults", busy=busy),
+                          icon_name="users", alert_html=alert_html, form=True)
+    S.add("default", "How often mentors check in with each youth, every 14 days until changed.", **over("settings-organization", overlays=box()))
+    S.add("busy", "Saving.", **over("settings-organization", overlays=box(busy=True)))
+    S.add("failed", "The save failed: the choice is kept and nothing changed.",
+          **over("settings-organization", overlays=box(alert_html=failed_alert("That didn’t go through", "Your mentoring defaults are unchanged. Try again."))))
+
+
+@screen("website-profile", "dialog", "Edit website profile", opens_from="settings-organization", reqs=["L2-126", "L1-025", "L2-005", "L2-001", "L2-032", "L2-035"],
+        na={"success": "Saving closes the dialog: the page shows the toast (`settings-organization/website-saved`)."})
+def website_profile(S):
+    from pages_organization import TAGLINE, ABOUT
+
+    def box(err=None, busy=False, alert_html="", slug="harbourview", tagline=TAGLINE):
+        e = err or {}
+        summary = form_summary([(k, m) for k, m in e.items()]) if e else ""
+        body = (summary
+                + field("site-slug", "Website address", value=slug, required=True, autofocus=not e, error=e.get("site-slug", ""),
+                        help_="Your site is at /site/ and this name: 3 to 40 lowercase letters, numbers and hyphens. Changing it stops the old address working.")
+                + field("site-tagline", "Tagline", value=tagline, required=True, error=e.get("site-tagline", ""), help_="One line under your name, up to 120 characters.")
+                + textarea("site-about", "About", value=ABOUT, rows=4, optional=True, help_="Up to 1,000 characters.", count=f"{len(ABOUT)} / 1,000")
+                + field("site-email", "Public email", type_="email", value="hello@harbourview.example", optional=True, error=e.get("site-email", ""),
+                        help_="Shown to visitors. Leave it empty to show none."))
+        return dialog_box("Edit website profile", "Visitors see this without signing in. Saving is logged.", body, footer("Save website profile", busy=busy),
+                          icon_name="globe", alert_html=alert_html, form=True, scroll=True)
+    S.add("default", "Tom edits the address, tagline, about and public email of the public website.", **over("settings-organization", overlays=box()))
+    S.add("invalid", "An address with capitals and spaces and an empty tagline: inline errors and a summary.",
+          **over("settings-organization", overlays=box(err={"site-slug": "Use 3 to 40 lowercase letters, numbers and hyphens, starting with a letter.",
+                                                            "site-tagline": "Write a tagline of up to 120 characters."}, slug="Harbourview Youth", tagline="")))
+    S.add("taken", "The address another organization already uses: refused, nothing changed.",
+          **over("settings-organization", overlays=box(err={"site-slug": "Another organization uses this address. Choose another."}, slug="northgate")))
+    S.add("busy", "Saving.", **over("settings-organization", overlays=box(busy=True)))
+    S.add("failed", "The save failed: what he typed is kept and nothing changed.",
+          **over("settings-organization", overlays=box(alert_html=failed_alert("That didn’t go through", "Your website profile is unchanged. Try again."))))

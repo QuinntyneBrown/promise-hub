@@ -55,6 +55,19 @@ def followups_card(rows=FOLLOW_UPS) -> str:
     return card(ul_list(items, card=False, label="Follow-ups, soonest first"), title="Follow-ups", tid="follow-ups", cls="card--flush")
 
 
+CHECKINS_DUE = [("emily", "No mentor check-in yet"), ("kevin", "No mentor check-in yet")]
+
+
+def checkins_due_card(rows=CHECKINS_DUE, days: int = 14) -> str:
+    """Youth whose mentor hasn't logged a mentor check-in within the organization's cadence (L2-125), never-checked-in first, then the oldest."""
+    if not rows:
+        return card(empty("No check-ins due", f"You’ve logged a mentor check-in with each of your youth in the last {days} days.", icon_name="check-circle", heading="h3"),
+                    title="Check-ins due", tid="check-ins-due", cls="card--flush")
+    items = [list_item(CHILD[cid]["name"], when, person=CHILD[cid], href=page("mentor-youth-detail"), end=badge("Due", "warning")) for cid, when in rows]
+    return card(ul_list(items, card=False, label=f"Youth without a mentor check-in in {days} days"), title="Check-ins due", tid="check-ins-due", cls="card--flush",
+                footer=f"Your organization asks for a mentor check-in every {days} days.")
+
+
 def record_card(rows, first: str = "Mateo") -> str:
     footer = btn("All mentor check-ins", "ghost", href=page("mentor-check-in-history"))
     if not rows:

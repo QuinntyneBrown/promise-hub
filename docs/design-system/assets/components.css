@@ -671,6 +671,11 @@ label.bubble__text { cursor: pointer; }
 .logo-mark { display: inline-grid; place-items: center; width: var(--size-avatar-xl); height: var(--size-avatar-xl); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-2); }
 .logo-mark img { display: block; width: 100%; height: 100%; object-fit: contain; }
 
+/* Organization logo: an organization's own uploaded logo in a square frame on a subtle surface, or its initials until it has one. */
+.org-logo { display: inline-grid; place-items: center; width: var(--size-avatar-xl); height: var(--size-avatar-xl); border-radius: var(--radius-lg); border: var(--border-width-hairline) solid var(--color-border-default); background: var(--color-bg-subtle); color: var(--color-fg-muted); font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); overflow: hidden; flex: none; }
+.org-logo img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.org-logo--sm { width: var(--size-avatar-md); height: var(--size-avatar-md); border-radius: var(--radius-md); font-size: var(--font-size-sm); }
+
 /* Durations are already zeroed by tokens.css; loops also stop after one pass. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-iteration-count: 1 !important; }
