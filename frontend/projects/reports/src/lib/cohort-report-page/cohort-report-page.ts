@@ -29,7 +29,12 @@ import {
   SelectOption,
   TableCell,
   TableColumn,
+  PhDialogs,
 } from '@promisehub/components';
+import {
+  ExportReportDialog,
+  ExportReportDialogData,
+} from '../export-report-dialog/export-report-dialog';
 import { EMPTY, catchError, map } from 'rxjs';
 
 const STATUS: Record<
@@ -68,6 +73,7 @@ const STATUS: Record<
 })
 export class CohortReportPage {
   private readonly api = inject(REPORTS_API);
+  private readonly dialogs = inject(PhDialogs);
   private readonly router = inject(Router);
   private readonly modules = toSignal(
     inject(SESSION_API)
@@ -164,6 +170,15 @@ export class CohortReportPage {
     inject(ActivatedRoute).paramMap.subscribe((params) => {
       this.programId.set(params.get('programId')!);
       this.load();
+    });
+  }
+
+  /** Exports exactly what the report shows (dialog: export-report, L2-129). */
+  protected openExport(report: CohortReport): void {
+    this.dialogs.open<void, ExportReportDialogData, ExportReportDialog>(ExportReportDialog, {
+      request: { kind: 'Cohort', programId: report.programId, days: null },
+      title: 'Export cohort report',
+      description: report.name,
     });
   }
 

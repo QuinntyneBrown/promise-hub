@@ -10,6 +10,7 @@ import { ProgressBoard } from './progress-board';
 import { StaffReport } from './staff-report';
 import { YouthReport } from './youth-report';
 import { ReportExport } from './report-export';
+import { ReportExportRequest } from './report-export-request';
 import { ReportsApi } from './reports-api';
 import { SurveySent } from './survey-sent';
 
@@ -42,6 +43,10 @@ export class HttpReportsApi implements ReportsApi {
 
   export(programId: string | null): Observable<LoadResult<ReportExport>> {
     return toLoad(this.http.post<ReportExport>(`${this.baseUrl}/reports/exports`, { programId }));
+  }
+
+  exportReport(request: ReportExportRequest): Observable<LoadResult<ReportExport>> {
+    return toLoad(this.http.post<ReportExport>(`${this.baseUrl}/reports/exports`, request));
   }
 
   sendSurvey(eventId: string): Observable<LoadResult<SurveySent>> {

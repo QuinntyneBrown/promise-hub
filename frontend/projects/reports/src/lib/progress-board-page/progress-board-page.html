@@ -13,7 +13,13 @@
   <ph-page-header
     title="Progress board"
     subtitle="Every youth, every module · the spreadsheet, replaced"
-  />
+  >
+    @if (b && b.youth.length && b.modules.length) {
+      <ph-button variant="primary" icon="download" hasPopup="dialog" (click)="openExport(b)"
+        >Export CSV</ph-button
+      >
+    }
+  </ph-page-header>
   @if (programs(); as options) {
     @if (options.length) {
       <div class="toolbar">

@@ -302,6 +302,7 @@ export * from './lib/reports/staff-report';
 export * from './lib/reports/mentor-activity-row';
 export * from './lib/reports/progress-board';
 export * from './lib/reports/report-export';
+export * from './lib/reports/report-export-request';
 export * from './lib/reports/reports-api';
 export * from './lib/reports/reports-api.token';
 export * from './lib/guardian/guardian-survey';

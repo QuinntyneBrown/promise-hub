@@ -51,6 +51,18 @@ test.describe('Report on staff activity as a program director', () => {
     await expect(staff.stat('Check-ins logged')).toHaveText('1');
   });
 
+  test('Given Export CSV, then one row per mentor for the period is offered', async ({ page, api }) => {
+    learningReports(api);
+    const staff = new StaffReportPage(page);
+    await staff.open();
+
+    await staff.exportCsv();
+
+    await expect(staff.download).toBeVisible();
+    expect(api.lastExportCsv().split('\n')[0]).toBe('Mentor,Cohorts,Youth,Check-ins,Reviews,Load');
+    await staff.expectAccessible();
+  });
+
   test('Given no mentors, then it says so', async ({ page, api }) => {
     learningReports(api);
     api.removeMembership('m-daniel');

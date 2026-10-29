@@ -17,7 +17,12 @@ import {
   SelectOption,
   TableCell,
   TableColumn,
+  PhDialogs,
 } from '@promisehub/components';
+import {
+  ExportReportDialog,
+  ExportReportDialogData,
+} from '../export-report-dialog/export-report-dialog';
 
 const LOAD: Record<
   MentorActivityRow['load'],
@@ -51,6 +56,7 @@ const LOAD: Record<
 })
 export class StaffReportPage {
   private readonly api = inject(REPORTS_API);
+  private readonly dialogs = inject(PhDialogs);
 
   protected readonly period = signal('');
   protected readonly periods: SelectOption[] = [
@@ -102,6 +108,16 @@ export class StaffReportPage {
   protected choose(period: string): void {
     this.period.set(period);
     this.load();
+  }
+
+  /** Exports a row per mentor for the period (dialog: export-report, L2-129). */
+  protected openExport(): void {
+    const days = this.period() ? (Number(this.period()) as 30 | 90) : null;
+    this.dialogs.open<void, ExportReportDialogData, ExportReportDialog>(ExportReportDialog, {
+      request: { kind: 'Staff', programId: null, days },
+      title: 'Export staff activity',
+      description: days ? `Last ${days} days` : 'All time',
+    });
   }
 
   protected load(): void {

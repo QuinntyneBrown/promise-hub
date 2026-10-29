@@ -10,7 +10,13 @@
   </ph-error-page>
 } @else {
   <ph-breadcrumb [items]="crumbs" />
-  <ph-page-header title="Staff activity" subtitle="Mentor caseloads, check-ins and reviews" />
+  <ph-page-header title="Staff activity" subtitle="Mentor caseloads, check-ins and reviews">
+    @if (v?.mentors?.length) {
+      <ph-button variant="primary" icon="download" hasPopup="dialog" (click)="openExport()"
+        >Export CSV</ph-button
+      >
+    }
+  </ph-page-header>
   <div class="toolbar">
     <ph-select
       inputId="rs-period"

@@ -18,7 +18,12 @@ import {
   SelectOption,
   TableCell,
   TableColumn,
+  PhDialogs,
 } from '@promisehub/components';
+import {
+  ExportReportDialog,
+  ExportReportDialogData,
+} from '../export-report-dialog/export-report-dialog';
 import { map } from 'rxjs';
 
 const CELL: Record<
@@ -53,6 +58,7 @@ const CELL: Record<
 })
 export class ProgressBoardPage {
   private readonly api = inject(REPORTS_API);
+  private readonly dialogs = inject(PhDialogs);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
@@ -119,6 +125,15 @@ export class ProgressBoardPage {
   /** The chosen cohort: the one in the address, else the first active program. */
   protected chosen(): string | null {
     return this.programId() ?? this.programs()?.[0]?.value ?? null;
+  }
+
+  /** Exports the board for the chosen cohort (dialog: export-report, L2-129). */
+  protected openExport(board: ProgressBoard): void {
+    this.dialogs.open<void, ExportReportDialogData, ExportReportDialog>(ExportReportDialog, {
+      request: { kind: 'Progress', programId: board.programId, days: null },
+      title: 'Export progress board',
+      description: board.programName + (board.trackName ? ' · ' + board.trackName : ''),
+    });
   }
 
   protected load(): void {

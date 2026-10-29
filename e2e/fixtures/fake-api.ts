@@ -12835,10 +12835,21 @@ export class FakeApi {
     });
   }
 
+  /** The CSV of the latest export, as the download would answer it. */
+  lastExportCsv(): string {
+    return [...this.reportExports.values()].at(-1)?.csv ?? "";
+  }
+
   private async exportReport(route: Route): Promise<void> {
     const m = await this.reportsCaller(route);
     if (!m) return;
-    const b = route.request().postDataJSON() as { programId: string | null };
+    const b = route.request().postDataJSON() as {
+      programId: string | null;
+      kind?: string | null;
+      days?: number | null;
+    };
+    const kind = b.kind ?? "Summary";
+    if (kind !== "Summary") return this.exportDetailed(route, m, kind, b);
     const r = this.computeReport(m, b.programId, true);
     const csv = [
       "Measure,Value",
@@ -12863,6 +12874,57 @@ export class FakeApi {
         rows: r.ages.length + r.programs.length + r.languages.length + 4,
         expiresAt: "2026-11-12T21:12:00Z",
       },
+    });
+  }
+
+  /** Mirrors backend ReportsHandler.ExportAsync for the detailed kinds (L2-129). */
+  private async exportDetailed(
+    route: Route,
+    m: Membership,
+    kind: string,
+    b: { programId: string | null; days?: number | null },
+  ): Promise<void> {
+    if (kind !== "Cohort" && kind !== "Progress" && kind !== "Staff")
+      return route.fulfill({
+        status: 422,
+        json: { errors: { kind: "Choose Summary, Cohort, Progress or Staff." } },
+      });
+    if (kind !== "Staff" && !b.programId)
+      return route.fulfill({
+        status: 422,
+        json: { errors: { programId: "Choose a cohort." } },
+      });
+    const on = this.modules.get(m.organizationId)!;
+    if ((kind === "Progress" && !on.includes("Learning")) || (kind === "Staff" && !on.includes("Mentoring")))
+      return route.fulfill({ status: 404 });
+    const days = b.days ?? null;
+    if (kind === "Staff" && days !== null && days !== 30 && days !== 90)
+      return route.fulfill({
+        status: 422,
+        json: { errors: { days: "Choose 30 or 90 days, or all time." } },
+      });
+    const out = this.reports.csv(this.reportSource(m), kind, b.programId, days);
+    if (!out) return route.fulfill({ status: 404 });
+    const slug = (name: string) =>
+      name
+        .toLowerCase()
+        .replace(/[^\p{L}\p{N}]+/gu, " ")
+        .trim()
+        .split(" ")
+        .join("-");
+    const org = organizations.find((o) => o.id === m.organizationId)!;
+    const fileName = [slug(org.name), kind.toLowerCase(), out.programName ? slug(out.programName) : null, "2026-11-05"]
+      .filter(Boolean)
+      .join("-") + ".csv";
+    const id = `export-${this.nextId++}`;
+    this.reportExports.set(id, {
+      organizationId: m.organizationId,
+      fileName,
+      csv: out.lines.join("\n") + "\n",
+    });
+    return route.fulfill({
+      status: 201,
+      json: { id, fileName, rows: out.lines.length - 1, expiresAt: "2026-11-12T21:12:00Z" },
     });
   }
 

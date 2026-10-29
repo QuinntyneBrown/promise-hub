@@ -372,6 +372,61 @@ export class FakeReports {
     };
   }
 
+  /** The CSV lines of a detailed export (L2-129), as backend ReportsHandler writes them; null when the program is not the organization's. */
+  csv(s: ReportSource, kind: "Cohort" | "Progress" | "Staff", programId: string | null, days: number | null): { lines: string[]; programName: string | null } | null {
+    const field = (v: string | number | null) => {
+      const t = v === null ? "" : String(v);
+      return /[",\n\r]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t;
+    };
+    const line = (values: (string | number | null)[]) => values.map(field).join(",");
+    if (kind === "Cohort") {
+      const r = this.cohort(s, programId!);
+      if (!r) return null;
+      const rollCall = s.modules.includes("RollCall");
+      const head = ["Youth", ...(r.learning ? ["Learning (%)"] : []), ...(rollCall ? ["Attendance (%)"] : []), ...(r.atRisk !== null ? ["Check-ins"] : []), "Status"];
+      const status = { AtRisk: "At risk", Ended: "Ended", OnTrack: "On track" } as Record<string, string>;
+      return {
+        programName: r.name,
+        lines: [
+          line(head),
+          ...r.youth.map((y) =>
+            line([
+              y.name,
+              ...(r.learning ? [y.hasAccount ? y.learning : "No account"] : []),
+              ...(rollCall ? [y.attendanceRate] : []),
+              ...(r.atRisk !== null ? [y.checkIns] : []),
+              status[y.status]!,
+            ]),
+          ),
+        ],
+      };
+    }
+    if (kind === "Progress") {
+      const b = this.progress(s, programId!);
+      if (!b) return null;
+      const words = { Done: "Done", InProgress: "In progress", NotStarted: "Not started", NoAccount: "No account" } as Record<string, string>;
+      return {
+        programName: b.programName,
+        lines: [
+          line(["Youth", ...b.modules.map((m) => m.title), "Quiz average (%)", "Overall (%)"]),
+          ...b.youth.map((y) => line([y.name, ...y.cells.map((c) => words[c]!), y.quizAverage, y.overall])),
+          line(["Cohort average", ...b.average.modules, b.average.quizAverage, b.average.overall]),
+        ],
+      };
+    }
+    const r = this.staff(s, days);
+    const reviews = r.reviews !== null;
+    return {
+      programName: null,
+      lines: [
+        line(["Mentor", "Cohorts", "Youth", "Check-ins", ...(reviews ? ["Reviews"] : []), "Load"]),
+        ...r.mentors.map((m) =>
+          line([m.name, m.cohorts.map((c) => `${c.name} (${c.lead ? "lead" : "supporting"})`).join("; "), m.caseload, m.checkIns, ...(reviews ? [m.reviews] : []), m.load]),
+        ),
+      ],
+    };
+  }
+
   private comparison(
     s: ReportSource,
     learningOn: boolean,

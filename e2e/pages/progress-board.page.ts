@@ -42,6 +42,20 @@ export class ProgressBoardPage extends BasePage {
     return this.page.getByRole('heading', { name: 'We couldn’t load the progress board' });
   }
 
+  get dialog(): Locator {
+    return this.page.getByRole('dialog');
+  }
+
+  async exportCsv(): Promise<void> {
+    await this.page.getByRole('button', { name: 'Export CSV' }).click();
+    await expect(this.dialog).toBeVisible();
+    await this.dialog.getByRole('button', { name: 'Export CSV' }).click();
+  }
+
+  get download(): Locator {
+    return this.dialog.getByRole('link', { name: /^Download/ });
+  }
+
   get forbidden(): Locator {
     return this.page.getByRole('heading', { name: 'Reports are for directors and site leads' });
   }

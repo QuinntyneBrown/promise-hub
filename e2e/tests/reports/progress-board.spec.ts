@@ -28,6 +28,19 @@ test.describe('Read the progress board as a program director', () => {
     await board.expectNoHorizontalScroll();
   });
 
+  test('Given Export CSV, then the board exports for the chosen cohort with the cohort average', async ({ page, api }) => {
+    learningReports(api);
+    const board = new ProgressBoardPage(page);
+    await board.open();
+
+    await board.exportCsv();
+
+    await expect(board.download).toBeVisible();
+    const csv = api.lastExportCsv();
+    expect(csv.split('\n')[0]).toBe('Youth,Knowing Yourself,Quiz average (%),Overall (%)');
+    expect(csv.trim().split('\n').at(-1)).toBe('Cohort average,50,,50');
+  });
+
   test('Given a cohort that follows no track, then the board says so', async ({ page, api }) => {
     learningReports(api);
     api.curriculumState.programTracks.delete('p-sports');

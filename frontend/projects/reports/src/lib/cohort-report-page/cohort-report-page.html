@@ -28,7 +28,13 @@
       [subtitle]="
         'Cohort report · since the program started' + (v.trackName ? ' · ' + v.trackName : '')
       "
-    />
+    >
+      @if (v.enrolled + v.ended > 0) {
+        <ph-button variant="primary" icon="download" hasPopup="dialog" (click)="openExport(v)"
+          >Export CSV</ph-button
+        >
+      }
+    </ph-page-header>
     <div class="toolbar">
       <ph-select
         inputId="rc-cohort"

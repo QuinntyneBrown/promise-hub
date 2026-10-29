@@ -6,6 +6,7 @@ import type { StaffReport } from './staff-report';
 import type { YouthReport } from './youth-report';
 import type { Report } from './report';
 import type { ReportExport } from './report-export';
+import type { ReportExportRequest } from './report-export-request';
 import type { SurveySent } from './survey-sent';
 
 /** Reports and their exports. */
@@ -20,6 +21,8 @@ export interface ReportsApi {
   /** The progress board of one cohort (L2-131). */
   progress(programId: string): Observable<LoadResult<ProgressBoard>>;
   export(programId: string | null): Observable<LoadResult<ReportExport>>;
+  /** Exports a detailed report as CSV, exactly as it shows (L2-129). */
+  exportReport(request: ReportExportRequest): Observable<LoadResult<ReportExport>>;
   /** Where the browser downloads an export from. */
   downloadUrl(id: string): string;
   /** Texts the event's households a survey link per child. */

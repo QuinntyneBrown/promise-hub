@@ -27,8 +27,8 @@ public static class ReportEndpoints
             await handler.ProgressAsync(programId, ct) is { } board ? Results.Ok(board) : Results.NotFound()).RequireModule(ModuleId.Learning);
         reports.MapPost("/exports", async (ExportReportCommand command, ReportsHandler handler, CancellationToken ct) =>
         {
-            var created = await handler.ExportAsync(command, ct);
-            return Results.Created($"/reports/exports/{created.Id}", created);
+            var export = await handler.ExportAsync(command, ct);
+            return export.Value is { } created ? Results.Created($"/reports/exports/{created.Id}", created) : export.ToHttp();
         });
         reports.MapGet("/exports/{id:guid}", async (Guid id, ReportsHandler handler, CancellationToken ct) =>
         {
