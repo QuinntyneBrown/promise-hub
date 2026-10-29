@@ -17,7 +17,7 @@ Ported from Waypoint `program-administration/configure-organization-profile` (`L
 
 Frontend:
 
-- **`SettingsOrganizationPage`** (`frontend/projects/settings/`) — `/settings/organization`. Loads `ORGANIZATION_SETTINGS_API.profile()`; shows the Profile card (`ph-card`, `ph-description-list`, `ph-org-logo`, `ph-file-upload`) with Edit profile, Replace logo and Remove logo; states loading, error, forbidden, default and each saved toast. After a profile save it resets the session (`SESSION_API.reset()`) so the shell shows the new name.
+- **`SettingsOrganizationPage`** (`frontend/projects/settings/`) — `/settings/organization`. Loads `ORGANIZATION_SETTINGS_API.profile()`; shows the Profile card (`ph-card`, `ph-description-list`, `ph-org-logo`, `ph-file-upload`) with Edit profile, the logo or the initials, Remove logo and the drop zone that adds or replaces it (a refused file says why under the zone, a failed upload shows an alert); states loading, error, forbidden, default and each saved toast. After a profile save it resets the session (`SESSION_API.reset()`) so the shell shows the new name.
 - **`OrganizationProfileDialog`** — CDK dialog with `ph-text-field` (name, city, contact email, phone), `ph-select` (time zone), `ph-error-summary` and the failed `ph-alert`; closes with true once saved.
 - **`ORGANIZATION_SETTINGS_API`** (`frontend/projects/api/`) — `profile`, `saveProfile`, `uploadLogo`, `removeLogo`, `logoUrl`.
 - **`PhOrgLogo`** (`frontend/projects/components/`) — the design system's org-logo: the image, or the initials.
@@ -26,10 +26,16 @@ Backend:
 
 - **`OrganizationProfileHandler`** (`Application/Organizations/`) — `GetAsync` answers the profile and whether a logo is set; `SaveAsync` validates (name and city 1 to 100 characters, an email or empty, ten digits or empty, a time zone from `OrganizationTimeZones`), changes the active organization only, audits Updated on `Organization` with the changed field names.
 - **`OrganizationLogoHandler`** — `UploadAsync` checks the first bytes for PNG or JPEG and the size (at most 1 MB), saves under `logos/{organizationId}/{random}.png|jpg`, replaces and deletes the earlier file, audits Created on `OrganizationLogo`; `OpenAsync` streams it; `RemoveAsync` deletes it and audits Deleted.
-- **`Organization`** — gains `ContactEmail`, `LogoKey`, `LogoFileName`, `LogoContentType`, `LogoUploadedAt`, `LogoUploadedBy` and `ChangeDetails(...)`; migration `OrganizationSettings`.
+- **`Organization`** — gains `ContactEmail`, `LogoKey`, `LogoFileName`, `LogoContentType`, `LogoUploadedAt`, `LogoUploadedBy`, `ChangeDetails(...)`, `AttachLogo(...)` and `RemoveLogo()`; migrations `OrganizationContactEmail` and `OrganizationLogo`.
 - **`SettingsEndpoints`** — `GET`/`PUT /settings/organization/profile`, `POST`/`GET`/`DELETE /settings/organization/logo` under `ManageSettings`.
 
 The fake API keeps the profile and logo per organization.
+
+## Built so far
+
+Prompt 79 delivered everything above: `OrganizationProfileHandler`, `OrganizationLogoHandler`, `EmailAddressRule`, `OrganizationTimeZones`, the profile and logo endpoints, `SettingsOrganizationPage`, `OrganizationProfileDialog`, `ORGANIZATION_SETTINGS_API` and `PhOrgLogo`. `/settings` now lands on Organization. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/OrganizationProfileTests.cs`, `OrganizationLogoTests.cs`, `e2e/tests/settings/organization-profile.spec.ts`, `organization-logo.spec.ts`.
+
+Deferred (ADR 0073): a display name separate from the name, per-organization colours, and showing the logo and contact email on guardian pages, the public website and the top bar.
 
 ## Requirements
 

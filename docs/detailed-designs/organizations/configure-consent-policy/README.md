@@ -28,7 +28,7 @@ Every row is tenant-owned and filtered by the organization (ADR 0002); a guardia
 
 ## Built so far
 
-Prompt 52 delivered everything above: the Guardian consent card on `SettingsPrivacyPage`, `ConsentPolicyDialog`, `PrivacyApi.consentPolicy` and `saveConsentPolicy`, `ConsentPolicyHandler`, `ConsentPolicy` with its migration. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/ConsentPolicyTests.cs`, `e2e/tests/settings/consent-policy.spec.ts`.
+Prompt 52 delivered the Privacy card: the Guardian consent card on `SettingsPrivacyPage`, `ConsentPolicyDialog`, `PrivacyApi.consentPolicy` and `saveConsentPolicy`, `ConsentPolicyHandler`, `ConsentPolicy` with its migration. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/ConsentPolicyTests.cs`, `e2e/tests/settings/consent-policy.spec.ts`. Prompt 79 added the Learning card, `/settings/learning` and `ConsentPolicyDialogData`; acceptance tests `LearningSettingsTests.cs` and `e2e/tests/settings/organization-module-defaults.spec.ts`. Waypoint's re-consent each term and media consent are deferred (ADR 0073).
 
 ## Requirements
 

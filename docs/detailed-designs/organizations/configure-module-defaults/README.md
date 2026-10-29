@@ -30,9 +30,15 @@ Backend:
 - **`PublicWebsiteHandler`** — `PublicSiteDto` gains `Tagline`, `About` and `Email`.
 - **`MentorDashboardHandler`** — `MentorDashboardDto` gains `CheckInEveryDays` and `CheckInsDue` (`MentorCheckInDueDto`: child, name, last date or null).
 - **`SettingsEndpoints`** — `GET`/`PUT /settings/mentoring` with `RequireModule(Mentoring)`, `GET`/`PUT /settings/website` with `RequireModule(PublicWebsite)`, both under `ManageSettings`.
-- **`Organization`** — gains `MentorCheckInDays`, `WebsiteTagline`, `WebsiteAbout`, `WebsiteEmail` (migration `OrganizationSettings`).
+- **`Organization`** — gains `MentorCheckInDays`, `WebsiteTagline`, `WebsiteAbout`, `WebsiteEmail`, `ChangeMentorCheckInDays` and `ChangeWebsiteProfile` (migrations `MentorCheckInCadence` and `WebsiteProfile`).
 
 The fake API keeps both per organization, answers 404 while the module is off and computes Check-ins due.
+
+## Built so far
+
+Prompt 79 delivered everything above: `MentoringSettingsHandler`, `WebsiteProfileHandler`, the settings endpoints behind their module gates, Check-ins due in `MentorDashboardHandler` and on `MentorDashboardPage`, the Mentoring and Public website cards with `MentoringDefaultsDialog` and `WebsiteProfileDialog`, and the profile in `PublicSiteDto`. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/MentoringSettingsTests.cs`, `WebsiteProfileTests.cs`, `e2e/tests/settings/organization-module-defaults.spec.ts`, `e2e/tests/mentoring/mentor-check-ins-due.spec.ts`.
+
+Deferred (ADR 0073): showing the tagline, about and public email on the public pages, which prompt 81 builds.
 
 ## Requirements
 

@@ -4,7 +4,7 @@ class SettingsOrganizationPage { +load() +editProfile() +uploadLogo(file) +remov
 class OrganizationProfileDialog { +save() -errors: Record<string,string> }
 interface OrganizationSettingsApi { +profile() +saveProfile(p) +uploadLogo(file) +removeLogo() +logoUrl() }
 class OrganizationProfileHandler { +GetAsync(): OrganizationProfileDto +SaveAsync(SaveOrganizationProfileRequest): Result }
-class OrganizationLogoHandler { +UploadAsync(name, type, length, stream) +OpenAsync() +RemoveAsync(): Result }
+class OrganizationLogoHandler { +UploadAsync(fileName, length, stream) +OpenAsync() +RemoveAsync(): Result }
 class OrganizationTimeZones <<static>> { All: IReadOnlyList<string> }
 class Organization { Name City ContactEmail? Phone? TimeZone LogoKey? +ChangeDetails(...) +AttachLogo(...) +RemoveLogo() }
 interface ITenantContext { OrganizationId ActorName }
