@@ -43,6 +43,19 @@ public sealed class Organization
     /// <summary>The lower-case name in the public website's address (<c>/site/{slug}</c>); null until chosen (ADR 0043).</summary>
     public string? WebsiteSlug { get; private set; }
 
+    /// <summary>Where families and youth can write to the organization; null until given (L2-122).</summary>
+    public string? ContactEmail { get; private set; }
+
+    /// <summary>Changes the profile kept on Settings › Organization (L2-122, ADR 0073); an empty contact email or phone is null.</summary>
+    public void ChangeDetails(string name, string city, string? contactEmail, string? phone, string timeZone)
+    {
+        Name = name;
+        City = city;
+        ContactEmail = contactEmail;
+        Phone = phone;
+        TimeZone = timeZone;
+    }
+
     public void ChangeWebsiteSlug(string slug) => WebsiteSlug = slug;
 
     public void Suspend(string reason, DateTimeOffset now)

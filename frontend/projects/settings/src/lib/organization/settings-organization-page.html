@@ -1,0 +1,56 @@
+<ph-page-header title="Organization" [subtitle]="subtitle()" />
+@switch (state()) {
+  @case ('forbidden') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="lock"
+        title="Admins set up the organization"
+        text="Ask an admin or a program director."
+      >
+        <ph-button link="/">Back to Today</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('error') {
+    <div class="stack">
+      <ph-tabs label="Settings sections" [links]="sections" />
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="warning"
+          tone="error"
+          title="We couldn’t load your organization’s settings"
+          text="Check your connection and try again."
+        >
+          <ph-button variant="primary" (click)="load()">Try again</ph-button>
+        </ph-empty-state>
+      </ph-card>
+    </div>
+  }
+  @case ('loading') {
+    <div class="stack" aria-busy="true" aria-label="Loading your organization’s settings">
+      <ph-tabs label="Settings sections" [links]="sections" />
+      <ph-skeleton shape="card" />
+    </div>
+  }
+  @default {
+    <div class="stack form">
+      <ph-tabs label="Settings sections" [links]="sections" />
+      @if (profile(); as p) {
+        <ph-card title="Profile">
+          <div class="card-body">
+            <ph-description-list [facts]="profileFacts(p)" />
+            <ph-inline-message>
+              The phone is on every guardian page. Today’s sessions and every date follow the time
+              zone.
+            </ph-inline-message>
+            <div>
+              <ph-button icon="edit" hasPopup="dialog" (click)="editProfile(p)"
+                >Edit profile</ph-button
+              >
+            </div>
+          </div>
+        </ph-card>
+      }
+    </div>
+  }
+}

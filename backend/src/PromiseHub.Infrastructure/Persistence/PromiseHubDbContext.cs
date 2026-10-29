@@ -400,6 +400,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(o => o.SuspendedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
             e.Property(o => o.SuspensionReason).HasMaxLength(500);
             e.Property(o => o.WebsiteSlug).HasMaxLength(60);
+            e.Property(o => o.ContactEmail).HasMaxLength(320);
             e.HasIndex(o => o.WebsiteSlug).IsUnique();
         });
         modelBuilder.Entity<Domain.Surveys.Survey>(e =>

@@ -15,6 +15,9 @@ public static class SettingsEndpoints
         settings.MapGet("/organization", (GetOrganizationSettingsHandler handler, CancellationToken ct) => handler.HandleAsync(ct));
         settings.MapPut("/organization", async (SaveOrganizationCommand command, SetupHandler handler, CancellationToken ct) =>
             (await handler.SaveOrganizationAsync(command, ct)).ToHttp());
+        settings.MapGet("/organization/profile", (OrganizationProfileHandler handler, CancellationToken ct) => handler.GetAsync(ct));
+        settings.MapPut("/organization/profile", async (SaveOrganizationProfileRequest request, OrganizationProfileHandler handler, CancellationToken ct) =>
+            (await handler.SaveAsync(request, ct)).ToHttp());
         app.MapGet("/setup", (SetupHandler handler, CancellationToken ct) => handler.GetAsync(ct)).RequirePermission(Permission.ManageSettings);
         settings.MapGet("/data-requests", (DataRequestHandler handler, CancellationToken ct) => handler.ListAsync(ct));
         settings.MapPost("/data-requests/{id:guid}/fulfil", async (Guid id, DataRequestHandler handler, CancellationToken ct) => (await handler.FulfilAsync(id, ct)).ToHttp());

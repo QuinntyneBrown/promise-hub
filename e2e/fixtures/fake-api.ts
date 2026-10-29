@@ -473,6 +473,27 @@ export interface FakeOnboarding {
   completed: boolean;
 }
 
+/** An organization's profile on Settings › Organization (L2-122). */
+interface FakeOrganizationDetails {
+  name: string;
+  city: string;
+  contactEmail: string | null;
+  phone: string | null;
+  timeZone: string;
+}
+
+/** Mirrors backend OrganizationTimeZones. */
+const FAKE_TIME_ZONES = [
+  "America/St_Johns",
+  "America/Halifax",
+  "America/Toronto",
+  "America/Winnipeg",
+  "America/Regina",
+  "America/Edmonton",
+  "America/Vancouver",
+  "America/Whitehorse",
+];
+
 export class FakeApi {
   readonly unrouted: string[] = [];
   private failures = new Map<string, number>();
@@ -670,7 +691,10 @@ export class FakeApi {
   /** Recovery codes left per person, and whether the other devices were signed out. */
   private recoveryCodes = new Map<string, number>();
   /** Saved profiles by membership (L2-117); a membership without one shows its seeded name. */
-  private readonly profiles = new Map<string, { name: string; mobile: string | null }>();
+  private readonly profiles = new Map<
+    string,
+    { name: string; mobile: string | null }
+  >();
   /** Display preferences by person (email), as saved on Display (L2-119, L2-120). */
   private readonly displays = new Map<string, FakeDisplay>();
   /** Passwords changed by their owner (L2-118), by email; everyone else signs in with the seeded one. */
@@ -759,6 +783,11 @@ export class FakeApi {
       { name: "Harbourview Youth Collective", city: "Hamilton, Ontario" },
     ],
   ]);
+  /** Profiles saved on Settings › Organization (L2-122), by organization; others show their seeded profile. */
+  private readonly organizationDetails = new Map<
+    string,
+    FakeOrganizationDetails
+  >();
   /** Report exports by id: organization, file name and CSV. */
   private reportExports = new Map<
     string,
@@ -2230,6 +2259,16 @@ export class FakeApi {
       /^\/api\/settings\/organization$/,
       (route) => this.saveOrganizationProfile(route),
     ],
+    [
+      "GET",
+      /^\/api\/settings\/organization\/profile$/,
+      (route) => this.getOrganizationDetails(route),
+    ],
+    [
+      "PUT",
+      /^\/api\/settings\/organization\/profile$/,
+      (route) => this.saveOrganizationDetails(route),
+    ],
     ["GET", /^\/api\/settings\/privacy$/, (route) => this.getPrivacy(route)],
     [
       "GET",
@@ -3013,7 +3052,7 @@ export class FakeApi {
         personName: this.profileOf(membership.id).name,
         role: membership.role,
         organizationId: organization.id,
-        organizationName: organization.name,
+        organizationName: this.organizationDetailsOf(organization.id).name,
         plan: organization.plan,
         modules: this.modules.get(organization.id),
         membershipId: membership.id,
@@ -5304,7 +5343,9 @@ export class FakeApi {
   /** The name and mobile of a membership, as saved from its profile (L2-117). */
   profileOf(membershipId: string): { name: string; mobile: string | null } {
     const m = memberships.find((x) => x.id === membershipId)!;
-    return this.profiles.get(membershipId) ?? { name: m.personName, mobile: null };
+    return (
+      this.profiles.get(membershipId) ?? { name: m.personName, mobile: null }
+    );
   }
 
   /** Mirrors backend ProfileHandler: the active membership only; a youth's name is read-only; audited without values. */
@@ -5322,7 +5363,8 @@ export class FakeApi {
     if (!name) errors["name"] = "Enter your name.";
     else if (name.length > 100) errors["name"] = "Use at most 100 characters.";
     else if (m.role === "Youth" && name !== current.name)
-      errors["name"] = "Your name comes from your record. Ask staff to change it.";
+      errors["name"] =
+        "Your name comes from your record. Ask staff to change it.";
     if (mobile && mobile.replace(/\D/g, "").length !== 10)
       errors["mobile"] = "Include the area code, like 905-555-0101.";
     if (Object.keys(errors).length)
@@ -5342,7 +5384,13 @@ export class FakeApi {
 
   /** A person's display preferences; System, Default and motion on until saved (L2-119, L2-120). */
   displayOf(email: string): FakeDisplay {
-    return this.displays.get(email) ?? { theme: "system", textSize: "default", reduceMotion: false };
+    return (
+      this.displays.get(email) ?? {
+        theme: "system",
+        textSize: "default",
+        reduceMotion: false,
+      }
+    );
   }
 
   /** Mirrors backend DisplayPreferencesHandler: the caller's own, by person. */
@@ -5500,6 +5548,92 @@ export class FakeApi {
       name: b.name.trim(),
       city: b.city.trim(),
     });
+    return route.fulfill({ status: 204 });
+  }
+
+  /** The organization's profile as saved on Settings › Organization, or as seeded (mirrors backend OrganizationProfileHandler). */
+  organizationDetailsOf(organizationId: string): FakeOrganizationDetails {
+    const org = organizations.find((o) => o.id === organizationId)!;
+    return (
+      this.organizationDetails.get(organizationId) ?? {
+        name: org.name,
+        city: org.city ?? "",
+        contactEmail: null,
+        phone:
+          organizationId === "org-northgate" ? "289-555-0190" : "905-555-0100",
+        timeZone: "America/Toronto",
+      }
+    );
+  }
+
+  private async getOrganizationDetails(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    return route.fulfill({
+      json: { ...this.organizationDetailsOf(organizationId), hasLogo: false },
+    });
+  }
+
+  private async saveOrganizationDetails(route: Route): Promise<void> {
+    const organizationId = await this.settingsCaller(route);
+    if (!organizationId) return;
+    const b = route
+      .request()
+      .postDataJSON() as Partial<FakeOrganizationDetails>;
+    const name = (b.name ?? "").trim();
+    const city = (b.city ?? "").trim();
+    const contactEmail = b.contactEmail?.trim().toLowerCase() || null;
+    const phone = b.phone?.trim() || null;
+    const timeZone = (b.timeZone ?? "").trim();
+    const errors: Record<string, string> = {};
+    const required = (value: string, field: string, empty: string) => {
+      if (!value) errors[field] = empty;
+      else if (value.length > 100)
+        errors[field] = "Use at most 100 characters.";
+    };
+    required(name, "name", "Enter your organization’s name.");
+    required(city, "city", "Enter the city you work in.");
+    if (contactEmail && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(contactEmail))
+      errors["contactEmail"] = "Enter an email like hello@example.org.";
+    if (phone && phone.replace(/\D/g, "").slice(-10).length !== 10)
+      errors["phone"] = "Include the area code, like 905-555-0100.";
+    if (!FAKE_TIME_ZONES.includes(timeZone))
+      errors["timeZone"] = "Choose a time zone from the list.";
+    if (Object.keys(errors).length)
+      return route.fulfill({ status: 422, json: { errors } });
+    const before = this.organizationDetailsOf(organizationId);
+    const after: FakeOrganizationDetails = {
+      name,
+      city,
+      contactEmail,
+      phone,
+      timeZone,
+    };
+    const labels: Record<keyof FakeOrganizationDetails, string> = {
+      name: "name",
+      city: "city",
+      contactEmail: "contact email",
+      phone: "phone",
+      timeZone: "time zone",
+    };
+    const changed = (Object.keys(labels) as (keyof FakeOrganizationDetails)[])
+      .filter((k) => before[k] !== after[k])
+      .map((k) => labels[k]);
+    this.organizationDetails.set(organizationId, after);
+    if (changed.length) {
+      const who = memberships.find(
+        (m) => m.id === this.membershipId,
+      )!.personName;
+      this.auditEntries.push({
+        organizationId,
+        when: NOW.toISOString(),
+        who,
+        action: "Updated",
+        record: "Organization",
+        summary: `Organization profile: ${changed.join(", ")} changed by ${who}`,
+        device: null,
+      });
+    }
     return route.fulfill({ status: 204 });
   }
 

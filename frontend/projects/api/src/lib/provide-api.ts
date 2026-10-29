@@ -60,6 +60,8 @@ import { PLATFORM_API } from './platform/platform-api.token';
 import { ACCOUNT_API } from './account/account-api.token';
 import { HttpAccountApi } from './account/http-account-api';
 import { DISPLAY_API } from './display/display-api.token';
+import { ORGANIZATION_SETTINGS_API } from './organization-settings/organization-settings-api.token';
+import { HttpOrganizationSettingsApi } from './organization-settings/http-organization-settings-api';
 import { HttpDisplayApi } from './display/http-display-api';
 import { HttpSearchApi } from './search/http-search-api';
 import { HttpSetupApi } from './setup/http-setup-api';
@@ -121,6 +123,7 @@ export function provideApi(): EnvironmentProviders {
     { provide: AUDIT_API, useClass: HttpAuditApi },
     { provide: PLATFORM_API, useClass: HttpPlatformApi },
     { provide: PRIVACY_API, useClass: HttpPrivacyApi },
+    { provide: ORGANIZATION_SETTINGS_API, useClass: HttpOrganizationSettingsApi },
     { provide: BILLING_API, useClass: HttpBillingApi },
     { provide: SETUP_API, useClass: HttpSetupApi },
     { provide: REPORTS_API, useClass: HttpReportsApi },

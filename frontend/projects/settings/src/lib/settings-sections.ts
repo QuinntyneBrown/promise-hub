@@ -2,6 +2,7 @@ import type { TabLink } from '@promisehub/components';
 
 /** The sections of Settings. Only built sections are linked. */
 export const SETTINGS_SECTIONS: TabLink[] = [
+  { label: 'Organization', link: '/settings/organization' },
   { label: 'Modules', link: '/settings/modules' },
   { label: 'Notifications', link: '/settings/notifications' },
   { label: 'Privacy', link: '/settings/privacy' },
