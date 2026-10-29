@@ -13,7 +13,7 @@ namespace PromiseHub.Application.Reports;
 /// <summary>
 /// The detailed reports (L2-127, L2-128, L2-131, ADR 0074), computed on read inside the tenant filter. A section whose module is off is null.
 /// </summary>
-public sealed class DetailedReportsHandler(IPromiseHubDb db, LearnerProgress progress, IModuleGate modules, TimeProvider clock)
+public sealed class DetailedReportsHandler(IPromiseHubDb db, LearnerProgress progress, IModuleGate modules, Mentoring.OrganizationToday today, TimeProvider clock)
 {
     /// <summary>The cohort report of one program of the organization, or null when there is no such program.</summary>
     public async Task<CohortReportDto?> CohortAsync(Guid programId, CancellationToken cancellationToken = default)
@@ -67,6 +67,73 @@ public sealed class DetailedReportsHandler(IPromiseHubDb db, LearnerProgress pro
             await ComparisonAsync(learningOn, rollCallOn, cancellationToken),
             youth);
     }
+
+    /// <summary>The youth report of one child of the organization, or null when there is no such child (L2-127 criterion 3).</summary>
+    public async Task<YouthReportDto?> YouthAsync(Guid childId, CancellationToken cancellationToken = default)
+    {
+        var child = await db.Children.AsNoTracking().FirstOrDefaultAsync(c => c.Id == childId, cancellationToken);
+        if (child is null)
+        {
+            return null;
+        }
+        var on = await modules.OnAsync(cancellationToken);
+        var programs = await (from e in db.Enrollments.AsNoTracking()
+                              join p in db.Programs.AsNoTracking() on e.ProgramId equals p.Id
+                              where e.ChildId == childId && e.EndedAt == null && p.Status == ProgramStatus.Active
+                              orderby p.Name
+                              select p.Name).ToListAsync(cancellationToken);
+        var account = await db.Memberships.AsNoTracking()
+            .Where(m => m.ChildId == childId && m.Role == Role.Youth && m.RemovedAt == null).Select(m => (Guid?)m.Id).FirstOrDefaultAsync(cancellationToken);
+
+        YouthLearningDto? learning = null;
+        if (on.Contains(ModuleId.Learning) && account is { } membershipId)
+        {
+            var tracks = await progress.ForMembership(membershipId).TracksAsync(cancellationToken);
+            var quizzes = tracks.SelectMany(t => t.Modules).SelectMany(m => m.Quizzes).Where(q => q.BestScore is not null)
+                .Select(q => new YouthQuizDto(q.Quiz.Id, q.Quiz.Title, q.BestScore!.Value)).ToList();
+            var badges = await (from a in db.BadgeAwards.AsNoTracking()
+                                join b in db.Badges.AsNoTracking() on a.BadgeId equals b.Id
+                                where a.MembershipId == membershipId
+                                orderby a.AwardedAt
+                                select b.Name).ToListAsync(cancellationToken);
+            var done = tracks.Sum(t => t.Done);
+            var total = tracks.Sum(t => t.Total);
+            learning = new YouthLearningDto(done, total, Percent(done, total), Average(quizzes.Select(q => (int?)q.BestScore)),
+                [.. tracks.SelectMany(t => t.Modules).Select(m => new YouthModuleDto(m.Module.Id, m.Module.Title, m.Done, m.Lessons.Count, ModuleState(m)))],
+                quizzes, badges);
+        }
+
+        YouthAttendanceSummaryDto? attendance = null;
+        if (on.Contains(ModuleId.RollCall))
+        {
+            var marks = (await db.AttendanceRecords.AsNoTracking().Where(r => r.ChildId == childId).ToListAsync(cancellationToken))
+                .Select(AttendanceMarks.Of).Where(m => m is not null).Select(m => m!.Value).ToList();
+            attendance = new YouthAttendanceSummaryDto(marks.Count(m => m == AttendanceMark.Present), marks.Count(m => m == AttendanceMark.Late),
+                marks.Count(m => m == AttendanceMark.Excused), marks.Count(m => m == AttendanceMark.Absent),
+                AttendanceMarks.Rate(marks.Count(AttendanceMarks.Attended), marks.Count));
+        }
+
+        YouthMentoringDto? mentoring = null;
+        if (on.Contains(ModuleId.Mentoring))
+        {
+            var mentor = await (from y in db.YouthMentors.AsNoTracking()
+                                join m in db.Memberships.AsNoTracking() on y.MentorMembershipId equals m.Id
+                                where y.ChildId == childId
+                                select m.PersonName).FirstOrDefaultAsync(cancellationToken);
+            var checkIns = await db.MentorCheckIns.AsNoTracking().Where(c => c.ChildId == childId)
+                .Select(c => new { c.Date, c.Engagement, c.CreatedAt }).ToListAsync(cancellationToken);
+            var latest = checkIns.OrderByDescending(c => c.Date).ThenByDescending(c => c.CreatedAt).FirstOrDefault();
+            mentoring = new YouthMentoringDto(mentor, checkIns.Count, latest?.Date, latest?.Engagement.ToString(),
+                await db.AtRiskFlags.AsNoTracking().AnyAsync(f => f.ChildId == childId && f.ResolvedAt == null, cancellationToken));
+        }
+
+        return new YouthReportDto(child.Id, child.FullName, child.AgeOn(await today.GetAsync(cancellationToken)), programs, account is not null,
+            learning, attendance, mentoring);
+    }
+
+    /// <summary>Done when every lesson is done and every required quiz passed, InProgress with some lessons done, else NotStarted.</summary>
+    private static string ModuleState(ModuleStatus module) =>
+        module.Lessons.Count > 0 && module.Complete ? "Done" : module.Done > 0 ? "InProgress" : "NotStarted";
 
     /// <summary>Attendance, retention and average completion across every active program of the organization.</summary>
     private async Task<CohortComparisonDto> ComparisonAsync(bool learningOn, bool rollCallOn, CancellationToken cancellationToken)

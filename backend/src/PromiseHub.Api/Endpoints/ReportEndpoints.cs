@@ -19,6 +19,8 @@ public static class ReportEndpoints
         // The detailed reports (L2-127, ADR 0074): computed on read, a section per module.
         reports.MapGet("/cohorts/{programId:guid}", async (Guid programId, DetailedReportsHandler handler, CancellationToken ct) =>
             await handler.CohortAsync(programId, ct) is { } report ? Results.Ok(report) : Results.NotFound());
+        reports.MapGet("/youth/{childId:guid}", async (Guid childId, DetailedReportsHandler handler, CancellationToken ct) =>
+            await handler.YouthAsync(childId, ct) is { } report ? Results.Ok(report) : Results.NotFound());
         reports.MapPost("/exports", async (ExportReportCommand command, ReportsHandler handler, CancellationToken ct) =>
         {
             var created = await handler.ExportAsync(command, ct);

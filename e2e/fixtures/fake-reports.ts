@@ -2,6 +2,7 @@ import type { FakeCurriculum } from "./fake-curriculum";
 import type { FakeLearning, TrackState } from "./fake-learning";
 import type { FakeAtRiskFlag } from "./fake-at-risk-flags";
 import type { FakeMentorCheckIn } from "./fake-mentor-check-ins";
+import { ageOf } from "./households";
 import { NOW, type FakeEvent, type FakeProgram } from "./programs";
 import type { ModuleId } from "./seed";
 
@@ -29,6 +30,10 @@ export interface ReportSource {
   checkIns: FakeMentorCheckIn[];
   learning: FakeLearning;
   curriculum: FakeCurriculum;
+  /** Badge names a youth membership holds, oldest first. */
+  badges(membershipId: string): string[];
+  /** The name of a child's mentor, or null. */
+  mentorName(childId: string): string | null;
 }
 
 const percent = (part: number, whole: number): number | null =>
@@ -210,6 +215,69 @@ export class FakeReports {
         : null,
       comparison: this.comparison(s, learningOn, rollCallOn),
       youth,
+    };
+  }
+
+  /** GET /reports/youth/{id} once the caller may read reports; null when the child is not the organization's. */
+  youth(s: ReportSource, childId: string) {
+    const child = s.children.get(childId);
+    if (!child) return null;
+    const programs = s.programs.filter((p) => p.status === 'Active' && p.roster.includes(childId));
+    const account = s.youthAccount(childId);
+    let learning = null;
+    if (s.modules.includes('Learning') && account) {
+      const tracks = s.learning.tracks(account, programs);
+      const modules = tracks.flatMap((t) => t.modules);
+      const quizzes = modules
+        .flatMap((m) => m.quizzes)
+        .map((q) => ({ quizId: q.quiz.id, title: q.quiz.title, best: s.learning.quizzes.best(account, q.quiz.id)?.score ?? null }))
+        .filter((q) => q.best !== null)
+        .map((q) => ({ quizId: q.quizId, title: q.title, bestScore: q.best! }));
+      const done = modules.reduce((n, m) => n + m.lessons.filter((l) => l.done).length, 0);
+      const total = modules.reduce((n, m) => n + m.lessons.length, 0);
+      learning = {
+        completedLessons: done,
+        totalLessons: total,
+        completion: percent(done, total),
+        quizAverage: average(quizzes.map((q) => q.bestScore)),
+        modules: modules.map((m) => {
+          const d = m.lessons.filter((l) => l.done).length;
+          const complete = m.lessons.length > 0 && d === m.lessons.length && m.quizzes.filter((q) => q.quiz.requiredToComplete).every((q) => q.passed);
+          return { moduleId: m.module.id, title: m.module.title, done: d, total: m.lessons.length, state: complete ? 'Done' : d > 0 ? 'InProgress' : 'NotStarted' };
+        }),
+        quizzes,
+        badges: s.badges(account),
+      };
+    }
+    let attendance = null;
+    if (s.modules.includes('RollCall')) {
+      const marks = s.events.map((e) => s.records(e.id).get(childId)).filter((r): r is ReportRecord => !!r && r.status !== 'NotYet');
+      const present = marks.filter((r) => r.status !== 'Absent' && !r.late).length;
+      const late = marks.filter((r) => r.status !== 'Absent' && r.late).length;
+      const excused = marks.filter((r) => r.status === 'Absent' && r.excused).length;
+      const absent = marks.filter((r) => r.status === 'Absent' && !r.excused).length;
+      attendance = { present, late, excused, absent, rate: percent(present + late, marks.length) };
+    }
+    let mentoring = null;
+    if (s.modules.includes('Mentoring')) {
+      const mine = s.checkIns.filter((c) => c.organizationId === s.organizationId && c.childId === childId).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+      mentoring = {
+        mentorName: s.mentorName(childId),
+        checkIns: mine.length,
+        latestOn: mine[0]?.date ?? null,
+        latestEngagement: mine[0]?.engagement ?? null,
+        openFlag: s.flags.some((f) => f.organizationId === s.organizationId && f.childId === childId && f.status === 'Open'),
+      };
+    }
+    return {
+      childId,
+      name: child.name,
+      age: ageOf(child.dateOfBirth),
+      programs: programs.map((p) => p.name).sort((a, b) => a.localeCompare(b)),
+      hasAccount: !!account,
+      learning,
+      attendance,
+      mentoring,
     };
   }
 

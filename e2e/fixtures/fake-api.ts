@@ -2406,6 +2406,11 @@ export class FakeApi {
       (route, p) => this.cohortReport(route, p["id"]!),
     ],
     [
+      "GET",
+      /^\/api\/reports\/youth\/(?<id>[^/]+)$/,
+      (route, p) => this.youthReport(route, p["id"]!),
+    ],
+    [
       "POST",
       /^\/api\/events\/(?<id>[^/]+)\/survey$/,
       (route, p) => this.sendSurvey(route, p["id"]!),
@@ -12743,7 +12748,23 @@ export class FakeApi {
       checkIns: this.mentorCheckIns.rows,
       learning: this.learningState,
       curriculum: this.curriculumState,
+      badges: (membershipId) =>
+        this.badges.awards
+          .filter((a) => a.membershipId === membershipId)
+          .sort((a, b) => a.awardedAt.localeCompare(b.awardedAt))
+          .map((a) => this.badges.badges.find((b) => b.id === a.badgeId)?.name ?? a.badgeId),
+      mentorName: (childId) => {
+        const id = this.youthMentors.get(childId);
+        return memberships.find((x) => x.id === id)?.personName ?? null;
+      },
     };
+  }
+
+  private async youthReport(route: Route, id: string): Promise<void> {
+    const m = await this.reportsCaller(route);
+    if (!m) return;
+    const report = this.reports.youth(this.reportSource(m), id);
+    return report ? route.fulfill({ json: report }) : route.fulfill({ status: 404 });
   }
 
   private async cohortReport(route: Route, id: string): Promise<void> {
