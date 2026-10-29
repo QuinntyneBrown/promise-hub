@@ -1,0 +1,15 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — View the staff activity report
+Container_Boundary(web, "Angular app") {
+  Component(page, "StaffReportPage", "reports", "mentors, load")
+  Component(client, "REPORTS_API", "api", "staff(days)")
+}
+Container_Boundary(api, "API") {
+  Component(gate, "RequireModule + RequirePermission(ViewReports)", "PromiseHub.Api", "404 while a module is off, 403 without ViewReports")
+  Component(h, "DetailedReportsHandler", "Application/Reports", "StaffAsync")
+}
+Rel(page, client, "staff(days)")
+Rel(client, gate, "GET /reports/staff")
+Rel(gate, h, "StaffAsync")
+@enduml

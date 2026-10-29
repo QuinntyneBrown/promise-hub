@@ -1,0 +1,25 @@
+@startuml
+title UML sequence — View the staff activity report (L2-128)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Marisol (Program director)" as p
+box "Frontend — Angular app" #E0F2FE
+participant StaffReportPage as page
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant "ReportEndpoints" as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant DetailedReportsHandler as h
+end box
+p -> page : opens Staff activity, Last 30 days
+page -> api : GET /reports/staff?days=30
+api -> api : Reports and Mentoring on or 404; ViewReports or 403 (c4, c5)
+api -> h : StaffAsync(30)
+h -> h : 30 or 90 or none, else 422 (c2)
+h -> h : mentors, cohorts, caseload, check-ins, reviews in the period (c1)
+h -> h : load against 4 to 8 (c1)
+api --> page : StaffReportDto
+page -> p : warning for an overloaded mentor, the table (c3)
+@enduml

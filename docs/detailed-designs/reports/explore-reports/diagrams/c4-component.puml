@@ -1,0 +1,17 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Explore reports
+Container_Boundary(web, "Angular app") {
+  Component(page, "ReportsPage", "reports", "Detailed reports card")
+  Component(session, "SESSION_API", "api", "modules on")
+  Component(routes, "moduleRoute", "promisehub", "reports/staff, reports/progress")
+}
+Container_Boundary(api, "API") {
+  Component(gate, "RequireModule + RequirePermission(ViewReports)", "PromiseHub.Api", "404 while a module is off, 403 without ViewReports")
+  Component(rh, "ReportsHandler", "Application/Reports", "GET /reports")
+}
+Rel(page, session, "current()")
+Rel(page, gate, "GET /reports")
+Rel(gate, rh, "GetAsync")
+Rel(routes, session, "modules")
+@enduml

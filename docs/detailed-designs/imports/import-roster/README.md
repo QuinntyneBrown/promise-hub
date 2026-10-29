@@ -13,10 +13,26 @@ Terms used in this document:
 - **duplicate row** — row whose child name and date of birth match an existing child in the organization
 - **merge** — choice to update the existing matched household and child from the row instead of skipping it
 - **rows need a look** — count of imported rows that created a record with a known gap, such as a guardian without a mobile number
+- **cohort column** — a column mapped to `Cohort` that names the program (cohort) each row's child joins, instead of the program chosen for everyone
+- **youth email column** — a column mapped to `YouthEmail` that invites each row's child, aged 12 to 18, to a youth account while Learning is on
+
+Prompt 80 ports Waypoint's `reporting-and-data/import-roster` design (`L2-REPORT-004`): the import places youth in cohorts and offers youth invitations (L2-130, ADR 0074). Waypoint's Mentor, Track and Status columns and its Missing consent status are not ported.
 
 ## Built so far
 
 Slice 14 delivered `ImportRosterPage` at `/import` (upload with `ph-file-upload`, mapping with `ph-roster-mapping` and `ph-stepper`, the invalid summary, review of duplicates with merge switches and rows that need a look, results with counts and rows to fix), `IMPORTS_API`, `POST /imports`, `PUT /imports/{id}/mapping`, `POST /imports/{id}/run`, `ImportSession`, `ColumnMatcher`, the duplicate rule and `SpreadsheetReader` for CSV and XLSX (ADR 0017). Progress polling, file storage and the pickup column are not built yet.
+
+## Cohort placement and youth invitations
+
+- **`ImportField`** — gains `Cohort` and `YouthEmail` after `Skip`, so stored mappings keep their numbers; **`ColumnMatcher`** matches Cohort, Group, Program and Class, and Youth email, Student email and Teen email.
+- **`ImportRow`** — gains `Cohort` and `YouthEmail`. **`ImportRows.Placement`** matches a cohort to an active program of the organization by its normalised name (case, spacing and hyphen style ignored); **`ImportRows.InvitationProblems`** applies L2-051's rules to each youth email (ages 12 to 18 from the row's or the existing child's date of birth, no account or waiting invitation, an email nobody uses, unique within the file).
+- **`SaveMappingHandler`** — refuses `YouthEmail` with 422 while Learning is off ("Youth invitations need Learning, which is off.") or for an importer without `ManageStaff` ("Only an admin sends youth invitations."); the preview gains `Placements`, `Invitations` and the rows that will not be placed or invited, with their reasons, among the rows that need a look.
+- **`RunImportHandler`** — enrols a row's child in its matched cohort, else in the program chosen for everyone, once only; after saving, issues one youth invitation per invitable row through **`InvitationIssuer`** (audited, emailed); the summary gains `Invited`, `NotPlaced` and `NotInvited`; the import's audit entry adds the cohort places and invitations.
+- **`ImportRosterPage`** — offers Cohort, and Youth email only while Learning is on; the review shows the cohort places and invitations; the results show Placed in cohorts and Youth invited with the rows not placed or not invited.
+
+Behaviour of a run with both columns:
+
+![Sequence for placing youth in cohorts and inviting them](diagrams/sequence-place-and-invite.png)
 
 ## Description
 
@@ -49,6 +65,7 @@ The feature realizes the following level-2 (L2) requirements. Each L2 requiremen
 | `L2-010` | `L1-004` | Staff import households, children, guardians, medical flags and pickups from CSV or XLSX in three steps: upload, map columns, review (`import-roster`). |
 | `L2-011` | `L1-005` | A household holds guardians and children; each child carries medical details, school, language, notes and approved pickups; everything has an audit trail. |
 | `L2-032` | `L1-017` | Every change and every sensitive view is recorded and searchable by admins. |
+| `L2-130` | `L1-004` | The import mapping offers two more fields: Cohort, which places the row's child in the program it names, and Youth email, which invites the child to a youth account while Learning is on. |
 
 ## Diagrams
 

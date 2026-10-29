@@ -1,0 +1,26 @@
+@startuml
+title UML sequence — View the progress board (L2-131)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Marisol (Program director)" as p
+box "Frontend — Angular app" #E0F2FE
+participant ProgressBoardPage as page
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant "ReportEndpoints" as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant DetailedReportsHandler as h
+end box
+p -> page : chooses After-School Tutoring
+page -> api : GET /reports/progress/{programId}
+api -> api : Reports and Learning on or 404; ViewReports or 403 (c5)
+api -> h : ProgressAsync
+h -> h : program in this organization or 404 (c5)
+h -> h : no track? empty modules (c4)
+h -> h : each youth: module states, quiz average, overall (c1)
+h -> h : averages over youth with an account (c1)
+api --> page : ProgressBoardDto
+page -> p : matrix scrolling in its own region (c2)
+@enduml

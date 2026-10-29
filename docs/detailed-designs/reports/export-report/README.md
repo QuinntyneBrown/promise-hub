@@ -16,6 +16,8 @@ Local terms:
 
 The slice spans the `export-data` dialog (default, busy, failed and success states) and the submitting and success states of `reports`. The same dialog is reused from the household, child, event and audit-log actions for other export kinds; those entry points pass a different export kind but share the pipeline described here.
 
+The detailed reports export through the same `POST /reports/exports` with a `kind` (`Cohort`, `Progress`, `Staff`); a missing `kind` is this export unchanged. See `export-filtered-data` (L2-129, ADR 0074).
+
 ## Description
 
 ### Frontend

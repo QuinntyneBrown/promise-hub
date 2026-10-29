@@ -11,7 +11,7 @@ mentor. Today is Thu 5 Nov 2026."""
 from kit import *  # noqa: F401,F403
 from reg import screen
 
-R_LEARN_REPORTS = ["L2-127", "L2-128", "L2-129", "L2-130", "L2-024", "L2-025", "L2-001", "L2-005", "L2-007", "L2-032", "L2-035", "L2-036"]
+R_LEARN_REPORTS = ["L2-127", "L2-128", "L2-129", "L2-131", "L2-024", "L2-025", "L2-001", "L2-005", "L2-007", "L2-032", "L2-035", "L2-036"]
 
 M = STAFF["marisol"]
 A = STAFF["aisha"]
@@ -52,7 +52,7 @@ COHORT_ROWS = [
 
 def cohort_filters(cohort: str = "After‑School Tutoring") -> str:
     return (f'<div class="toolbar">{select("rc-cohort", "Cohort", ["After‑School Tutoring", "Saturday Sports", "One-to-one Mentoring", "Winter Camp 2026"], selected=cohort, visually_hidden_label=True)}'
-            f'{select("rc-range", "Period", ["This term (Sep 2026– )", "Last 30 days", "Custom…"], visually_hidden_label=True)}</div>')
+            '</div>')
 
 
 def cohort_body(*, learning: bool = True, mentoring: bool = True) -> str:
@@ -86,7 +86,7 @@ def cohort_body(*, learning: bool = True, mentoring: bool = True) -> str:
 
 @screen("report-cohort", "page", "Cohort report", route="/reports/cohorts/:programId", reqs=R_LEARN_REPORTS, na={})
 def report_cohort(S):
-    hdr = crumbs("Cohort report") + page_header("After‑School Tutoring", "Cohort report · Sep 2026 to today · Leadership Foundations", export_btn())
+    hdr = crumbs("Cohort report") + page_header("After‑School Tutoring", "Cohort report · since the program started · Leadership Foundations", export_btn())
     S.add("default", "Marisol’s cohort report for After‑School Tutoring: enrolment, average completion, attendance, retention and at-risk count, completion by module, the program average and each youth.",
           nav="reports", user=M, main=hdr + cohort_filters() + cohort_body(),
           notes=note("Learning numbers come from youth with an account; children without one show “No account”. At risk is an open flag from a mentor.", "top: 5rem; right: 1rem;"))
@@ -96,7 +96,7 @@ def report_cohort(S):
     S.add("error", "The cohort report failed to load.", nav="reports", user=M, main=crumbs("Cohort report") + page_header("After‑School Tutoring", "") + failed_load("We couldn’t build the cohort report"))
     S.add("forbidden", "A youth worker following a link to a cohort report.", nav="reports", user=A, main=FORBIDDEN)
     S.add("modules-off", "Grace at Northgate, where Learning and Mentoring are off: enrolment, attendance and retention only; no learning column, no check-ins, no at-risk count.",
-          nav="reports", user=GRACE, modules=NG_MODULES, main=crumbs("Cohort report") + page_header("Sunday Kids Club", "Cohort report · Sep 2026 to today", export_btn()) + cohort_filters("Sunday Kids Club").replace("After‑School Tutoring", "Sunday Kids Club") + cohort_body(learning=False, mentoring=False).replace("After‑School Tutoring", "Sunday Kids Club"))
+          nav="reports", user=GRACE, modules=NG_MODULES, main=crumbs("Cohort report") + page_header("Sunday Kids Club", "Cohort report · since the program started", export_btn()) + cohort_filters("Sunday Kids Club").replace("After‑School Tutoring", "Sunday Kids Club") + cohort_body(learning=False, mentoring=False).replace("After‑School Tutoring", "Sunday Kids Club"))
     S.add("exported", "The CSV is ready: one row per youth with exactly the columns shown, and the export is in the audit log.",
           nav="reports", user=M, main=hdr + cohort_filters() + alert("success", "Export ready", "harbourview-youth-collective-cohort-after-school-tutoring-2026-11-05.csv · 48 rows", actions=btn("Download", "primary", size="sm", icon_name="download"), dismiss=True) + cohort_body(),
           toast_html=toast_region(toast("success", "Export ready", "48 rows · link lasts 7 days", action="Download")))
@@ -117,26 +117,26 @@ def youth_body(*, learning: bool = True, mentoring: bool = True, attendance: boo
     if attendance:
         cards.append(card(facts([("Present", "22"), ("Late", "1"), ("Excused", "1"), ("Absent", "1")]), title="Attendance", tid="attendance"))
     if mentoring:
-        cards.append(card(facts([("Mentor", "Daniel Osei"), ("Check-ins", "4 this term"), ("Latest", "Tue 3 Nov · Engaged"), ("Open flag", "None")]), title="Mentoring", tid="mentoring"))
+        cards.append(card(facts([("Mentor", "Daniel Osei"), ("Check-ins", "4"), ("Latest", "Tue 3 Nov · Engaged"), ("Open flag", "None")]), title="Mentoring", tid="mentoring"))
     return out + f'<div class="split">{"".join(cards)}</div>'
 
 
 @screen("report-youth", "page", "Youth report", route="/reports/youth/:childId", reqs=R_LEARN_REPORTS, na={})
 def report_youth(S):
-    hdr = crumbs("Youth report") + page_header("Sofía Rivera", "Youth report · After‑School Tutoring · 12 · Sep 2026 to today", btn("Print", "", icon_name="file", attrs='onclick="window.print()"'))
+    hdr = crumbs("Youth report") + page_header("Sofía Rivera", "Youth report · After‑School Tutoring · 12", btn("Print", "", icon_name="file", attrs='onclick="window.print()"'))
     S.add("default", "Sofía’s report for a guardian meeting: lessons, quiz average, badges and attendance, module completion, quiz scores, the attendance breakdown and her mentor’s check-ins (never their notes).",
           nav="reports", user=M, main=hdr + youth_body(),
           notes=note("Mentor check-in notes stay private (ADR 0061): the report counts check-ins and shows the latest date and engagement only.", "top: 5rem; right: 1rem;"))
     S.add("loading", "Building Sofía’s report.", nav="reports", user=M, main=crumbs("Youth report") + page_header("Youth report", "") + skeleton_kpis() + skeleton_list(4, "Loading sections"))
     S.add("empty", "Mateo (9) has no youth account, so there is no learning to show; attendance and mentoring still are.",
-          nav="reports", user=M, main=crumbs("Youth report") + page_header("Mateo Rivera", "Youth report · After‑School Tutoring · 9 · Sep 2026 to today") +
+          nav="reports", user=M, main=crumbs("Youth report") + page_header("Mateo Rivera", "Youth report · After‑School Tutoring · 9") +
           alert("info", "Mateo has no youth account", "Learning shows here once he has one. Youth accounts are for ages 12 to 18.") + youth_body(learning=False))
     S.add("error", "The youth report failed to load.", nav="reports", user=M, main=crumbs("Youth report") + page_header("Youth report", "") + failed_load("We couldn’t build the youth report"))
     S.add("forbidden", "A youth worker opening a youth report.", nav="reports", user=A, main=FORBIDDEN)
     S.add("not-found", "A child of another organization, or one that doesn’t exist: the same answer either way.", nav="reports", user=M,
           main=crumbs("Youth report") + card(empty("We couldn’t find that youth", "They may have been removed, or the link is wrong.", action=btn("Back to Reports", "primary", href=page("reports")), icon_name="search", heading="h1"), cls="card--flush"))
     S.add("modules-off", "Lucía at Northgate, where Learning and Mentoring are off: attendance only.", nav="reports", user=GRACE, modules=NG_MODULES,
-          main=crumbs("Youth report") + page_header("Lucía Rivera", "Youth report · Sunday Kids Club · 14 · Sep 2026 to today", btn("Print", "", icon_name="file")) + youth_body(learning=False, mentoring=False))
+          main=crumbs("Youth report") + page_header("Lucía Rivera", "Youth report · Sunday Kids Club · 14", btn("Print", "", icon_name="file")) + youth_body(learning=False, mentoring=False))
 
 
 # ------------------------------------------------------------------ Staff activity report
@@ -149,9 +149,9 @@ STAFF_ROWS = [
 
 @screen("report-staff", "page", "Staff activity report", route="/reports/staff", reqs=R_LEARN_REPORTS, na={})
 def report_staff(S):
-    hdr = crumbs("Staff activity") + page_header("Staff activity", "Mentor caseloads, check-ins and reviews · Sep 2026 to today", export_btn())
-    filters = f'<div class="toolbar">{select("rs-range", "Period", ["This term (Sep 2026– )", "Last 30 days", "Custom…"], visually_hidden_label=True)}</div>'
-    body = (kpis([("Active mentors", "3", ""), ("Check-ins logged", "25", "this term"), ("Reviews completed", "10", "graded work"), ("Youth per mentor", "5", "target 4 to 8")])
+    hdr = crumbs("Staff activity") + page_header("Staff activity", "Mentor caseloads, check-ins and reviews", export_btn())
+    filters = f'<div class="toolbar">{select("rs-range", "Period", ["All time", "Last 30 days", "Last 90 days"], visually_hidden_label=True)}</div>'
+    body = (kpis([("Active mentors", "3", ""), ("Check-ins logged", "25", "all time"), ("Reviews completed", "10", "graded work"), ("Youth per mentor", "5", "target 4 to 8")])
             + alert("warning", "Daniel Osei has 9 youth", "Above the target of 4 to 8. Samira Khan has 1 and can take more.")
             + table("Mentor activity", ["Mentor", "Cohorts", "#Youth", "#Check-ins", "#Reviews", "Load"], STAFF_ROWS, hide_sm={1})
             + '<p class="hint" style="margin-top: var(--space-2);">Overloaded: more than 8 youth. Underloaded: fewer than 4.</p>')

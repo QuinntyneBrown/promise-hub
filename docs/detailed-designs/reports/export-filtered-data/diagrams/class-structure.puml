@@ -1,0 +1,13 @@
+@startuml
+title UML classes — Export filtered data
+class ReportsHandler { +ExportAsync(ExportReportCommand): Gated<ExportCreatedDto> +DownloadAsync(id): ExportFile }
+class ExportReportCommand <<record>> { ProgramId? From? To? Kind? Days? }
+class ReportCsv { +Line(values): string }
+class ReportExport { Id OrganizationId FileName Content Rows CreatedBy CreatedAt ExpiresAt }
+interface IAuditWriter
+ReportsHandler ..> ExportReportCommand
+ReportsHandler --> DetailedReportsHandler
+ReportsHandler --> ReportCsv
+ReportsHandler --> ReportExport
+ReportsHandler --> IAuditWriter
+@enduml

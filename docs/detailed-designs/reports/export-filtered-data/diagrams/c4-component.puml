@@ -1,0 +1,19 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Export filtered data
+Container_Boundary(web, "Angular app") {
+  Component(dlg, "ExportReportDialog", "reports", "Export CSV, Download")
+  Component(client, "REPORTS_API", "api", "exportReport(), downloadUrl()")
+}
+Container_Boundary(api, "API") {
+  Component(gate, "RequireModule + RequirePermission(ViewReports)", "PromiseHub.Api", "404 while a module is off, 403 without ViewReports")
+  Component(rh, "ReportsHandler", "Application/Reports", "ExportAsync by kind")
+  Component(h, "DetailedReportsHandler", "Application/Reports", "the report")
+  Component(csv, "ReportCsv", "Application/Reports", "rows to CSV")
+}
+Rel(dlg, client, "exportReport()")
+Rel(client, gate, "POST /reports/exports")
+Rel(gate, rh, "ExportAsync")
+Rel(rh, h, "computes")
+Rel(rh, csv, "writes")
+@enduml
