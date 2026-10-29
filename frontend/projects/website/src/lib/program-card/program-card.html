@@ -1,0 +1,17 @@
+@let p = program();
+<ph-card>
+  <article class="program" [attr.aria-label]="p.name">
+    <div class="head">
+      <h3>{{ p.name }}</h3>
+      <ph-badge [tone]="p.status === 'Running' ? 'success' : 'info'">{{ status() }}</ph-badge>
+    </div>
+    <ph-description-list [facts]="facts()" />
+    @if (p.applyPath; as apply) {
+      <ph-button variant="primary" icon="arrow-right" [link]="apply" [label]="'Apply to ' + p.name"
+        >Apply</ph-button
+      >
+    } @else {
+      <p class="closed">Enrollment is closed for now. Contact us to hear when it opens.</p>
+    }
+  </article>
+</ph-card>

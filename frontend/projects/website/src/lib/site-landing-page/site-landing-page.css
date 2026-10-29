@@ -1,0 +1,24 @@
+.step {
+  margin: 0;
+  font: var(--text-overline);
+  color: var(--color-fg-accent);
+  text-transform: uppercase;
+}
+h3 {
+  margin: var(--space-2) 0;
+  font: var(--text-h3);
+}
+.muted {
+  margin: 0;
+  color: var(--color-fg-muted);
+}
+.grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--layout-card-min)), 1fr));
+}
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}

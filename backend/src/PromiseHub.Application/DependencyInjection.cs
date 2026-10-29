@@ -236,7 +236,9 @@ public static class DependencyInjection
         services.AddScoped<Mentoring.GradeSubmissionHandler>();
         services.AddScoped<Mentoring.QuizApprovalHandler>();
         services.AddScoped<Mentoring.CompetenciesHandler>();
+        services.AddScoped<Website.PublicSiteResolver>();
         services.AddScoped<Website.PublicWebsiteHandler>();
+        services.AddScoped<Website.PublicContentHandler>();
         return services;
     }
 }

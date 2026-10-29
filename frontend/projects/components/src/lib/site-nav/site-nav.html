@@ -1,0 +1,18 @@
+<header class="site-nav">
+  <a class="brand" [routerLink]="home()"><ph-brand-mark />{{ organization() }}</a>
+  <nav class="links" aria-label="Site">
+    @for (item of links(); track item.label) {
+      <a [routerLink]="item.link" routerLinkActive="current" ariaCurrentWhenActive="page">{{
+        item.label
+      }}</a>
+    }
+  </nav>
+  <div class="actions">
+    @if (signIn(); as signInLink) {
+      <ph-button variant="ghost" size="sm" [link]="signInLink">Sign in</ph-button>
+    }
+    @if (apply(); as applyLink) {
+      <ph-button variant="primary" size="sm" [link]="applyLink">Apply</ph-button>
+    }
+  </div>
+</header>
