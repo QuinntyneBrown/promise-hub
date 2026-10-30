@@ -79,6 +79,26 @@ public sealed class LearningBondApplication : ITenantOwned
         UpdatedAt = now;
     }
 
+    /// <summary>The provider received it (L2-150 criterion 2); a later status is never moved back.</summary>
+    public void MarkReceived(DateTimeOffset now)
+    {
+        ReceivedAt ??= now;
+        if (Status == LearningBondApplicationStatus.Submitted)
+        {
+            Status = LearningBondApplicationStatus.Received;
+        }
+        UpdatedAt = now;
+    }
+
+    public void MarkDeposited(int amount, DateTimeOffset now)
+    {
+        ReceivedAt ??= now;
+        DepositedAt = now;
+        DepositAmount = amount;
+        Status = LearningBondApplicationStatus.Deposited;
+        UpdatedAt = now;
+    }
+
     private void Change(Action change, DateTimeOffset now)
     {
         change();

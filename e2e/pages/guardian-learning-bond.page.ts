@@ -159,6 +159,11 @@ export class GuardianLearningBondPage extends BasePage {
     return this.page.getByTestId('next-steps').getByRole('listitem');
   }
 
+  /** What the provider last reported: received, deposited or a document needed. */
+  get progressNotice(): Locator {
+    return this.page.getByTestId('progress-notice');
+  }
+
   get depositWindow(): Locator {
     return this.page.getByTestId('deposit-window');
   }

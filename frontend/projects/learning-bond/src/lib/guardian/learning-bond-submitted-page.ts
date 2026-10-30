@@ -10,6 +10,7 @@ import {
 import { GuardianPageResult, LEARNING_BOND_API, LearningBondProgress } from '@promisehub/api';
 import {
   PhAgentMessage,
+  PhAlert,
   PhBadge,
   PhButton,
   PhCard,
@@ -40,6 +41,7 @@ interface NextStep {
   selector: 'ph-learning-bond-submitted-page',
   imports: [
     PhAgentMessage,
+    PhAlert,
     PhBadge,
     PhButton,
     PhCard,

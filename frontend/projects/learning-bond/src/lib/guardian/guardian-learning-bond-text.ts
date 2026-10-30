@@ -124,9 +124,17 @@ export interface GuardianLearningBondText {
   familyPage: string;
   notSentHeading: string;
   backToReview: string;
+  receivedTitle: (provider: string, name: string) => string;
+  receivedText: string;
+  depositedTitle: (amount: string, name: string) => string;
+  depositedText: string;
 }
 
 const en: GuardianLearningBondText = {
+  receivedTitle: (provider, name) => `${provider} received ${name}’s application`,
+  receivedText: 'The RESP is open. Next, the Government of Canada checks your tax returns.',
+  depositedTitle: (amount, name) => `${amount} was deposited in ${name}’s RESP`,
+  depositedText: 'It’s in the RESP now, saved for school after high school.',
   locale: 'en-GB',
   sentHeading: (provider, date) => `Sent to ${provider} on ${date}`,
   seeNext: 'See what happens next',
@@ -260,6 +268,11 @@ const en: GuardianLearningBondText = {
 };
 
 const es: GuardianLearningBondText = {
+  receivedTitle: (provider, name) => `${provider} recibió la solicitud de ${name}`,
+  receivedText:
+    'El RESP está abierto. Ahora el Gobierno de Canadá revisa sus declaraciones de impuestos.',
+  depositedTitle: (amount, name) => `Se depositaron ${amount} en el RESP de ${name}`,
+  depositedText: 'Ya está en el RESP, ahorrado para estudiar después de la secundaria.',
   locale: 'es',
   sentHeading: (provider, date) => `Enviado a ${provider} el ${date}`,
   seeNext: 'Ver qué pasa ahora',
@@ -395,6 +408,11 @@ const es: GuardianLearningBondText = {
 };
 
 const fr: GuardianLearningBondText = {
+  receivedTitle: (provider, name) => `${provider} a reçu la demande de ${name}`,
+  receivedText:
+    'Le REEE est ouvert. Ensuite, le gouvernement du Canada vérifie vos déclarations de revenus.',
+  depositedTitle: (amount, name) => `${amount} ont été versés dans le REEE de ${name}`,
+  depositedText: 'C’est dans le REEE, mis de côté pour les études après le secondaire.',
   locale: 'fr-CA',
   sentHeading: (provider, date) => `Envoyée à ${provider} le ${date}`,
   seeNext: 'Voir la suite',

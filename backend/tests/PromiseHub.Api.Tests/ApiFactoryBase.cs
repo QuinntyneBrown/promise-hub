@@ -44,6 +44,9 @@ public abstract class ApiFactoryBase : WebApplicationFactory<Program>
     public const string InboundSmsSecret = "test-inbound-secret";
 
     /// <summary>A Learning Bond key generated for this test host (ADR 0076); real keys come from configuration or a key vault.</summary>
+    /// <summary>The secret Northfield Credit Union signs its Learning Bond webhooks with (LearningBond:Webhooks:northfield).</summary>
+    public const string NorthfieldWebhookSecret = "northfield-test-secret";
+
     public static readonly string LearningBondKey = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
 
     public FakeTimeProvider Clock { get; } = new(new DateTimeOffset(2026, 11, 5, 21, 12, 0, TimeSpan.Zero));
@@ -58,6 +61,8 @@ public abstract class ApiFactoryBase : WebApplicationFactory<Program>
         builder.UseSetting("Ops:Alerts", "false");
         builder.UseSetting("Sms:InboundSecret", InboundSmsSecret);
         builder.UseSetting("LearningBond:Key", LearningBondKey);
+        builder.UseSetting("LearningBond:Webhooks:northfield", NorthfieldWebhookSecret);
+        builder.UseSetting("LearningBond:Webhooks:maple-trust", "maple-test-secret");
         builder.ConfigureServices(services =>
         {
             services.AddSingleton<TimeProvider>(Clock);

@@ -89,6 +89,7 @@ app.MapWebsiteEndpoints();
 app.MapLearningBondEndpoints();
 app.MapLearningBondGuardianEndpoints();
 app.MapLearningBondSignerEndpoints();
+app.MapLearningBondWebhookEndpoints();
 app.MapLearningEndpoints();
 app.MapCurriculumEndpoints();
 app.MapMentoringEndpoints();

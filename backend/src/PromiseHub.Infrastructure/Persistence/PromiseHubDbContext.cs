@@ -102,6 +102,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.LearningBond.LearningBondClaim> LearningBondClaims => Set<Domain.LearningBond.LearningBondClaim>();
     public DbSet<Domain.LearningBond.LearningBondApplication> LearningBondApplications => Set<Domain.LearningBond.LearningBondApplication>();
     public DbSet<Domain.LearningBond.LearningBondDocument> LearningBondDocuments => Set<Domain.LearningBond.LearningBondDocument>();
+    public DbSet<Domain.LearningBond.LearningBondProviderEvent> LearningBondProviderEvents => Set<Domain.LearningBond.LearningBondProviderEvent>();
     public DbSet<Domain.LearningBond.LearningBondSettings> LearningBondSettings => Set<Domain.LearningBond.LearningBondSettings>();
     public DbSet<DataRequest> DataRequests => Set<DataRequest>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
@@ -423,6 +424,15 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(a => a.SubmittedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
             e.Property(a => a.ReceivedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
             e.Property(a => a.DepositedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+        });
+        // A provider event applied once by its id (L2-150 criterion 4).
+        modelBuilder.Entity<Domain.LearningBond.LearningBondProviderEvent>(e =>
+        {
+            e.HasIndex(p => new { p.Provider, p.EventId }).IsUnique();
+            e.Property(p => p.Provider).HasMaxLength(100);
+            e.Property(p => p.EventId).HasMaxLength(100);
+            e.Property(p => p.Kind).HasMaxLength(20);
+            e.Property(p => p.ReceivedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
         });
         // A document the provider asked for: ciphertext in the file store, sent only on the guardian's Send (L2-150 criterion 6).
         modelBuilder.Entity<Domain.LearningBond.LearningBondDocument>(e =>

@@ -30,6 +30,28 @@ test.describe('A guardian sees the submitted Learning Bond application', () => {
     await learningBond.expectAccessible();
   });
 
+  // L2-150 criterion 2 (learning-bond-submitted/received, deposited).
+  test('Given Northfield reported the deposit, when Carmen opens the page, then the amount and every step are done', async ({ page, api }) => {
+    api.learningBond.applications.set('app-c-mateo', {
+      childId: 'c-mateo',
+      householdId: 'hh-rivera',
+      province: 'ON',
+      provider: 'Northfield Credit Union',
+      phone: '905-555-0142',
+      email: 'carmen.rivera@example.com',
+      address: '42 Barton St E, Apt 3, Hamilton ON L8L 2V6',
+      reviewVersion: 2,
+      status: 'Deposited',
+      depositAmount: 1400,
+    });
+    const learningBond = new GuardianLearningBondPage(page);
+    await learningBond.openSubmitted('tok-lb-rivera', 'c-mateo');
+
+    await expect(learningBond.progressNotice).toContainText('$1,400 was deposited in Mateo’s RESP');
+    await expect(learningBond.nextSteps.filter({ hasText: 'Done' })).toHaveCount(3);
+    await learningBond.expectAccessible();
+  });
+
   // L2-150 criterion 1: nothing to show before Submit.
   test('Given Mateo’s application isn’t sent yet, when Carmen opens the submitted page, then it says so and links back to the review', async ({ page }) => {
     const learningBond = new GuardianLearningBondPage(page);

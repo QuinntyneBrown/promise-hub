@@ -11,6 +11,23 @@
           <div class="stack">
             <ph-stepper [current]="5" [total]="5" [label]="t.step(5)" />
             <h1>{{ sentOn(p) }}</h1>
+            @if (p.status === 'Deposited' && p.depositAmount !== null) {
+              <div data-testid="progress-notice">
+                <ph-alert
+                  tone="success"
+                  [title]="t.depositedTitle(t.amount(p.depositAmount), p.firstName)"
+                  [text]="t.depositedText"
+                />
+              </div>
+            } @else if (p.status === 'Received') {
+              <div data-testid="progress-notice">
+                <ph-alert
+                  tone="success"
+                  [title]="t.receivedTitle(p.provider, p.firstName)"
+                  [text]="t.receivedText"
+                />
+              </div>
+            }
             <ph-agent-message [speaker]="t.speaker" [text]="p.explanation" />
             <ph-card [title]="t.nextTitle" [flush]="true">
               <div data-testid="next-steps">
