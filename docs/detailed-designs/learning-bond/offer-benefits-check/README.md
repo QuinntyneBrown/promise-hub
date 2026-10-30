@@ -16,19 +16,28 @@ The guardian link resolves the organization through `GuardianAccess` and then th
 
 Frontend:
 
-- **`BenefitsOfferCard`** on `learning-bond-submitted` and `guardian-learning-bond` — `ph-card` with the agent's sentence, `ph-button` Check benefits and Not now; Not now calls `LEARNING_BOND_API.declineBenefitsOffer(token)` and the card stays on the family page.
-- **`BenefitsConsentDialog`** (`learning-bond-benefits-offer`) — `ph-dialog` with `ph-checkbox` carrying the Benefits wording, `ph-text-field` typed name (`autocomplete="name"`), `ph-error-summary`; Agree and check posts the consent and navigates to the intake.
-- **`BenefitsIntakePage`** (`learning-bond-benefits-intake`) — `ph-text-field` household size (`inputmode="numeric"`, 1 to 15), `ph-radio-group` marital status (six values), Canada Child Benefit now (Yes, No, Not sure), income changed (Yes, No), and, when the status is Separated or Divorced, one `ph-radio-group` per child (Me, The other parent, We share, Not sure); `ph-alert` warning for the stopped child with I'd rather talk to someone (`learning-bond-callback`). Nothing the Learning Bond intake already holds is shown again.
-- **`LEARNING_BOND_API`** — `giveConsent(token, BenefitsConsentRequest)`, `declineBenefitsOffer(token)`, `saveBenefitsIntake(token, BenefitsIntakeRequest)`; every DTO carries `Last3` only.
+- **The offer.** On `LearningBondSubmittedPage`, a `ph-card` Child benefits shows the agent's offer, Check benefits and Not now. Not now calls `dismissBenefitsOffer` and the offer goes from the confirmation. On `GuardianLearningBondPage`, the same offer stays until the Benefits consent is given, then becomes Your benefits.
+- **`LearningBondBenefitsConsentPage`** (route `/g/learning-bond/:token/benefits/consent`) shows `ph-checkbox` with the Benefits wording, `ph-text-field` for the typed name, and Agree. Not ticked: "Tick the box to agree." After it, the three questions.
+- **`LearningBondBenefitsIntakePage`** (route `.../benefits/intake`) shows the agent's line naming what is reused, then, in a `ph-card` About your household:
+  - `ph-text-field` (number) for household size;
+  - `ph-select` for marital status;
+  - `ph-radio-group` for the Canada Child Benefit now and for income changed;
+  - for Separated or Divorced, one `ph-radio-group` per child for who claims them.
+
+  Check my benefits saves the answers and opens the list. Errors show per field.
+- **API methods on `LEARNING_BOND_API`**: `dismissBenefitsOffer`, `benefitsConsent`, `giveBenefitsConsent`, `benefitsIntake` and `saveBenefitsIntake`.
 
 Backend:
 
-- **`GiveConsentHandler`** — stores a `LearningBondConsent` with `Scope = Benefits`, the wording version from `LearningBondTexts`, the household language and the typed name; it never reuses `GuardianConsent` nor a `LearningBond` scope; audits Consent given.
-- **`DeclineBenefitsOfferHandler`** — records `BenefitsOfferDeclinedAt` on `LearningBondIntake` so the offer is not shown on `learning-bond-submitted` again; the card on `guardian-learning-bond` remains.
-- **`BenefitsConsentFilter`** — endpoint filter on every `/g/learning-bond/{token}/benefits*` route; no Benefits consent for the household answers 403 and no benefit question is asked (`L2-153` criterion 3).
-- **`SaveBenefitsIntakeHandler`** — validates household size 1 to 15 ("Enter how many people live with you, from 1 to 15."), marital status and Canada Child Benefit in their lists ("Choose one."), 422 per field; writes the benefits facts through `ILearningBondCipher`; records `IncomeChanged` so every estimate carries "These estimates use your last tax return. A big change this year can change them."; for Separated or Divorced stores `ClaimedBy` per child. Not sure marks the child `CheckStopped` with "We can't check benefits for {first name} until it's clear who claims them. Staff can help."; The other parent excludes the child from every benefit answered to this guardian. Audits Intake saved naming the fields.
-- **`BenefitsOfferPolicy`** — decides where the offer appears: on `learning-bond-submitted` after a submission, and on `guardian-learning-bond` when no claim can start (every child over 15 or born before 2004) once a per-child consent of `L2-145` exists.
-- **Endpoints** (`LearningBondGuardianEndpoints.cs`) — `POST /g/learning-bond/{token}/consents` (scope `Benefits`), `POST /g/learning-bond/{token}/benefits/offer/decline`, `PUT /g/learning-bond/{token}/benefits/intake`.
+- **`LearningBondConsentHandler.GiveAsync`** with scope `Benefits` stores one `LearningBondConsent` per child under 18 with the Benefits wording version. It starts no claim and is audited per child (ADR 0082).
+- **`LearningBondBenefitsAccess`** gives the Learning Bond guardian scope plus a Benefits consent in force (otherwise 403). It also reads and writes the encrypted answers on `LearningBondBenefitsCheck`.
+- **`LearningBondBenefitsHandler`**:
+  - `DismissOfferAsync` stamps `OfferDismissedAt`.
+  - `ConsentPageAsync` returns the wording and whether the consent is given.
+  - `IntakeAsync` returns the children under 18 and whether the SIN and the tax answer are already given.
+  - `SaveIntakeAsync` validates household size (1 to 15, "Enter how many people live with you, from 1 to 15."), marital status, the Canada Child Benefit and income changed ("Choose one."), and who claims each child when separated or divorced. It encrypts the answers and audits the field names only.
+- **The offer on other responses.** `GuardianLearningBondDto.Benefits` (offered, consented) and `LearningBondProgressDto.BenefitsOffer` (no consent and no Not now) carry it.
+- **Endpoints**, in `LearningBondGuardianEndpoints`: `POST /g/learning-bond/{token}/benefits/offer/dismiss`, `GET .../benefits/consent`, `POST .../consents` with `scope: "Benefits"`, and `GET` and `PUT .../benefits/intake`.
 
 ## Requirements
 
