@@ -51,6 +51,12 @@ Deferred: webhooks (`/learning-bond/webhooks/**`) arrive with the applications t
 
 Prompt 82 delivered the module end to end with no screen of its own: `ModuleId.LearningBond` with its name and needs, the agreement gate in `SaveModulesHandler`, `LearningBondEndpoints` and `LearningBondGuardianEndpoints`, `LearningBondGuardianHandler`, the encrypted store above, the audit entries, migration `LearningBondFoundation` (`LearningBondAgreements`, `LearningBondAgreementAcceptances`, `LearningBondIntakes`) and the seed (Harbourview on with the agreement accepted, Northgate off). Frontend: `MODULE_CATALOG` and Settings › Modules, the empty `learning-bond` library with its staff and guardian route tables, `LEARNING_BOND_API` with `HttpLearningBondApi`, the shell's module route and link guard, and the fake API in `e2e/fixtures/fake-learning-bond.ts`. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/LearningBondModuleTests.cs`, `backend/tests/PromiseHub.Api.Tests/LearningBondAuditTests.cs`, `backend/tests/PromiseHub.Infrastructure.Tests/LearningBondCipherTests.cs`, `backend/tests/PromiseHub.Infrastructure.Tests/LearningBondSinStorageTests.cs` and `e2e/tests/learning-bond/module-gate.spec.ts`.
 
+## Built in prompt 83
+
+- `LearningBondOverviewHandler` answers `GET /learning-bond/overview` (the hub): agreement version, latest acceptance, `pendingVersion` and its effective date, coverage with the chosen programs' names and the households reached, status roles, sender name, languages and `launchBlocked` ("A new version of the agreement needs accepting." while a version is pending). Launch itself is prompt 85, so the Launch card offers no action yet beyond the disabled button.
+- `SettingsLearningBondPage` (`frontend/projects/learning-bond/`, `/settings/learning-bond`) with its own Settings tabs: `settingsSections(modules)` in the api library adds the Learning Bond tab only while the module is on, and every Settings page reads it from the session (ADR 0077). The hub, coverage and invitation are lazy-loaded through `moduleRoute('settings/learning-bond', 'LearningBond')`; the agreement through `moduleRoute('settings/learning-bond/agreement', ['Roster', 'Messages'])` from the settings library.
+- Acceptance tests: `backend/tests/PromiseHub.Api.Tests/LearningBondInvitationTests.cs` (overview and new version) and `e2e/tests/learning-bond/hub.spec.ts`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

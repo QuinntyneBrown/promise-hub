@@ -32,6 +32,15 @@ Backend:
 
 Tenant and module gate: acceptances and signer requests carry `OrganizationId`; Northgate's admin never sees or counts Harbourview's acceptance (L2-136 criterion 6). Nothing here reads a household, child or guardian record (criterion 5). Audited: acceptance, signer request, resend, cancel, signer acceptance.
 
+## Built so far
+
+Prompt 83 built the admin side; the signer's own page behind the link (`SignerLinkAccess`, `AcceptAgreementAsSignerHandler`, `LearningBondSignerPage`) is prompt 84.
+
+- `LearningBondAgreementHandler` answers `GET /learning-bond/agreement` and `POST .../acceptances` (one handler where this design names two). The DTO adds `earlierAcceptance` (the latest acceptance of an earlier version while a new one is pending) and `moduleOn`, which picks the breadcrumb (Learning Bond or Modules) and the accepted state's next step (Choose coverage, or Turn on Learning Bond). Accepting a version already accepted answers 201 with the existing acceptance and audits nothing; accepting closes a request still waiting for a named signer.
+- `LearningBondSignerHandler` answers `POST /learning-bond/agreement/signers`, `POST .../signers/{id}/resend` and `DELETE .../signers/{id}`. The email goes from "{organization} via PromiseHub" through `IEmailSender`. Resend mints a new link (ADR 0077) and is audited as Updated; cancel is audited as Updated. Another organization's request id answers 404. Migration `LearningBondSignerRequests`.
+- Frontend: `LearningBondAgreementPage` and `LearningBondSignerDialog` in `frontend/projects/settings/` (ADR 0077), mounted at `/settings/learning-bond/agreement` with `moduleRoute(['Roster', 'Messages'])`; Settings › Modules shows Read the agreement beside the refusal. The signer dialog closes on success and the page shows the Named signer card with Resend and Cancel; a toast confirms the link went.
+- Acceptance tests: `backend/tests/PromiseHub.Api.Tests/LearningBondAgreementTests.cs`, `LearningBondSignerTests.cs`, `e2e/tests/learning-bond/agreement.spec.ts` and `signer.spec.ts`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

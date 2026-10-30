@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 83 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="83" data-video-title="Turn on Learning Bond" data-parts="Introduction|Refused|The agreement|Named signer|The hub|Coverage|Invitation|New version|Phone and states|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 83</div>
+  <h1>Turn on Learning Bond</h1>
+  <p class="lead">Accept the agreement or name a signer, choose coverage, and check the invitation</p>
+</section>
+
+<section id="journey" data-part="0" data-cue="This video follows two admins">
+  <h2>The first staff journey of Learning Bond</h2>
+  <ul>
+    <li>Grace at Northgate: refused, reads the agreement, accepts, turns it on</li>
+    <li>Grace names a signer instead, with Resend and Cancel</li>
+    <li>Tom at Harbourview: coverage, the invitation, a new agreement version</li>
+  </ul>
+  <p class="muted small">L2-135 · L2-136 · L2-137 · L2-138 · L2-139 · ADR 0076 · ADR 0077</p>
+</section>
+
+<section id="accept-clip" data-part="1" data-cue="Grace runs Northgate Community Church Kids" data-clip="clips/accept-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Refused, then the agreement</h3><p>Grace at Northgate, Learning Bond off.</p></div>
+</section>
+
+<section id="refused" data-part="1" data-cue="The agreement opens even though Learning Bond is still off">
+  <h2>Read the agreement, beside the refusal</h2>
+  <img class="shot" alt="Accept the Learning Bond data-handling agreement first, with Read the agreement" src="shots/desktop-modules-refused.png">
+  <p class="muted small">/settings/learning-bond/agreement · settings library · moduleRoute(['Roster', 'Messages']) (ADR 0077)</p>
+</section>
+
+<section id="agreement" data-part="2" data-cue="The agreement is one page in three sections">
+  <h2>One page, three sections, one box</h2>
+  <img class="shot" alt="The data-handling agreement with the authority box, Accept and Ask someone else to sign" src="shots/desktop-agreement.png">
+  <p class="muted small">GET /learning-bond/agreement · version, effective date, sections, acceptance, signer</p>
+</section>
+
+<section id="accepted" data-part="2" data-cue="She ticks the box and accepts.">
+  <div class="cols">
+    <img class="shot" alt="Confirm you have authority beside the box" src="shots/desktop-agreement-invalid.png">
+    <img class="shot" alt="Accepted by Grace Mensah, with Turn on Learning Bond" src="shots/desktop-accepted-off.png">
+  </div>
+  <p class="muted small">POST …/acceptances · 422 without authority · 201, audited as Created on LearningBondAgreementAcceptance</p>
+</section>
+
+<section id="signer-clip" data-part="3" data-cue="Not every admin can sign for the organization." data-clip="clips/signer-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Ask someone else to sign</h3><p>Rev. Angela Baptiste, board chair.</p></div>
+</section>
+
+<section id="signer" data-part="3" data-cue="Only one request is open at a time.">
+  <div class="cols">
+    <img class="shot" alt="Ask someone else to sign dialog" src="shots/desktop-signer-dialog.png">
+    <img class="shot" alt="Waiting for Rev. Angela Baptiste to sign, with Resend and Cancel" src="shots/desktop-waiting-signer.png">
+  </div>
+  <p class="muted small">LearningBondSignerRequest · hashed single-use token · 14 days · one open per organization</p>
+</section>
+
+<section id="hub" data-part="4" data-cue="At Harbourview, Learning Bond is already on">
+  <h2>Settings › Learning Bond</h2>
+  <img class="shot" alt="The hub with the agreement, coverage, invitation and launch cards" src="shots/desktop-hub.png">
+  <p class="muted small">GET /learning-bond/overview · the tab only while the module is on (settingsSections)</p>
+</section>
+
+<section id="coverage-clip" data-part="5" data-cue="Tom chooses which programs Learning Bond covers." data-clip="clips/coverage-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Coverage</h3><p>Two programs, two more roles.</p></div>
+</section>
+
+<section id="coverage" data-part="5" data-cue="Admin and Program director are always there">
+  <div class="cols">
+    <img class="shot" alt="Coverage with every program and the fixed roles" src="shots/desktop-coverage.png">
+    <img class="shot" alt="Learning Bond settings saved" src="shots/desktop-coverage-saved.png">
+  </div>
+  <p class="muted small">LearningBondCoverage · children under 18 actively enrolled in running programs · archived and foreign programs refused</p>
+</section>
+
+<section id="invitation-clip" data-part="6" data-cue="The invitation is platform wording" data-clip="clips/invitation-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>The invitation</h3><p>English, Spanish and French; only the sender changes.</p></div>
+</section>
+
+<section id="invitation" data-part="6" data-cue="The only thing Tom can change is the sender name">
+  <div class="cols">
+    <img class="shot" alt="The invitation previewed in three languages" src="shots/desktop-invitation.png">
+    <img class="shot" alt="Sender name saved" src="shots/desktop-invitation-saved.png">
+  </div>
+  <p class="muted small">LearningBondTexts · sample child and guardian · ph-sms-preview · ph-email-preview · SenderNameRule</p>
+</section>
+
+<section id="new-version-clip" data-part="7" data-cue="When the platform publishes version three" data-clip="clips/new-version-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>A new version</h3><p>Launch disabled until version 3 is accepted.</p></div>
+</section>
+
+<section id="new-version" data-part="7" data-cue="Harbourview's earlier acceptance of version two">
+  <h2>On for families, closed for launch</h2>
+  <img class="shot" alt="A new version of the agreement needs accepting, Launch disabled" src="shots/desktop-new-version.png">
+  <p class="muted small">L2-136 criterion 4 · launchBlocked · pendingVersion</p>
+</section>
+
+<section id="phone-clip" data-part="8" data-cue="The hub and the invitation work on a phone" data-clip="clips/hub-phone.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>On a phone</h3><p>One column at a time.</p></div>
+</section>
+
+<section id="phone" data-part="8" data-cue="each language keeps its text message and its email together">
+  <div class="cols">
+    <img class="shot" alt="The hub on a phone" src="shots/phone-hub.png">
+    <img class="shot" alt="The invitation on a phone" src="shots/phone-invitation.png">
+  </div>
+</section>
+
+<section id="states-clip" data-part="8" data-cue="When something goes wrong, each page says so plainly" data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>When things fail</h3><p>Invalid, error and forbidden.</p></div>
+</section>
+
+<section id="states" data-part="8" data-cue="When the hub fails to load">
+  <div class="cols">
+    <div>
+      <img class="shot" alt="Choose at least one program" src="shots/desktop-coverage-invalid.png">
+      <img class="shot" alt="Use 1 to 30 letters, numbers and spaces" src="shots/desktop-invitation-invalid.png">
+    </div>
+    <div>
+      <img class="shot" alt="We couldn't load Learning Bond settings" src="shots/desktop-error.png">
+      <img class="shot" alt="Admins accept the agreement" src="shots/desktop-forbidden.png">
+    </div>
+  </div>
+</section>
+
+<section id="testing" data-part="9" data-cue="The API tests cover">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>LearningBondAgreementTests</code>, <code>LearningBondSignerTests</code>: authority, field errors, resend, cancel</li>
+    <li><code>LearningBondSettingsTests</code>, <code>LearningBondInvitationTests</code>: coverage, the sender rule, the new version</li>
+    <li>Module off, another organization and a site lead in every suite</li>
+    <li><code>e2e/tests/learning-bond/</code>: agreement, signer, coverage, invitation, hub · laptop and phone · axe</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="10" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>The agreement is accepted in Settings, before the module is on</li><li>A named signer gets one single-use link at a time</li><li>Coverage is counted on the server; Admin and Program director always see status</li><li>Fixed wording; only the sender name changes</li><li>A new version disables Launch until accepted</li></ul>
+  <p class="muted">Next: Tom launches the invitations</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

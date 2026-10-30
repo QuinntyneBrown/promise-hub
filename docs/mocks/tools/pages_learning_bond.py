@@ -100,7 +100,7 @@ def settings_learning_bond(S):
 
     coverage_card = card(facts([("Programs", "After‑School Tutoring, Saturday Sports · 112 households"), ("Who sees each family’s status", "Admin, Program director, Site lead, Youth worker")]),
                          title="Coverage", tid="coverage", footer=f'<a href="{page("learning-bond-coverage")}">Change coverage</a>')
-    invitation_card = card(facts([("Sender name", esc(SENDER)), ("Languages", "English and Spanish, the languages your households use"), ("Wording", "Platform-approved; only the sender name changes")]),
+    invitation_card = card(facts([("Sender name", esc(SENDER)), ("Languages", "English, Spanish and French, the languages your households use"), ("Wording", "Platform-approved; only the sender name changes")]),
                            title="Guardian invitation", tid="invitation", footer=f'<a href="{page("learning-bond-invitation")}">Preview and edit</a>')
 
     def launch_card(state="scheduled", *, disabled_reason=""):
@@ -236,9 +236,43 @@ def email_preview(lang: str, sender: str = SENDER) -> str:
             f'<p class="email__footer">{esc(sender)} via PromiseHub · Harbourview Youth Collective, Hamilton · <a href="{page("guardian-update")}">Unsubscribe</a></p></div>')
 
 
+# The admin's preview reads no household (L2-136 criterion 5), so it fills the platform wording with a sample child, guardian and link.
+PREVIEW_LINK = "promisehub.ca/lb/4r7k9x"
+
+
+def preview_sms(lang: str, sender: str = SENDER) -> str:
+    if lang == "es":
+        return f"{sender}: Maya podría tener derecho a hasta $2,000 para estudiar después de la secundaria. No cuesta nada. Toque para comprobarlo: {PREVIEW_LINK} (STOP para salir)"
+    if lang == "fr":
+        return f"{sender} : Maya pourrait recevoir jusqu’à 2 000 $ pour ses études après le secondaire. C’est gratuit. Touchez pour vérifier : {PREVIEW_LINK} (STOP pour arrêter)"
+    return f"{sender}: Maya may be owed up to $2,000 for school after high school. It costs nothing. Tap to check: {PREVIEW_LINK} (STOP to opt out)"
+
+
+def preview_email(lang: str, sender: str = SENDER) -> str:
+    title, text, action, foot = {
+        "en": ("Maya may be owed up to $2,000 for school after high school",
+               "Hi Alex. The Government of Canada puts the Canada Learning Bond into an RESP for families with lower incomes. It costs nothing and you don’t need to put in any money. Check in about 15 minutes on your phone.",
+               "Check now", f"{sender} via PromiseHub · Harbourview Youth Collective, Hamilton · Unsubscribe"),
+        "es": ("Maya podría tener derecho a hasta $2,000 para estudiar",
+               "Hola, Alex. El Gobierno de Canadá deposita el Bono de Estudios Canadiense en un RESP para familias con ingresos más bajos. No cuesta nada y no hace falta aportar dinero. Compruébelo en unos 15 minutos desde su teléfono.",
+               "Comprobar ahora", f"{sender} a través de PromiseHub · Harbourview Youth Collective, Hamilton · Dejar de recibir correos"),
+        "fr": ("Maya pourrait recevoir jusqu’à 2 000 $ pour ses études",
+               "Bonjour Alex. Le gouvernement du Canada verse le Bon d’études canadien dans un REEE pour les familles à revenu modeste. C’est gratuit et vous n’avez rien à verser. Vérifiez en 15 minutes environ sur votre téléphone.",
+               "Vérifier maintenant", f"{sender} via PromiseHub · Harbourview Youth Collective, Hamilton · Se désabonner"),
+    }[lang]
+    return (f'<div class="email"><p class="email__title">{esc(title)}</p><p class="email__text">{esc(text)}</p>'
+            f'<p class="email__action"><span class="email__button">{esc(action)}</span></p><p class="email__footer">{esc(foot)}</p></div>')
+
+
+def sms_segments(text: str) -> int:
+    gsm = "@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !\"#¤%&'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà"
+    single, multi = (160, 153) if all(c in gsm for c in text) else (70, 67)
+    return 1 if len(text) <= single else -(-len(text) // multi)
+
+
 @screen("learning-bond-invitation", "page", "Learning Bond invitation", route="/settings/learning-bond/invitation", reqs=R_INVITATION, na={"empty": "The invitation always has the platform text."})
 def learning_bond_invitation(S):
-    hdr = crumbs("Invitation") + page_header("Guardian invitation", "Platform-approved wording in English and Spanish, the languages your households use. You change only the sender name.")
+    hdr = crumbs("Invitation") + page_header("Guardian invitation", "Platform-approved wording in English, Spanish and French, the languages your households use. You change only the sender name.")
 
     def form(*, value=SENDER, err="", busy=False, saved=False):
         f = field("sender", "Sender name", value=value, error=err, help_="1 to 30 letters, numbers and spaces. Starts every text and signs every email.", attrs=' maxlength="30"', required=True)
@@ -246,15 +280,17 @@ def learning_bond_invitation(S):
         return f'<form class="stack" action="#" method="post" novalidate>{form_summary([("sender", err)]) if err else ""}{card(f, title="Sender", tid="sender")}{form_actions("Save", page("settings-learning-bond"), busy=busy, extra=status_)}</form>'
 
     def previews(sender=SENDER):
-        en = SMS_EN.replace(SENDER, sender)
-        es = SMS_ES.replace(SENDER, sender)
-        return (card(f'<h3 class="section-title">English</h3>{sms(en, segments=1 if len(en) <= 160 else 2)}<h3 class="section-title">Spanish</h3>{sms(es, segments=2)}', title="Text message", tid="sms")
-                + card(f'<h3 class="section-title">English</h3>{email_preview("en", sender)}<h3 class="section-title">Spanish</h3>{email_preview("es", sender)}', title="Email", tid="email"))
+        out = ""
+        for lang, name in (("en", "English"), ("es", "Spanish"), ("fr", "French")):
+            text = preview_sms(lang, sender)
+            out += card(f'<h3 class="section-title">Text message</h3>{sms(text, segments=sms_segments(text))}<h3 class="section-title">Email</h3>{preview_email(lang, sender)}',
+                        title=name, tid=f"preview-{lang}")
+        return out
 
     def layout(f, p):
         return f'<div class="split"><div class="stack form-width--lg">{f}</div><div class="stack">{p}</div></div>'
 
-    S.add("default", "The SMS and email in English and Spanish only, with the sender name and the segment count; French isn’t shown because no Harbourview household uses it.", nav="settings", user=T,
+    S.add("default", "The SMS and email in English, Spanish and French, the languages Harbourview’s households use, with the sender name and the segment count; a sample child, guardian and link fill the wording.", nav="settings", user=T,
           main=hdr + layout(form(), previews()), notes=note("The body is fixed by the platform and sent in each household’s language, falling back to English. Each child’s first name is filled in per household (L2-139).", "top: 5rem; right: 1rem;"))
     S.add("invalid", "A sender name with a link in it: 422 and the single rule.", nav="settings", user=T,
           main=hdr + layout(form(value="Harbourview hbv.ph/join", err="Use 1 to 30 letters, numbers and spaces."), previews("Harbourview hbv.ph/join")))

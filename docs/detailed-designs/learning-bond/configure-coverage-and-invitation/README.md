@@ -30,6 +30,16 @@ Backend:
 
 Tenant and module gate: both endpoints sit in the `/learning-bond` group behind `RequireModule(ModuleId.LearningBond)` and `ManageSettings`; the settings row and every program id are read under the tenant filter, so another organization's program is unknown. Audited: each save with the fields changed. The DTOs carry program names, counts, roles and the sender name only.
 
+## Built so far
+
+Prompt 83 built both pages and their endpoints.
+
+- `LearningBondSettings` (Domain) is the one row per organization, created on first save (migration `LearningBondSettings`); with no row the organization covers every program, Admin and Program director see status and the sender name is the organization's name cut to 30 characters at a word boundary. `ChangeCoverage` adds the fixed pair back and answers the fields that changed; a save that changes nothing is not audited.
+- `LearningBondSettingsHandler` answers `GET`/`PUT /learning-bond/settings`; the DTO adds `allHouseholds` for the Every program option. A role outside Admin, Program director, Site lead, Youth worker and Volunteer coordinator answers 422 "Choose staff roles that may see status.". `LearningBondCoverage` counts covered households per program from active enrollments of children under 18 (by the organization's today; a child with no date of birth counts) in running programs.
+- `LearningBondInvitationHandler` answers `GET`/`PUT /learning-bond/invitation`. The previews read no household beyond its language: `LearningBondTexts` fills the wording with a sample child (Maya), guardian (Alex) and link, so no family's name appears before invitations go out (L2-136 criterion 5). Languages are those of the tenant's households in English, Spanish, French order, English when there are none. `SenderNameRule` refuses more than 30 characters, characters outside letters, numbers, spaces and `&'.-`, anything shaped like a domain (a dot followed by two letters) and seven or more digits.
+- Frontend (`frontend/projects/learning-bond/`): `LearningBondCoveragePage` (`ph-radio-group`, `ph-checkbox-group` with the fixed roles disabled) and `LearningBondInvitationPage` (`ph-text-field`, a `ph-card` per language with `ph-sms-preview` and the new library component `ph-email-preview`). The previews follow the field as the admin types and recount SMS segments with Messaging's rule; the saved preview is the server's. The coverage toast names the chosen programs without a total, since only the server counts a household reached through two programs once.
+- Acceptance tests: `backend/tests/PromiseHub.Api.Tests/LearningBondSettingsTests.cs`, `LearningBondInvitationTests.cs`, `e2e/tests/learning-bond/coverage.spec.ts` and `invitation.spec.ts`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |
