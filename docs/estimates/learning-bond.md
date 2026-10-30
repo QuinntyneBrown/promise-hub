@@ -6,7 +6,7 @@
 | complete-intake | 8 days | 80% |
 | configure-coverage-and-invitation | 4 days | 90% |
 | estimate-learning-bond | 3 days | 90% |
-| follow-application-progress | 9 days | 0% |
+| follow-application-progress | 9 days | 80% |
 | gate-learning-bond-module | 4 days | 80% |
 | give-and-withdraw-consent | 5 days | 50% |
 | launch-invitations | 6 days | 80% |

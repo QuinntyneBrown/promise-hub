@@ -84,3 +84,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0078](0078-the-learning-bond-signer-page-is-anonymous-and-lives-in-the-settings-library.md) | The Learning Bond signer page is anonymous and lives in the settings library |
 | [0079](0079-learning-bond-launches-are-due-rows-the-dispatch-runner-sends.md) | Learning Bond launches are due rows the dispatch runner sends |
 | [0080](0080-learning-bond-providers-and-province-are-code-and-the-address-is-asked-on-the-review.md) | Learning Bond providers and the province live in code, and the review asks for the address |
+| [0081](0081-provider-webhooks-are-hmac-signed-and-claim-reminders-run-in-the-dispatch-runner.md) | Provider webhooks are HMAC-signed, and claim reminders run in the dispatch runner |

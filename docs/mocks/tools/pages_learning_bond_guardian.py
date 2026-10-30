@@ -385,7 +385,7 @@ def learning_bond_paused(S):
           main=f'<h1>Mateo’s claim is paused</h1><p>{badge("Paused · needs a SIN", "warning")}</p>' + alert("success", "We’ll text you Thu 19 Nov and Sat 5 Dec", "Each text has the link to pick up here. Reply STOP any time.") + sin_help + g_footer())
     S.add("resumed", "Reopened with the SIN in hand: the claim picks up at Mateo’s SIN with every other answer kept.",
           main='<h1>Welcome back, Carmen</h1>' + alert("info", "Picking up at Mateo’s SIN", "Your other answers are saved.", actions=btn("Continue", "primary", size="sm", icon_name="arrow-right", href=page("learning-bond-intake", "resumed"))) + g_footer())
-    S.add("closed", "No activity for 180 days: closed as Not completed, the SINs destroyed; reopening starts again.",
+    S.add("closed", "No activity for 180 days: closed as Not completed, the SINs destroyed. The app shows this as the family page offering the claim again from consent (ADR 0081); the closed wording stays here for the agent's line.",
           main=f'<h1>Mateo’s claim was closed</h1><p>{badge("Not completed")}</p>' + agent("Nothing happened for 180 days, so I deleted the numbers you gave me. You can start again any time; Mateo can claim until the day before he turns 21.")
                + f'<div>{btn("Start again", "primary", size="lg", href=page("guardian-learning-bond"))}</div>' + g_footer())
     S.add("loading", "Loading.", main=loading_page("Learning Bond paused"))
