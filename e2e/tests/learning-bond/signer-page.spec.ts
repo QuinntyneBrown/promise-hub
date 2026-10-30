@@ -61,6 +61,55 @@ test.describe('Learning Bond signer page', () => {
     await signer.expectExpired(`Ask ${northgate} to send a new one.`);
     await signer.expectAccessible();
   });
+  // L2-137 criterion 9 (learning-bond-agreement/signer-expired): Resend replaced the link Angela kept.
+  test('Given Grace resent the link, when Angela opens the earlier one, then it has expired and names Northgate', async ({ page, api }) => {
+    const replaced = api.learningBond.nameSigner('m-grace', angela);
+    api.learningBond.nameSigner('m-grace', angela);
+    const signer = new LearningBondSignerPage(page);
+
+    await signer.openLink(replaced);
+
+    await signer.expectExpired(`Ask ${northgate} to send a new one.`);
+    await expect(signer.acceptButton).toHaveCount(0);
+    await signer.expectAccessible();
+  });
+
+  // L2-137 criterion 9, L2-003: a suspended organization's link stops working.
+  test('Given Northgate is suspended, when Angela opens her link, then it has expired', async ({ page, api }) => {
+    const token = api.learningBond.nameSigner('m-grace', angela);
+    api.suspend('org-northgate');
+    const signer = new LearningBondSignerPage(page);
+
+    await signer.openLink(token);
+
+    await signer.expectExpired(`Ask ${northgate} to send a new one.`);
+  });
+
+  // L2-137 criterion 9 (learning-bond-agreement/signer-unknown).
+  test('Given a link PromiseHub doesn’t know, then it has expired and names no organization', async ({ page }) => {
+    const signer = new LearningBondSignerPage(page);
+
+    await signer.openLink('tok-signer-unknown');
+
+    await signer.expectExpired('Ask the organization that sent it to send a new one.');
+    await signer.expectAccessible();
+  });
+
+  // learning-bond-agreement/signer-error: Try again reads the link again; nothing is used up.
+  test('Given the link fails to load, when Angela chooses Try again, then the agreement opens', async ({ page, api }) => {
+    const token = api.learningBond.nameSigner('m-grace', angela);
+    api.failNext(`/api/sign/learning-bond/${token}`, 500);
+    const signer = new LearningBondSignerPage(page);
+    await signer.openLink(token);
+    await expect(signer.heading).toHaveText('Learning Bond data-handling agreement');
+    await expect(signer.tryAgain).toBeVisible();
+    await signer.expectAccessible();
+
+    api.recover(`/api/sign/learning-bond/${token}`);
+    await signer.tryAgain.click();
+
+    await expect(signer.heading).toHaveText(`Accept the Learning Bond data-handling agreement for ${northgate}`);
+  });
 });
 
 test.describe('Learning Bond signer page, seen by the admin who asked', () => {

@@ -58,6 +58,7 @@ public sealed class LearningBondSignerHandler(IPromiseHubDb db, ITenantContext t
         var signer = new LearningBondSignerRequest(Guid.NewGuid(), tenant.OrganizationId, name, title, address, GuardianTokens.Hash(token),
             tenant.MembershipId, tenant.ActorName, now);
         db.LearningBondSignerRequests.Add(signer);
+        db.LearningBondSignerTokens.Add(new LearningBondSignerToken(Guid.NewGuid(), signer.OrganizationId, signer.Id, signer.TokenHash, now));
         audit.Record(new AuditEvent(AuditAction.Created, nameof(LearningBondSignerRequest), signer.Id, $"Learning Bond agreement signer requested: {name}, {title}"));
         await db.SaveChangesAsync(cancellationToken);
         await SendAsync(signer, token, cancellationToken);
@@ -73,6 +74,7 @@ public sealed class LearningBondSignerHandler(IPromiseHubDb db, ITenantContext t
         }
         var token = GuardianTokens.New();
         signer.Resend(GuardianTokens.Hash(token), clock.GetUtcNow());
+        db.LearningBondSignerTokens.Add(new LearningBondSignerToken(Guid.NewGuid(), signer.OrganizationId, signer.Id, signer.TokenHash, signer.SentAt));
         audit.Record(new AuditEvent(AuditAction.Updated, nameof(LearningBondSignerRequest), signer.Id, $"Learning Bond agreement signer link resent to {signer.Name}"));
         await db.SaveChangesAsync(cancellationToken);
         await SendAsync(signer, token, cancellationToken);

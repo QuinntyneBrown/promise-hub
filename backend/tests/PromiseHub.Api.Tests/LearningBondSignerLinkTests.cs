@@ -13,6 +13,7 @@ namespace PromiseHub.Api.Tests;
 public sealed partial class LearningBondSignerLinkTests : IAsyncLifetime
 {
     private static readonly Guid Grace = DatabaseSeeder.MembershipId(DatabaseSeeder.Northgate, "grace@northgate.example");
+    private static readonly Guid Tom = DatabaseSeeder.MembershipId(DatabaseSeeder.Harbourview, "tom@harbourview.example");
 
     private readonly PromiseHubApiFactory _factory = new();
 
@@ -98,6 +99,74 @@ public sealed partial class LearningBondSignerLinkTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Gone, (await anonymous.PostAsJsonAsync($"/sign/learning-bond/{token}/acceptances", new { authority = true })).StatusCode);
         Assert.Equal(HttpStatusCode.OK,
             (await grace.PutAsJsonAsync("/settings/modules", new { on = new[] { "Roster", "RollCall", "QuickCards", "Messages", "LearningBond" } })).StatusCode);
+    }
+
+    // L2-137 criterion 9: a replaced, expired or cancelled link says whom to ask and accepts nothing.
+    [Fact]
+    public async Task A_replaced_expired_or_cancelled_link_says_it_has_expired_naming_the_organization_and_accepts_nothing()
+    {
+        var grace = _factory.ClientFor(Grace);
+        var anonymous = _factory.CreateClient();
+        var replaced = await RequestSigner();
+        var id = (await grace.GetFromJsonAsync<JsonElement>("/learning-bond/agreement")).GetProperty("signer").GetProperty("id").GetString();
+        Assert.Equal(HttpStatusCode.NoContent, (await grace.PostAsync($"/learning-bond/agreement/signers/{id}/resend", null)).StatusCode);
+        var expired = LastLink();
+
+        await AssertExpired(anonymous, replaced);
+        Assert.Equal(HttpStatusCode.OK, (await anonymous.GetAsync($"/sign/learning-bond/{expired}")).StatusCode);
+        _factory.Clock.Advance(TimeSpan.FromDays(14));
+        await AssertExpired(anonymous, expired);
+
+        var cancelled = await RequestSigner();
+        id = (await grace.GetFromJsonAsync<JsonElement>("/learning-bond/agreement")).GetProperty("signer").GetProperty("id").GetString();
+        Assert.Equal(HttpStatusCode.NoContent, (await grace.DeleteAsync($"/learning-bond/agreement/signers/{id}")).StatusCode);
+        await AssertExpired(anonymous, cancelled);
+
+        Assert.Equal("0", Scalar($"SELECT COUNT(*) FROM LearningBondAgreementAcceptances WHERE OrganizationId = '{Upper(DatabaseSeeder.Northgate)}'"));
+    }
+
+    // L2-137 criterion 9, L2-003: an unknown link names no one; a suspended organization's link stops working and nothing is deleted.
+    [Fact]
+    public async Task An_unknown_link_answers_404_and_a_suspended_organizations_link_has_expired()
+    {
+        var token = await RequestSigner();
+        var anonymous = _factory.CreateClient();
+
+        var unknown = await anonymous.GetAsync("/sign/learning-bond/not-a-link");
+        Assert.Equal(HttpStatusCode.NotFound, unknown.StatusCode);
+        Assert.Equal(string.Empty, await unknown.Content.ReadAsStringAsync());
+        Assert.Equal(HttpStatusCode.NotFound, (await anonymous.PostAsJsonAsync("/sign/learning-bond/not-a-link/acceptances", new { authority = true })).StatusCode);
+
+        Assert.Equal(HttpStatusCode.NoContent,
+            (await _factory.ClientFor(Tom).PostAsJsonAsync($"/platform/organizations/{DatabaseSeeder.Northgate}/suspend", new { reason = "Unpaid since September" })).StatusCode);
+        await AssertExpired(anonymous, token);
+        Assert.Equal("1", Scalar("SELECT COUNT(*) FROM LearningBondSignerRequests"));
+    }
+
+    // L2-137 criterion 10, L2-162: Northgate's signer touches nothing of Harbourview's.
+    [Fact]
+    public async Task Northgates_signer_changes_nothing_of_Harbourviews()
+    {
+        var token = await RequestSigner();
+        var harbourview = Upper(DatabaseSeeder.Harbourview);
+        var before = Rows($"SELECT Id FROM LearningBondAgreementAcceptances WHERE OrganizationId = '{harbourview}'");
+
+        Assert.Equal(HttpStatusCode.Created, (await _factory.CreateClient().PostAsJsonAsync($"/sign/learning-bond/{token}/acceptances", new { authority = true })).StatusCode);
+
+        Assert.Equal(before, Rows($"SELECT Id FROM LearningBondAgreementAcceptances WHERE OrganizationId = '{harbourview}'"));
+        Assert.Equal("0", Scalar($"SELECT COUNT(*) FROM AuditEntries WHERE OrganizationId = '{harbourview}' AND ActorName LIKE 'Signer:%'"));
+        Assert.Equal("0", Scalar($"SELECT COUNT(*) FROM Notifications WHERE OrganizationId = '{harbourview}' AND Kind = 'agreement'"));
+        Assert.DoesNotContain((await _factory.ClientFor(Tom).GetFromJsonAsync<JsonElement>("/notifications")).GetProperty("items").EnumerateArray(),
+            n => n.GetProperty("kind").GetString() == "agreement");
+    }
+
+    private static async Task AssertExpired(HttpClient anonymous, string token)
+    {
+        var read = await anonymous.GetAsync($"/sign/learning-bond/{token}");
+        Assert.Equal(HttpStatusCode.Gone, read.StatusCode);
+        Assert.Equal("This link has expired. Ask Northgate Community Church Kids to send a new one.",
+            (await read.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("message").GetString());
+        Assert.Equal(HttpStatusCode.Gone, (await anonymous.PostAsJsonAsync($"/sign/learning-bond/{token}/acceptances", new { authority = true })).StatusCode);
     }
 
     // Grace at Northgate turns Messages on (Learning Bond needs Roster and Messages before the agreement is offered) and names Angela.
