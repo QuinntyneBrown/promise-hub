@@ -1,3 +1,5 @@
+import { map } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import {
   ConsentPolicy,
@@ -7,6 +9,7 @@ import {
   OrganizationLogo,
   SESSION_API,
   WebsiteProfile,
+  settingsSections,
 } from '@promisehub/api';
 import {
   Fact,
@@ -29,7 +32,6 @@ import { ConsentPolicyDialog } from '../consent-policy-dialog/consent-policy-dia
 import { ConsentPolicyDialogData } from '../consent-policy-dialog-data';
 import { MentoringDefaultsDialog } from '../mentoring-defaults-dialog/mentoring-defaults-dialog';
 import { OrganizationProfileDialog } from '../organization-profile-dialog/organization-profile-dialog';
-import { SETTINGS_SECTIONS } from '../settings-sections';
 import { WebsiteProfileDialog } from '../website-profile-dialog/website-profile-dialog';
 import { timeZoneLabel } from '../time-zones';
 
@@ -61,7 +63,12 @@ export class SettingsOrganizationPage {
   private readonly toasts = inject(ToastService);
   private readonly dialogs = inject(PhDialogs);
 
-  protected readonly sections = SETTINGS_SECTIONS;
+  protected readonly sections = toSignal(
+    inject(SESSION_API)
+      .current()
+      .pipe(map((s) => settingsSections(s.modules))),
+    { initialValue: settingsSections([]) },
+  );
   protected readonly state = signal<'loading' | 'loaded' | 'forbidden' | 'error'>('loading');
   protected readonly profile = signal<OrganizationDetails | null>(null);
   /** Learning's consent policy; null while Learning is off (never requested) or before it loads. */

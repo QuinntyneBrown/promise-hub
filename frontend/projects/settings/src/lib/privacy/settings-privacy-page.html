@@ -13,7 +13,7 @@
   }
   @case ('error') {
     <div class="stack">
-      <ph-tabs label="Settings sections" [links]="sections" />
+      <ph-tabs label="Settings sections" [links]="sections()" />
       <ph-card [flush]="true">
         <ph-empty-state
           icon="warning"
@@ -28,13 +28,13 @@
   }
   @case ('loading') {
     <div class="stack" aria-busy="true" aria-label="Loading privacy settings">
-      <ph-tabs label="Settings sections" [links]="sections" />
+      <ph-tabs label="Settings sections" [links]="sections()" />
       <ph-skeleton shape="card" />
     </div>
   }
   @default {
     <div class="stack form">
-      <ph-tabs label="Settings sections" [links]="sections" />
+      <ph-tabs label="Settings sections" [links]="sections()" />
       <ph-card title="Residency and security">
         <ph-description-list [facts]="facts()" />
       </ph-card>

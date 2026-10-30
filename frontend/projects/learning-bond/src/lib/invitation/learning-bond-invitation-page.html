@@ -1,0 +1,80 @@
+<ph-breadcrumb [items]="crumbs" />
+<ph-page-header title="Guardian invitation" [subtitle]="subtitle()" />
+@switch (state()) {
+  @case ('forbidden') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="lock"
+        title="Admins edit the invitation"
+        text="Ask an admin or a program director."
+      >
+        <ph-button link="/">Back to Today</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('error') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load the invitation"
+        text="Check your connection and try again."
+      >
+        <ph-button variant="primary" icon="refresh" (click)="load()">Try again</ph-button>
+        <ph-button variant="ghost" link="/settings/learning-bond">Back to Learning Bond</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('loading') {
+    <div class="split" aria-busy="true" aria-label="Loading the invitation">
+      <ph-skeleton shape="card" />
+      <ph-skeleton shape="card" />
+    </div>
+  }
+  @default {
+    <div class="split">
+      <form class="column" novalidate (ngSubmit)="save()">
+        @if (summary().length) {
+          <ph-error-summary [items]="summary()" />
+        }
+        <ph-card title="Sender">
+          <ph-text-field
+            inputId="sender-name"
+            label="Sender name"
+            name="senderName"
+            help="1 to 30 letters, numbers and spaces. Starts every text and signs every email."
+            [maxlength]="30"
+            [error]="error()"
+            [ngModel]="sender()"
+            (ngModelChange)="sender.set($event)"
+          />
+        </ph-card>
+        <div class="actions">
+          <ph-button variant="primary" type="submit" [busy]="saving()">Save</ph-button>
+          <ph-button variant="ghost" link="/settings/learning-bond">Cancel</ph-button>
+        </div>
+      </form>
+      <div class="column">
+        @for (p of previews(); track p.code) {
+          <ph-card [title]="p.name" [attr.data-testid]="'preview-' + p.name.toLowerCase()">
+            <div class="preview">
+              <h3 class="section-title">Text message</h3>
+              <ph-sms-preview
+                [text]="p.sms"
+                [characters]="p.smsCharacters"
+                [segments]="p.smsSegments"
+              />
+              <h3 class="section-title">Email</h3>
+              <ph-email-preview
+                [title]="p.emailTitle"
+                [text]="p.emailText"
+                [action]="p.emailAction"
+                [footer]="p.emailFooter"
+              />
+            </div>
+          </ph-card>
+        }
+      </div>
+    </div>
+  }
+}

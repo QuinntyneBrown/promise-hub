@@ -1,0 +1,29 @@
+:host {
+  display: block;
+  background: var(--color-bg-surface);
+  color: var(--color-fg-default);
+  padding: var(--space-8);
+  font: var(--text-body);
+  overflow-wrap: anywhere;
+}
+.title {
+  font: var(--text-h4);
+  margin: 0 0 var(--space-4);
+}
+.text,
+.action {
+  margin: 0 0 var(--space-6);
+}
+.button {
+  display: inline-block;
+  background: var(--color-accent);
+  color: var(--color-fg-on-accent);
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-full);
+  font: var(--text-label);
+}
+.footer {
+  font: var(--text-caption);
+  color: var(--color-fg-muted);
+  margin: 0;
+}

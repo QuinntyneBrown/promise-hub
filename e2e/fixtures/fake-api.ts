@@ -2262,6 +2262,9 @@ export class FakeApi {
     ["POST", /^\/api\/learning-bond\/agreement\/signers$/, (route) => this.learningBondRequestSigner(route)],
     ["GET", /^\/api\/learning-bond\/settings$/, (route) => this.learningBondSettings(route)],
     ["PUT", /^\/api\/learning-bond\/settings$/, (route) => this.learningBondSaveSettings(route)],
+    ["GET", /^\/api\/learning-bond\/invitation$/, (route) => this.learningBondInvitation(route)],
+    ["PUT", /^\/api\/learning-bond\/invitation$/, (route) => this.learningBondSaveInvitation(route)],
+    ["GET", /^\/api\/learning-bond\/overview$/, (route) => this.learningBondOverview(route)],
     ["POST", /^\/api\/learning-bond\/agreement\/signers\/(?<id>[^/]+)\/resend$/, (route, p) => this.learningBondResendSigner(route, p["id"]!)],
     ["DELETE", /^\/api\/learning-bond\/agreement\/signers\/(?<id>[^/]+)$/, (route, p) => this.learningBondCancelSigner(route, p["id"]!)],
     [
@@ -3283,6 +3286,42 @@ export class FakeApi {
     const m = await this.learningBondAdmin(route);
     if (!m) return;
     return this.learningBond.saveSettings(route, m, this.learningBondPrograms(m.organizationId));
+  }
+
+  /** The languages the organization's households use, as codes in English, Spanish, French order; English when there are none. */
+  private learningBondLanguages(organizationId: string): string[] {
+    const code = (language: string) => (language === "Spanish" ? "es" : language === "French" ? "fr" : "en");
+    const used = new Set(this.households.filter((h) => h.organizationId === organizationId).map((h) => code(h.language)));
+    const codes = ["en", "es", "fr"].filter((c) => used.has(c));
+    return codes.length ? codes : ["en"];
+  }
+
+  /** GET /learning-bond/invitation (L2-139 criterion 1). */
+  private async learningBondInvitation(route: Route): Promise<void> {
+    const m = await this.learningBondAdmin(route);
+    if (!m) return;
+    const details = this.organizationDetailsOf(m.organizationId);
+    return this.learningBond.invitation(route, m, { name: details.name, city: details.city }, this.learningBondLanguages(m.organizationId));
+  }
+
+  /** PUT /learning-bond/invitation (L2-139 criteria 2 and 3). */
+  private async learningBondSaveInvitation(route: Route): Promise<void> {
+    const m = await this.learningBondAdmin(route);
+    if (!m) return;
+    return this.learningBond.saveInvitation(route, m);
+  }
+
+  /** GET /learning-bond/overview (L2-136 criteria 4 and 9). */
+  private async learningBondOverview(route: Route): Promise<void> {
+    const m = await this.learningBondAdmin(route);
+    if (!m) return;
+    return this.learningBond.overview(
+      route,
+      m,
+      this.organizationDetailsOf(m.organizationId).name,
+      this.learningBondPrograms(m.organizationId),
+      this.learningBondLanguages(m.organizationId),
+    );
   }
 
   /** POST /learning-bond/agreement/signers (L2-137 criterion 1). */

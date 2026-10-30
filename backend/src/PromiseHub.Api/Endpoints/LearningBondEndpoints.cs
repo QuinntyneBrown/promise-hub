@@ -18,11 +18,15 @@ public static class LearningBondEndpoints
         var learningBond = app.MapGroup("/learning-bond").RequireModule(ModuleId.LearningBond);
         learningBond.MapGet(string.Empty, () => Results.Ok(new LearningBondStatusDto(On: true)));
 
-        // Settings › Learning Bond (L2-138, L2-139): admins only, behind the module gate.
+        // Settings › Learning Bond (L2-136 criterion 9, L2-138, L2-139): admins only, behind the module gate.
         var settings = learningBond.MapGroup(string.Empty).RequirePermission(Permission.ManageSettings);
         settings.MapGet("/settings", (LearningBondSettingsHandler handler, CancellationToken ct) => handler.GetAsync(ct));
         settings.MapPut("/settings", async (SaveLearningBondSettingsRequest request, LearningBondSettingsHandler handler, CancellationToken ct) =>
             (await handler.SaveAsync(request, ct)).ToHttp());
+        settings.MapGet("/invitation", (LearningBondInvitationHandler handler, CancellationToken ct) => handler.GetAsync(ct));
+        settings.MapPut("/invitation", async (SaveInvitationRequest request, LearningBondInvitationHandler handler, CancellationToken ct) =>
+            (await handler.SaveAsync(request, ct)).ToHttp());
+        settings.MapGet("/overview", (LearningBondOverviewHandler handler, CancellationToken ct) => handler.GetAsync(ct));
 
         var agreement = app.MapGroup("/learning-bond/agreement").RequirePermission(Permission.ManageSettings).RequireModule(ModuleId.Roster).RequireModule(ModuleId.Messages);
         agreement.MapGet(string.Empty, (LearningBondAgreementHandler handler, CancellationToken ct) => handler.GetAsync(ct));

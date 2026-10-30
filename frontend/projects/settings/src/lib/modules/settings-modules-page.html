@@ -13,7 +13,7 @@
   }
   @case ('error') {
     <div class="stack">
-      <ph-tabs label="Settings sections" [links]="sections" />
+      <ph-tabs label="Settings sections" [links]="sections()" />
       <ph-card [flush]="true">
         <ph-empty-state
           icon="warning"
@@ -28,7 +28,7 @@
   }
   @case ('loaded') {
     <form class="stack form" novalidate (ngSubmit)="save()">
-      <ph-tabs label="Settings sections" [links]="sections" />
+      <ph-tabs label="Settings sections" [links]="sections()" />
       <div class="summary-row">
         <p class="muted" data-testid="modules-summary">
           {{ on().size }} of {{ catalog.length }} modules on

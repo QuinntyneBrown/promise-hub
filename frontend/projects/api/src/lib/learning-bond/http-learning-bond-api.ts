@@ -9,6 +9,8 @@ import { LearningBondAgreement } from './learning-bond-agreement';
 import { LearningBondApi } from './learning-bond-api';
 import { LearningBondLink } from './learning-bond-link';
 import { LearningBondStatus } from './learning-bond-status';
+import { LearningBondInvitation } from './learning-bond-invitation';
+import { LearningBondOverview } from './learning-bond-overview';
 import { LearningBondSettings } from './learning-bond-settings';
 import { RequestLearningBondSigner } from './request-learning-bond-signer';
 import { SaveLearningBondSettings } from './save-learning-bond-settings';
@@ -63,6 +65,20 @@ export class HttpLearningBondApi implements LearningBondApi {
 
   saveSettings(request: SaveLearningBondSettings): Observable<WriteOutcome> {
     return toWrite(this.http.put<null>(`${this.baseUrl}/learning-bond/settings`, request));
+  }
+
+  overview(): Observable<LoadResult<LearningBondOverview>> {
+    return toLoad(this.http.get<LearningBondOverview>(`${this.baseUrl}/learning-bond/overview`));
+  }
+
+  invitation(): Observable<LoadResult<LearningBondInvitation>> {
+    return toLoad(
+      this.http.get<LearningBondInvitation>(`${this.baseUrl}/learning-bond/invitation`),
+    );
+  }
+
+  saveInvitation(senderName: string): Observable<WriteOutcome> {
+    return toWrite(this.http.put<null>(`${this.baseUrl}/learning-bond/invitation`, { senderName }));
   }
 
   cancelSigner(id: string): Observable<WriteOutcome> {

@@ -1,5 +1,14 @@
+import { map } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { MODULE_CATALOG, MODULE_PRESETS, MODULES_API, ModuleId } from '@promisehub/api';
+import {
+  MODULE_CATALOG,
+  MODULE_PRESETS,
+  MODULES_API,
+  ModuleId,
+  SESSION_API,
+  settingsSections,
+} from '@promisehub/api';
 import {
   PhButton,
   PhCard,
@@ -13,7 +22,6 @@ import {
   ToastService,
 } from '@promisehub/components';
 import { FormsModule } from '@angular/forms';
-import { SETTINGS_SECTIONS } from '../settings-sections';
 
 /** Settings › Modules (mock: settings-modules): switch modules on and off, with presets and the server's dependency errors. */
 @Component({
@@ -38,7 +46,12 @@ export class SettingsModulesPage {
   private readonly api = inject(MODULES_API);
   private readonly toasts = inject(ToastService);
 
-  protected readonly sections = SETTINGS_SECTIONS;
+  protected readonly sections = toSignal(
+    inject(SESSION_API)
+      .current()
+      .pipe(map((s) => settingsSections(s.modules))),
+    { initialValue: settingsSections([]) },
+  );
   /** The refusal that offers Read the agreement beside Learning Bond (L2-135 criterion 4). */
   protected readonly agreementFirst = 'Accept the Learning Bond data-handling agreement first.';
   protected readonly catalog = MODULE_CATALOG;

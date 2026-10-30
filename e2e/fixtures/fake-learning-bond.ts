@@ -223,7 +223,124 @@ export class FakeLearningBond {
     if (changed.length) this.settingsAudit.push({ organizationId: m.organizationId, summary: `Learning Bond settings changed: ${changed.join(', ')}` });
     return route.fulfill({ status: 204 });
   }
+
+  /** The sender name: the saved one, or the organization's name cut to 30 characters at a word boundary (L2-139 criterion 5). */
+  senderNameOf(organizationId: string, organizationName: string): string {
+    return this.settingsOf(organizationId).senderName ?? defaultSender(organizationName);
+  }
+
+  /** GET /learning-bond/invitation (L2-139 criterion 1): the platform wording in each language the households use, with samples. */
+  invitation(route: Route, m: Membership, organization: { name: string; city: string }, languages: string[]): Promise<void> {
+    const sender = this.senderNameOf(m.organizationId, organization.name);
+    return route.fulfill({
+      json: {
+        senderName: sender,
+        languages: languages.map((code) => {
+          const sms = texts.sms(code, sender);
+          return {
+            code,
+            name: texts.name(code),
+            sms,
+            smsCharacters: sms.length,
+            smsSegments: smsSegments(sms),
+            emailTitle: texts.emailTitle(code),
+            emailText: texts.emailText(code),
+            emailAction: texts.emailAction(code),
+            emailFooter: texts.emailFooter(code, sender, organization.name, organization.city),
+          };
+        }),
+      },
+    });
+  }
+
+  /** PUT /learning-bond/invitation (L2-139 criteria 2 and 3). */
+  saveInvitation(route: Route, m: Membership): Promise<void> {
+    const name = ((route.request().postDataJSON() as { senderName?: string }).senderName ?? '').trim();
+    const valid = name.length > 0 && name.length <= 30 && /^[\p{L}\p{N} &'’.\-]+$/u.test(name) && !/[\p{L}\p{N}-]\.\p{L}{2,}/iu.test(name) && (name.match(/[0-9]/g) ?? []).length < 7;
+    if (!valid) return route.fulfill({ status: 422, json: { errors: { senderName: 'Use 1 to 30 letters, numbers and spaces.' } } });
+    const before = this.settingsOf(m.organizationId);
+    if (before.senderName !== name) {
+      this.settings.set(m.organizationId, { ...before, senderName: name });
+      this.settingsAudit.push({ organizationId: m.organizationId, summary: 'Learning Bond settings changed: SenderName' });
+    }
+    return route.fulfill({ status: 204 });
+  }
+
+  /** GET /learning-bond/overview (L2-136 criteria 4 and 9): the hub; a pending version disables Launch. */
+  overview(route: Route, m: Membership, organizationName: string, programs: FakeLearningBondProgram[], languages: string[]): Promise<void> {
+    const own = this.acceptances.filter((a) => a.organizationId === m.organizationId).sort((a, b) => b.version - a.version);
+    const latest = own[0];
+    const pending = latest?.version !== this.version;
+    const settings = this.settingsOf(m.organizationId);
+    const chosen = settings.coverage === 'ChosenPrograms' ? programs.filter((p) => settings.programIds.includes(p.id)) : programs;
+    return route.fulfill({
+      json: {
+        agreementVersion: this.version,
+        acceptance: latest ? { version: latest.version, acceptedBy: latest.acceptedBy, acceptedAt: latest.acceptedAt } : null,
+        pendingVersion: pending ? this.version : null,
+        pendingEffectiveOn: pending ? this.effectiveOn : null,
+        coverage: settings.coverage,
+        programs: settings.coverage === 'ChosenPrograms' ? chosen.map((p) => p.name) : [],
+        households: new Set(chosen.flatMap((p) => p.households)).size,
+        statusRoles: settings.statusRoles,
+        senderName: this.senderNameOf(m.organizationId, organizationName),
+        languages,
+        launchBlocked: pending ? 'A new version of the agreement needs accepting.' : null,
+      },
+    });
+  }
 }
+
+/** The organization's name cut to 30 characters at a word boundary (SenderNameRule.Default). */
+function defaultSender(name: string): string {
+  if (name.length <= 30) return name;
+  const cut = name.slice(0, 30);
+  const space = cut.lastIndexOf(' ');
+  return (space > 0 ? cut.slice(0, space) : cut).trimEnd();
+}
+
+const GSM7 = '@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#¤%&\'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà';
+
+/** SMS segments as Messaging counts them (SmsSegments): 160 and 153 for GSM-7, 70 and 67 otherwise. */
+function smsSegments(text: string): number {
+  const gsm = [...text].every((c) => GSM7.includes(c));
+  const [single, multi] = gsm ? [160, 153] : [70, 67];
+  return text.length <= single ? 1 : Math.ceil(text.length / multi);
+}
+
+const link = 'promisehub.ca/lb/4r7k9x';
+
+/** The platform wording (backend LearningBondTexts) with its sample child Maya, guardian Alex and link. */
+const texts = {
+  name: (code: string) => (code === 'es' ? 'Spanish' : code === 'fr' ? 'French' : 'English'),
+  sms: (code: string, sender: string) =>
+    code === 'es'
+      ? `${sender}: Maya podría tener derecho a hasta $2,000 para estudiar después de la secundaria. No cuesta nada. Toque para comprobarlo: ${link} (STOP para salir)`
+      : code === 'fr'
+        ? `${sender} : Maya pourrait recevoir jusqu’à 2 000 $ pour ses études après le secondaire. C’est gratuit. Touchez pour vérifier : ${link} (STOP pour arrêter)`
+        : `${sender}: Maya may be owed up to $2,000 for school after high school. It costs nothing. Tap to check: ${link} (STOP to opt out)`,
+  emailTitle: (code: string) =>
+    code === 'es'
+      ? 'Maya podría tener derecho a hasta $2,000 para estudiar'
+      : code === 'fr'
+        ? 'Maya pourrait recevoir jusqu’à 2 000 $ pour ses études'
+        : 'Maya may be owed up to $2,000 for school after high school',
+  emailText: (code: string) =>
+    code === 'es'
+      ? 'Hola, Alex. El Gobierno de Canadá deposita el Bono de Estudios Canadiense en un RESP para familias con ingresos más bajos. No cuesta nada y no hace falta aportar dinero. Compruébelo en unos 15 minutos desde su teléfono.'
+      : code === 'fr'
+        ? 'Bonjour Alex. Le gouvernement du Canada verse le Bon d’études canadien dans un REEE pour les familles à revenu modeste. C’est gratuit et vous n’avez rien à verser. Vérifiez en 15 minutes environ sur votre téléphone.'
+        : 'Hi Alex. The Government of Canada puts the Canada Learning Bond into an RESP for families with lower incomes. It costs nothing and you don’t need to put in any money. Check in about 15 minutes on your phone.',
+  emailAction: (code: string) => (code === 'es' ? 'Comprobar ahora' : code === 'fr' ? 'Vérifier maintenant' : 'Check now'),
+  emailFooter: (code: string, sender: string, organization: string, city: string) => {
+    const place = city ? `${organization}, ${city.split(',')[0]!.trim()}` : organization;
+    return code === 'es'
+      ? `${sender} a través de PromiseHub · ${place} · Dejar de recibir correos`
+      : code === 'fr'
+        ? `${sender} via PromiseHub · ${place} · Se désabonner`
+        : `${sender} via PromiseHub · ${place} · Unsubscribe`;
+  },
+};
 
 function addDays(iso: string, days: number): string {
   return new Date(new Date(iso).getTime() + days * 86_400_000).toISOString();
