@@ -18,6 +18,7 @@ test.describe('A guardian opens the Learning Bond link', () => {
 
     await expect(learningBond.heading).toHaveText('Mateo y Sofía podrían tener derecho a dinero para estudiar después de la secundaria');
     await expect(learningBond.agent).toContainText('no a Harbourview Youth Collective.');
+    await expect(learningBond.agent).toContainText('Bono de Estudios:');
     await expect(learningBond.child('Mateo')).toContainText('Hasta $1,400');
     await expect(learningBond.child('Sofía')).toContainText('Hasta $1,700');
     await learningBond.expectAccessible();

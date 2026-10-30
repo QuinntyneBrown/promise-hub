@@ -3613,8 +3613,18 @@ export class FakeApi {
   }
 
   /** A Learning Bond link for a verified device: 410 unknown, 404 with the module off, 401 for the code step (GuardianAccess). */
-  private async learningBondGuardianScope(route: Route, token: string): Promise<{ household: FakeHousehold; organizationId: string } | null> {
+  /** A Learning Bond link, or any other link of the household's, as the real API resolves both (GuardianAccess). */
+  private learningBondLinkOf(token: string): { householdId: string; organizationId: string; language: "en" | "es" | "fr" } | undefined {
     const link = this.learningBond.links.get(token);
+    if (link) return link;
+    const household = this.households.find((h) => h.id === this.homeLinks.get(token));
+    if (!household) return undefined;
+    const language = household.language === "Spanish" ? "es" : household.language === "French" ? "fr" : "en";
+    return { householdId: household.id, organizationId: household.organizationId, language };
+  }
+
+  private async learningBondGuardianScope(route: Route, token: string): Promise<{ household: FakeHousehold; organizationId: string } | null> {
+    const link = this.learningBondLinkOf(token);
     if (!link) {
       await route.fulfill({ status: 410, json: { code: "link-expired", organization: null, phone: null } });
       return null;
@@ -3640,12 +3650,8 @@ export class FakeApi {
     return { household, organizationId: link.organizationId };
   }
 
-  /** GET /g/learning-bond/{token}/page (L2-144): each covered child under 18 with an amount; 18 to 20 claim for themselves. */
-  private async learningBondGuardianPage(route: Route, token: string): Promise<void> {
-    const scope = await this.learningBondGuardianScope(route, token);
-    if (!scope) return;
-    const { household, organizationId } = scope;
-    const code = this.learningBond.links.get(token)!.language;
+  /** Each covered child under 18 with the rule's amount, and each child 18 to 20 who claims for themselves (LearningBondFamilyChildren). */
+  private learningBondCoveredChildren(household: (typeof this.households)[number], organizationId: string) {
     const settings = this.learningBond.settingsOf(organizationId);
     const programs = this.programs.filter(
       (p) => p.organizationId === organizationId && p.status === "Active" && (settings.coverage === "AllPrograms" || settings.programIds.includes(p.id)),
@@ -3655,7 +3661,7 @@ export class FakeApi {
       const [y, m, d] = dob.split("-").map(Number) as [number, number, number];
       return 2026 - y - (m > 11 || (m === 11 && d > 5) ? 1 : 0);
     };
-    const children = [...household.children]
+    return [...household.children]
       .sort((a, b) => a.firstName.localeCompare(b.firstName))
       .flatMap((c) => {
         const age = ageOf(c.dateOfBirth);
@@ -3667,6 +3673,31 @@ export class FakeApi {
           ];
         return [];
       });
+  }
+
+  /** The guardian home's Learning Bond card (L2-144 criterion 7): invited, not declined, module on, covered children under 18. */
+  private learningBondHomeCard(household: (typeof this.households)[number], organizationId: string) {
+    if (!this.modules.get(organizationId)!.includes("LearningBond")) return null;
+    if (!this.learningBond.invitations.some((i) => i.householdId === household.id) || this.learningBond.declined.has(household.id)) return null;
+    const children = this.learningBondCoveredChildren(household, organizationId).filter((c) => !c.selfClaim && c.amount !== null);
+    if (!children.length) return null;
+    const submitted = new Set([...this.learningBond.applications.values()].filter((a) => a.status === "Submitted").map((a) => a.childId));
+    return {
+      children: children.map((c) => ({
+        id: c.id,
+        firstName: c.firstName,
+        status: submitted.has(c.id) ? "Submitted" : this.learningBond.consents.some((k) => k.childId === c.id) ? "Started" : "Invited",
+      })),
+    };
+  }
+
+  /** GET /g/learning-bond/{token}/page (L2-144): each covered child under 18 with an amount; 18 to 20 claim for themselves. */
+  private async learningBondGuardianPage(route: Route, token: string): Promise<void> {
+    const scope = await this.learningBondGuardianScope(route, token);
+    if (!scope) return;
+    const { household, organizationId } = scope;
+    const code = this.learningBondLinkOf(token)!.language;
+    const children = this.learningBondCoveredChildren(household, organizationId);
     const declined = this.learningBond.declined.has(household.id);
     const organization = this.organizationDetailsOf(organizationId).name;
     return route.fulfill({
@@ -3700,7 +3731,7 @@ export class FakeApi {
   private async learningBondConsentPage(route: Route, token: string): Promise<void> {
     const scope = await this.learningBondGuardianScope(route, token);
     if (!scope) return;
-    const code = this.learningBond.links.get(token)!.language;
+    const code = this.learningBondLinkOf(token)!.language;
     const organization = this.organizationDetailsOf(scope.organizationId).name;
     return route.fulfill({
       json: {
@@ -3727,7 +3758,7 @@ export class FakeApi {
     if (b.childIds!.some((id) => !open.some((c) => c.id === id))) return route.fulfill({ status: 403, json: { code: "forbidden" } });
     if (!scope.household.guardians.some((g) => g.name.toLowerCase() === typed.toLowerCase()))
       return route.fulfill({ status: 422, json: { errors: { typedName: "Type the full name of a guardian of this household." } } });
-    const code = this.learningBond.links.get(token)!.language;
+    const code = this.learningBondLinkOf(token)!.language;
     for (const childId of b.childIds!) this.learningBond.consents.push({ householdId: scope.household.id, childId, typedName: typed, language: code, wordingVersion: 1 });
     return route.fulfill({ status: 201, json: { ids: b.childIds!.map((id) => `consent-${id}`) } });
   }
@@ -3748,7 +3779,7 @@ export class FakeApi {
   private async learningBondIntake(route: Route, token: string, childId: string): Promise<void> {
     const found = await this.learningBondConsentedChild(route, token, childId);
     if (!found) return;
-    const code = this.learningBond.links.get(token)!.language;
+    const code = this.learningBondLinkOf(token)!.language;
     const intake = this.learningBond.intakes.get(found.household.id);
     const claim = this.learningBond.claims.get(childId);
     return route.fulfill({
@@ -3798,7 +3829,7 @@ export class FakeApi {
     const intake = this.learningBond.intakes.get(found.household.id);
     if (!intake?.guardianLast3 || !intake.taxFiled || !this.learningBond.claims.get(childId)?.childLast3)
       return route.fulfill({ status: 409, json: { code: "intake-incomplete" } });
-    const code = this.learningBond.links.get(token)!.language;
+    const code = this.learningBondLinkOf(token)!.language;
     const year = Number(found.child.dateOfBirth?.slice(0, 4) ?? 0);
     const name = found.child.firstName;
     return route.fulfill({
@@ -3832,7 +3863,7 @@ export class FakeApi {
     const provider = a.provider ?? "Northfield Credit Union";
     return {
       id,
-      language: this.learningBond.links.get(token)!.language,
+      language: this.learningBondLinkOf(token)!.language,
       organization: "Harbourview Youth Collective",
       explanation: `I filled in ${provider}’s application from what I have. Check each field. Nothing has been sent yet; here’s exactly what goes, and to whom.`,
       childId: a.childId,
@@ -3960,7 +3991,7 @@ export class FakeApi {
 
   /** GET /g/learning-bond/{token}: the organization from the link, then the module gate; every refusal is the same bare 404 (L2-162 criterion 6). */
   private learningBondLink(route: Route, token: string): Promise<void> {
-    const link = this.learningBond.links.get(token);
+    const link = this.learningBondLinkOf(token);
     if (!link || !this.modules.get(link.organizationId)!.includes("LearningBond"))
       return route.fulfill({ status: 404 });
     const organization = organizations.find((o) => o.id === link.organizationId)!;
@@ -11860,7 +11891,7 @@ export class FakeApi {
       : (this.guardianLinks.get(token) ??
           this.surveyLinks.get(token) ??
           this.consentLinks.get(token) ??
-          this.learningBond.links.get(token));
+          this.learningBondLinkOf(token));
   }
 
   private async guardianHome(route: Route, token: string): Promise<void> {
@@ -11972,6 +12003,7 @@ export class FakeApi {
         announcements: this.modules.get(org.id)!.includes("Messages")
           ? this.announcementsOf(household.id).filter((a) => !a.read).length
           : null,
+        learningBond: this.learningBondHomeCard(household, org.id),
         pickupRequests: this.pickupRequests
           .filter(
             (r) => r.householdId === household.id && r.status === "Pending",

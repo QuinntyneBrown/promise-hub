@@ -10,6 +10,17 @@ const TEXT = {
     newAnnouncements: (n: number, org: string) => `${n} new from ${org}.`,
     noNewAnnouncements: 'No new announcements.',
     readAnnouncements: 'Read announcements',
+    learningBond: 'Learning Bond',
+    openLearningBond: 'Open Learning Bond',
+    learningBondLine: (name: string, status: string) =>
+      ({
+        Invited: `${name} may be owed money for school after high school.`,
+        Started: `${name}’s claim is started.`,
+        Paused: `${name}’s claim is waiting on you.`,
+        Submitted: `${name}’s application was sent.`,
+        Deposited: `${name}’s Learning Bond was deposited.`,
+        NotCompleted: `${name}’s claim wasn’t completed.`,
+      })[status] ?? '',
     back: 'Back to your family',
     childIntro: (child: string, org: string) =>
       `A read-only look at how ${child} is doing at ${org}.`,
@@ -77,6 +88,17 @@ const TEXT = {
     newAnnouncements: (n: number, org: string) => `${n} nuevos de ${org}.`,
     noNewAnnouncements: 'No hay anuncios nuevos.',
     readAnnouncements: 'Leer los anuncios',
+    learningBond: 'Bono de Estudios',
+    openLearningBond: 'Abrir el Bono de Estudios',
+    learningBondLine: (name: string, status: string) =>
+      ({
+        Invited: `${name} podría tener derecho a dinero para estudiar después de la secundaria.`,
+        Started: `La solicitud de ${name} está empezada.`,
+        Paused: `La solicitud de ${name} espera algo de usted.`,
+        Submitted: `La solicitud de ${name} se envió.`,
+        Deposited: `El Bono de ${name} se depositó.`,
+        NotCompleted: `La solicitud de ${name} no se completó.`,
+      })[status] ?? '',
     back: 'Volver a su familia',
     childIntro: (child: string, org: string) =>
       `Un resumen de solo lectura de cómo le va a ${child} en ${org}.`,
@@ -144,6 +166,17 @@ const TEXT = {
     newAnnouncements: (n: number, org: string) => `${n} nouvelles de ${org}.`,
     noNewAnnouncements: 'Aucune nouvelle annonce.',
     readAnnouncements: 'Lire les annonces',
+    learningBond: 'Bon d’études',
+    openLearningBond: 'Ouvrir le Bon d’études',
+    learningBondLine: (name: string, status: string) =>
+      ({
+        Invited: `${name} pourrait avoir droit à de l’argent pour les études après le secondaire.`,
+        Started: `La demande de ${name} est commencée.`,
+        Paused: `La demande de ${name} attend quelque chose de vous.`,
+        Submitted: `La demande de ${name} a été envoyée.`,
+        Deposited: `Le Bon de ${name} a été déposé.`,
+        NotCompleted: `La demande de ${name} n’a pas été complétée.`,
+      })[status] ?? '',
     back: 'Retour à votre famille',
     childIntro: (child: string, org: string) =>
       `Un aperçu en lecture seule de la façon dont ${child} progresse à ${org}.`,

@@ -14,7 +14,7 @@ namespace PromiseHub.Application.Guardian;
 /// The household's home page, opened from a decision text (L2-013 criterion 12): each child's programs with the status, the
 /// waitlist position and the note staff wrote. The household comes from the link; a new device verifies with a code first.
 /// </summary>
-public sealed class GuardianHomeHandler(IPromiseHubDb db, GuardianAccess access, IModuleGate modules, NoShowReplyHandler replies, ApprovedPickupsHandler pickups, PickupRequestHandler requests, GuardianContactChange contactChange, GuardianAnnouncementsHandler announcements, IAuditWriter audit, TimeProvider clock)
+public sealed class GuardianHomeHandler(IPromiseHubDb db, GuardianAccess access, IModuleGate modules, NoShowReplyHandler replies, ApprovedPickupsHandler pickups, PickupRequestHandler requests, GuardianContactChange contactChange, GuardianAnnouncementsHandler announcements, IAuditWriter audit, TimeProvider clock, LearningBond.LearningBondHomeCard learningBond)
 {
     public async Task<GuardianResult> GetAsync(GuardianRequest request, CancellationToken cancellationToken = default)
     {
@@ -72,7 +72,8 @@ public sealed class GuardianHomeHandler(IPromiseHubDb db, GuardianAccess access,
             noShows,
             [.. waiting.OrderBy(r => r.RequestedAt).Select(r => new GuardianHomePickupRequestDto(r.Id, children.First(c => c.Id == r.ChildId).FirstName, r.CollectorName, eventNames.GetValueOrDefault(r.EventId, ""), r.RequestedAt))],
             primary is null ? null : new GuardianHomeContactDto(primary.Name, primary.Mobile, primary.Email, scope.Household.Language),
-            await announcements.UnreadAsync(scope.Household.Id, cancellationToken)));
+            await announcements.UnreadAsync(scope.Household.Id, cancellationToken),
+            await learningBond.ForAsync(scope.Household.Id, scope.Organization.TimeZone, cancellationToken)));
     }
 
     /// <summary>Answers a no-show text from the page instead of replying 1 or 2 (L2-018 criterion 8).</summary>

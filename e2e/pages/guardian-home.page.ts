@@ -47,6 +47,15 @@ export class GuardianHomePage extends BasePage {
     return this.page.getByRole('region', { name: /^(Announcements|Anuncios|Annonces)$/ });
   }
 
+  /** The Learning Bond card (L2-144 criterion 7), present only once the household is invited and while the module is on. */
+  get learningBond(): Locator {
+    return this.page.getByRole('region', { name: /^(Learning Bond|Bono de Estudios|Bon d’études)$/ });
+  }
+
+  async openLearningBond(): Promise<void> {
+    await this.learningBond.getByRole('link').click();
+  }
+
   async openAnnouncements(): Promise<void> {
     await this.announcements.getByRole('link').click();
   }
@@ -69,7 +78,10 @@ export class GuardianHomePage extends BasePage {
 
   async removePickup(name: string): Promise<void> {
     await this.page.getByRole('button', { name: new RegExp(`^(Remove|Quitar|Retirer) ${name}`) }).click();
-    await this.page.getByRole('dialog').getByRole('button', { name: /^(Remove|Quitar|Retirer)$/ }).click();
+    await this.page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(Remove|Quitar|Retirer)$/ })
+      .click();
   }
 
   get details(): Locator {
@@ -106,7 +118,10 @@ export class GuardianHomePage extends BasePage {
   }
 
   get pickupRequest(): Locator {
-    return this.page.getByRole('main').getByRole('status').filter({ hasText: /to collect|para recoger|chercher/ });
+    return this.page
+      .getByRole('main')
+      .getByRole('status')
+      .filter({ hasText: /to collect|para recoger|chercher/ });
   }
 
   async decidePickup(approve: boolean): Promise<void> {
@@ -114,11 +129,17 @@ export class GuardianHomePage extends BasePage {
   }
 
   get noShowAlert(): Locator {
-    return this.page.getByRole('main').getByRole('status').filter({ hasText: /checked in|registrad|enregistr/ });
+    return this.page
+      .getByRole('main')
+      .getByRole('status')
+      .filter({ hasText: /checked in|registrad|enregistr/ });
   }
 
   get answered(): Locator {
-    return this.page.getByRole('main').getByRole('status').filter({ hasText: /^(Thanks|Gracias|Merci)/ });
+    return this.page
+      .getByRole('main')
+      .getByRole('status')
+      .filter({ hasText: /^(Thanks|Gracias|Merci)/ });
   }
 
   async answer(reply: 'On the way' | 'Absent tonight'): Promise<void> {
@@ -129,7 +150,10 @@ export class GuardianHomePage extends BasePage {
     await this.page.getByRole('main').getByRole('textbox').fill(contact);
     await this.page.getByRole('button', { name: /^(Send me a code|Envíenme un código|Envoyez-moi un code)$/ }).click();
     // Wait for the code step: filling straight away can still hit the contact field on a slow machine.
-    await this.page.getByRole('main').getByLabel(/^(Six-digit code|Código de seis dígitos|Code à six chiffres)/).fill(code);
+    await this.page
+      .getByRole('main')
+      .getByLabel(/^(Six-digit code|Código de seis dígitos|Code à six chiffres)/)
+      .fill(code);
     await this.page.getByRole('button', { name: /^(Continue|Continuar|Continuer)$/ }).click();
   }
 }

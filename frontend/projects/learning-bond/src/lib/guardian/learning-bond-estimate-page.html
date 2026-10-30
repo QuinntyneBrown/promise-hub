@@ -14,7 +14,7 @@
           } @else {
             <h1>{{ t.estimateHeading(e.firstName, t.amount(e.amount)) }}</h1>
             <p class="plain lede" data-testid="estimate-note">{{ t.estimateNote(e.firstName) }}</p>
-            <ph-agent-message [text]="e.explanation" />
+            <ph-agent-message [speaker]="t.speaker" [text]="e.explanation" />
             @if (e.needsTaxReturn) {
               <div data-testid="estimate-tax-return">
                 <ph-alert

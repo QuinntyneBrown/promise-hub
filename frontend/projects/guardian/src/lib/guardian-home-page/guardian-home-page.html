@@ -169,6 +169,18 @@
             </div>
           </ph-card>
         }
+        @if (home.learningBond; as bond) {
+          <ph-card [title]="p().learningBond">
+            <div class="stack">
+              <p>{{ learningBondText(bond.children) }}</p>
+              <div>
+                <ph-button icon="sparkle" [link]="['/g/learning-bond', token()]">{{
+                  p().openLearningBond
+                }}</ph-button>
+              </div>
+            </div>
+          </ph-card>
+        }
         @let items = rows(home);
         @if (items.length) {
           <ph-list [label]="h().list">

@@ -11,7 +11,7 @@
         <div class="stack">
           @if (a.noProvider) {
             <h1>{{ t.noProviderHeading }}</h1>
-            <ph-agent-message [text]="t.noProviderText" />
+            <ph-agent-message [speaker]="t.speaker" [text]="t.noProviderText" />
           } @else if (outcome() === 'sent') {
             <h1>{{ t.reviewHeading(a.firstName) }}</h1>
             <div data-testid="review-sent">
@@ -36,7 +36,7 @@
             } @else if (outcome() === 'incomplete') {
               <ph-alert tone="warning" [title]="t.addAddress" />
             }
-            <ph-agent-message [text]="a.explanation" />
+            <ph-agent-message [speaker]="t.speaker" [text]="a.explanation" />
             <ph-card [title]="t.providerTitle">
               <div class="stack" data-testid="review-provider">
                 <p class="plain">

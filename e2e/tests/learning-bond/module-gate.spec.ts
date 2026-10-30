@@ -15,9 +15,7 @@ test.describe('Learning Bond module gate', () => {
       await modules.open();
 
       expect((await modules.moduleNames()).at(-1)).toBe('Learning Bond');
-      await expect(modules.description('Learning Bond')).toHaveText(
-        'Claims every dollar the government already owes your child, from birth to university.',
-      );
+      await expect(modules.description('Learning Bond')).toHaveText('Claims every dollar the government already owes your child, from birth to university.');
       await expect(modules.toggle('Learning Bond')).toBeChecked();
       await expect(modules.summary).toHaveText('11 of 12 modules on');
     });
@@ -136,9 +134,7 @@ test.describe('Learning Bond module gate', () => {
         await unavailable.openLink(token);
 
         await unavailable.expectShown();
-        await expect(unavailable.explanation).toHaveText(
-          'The organization that sent this link isn’t offering Learning Bond right now. Nothing about your family was collected.',
-        );
+        await expect(unavailable.explanation).toHaveText('The organization that sent this link isn’t offering Learning Bond right now. Nothing about your family was collected.');
         await expect(page.getByText('Northgate')).toHaveCount(0);
         expect(library.loaded).toBe(false);
         await unavailable.expectAccessible();

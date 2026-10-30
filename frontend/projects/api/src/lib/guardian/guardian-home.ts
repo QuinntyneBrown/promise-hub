@@ -35,6 +35,14 @@ export interface GuardianHome {
   }[];
   /** How many announcements the household has not read; null while Messages is off (L2-103). */
   announcements?: number | null;
+  /** The Learning Bond card (L2-144 criterion 7): null until the household is invited, after I'm not interested, or with the module off. */
+  learningBond?: {
+    children: {
+      id: string;
+      firstName: string;
+      status: 'Invited' | 'Started' | 'Paused' | 'Submitted' | 'Deposited' | 'NotCompleted';
+    }[];
+  } | null;
   /** How the family page reaches the primary guardian, for them to correct. */
   contact?: { name: string; mobile: string | null; email: string | null; language: string } | null;
 }

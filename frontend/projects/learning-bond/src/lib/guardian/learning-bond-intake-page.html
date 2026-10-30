@@ -10,7 +10,7 @@
         @let i = r.value;
         <div class="stack">
           <h1>{{ t.intakeHeading(i.firstName) }}</h1>
-          <ph-agent-message [text]="i.explanation" />
+          <ph-agent-message [speaker]="t.speaker" [text]="i.explanation" />
           <ph-card [title]="t.recordTitle">
             <div class="stack" data-testid="intake-record">
               <p class="plain">

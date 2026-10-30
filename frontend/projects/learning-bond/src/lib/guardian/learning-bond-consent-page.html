@@ -28,7 +28,7 @@
             </div>
           } @else {
             <h1>{{ t.consentHeading }}</h1>
-            <ph-agent-message [text]="page.explanation" />
+            <ph-agent-message [speaker]="t.speaker" [text]="page.explanation" />
             @if (page.children.length) {
               <form class="stack" novalidate (ngSubmit)="agree()">
                 @if (summary().length) {

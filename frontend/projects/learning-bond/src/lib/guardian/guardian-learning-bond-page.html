@@ -60,7 +60,7 @@
         @let page = r.value;
         <div class="stack">
           <h1>{{ heading() }}</h1>
-          <ph-agent-message [text]="page.explanation" />
+          <ph-agent-message [speaker]="t.speaker" [text]="page.explanation" />
           @if (chosen() === 'NotNow') {
             <div data-testid="learning-bond-choice">
               <ph-alert tone="info" [title]="t.notNowTitle" [text]="t.notNowText" />
