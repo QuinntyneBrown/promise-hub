@@ -25,10 +25,10 @@ test.describe('Learning Bond households', () => {
     await families.expectNoHorizontalScroll();
 
     await families.filterByStatus('Invited');
-    expect(await families.names()).toEqual(['Thompson']);
+    await expect.poll(() => families.names()).toEqual(['Thompson']);
     await families.filterByStatus('All');
     await families.filterByProgram('Saturday Sports');
-    expect(await families.names()).toEqual(['Tran']);
+    await expect.poll(() => families.names()).toEqual(['Tran']);
   });
 });
 

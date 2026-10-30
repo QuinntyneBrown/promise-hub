@@ -19,7 +19,9 @@ export class LearningBondFamiliesPage extends BasePage {
     return this.page.getByRole('list', { name: 'Covered households' });
   }
 
+  /** The households listed, once the list has loaded. */
   async names(): Promise<string[]> {
+    await this.list.waitFor();
     return (await this.list.getByTestId('list-title').allInnerTexts()).map((t) => t.trim());
   }
 
