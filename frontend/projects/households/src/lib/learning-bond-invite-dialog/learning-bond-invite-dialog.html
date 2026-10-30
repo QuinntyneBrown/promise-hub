@@ -1,0 +1,29 @@
+<ph-dialog
+  [title]="'Invite the ' + card.name + ' household to Learning Bond'"
+  [description]="description()"
+  icon="send"
+>
+  <div class="stack">
+    <ph-sms-preview
+      [text]="card.sms"
+      [characters]="card.smsCharacters"
+      [segments]="card.smsSegments"
+    />
+    <p class="text-caption">
+      Counts toward the monthly SMS cap. A household isn’t invited twice within 7 days.
+    </p>
+    @if (failed()) {
+      <ph-alert
+        tone="danger"
+        title="That didn’t go through"
+        text="No invitation was sent. Try again."
+      />
+    }
+  </div>
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close()">Cancel</ph-button>
+    <ph-button variant="primary" icon="send" [busy]="busy()" (click)="send()"
+      >Send invitation</ph-button
+    >
+  </ng-container>
+</ph-dialog>

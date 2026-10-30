@@ -107,6 +107,11 @@
             }
           </ph-card>
         </div>
+        @if (learningBondOn()) {
+          <div class="stack">
+            <ph-learning-bond-household-card [householdId]="h.id" />
+          </div>
+        }
       </div>
     }
   }

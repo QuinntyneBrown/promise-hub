@@ -284,6 +284,34 @@ export class FakeLearningBond {
     return route.fulfill({ status: 204 });
   }
 
+  /** Every invitation sent (LearningBondInvitation): a household is not invited again within 7 days (L2-140 criterion 5). */
+  readonly invitations: { organizationId: string; householdId: string; sentAt: string }[] = [];
+
+  /** When the household was invited within 7 days of now, if it was. */
+  invitedAt(householdId: string, now: string): string | null {
+    const since = new Date(new Date(now).getTime() - 7 * 24 * 3600 * 1000).toISOString();
+    return (
+      this.invitations
+        .filter((i) => i.householdId === householdId && i.sentAt > since)
+        .map((i) => i.sentAt)
+        .sort()
+        .at(-1) ?? null
+    );
+  }
+
+  /** The invitation text naming each eligible child, with the sample link (LearningBondTexts.Sms). */
+  invitationSms(code: 'en' | 'es' | 'fr', sender: string, children: string[]): string {
+    const and = { en: 'and', es: 'y', fr: 'et' }[code];
+    const names = children.length <= 1 ? children.join('') : `${children.slice(0, -1).join(', ')} ${and} ${children.at(-1)}`;
+    const plural = children.length > 1;
+    const link = 'promisehub.ca/lb/4r7k9x';
+    if (code === 'es')
+      return `${sender}: ${names} ${plural ? 'podrían' : 'podría'} tener derecho a hasta $2,000 para estudiar después de la secundaria. No cuesta nada. Toque para comprobarlo: ${link} (STOP para salir)`;
+    if (code === 'fr')
+      return `${sender} : ${names} ${plural ? 'pourraient' : 'pourrait'} recevoir jusqu’à 2 000 $ pour ses études après le secondaire. C’est gratuit. Touchez pour vérifier : ${link} (STOP pour arrêter)`;
+    return `${sender}: ${names} may be owed up to $2,000 for school after high school. It costs nothing. Tap to check: ${link} (STOP to opt out)`;
+  }
+
   /** organization → its launch as chosen (LearningBondSettings.LaunchMode, LaunchDate, LaunchedAt). */
   readonly launches = new Map<string, { mode: 'Scheduled' | 'AtTheDoor'; date: string | null; launchedAt: string | null }>();
 

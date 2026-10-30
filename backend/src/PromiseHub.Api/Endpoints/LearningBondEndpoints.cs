@@ -19,6 +19,24 @@ public static class LearningBondEndpoints
         var learningBond = app.MapGroup("/learning-bond").RequireModule(ModuleId.LearningBond);
         learningBond.MapGet(string.Empty, () => Results.Ok(new LearningBondStatusDto(On: true)));
 
+        // A household's card and the invitation at the door (L2-140 criteria 4, 5 and 8): staff whose role is in the status roles, checked
+        // by the handler since the organization chooses them.
+        learningBond.MapGet("/households/{id:guid}", async (Guid id, LearningBondHouseholdHandler handler, CancellationToken ct) =>
+            await handler.GetAsync(id, ct) switch
+            {
+                (ResultStatus.Done, { } card) => Results.Ok(card),
+                (ResultStatus.Forbidden, _) => Result.Forbidden.ToHttp(),
+                _ => Results.NotFound(),
+            });
+        learningBond.MapPost("/households/{id:guid}/invitations", async (Guid id, LearningBondHouseholdHandler handler, CancellationToken ct) =>
+            await handler.InviteAsync(id, ct) switch
+            {
+                { Status: ResultStatus.Created, InvitedAt: var at } => Results.Json(new { invitedAt = at }, statusCode: StatusCodes.Status201Created),
+                { Status: ResultStatus.Done, InvitedAt: var at } => Results.Ok(new { invitedAt = at }),
+                { Status: ResultStatus.Forbidden } => Result.Forbidden.ToHttp(),
+                _ => Results.NotFound(),
+            });
+
         // Settings › Learning Bond (L2-136 criterion 9, L2-138, L2-139): admins only, behind the module gate.
         var settings = learningBond.MapGroup(string.Empty).RequirePermission(Permission.ManageSettings);
         settings.MapGet("/settings", (LearningBondSettingsHandler handler, CancellationToken ct) => handler.GetAsync(ct));

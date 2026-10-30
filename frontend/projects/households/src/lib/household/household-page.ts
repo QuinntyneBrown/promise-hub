@@ -21,11 +21,13 @@ import { AddChildDialog } from '../add-child/add-child-dialog';
 import { AddGuardianDialog } from '../add-guardian/add-guardian-dialog';
 import { EditGuardianDialog } from '../edit-guardian/edit-guardian-dialog';
 import { HouseholdActionsDialog } from '../household-actions/household-actions-dialog';
+import { LearningBondHouseholdCard } from '../learning-bond-card/learning-bond-household-card';
 
 /** A household (mock: household): children, guardians and the household's actions. */
 @Component({
   selector: 'ph-household-page',
   imports: [
+    LearningBondHouseholdCard,
     PhAlert,
     PhBadge,
     PhBreadcrumb,
@@ -57,6 +59,10 @@ export class HouseholdPage {
 
   protected readonly canWrite = computed(
     () => !!this.session() && can(this.session()!.role, 'writeHouseholds'),
+  );
+  /** The Learning Bond card is composed only while the module is on (L2-162); the card hides itself outside the status roles. */
+  protected readonly learningBondOn = computed(
+    () => !!this.session()?.modules.includes('LearningBond'),
   );
   protected readonly canDelete = computed(
     () => !!this.session() && can(this.session()!.role, 'deleteHouseholds'),

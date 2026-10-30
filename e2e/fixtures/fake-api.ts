@@ -2273,6 +2273,8 @@ export class FakeApi {
     ["PUT", /^\/api\/learning-bond\/invitation$/, (route) => this.learningBondSaveInvitation(route)],
     ["GET", /^\/api\/learning-bond\/overview$/, (route) => this.learningBondOverview(route)],
     ["GET", /^\/api\/learning-bond\/launch$/, (route) => this.learningBondLaunch(route)],
+    ["GET", /^\/api\/learning-bond\/households\/(?<id>[^/]+)$/, (route, p) => this.learningBondHousehold(route, p["id"]!)],
+    ["POST", /^\/api\/learning-bond\/households\/(?<id>[^/]+)\/invitations$/, (route, p) => this.learningBondInvite(route, p["id"]!)],
     ["POST", /^\/api\/learning-bond\/launch$/, (route) => this.learningBondLaunchChange(route, "POST")],
     ["PUT", /^\/api\/learning-bond\/launch$/, (route) => this.learningBondLaunchChange(route, "PUT")],
     ["DELETE", /^\/api\/learning-bond\/launch$/, (route) => this.learningBondLaunchChange(route, "DELETE")],
@@ -3363,6 +3365,79 @@ export class FakeApi {
       neither: count("Neither"),
       programs: [...new Set(covered.flatMap((c) => c.programs))].sort(),
     });
+  }
+
+  /** A caller whose role is in the status roles, with Learning Bond on: 404 while off (the module gate first), then 403 (L2-140 criterion 8). */
+  private async learningBondStaff(route: Route): Promise<Membership | null> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) {
+      await this.unauthenticated(route);
+      return null;
+    }
+    if (!this.modules.get(m.organizationId)!.includes("LearningBond")) {
+      await route.fulfill({ status: 404 });
+      return null;
+    }
+    if (!this.learningBond.settingsOf(m.organizationId).statusRoles.includes(m.role)) {
+      await route.fulfill({ status: 403, json: { code: "forbidden" } });
+      return null;
+    }
+    return m;
+  }
+
+  /** GET /learning-bond/households/{id} (L2-140 criteria 4 and 5): the household card; another organization's household is 404. */
+  private async learningBondHousehold(route: Route, id: string): Promise<void> {
+    const m = await this.learningBondStaff(route);
+    if (!m) return;
+    const household = this.households.find((h) => h.id === id && h.organizationId === m.organizationId);
+    if (!household) return route.fulfill({ status: 404 });
+    const covered = this.learningBondCovered(m.organizationId).find((c) => c.household.id === id);
+    const children = covered ? this.learningBondChildren(m.organizationId, id) : [];
+    const code = household.language === "Spanish" ? "es" : household.language === "French" ? "fr" : "en";
+    const sender = this.learningBond.settingsOf(m.organizationId).senderName ?? this.organizationDetailsOf(m.organizationId).name;
+    const sms = this.learningBond.invitationSms(code, sender, children);
+    return route.fulfill({
+      json: {
+        householdId: id,
+        name: household.name,
+        covered: !!covered,
+        programs: covered?.programs ?? [],
+        children,
+        invitedAt: this.learningBond.invitedAt(id, NOW.toISOString()),
+        recipients: household.guardians.filter((g) => g.mobile || (g.email && !g.emailBounced)).map((g) => g.name),
+        language: { en: "English", es: "Spanish", fr: "French" }[code],
+        sms,
+        smsCharacters: sms.length,
+        smsSegments: Math.ceil(sms.length / (/^[\x00-\x7F£¥èéùìòÇØøÅåÄÖÑÜäöñüà§¿¡’]*$/.test(sms) && sms.length <= 160 ? 160 : 153)),
+      },
+    });
+  }
+
+  /** POST /learning-bond/households/{id}/invitations (L2-140 criteria 4 and 5): 201 now, or 200 with when inside 7 days. */
+  private async learningBondInvite(route: Route, id: string): Promise<void> {
+    const m = await this.learningBondStaff(route);
+    if (!m) return;
+    if (!this.learningBondCovered(m.organizationId).some((c) => c.household.id === id)) return route.fulfill({ status: 404 });
+    const now = NOW.toISOString();
+    const when = this.learningBond.invitedAt(id, now);
+    if (when) return route.fulfill({ json: { invitedAt: when } });
+    this.learningBond.invitations.push({ organizationId: m.organizationId, householdId: id, sentAt: now });
+    return route.fulfill({ status: 201, json: { invitedAt: now } });
+  }
+
+  /** The first names of a household's children the coverage reaches, in name order. */
+  private learningBondChildren(organizationId: string, householdId: string): string[] {
+    const settings = this.learningBond.settingsOf(organizationId);
+    const roster = new Set(
+      this.programs
+        .filter((p) => p.organizationId === organizationId && p.status === "Active" && (settings.coverage === "AllPrograms" || settings.programIds.includes(p.id)))
+        .flatMap((p) => p.roster),
+    );
+    return this.households
+      .find((h) => h.id === householdId)!
+      .children.filter((c) => roster.has(c.id))
+      .map((c) => c.firstName)
+      .sort((a, b) => a.localeCompare(b));
   }
 
   /** POST, PUT and DELETE /learning-bond/launch (L2-140 criteria 2 to 6): schedule, move or cancel. */

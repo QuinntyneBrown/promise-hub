@@ -1,0 +1,16 @@
+@if (card(); as c) {
+  <ph-card title="Learning Bond" data-testid="learning-bond-card">
+    <div class="stack">
+      @if (c.invitedAt; as at) {
+        <p>{{ invitedLine(at) }}. Covered through {{ programs() }}.</p>
+      } @else {
+        <p class="text-muted">Not invited yet. Covered through {{ programs() }}.</p>
+        <div>
+          <ph-button icon="send" hasPopup="dialog" (click)="invite(c)"
+            >Invite to Learning Bond</ph-button
+          >
+        </div>
+      }
+    </div>
+  </ph-card>
+}

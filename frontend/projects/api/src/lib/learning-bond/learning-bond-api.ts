@@ -2,6 +2,8 @@ import type { Observable } from 'rxjs';
 import type { LoadResult } from '../load-result';
 import type { WriteOutcome } from '../write-outcome';
 import type { LearningBondAgreement } from './learning-bond-agreement';
+import type { LearningBondHousehold } from './learning-bond-household';
+import type { LearningBondInviteOutcome } from './learning-bond-invite-outcome';
 import type { LearningBondLaunch } from './learning-bond-launch';
 import type { LearningBondLink } from './learning-bond-link';
 import type { LearningBondMissingContact } from './learning-bond-missing-contact';
@@ -47,6 +49,10 @@ export interface LearningBondApi {
   launch(): Observable<LoadResult<LearningBondLaunch>>;
   /** GET /learning-bond/launch/missing-contacts: covered households with no mobile number or email. */
   missingContacts(): Observable<LoadResult<LearningBondMissingContact[]>>;
+  /** GET /learning-bond/households/{id}: the household's card; forbidden outside the status roles. */
+  household(householdId: string): Observable<LoadResult<LearningBondHousehold>>;
+  /** POST /learning-bond/households/{id}/invitations: invites at the door, or answers when it was invited within 7 days. */
+  inviteHousehold(householdId: string): Observable<LearningBondInviteOutcome>;
   /** POST /learning-bond/launch: schedules for a day (yyyy-mm-dd) or chooses at the door; invalid by field. */
   scheduleLaunch(mode: 'Scheduled' | 'AtTheDoor', date: string | null): Observable<WriteOutcome>;
   /** PUT /learning-bond/launch: moves a scheduled launch that hasn't sent. */
