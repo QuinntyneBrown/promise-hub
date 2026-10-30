@@ -287,6 +287,17 @@ export class FakeLearningBond {
   /** Every invitation sent (LearningBondInvitation): a household is not invited again within 7 days (L2-140 criterion 5). */
   readonly invitations: { organizationId: string; householdId: string; sentAt: string }[] = [];
 
+  /** Guardians' call requests (LearningBondCallRequest): open until a call is marked done; No answer keeps one open (L2-142). */
+  readonly callRequests: { organizationId: string; householdId: string; phone: string; when: 'Mornings' | 'Afternoons' | 'Evenings'; requestedAt: string; outcome: string | null }[] = [];
+
+  /** A guardian asks for a call, as POST /g/learning-bond/{token}/callback would record it. */
+  requestCall(organizationId: string, householdId: string, phone: string, when: 'Mornings' | 'Afternoons' | 'Evenings', requestedAt = '2026-11-05T19:10:00Z'): void {
+    this.callRequests.push({ organizationId, householdId, phone, when, requestedAt, outcome: null });
+  }
+
+  /** Audit summaries the fake records for call outcomes, as the backend writes them. */
+  readonly callAudit: string[] = [];
+
   /** When the household was invited within 7 days of now, if it was. */
   invitedAt(householdId: string, now: string): string | null {
     const since = new Date(new Date(now).getTime() - 7 * 24 * 3600 * 1000).toISOString();

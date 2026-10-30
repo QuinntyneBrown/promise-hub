@@ -2273,8 +2273,10 @@ export class FakeApi {
     ["PUT", /^\/api\/learning-bond\/invitation$/, (route) => this.learningBondSaveInvitation(route)],
     ["GET", /^\/api\/learning-bond\/overview$/, (route) => this.learningBondOverview(route)],
     ["GET", /^\/api\/learning-bond\/launch$/, (route) => this.learningBondLaunch(route)],
+    ["GET", /^\/api\/learning-bond\/households$/, (route) => this.learningBondFamilies(route)],
     ["GET", /^\/api\/learning-bond\/households\/(?<id>[^/]+)$/, (route, p) => this.learningBondHousehold(route, p["id"]!)],
     ["POST", /^\/api\/learning-bond\/households\/(?<id>[^/]+)\/invitations$/, (route, p) => this.learningBondInvite(route, p["id"]!)],
+    ["POST", /^\/api\/learning-bond\/households\/(?<id>[^/]+)\/call-outcome$/, (route, p) => this.learningBondCallOutcome(route, p["id"]!)],
     ["POST", /^\/api\/learning-bond\/launch$/, (route) => this.learningBondLaunchChange(route, "POST")],
     ["PUT", /^\/api\/learning-bond\/launch$/, (route) => this.learningBondLaunchChange(route, "PUT")],
     ["DELETE", /^\/api\/learning-bond\/launch$/, (route) => this.learningBondLaunchChange(route, "DELETE")],
@@ -3385,6 +3387,43 @@ export class FakeApi {
     return m;
   }
 
+  /** GET /learning-bond/households (L2-142 criteria 1 and 5): each covered household's status and last change, by status and program. */
+  private async learningBondFamilies(route: Route): Promise<void> {
+    const m = await this.learningBondStaff(route);
+    if (!m) return;
+    const url = new URL(route.request().url());
+    const status = url.searchParams.get("status");
+    const program = url.searchParams.get("program");
+    const covered = this.learningBondCovered(m.organizationId);
+    const programs = this.learningBondPrograms(m.organizationId).filter((p) => covered.some((c) => c.programs.includes(p.name)));
+    const rows = covered.map((c) => {
+      const invited = this.learningBond.invitations.filter((i) => i.householdId === c.household.id).map((i) => i.sentAt).sort().at(-1) ?? null;
+      const open = this.learningBond.callRequests.find((r) => r.householdId === c.household.id && !r.outcome);
+      const notInterested = this.learningBond.callRequests.find((r) => r.householdId === c.household.id && r.outcome === "NotInterested");
+      const guardian = [...c.household.guardians].sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.name.localeCompare(b.name))[0]?.name ?? null;
+      return {
+        programIds: programs.filter((p) => c.programs.includes(p.name)).map((p) => p.id),
+        row: {
+          householdId: c.household.id,
+          name: c.household.name,
+          guardian,
+          programs: c.programs.join(", "),
+          status: open ? "CallRequested" : notInterested ? "NotInterested" : invited ? "Invited" : "NotInvited",
+          changedAt: open?.requestedAt ?? invited,
+          callPhone: open?.phone ?? null,
+          callWhen: open?.when ?? null,
+        },
+      };
+    });
+    return route.fulfill({
+      json: {
+        covered: covered.length,
+        programs: programs.map((p) => ({ id: p.id, name: p.name, households: covered.filter((c) => c.programs.includes(p.name)).length })),
+        households: rows.filter((r) => (!status || r.row.status === status) && (!program || r.programIds.includes(program))).map((r) => r.row),
+      },
+    });
+  }
+
   /** GET /learning-bond/households/{id} (L2-140 criteria 4 and 5): the household card; another organization's household is 404. */
   private async learningBondHousehold(route: Route, id: string): Promise<void> {
     const m = await this.learningBondStaff(route);
@@ -3423,6 +3462,23 @@ export class FakeApi {
     if (when) return route.fulfill({ json: { invitedAt: when } });
     this.learningBond.invitations.push({ organizationId: m.organizationId, householdId: id, sentAt: now });
     return route.fulfill({ status: 201, json: { invitedAt: now } });
+  }
+
+  /** POST /learning-bond/households/{id}/call-outcome (L2-142 criteria 4 and 7): No answer keeps the request open; none open is 409. */
+  private async learningBondCallOutcome(route: Route, id: string): Promise<void> {
+    const m = await this.learningBondStaff(route);
+    if (!m) return;
+    const household = this.households.find((h) => h.id === id && h.organizationId === m.organizationId);
+    if (!household) return route.fulfill({ status: 404 });
+    const { outcome } = route.request().postDataJSON() as { outcome?: string };
+    if (!["Resumed", "NotInterested", "NoAnswer"].includes(outcome ?? "")) return route.fulfill({ status: 422, json: { errors: { outcome: "Choose how the call went." } } });
+    const open = this.learningBond.callRequests.filter((r) => r.householdId === id && !r.outcome);
+    if (!open.length) return route.fulfill({ status: 409, json: { code: "conflict" } });
+    if (outcome !== "NoAnswer") for (const r of open) r.outcome = outcome!;
+    this.learningBond.callAudit.push(
+      `Learning Bond call with the ${household.name} household done: ${{ Resumed: "Resumed", NotInterested: "Not interested", NoAnswer: "No answer" }[outcome!]}`,
+    );
+    return route.fulfill({ status: 204 });
   }
 
   /** The first names of a household's children the coverage reaches, in name order. */
@@ -3546,6 +3602,8 @@ export class FakeApi {
         modules: this.modules.get(organization.id),
         membershipId: membership.id,
         display: this.displayOf(membership.email),
+        learningBondStatus:
+          this.modules.get(organization.id)!.includes("LearningBond") && this.learningBond.settingsOf(organization.id).statusRoles.includes(membership.role),
       },
     });
   }

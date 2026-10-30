@@ -18,6 +18,8 @@ export interface Section extends NavItem {
   /** The module it belongs to, or every module it needs. */
   module?: ModuleId | ModuleId[];
   roles?: Role[];
+  /** Shown only when the session says so, such as Learning Bond's covered households for the status roles (L2-142 criterion 5). */
+  requires?: 'learningBondStatus';
 }
 
 /**
@@ -160,6 +162,14 @@ export const NAVIGATION: Section[] = [
     placement: 'overflow',
     roles: ['Admin'],
   },
+  {
+    label: 'Learning Bond',
+    link: '/learning-bond/families',
+    icon: 'sparkle',
+    placement: 'overflow',
+    module: 'LearningBond',
+    requires: 'learningBondStatus',
+  },
   { label: 'Settings', link: '/settings', icon: 'settings', placement: 'overflow' },
   {
     label: 'Notifications',
@@ -177,10 +187,15 @@ export const NAVIGATION: Section[] = [
   },
 ];
 
-export function navigationFor(modules: readonly ModuleId[], role: Role): NavItem[] {
+export function navigationFor(
+  modules: readonly ModuleId[],
+  role: Role,
+  flags: { learningBondStatus?: boolean } = {},
+): NavItem[] {
   return NAVIGATION.filter(
     (section) =>
       [section.module ?? []].flat().every((m) => modules.includes(m)) &&
-      (section.roles ?? STAFF).includes(role),
+      (section.roles ?? STAFF).includes(role) &&
+      (!section.requires || !!flags[section.requires]),
   );
 }

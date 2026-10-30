@@ -10,4 +10,5 @@ public sealed record SessionDto(
     string Plan,
     IReadOnlyList<string> Modules,
     Guid MembershipId,
-    DisplayPreferencesDto Display);
+    DisplayPreferencesDto Display,
+    bool LearningBondStatus);

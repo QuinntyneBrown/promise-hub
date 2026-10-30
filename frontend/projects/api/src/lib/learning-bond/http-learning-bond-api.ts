@@ -1,4 +1,4 @@
-import { HttpClient, HttpErrorResponse, HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams, HttpResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, of } from 'rxjs';
 import { API_BASE_URL } from '../api-base-url';
@@ -7,6 +7,7 @@ import { LoadResult } from '../load-result';
 import { WriteOutcome } from '../write-outcome';
 import { LearningBondAgreement } from './learning-bond-agreement';
 import { LearningBondApi } from './learning-bond-api';
+import { LearningBondFamilies } from './learning-bond-families';
 import { LearningBondHousehold } from './learning-bond-household';
 import { LearningBondInviteOutcome } from './learning-bond-invite-outcome';
 import { LearningBondLaunch } from './learning-bond-launch';
@@ -92,6 +93,27 @@ export class HttpLearningBondApi implements LearningBondApi {
           households: LearningBondMissingContact[];
         }>(`${this.baseUrl}/learning-bond/launch/missing-contacts`)
         .pipe(map((r) => r.households)),
+    );
+  }
+
+  families(
+    status: string | null,
+    programId: string | null,
+  ): Observable<LoadResult<LearningBondFamilies>> {
+    let params = new HttpParams();
+    if (status) params = params.set('status', status);
+    if (programId) params = params.set('program', programId);
+    return toLoad(
+      this.http.get<LearningBondFamilies>(`${this.baseUrl}/learning-bond/households`, { params }),
+    );
+  }
+
+  recordCall(householdId: string, outcome: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(
+        `${this.baseUrl}/learning-bond/households/${encodeURIComponent(householdId)}/call-outcome`,
+        { outcome },
+      ),
     );
   }
 

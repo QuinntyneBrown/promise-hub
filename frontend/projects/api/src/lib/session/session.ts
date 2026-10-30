@@ -15,4 +15,6 @@ export interface Session {
   membershipId: string;
   /** The person's display preferences, applied by the shell once per session (L2-119, L2-120). */
   display: DisplayPreferences;
+  /** Whether Learning Bond is on and this member's role sees each family's status (L2-142 criterion 5). */
+  learningBondStatus?: boolean;
 }

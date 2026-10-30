@@ -21,6 +21,8 @@ public static class LearningBondEndpoints
 
         // A household's card and the invitation at the door (L2-140 criteria 4, 5 and 8): staff whose role is in the status roles, checked
         // by the handler since the organization chooses them.
+        learningBond.MapGet("/households", async (string? status, Guid? program, LearningBondFamiliesHandler handler, CancellationToken ct) =>
+            await handler.ListAsync(status, program, ct) is (true, { } list) ? Results.Ok(list) : Result.Forbidden.ToHttp());
         learningBond.MapGet("/households/{id:guid}", async (Guid id, LearningBondHouseholdHandler handler, CancellationToken ct) =>
             await handler.GetAsync(id, ct) switch
             {
@@ -28,6 +30,8 @@ public static class LearningBondEndpoints
                 (ResultStatus.Forbidden, _) => Result.Forbidden.ToHttp(),
                 _ => Results.NotFound(),
             });
+        learningBond.MapPost("/households/{id:guid}/call-outcome", async (Guid id, CallOutcomeRequest request, LearningBondHouseholdHandler handler, CancellationToken ct) =>
+            (await handler.RecordCallAsync(id, request, ct)).ToHttp());
         learningBond.MapPost("/households/{id:guid}/invitations", async (Guid id, LearningBondHouseholdHandler handler, CancellationToken ct) =>
             await handler.InviteAsync(id, ct) switch
             {

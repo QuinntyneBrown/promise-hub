@@ -42,9 +42,12 @@ public sealed class LearningBondCoverage(IPromiseHubDb db, OrganizationToday tod
         var programs = await db.Programs.AsNoTracking().Select(p => new { p.Id, p.Name }).ToDictionaryAsync(p => p.Id, p => p.Name, cancellationToken);
         var names = await db.Households.AsNoTracking().Where(h => ids.Contains(h.Id) && h.DeletedAt == null).ToDictionaryAsync(h => h.Id, h => h.Name, cancellationToken);
         return [.. ids.Where(names.ContainsKey).OrderBy(id => names[id], StringComparer.CurrentCulture)
-            .Select(id => new LearningBondCoveredHousehold(id,
-                [.. reached.Where(r => r.HouseholdId == id).Select(r => programs[r.ProgramId]).Distinct().Order(StringComparer.CurrentCulture)],
-                [.. reached.Where(r => r.HouseholdId == id).Select(r => r.Child).Distinct().Order(StringComparer.CurrentCulture)]))];
+            .Select(id =>
+            {
+                var own = reached.Where(r => r.HouseholdId == id).Select(r => r.ProgramId).Distinct().OrderBy(p => programs[p], StringComparer.CurrentCulture).ToList();
+                return new LearningBondCoveredHousehold(id, [.. own.Select(p => programs[p])],
+                    [.. reached.Where(r => r.HouseholdId == id).Select(r => r.Child).Distinct().Order(StringComparer.CurrentCulture)], own);
+            })];
     }
 
     private async Task<List<(Guid ProgramId, Guid HouseholdId)>> ReachedAsync(CancellationToken cancellationToken) =>

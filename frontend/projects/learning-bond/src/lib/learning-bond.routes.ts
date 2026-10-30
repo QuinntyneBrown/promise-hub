@@ -1,12 +1,19 @@
 import { Routes } from '@angular/router';
 import { LearningBondCoveragePage } from './coverage/learning-bond-coverage-page';
+import { LearningBondFamiliesPage } from './families/learning-bond-families-page';
 import { SettingsLearningBondPage } from './hub/settings-learning-bond-page';
 import { LearningBondInvitationPage } from './invitation/learning-bond-invitation-page';
 import { LearningBondLaunchPage } from './launch/learning-bond-launch-page';
 import { LearningBondMissingContactsPage } from './launch/learning-bond-missing-contacts-page';
 
-/** Staff pages under /learning-bond, loaded only while Learning Bond is on (L2-162 criterion 3). Screens arrive with prompt 85 onward. */
-export const routes: Routes = [];
+/** Staff pages under /learning-bond, loaded only while Learning Bond is on (L2-162 criterion 3). */
+export const routes: Routes = [
+  {
+    path: 'families',
+    component: LearningBondFamiliesPage,
+    title: 'Households · Learning Bond · PromiseHub',
+  },
+];
 
 /**
  * Settings › Learning Bond under /settings/learning-bond, loaded only while Learning Bond is on. The agreement page is the settings

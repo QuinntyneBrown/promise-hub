@@ -97,6 +97,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.LearningBond.LearningBondSignerRequest> LearningBondSignerRequests => Set<Domain.LearningBond.LearningBondSignerRequest>();
     public DbSet<Domain.LearningBond.LearningBondSignerToken> LearningBondSignerTokens => Set<Domain.LearningBond.LearningBondSignerToken>();
     public DbSet<Domain.LearningBond.LearningBondInvitation> LearningBondInvitations => Set<Domain.LearningBond.LearningBondInvitation>();
+    public DbSet<Domain.LearningBond.LearningBondCallRequest> LearningBondCallRequests => Set<Domain.LearningBond.LearningBondCallRequest>();
     public DbSet<Domain.LearningBond.LearningBondSettings> LearningBondSettings => Set<Domain.LearningBond.LearningBondSettings>();
     public DbSet<DataRequest> DataRequests => Set<DataRequest>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
@@ -378,6 +379,18 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.HasIndex(i => new { i.OrganizationId, i.HouseholdId });
             e.Property(i => i.How).HasConversion<string>().HasMaxLength(20);
             e.Property(i => i.SentAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+        });
+        // A guardian's call request: the number and time they gave, until the call is marked done (L2-142).
+        modelBuilder.Entity<Domain.LearningBond.LearningBondCallRequest>(e =>
+        {
+            e.HasIndex(c => new { c.OrganizationId, c.HouseholdId });
+            e.Property(c => c.Guardian).HasMaxLength(200);
+            e.Property(c => c.Phone).HasMaxLength(Domain.LearningBond.LearningBondCallRequest.MaximumPhone);
+            e.Property(c => c.When).HasConversion<string>().HasMaxLength(20);
+            e.Property(c => c.Outcome).HasConversion<string>().HasMaxLength(20);
+            e.Property(c => c.DoneBy).HasMaxLength(200);
+            e.Property(c => c.RequestedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(c => c.DoneAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
         });
         // One settings row per organization: coverage, status roles and the sender name (L2-138, L2-139).
         modelBuilder.Entity<Domain.LearningBond.LearningBondSettings>(e =>

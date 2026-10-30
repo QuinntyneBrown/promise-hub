@@ -14,7 +14,7 @@ namespace PromiseHub.Application.LearningBond;
 /// organization's status roles only. Another organization's household is unknown; a household no covered program reaches is not invited.
 /// </summary>
 public sealed class LearningBondHouseholdHandler(IPromiseHubDb db, ITenantContext tenant, LearningBondCoverage coverage, LearningBondInvitationSender sender,
-    IAuditWriter audit, TimeProvider clock)
+    LearningBondStatusRoles roles, IAuditWriter audit, TimeProvider clock)
 {
     public async Task<(ResultStatus Status, LearningBondHouseholdDto? Card)> GetAsync(Guid householdId, CancellationToken cancellationToken = default)
     {
@@ -65,6 +65,41 @@ public sealed class LearningBondHouseholdHandler(IPromiseHubDb db, ITenantContex
         return new(ResultStatus.Created, clock.GetUtcNow());
     }
 
+    /// <summary>
+    /// Mark call done (L2-142 criteria 4 and 7): records the outcome of the household's open call request, audited; the status follows it.
+    /// No answer keeps the request open, so the household stays Call requested to try again. No open request answers Conflict; another
+    /// organization's household, NotFound.
+    /// </summary>
+    public async Task<Result> RecordCallAsync(Guid householdId, CallOutcomeRequest request, CancellationToken cancellationToken = default)
+    {
+        if (!await SeesStatusAsync(cancellationToken))
+        {
+            return Result.Forbidden;
+        }
+        if (await db.Households.AsNoTracking().FirstOrDefaultAsync(h => h.Id == householdId && h.DeletedAt == null, cancellationToken) is not { } household)
+        {
+            return Result.NotFound;
+        }
+        if (!Enum.TryParse<LearningBondCallOutcome>(request.Outcome, out var outcome) || !Enum.IsDefined(outcome))
+        {
+            return Result.Invalid(new Dictionary<string, string> { ["outcome"] = "Choose how the call went." });
+        }
+        var open = (await db.LearningBondCallRequests.Where(c => c.HouseholdId == householdId && c.DoneAt == null).ToListAsync(cancellationToken))
+            .OrderBy(c => c.RequestedAt).ToList();
+        if (open.Count == 0)
+        {
+            return Result.Conflict;
+        }
+        foreach (var call in open.Where(_ => outcome != LearningBondCallOutcome.NoAnswer))
+        {
+            call.Done(outcome, tenant.ActorName, clock.GetUtcNow());
+        }
+        var said = outcome switch { LearningBondCallOutcome.NotInterested => "Not interested", LearningBondCallOutcome.NoAnswer => "No answer", _ => "Resumed" };
+        audit.Record(new AuditEvent(AuditAction.Updated, nameof(LearningBondCallRequest), householdId, $"Learning Bond call with the {household.Name} household done: {said}"));
+        await db.SaveChangesAsync(cancellationToken);
+        return Result.Done;
+    }
+
     /// <summary>When the household was invited within the last 7 days, if it was.</summary>
     private async Task<DateTimeOffset?> InvitedAtAsync(Guid householdId, CancellationToken cancellationToken)
     {
@@ -73,9 +108,5 @@ public sealed class LearningBondHouseholdHandler(IPromiseHubDb db, ITenantContex
         return sent.Where(s => s > since).Order().Select(s => (DateTimeOffset?)s).LastOrDefault();
     }
 
-    private async Task<bool> SeesStatusAsync(CancellationToken cancellationToken)
-    {
-        var roles = (await db.LearningBondSettings.AsNoTracking().FirstOrDefaultAsync(cancellationToken))?.Roles ?? LearningBondSettings.FixedRoles;
-        return roles.Contains(tenant.Role);
-    }
+    private Task<bool> SeesStatusAsync(CancellationToken cancellationToken) => roles.SeesStatusAsync(cancellationToken);
 }
