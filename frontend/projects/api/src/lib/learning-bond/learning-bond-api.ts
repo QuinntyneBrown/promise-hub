@@ -85,6 +85,10 @@ export interface LearningBondApi {
     token: string,
     childId: string,
   ): Observable<GuardianPageResult<LearningBondProgress | null>>;
+  /** POST /g/learning-bond/{token}/documents/{id}/file: a requested document, kept encrypted until Send (L2-150 criterion 6). */
+  uploadDocument(token: string, documentId: string, file: File): Observable<WriteOutcome>;
+  /** POST /g/learning-bond/{token}/documents/{id}/send: the only way a document reaches the provider, once. */
+  sendDocument(token: string, documentId: string): Observable<LearningBondSubmitOutcome>;
   /** GET /learning-bond/agreement: the current version, the organization's acceptance and the open signer request. */
   agreement(): Observable<LoadResult<LearningBondAgreement>>;
   /** POST /learning-bond/agreement/acceptances: accepts the current version; invalid without the authority box. */

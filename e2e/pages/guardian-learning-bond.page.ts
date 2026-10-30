@@ -164,6 +164,22 @@ export class GuardianLearningBondPage extends BasePage {
     return this.page.getByTestId('progress-notice');
   }
 
+  /** Chooses a file for the requested document; it is kept, not sent. */
+  async chooseDocument(name: string, mimeType: string, size = 1200): Promise<void> {
+    await this.page
+      .getByTestId('document-request')
+      .locator('input[type=file]')
+      .setInputFiles({ name, mimeType, buffer: Buffer.alloc(size, 37) });
+  }
+
+  get documentRequest(): Locator {
+    return this.page.getByTestId('document-request');
+  }
+
+  get documentSent(): Locator {
+    return this.page.getByTestId('document-sent');
+  }
+
   get depositWindow(): Locator {
     return this.page.getByTestId('deposit-window');
   }

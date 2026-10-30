@@ -2662,6 +2662,9 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("SubmissionKey")
+                        .HasColumnType("TEXT");
+
                     b.Property<long?>("UploadedAt")
                         .HasColumnType("INTEGER");
 

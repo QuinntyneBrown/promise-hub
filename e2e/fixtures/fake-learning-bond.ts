@@ -358,6 +358,9 @@ export class FakeLearningBond {
   /** The province a new application is prepared for, from the organization's time zone (RespProviders.ProvinceOf). */
   province = 'ON';
 
+  /** Documents the fake provider received (IRespProviderChannel.SendDocumentAsync): nothing is here before Send. */
+  readonly documentsSent: { documentId: string; fileName: string }[] = [];
+
   /** When true, the provider refuses and nothing is sent. */
   providerFails = false;
 

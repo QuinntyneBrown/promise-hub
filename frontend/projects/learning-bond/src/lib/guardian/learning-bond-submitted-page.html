@@ -11,7 +11,20 @@
           <div class="stack">
             <ph-stepper [current]="5" [total]="5" [label]="t.step(5)" />
             <h1>{{ sentOn(p) }}</h1>
-            @if (p.status === 'Deposited' && p.depositAmount !== null) {
+            @if (sentDocument(); as sent) {
+              <div data-testid="document-sent">
+                <ph-alert tone="success" [title]="t.documentSent(sent, p.provider)" />
+              </div>
+            }
+            @if (p.document; as d) {
+              <div data-testid="progress-notice">
+                <ph-alert
+                  tone="warning"
+                  [title]="t.documentTitle(p.provider, d.name, p.firstName)"
+                  [text]="t.documentText"
+                />
+              </div>
+            } @else if (p.status === 'Deposited' && p.depositAmount !== null) {
               <div data-testid="progress-notice">
                 <ph-alert
                   tone="success"
@@ -29,6 +42,38 @@
               </div>
             }
             <ph-agent-message [speaker]="t.speaker" [text]="p.explanation" />
+            @if (p.document; as d) {
+              <ph-card [title]="t.documentTitle(p.provider, d.name, p.firstName)">
+                <div class="stack" data-testid="document-request">
+                  <ph-file-upload
+                    inputId="document-file"
+                    [title]="t.documentUpload"
+                    [text]="t.documentText"
+                    accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                    [busy]="uploading()"
+                    [error]="documentError()"
+                    (fileSelected)="upload(d.id, $event)"
+                  />
+                  @if (chosen() ?? d.fileName; as file) {
+                    <p class="plain">{{ t.documentChosen(file) }}</p>
+                  }
+                  @if (documentFailed()) {
+                    <ph-alert tone="danger" [title]="t.documentNotSent" />
+                  }
+                  <div>
+                    <ph-button
+                      variant="primary"
+                      size="lg"
+                      icon="send"
+                      [busy]="sending()"
+                      [disabled]="!(chosen() ?? d.fileName)"
+                      (click)="send(p, d.id, d.name)"
+                      >{{ t.documentSend(p.provider) }}</ph-button
+                    >
+                  </div>
+                </div>
+              </ph-card>
+            }
             <ph-card [title]="t.nextTitle" [flush]="true">
               <div data-testid="next-steps">
                 <ph-list [label]="t.nextTitle" [inset]="true">

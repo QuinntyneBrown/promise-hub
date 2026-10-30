@@ -15,6 +15,7 @@ import {
   PhButton,
   PhCard,
   PhEmptyState,
+  PhFileUpload,
   PhGuardianShell,
   PhList,
   PhListItem,
@@ -46,6 +47,7 @@ interface NextStep {
     PhButton,
     PhCard,
     PhEmptyState,
+    PhFileUpload,
     PhGuardianShell,
     PhList,
     PhListItem,
@@ -79,6 +81,13 @@ export class LearningBondSubmittedPage implements OnInit {
     return r?.status === 'verify' || r?.status === 'gone' ? r.organization : null;
   });
 
+  protected readonly uploading = signal(false);
+  protected readonly sending = signal(false);
+  protected readonly chosen = signal<string | null>(null);
+  protected readonly documentError = signal<string | null>(null);
+  protected readonly documentFailed = signal(false);
+  protected readonly sentDocument = signal<string | null>(null);
+
   ngOnInit(): void {
     this.load();
   }
@@ -86,6 +95,34 @@ export class LearningBondSubmittedPage implements OnInit {
   protected load(): void {
     this.result.set(null);
     this.api.progress(this.token(), this.childId()).subscribe((r) => this.result.set(r));
+  }
+
+  /** Keeps the chosen file encrypted on the server; nothing reaches the provider until Send (L2-150 criterion 6). */
+  protected upload(documentId: string, file: File): void {
+    this.uploading.set(true);
+    this.documentError.set(null);
+    this.api.uploadDocument(this.token(), documentId, file).subscribe((r) => {
+      this.uploading.set(false);
+      if (r.status === 'saved') this.chosen.set(file.name);
+      else if (r.status === 'invalid') this.documentError.set(r.errors['file'] ?? null);
+      else this.documentFailed.set(true);
+    });
+  }
+
+  protected send(p: LearningBondProgress, documentId: string, name: string): void {
+    if (this.sending()) return;
+    this.sending.set(true);
+    this.documentFailed.set(false);
+    this.api.sendDocument(this.token(), documentId).subscribe((r) => {
+      this.sending.set(false);
+      if (r.status !== 'sent') {
+        this.documentFailed.set(true);
+        return;
+      }
+      this.sentDocument.set(name);
+      this.chosen.set(null);
+      this.result.set({ status: 'loaded', value: { ...p, document: null } });
+    });
   }
 
   protected sentOn(p: LearningBondProgress): string {

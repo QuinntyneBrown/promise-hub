@@ -2303,6 +2303,16 @@ export class FakeApi {
       (route, p) => this.learningBondSaveIntake(route, p["token"]!, p["child"]!),
     ],
     [
+      "POST",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/documents\/(?<id>[^/]+)\/file$/,
+      (route, p) => this.learningBondUploadDocument(route, p["token"]!, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/documents\/(?<id>[^/]+)\/send$/,
+      (route, p) => this.learningBondSendDocument(route, p["token"]!, p["id"]!),
+    ],
+    [
       "GET",
       /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/children\/(?<child>[^/]+)\/progress$/,
       (route, p) => this.learningBondProgress(route, p["token"]!, p["child"]!),
@@ -3983,9 +3993,48 @@ export class FakeApi {
         expectedFrom: "2027-01-15",
         expectedTo: "2027-02-28",
         fields: review.fields,
-        document: a.document ?? null,
+        document: a.document && !a.document.sentAt ? a.document : null,
       },
     });
+  }
+
+  /** The household's application holding a requested document (LearningBondDocumentHandler.OwnAsync). */
+  private learningBondDocumentOf(householdId: string, documentId: string) {
+    return [...this.learningBond.applications.values()].find((a) => a.householdId === householdId && a.document?.id === documentId);
+  }
+
+  /** POST .../documents/{id}/file (L2-150 criterion 6): a PDF, JPEG or PNG of up to 10 MB, kept until Send. */
+  private async learningBondUploadDocument(route: Route, token: string, documentId: string): Promise<void> {
+    const scope = await this.learningBondGuardianScope(route, token);
+    if (!scope) return;
+    const a = this.learningBondDocumentOf(scope.household.id, documentId);
+    if (!a) return route.fulfill({ status: 404 });
+    const body = route.request().postDataBuffer() ?? Buffer.alloc(0);
+    const head = body.subarray(0, 600).toString("latin1");
+    const name = /filename="([^"]+)"/.exec(head)?.[1] ?? "";
+    const type = /Content-Type: ([^\r\n]+)/i.exec(head)?.[1]?.trim() ?? "";
+    const allowed: Record<string, string> = { pdf: "application/pdf", jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png" };
+    const message = "Choose a PDF, JPEG or PNG up to 10 MB.";
+    if (allowed[name.split(".").pop()!.toLowerCase()] !== type) return route.fulfill({ status: 422, json: { errors: { file: message } } });
+    if (body.length > 10 * 1024 * 1024)
+      return route.fulfill({ status: 422, json: { errors: { file: `That file is ${Math.ceil(body.length / (1024 * 1024))} MB. ${message}` } } });
+    a.document!.fileName = name;
+    return route.fulfill({ json: { id: documentId, fileName: name } });
+  }
+
+  /** POST .../documents/{id}/send (L2-150 criterion 6): the guardian's Send, once. */
+  private async learningBondSendDocument(route: Route, token: string, documentId: string): Promise<void> {
+    const scope = await this.learningBondGuardianScope(route, token);
+    if (!scope) return;
+    const a = this.learningBondDocumentOf(scope.household.id, documentId);
+    if (!a) return route.fulfill({ status: 404 });
+    const d = a.document!;
+    if (d.sentAt) return route.fulfill({ status: 202, json: { id: d.id, sentAt: d.sentAt } });
+    if (!d.fileName) return route.fulfill({ status: 409, json: { code: "no-file" } });
+    if (this.learningBond.providerFails) return route.fulfill({ status: 502, json: { code: "not-sent" } });
+    d.sentAt = "2026-11-05T21:12:00Z";
+    this.learningBond.documentsSent.push({ documentId: d.id, fileName: d.fileName });
+    return route.fulfill({ status: 202, json: { id: d.id, sentAt: d.sentAt } });
   }
 
   /** POST .../applications/{id}/submit (L2-149): once, with the review's version; a failed provider sends nothing. */

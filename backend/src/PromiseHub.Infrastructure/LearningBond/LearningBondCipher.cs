@@ -15,6 +15,7 @@ public sealed class LearningBondCipher : ILearningBondCipher
     private const int NonceSize = 12;
     private const int TagSize = 16;
     private static readonly byte[] Purpose = Encoding.UTF8.GetBytes("PromiseHub.LearningBond.SIN");
+    private static readonly byte[] DocumentPurpose = Encoding.UTF8.GetBytes("PromiseHub.LearningBond.Document");
 
     private readonly byte[]? _key;
 
@@ -57,6 +58,33 @@ public sealed class LearningBondCipher : ILearningBondCipher
         catch (Exception e) when (e is CryptographicException or FormatException or OverflowException or ArgumentException)
         {
             throw new LearningBondCipherException("The social insurance number could not be decrypted under the Learning Bond key.");
+        }
+    }
+
+    public byte[] EncryptDocument(byte[] content)
+    {
+        var key = _key ?? throw new LearningBondUnavailableException();
+        var output = new byte[NonceSize + TagSize + content.Length];
+        var nonce = output.AsSpan(0, NonceSize);
+        RandomNumberGenerator.Fill(nonce);
+        using var aes = new AesGcm(key, TagSize);
+        aes.Encrypt(nonce, content, output.AsSpan(NonceSize + TagSize), output.AsSpan(NonceSize, TagSize), DocumentPurpose);
+        return output;
+    }
+
+    public byte[] DecryptDocument(byte[] ciphertext)
+    {
+        var key = _key ?? throw new LearningBondUnavailableException();
+        try
+        {
+            var plain = new byte[ciphertext.Length - NonceSize - TagSize];
+            using var aes = new AesGcm(key, TagSize);
+            aes.Decrypt(ciphertext.AsSpan(0, NonceSize), ciphertext.AsSpan(NonceSize + TagSize), ciphertext.AsSpan(NonceSize, TagSize), plain, DocumentPurpose);
+            return plain;
+        }
+        catch (Exception e) when (e is CryptographicException or OverflowException or ArgumentException)
+        {
+            throw new LearningBondCipherException("The document could not be decrypted under the Learning Bond key.");
         }
     }
 

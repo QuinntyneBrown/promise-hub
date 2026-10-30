@@ -38,5 +38,10 @@ public sealed class LearningBondDocument : ITenantOwned
         UploadedAt = now;
     }
 
+    /// <summary>Written before the provider's channel is called, so a repeat finds it and sends nothing more.</summary>
+    public Guid? SubmissionKey { get; private set; }
+
+    public Guid BeginSending() => SubmissionKey ??= Guid.NewGuid();
+
     public void MarkSent(DateTimeOffset now) => SentAt = now;
 }

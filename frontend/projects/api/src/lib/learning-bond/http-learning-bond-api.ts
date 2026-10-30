@@ -276,20 +276,9 @@ export class HttpLearningBondApi implements LearningBondApi {
     id: string,
     reviewVersion: number,
   ): Observable<LearningBondSubmitOutcome> {
-    return this.http
-      .post<unknown>(`${this.applicationUrl(token, id)}/submit`, { reviewVersion })
-      .pipe(
-        map((): LearningBondSubmitOutcome => ({ status: 'sent' })),
-        catchError((error: HttpErrorResponse) =>
-          of<LearningBondSubmitOutcome>(
-            error.status === 502
-              ? { status: 'not-sent' }
-              : error.status === 409
-                ? { status: error.error?.code === 'stale-review' ? 'stale' : 'incomplete' }
-                : { status: 'error' },
-          ),
-        ),
-      );
+    return this.outcome(
+      this.http.post<unknown>(`${this.applicationUrl(token, id)}/submit`, { reviewVersion }),
+    );
   }
 
   progress(
@@ -305,6 +294,39 @@ export class HttpLearningBondApi implements LearningBondApi {
             error.status === 409 ? of(null) : throwError(() => error),
           ),
         ),
+    );
+  }
+
+  uploadDocument(token: string, documentId: string, file: File): Observable<WriteOutcome> {
+    const form = new FormData();
+    form.append('file', file, file.name);
+    return toWrite(
+      this.http.post<{ id: string }>(`${this.documentUrl(token, documentId)}/file`, form),
+    );
+  }
+
+  sendDocument(token: string, documentId: string): Observable<LearningBondSubmitOutcome> {
+    return this.outcome(
+      this.http.post<unknown>(`${this.documentUrl(token, documentId)}/send`, null),
+    );
+  }
+
+  private documentUrl(token: string, documentId: string): string {
+    return `${this.baseUrl}/g/learning-bond/${encodeURIComponent(token)}/documents/${encodeURIComponent(documentId)}`;
+  }
+
+  private outcome(call: Observable<unknown>): Observable<LearningBondSubmitOutcome> {
+    return call.pipe(
+      map((): LearningBondSubmitOutcome => ({ status: 'sent' })),
+      catchError((error: HttpErrorResponse) =>
+        of<LearningBondSubmitOutcome>(
+          error.status === 502
+            ? { status: 'not-sent' }
+            : error.status === 409
+              ? { status: error.error?.code === 'stale-review' ? 'stale' : 'incomplete' }
+              : { status: 'error' },
+        ),
+      ),
     );
   }
 

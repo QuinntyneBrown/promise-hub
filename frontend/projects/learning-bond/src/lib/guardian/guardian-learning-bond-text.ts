@@ -128,9 +128,24 @@ export interface GuardianLearningBondText {
   receivedText: string;
   depositedTitle: (amount: string, name: string) => string;
   depositedText: string;
+  documentTitle: (provider: string, document: string, name: string) => string;
+  documentText: string;
+  documentUpload: string;
+  documentChosen: (file: string) => string;
+  documentSend: (provider: string) => string;
+  documentSent: (document: string, provider: string) => string;
+  documentNotSent: string;
 }
 
 const en: GuardianLearningBondText = {
+  documentTitle: (provider, document, name) => `${provider} needs ${document} for ${name}`,
+  documentText: 'PDF, JPEG or PNG up to 10 MB. It’s kept here and sent only when you tap Send.',
+  documentUpload: 'Choose a file or take a photo',
+  documentChosen: (file) => `Chosen: ${file}`,
+  documentSend: (provider) => `Send to ${provider}`,
+  documentSent: (document, provider) =>
+    `${document.charAt(0).toUpperCase()}${document.slice(1)} went to ${provider}.`,
+  documentNotSent: 'We couldn’t send it. Nothing was sent. Try again.',
   receivedTitle: (provider, name) => `${provider} received ${name}’s application`,
   receivedText: 'The RESP is open. Next, the Government of Canada checks your tax returns.',
   depositedTitle: (amount, name) => `${amount} was deposited in ${name}’s RESP`,
@@ -268,6 +283,15 @@ const en: GuardianLearningBondText = {
 };
 
 const es: GuardianLearningBondText = {
+  documentTitle: (provider, document, name) => `${provider} necesita ${document} para ${name}`,
+  documentText:
+    'PDF, JPEG o PNG de hasta 10 MB. Se guarda aquí y se envía solo cuando toque Enviar.',
+  documentUpload: 'Elija un archivo o tome una foto',
+  documentChosen: (file) => `Elegido: ${file}`,
+  documentSend: (provider) => `Enviar a ${provider}`,
+  documentSent: (document, provider) =>
+    `${document.charAt(0).toUpperCase()}${document.slice(1)} se envió a ${provider}.`,
+  documentNotSent: 'No pudimos enviarlo. No se envió nada. Inténtelo de nuevo.',
   receivedTitle: (provider, name) => `${provider} recibió la solicitud de ${name}`,
   receivedText:
     'El RESP está abierto. Ahora el Gobierno de Canadá revisa sus declaraciones de impuestos.',
@@ -408,6 +432,15 @@ const es: GuardianLearningBondText = {
 };
 
 const fr: GuardianLearningBondText = {
+  documentTitle: (provider, document, name) => `${provider} a besoin de ${document} pour ${name}`,
+  documentText:
+    'PDF, JPEG ou PNG jusqu’à 10 Mo. Il est gardé ici et envoyé seulement quand vous touchez Envoyer.',
+  documentUpload: 'Choisissez un fichier ou prenez une photo',
+  documentChosen: (file) => `Choisi : ${file}`,
+  documentSend: (provider) => `Envoyer à ${provider}`,
+  documentSent: (document, provider) =>
+    `${document.charAt(0).toUpperCase()}${document.slice(1)} a été envoyé à ${provider}.`,
+  documentNotSent: 'Nous n’avons pas pu l’envoyer. Rien n’a été envoyé. Réessayez.',
   receivedTitle: (provider, name) => `${provider} a reçu la demande de ${name}`,
   receivedText:
     'Le REEE est ouvert. Ensuite, le gouvernement du Canada vérifie vos déclarations de revenus.',
