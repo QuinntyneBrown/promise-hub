@@ -96,6 +96,14 @@ export class GuardianLearningBondPage extends BasePage {
     return this.page.getByTestId('intake-saved');
   }
 
+  async openEstimate(token: string, childId: string): Promise<void> {
+    await super.open(`/g/learning-bond/${token}/children/${childId}/estimate`);
+  }
+
+  get estimateNote(): Locator {
+    return this.page.getByTestId('estimate-note');
+  }
+
   async expectCodeStep(): Promise<void> {
     await expect(this.heading).toHaveText(/^(Check it’s you|Confirme que es usted|Confirmez que c’est vous)$/);
   }

@@ -42,6 +42,18 @@ public sealed class LearningBondClaim : ITenantOwned
         UpdatedAt = now;
     }
 
+    /// <summary>The "up to" amount last shown and the version of the rule that computed it (L2-147 criterion 5).</summary>
+    public int? EstimateAmount { get; private set; }
+
+    public int? RuleVersion { get; private set; }
+
+    public void RecordEstimate(int? amount, int ruleVersion, DateTimeOffset now)
+    {
+        EstimateAmount = amount;
+        RuleVersion = ruleVersion;
+        UpdatedAt = now;
+    }
+
     public void Pause(LearningBondPausedReason reason, DateTimeOffset now)
     {
         Status = LearningBondClaimStatus.Paused;

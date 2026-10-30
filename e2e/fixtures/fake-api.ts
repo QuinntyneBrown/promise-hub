@@ -2303,6 +2303,11 @@ export class FakeApi {
       (route, p) => this.learningBondSaveIntake(route, p["token"]!, p["child"]!),
     ],
     [
+      "GET",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/children\/(?<child>[^/]+)\/estimate$/,
+      (route, p) => this.learningBondEstimate(route, p["token"]!, p["child"]!),
+    ],
+    [
       "POST",
       /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/children\/(?<child>[^/]+)\/intake\/record-fix$/,
       (route, p) => this.learningBondRecordFix(route, p["token"]!, p["child"]!),
@@ -3764,6 +3769,31 @@ export class FakeApi {
     this.learningBond.intakes.set(found.household.id, intake);
     if (child) this.learningBond.claims.set(childId, { childLast3: child.slice(-3), recordFix: this.learningBond.claims.get(childId)?.recordFix ?? null });
     return route.fulfill({ status: 204 });
+  }
+
+  /** GET /g/learning-bond/{token}/children/{childId}/estimate (L2-147): 409 until the intake is complete. */
+  private async learningBondEstimate(route: Route, token: string, childId: string): Promise<void> {
+    const found = await this.learningBondConsentedChild(route, token, childId);
+    if (!found) return;
+    const intake = this.learningBond.intakes.get(found.household.id);
+    if (!intake?.guardianLast3 || !intake.taxFiled || !this.learningBond.claims.get(childId)?.childLast3)
+      return route.fulfill({ status: 409, json: { code: "intake-incomplete" } });
+    const code = this.learningBond.links.get(token)!.language;
+    const year = Number(found.child.dateOfBirth?.slice(0, 4) ?? 0);
+    const name = found.child.firstName;
+    return route.fulfill({
+      json: {
+        language: code,
+        organization: "Harbourview Youth Collective",
+        explanation: `I worked this out from ${name}’s birth year with the Government of Canada’s rules. It isn’t a promise: the Government confirms it from your tax returns.`,
+        childId,
+        firstName: name,
+        amount: this.learningBond.estimate(year),
+        ruleVersion: 1,
+        bornBefore2004: year > 0 && year < 2004,
+        needsTaxReturn: intake.taxFiled !== "Yes",
+      },
+    });
   }
 
   /** POST /g/learning-bond/{token}/children/{childId}/intake/record-fix (L2-146 criterion 1). */

@@ -11,6 +11,7 @@ import { GuardianPageResult } from '../guardian/guardian-page-result';
 import { toGuardianPage } from '../guardian/to-guardian-page';
 import { GuardianLearningBond } from './guardian-learning-bond';
 import { LearningBondConsentPage } from './learning-bond-consent-page';
+import { LearningBondEstimate } from './learning-bond-estimate';
 import { LearningBondIntake } from './learning-bond-intake';
 import { SaveLearningBondIntake } from './save-learning-bond-intake';
 import { LearningBondFamilies } from './learning-bond-families';
@@ -222,6 +223,12 @@ export class HttpLearningBondApi implements LearningBondApi {
   requestRecordFix(token: string, childId: string, note: string): Observable<WriteOutcome> {
     return toWrite(
       this.http.post<null>(this.childUrl(token, childId, '/intake/record-fix'), { note }),
+    );
+  }
+
+  estimate(token: string, childId: string): Observable<GuardianPageResult<LearningBondEstimate>> {
+    return toGuardianPage(
+      this.http.get<LearningBondEstimate>(this.childUrl(token, childId, '/estimate')),
     );
   }
 

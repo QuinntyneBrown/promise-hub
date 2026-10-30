@@ -2459,6 +2459,9 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("ConsentId")
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("EstimateAmount")
+                        .HasColumnType("INTEGER");
+
                     b.Property<Guid>("HouseholdId")
                         .HasColumnType("TEXT");
 
@@ -2468,6 +2471,9 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.Property<string>("PausedReason")
                         .HasMaxLength(30)
                         .HasColumnType("TEXT");
+
+                    b.Property<int?>("RuleVersion")
+                        .HasColumnType("INTEGER");
 
                     b.Property<long>("StartedAt")
                         .HasColumnType("INTEGER");

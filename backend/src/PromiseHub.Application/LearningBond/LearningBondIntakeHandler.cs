@@ -11,8 +11,8 @@ namespace PromiseHub.Application.LearningBond;
 /// return. SINs are validated on the server, encrypted at the field and kept with their last three digits; the guardian's SIN and the tax
 /// answer belong to the household and are reused for every child. Only for a child with Learning Bond consent in force.
 /// </summary>
-public sealed class LearningBondIntakeHandler(IPromiseHubDb db, LearningBondGuardianScope guardianScope, ILearningBondCipher cipher, LearningBondStaffNotifier staff,
-    IAuditWriter audit, TimeProvider clock)
+public sealed class LearningBondIntakeHandler(IPromiseHubDb db, LearningBondGuardianScope guardianScope, LearningBondClaimFinder claims, ILearningBondCipher cipher,
+    LearningBondStaffNotifier staff, IAuditWriter audit, TimeProvider clock)
 {
     public const string SinMessage = "Check the number. A SIN has 9 digits, like 123 456 782.";
     public const string SameSinMessage = "Each person has their own SIN.";
@@ -141,15 +141,8 @@ public sealed class LearningBondIntakeHandler(IPromiseHubDb db, LearningBondGuar
         return GuardianResult.Of(GuardianOutcome.Done);
     }
 
-    /// <summary>The child's claim, when Learning Bond consent for that child is in force.</summary>
-    private async Task<LearningBondClaim?> ClaimAsync(Guid householdId, Guid childId, CancellationToken cancellationToken, bool tracked = false)
-    {
-        var consents = await db.LearningBondConsents.AsNoTracking()
-            .Where(c => c.HouseholdId == householdId && c.ChildId == childId && c.Scope == LearningBondConsentScope.LearningBond && c.WithdrawnAt == null)
-            .Select(c => c.Id).ToListAsync(cancellationToken);
-        var query = tracked ? db.LearningBondClaims : db.LearningBondClaims.AsNoTracking();
-        return await query.FirstOrDefaultAsync(c => c.HouseholdId == householdId && c.ChildId == childId && consents.Contains(c.ConsentId), cancellationToken);
-    }
+    private Task<LearningBondClaim?> ClaimAsync(Guid householdId, Guid childId, CancellationToken cancellationToken, bool tracked = false) =>
+        claims.ForChildAsync(householdId, childId, tracked, cancellationToken);
 
     /// <summary>The nine digits of a SIN given now, or null when none was given; a value that is not a SIN adds the field's error.</summary>
     private static string? Sin(string? value, string field, Dictionary<string, string> errors)

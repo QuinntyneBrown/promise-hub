@@ -63,9 +63,25 @@ export interface GuardianLearningBondText {
   fixCancel: string;
   fixTitle: (name: string) => string;
   fixRequested: (organization: string, name: string) => string;
+  estimateHeading: (name: string, amount: string) => string;
+  estimateNote: (name: string) => string;
+  bornBefore: (name: string) => string;
+  taxReturnTitle: string;
+  taxReturnText: (name: string) => string;
+  toReview: (name: string) => string;
+  backToDetails: string;
 }
 
 const en: GuardianLearningBondText = {
+  estimateHeading: (name, amount) => `${name} may be owed up to ${amount}.`,
+  estimateNote: (name) =>
+    `Based on the years since ${name} was born. The Government of Canada confirms the amount from your tax returns.`,
+  bornBefore: (name) => `${name} was born before 2004, so the Learning Bond doesn’t apply.`,
+  taxReturnTitle: 'You’ll need to file to receive it',
+  taxReturnText: (name) =>
+    `The Learning Bond is based on your family’s income. Once last year’s tax return is filed, ${name}’s claim carries on from here.`,
+  toReview: (name) => `Review ${name}’s application`,
+  backToDetails: 'Back to the details',
   intakeHeading: (name) => `${name}’s details`,
   recordTitle: 'On the enrolment record',
   recordRight: 'Yes, that’s right',
@@ -133,6 +149,15 @@ const en: GuardianLearningBondText = {
 };
 
 const es: GuardianLearningBondText = {
+  estimateHeading: (name, amount) => `${name} podría tener derecho a hasta ${amount}.`,
+  estimateNote: (name) =>
+    `Según los años desde que nació ${name}. El Gobierno de Canadá confirma el monto con sus declaraciones de impuestos.`,
+  bornBefore: (name) => `${name} nació antes de 2004, así que el Bono de Estudios no aplica.`,
+  taxReturnTitle: 'Tendrá que presentar la declaración para recibirlo',
+  taxReturnText: (name) =>
+    `El Bono depende de los ingresos de su familia. Cuando presente la declaración del año pasado, la solicitud de ${name} sigue desde aquí.`,
+  toReview: (name) => `Revisar la solicitud de ${name}`,
+  backToDetails: 'Volver a los datos',
   intakeHeading: (name) => `Los datos de ${name}`,
   recordTitle: 'En el registro de inscripción',
   recordRight: 'Sí, es correcto',
@@ -202,6 +227,15 @@ const es: GuardianLearningBondText = {
 };
 
 const fr: GuardianLearningBondText = {
+  estimateHeading: (name, amount) => `${name} pourrait recevoir jusqu’à ${amount}.`,
+  estimateNote: (name) =>
+    `Selon les années depuis la naissance de ${name}. Le gouvernement du Canada confirme le montant à partir de vos déclarations de revenus.`,
+  bornBefore: (name) => `${name} est né avant 2004 : le Bon d’études ne s’applique pas.`,
+  taxReturnTitle: 'Vous devrez produire votre déclaration pour le recevoir',
+  taxReturnText: (name) =>
+    `Le Bon dépend du revenu de votre famille. Une fois la déclaration de l’an dernier produite, la demande de ${name} reprend ici.`,
+  toReview: (name) => `Vérifier la demande de ${name}`,
+  backToDetails: 'Retour aux renseignements',
   intakeHeading: (name) => `Les renseignements de ${name}`,
   recordTitle: 'Au dossier d’inscription',
   recordRight: 'Oui, c’est exact',

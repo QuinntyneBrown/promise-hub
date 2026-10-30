@@ -25,6 +25,14 @@ public static class AgentFallbackCopy
         _ => $"I already have {child}’s name and date of birth from the enrolment. I’ll only ask for what’s missing: numbers go in the boxes, never in a message to me.",
     };
 
+    /// <summary>The estimate (L2-147): where the number comes from; it never states one itself.</summary>
+    public static string Estimate(string code, string child) => code switch
+    {
+        "es" => $"Lo calculé con el año de nacimiento de {child} y las reglas del Gobierno de Canadá. No es una promesa: el Gobierno lo confirma con sus declaraciones.",
+        "fr" => $"Je l’ai calculé à partir de l’année de naissance de {child} et des règles du gouvernement du Canada. Ce n’est pas une promesse : le gouvernement le confirme avec vos déclarations.",
+        _ => $"I worked this out from {child}’s birth year with the Government of Canada’s rules. It isn’t a promise: the Government confirms it from your tax returns.",
+    };
+
     /// <summary>The consent step (L2-145): why each child needs its own permission.</summary>
     public static string Consent(string code, string organization) => code switch
     {

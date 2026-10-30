@@ -65,6 +65,10 @@ h1 {
 .hint-left {
   color: var(--color-fg-muted);
 }
+.lede {
+  font: var(--text-body-lg, var(--text-body));
+  color: var(--color-fg-muted);
+}
 .visually-hidden {
   position: absolute;
   width: 1px;

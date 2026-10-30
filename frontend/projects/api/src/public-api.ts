@@ -488,6 +488,7 @@ export * from './lib/learning-bond/guardian-learning-bond-child';
 export * from './lib/learning-bond/learning-bond-consent-page';
 export * from './lib/learning-bond/learning-bond-consent-child';
 export * from './lib/learning-bond/learning-bond-intake';
+export * from './lib/learning-bond/learning-bond-estimate';
 export * from './lib/learning-bond/save-learning-bond-intake';
 export * from './lib/guardian/to-guardian-page';
 export * from './lib/learning-bond/learning-bond-family-status-labels';

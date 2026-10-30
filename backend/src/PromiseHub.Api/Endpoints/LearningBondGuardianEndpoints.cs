@@ -31,6 +31,8 @@ public static class LearningBondGuardianEndpoints
             HttpContext http, CancellationToken ct) => GuardianEndpoints.ToHttp(await handler.SaveAsync(GuardianEndpoints.Request(token, http), childId, request, ct)));
         guardian.MapPost("/children/{childId:guid}/intake/record-fix", async (string token, Guid childId, LearningBondRecordFixRequest request, LearningBondIntakeHandler handler,
             HttpContext http, CancellationToken ct) => GuardianEndpoints.ToHttp(await handler.RequestFixAsync(GuardianEndpoints.Request(token, http), childId, request, ct)));
+        guardian.MapGet("/children/{childId:guid}/estimate", async (string token, Guid childId, LearningBondEstimateHandler handler, HttpContext http, CancellationToken ct) =>
+            GuardianEndpoints.ToHttp(await handler.GetAsync(GuardianEndpoints.Request(token, http), childId, ct)));
         guardian.MapPost("/callback", async (string token, CallbackRequest request, LearningBondGuardianHandler handler, HttpContext http, CancellationToken ct) =>
             await handler.RequestCallAsync(new GuardianRequest(token, http.Request.Cookies[GuardianEndpoints.DeviceCookie], http.Request.Headers.UserAgent.ToString()), request, ct)
                 switch
