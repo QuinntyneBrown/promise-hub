@@ -17,6 +17,14 @@ public static class AgentFallbackCopy
             + $"You don’t need to put in any money. What you enter goes to the RESP provider and the Government of Canada, not to {organization}.",
     };
 
+    /// <summary>The intake (L2-146): the record is known; only what is missing is asked, and numbers go in the fields.</summary>
+    public static string Intake(string code, string child) => code switch
+    {
+        "es" => $"Ya tengo el nombre y la fecha de nacimiento de {child} de la inscripción. Solo le pediré lo que falta: los números van en las casillas, nunca en un mensaje para mí.",
+        "fr" => $"J’ai déjà le nom et la date de naissance de {child} grâce à l’inscription. Je ne demande que ce qui manque : les numéros vont dans les cases, jamais dans un message pour moi.",
+        _ => $"I already have {child}’s name and date of birth from the enrolment. I’ll only ask for what’s missing: numbers go in the boxes, never in a message to me.",
+    };
+
     /// <summary>The consent step (L2-145): why each child needs its own permission.</summary>
     public static string Consent(string code, string organization) => code switch
     {

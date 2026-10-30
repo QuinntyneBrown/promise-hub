@@ -258,6 +258,8 @@ public static class DependencyInjection
         services.AddScoped<LearningBond.LearningBondGuardianScope>();
         services.AddScoped<LearningBond.LearningBondFamilyChildren>();
         services.AddScoped<LearningBond.LearningBondConsentHandler>();
+        services.AddScoped<LearningBond.LearningBondStaffNotifier>();
+        services.AddScoped<LearningBond.LearningBondIntakeHandler>();
         services.AddScoped<LearningBond.LearningBondGuardianHandler>();
         services.AddScoped<LearningBond.LearningBondSinDestroyer>();
         return services;

@@ -122,6 +122,7 @@ public static class GuardianEndpoints
         GuardianOutcome.VerificationRequired => Results.Json(result.Value, contentType: "application/problem+json", statusCode: StatusCodes.Status401Unauthorized),
         GuardianOutcome.Locked => Results.Json(new { code = "locked" }, contentType: "application/problem+json", statusCode: StatusCodes.Status423Locked),
         GuardianOutcome.NotFound => Results.NotFound(),
+        GuardianOutcome.Unavailable => Results.Json(new { code = "unavailable" }, contentType: "application/problem+json", statusCode: StatusCodes.Status503ServiceUnavailable),
         GuardianOutcome.Forbidden => Results.Json(new { code = "forbidden" }, contentType: "application/problem+json", statusCode: StatusCodes.Status403Forbidden),
         GuardianOutcome.TooMany => Results.Json(new { code = "too-many" }, contentType: "application/problem+json", statusCode: StatusCodes.Status429TooManyRequests),
         GuardianOutcome.Conflict => Results.Json(result.Value ?? new { code = "conflict" }, contentType: "application/problem+json", statusCode: StatusCodes.Status409Conflict),

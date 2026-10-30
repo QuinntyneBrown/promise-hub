@@ -397,6 +397,10 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
         {
             e.HasIndex(c => new { c.OrganizationId, c.HouseholdId, c.ChildId });
             e.Property(c => c.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(c => c.PausedReason).HasConversion<string>().HasMaxLength(30);
+            e.Ignore(c => c.ChildSin);
+            e.Property(c => c.ChildSinCiphertext).HasMaxLength(200);
+            e.Property(c => c.ChildSinLast3).HasMaxLength(3);
             e.Property(c => c.StartedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.Property(c => c.UpdatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
         });
@@ -436,6 +440,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(i => i.CreatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.Property(i => i.UpdatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.Property(i => i.GuardianSinDestroyedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.Property(x => x.TaxFiled).HasConversion<string>().HasMaxLength(10);
         });
         modelBuilder.Entity<Domain.Website.VolunteerInterest>(e =>
         {

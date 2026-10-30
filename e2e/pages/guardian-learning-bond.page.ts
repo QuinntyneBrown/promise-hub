@@ -62,6 +62,40 @@ export class GuardianLearningBondPage extends BasePage {
     return this.page.getByTestId('consent-recorded');
   }
 
+  async openIntake(token: string, childId: string): Promise<void> {
+    await super.open(`/g/learning-bond/${token}/children/${childId}/intake`);
+  }
+
+  /** The record to confirm on the intake: the child's name and date of birth. */
+  get record(): Locator {
+    return this.page.getByTestId('intake-record');
+  }
+
+  sinField(label: 'Your SIN' | string): Locator {
+    return this.page.getByLabel(label, { exact: true });
+  }
+
+  /** A SIN already given, shown only as its last three digits. */
+  masked(name: 'guardian' | 'child'): Locator {
+    return this.page.getByTestId(`intake-${name}-sin-saved`);
+  }
+
+  async answerTaxes(answer: 'Yes' | 'No' | 'Not sure'): Promise<void> {
+    await this.page.getByRole('radio', { name: answer, exact: true }).check();
+  }
+
+  async saveIntake(): Promise<void> {
+    await this.page.getByRole('button', { name: 'Save and continue' }).click();
+  }
+
+  intakeError(field: 'guardian-sin' | 'child-sin'): Locator {
+    return this.page.getByTestId(`intake-${field}-error`);
+  }
+
+  get intakeSaved(): Locator {
+    return this.page.getByTestId('intake-saved');
+  }
+
   async expectCodeStep(): Promise<void> {
     await expect(this.heading).toHaveText(/^(Check it’s you|Confirme que es usted|Confirmez que c’est vous)$/);
   }

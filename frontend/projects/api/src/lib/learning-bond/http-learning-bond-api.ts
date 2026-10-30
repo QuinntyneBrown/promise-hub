@@ -11,6 +11,8 @@ import { GuardianPageResult } from '../guardian/guardian-page-result';
 import { toGuardianPage } from '../guardian/to-guardian-page';
 import { GuardianLearningBond } from './guardian-learning-bond';
 import { LearningBondConsentPage } from './learning-bond-consent-page';
+import { LearningBondIntake } from './learning-bond-intake';
+import { SaveLearningBondIntake } from './save-learning-bond-intake';
 import { LearningBondFamilies } from './learning-bond-families';
 import { LearningBondHousehold } from './learning-bond-household';
 import { LearningBondInviteOutcome } from './learning-bond-invite-outcome';
@@ -201,6 +203,30 @@ export class HttpLearningBondApi implements LearningBondApi {
         },
       ),
     );
+  }
+
+  intake(token: string, childId: string): Observable<GuardianPageResult<LearningBondIntake>> {
+    return toGuardianPage(
+      this.http.get<LearningBondIntake>(this.childUrl(token, childId, '/intake')),
+    );
+  }
+
+  saveIntake(
+    token: string,
+    childId: string,
+    answers: SaveLearningBondIntake,
+  ): Observable<WriteOutcome> {
+    return toWrite(this.http.put<null>(this.childUrl(token, childId, '/intake'), answers));
+  }
+
+  requestRecordFix(token: string, childId: string, note: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(this.childUrl(token, childId, '/intake/record-fix'), { note }),
+    );
+  }
+
+  private childUrl(token: string, childId: string, rest: string): string {
+    return `${this.baseUrl}/g/learning-bond/${encodeURIComponent(token)}/children/${encodeURIComponent(childId)}${rest}`;
   }
 
   agreement(): Observable<LoadResult<LearningBondAgreement>> {

@@ -14,7 +14,7 @@ namespace PromiseHub.Application.LearningBond;
 /// revoked link, a suspended organization and the module off all answer null, so the endpoint's 404 never confirms which it was.
 /// </summary>
 public sealed class LearningBondGuardianHandler(GuardianAccess access, TenantContext tenant, IModuleGate modules, IAuditWriter audit, IPromiseHubDb db,
-    NotificationWriter notifications, LearningBondGuardianScope guardianScope, LearningBondFamilyChildren familyChildren, TimeProvider clock)
+    LearningBondStaffNotifier staff, LearningBondGuardianScope guardianScope, LearningBondFamilyChildren familyChildren, TimeProvider clock)
 {
     public async Task<LearningBondGuardianDto?> GetAsync(GuardianRequest request, CancellationToken cancellationToken = default)
     {
@@ -35,7 +35,7 @@ public sealed class LearningBondGuardianHandler(GuardianAccess access, TenantCon
 
     public const string PhoneMessage = "Enter a phone number like 905-555-0142.";
     public const string WhenMessage = "Choose a time of day.";
-    public const string NoticeKind = "learning-bond";
+    public const string NoticeKind = LearningBondStaffNotifier.Kind;
 
     /// <summary>
     /// I'd rather talk to someone (L2-142 criterion 3): stores the number and time, so the household's status is Call requested, and tells the
@@ -72,10 +72,7 @@ public sealed class LearningBondGuardianHandler(GuardianAccess access, TenantCon
             .Select(g => g.Name).FirstOrDefaultAsync(cancellationToken);
         db.LearningBondCallRequests.Add(new LearningBondCallRequest(Guid.NewGuid(), scope.Organization.Id, scope.Household.Id, guardian, phone, when, clock.GetUtcNow()));
         audit.Record(new AuditEvent(AuditAction.Created, nameof(LearningBondCallRequest), scope.Household.Id, $"Learning Bond call requested by the {scope.Household.Name} household"));
-        var roles = (await db.LearningBondSettings.AsNoTracking().FirstOrDefaultAsync(cancellationToken))?.Roles ?? LearningBondSettings.FixedRoles;
-        var staff = await db.Memberships.AsNoTracking().Where(m => m.RemovedAt == null).Select(m => new { m.Id, m.Role }).ToListAsync(cancellationToken);
-        await notifications.NotifyMembersAsync(staff.Where(m => roles.Contains(m.Role)).Select(m => m.Id), NoticeKind,
-            $"{guardian ?? $"The {scope.Household.Name} household"} asked for a call about Learning Bond · {phone} · {when.ToString().ToLowerInvariant()}.",
+        await staff.NotifyAsync($"{guardian ?? $"The {scope.Household.Name} household"} asked for a call about Learning Bond · {phone} · {when.ToString().ToLowerInvariant()}.",
             "/learning-bond/families?status=CallRequested", cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return new(ResultStatus.Done, $"{scope.Organization.Name} will call you. They will see where you are in the steps, never your SIN.");

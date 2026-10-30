@@ -25,4 +25,27 @@ public sealed class LearningBondClaim : ITenantOwned
     public LearningBondClaimStatus Status { get; private set; }
     public DateTimeOffset StartedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
+
+    /// <summary>The child's SIN, kept only as ciphertext under a key outside the database, and its last three digits (L2-159).</summary>
+    public string? ChildSinCiphertext { get; private set; }
+
+    public string? ChildSinLast3 { get; private set; }
+
+    public LearningBondPausedReason? PausedReason { get; private set; }
+
+    public EncryptedSin? ChildSin => ChildSinLast3 is null ? null : new EncryptedSin(ChildSinCiphertext, ChildSinLast3);
+
+    public void SetChildSin(EncryptedSin sin, DateTimeOffset now)
+    {
+        ChildSinCiphertext = sin.Ciphertext;
+        ChildSinLast3 = sin.Last3;
+        UpdatedAt = now;
+    }
+
+    public void Pause(LearningBondPausedReason reason, DateTimeOffset now)
+    {
+        Status = LearningBondClaimStatus.Paused;
+        PausedReason = reason;
+        UpdatedAt = now;
+    }
 }

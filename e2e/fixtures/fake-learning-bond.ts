@@ -320,6 +320,20 @@ export class FakeLearningBond {
     return `Before I ask anything, I need your permission for each child. It’s separate from the program consent you gave ${organization}.`;
   }
 
+  /** household → its intake: the guardian SIN's last three digits and the tax answer, reused for every child (LearningBondIntake). */
+  readonly intakes = new Map<string, { guardianLast3: string | null; taxFiled: string | null }>();
+
+  /** child → its SIN's last three digits and whether a record fix was asked (LearningBondClaim). The fake keeps no whole SIN. */
+  readonly claims = new Map<string, { childLast3: string | null; recordFix: string | null }>();
+
+  /** The intake's agent line (AgentFallbackCopy.Intake). */
+  intakeLine(code: 'en' | 'es' | 'fr', child: string): string {
+    if (code === 'es') return `Ya tengo el nombre y la fecha de nacimiento de ${child} de la inscripción. Solo le pediré lo que falta: los números van en las casillas, nunca en un mensaje para mí.`;
+    if (code === 'fr')
+      return `J’ai déjà le nom et la date de naissance de ${child} grâce à l’inscription. Je ne demande que ce qui manque : les numéros vont dans les cases, jamais dans un message pour moi.`;
+    return `I already have ${child}’s name and date of birth from the enrolment. I’ll only ask for what’s missing: numbers go in the boxes, never in a message to me.`;
+  }
+
   /** Households whose guardian said they aren't interested (LearningBondInvitation.DeclinedAt). */
   readonly declined = new Set<string>();
 
@@ -605,4 +619,20 @@ function inLaunchRange(date?: string): boolean {
 function launchDay(date: string): string {
   const d = new Date(`${date}T12:00:00Z`);
   return `${d.toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'UTC' })} ${d.getUTCDate()} ${d.toLocaleDateString('en-GB', { month: 'short', timeZone: 'UTC' })} ${d.getUTCFullYear()}`;
+}
+
+/** The nine digits of a SIN, or null: 9 digits after spaces and hyphens, the check digit (Luhn), not starting with 0 or 8 (L2-146 criterion 3). */
+export function sinDigits(value: string): string | null {
+  const digits = value.replace(/[\s-]/g, '');
+  if (!/^\d{9}$/.test(digits) || digits[0] === '0' || digits[0] === '8') return null;
+  let total = 0;
+  for (let i = 0; i < 9; i++) {
+    let d = Number(digits[i]);
+    if (i % 2 === 1) {
+      d *= 2;
+      if (d > 9) d -= 9;
+    }
+    total += d;
+  }
+  return total % 10 === 0 ? digits : null;
 }

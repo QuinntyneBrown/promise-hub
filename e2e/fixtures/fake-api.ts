@@ -10,7 +10,7 @@ import {
   seedHouseholds,
 } from "./households";
 import { FakeBadges } from "./fake-badges";
-import { FakeLearningBond, type FakeLearningBondProgram } from "./fake-learning-bond";
+import { FakeLearningBond, sinDigits, type FakeLearningBondProgram } from "./fake-learning-bond";
 import { FakeCurriculum } from "./fake-curriculum";
 import { FakeProgression } from "./fake-progression";
 import { FakeJourney } from "./fake-journey";
@@ -2292,6 +2292,21 @@ export class FakeApi {
     ["GET", /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/page$/, (route, p) => this.learningBondGuardianPage(route, p["token"]!)],
     ["POST", /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/choice$/, (route, p) => this.learningBondChoice(route, p["token"]!)],
     ["GET", /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/consent$/, (route, p) => this.learningBondConsentPage(route, p["token"]!)],
+    [
+      "GET",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/children\/(?<child>[^/]+)\/intake$/,
+      (route, p) => this.learningBondIntake(route, p["token"]!, p["child"]!),
+    ],
+    [
+      "PUT",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/children\/(?<child>[^/]+)\/intake$/,
+      (route, p) => this.learningBondSaveIntake(route, p["token"]!, p["child"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/children\/(?<child>[^/]+)\/intake\/record-fix$/,
+      (route, p) => this.learningBondRecordFix(route, p["token"]!, p["child"]!),
+    ],
     ["POST", /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/consents$/, (route, p) => this.learningBondGiveConsent(route, p["token"]!)],
     [
       "GET",
@@ -3690,6 +3705,75 @@ export class FakeApi {
     const code = this.learningBond.links.get(token)!.language;
     for (const childId of b.childIds!) this.learningBond.consents.push({ householdId: scope.household.id, childId, typedName: typed, language: code, wordingVersion: 1 });
     return route.fulfill({ status: 201, json: { ids: b.childIds!.map((id) => `consent-${id}`) } });
+  }
+
+  /** The household's consented child for a Learning Bond step, or 403 (LearningBondIntakeHandler.ClaimAsync). */
+  private async learningBondConsentedChild(route: Route, token: string, childId: string): Promise<{ household: FakeHousehold; child: FakeChild } | null> {
+    const scope = await this.learningBondGuardianScope(route, token);
+    if (!scope) return null;
+    const child = scope.household.children.find((c) => c.id === childId);
+    if (!child || !this.learningBond.consents.some((k) => k.childId === childId && k.householdId === scope.household.id)) {
+      await route.fulfill({ status: 403, json: { code: "forbidden" } });
+      return null;
+    }
+    return { household: scope.household, child };
+  }
+
+  /** GET /g/learning-bond/{token}/children/{childId}/intake (L2-146 criteria 1, 2, 5 and 6): SINs only as their last three digits. */
+  private async learningBondIntake(route: Route, token: string, childId: string): Promise<void> {
+    const found = await this.learningBondConsentedChild(route, token, childId);
+    if (!found) return;
+    const code = this.learningBond.links.get(token)!.language;
+    const intake = this.learningBond.intakes.get(found.household.id);
+    const claim = this.learningBond.claims.get(childId);
+    return route.fulfill({
+      json: {
+        language: code,
+        organization: "Harbourview Youth Collective",
+        explanation: this.learningBond.intakeLine(code, found.child.firstName),
+        childId,
+        firstName: found.child.firstName,
+        childName: `${found.child.firstName} ${found.child.lastName}`,
+        dateOfBirth: found.child.dateOfBirth,
+        taxYear: 2025,
+        guardianSin: intake?.guardianLast3 ?? null,
+        childSin: claim?.childLast3 ?? null,
+        taxFiled: intake?.taxFiled ?? null,
+        recordFixRequested: !!claim?.recordFix,
+      },
+    });
+  }
+
+  /** PUT /g/learning-bond/{token}/children/{childId}/intake (L2-146 criteria 3 and 4): validated, kept as the last three digits. */
+  private async learningBondSaveIntake(route: Route, token: string, childId: string): Promise<void> {
+    const found = await this.learningBondConsentedChild(route, token, childId);
+    if (!found) return;
+    const b = route.request().postDataJSON() as { guardianSin?: string | null; childSin?: string | null; taxFiled?: string | null };
+    const errors: Record<string, string> = {};
+    const message = "Check the number. A SIN has 9 digits, like 123 456 782.";
+    const guardian = b.guardianSin?.trim() ? sinDigits(b.guardianSin) : null;
+    const child = b.childSin?.trim() ? sinDigits(b.childSin) : null;
+    if (b.guardianSin?.trim() && !guardian) errors["guardianSin"] = message;
+    if (b.childSin?.trim() && !child) errors["childSin"] = message;
+    if (b.taxFiled && !["Yes", "No", "NotSure"].includes(b.taxFiled)) errors["taxFiled"] = "Choose Yes, No or Not sure.";
+    const intake = this.learningBond.intakes.get(found.household.id) ?? { guardianLast3: null, taxFiled: null };
+    if (!Object.keys(errors).length && child && guardian && child === guardian) errors["childSin"] = "Each person has their own SIN.";
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    if (guardian) intake.guardianLast3 = guardian.slice(-3);
+    if (b.taxFiled) intake.taxFiled = b.taxFiled;
+    this.learningBond.intakes.set(found.household.id, intake);
+    if (child) this.learningBond.claims.set(childId, { childLast3: child.slice(-3), recordFix: this.learningBond.claims.get(childId)?.recordFix ?? null });
+    return route.fulfill({ status: 204 });
+  }
+
+  /** POST /g/learning-bond/{token}/children/{childId}/intake/record-fix (L2-146 criterion 1). */
+  private async learningBondRecordFix(route: Route, token: string, childId: string): Promise<void> {
+    const found = await this.learningBondConsentedChild(route, token, childId);
+    if (!found) return;
+    const { note } = route.request().postDataJSON() as { note?: string };
+    if (!note?.trim()) return route.fulfill({ status: 422, json: { errors: { note: "Tell us what to fix, in up to 500 characters." } } });
+    this.learningBond.claims.set(childId, { childLast3: this.learningBond.claims.get(childId)?.childLast3 ?? null, recordFix: note.trim() });
+    return route.fulfill({ status: 204 });
   }
 
   /** POST /g/learning-bond/{token}/choice (L2-144 criterion 4). */

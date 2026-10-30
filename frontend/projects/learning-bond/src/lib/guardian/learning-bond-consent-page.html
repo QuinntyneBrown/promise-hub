@@ -17,9 +17,13 @@
                 [title]="t.consentRecorded(names(recorded()))"
                 [text]="t.consentRecordedText"
               >
-                <ph-button size="sm" variant="primary" icon="arrow-right" link="../intake">{{
-                  t.toDetails(names(recorded().slice(0, 1)))
-                }}</ph-button>
+                <ph-button
+                  size="sm"
+                  variant="primary"
+                  icon="arrow-right"
+                  [link]="['..', 'children', recorded()[0], 'intake']"
+                  >{{ t.toDetails(names(recorded().slice(0, 1))) }}</ph-button
+                >
               </ph-alert>
             </div>
           } @else {

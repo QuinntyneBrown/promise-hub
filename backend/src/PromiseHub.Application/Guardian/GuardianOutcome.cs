@@ -21,6 +21,8 @@ public enum GuardianOutcome
     /// <summary>The request names something that isn't this household guardian's to decide (403).</summary>
     Forbidden,
     NotFound,
+    /// <summary>A service the request needs isn't available, such as the Learning Bond key (503); nothing is stored.</summary>
+    Unavailable,
     Conflict,
     Invalid,
 }

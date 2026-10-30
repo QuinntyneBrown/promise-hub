@@ -2448,6 +2448,14 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("ChildId")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("ChildSinCiphertext")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ChildSinLast3")
+                        .HasMaxLength(3)
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("ConsentId")
                         .HasColumnType("TEXT");
 
@@ -2455,6 +2463,10 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PausedReason")
+                        .HasMaxLength(30)
                         .HasColumnType("TEXT");
 
                     b.Property<long>("StartedAt")
@@ -2549,6 +2561,10 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TaxFiled")
+                        .HasMaxLength(10)
                         .HasColumnType("TEXT");
 
                     b.Property<long>("UpdatedAt")

@@ -26,6 +26,9 @@ public sealed class LearningBondIntake : ITenantOwned
     public DateTimeOffset UpdatedAt { get; private set; }
     public DateTimeOffset? GuardianSinDestroyedAt { get; private set; }
 
+    /// <summary>The household's answer about last year's tax return, asked once for every child (L2-146 criteria 2 and 5).</summary>
+    public LearningBondTaxFiled? TaxFiled { get; private set; }
+
     public EncryptedSin? GuardianSin => GuardianSinLast3 is null ? null : new EncryptedSin(GuardianSinCiphertext, GuardianSinLast3);
 
     public void SetGuardianSin(EncryptedSin sin, DateTimeOffset now)
@@ -33,6 +36,12 @@ public sealed class LearningBondIntake : ITenantOwned
         GuardianSinCiphertext = sin.Ciphertext;
         GuardianSinLast3 = sin.Last3;
         GuardianSinDestroyedAt = null;
+        UpdatedAt = now;
+    }
+
+    public void SetTaxFiled(LearningBondTaxFiled answer, DateTimeOffset now)
+    {
+        TaxFiled = answer;
         UpdatedAt = now;
     }
 

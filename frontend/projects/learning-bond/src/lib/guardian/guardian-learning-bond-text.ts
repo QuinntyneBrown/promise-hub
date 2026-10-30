@@ -41,9 +41,54 @@ export interface GuardianLearningBondText {
   consentRecordedText: string;
   toDetails: (name: string) => string;
   allConsented: string;
+  intakeHeading: (name: string) => string;
+  recordTitle: string;
+  recordRight: string;
+  fixThis: string;
+  confirmed: string;
+  yourSin: string;
+  childSin: (name: string) => string;
+  sinHelp: string;
+  saved: string;
+  change: string;
+  taxQuestion: (year: number) => string;
+  yes: string;
+  no: string;
+  notSure: string;
+  saveAndContinue: string;
+  intakeSaved: string;
+  next: string;
+  fixLabel: string;
+  fixSend: (organization: string) => string;
+  fixCancel: string;
+  fixTitle: (name: string) => string;
+  fixRequested: (organization: string, name: string) => string;
 }
 
 const en: GuardianLearningBondText = {
+  intakeHeading: (name) => `${name}’s details`,
+  recordTitle: 'On the enrolment record',
+  recordRight: 'Yes, that’s right',
+  fixThis: 'Fix this',
+  confirmed: 'Thanks. I won’t ask for these again.',
+  yourSin: 'Your SIN',
+  childSin: (name) => `${name}’s SIN`,
+  sinHelp: '9 digits, like 123 456 782. Only the last 3 digits show once saved.',
+  saved: 'Saved. Only the last 3 digits are shown.',
+  change: 'Change',
+  taxQuestion: (year) => `Did your family file a ${year} tax return?`,
+  yes: 'Yes',
+  no: 'No',
+  notSure: 'Not sure',
+  saveAndContinue: 'Save and continue',
+  intakeSaved: 'Saved. Nothing has been sent yet.',
+  next: 'See the estimate',
+  fixLabel: 'What should we fix?',
+  fixSend: (organization) => `Send to ${organization}`,
+  fixCancel: 'Cancel',
+  fixTitle: (name) => `Fix ${name}’s record`,
+  fixRequested: (organization, name) =>
+    `We asked ${organization} to fix ${name}’s record. We’ll text you when it’s done.`,
   consentHeading: 'Your permission, for each child',
   children: 'Children',
   typedName: 'Type your full name to sign',
@@ -88,6 +133,29 @@ const en: GuardianLearningBondText = {
 };
 
 const es: GuardianLearningBondText = {
+  intakeHeading: (name) => `Los datos de ${name}`,
+  recordTitle: 'En el registro de inscripción',
+  recordRight: 'Sí, es correcto',
+  fixThis: 'Corregir esto',
+  confirmed: 'Gracias. No se lo volveré a preguntar.',
+  yourSin: 'Su NAS',
+  childSin: (name) => `El NAS de ${name}`,
+  sinHelp: '9 dígitos, como 123 456 782. Al guardar solo se ven los últimos 3.',
+  saved: 'Guardado. Solo se ven los últimos 3 dígitos.',
+  change: 'Cambiar',
+  taxQuestion: (year) => `¿Su familia presentó la declaración de impuestos de ${year}?`,
+  yes: 'Sí',
+  no: 'No',
+  notSure: 'No estoy seguro',
+  saveAndContinue: 'Guardar y continuar',
+  intakeSaved: 'Guardado. Todavía no se envió nada.',
+  next: 'Ver la estimación',
+  fixLabel: '¿Qué debemos corregir?',
+  fixSend: (organization) => `Enviar a ${organization}`,
+  fixCancel: 'Cancelar',
+  fixTitle: (name) => `Corregir el registro de ${name}`,
+  fixRequested: (organization, name) =>
+    `Pedimos a ${organization} que corrija el registro de ${name}. Le avisaremos cuando esté listo.`,
   consentHeading: 'Su permiso, por cada hijo',
   children: 'Hijos',
   typedName: 'Escriba su nombre completo para firmar',
@@ -134,6 +202,29 @@ const es: GuardianLearningBondText = {
 };
 
 const fr: GuardianLearningBondText = {
+  intakeHeading: (name) => `Les renseignements de ${name}`,
+  recordTitle: 'Au dossier d’inscription',
+  recordRight: 'Oui, c’est exact',
+  fixThis: 'Corriger',
+  confirmed: 'Merci. Je ne vous le redemanderai pas.',
+  yourSin: 'Votre NAS',
+  childSin: (name) => `Le NAS de ${name}`,
+  sinHelp: '9 chiffres, comme 123 456 782. Seuls les 3 derniers s’affichent une fois enregistré.',
+  saved: 'Enregistré. Seuls les 3 derniers chiffres s’affichent.',
+  change: 'Modifier',
+  taxQuestion: (year) => `Votre famille a-t-elle produit une déclaration de revenus ${year} ?`,
+  yes: 'Oui',
+  no: 'Non',
+  notSure: 'Je ne sais pas',
+  saveAndContinue: 'Enregistrer et continuer',
+  intakeSaved: 'Enregistré. Rien n’a encore été envoyé.',
+  next: 'Voir l’estimation',
+  fixLabel: 'Que devons-nous corriger ?',
+  fixSend: (organization) => `Envoyer à ${organization}`,
+  fixCancel: 'Annuler',
+  fixTitle: (name) => `Corriger le dossier de ${name}`,
+  fixRequested: (organization, name) =>
+    `Nous avons demandé à ${organization} de corriger le dossier de ${name}. Nous vous écrirons quand ce sera fait.`,
   consentHeading: 'Votre permission, pour chaque enfant',
   children: 'Enfants',
   typedName: 'Tapez votre nom complet pour signer',

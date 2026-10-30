@@ -1,0 +1,151 @@
+<ph-guardian-shell [organization]="organization()" [attr.lang]="language()">
+  @let t = text();
+  @let r = result();
+  @if (!r) {
+    <h1 class="visually-hidden">{{ t.loading }}</h1>
+    <ph-skeleton shape="card" [attr.aria-label]="t.loading" />
+  } @else {
+    @switch (r.status) {
+      @case ('loaded') {
+        @let i = r.value;
+        <div class="stack">
+          <h1>{{ t.intakeHeading(i.firstName) }}</h1>
+          <ph-agent-message [text]="i.explanation" />
+          <ph-card [title]="t.recordTitle">
+            <div class="stack" data-testid="intake-record">
+              <p class="plain">
+                <strong>{{ i.childName }}</strong> · {{ born(i) }}
+              </p>
+              @if (i.recordFixRequested) {
+                <div data-testid="intake-fix-requested">
+                  <ph-alert tone="info" [title]="t.fixRequested(i.organization, i.firstName)" />
+                </div>
+              } @else if (confirmed()) {
+                <p class="plain hint-left">{{ t.confirmed }}</p>
+              } @else {
+                <div class="cluster start">
+                  <ph-button variant="primary" (click)="confirmed.set(true)">{{
+                    t.recordRight
+                  }}</ph-button>
+                  <ph-button variant="ghost" hasPopup="dialog" (click)="fix(i)">{{
+                    t.fixThis
+                  }}</ph-button>
+                </div>
+              }
+            </div>
+          </ph-card>
+          @if (!i.recordFixRequested) {
+            <form class="stack" novalidate (ngSubmit)="save()">
+              @if (summary().length) {
+                <ph-error-summary [title]="t.fixFirst" [items]="summary()" />
+              }
+              <ph-card>
+                <div class="stack">
+                  @if (asksGuardian(i)) {
+                    <ph-text-field
+                      inputId="intake-guardian-sin"
+                      [label]="t.yourSin"
+                      type="password"
+                      name="guardianSin"
+                      inputmode="numeric"
+                      autocomplete="off"
+                      [help]="t.sinHelp"
+                      [error]="errors()['guardianSin'] ?? null"
+                      [(ngModel)]="guardianSin"
+                    />
+                  } @else {
+                    <div class="saved" data-testid="intake-guardian-sin-saved">
+                      <span class="label">{{ t.yourSin }}</span>
+                      <span class="mono">••• ••• {{ i.guardianSin }}</span>
+                      <ph-button
+                        variant="ghost"
+                        size="sm"
+                        [label]="t.change + ' ' + t.yourSin"
+                        (click)="change('guardian')"
+                        >{{ t.change }}</ph-button
+                      >
+                    </div>
+                  }
+                  @if (asksChild(i)) {
+                    <ph-text-field
+                      inputId="intake-child-sin"
+                      [label]="t.childSin(i.firstName)"
+                      type="password"
+                      name="childSin"
+                      inputmode="numeric"
+                      autocomplete="off"
+                      [help]="t.sinHelp"
+                      [error]="errors()['childSin'] ?? null"
+                      [(ngModel)]="childSin"
+                    />
+                  } @else {
+                    <div class="saved" data-testid="intake-child-sin-saved">
+                      <span class="label">{{ t.childSin(i.firstName) }}</span>
+                      <span class="mono">••• ••• {{ i.childSin }}</span>
+                      <ph-button
+                        variant="ghost"
+                        size="sm"
+                        [label]="t.change + ' ' + t.childSin(i.firstName)"
+                        (click)="change('child')"
+                        >{{ t.change }}</ph-button
+                      >
+                    </div>
+                  }
+                  <div id="intake-tax">
+                    <ph-radio-group
+                      [legend]="t.taxQuestion(i.taxYear)"
+                      name="taxFiled"
+                      [options]="taxOptions()"
+                      [error]="errors()['taxFiled'] ?? null"
+                      [(ngModel)]="taxFiled"
+                    />
+                  </div>
+                  <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
+                    t.saveAndContinue
+                  }}</ph-button>
+                </div>
+              </ph-card>
+            </form>
+            @if (saved() && i.guardianSin && i.childSin && i.taxFiled) {
+              <div data-testid="intake-saved">
+                <ph-alert tone="success" [title]="t.intakeSaved">
+                  <ph-button size="sm" variant="primary" icon="arrow-right" link="../estimate">{{
+                    t.next
+                  }}</ph-button>
+                </ph-alert>
+              </div>
+            }
+          }
+          @if (failed()) {
+            <ph-alert tone="danger" [title]="t.failed" />
+          }
+        </div>
+      }
+      @case ('gone') {
+        <h1>{{ t.expiredHeading }}</h1>
+        <ph-card>
+          <p class="plain">{{ t.expiredText(r.organization ?? '') }}</p>
+        </ph-card>
+      }
+      @case ('verify') {
+        <h1>{{ t.verifyHeading }}</h1>
+        <ph-card>
+          <div class="stack">
+            <p class="plain">{{ t.verifyText }}</p>
+            <ph-button variant="primary" link="../../..">{{ t.continue }}</ph-button>
+          </div>
+        </ph-card>
+      }
+      @default {
+        <h1>{{ t.pageTitle }}</h1>
+        <ph-card [flush]="true">
+          <ph-empty-state icon="warning" tone="error" [title]="t.errorTitle" [text]="t.errorText">
+            <ph-button variant="primary" icon="refresh" (click)="load()">{{
+              t.tryAgain
+            }}</ph-button>
+          </ph-empty-state>
+        </ph-card>
+      }
+    }
+  }
+</ph-guardian-shell>
