@@ -88,3 +88,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0082](0082-the-benefits-check-keeps-its-own-consent-answers-and-one-application-per-benefit.md) | The benefits check keeps its own consent, its answers encrypted, and one application per benefit |
 | [0083](0083-date-reminders-are-sent-on-their-day-and-the-total-is-computed-from-the-records.md) | Date reminders are sent on their day, and the total is computed from the records |
 | [0084](0084-learning-bond-figures-are-computed-on-read-and-suppressed-where-they-rest-on-few-households.md) | Learning Bond figures are computed on read and suppressed where they rest on few households |
+| [0085](0085-the-learning-bond-agent-answers-through-a-model-behind-an-interface-and-falls-back-to-the-approved-line.md) | The Learning Bond agent answers through a model behind an interface and falls back to the approved line |

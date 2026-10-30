@@ -1,29 +1,38 @@
 @startuml
 title UML classes — Run the Learning Bond agent
-enum AgentStep { Landing Consent Intake Estimate Review Submitted Benefits Reminders Total }
-class AgentContext <<record>> { Language Children: ChildSummary[] Statuses Figures }
-class ChildSummary <<record>> { FirstName Age ClaimStatus }
-class AgentRequest <<record>> { Step Message? }
-class AgentReplyDto <<record>> { Text Language FromFallback OfferCallback }
-class AgentConversation { Id OrganizationId HouseholdId StartedAt }
-class AgentMessage { Id ConversationId Step Role Text SentAt ToolsUsed[] }
-class LearningBondAgent { +ReplyAsync(scope, AgentRequest): AgentReplyDto }
-class AgentRedactor { +Redact(text): string +Redact(AgentContext): AgentContext }
-class AgentTools { +GetStatus(scope, childId?) +GetEstimate(scope, childId) +ListBenefits(scope) +ExplainStep(step) +OfferCallback() }
-class AgentFallbackCopy { +Line(step, language): string }
-interface ILanguageModel { +CompleteAsync(systemPrompt, context, tools, timeout): ModelReply }
-class ModelReply <<record>> { Text? ToolCalls[] }
+class AgentContext <<record>> { Organization Children: AgentChild[] BenefitsChecked Unlocked AppliedFor }
+class AgentChild <<record>> { FirstName Age? Claim? Paused? Estimate? }
+class AgentFacts <<record>> { Context: AgentContext Amounts: int set }
+class AskLearningBondAgentRequest <<record>> { Step Message? }
+class LearningBondAgentReplyDto <<record>> { Step Fixed Reply? Source }
+class LearningBondConversationDto <<record>> { Messages: LearningBondAgentMessageDto[] }
+class LearningBondAgentMessageDto <<record>> { Role Text Step At }
+class LearningBondAgentMessage { Id OrganizationId HouseholdId Step Role Text CreatedAt }
+class LearningBondAgent { +AskAsync(request, ask): GuardianResult +ConversationAsync(request): GuardianResult }
+class LearningBondAgentPrompts { +Steps +For(step, language, organization, context) }
+class AgentFallbackCopy { +Welcome() +Consent() +Estimate() +SinRefused(code) +NumberRemoved(code) }
+interface ILanguageModel { +ReplyAsync(LanguageModelRequest, runTool, ct): string? }
+interface ILearningBondAgentSettings { +Timeout }
+class LanguageModelRequest <<record>> { System History: LanguageModelTurn[] Message Tools: LanguageModelTool[] Language }
+class LanguageModelToolCall <<record>> { Name Arguments }
+class ClaudeLanguageModel
+class UnconfiguredLanguageModel
 class FakeLanguageModel
-LearningBondAgent --> AgentRedactor
-LearningBondAgent --> AgentTools
-LearningBondAgent --> AgentFallbackCopy
 LearningBondAgent --> ILanguageModel
-LearningBondAgent ..> AgentContext
-LearningBondAgent ..> AgentReplyDto
-LearningBondAgent ..> AgentConversation
-AgentConversation "1" *-- "0..*" AgentMessage
-AgentContext "1" *-- "0..*" ChildSummary
-AgentMessage --> AgentStep
-ILanguageModel ..> ModelReply
+LearningBondAgent --> ILearningBondAgentSettings
+LearningBondAgent --> LearningBondAgentPrompts
+LearningBondAgent --> AgentFallbackCopy
+LearningBondAgent ..> AgentFacts
+AgentFacts *-- AgentContext
+AgentContext "1" *-- "0..*" AgentChild
+LearningBondAgent ..> AskLearningBondAgentRequest
+LearningBondAgent ..> LearningBondAgentReplyDto
+LearningBondAgent ..> LearningBondConversationDto
+LearningBondConversationDto "1" *-- "0..*" LearningBondAgentMessageDto
+LearningBondAgent ..> LearningBondAgentMessage
+ILanguageModel ..> LanguageModelRequest
+ILanguageModel ..> LanguageModelToolCall
+ClaudeLanguageModel ..|> ILanguageModel
+UnconfiguredLanguageModel ..|> ILanguageModel
 FakeLanguageModel ..|> ILanguageModel
 @enduml
