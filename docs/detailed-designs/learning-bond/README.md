@@ -7,21 +7,21 @@ Nothing is built yet. Requirements are `L2-135` to `L2-163`; screens are the `le
 | Design | Journey | Requirements |
 |---|---|---|
 | [gate-learning-bond-module](gate-learning-bond-module/README.md) | Turn on Learning Bond | L2-135, L2-162, L2-161 |
-| [accept-data-handling-agreement](accept-data-handling-agreement/README.md) | Turn on Learning Bond | L2-136, L2-137 |
+| [accept-data-handling-agreement](accept-data-handling-agreement/README.md) | Turn on Learning Bond, Sign the data-handling agreement | L2-136, L2-137 |
 | [configure-coverage-and-invitation](configure-coverage-and-invitation/README.md) | Turn on Learning Bond | L2-138, L2-139 |
-| [launch-invitations](launch-invitations/README.md) | Turn on Learning Bond | L2-140 |
+| [launch-invitations](launch-invitations/README.md) | Launch Learning Bond invitations | L2-140 |
 | [view-dashboard-and-export](view-dashboard-and-export/README.md) | Report Learning Bond outcomes | L2-141, L2-143 |
 | [support-families-with-status](support-families-with-status/README.md) | Help a family with Learning Bond | L2-142 |
 | [open-guardian-learning-bond](open-guardian-learning-bond/README.md) | Claim the Learning Bond | L2-144 |
-| [give-and-withdraw-consent](give-and-withdraw-consent/README.md) | Claim the Learning Bond | L2-145, L2-152 |
+| [give-and-withdraw-consent](give-and-withdraw-consent/README.md) | Claim the Learning Bond, Withdraw Learning Bond consent | L2-145, L2-152 |
 | [complete-intake](complete-intake/README.md) | Claim the Learning Bond | L2-146, L2-159 |
 | [estimate-learning-bond](estimate-learning-bond/README.md) | Claim the Learning Bond | L2-147 |
 | [review-and-submit-application](review-and-submit-application/README.md) | Claim the Learning Bond | L2-148, L2-149 |
-| [follow-application-progress](follow-application-progress/README.md) | Claim the Learning Bond | L2-150, L2-151 |
+| [follow-application-progress](follow-application-progress/README.md) | Follow or resume a claim | L2-150, L2-151 |
 | [offer-benefits-check](offer-benefits-check/README.md) | Check child benefits | L2-153, L2-154 |
 | [list-and-apply-for-benefits](list-and-apply-for-benefits/README.md) | Check child benefits | L2-155, L2-156 |
-| [remind-and-total-dollars](remind-and-total-dollars/README.md) | Check child benefits | L2-157, L2-158 |
-| [run-learning-bond-agent](run-learning-bond-agent/README.md) | Every guardian page | L2-160, L2-163 |
+| [remind-and-total-dollars](remind-and-total-dollars/README.md) | Get reminders and track dollars unlocked | L2-157, L2-158 |
+| [run-learning-bond-agent](run-learning-bond-agent/README.md) | Learning Bond safeguards (every guardian page) | L2-160, L2-163 |
 
 Decisions the designs make beyond ADR 0076, each stated in the design it affects:
 

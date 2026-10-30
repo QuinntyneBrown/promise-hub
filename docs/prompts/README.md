@@ -97,5 +97,23 @@ Order: dependencies first (sign-in, invitations, consent, cohorts), then Waypoin
 | 80 | [Report, export and import learning data](80-report-export-and-import.md) | Program director and Admin | Waypoint 29 Report, export and import | Reports |
 | 81 | [Explore the public website](81-explore-the-public-website.md) | Visitor | Waypoint 28 Explore public site | Public website |
 
+### Learning Bond (ADR 0076, `L2-135` to `L2-163`)
+
+In dependency order: the gate, cipher and audit first, then the admin side, then the guardian claim, then what reads the claim's records. The model-backed agent comes last because every journey ships with the fixed line. Estimates are the design totals from `docs/estimates/learning-bond.md`.
+
+| # | Slice | Persona | Kind | Why here |
+|---|---|---|---|---|
+| 82 | [Learning Bond safeguards: module gate, encrypted store and audit](82-learning-bond-safeguards-foundation.md) | Everyone | Supporting | `AGENTS.md` requires a module-off and a cross-tenant case in every test and `L2-159` forbids a clear-text SIN, so the gate, the cipher and the audit come before the first screen. |
+| 83 | [Turn on Learning Bond](83-turn-on-learning-bond.md) | Admin / office manager | Journey | Nothing reaches a family until the agreement is accepted and coverage chosen. |
+| 84 | [Sign the data-handling agreement](84-sign-the-data-handling-agreement.md) | Signer | Journey | Unblocks organizations whose admin cannot sign, before any launch. |
+| 85 | [Launch Learning Bond invitations and help a family with status](85-launch-learning-bond-invitations.md) | Admin / office manager and Site lead | Journey | Produces the guardian link; status shares the coverage query. |
+| 86 | [Claim the Learning Bond](86-claim-the-learning-bond.md) | Guardian | Journey | The value journey; everything before exists to deliver this link. |
+| 87 | [Follow or resume a claim](87-follow-or-resume-a-claim.md) | Guardian | Journey | Needs the submitted application prompt 86 creates. |
+| 88 | [Withdraw Learning Bond consent](88-withdraw-learning-bond-consent.md) | Guardian | Journey | Exercises every record and proves destruction works. |
+| 89 | [Check child benefits](89-check-child-benefits.md) | Guardian | Journey | Reuses prompt 86's consent, intake and submit code. |
+| 90 | [Get reminders and track dollars unlocked](90-get-reminders-and-track-dollars-unlocked.md) | Guardian | Journey | Depends on both streams existing. |
+| 91 | [Report Learning Bond outcomes](91-report-learning-bond-outcomes.md) | Program director | Journey | Figures exist only once claims and benefits flow. |
+| 92 | [Model-backed Learning Bond agent](92-model-backed-learning-bond-agent.md) | Guardian | Supporting | Adds the model behind the same bubble without changing earlier tests. |
+
 
 Deferred from Waypoint: the standalone help and support pages, the server-side rendered public site, Waypoint's traceability script and architecture tests (PromiseHub does not write them), and a real donation payment provider.
