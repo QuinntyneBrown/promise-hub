@@ -103,6 +103,8 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.LearningBond.LearningBondApplication> LearningBondApplications => Set<Domain.LearningBond.LearningBondApplication>();
     public DbSet<Domain.LearningBond.LearningBondDocument> LearningBondDocuments => Set<Domain.LearningBond.LearningBondDocument>();
     public DbSet<Domain.LearningBond.LearningBondProviderEvent> LearningBondProviderEvents => Set<Domain.LearningBond.LearningBondProviderEvent>();
+    public DbSet<Domain.LearningBond.LearningBondReminder> LearningBondReminders => Set<Domain.LearningBond.LearningBondReminder>();
+    public DbSet<Domain.LearningBond.LearningBondReminderChoice> LearningBondChoices => Set<Domain.LearningBond.LearningBondReminderChoice>();
     public DbSet<Domain.LearningBond.LearningBondSettings> LearningBondSettings => Set<Domain.LearningBond.LearningBondSettings>();
     public DbSet<DataRequest> DataRequests => Set<DataRequest>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
@@ -395,6 +397,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(c => c.Language).HasMaxLength(5);
             e.Property(c => c.GivenAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.Property(c => c.WithdrawnAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.Property(c => c.ClosedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
         });
         modelBuilder.Entity<Domain.LearningBond.LearningBondClaim>(e =>
         {
@@ -406,6 +409,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(c => c.ChildSinLast3).HasMaxLength(3);
             e.Property(c => c.StartedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.Property(c => c.UpdatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(c => c.PausedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
         });
         // A child's application: contact details for this application only and the review version Submit quotes (L2-148, L2-149).
         modelBuilder.Entity<Domain.LearningBond.LearningBondApplication>(e =>
@@ -424,6 +428,19 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(a => a.SubmittedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
             e.Property(a => a.ReceivedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
             e.Property(a => a.DepositedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+        });
+        // Reminders to pick a paused claim back up, and the guardian's answer (L2-151 criterion 3).
+        modelBuilder.Entity<Domain.LearningBond.LearningBondReminder>(e =>
+        {
+            e.HasIndex(r => new { r.OrganizationId, r.ClaimId });
+            e.Property(r => r.DueAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(r => r.SentAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.Property(r => r.CancelledAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+        });
+        modelBuilder.Entity<Domain.LearningBond.LearningBondReminderChoice>(e =>
+        {
+            e.HasIndex(r => new { r.OrganizationId, r.ClaimId });
+            e.Property(r => r.ChosenAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
         });
         // A provider event applied once by its id (L2-150 criterion 4).
         modelBuilder.Entity<Domain.LearningBond.LearningBondProviderEvent>(e =>

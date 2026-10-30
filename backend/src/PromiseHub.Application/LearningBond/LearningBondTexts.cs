@@ -51,6 +51,14 @@ public static class LearningBondTexts
         _ => $"{provider} needs {document} for {child}. Tap to send it: {link}",
     };
 
+    /// <summary>A reminder to pick a paused claim back up (L2-151 criterion 3).</summary>
+    public static string Reminder(string code, string sender, string child, string link) => code switch
+    {
+        "es" => $"{sender}: la solicitud del Bono de Estudios de {child} le espera. Toque para seguir donde lo dejó: {link} (STOP para salir)",
+        "fr" => $"{sender} : la demande de Bon d’études de {child} vous attend. Touchez pour reprendre là où vous étiez : {link} (STOP pour arrêter)",
+        _ => $"{sender}: {child}’s Learning Bond claim is waiting for you. Tap to pick up where you left off: {link} (STOP to opt out)",
+    };
+
     public static string EmailTitle(string code, string child) => EmailTitle(code, [child]);
 
     public static string EmailTitle(string code, IReadOnlyList<string> children) => code switch

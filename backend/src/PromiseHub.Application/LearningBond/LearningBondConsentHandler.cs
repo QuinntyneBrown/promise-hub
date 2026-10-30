@@ -84,7 +84,7 @@ public sealed class LearningBondConsentHandler(IPromiseHubDb db, LearningBondGua
     private async Task<List<GuardianLearningBondChildDto>> OpenChildrenAsync(Guid householdId, string timeZone, CancellationToken cancellationToken)
     {
         var consented = await db.LearningBondConsents.AsNoTracking()
-            .Where(c => c.HouseholdId == householdId && c.Scope == LearningBondConsentScope.LearningBond && c.WithdrawnAt == null)
+            .Where(c => c.HouseholdId == householdId && c.Scope == LearningBondConsentScope.LearningBond && c.WithdrawnAt == null && c.ClosedAt == null)
             .Select(c => c.ChildId).ToListAsync(cancellationToken);
         return [.. (await familyChildren.ForAsync(householdId, timeZone, cancellationToken)).Where(c => !c.SelfClaim && c.Amount is not null && !consented.Contains(c.Id))];
     }

@@ -9,7 +9,7 @@ public sealed class LearningBondClaimFinder(IPromiseHubDb db)
     public async Task<LearningBondClaim?> ForChildAsync(Guid householdId, Guid childId, bool tracked = false, CancellationToken cancellationToken = default)
     {
         var consents = await db.LearningBondConsents.AsNoTracking()
-            .Where(c => c.HouseholdId == householdId && c.ChildId == childId && c.Scope == LearningBondConsentScope.LearningBond && c.WithdrawnAt == null)
+            .Where(c => c.HouseholdId == householdId && c.ChildId == childId && c.Scope == LearningBondConsentScope.LearningBond && c.WithdrawnAt == null && c.ClosedAt == null)
             .Select(c => c.Id).ToListAsync(cancellationToken);
         var query = tracked ? db.LearningBondClaims : db.LearningBondClaims.AsNoTracking();
         return await query.FirstOrDefaultAsync(c => c.HouseholdId == householdId && c.ChildId == childId && consents.Contains(c.ConsentId), cancellationToken);

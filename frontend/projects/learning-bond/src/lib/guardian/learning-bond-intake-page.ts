@@ -8,6 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { GuardianPageResult, LEARNING_BOND_API, LearningBondIntake } from '@promisehub/api';
 import {
   ErrorSummaryItem,
@@ -60,6 +61,8 @@ import {
 export class LearningBondIntakePage implements OnInit {
   private readonly api = inject(LEARNING_BOND_API);
   private readonly dialogs = inject(PhDialogs);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   readonly token = input.required<string>();
   readonly childId = input.required<string>();
@@ -130,6 +133,15 @@ export class LearningBondIntakePage implements OnInit {
 
   protected change(which: 'guardian' | 'child'): void {
     this.changing.update((c) => ({ ...c, [which]: true }));
+  }
+
+  /** No SIN for the child yet: the claim pauses with how to get one (L2-151 criterion 1). */
+  protected noSinYet(): void {
+    this.api.pauseClaim(this.token(), this.childId()).subscribe((r) => {
+      if (r.status === 'saved')
+        void this.router.navigate(['../paused'], { relativeTo: this.route });
+      else this.failed.set(true);
+    });
   }
 
   protected fix(i: LearningBondIntake): void {

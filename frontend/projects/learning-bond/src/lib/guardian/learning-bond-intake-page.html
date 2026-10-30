@@ -79,6 +79,11 @@
                       [error]="errors()['childSin'] ?? null"
                       [(ngModel)]="childSin"
                     />
+                    <div>
+                      <ph-button variant="ghost" size="sm" (click)="noSinYet()">{{
+                        t.noSinYet(i.firstName)
+                      }}</ph-button>
+                    </div>
                   } @else {
                     <div class="saved" data-testid="intake-child-sin-saved">
                       <span class="label">{{ t.childSin(i.firstName) }}</span>

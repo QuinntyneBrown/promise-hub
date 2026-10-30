@@ -15,6 +15,7 @@ import { LearningBondApplication } from './learning-bond-application';
 import { LearningBondApplicationChange } from './learning-bond-application-change';
 import { LearningBondEstimate } from './learning-bond-estimate';
 import { LearningBondProgress } from './learning-bond-progress';
+import { LearningBondPaused } from './learning-bond-paused';
 import { LearningBondSubmitOutcome } from './learning-bond-submit-outcome';
 import { LearningBondIntake } from './learning-bond-intake';
 import { SaveLearningBondIntake } from './save-learning-bond-intake';
@@ -295,6 +296,28 @@ export class HttpLearningBondApi implements LearningBondApi {
           ),
         ),
     );
+  }
+
+  pauseClaim(token: string, childId: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(this.childUrl(token, childId, '/pause'), { reason: 'NeedsSin' }),
+    );
+  }
+
+  paused(token: string, childId: string): Observable<GuardianPageResult<LearningBondPaused>> {
+    return toGuardianPage(
+      this.http.get<LearningBondPaused>(this.childUrl(token, childId, '/paused')),
+    );
+  }
+
+  setReminder(
+    token: string,
+    childId: string,
+    remind: boolean,
+  ): Observable<LearningBondPaused | null> {
+    return this.http
+      .put<LearningBondPaused>(this.childUrl(token, childId, '/reminder'), { remind })
+      .pipe(catchError(() => of(null)));
   }
 
   uploadDocument(token: string, documentId: string, file: File): Observable<WriteOutcome> {

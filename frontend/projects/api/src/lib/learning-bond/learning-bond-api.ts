@@ -9,6 +9,7 @@ import type { LearningBondApplication } from './learning-bond-application';
 import type { LearningBondApplicationChange } from './learning-bond-application-change';
 import type { LearningBondEstimate } from './learning-bond-estimate';
 import type { LearningBondProgress } from './learning-bond-progress';
+import type { LearningBondPaused } from './learning-bond-paused';
 import type { LearningBondSubmitOutcome } from './learning-bond-submit-outcome';
 import type { LearningBondIntake } from './learning-bond-intake';
 import type { SaveLearningBondIntake } from './save-learning-bond-intake';
@@ -89,6 +90,16 @@ export interface LearningBondApi {
   uploadDocument(token: string, documentId: string, file: File): Observable<WriteOutcome>;
   /** POST /g/learning-bond/{token}/documents/{id}/send: the only way a document reaches the provider, once. */
   sendDocument(token: string, documentId: string): Observable<LearningBondSubmitOutcome>;
+  /** POST /g/learning-bond/{token}/children/{childId}/pause: the child has no SIN yet (L2-151 criterion 1). */
+  pauseClaim(token: string, childId: string): Observable<WriteOutcome>;
+  /** GET /g/learning-bond/{token}/children/{childId}/paused: what helps and where the claim resumes (L2-151). */
+  paused(token: string, childId: string): Observable<GuardianPageResult<LearningBondPaused>>;
+  /** PUT /g/learning-bond/{token}/children/{childId}/reminder: texts at 14 and 30 days, or none; null when it failed. */
+  setReminder(
+    token: string,
+    childId: string,
+    remind: boolean,
+  ): Observable<LearningBondPaused | null>;
   /** GET /learning-bond/agreement: the current version, the organization's acceptance and the open signer request. */
   agreement(): Observable<LoadResult<LearningBondAgreement>>;
   /** POST /learning-bond/agreement/acceptances: accepts the current version; invalid without the authority box. */

@@ -35,5 +35,10 @@ public sealed class LearningBondConsent : ITenantOwned
     public DateTimeOffset GivenAt { get; private set; }
     public DateTimeOffset? WithdrawnAt { get; private set; }
 
-    public bool InForce => WithdrawnAt is null;
+    /// <summary>When its claim closed as Not completed (L2-151 criterion 5): no longer in force, and reopening the link starts again.</summary>
+    public DateTimeOffset? ClosedAt { get; private set; }
+
+    public bool InForce => WithdrawnAt is null && ClosedAt is null;
+
+    public void Close(DateTimeOffset now) => ClosedAt ??= now;
 }

@@ -189,6 +189,23 @@ export class GuardianLearningBondPage extends BasePage {
     return this.page.getByTestId('sent-fields').getByRole('listitem').filter({ hasText: label });
   }
 
+  async openPaused(token: string, childId: string): Promise<void> {
+    await super.open(`/g/learning-bond/${token}/children/${childId}/paused`);
+  }
+
+  get pausedBadge(): Locator {
+    return this.page.getByTestId('paused-badge');
+  }
+
+  async remind(answer: 'Yes, text me' | 'No thanks'): Promise<void> {
+    await this.page.getByRole('radio', { name: answer }).check();
+    await this.page.getByRole('button', { name: 'Save', exact: true }).click();
+  }
+
+  get reminderSaved(): Locator {
+    return this.page.getByTestId('reminder-saved');
+  }
+
   async expectCodeStep(): Promise<void> {
     await expect(this.heading).toHaveText(/^(Check it’s you|Confirme que es usted|Confirmez que c’est vous)$/);
   }

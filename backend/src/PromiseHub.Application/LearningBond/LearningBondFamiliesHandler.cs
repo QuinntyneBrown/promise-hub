@@ -38,7 +38,8 @@ public sealed class LearningBondFamiliesHandler(IPromiseHubDb db, LearningBondCo
             }
             else if (claims.Where(x => x.HouseholdId == c.HouseholdId).OrderByDescending(x => x.UpdatedAt).FirstOrDefault() is { } claim)
             {
-                state = claim.Status == LearningBondClaimStatus.Deposited ? LearningBondFamilyStatus.Deposited
+                state = claim.Status == LearningBondClaimStatus.NotCompleted ? LearningBondFamilyStatus.NotCompleted
+                    : claim.Status == LearningBondClaimStatus.Deposited ? LearningBondFamilyStatus.Deposited
                     : claim.Status == LearningBondClaimStatus.Submitted ? LearningBondFamilyStatus.Submitted : claim.PausedReason switch
                     {
                         LearningBondPausedReason.NeedsTaxReturn => LearningBondFamilyStatus.PausedNeedsTaxReturn,

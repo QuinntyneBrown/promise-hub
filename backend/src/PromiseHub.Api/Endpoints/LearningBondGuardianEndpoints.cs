@@ -64,6 +64,12 @@ public static class LearningBondGuardianEndpoints
         }).DisableAntiforgery().WithMetadata(new Microsoft.AspNetCore.Mvc.RequestSizeLimitAttribute(32 * 1024 * 1024));
         guardian.MapPost("/documents/{id:guid}/send", async (string token, Guid id, LearningBondDocumentHandler handler, HttpContext http, CancellationToken ct) =>
             GuardianEndpoints.ToHttp(await handler.SendAsync(GuardianEndpoints.Request(token, http), id, ct)));
+        guardian.MapPost("/children/{childId:guid}/pause", async (string token, Guid childId, PauseLearningBondClaimRequest request, LearningBondPauseHandler handler,
+            HttpContext http, CancellationToken ct) => GuardianEndpoints.ToHttp(await handler.PauseAsync(GuardianEndpoints.Request(token, http), childId, request, ct)));
+        guardian.MapGet("/children/{childId:guid}/paused", async (string token, Guid childId, LearningBondPauseHandler handler, HttpContext http, CancellationToken ct) =>
+            GuardianEndpoints.ToHttp(await handler.GetAsync(GuardianEndpoints.Request(token, http), childId, ct)));
+        guardian.MapPut("/children/{childId:guid}/reminder", async (string token, Guid childId, LearningBondReminderRequest request, LearningBondPauseHandler handler,
+            HttpContext http, CancellationToken ct) => GuardianEndpoints.ToHttp(await handler.SetReminderAsync(GuardianEndpoints.Request(token, http), childId, request, ct)));
         guardian.MapPost("/callback", async (string token, CallbackRequest request, LearningBondGuardianHandler handler, HttpContext http, CancellationToken ct) =>
             await handler.RequestCallAsync(new GuardianRequest(token, http.Request.Cookies[GuardianEndpoints.DeviceCookie], http.Request.Headers.UserAgent.ToString()), request, ct)
                 switch

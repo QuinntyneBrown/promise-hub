@@ -135,9 +135,62 @@ export interface GuardianLearningBondText {
   documentSend: (provider: string) => string;
   documentSent: (document: string, provider: string) => string;
   documentNotSent: string;
+  noSinYet: (name: string) => string;
+  whatToDo: string;
+  pausedHeading: (name: string) => string;
+  pausedBadge: (reason: string) => string;
+  sinHowTitle: (name: string) => string;
+  sinHowSteps: (name: string) => string[];
+  sinApply: string;
+  taxHowTitle: string;
+  taxHowText: string;
+  taxFind: string;
+  remindLegend: string;
+  remindYes: string;
+  remindYesHint: string;
+  remindNo: string;
+  reminderSet: (first: string, second: string) => string;
+  reminderSetText: string;
+  reminderNone: string;
+  resumeIntake: (name: string) => string;
+  resumeEstimate: (name: string) => string;
+  pickUp: string;
+  continueClaim: (name: string) => string;
 }
 
 const en: GuardianLearningBondText = {
+  noSinYet: (name) => `${name} doesn’t have a SIN yet`,
+  whatToDo: 'What to do now',
+  pausedHeading: (name) => `${name}’s claim is paused`,
+  pausedBadge: (reason) =>
+    reason === 'NeedsSin'
+      ? 'Paused · needs a SIN'
+      : reason === 'NeedsTaxReturn'
+        ? 'Paused · needs a tax return'
+        : 'Paused · record being fixed',
+  sinHowTitle: (name) => `How to get ${name}’s SIN`,
+  sinHowSteps: (name) => [
+    `Get ${name}’s birth certificate, or their permanent resident card.`,
+    'Apply online or at a Service Canada Centre. It’s free and takes about 2 weeks.',
+    'Come back to this link with the number.',
+  ],
+  sinApply: 'Apply on canada.ca',
+  taxHowTitle: 'File for free',
+  taxHowText:
+    'Bring your T4s and ID. Most clinics finish in one visit, and filing often brings other benefits too.',
+  taxFind: 'Find a free clinic',
+  remindLegend: 'Remind you in 14 days?',
+  remindYes: 'Yes, text me',
+  remindYesHint:
+    'One text in 14 days and one in 30, with the link to pick up here. None after that.',
+  remindNo: 'No thanks',
+  reminderSet: (first, second) => `We’ll text you ${first} and ${second}`,
+  reminderSetText: 'Each text has the link to pick up here.',
+  reminderNone: 'No reminders. Come back to this link any time.',
+  resumeIntake: (name) => `Continue with ${name}’s details`,
+  resumeEstimate: (name) => `Back to ${name}’s estimate`,
+  pickUp: 'Pick up where you left off',
+  continueClaim: (name) => `Continue ${name}’s claim`,
   documentTitle: (provider, document, name) => `${provider} needs ${document} for ${name}`,
   documentText: 'PDF, JPEG or PNG up to 10 MB. It’s kept here and sent only when you tap Send.',
   documentUpload: 'Choose a file or take a photo',
@@ -283,6 +336,38 @@ const en: GuardianLearningBondText = {
 };
 
 const es: GuardianLearningBondText = {
+  noSinYet: (name) => `${name} todavía no tiene SIN`,
+  whatToDo: 'Qué hacer ahora',
+  pausedHeading: (name) => `La solicitud de ${name} está en pausa`,
+  pausedBadge: (reason) =>
+    reason === 'NeedsSin'
+      ? 'En pausa · falta el SIN'
+      : reason === 'NeedsTaxReturn'
+        ? 'En pausa · falta la declaración'
+        : 'En pausa · se corrige el registro',
+  sinHowTitle: (name) => `Cómo obtener el SIN de ${name}`,
+  sinHowSteps: (name) => [
+    `Busque el certificado de nacimiento de ${name} o su tarjeta de residente permanente.`,
+    'Pídalo en línea o en un Centro de Service Canada. Es gratis y tarda unas 2 semanas.',
+    'Vuelva a este enlace con el número.',
+  ],
+  sinApply: 'Pedirlo en canada.ca',
+  taxHowTitle: 'Presente la declaración gratis',
+  taxHowText:
+    'Lleve sus T4 y una identificación. La mayoría de las clínicas lo hacen en una visita, y declarar suele traer otros beneficios.',
+  taxFind: 'Buscar una clínica gratuita',
+  remindLegend: '¿Le recordamos en 14 días?',
+  remindYes: 'Sí, envíenme un mensaje',
+  remindYesHint:
+    'Un mensaje en 14 días y otro en 30, con el enlace para seguir aquí. Nada más después.',
+  remindNo: 'No, gracias',
+  reminderSet: (first, second) => `Le escribiremos el ${first} y el ${second}`,
+  reminderSetText: 'Cada mensaje tiene el enlace para seguir aquí.',
+  reminderNone: 'Sin recordatorios. Vuelva a este enlace cuando quiera.',
+  resumeIntake: (name) => `Seguir con los datos de ${name}`,
+  resumeEstimate: (name) => `Volver a la estimación de ${name}`,
+  pickUp: 'Seguir donde lo dejó',
+  continueClaim: (name) => `Seguir con la solicitud de ${name}`,
   documentTitle: (provider, document, name) => `${provider} necesita ${document} para ${name}`,
   documentText:
     'PDF, JPEG o PNG de hasta 10 MB. Se guarda aquí y se envía solo cuando toque Enviar.',
@@ -432,6 +517,38 @@ const es: GuardianLearningBondText = {
 };
 
 const fr: GuardianLearningBondText = {
+  noSinYet: (name) => `${name} n’a pas encore de NAS`,
+  whatToDo: 'Que faire maintenant',
+  pausedHeading: (name) => `La demande de ${name} est en pause`,
+  pausedBadge: (reason) =>
+    reason === 'NeedsSin'
+      ? 'En pause · NAS manquant'
+      : reason === 'NeedsTaxReturn'
+        ? 'En pause · déclaration manquante'
+        : 'En pause · dossier en correction',
+  sinHowTitle: (name) => `Obtenir le NAS de ${name}`,
+  sinHowSteps: (name) => [
+    `Trouvez l’acte de naissance de ${name} ou sa carte de résident permanent.`,
+    'Faites la demande en ligne ou dans un Centre Service Canada. C’est gratuit et prend environ 2 semaines.',
+    'Revenez à ce lien avec le numéro.',
+  ],
+  sinApply: 'Faire la demande sur canada.ca',
+  taxHowTitle: 'Produire gratuitement',
+  taxHowText:
+    'Apportez vos T4 et une pièce d’identité. La plupart des comptoirs terminent en une visite, et produire sa déclaration ouvre souvent d’autres prestations.',
+  taxFind: 'Trouver un comptoir gratuit',
+  remindLegend: 'Vous le rappeler dans 14 jours?',
+  remindYes: 'Oui, écrivez-moi',
+  remindYesHint:
+    'Un texto dans 14 jours et un dans 30, avec le lien pour reprendre ici. Rien ensuite.',
+  remindNo: 'Non merci',
+  reminderSet: (first, second) => `Nous vous écrirons le ${first} et le ${second}`,
+  reminderSetText: 'Chaque texto contient le lien pour reprendre ici.',
+  reminderNone: 'Pas de rappel. Revenez à ce lien quand vous voulez.',
+  resumeIntake: (name) => `Reprendre les renseignements de ${name}`,
+  resumeEstimate: (name) => `Retour à l’estimation de ${name}`,
+  pickUp: 'Reprendre là où vous étiez',
+  continueClaim: (name) => `Continuer la demande de ${name}`,
   documentTitle: (provider, document, name) => `${provider} a besoin de ${document} pour ${name}`,
   documentText:
     'PDF, JPEG ou PNG jusqu’à 10 Mo. Il est gardé ici et envoyé seulement quand vous touchez Envoyer.',

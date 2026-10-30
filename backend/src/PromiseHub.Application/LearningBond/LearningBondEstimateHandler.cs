@@ -12,7 +12,7 @@ namespace PromiseHub.Application.LearningBond;
 /// (L2-151); the estimate still shows.
 /// </summary>
 public sealed class LearningBondEstimateHandler(IPromiseHubDb db, LearningBondGuardianScope guardianScope, LearningBondClaimFinder claims, IAuditWriter audit,
-    TimeProvider clock)
+    LearningBondPauseHandler pauses, TimeProvider clock)
 {
     public async Task<GuardianResult> GetAsync(GuardianRequest request, Guid childId, CancellationToken cancellationToken = default)
     {
@@ -46,6 +46,10 @@ public sealed class LearningBondEstimateHandler(IPromiseHubDb db, LearningBondGu
         if (needsTaxReturn && claim.PausedReason != LearningBondPausedReason.NeedsTaxReturn)
         {
             claim.Pause(LearningBondPausedReason.NeedsTaxReturn, now);
+        }
+        else if (!needsTaxReturn && claim.PausedReason == LearningBondPausedReason.NeedsTaxReturn)
+        {
+            await pauses.ResumeAsync(claim, cancellationToken);
         }
         await db.SaveChangesAsync(cancellationToken);
         var code = GuardianLanguage.Code(scope.Household.Language);

@@ -82,6 +82,17 @@
                     @if (!c.selfClaim && c.amount !== null) {
                       <ph-badge tone="info">{{ badge(c) }}</ph-badge>
                     }
+                    @if (resume(c); as next) {
+                      <div>
+                        <ph-button
+                          size="sm"
+                          variant="ghost"
+                          icon="arrow-right"
+                          [link]="next.link"
+                          >{{ next.label }}</ph-button
+                        >
+                      </div>
+                    }
                   </ph-list-item>
                 }
               </ph-list>

@@ -2552,6 +2552,9 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("TEXT");
 
+                    b.Property<long?>("PausedAt")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("PausedReason")
                         .HasMaxLength(30)
                         .HasColumnType("TEXT");
@@ -2587,6 +2590,9 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid>("ChildId")
                         .HasColumnType("TEXT");
+
+                    b.Property<long?>("ClosedAt")
+                        .HasColumnType("INTEGER");
 
                     b.Property<long>("GivenAt")
                         .HasColumnType("INTEGER");
@@ -2793,6 +2799,66 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("LearningBondProviderEvents");
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondReminder", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("CancelledAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("ClaimId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("DueAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("HouseholdId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("SentAt")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("OrganizationId", "ClaimId");
+
+                    b.ToTable("LearningBondReminders");
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondReminderChoice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("ChosenAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("ClaimId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Remind")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("OrganizationId", "ClaimId");
+
+                    b.ToTable("LearningBondChoices");
                 });
 
             modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondSettings", b =>
@@ -5234,6 +5300,24 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                 });
 
             modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondProviderEvent", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondReminder", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondReminderChoice", b =>
                 {
                     b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
                         .WithMany()

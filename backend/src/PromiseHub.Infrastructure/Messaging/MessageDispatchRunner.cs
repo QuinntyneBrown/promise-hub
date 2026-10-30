@@ -42,9 +42,14 @@ public sealed class MessageDispatchRunner(IServiceScopeFactory scopes, TimeProvi
             var withLaunches = await db.LearningBondSettings.IgnoreQueryFilters().AsNoTracking()
                 .Where(s => s.LaunchMode == Domain.LearningBond.LearningBondLaunchMode.Scheduled && s.LaunchedAt == null)
                 .Select(s => s.OrganizationId).ToListAsync(cancellationToken);
+            // Learning Bond reminders that may be due, and paused claims that may have idled 180 days; the job decides (L2-151).
+            var withClaims = (await db.LearningBondReminders.IgnoreQueryFilters().AsNoTracking().Where(r => r.SentAt == null && r.CancelledAt == null)
+                    .Select(r => r.OrganizationId).ToListAsync(cancellationToken))
+                .Union(await db.LearningBondClaims.IgnoreQueryFilters().AsNoTracking().Where(c => c.Status == Domain.LearningBond.LearningBondClaimStatus.Paused)
+                    .Select(c => c.OrganizationId).ToListAsync(cancellationToken));
             // A suspended organization sends nothing; its queue waits until it is reinstated (L2-003).
             var suspended = await db.Organizations.AsNoTracking().Where(o => o.SuspendedAt != null).Select(o => o.Id).ToListAsync(cancellationToken);
-            organizations = [.. withDeliveries.Union(withSlips).Union(withReminders).Union(withSessions).Union(withLaunches).Except(suspended)];
+            organizations = [.. withDeliveries.Union(withSlips).Union(withReminders).Union(withSessions).Union(withLaunches).Union(withClaims).Except(suspended)];
         }
         foreach (var organizationId in organizations)
         {
@@ -54,6 +59,7 @@ public sealed class MessageDispatchRunner(IServiceScopeFactory scopes, TimeProvi
             await scope.ServiceProvider.GetRequiredService<SendDueRemindersHandler>().HandleAsync(cancellationToken);
             await scope.ServiceProvider.GetRequiredService<Application.Attendance.SendNoShowAlertsHandler>().HandleAsync(cancellationToken);
             await scope.ServiceProvider.GetRequiredService<Application.LearningBond.LearningBondLaunchHandler>().SendDueAsync(cancellationToken);
+            await scope.ServiceProvider.GetRequiredService<Application.LearningBond.LearningBondClaimJob>().RunAsync(cancellationToken);
             await scope.ServiceProvider.GetRequiredService<SendQueuedDeliveriesHandler>().HandleAsync(cancellationToken);
         }
     }

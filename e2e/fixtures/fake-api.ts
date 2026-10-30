@@ -2313,6 +2313,21 @@ export class FakeApi {
       (route, p) => this.learningBondSendDocument(route, p["token"]!, p["id"]!),
     ],
     [
+      "POST",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/children\/(?<child>[^/]+)\/pause$/,
+      (route, p) => this.learningBondPause(route, p["token"]!, p["child"]!),
+    ],
+    [
+      "GET",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/children\/(?<child>[^/]+)\/paused$/,
+      (route, p) => this.learningBondPaused(route, p["token"]!, p["child"]!),
+    ],
+    [
+      "PUT",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/children\/(?<child>[^/]+)\/reminder$/,
+      (route, p) => this.learningBondReminder(route, p["token"]!, p["child"]!),
+    ],
+    [
       "GET",
       /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/children\/(?<child>[^/]+)\/progress$/,
       (route, p) => this.learningBondProgress(route, p["token"]!, p["child"]!),
@@ -3681,13 +3696,29 @@ export class FakeApi {
       .flatMap((c) => {
         const age = ageOf(c.dateOfBirth);
         const names = programs.filter((p) => p.roster.includes(c.id)).map((p) => p.name).sort();
-        if (age !== null && age >= 18 && age < 21) return [{ id: c.id, firstName: c.firstName, age, programs: names, amount: null, selfClaim: true }];
+        if (age !== null && age >= 18 && age < 21) return [{ id: c.id, firstName: c.firstName, age, programs: names, amount: null, selfClaim: true, claim: null }];
         if ((age === null || age < 18) && names.length)
           return [
-            { id: c.id, firstName: c.firstName, age, programs: names, amount: c.dateOfBirth ? this.learningBond.estimate(Number(c.dateOfBirth.slice(0, 4))) : null, selfClaim: false },
+            {
+              id: c.id,
+              firstName: c.firstName,
+              age,
+              programs: names,
+              amount: c.dateOfBirth ? this.learningBond.estimate(Number(c.dateOfBirth.slice(0, 4))) : null,
+              selfClaim: false,
+              claim: this.learningBondClaimStatus(c.id),
+            },
           ];
         return [];
       });
+  }
+
+  /** Where a child's open claim stands (GuardianLearningBondChildDto.Claim): null before consent. */
+  private learningBondClaimStatus(childId: string): string | null {
+    if (!this.learningBond.consents.some((k) => k.childId === childId)) return null;
+    const application = [...this.learningBond.applications.values()].find((a) => a.childId === childId && ["Submitted", "Received", "Deposited"].includes(a.status));
+    if (application) return application.status;
+    return this.learningBond.claims.get(childId)?.paused ? "Paused" : "Started";
   }
 
   /** The guardian home's Learning Bond card (L2-144 criterion 7): invited, not declined, module on, covered children under 18. */
@@ -3996,6 +4027,61 @@ export class FakeApi {
         document: a.document && !a.document.sentAt ? a.document : null,
       },
     });
+  }
+
+  /** POST .../children/{childId}/pause (L2-151 criterion 1): only for a child with no SIN yet. */
+  private async learningBondPause(route: Route, token: string, childId: string): Promise<void> {
+    const found = await this.learningBondConsentedChild(route, token, childId);
+    if (!found) return;
+    const claim = this.learningBond.claims.get(childId) ?? { childLast3: null, recordFix: null };
+    this.learningBond.claims.set(childId, { ...claim, paused: "NeedsSin" });
+    return route.fulfill({ status: 204 });
+  }
+
+  private learningBondPausedBody(token: string, child: FakeChild) {
+    const claim = this.learningBond.claims.get(child.id)!;
+    const name = child.firstName;
+    const sin = claim.paused === "NeedsSin";
+    return {
+      language: this.learningBondLinkOf(token)!.language,
+      organization: "Harbourview Youth Collective",
+      explanation: sin
+        ? `${name} needs a social insurance number for the Learning Bond. You can apply for free through Service Canada; here’s the link. Everything you gave me is kept.`
+        : "The Learning Bond needs last year’s tax return. Free tax clinics can file it for you; here’s where to find one. Everything else is kept.",
+      childId: child.id,
+      firstName: name,
+      status: "Paused",
+      reason: claim.paused,
+      helpLink: sin
+        ? "https://www.canada.ca/en/employment-social-development/services/sin/apply.html"
+        : "https://www.canada.ca/en/revenue-agency/services/tax/individuals/community-volunteer-income-tax-program/need-a-hand-complete-your-tax-return.html",
+      resumeStep: sin ? "intake" : "estimate",
+      reminder: claim.reminder ?? null,
+      reminderDates: claim.reminder ? ["2026-11-19", "2026-12-05"] : [],
+    };
+  }
+
+  /** GET .../children/{childId}/paused (L2-151): why it waits, what helps, where it resumes. */
+  private async learningBondPaused(route: Route, token: string, childId: string): Promise<void> {
+    const found = await this.learningBondConsentedChild(route, token, childId);
+    if (!found) return;
+    const claim = this.learningBond.claims.get(childId);
+    const paused = claim?.paused ?? (this.learningBond.intakes.get(found.household.id)?.taxFiled && this.learningBond.intakes.get(found.household.id)?.taxFiled !== "Yes" ? "NeedsTaxReturn" : null);
+    if (!paused) return route.fulfill({ status: 409, json: { code: "not-paused" } });
+    this.learningBond.claims.set(childId, { ...(claim ?? { childLast3: null, recordFix: null }), paused });
+    return route.fulfill({ json: this.learningBondPausedBody(token, found.child) });
+  }
+
+  /** PUT .../children/{childId}/reminder (L2-151 criterion 3): texts at 14 and 30 days, or none. */
+  private async learningBondReminder(route: Route, token: string, childId: string): Promise<void> {
+    const found = await this.learningBondConsentedChild(route, token, childId);
+    if (!found) return;
+    const { remind } = route.request().postDataJSON() as { remind?: boolean };
+    if (typeof remind !== "boolean") return route.fulfill({ status: 422, json: { errors: { remind: "Choose Yes, text me or No thanks." } } });
+    const claim = this.learningBond.claims.get(childId);
+    if (!claim?.paused) return route.fulfill({ status: 409, json: { code: "not-paused" } });
+    claim.reminder = remind;
+    return route.fulfill({ json: this.learningBondPausedBody(token, found.child) });
   }
 
   /** The household's application holding a requested document (LearningBondDocumentHandler.OwnAsync). */

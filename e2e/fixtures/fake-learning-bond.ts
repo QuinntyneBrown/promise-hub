@@ -324,7 +324,7 @@ export class FakeLearningBond {
   readonly intakes = new Map<string, { guardianLast3: string | null; taxFiled: string | null }>();
 
   /** child → its SIN's last three digits and whether a record fix was asked (LearningBondClaim). The fake keeps no whole SIN. */
-  readonly claims = new Map<string, { childLast3: string | null; recordFix: string | null }>();
+  readonly claims = new Map<string, { childLast3: string | null; recordFix: string | null; paused?: 'NeedsSin' | 'NeedsTaxReturn' | null; reminder?: boolean | null }>();
 
   /** The intake's agent line (AgentFallbackCopy.Intake). */
   intakeLine(code: 'en' | 'es' | 'fr', child: string): string {
