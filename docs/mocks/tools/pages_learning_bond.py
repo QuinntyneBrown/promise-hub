@@ -63,6 +63,11 @@ def crumbs(current: str) -> str:
     return breadcrumb([("Settings", page("settings-organization")), ("Learning Bond", page("settings-learning-bond"))], current)
 
 
+def crumbs_off(current: str) -> str:
+    """While Learning Bond is off the hub isn't served, so the agreement sits under Settings › Modules."""
+    return breadcrumb([("Settings", page("settings-organization")), ("Modules", page("settings-modules"))], current)
+
+
 def failed_load(title: str, back: str = "") -> str:
     acts = btn("Try again", "primary", icon_name="refresh") + (btn("Back to Learning Bond", "ghost", href=page("settings-learning-bond")) if back else "")
     return card(empty(title, "Check your connection and try again.", action=acts, error=True, icon_name="alert-triangle"), cls="card--flush")
@@ -77,7 +82,8 @@ def privacy_note(pos: str = "top: 5rem; right: 1rem;") -> str:
 
 
 # ------------------------------------------------------------------ Settings › Learning Bond (the hub)
-@screen("settings-learning-bond", "page", "Learning Bond settings", route="/settings/learning-bond", reqs=R_HUB, na={"empty": "The hub always lists the agreement, coverage, invitation and launch."})
+@screen("settings-learning-bond", "page", "Learning Bond settings", route="/settings/learning-bond", reqs=R_HUB,
+        na={"empty": "The hub always lists the agreement, coverage, invitation and launch."})
 def settings_learning_bond(S):
     hdr = page_header("Learning Bond", "Claims the money governments already owe your families’ children. Needs Roster and Messages.") + settings_nav("settings-learning-bond")
 
@@ -89,10 +95,6 @@ def settings_learning_bond(S):
         elif state == "new-version":
             body = alert("warning", "A new version of the agreement needs accepting.", f"Version 3 took effect Sun 1 Nov 2026. Version {AGREEMENT_VERSION} was accepted by Tom Nguyen on {AGREEMENT_DATE}. Families already in progress continue; no new invitation goes out until it is accepted.",
                          actions=btn("Read and accept version 3", "primary", size="sm", href=page("learning-bond-agreement")))
-            foot = ""
-        else:
-            body = alert("warning", "Not accepted yet", "Learning Bond stays off until someone with authority accepts the data-handling agreement.",
-                         actions=btn("Read the agreement", "primary", size="sm", href=page("learning-bond-agreement")) + btn("Ask someone else to sign", "ghost", size="sm", data_href=dialog("learning-bond-signer")))
             foot = ""
         return card(body, title="Data-handling agreement", tid="agreement", footer=foot)
 
@@ -120,8 +122,6 @@ def settings_learning_bond(S):
     S.add("default", "Settings › Learning Bond for Harbourview: the agreement accepted, coverage, the invitation sender and a launch scheduled for Monday.", nav="settings", user=T,
           main=hdr + grid(agreement_card(), launch_card()),
           notes=note("Learning Bond is in Settings only for admins. Program directors and site leads reach the dashboard and the families list from More.", "top: 5rem; right: 1rem;"))
-    S.add("not-accepted", "Learning Bond turned on in Modules but the agreement not yet accepted: Launch is disabled and the agreement card says what to do.", nav="settings", user=T,
-          main=hdr + grid(agreement_card("none"), launch_card(disabled_reason="Accept the data-handling agreement before launching.")))
     S.add("new-version", "The platform published version 3 of the agreement: families in progress continue, no new invitation is sent and Launch is disabled until it is accepted (L2-136).", nav="settings", user=T,
           main=hdr + alert("warning", "A new version of the agreement needs accepting.", "Launch is paused until Tom or a named signer accepts version 3.", banner=True, actions=btn("Read version 3", "primary", size="sm", href=page("learning-bond-agreement")))
           + grid(agreement_card("new-version"), launch_card(disabled_reason="A new version of the agreement needs accepting.")))
@@ -166,6 +166,10 @@ def learning_bond_agreement(S):
     S.add("accepted", "Accepted: who, when and which version; Launch is now possible.", nav="settings", user=T,
           main=hdr + layout(card(alert("success", f"Accepted by Tom Nguyen on {AGREEMENT_DATE}, version {AGREEMENT_VERSION}", "Recorded in the audit log. No family data has been collected yet.",
                                        actions=btn("Choose coverage", "primary", size="sm", href=page("learning-bond-coverage")) + btn("Back to Learning Bond", "ghost", size="sm", href=page("settings-learning-bond"))))))
+    S.add("accepted-off", "Accepted while Learning Bond is still off (reached from Read the agreement in Settings › Modules): the next step is to turn it on.", nav="settings", user=T,
+          main=crumbs_off("Agreement") + page_header("Learning Bond data-handling agreement", "One page. Accept it for Harbourview, or name the person who can.")
+          + layout(card(alert("success", f"Accepted by Tom Nguyen on {AGREEMENT_DATE}, version {AGREEMENT_VERSION}", "Recorded in the audit log. Turn Learning Bond on in Modules to choose coverage and the invitation.",
+                                       actions=btn("Turn on Learning Bond", "primary", size="sm", href=page("settings-modules"))))))
     S.add("waiting-signer", "Tom named Rev. Angela Baptiste as the signer: the page waits, with Resend and Cancel.", nav="settings", user=T,
           main=hdr + layout(card(f'<p>{icon("clock", "icon--sm")} <strong>Waiting for Rev. Angela Baptiste to sign.</strong></p><p class="text-muted">Board chair · angela.baptiste@harbourview.example · emailed Thu 5 Nov, 4:02 pm. The link works for 14 days.</p>'
                                  f'<div class="cluster">{btn("Resend", "", icon_name="mail")}{btn("Cancel", "ghost")}</div>', title="Named signer", tid="signer")),

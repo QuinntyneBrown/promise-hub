@@ -3247,7 +3247,6 @@
       ],
       "states": [
         "default",
-        "not-accepted",
         "new-version",
         "launched",
         "loading",
@@ -3278,6 +3277,7 @@
         "invalid",
         "submitting",
         "accepted",
+        "accepted-off",
         "waiting-signer",
         "signer",
         "signer-accepted",

@@ -25,7 +25,7 @@ Nothing is built yet. Requirements are `L2-135` to `L2-163`; screens are the `le
 
 Decisions the designs make beyond ADR 0076, each stated in the design it affects:
 
-- The agreement routes (`/learning-bond/agreement/**`) and the signer's anonymous link (`/sign/learning-bond/{token}`, `SignerLinkAccess`) work while the module is off, because `L2-135` criterion 4 requires acceptance before the module can be turned on. The mock state `settings-learning-bond/not-accepted` describes a state the requirements make impossible.
+- The agreement routes (`/learning-bond/agreement/**`) and the signer's anonymous link (`/sign/learning-bond/{token}`, `SignerLinkAccess`) work while the module is off, because `L2-135` criterion 4 requires acceptance before the module can be turned on. The hub is served only while the module is on, so its old `not-accepted` mock state was removed; while the module is off, Settings › Modules links to the agreement, which the settings library serves (ADR 0077).
 - The household page card and the `learning-bond-invite-household` dialog live in the `households` library and depend only on `LEARNING_BOND_API`.
 - `LearningBondCoverage` is the one query for covered households; `LearningBondFigures` is shared by the dashboard and the export; `LearningBondStatus` computes a household's status from its records.
 - Not sure to the tax question pauses the claim like No (`L2-151` criterion 2 over `L2-147` criterion 4). Fix this on the intake pauses the claim as `AwaitingRecordFix`; the guardian change-request handler is chosen at implementation.
