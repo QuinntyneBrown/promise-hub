@@ -12,6 +12,7 @@ import { GuardianHome } from './guardian-home';
 import { GuardianChild } from './guardian-child';
 import { GuardianAnnouncements } from './guardian-announcements';
 import { GuardianPageResult } from './guardian-page-result';
+import { toGuardianPage } from './to-guardian-page';
 import { GuardianSlip } from './guardian-slip';
 import { GuardianSlipResult } from './guardian-slip-result';
 import { GuardianVerifyOutcome } from './guardian-verify-outcome';
@@ -152,30 +153,7 @@ export class HttpGuardianApi implements GuardianApi {
   }
 
   private page<T>(url: string): Observable<GuardianPageResult<T>> {
-    return this.http.get<T>(url).pipe(
-      map((value): GuardianPageResult<T> => ({ status: 'loaded', value })),
-      catchError((error: HttpErrorResponse) =>
-        of<GuardianPageResult<T>>(
-          error.status === 401
-            ? {
-                status: 'verify',
-                language: error.error?.language ?? 'en',
-                organization: error.error?.organization ?? '',
-                phone: error.error?.phone ?? null,
-                contacts: error.error?.contacts ?? [],
-              }
-            : error.status === 410
-              ? {
-                  status: 'gone',
-                  organization: error.error?.organization ?? null,
-                  phone: error.error?.phone ?? null,
-                }
-              : error.status === 404
-                ? { status: 'not-found' }
-                : { status: 'error' },
-        ),
-      ),
-    );
+    return toGuardianPage(this.http.get<T>(url));
   }
 
   requestCode(token: string, contact: string): Observable<'sent' | 'gone' | 'error'> {

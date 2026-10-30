@@ -14,7 +14,7 @@ namespace PromiseHub.Application.LearningBond;
 /// revoked link, a suspended organization and the module off all answer null, so the endpoint's 404 never confirms which it was.
 /// </summary>
 public sealed class LearningBondGuardianHandler(GuardianAccess access, TenantContext tenant, IModuleGate modules, IAuditWriter audit, IPromiseHubDb db,
-    NotificationWriter notifications, TimeProvider clock)
+    NotificationWriter notifications, LearningBondCoverage coverage, TimeProvider clock)
 {
     public async Task<LearningBondGuardianDto?> GetAsync(GuardianRequest request, CancellationToken cancellationToken = default)
     {
@@ -79,5 +79,102 @@ public sealed class LearningBondGuardianHandler(GuardianAccess access, TenantCon
             "/learning-bond/families?status=CallRequested", cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return new(ResultStatus.Done, $"{scope.Organization.Name} will call you. They will see where you are in the steps, never your SIN.");
+    }
+
+    /// <summary>
+    /// The guardian's Learning Bond page (L2-144): an unknown or revoked link has expired; with the module off, not found; a device not verified
+    /// for the household gets the code step and nothing about the children; a verified one gets the children and the agent's fixed line.
+    /// </summary>
+    public async Task<GuardianResult> PageAsync(GuardianRequest request, CancellationToken cancellationToken = default)
+    {
+        var (gate, scope) = await TrustedAsync(request, cancellationToken);
+        if (gate is not null)
+        {
+            return gate;
+        }
+        var code = GuardianLanguage.Code(scope!.Household.Language);
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(clock.GetUtcNow(), TimeZoneInfo.FindSystemTimeZoneById(scope.Organization.TimeZone)).DateTime);
+        var covered = (await coverage.CoveredAsync(cancellationToken)).FirstOrDefault(c => c.HouseholdId == scope.Household.Id);
+        var programIds = covered?.ProgramIds ?? [];
+        var enrolled = await (from e in db.Enrollments.AsNoTracking()
+                              join p in db.Programs.AsNoTracking() on e.ProgramId equals p.Id
+                              where e.EndedAt == null && programIds.Contains(e.ProgramId)
+                              select new { e.ChildId, p.Name }).ToListAsync(cancellationToken);
+        var children = new List<GuardianLearningBondChildDto>();
+        foreach (var child in (await db.Children.AsNoTracking().Where(c => c.HouseholdId == scope.Household.Id).ToListAsync(cancellationToken))
+                     .OrderBy(c => c.FirstName, StringComparer.CurrentCulture))
+        {
+            var age = child.AgeOn(today);
+            var programs = enrolled.Where(e => e.ChildId == child.Id).Select(e => e.Name).Distinct().Order(StringComparer.CurrentCulture).ToList();
+            if (age is >= 18 and < 21)
+            {
+                children.Add(new(child.Id, child.FirstName, age, programs, null, true));
+            }
+            else if (age is null or < 18 && programs.Count > 0)
+            {
+                children.Add(new(child.Id, child.FirstName, age, programs,
+                    child.DateOfBirth is { } born ? LearningBondRule.Current.Estimate(born.Year, today.Year) : null, false));
+            }
+        }
+        var invitation = await LatestInvitationAsync(scope.Household.Id, cancellationToken);
+        var status = invitation is null ? LearningBondFamilyStatus.NotInvited
+            : invitation.DeclinedAt is not null ? LearningBondFamilyStatus.NotInterested : LearningBondFamilyStatus.Invited;
+        return GuardianResult.Of(GuardianOutcome.Ok, new GuardianLearningBondDto(code, scope.Organization.Name, scope.Organization.Phone,
+            AgentFallbackCopy.Welcome(code, scope.Organization.Name), children, status.ToString()));
+    }
+
+    /// <summary>Not now changes nothing; I'm not interested marks the household's invitation declined, audited (L2-144 criterion 4).</summary>
+    public async Task<GuardianResult> ChooseAsync(GuardianRequest request, LearningBondChoiceRequest choice, CancellationToken cancellationToken = default)
+    {
+        var (gate, scope) = await TrustedAsync(request, cancellationToken);
+        if (gate is not null)
+        {
+            return gate;
+        }
+        switch (choice.Choice)
+        {
+            case "NotNow":
+                return GuardianResult.Of(GuardianOutcome.Done);
+            case "NotInterested":
+                if (await LatestInvitationAsync(scope!.Household.Id, cancellationToken, tracked: true) is { } invitation && invitation.DeclinedAt is null)
+                {
+                    invitation.Decline(clock.GetUtcNow());
+                    audit.Record(new AuditEvent(AuditAction.Updated, nameof(LearningBondInvitation), scope.Household.Id,
+                        $"The {scope.Household.Name} household isn’t interested in the Learning Bond"));
+                    await db.SaveChangesAsync(cancellationToken);
+                }
+                return GuardianResult.Of(GuardianOutcome.Done);
+            default:
+                return GuardianResult.Invalid("choice", "Choose Not now or I’m not interested.");
+        }
+    }
+
+    /// <summary>The link's scope for a verified device, or why not: expired, not found (module off) or the code step.</summary>
+    private async Task<(GuardianResult? Gate, GuardianScope? Scope)> TrustedAsync(GuardianRequest request, CancellationToken cancellationToken)
+    {
+        var scope = await access.ResolveAsync(request, cancellationToken);
+        if (scope is null)
+        {
+            return (GuardianResult.Of(GuardianOutcome.Gone, GuardianAccess.GoneBody(null)), null);
+        }
+        tenant.ResolveForGuardian(scope.Organization.Id);
+        if (!await modules.IsOnAsync(ModuleId.LearningBond, cancellationToken))
+        {
+            return (GuardianResult.Of(GuardianOutcome.NotFound), null);
+        }
+        if (!scope.Trusted)
+        {
+            var guardians = await db.Guardians.AsNoTracking().Where(g => g.HouseholdId == scope.Household.Id).ToListAsync(cancellationToken);
+            var contacts = guardians.Where(g => !string.IsNullOrWhiteSpace(g.Mobile)).Select(g => ContactMask.Phone(g.Mobile!))
+                .Concat(guardians.Where(g => !string.IsNullOrWhiteSpace(g.Email) && !g.EmailBounced).Select(g => ContactMask.Email(g.Email!)));
+            return (GuardianResult.Of(GuardianOutcome.VerificationRequired, GuardianAccess.VerifyBody(scope, contacts)), null);
+        }
+        return (null, scope);
+    }
+
+    private async Task<LearningBondInvitation?> LatestInvitationAsync(Guid householdId, CancellationToken cancellationToken, bool tracked = false)
+    {
+        var query = tracked ? db.LearningBondInvitations : db.LearningBondInvitations.AsNoTracking();
+        return (await query.Where(i => i.HouseholdId == householdId).ToListAsync(cancellationToken)).OrderByDescending(i => i.SentAt).FirstOrDefault();
     }
 }

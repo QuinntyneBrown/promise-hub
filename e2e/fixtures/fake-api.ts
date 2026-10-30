@@ -2289,6 +2289,8 @@ export class FakeApi {
       /^\/api\/sign\/learning-bond\/(?<token>[^/]+)\/acceptances$/,
       (route, p) => this.learningBondAcceptAsSigner(route, p["token"]!),
     ],
+    ["GET", /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/page$/, (route, p) => this.learningBondGuardianPage(route, p["token"]!)],
+    ["POST", /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/choice$/, (route, p) => this.learningBondChoice(route, p["token"]!)],
     [
       "GET",
       /^\/api\/g\/learning-bond\/(?<token>[^/]+)$/,
@@ -3566,6 +3568,85 @@ export class FakeApi {
     return this.learningBond.acceptAsSigner(route, token, (id) => this.organizationDetailsOf(id).name, "2026-11-05T21:30:00Z", (organizationId, membershipId, text) =>
       this.notify(organizationId, [membershipId], "agreement", text, "/settings/learning-bond/agreement"),
     );
+  }
+
+  /** A Learning Bond link for a verified device: 410 unknown, 404 with the module off, 401 for the code step (GuardianAccess). */
+  private async learningBondGuardianScope(route: Route, token: string): Promise<{ household: FakeHousehold; organizationId: string } | null> {
+    const link = this.learningBond.links.get(token);
+    if (!link) {
+      await route.fulfill({ status: 410, json: { code: "link-expired", organization: null, phone: null } });
+      return null;
+    }
+    if (!this.modules.get(link.organizationId)!.includes("LearningBond")) {
+      await route.fulfill({ status: 404 });
+      return null;
+    }
+    const household = this.households.find((h) => h.id === link.householdId)!;
+    if (!this.trustedHouseholds.has(household.id)) {
+      await route.fulfill({
+        status: 401,
+        json: {
+          code: "verification-required",
+          language: link.language,
+          organization: this.organizationDetailsOf(link.organizationId).name,
+          phone: "905-555-0100",
+          contacts: household.guardians.filter((g) => g.mobile).map((g) => `•••-•••-${g.mobile!.slice(-4)}`),
+        },
+      });
+      return null;
+    }
+    return { household, organizationId: link.organizationId };
+  }
+
+  /** GET /g/learning-bond/{token}/page (L2-144): each covered child under 18 with an amount; 18 to 20 claim for themselves. */
+  private async learningBondGuardianPage(route: Route, token: string): Promise<void> {
+    const scope = await this.learningBondGuardianScope(route, token);
+    if (!scope) return;
+    const { household, organizationId } = scope;
+    const code = this.learningBond.links.get(token)!.language;
+    const settings = this.learningBond.settingsOf(organizationId);
+    const programs = this.programs.filter(
+      (p) => p.organizationId === organizationId && p.status === "Active" && (settings.coverage === "AllPrograms" || settings.programIds.includes(p.id)),
+    );
+    const ageOf = (dob: string | null) => {
+      if (!dob) return null;
+      const [y, m, d] = dob.split("-").map(Number) as [number, number, number];
+      return 2026 - y - (m > 11 || (m === 11 && d > 5) ? 1 : 0);
+    };
+    const children = [...household.children]
+      .sort((a, b) => a.firstName.localeCompare(b.firstName))
+      .flatMap((c) => {
+        const age = ageOf(c.dateOfBirth);
+        const names = programs.filter((p) => p.roster.includes(c.id)).map((p) => p.name).sort();
+        if (age !== null && age >= 18 && age < 21) return [{ id: c.id, firstName: c.firstName, age, programs: names, amount: null, selfClaim: true }];
+        if ((age === null || age < 18) && names.length)
+          return [
+            { id: c.id, firstName: c.firstName, age, programs: names, amount: c.dateOfBirth ? this.learningBond.estimate(Number(c.dateOfBirth.slice(0, 4))) : null, selfClaim: false },
+          ];
+        return [];
+      });
+    const declined = this.learningBond.declined.has(household.id);
+    const organization = this.organizationDetailsOf(organizationId).name;
+    return route.fulfill({
+      json: {
+        language: code,
+        organization,
+        phone: "905-555-0100",
+        explanation: this.learningBond.welcome(code, organization),
+        children,
+        status: declined ? "NotInterested" : "Invited",
+      },
+    });
+  }
+
+  /** POST /g/learning-bond/{token}/choice (L2-144 criterion 4). */
+  private async learningBondChoice(route: Route, token: string): Promise<void> {
+    const scope = await this.learningBondGuardianScope(route, token);
+    if (!scope) return;
+    const { choice } = route.request().postDataJSON() as { choice?: string };
+    if (choice === "NotInterested") this.learningBond.declined.add(scope.household.id);
+    else if (choice !== "NotNow") return route.fulfill({ status: 422, json: { errors: { choice: "Choose Not now or I’m not interested." } } });
+    return route.fulfill({ status: 204 });
   }
 
   /** GET /g/learning-bond/{token}: the organization from the link, then the module gate; every refusal is the same bare 404 (L2-162 criterion 6). */
@@ -11469,7 +11550,8 @@ export class FakeApi {
       ? { householdId: home }
       : (this.guardianLinks.get(token) ??
           this.surveyLinks.get(token) ??
-          this.consentLinks.get(token));
+          this.consentLinks.get(token) ??
+          this.learningBond.links.get(token));
   }
 
   private async guardianHome(route: Route, token: string): Promise<void> {

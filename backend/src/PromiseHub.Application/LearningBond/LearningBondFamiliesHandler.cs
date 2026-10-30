@@ -19,7 +19,7 @@ public sealed class LearningBondFamiliesHandler(IPromiseHubDb db, LearningBondCo
         var ids = covered.Select(c => c.HouseholdId).ToList();
         var households = await db.Households.AsNoTracking().Where(h => ids.Contains(h.Id)).ToDictionaryAsync(h => h.Id, h => h.Name, cancellationToken);
         var guardians = await db.Guardians.AsNoTracking().Where(g => ids.Contains(g.HouseholdId)).ToListAsync(cancellationToken);
-        var invitations = await db.LearningBondInvitations.AsNoTracking().Where(i => ids.Contains(i.HouseholdId)).Select(i => new { i.HouseholdId, i.SentAt })
+        var invitations = await db.LearningBondInvitations.AsNoTracking().Where(i => ids.Contains(i.HouseholdId)).Select(i => new { i.HouseholdId, i.SentAt, i.DeclinedAt })
             .ToListAsync(cancellationToken);
         var calls = await db.LearningBondCallRequests.AsNoTracking().Where(r => ids.Contains(r.HouseholdId)).ToListAsync(cancellationToken);
         var rows = covered.Select(c =>
@@ -37,6 +37,10 @@ public sealed class LearningBondFamiliesHandler(IPromiseHubDb db, LearningBondCo
             else if (done is { Outcome: LearningBondCallOutcome.NotInterested })
             {
                 (state, changed) = (LearningBondFamilyStatus.NotInterested, done.DoneAt);
+            }
+            else if (invitations.Where(i => i.HouseholdId == c.HouseholdId).Select(i => i.DeclinedAt).Max() is { } declined)
+            {
+                (state, changed) = (LearningBondFamilyStatus.NotInterested, declined);
             }
             var guardian = guardians.Where(g => g.HouseholdId == c.HouseholdId).OrderByDescending(g => g.IsPrimary).ThenBy(g => g.Name, StringComparer.CurrentCulture)
                 .FirstOrDefault()?.Name;

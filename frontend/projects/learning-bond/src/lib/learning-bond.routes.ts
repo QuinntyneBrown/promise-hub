@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { LearningBondCoveragePage } from './coverage/learning-bond-coverage-page';
 import { LearningBondFamiliesPage } from './families/learning-bond-families-page';
+import { GuardianLearningBondPage } from './guardian/guardian-learning-bond-page';
 import { SettingsLearningBondPage } from './hub/settings-learning-bond-page';
 import { LearningBondInvitationPage } from './invitation/learning-bond-invitation-page';
 import { LearningBondLaunchPage } from './launch/learning-bond-launch-page';
@@ -48,5 +49,12 @@ export const settingsRoutes: Routes = [
   },
 ];
 
-/** Guardian pages under /g/learning-bond/:token, loaded only when the server answers the link (L2-162 criterion 6). Screens arrive with prompt 86 onward. */
-export const guardianRoutes: Routes = [];
+/** Guardian pages under /g/learning-bond/:token, loaded only when the server answers the link (L2-162 criterion 6). */
+export const guardianRoutes: Routes = [
+  {
+    path: '',
+    pathMatch: 'full',
+    component: GuardianLearningBondPage,
+    title: 'Learning Bond · PromiseHub',
+  },
+];

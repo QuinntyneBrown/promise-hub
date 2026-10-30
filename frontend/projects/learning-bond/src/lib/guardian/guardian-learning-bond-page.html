@@ -1,0 +1,123 @@
+<ph-guardian-shell [organization]="organization()" [attr.lang]="language()">
+  @let t = text();
+  @let r = result();
+  @if (!r) {
+    <h1 class="visually-hidden">{{ t.loading }}</h1>
+    <ph-skeleton shape="card" [attr.aria-label]="t.loading" />
+  } @else {
+    @switch (r.status) {
+      @case ('verify') {
+        @if (step() === 'locked') {
+          <h1>{{ t.verifyHeading }}</h1>
+          <ph-alert tone="danger" [title]="t.locked" />
+        } @else if (step() === 'code') {
+          <h1>{{ t.codeHeading }}</h1>
+          <p>{{ t.codeText }}</p>
+          <form class="stack" novalidate (ngSubmit)="verify()">
+            <ph-text-field
+              inputId="code"
+              [label]="t.codeLabel"
+              name="code"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              [error]="errors()['code'] ?? null"
+              [(ngModel)]="code"
+            />
+            <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
+              t.continue
+            }}</ph-button>
+            <ph-button variant="ghost" (click)="step.set('contact')">{{
+              t.differentContact
+            }}</ph-button>
+          </form>
+        } @else {
+          <h1>{{ t.verifyHeading }}</h1>
+          <p>{{ t.verifyText }}</p>
+          <form class="stack" novalidate (ngSubmit)="requestCode()">
+            <ph-text-field
+              inputId="contact"
+              [label]="t.contactLabel"
+              name="contact"
+              autocomplete="tel"
+              [(ngModel)]="contact"
+            />
+            <ph-button variant="primary" type="submit" size="lg" [busy]="busy()">{{
+              t.sendCode
+            }}</ph-button>
+          </form>
+        }
+        @if (failed()) {
+          <ph-alert tone="danger" [title]="t.failed" />
+        }
+      }
+      @case ('gone') {
+        <h1>{{ t.expiredHeading }}</h1>
+        <ph-card>
+          <p class="plain">{{ t.expiredText(r.organization ?? '') }}</p>
+        </ph-card>
+      }
+      @case ('loaded') {
+        @let page = r.value;
+        <div class="stack">
+          <h1>{{ heading() }}</h1>
+          <ph-agent-message [text]="page.explanation" />
+          @if (chosen() === 'NotNow') {
+            <div data-testid="learning-bond-choice">
+              <ph-alert tone="info" [title]="t.notNowTitle" [text]="t.notNowText" />
+            </div>
+          } @else if (chosen() === 'NotInterested' || page.status === 'NotInterested') {
+            <div data-testid="learning-bond-choice">
+              <ph-alert
+                tone="success"
+                [title]="t.notInterestedTitle"
+                [text]="t.notInterestedText"
+              />
+            </div>
+          }
+          <ph-card [title]="t.kids" [flush]="true">
+            <div data-testid="learning-bond-children">
+              <ph-list [label]="t.kids">
+                @for (c of page.children; track c.id) {
+                  <ph-list-item [title]="c.firstName" [meta]="meta(c)" [avatar]="c.firstName">
+                    @if (!c.selfClaim && c.amount !== null) {
+                      <ph-badge tone="info">{{ badge(c) }}</ph-badge>
+                    }
+                  </ph-list-item>
+                }
+              </ph-list>
+            </div>
+          </ph-card>
+          @if (
+            claimable().length && chosen() !== 'NotInterested' && page.status !== 'NotInterested'
+          ) {
+            <div class="stack actions">
+              <ph-button variant="primary" size="lg" icon="arrow-right" [link]="['consent']">{{
+                t.continue
+              }}</ph-button>
+              <div class="cluster">
+                <ph-button [busy]="busy()" (click)="choose('NotNow')">{{ t.notNow }}</ph-button>
+                <ph-button variant="ghost" [busy]="busy()" (click)="choose('NotInterested')">{{
+                  t.notInterested
+                }}</ph-button>
+              </div>
+              <p class="hint">{{ t.about }}</p>
+            </div>
+          }
+          @if (failed()) {
+            <ph-alert tone="danger" [title]="t.failed" />
+          }
+        </div>
+      }
+      @default {
+        <h1>{{ t.pageTitle }}</h1>
+        <ph-card [flush]="true">
+          <ph-empty-state icon="warning" tone="error" [title]="t.errorTitle" [text]="t.errorText">
+            <ph-button variant="primary" icon="refresh" (click)="load()">{{
+              t.tryAgain
+            }}</ph-button>
+          </ph-empty-state>
+        </ph-card>
+      }
+    }
+  }
+</ph-guardian-shell>

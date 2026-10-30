@@ -2484,6 +2484,9 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<long?>("DeclinedAt")
+                        .HasColumnType("INTEGER");
+
                     b.Property<Guid>("HouseholdId")
                         .HasColumnType("TEXT");
 

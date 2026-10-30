@@ -91,7 +91,24 @@ export class FakeLearningBond {
   readonly links = new Map<string, FakeLearningBondLink>([
     ['tok-lb-rivera', { householdId: 'hh-rivera', organizationId: 'org-harbourview', language: 'es' }],
     ['tok-lb-northgate', { householdId: 'hh-northgate-rivera', organizationId: 'org-northgate', language: 'es' }],
+    ['tok-lb-haddad', { householdId: 'hh-haddad', organizationId: 'org-harbourview', language: 'fr' }],
   ]);
+
+  /** The agent's welcome line for the landing page (AgentFallbackCopy.Welcome). */
+  welcome(code: 'en' | 'es' | 'fr', organization: string): string {
+    if (code === 'es')
+      return `El Bono de Estudios Canadiense es dinero que el Gobierno de Canadá deposita en el RESP de un niño para familias con ingresos más bajos. No tiene que aportar dinero. Lo que escriba va al proveedor del RESP y al Gobierno de Canadá, no a ${organization}.`;
+    if (code === 'fr')
+      return `Le Bon d’études canadien est de l’argent que le gouvernement du Canada verse dans le REEE d’un enfant pour les familles à revenu modeste. Vous n’avez rien à verser. Ce que vous saisissez va au fournisseur de REEE et au gouvernement du Canada, pas à ${organization}.`;
+    return `The Canada Learning Bond is money the Government of Canada puts in a child’s RESP for families with lower incomes. You don’t need to put in any money. What you enter goes to the RESP provider and the Government of Canada, not to ${organization}.`;
+  }
+
+  /** "Up to" the amount for a child born in a year, as of 2026 (LearningBondRule v1); null before 2004. */
+  estimate(birthYear: number, currentYear = 2026): number | null {
+    if (birthYear < 2004 || birthYear > currentYear) return null;
+    const years = Math.min(currentYear, birthYear + 15) - birthYear + 1;
+    return Math.min(2000, 500 + (years - 1) * 100);
+  }
 
   /** organization → its open signer request (one per organization, L2-137 criterion 5). */
   readonly signers = new Map<string, FakeLearningBondSigner>();
@@ -283,6 +300,9 @@ export class FakeLearningBond {
     this.signers.delete(m.organizationId);
     return route.fulfill({ status: 204 });
   }
+
+  /** Households whose guardian said they aren't interested (LearningBondInvitation.DeclinedAt). */
+  readonly declined = new Set<string>();
 
   /** Every invitation sent (LearningBondInvitation): a household is not invited again within 7 days (L2-140 criterion 5). */
   readonly invitations: { organizationId: string; householdId: string; sentAt: string }[] = [];

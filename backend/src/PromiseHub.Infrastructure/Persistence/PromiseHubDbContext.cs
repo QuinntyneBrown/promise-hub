@@ -379,6 +379,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.HasIndex(i => new { i.OrganizationId, i.HouseholdId });
             e.Property(i => i.How).HasConversion<string>().HasMaxLength(20);
             e.Property(i => i.SentAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(i => i.DeclinedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
         });
         // A guardian's call request: the number and time they gave, until the call is marked done (L2-142).
         modelBuilder.Entity<Domain.LearningBond.LearningBondCallRequest>(e =>

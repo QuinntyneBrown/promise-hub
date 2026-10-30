@@ -16,6 +16,11 @@ public static class LearningBondGuardianEndpoints
         guardian.MapGet(string.Empty, async (string token, LearningBondGuardianHandler handler, HttpContext http, CancellationToken ct) =>
             await handler.GetAsync(new GuardianRequest(token, http.Request.Cookies[GuardianEndpoints.DeviceCookie], http.Request.Headers.UserAgent.ToString()), ct)
                 is { } link ? Results.Ok(link) : Results.NotFound());
+        // The page and the choice need a verified device (L2-144 criteria 2 and 4); the link check above names no family.
+        guardian.MapGet("/page", async (string token, LearningBondGuardianHandler handler, HttpContext http, CancellationToken ct) =>
+            GuardianEndpoints.ToHttp(await handler.PageAsync(GuardianEndpoints.Request(token, http), ct)));
+        guardian.MapPost("/choice", async (string token, LearningBondChoiceRequest request, LearningBondGuardianHandler handler, HttpContext http, CancellationToken ct) =>
+            GuardianEndpoints.ToHttp(await handler.ChooseAsync(GuardianEndpoints.Request(token, http), request, ct)));
         guardian.MapPost("/callback", async (string token, CallbackRequest request, LearningBondGuardianHandler handler, HttpContext http, CancellationToken ct) =>
             await handler.RequestCallAsync(new GuardianRequest(token, http.Request.Cookies[GuardianEndpoints.DeviceCookie], http.Request.Headers.UserAgent.ToString()), request, ct)
                 switch

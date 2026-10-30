@@ -7,6 +7,9 @@ import { LoadResult } from '../load-result';
 import { WriteOutcome } from '../write-outcome';
 import { LearningBondAgreement } from './learning-bond-agreement';
 import { LearningBondApi } from './learning-bond-api';
+import { GuardianPageResult } from '../guardian/guardian-page-result';
+import { toGuardianPage } from '../guardian/to-guardian-page';
+import { GuardianLearningBond } from './guardian-learning-bond';
 import { LearningBondFamilies } from './learning-bond-families';
 import { LearningBondHousehold } from './learning-bond-household';
 import { LearningBondInviteOutcome } from './learning-bond-invite-outcome';
@@ -161,6 +164,22 @@ export class HttpLearningBondApi implements LearningBondApi {
 
   cancelLaunch(): Observable<WriteOutcome> {
     return toWrite(this.http.delete<null>(`${this.baseUrl}/learning-bond/launch`));
+  }
+
+  guardianPage(token: string): Observable<GuardianPageResult<GuardianLearningBond>> {
+    return toGuardianPage(
+      this.http.get<GuardianLearningBond>(
+        `${this.baseUrl}/g/learning-bond/${encodeURIComponent(token)}/page`,
+      ),
+    );
+  }
+
+  choose(token: string, choice: 'NotNow' | 'NotInterested'): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(`${this.baseUrl}/g/learning-bond/${encodeURIComponent(token)}/choice`, {
+        choice,
+      }),
+    );
   }
 
   agreement(): Observable<LoadResult<LearningBondAgreement>> {

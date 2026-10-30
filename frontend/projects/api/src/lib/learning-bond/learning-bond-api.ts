@@ -2,6 +2,8 @@ import type { Observable } from 'rxjs';
 import type { LoadResult } from '../load-result';
 import type { WriteOutcome } from '../write-outcome';
 import type { LearningBondAgreement } from './learning-bond-agreement';
+import type { GuardianPageResult } from '../guardian/guardian-page-result';
+import type { GuardianLearningBond } from './guardian-learning-bond';
 import type { LearningBondFamilies } from './learning-bond-families';
 import type { LearningBondHousehold } from './learning-bond-household';
 import type { LearningBondInviteOutcome } from './learning-bond-invite-outcome';
@@ -26,6 +28,10 @@ export interface LearningBondApi {
   status(): Observable<LoadResult<LearningBondStatus>>;
   /** GET /g/learning-bond/{token}: a guardian link; not-found for an unknown link, a suspended organization or the module off. */
   link(token: string): Observable<LoadResult<LearningBondLink>>;
+  /** GET /g/learning-bond/{token}/page: the guardian's page, or the code step for a new device (L2-144). */
+  guardianPage(token: string): Observable<GuardianPageResult<GuardianLearningBond>>;
+  /** POST /g/learning-bond/{token}/choice: "NotNow" or "NotInterested". */
+  choose(token: string, choice: 'NotNow' | 'NotInterested'): Observable<WriteOutcome>;
   /** GET /learning-bond/agreement: the current version, the organization's acceptance and the open signer request. */
   agreement(): Observable<LoadResult<LearningBondAgreement>>;
   /** POST /learning-bond/agreement/acceptances: accepts the current version; invalid without the authority box. */

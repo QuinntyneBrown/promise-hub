@@ -110,10 +110,10 @@ public static class GuardianEndpoints
 
     public const string EnrollCookie = "ph_enroll_device";
 
-    private static GuardianRequest Request(string token, HttpContext http) =>
+    internal static GuardianRequest Request(string token, HttpContext http) =>
         new(token, http.Request.Cookies[DeviceCookie], http.Request.Headers.UserAgent.ToString());
 
-    private static IResult ToHttp(GuardianResult result) => result.Outcome switch
+    internal static IResult ToHttp(GuardianResult result) => result.Outcome switch
     {
         GuardianOutcome.Ok => Results.Ok(result.Value),
         GuardianOutcome.Done => Results.NoContent(),
