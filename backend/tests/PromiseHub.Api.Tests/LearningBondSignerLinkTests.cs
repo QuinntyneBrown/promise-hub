@@ -54,6 +54,52 @@ public sealed partial class LearningBondSignerLinkTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.OK, (await anonymous.GetAsync($"/sign/learning-bond/{token}")).StatusCode);
     }
 
+    // L2-137 criterion 2: the acceptance records the signer, Grace is told in the app and by email, and the link stops working.
+    [Fact]
+    public async Task Accepting_records_the_signer_tells_the_admin_and_the_link_stops_working()
+    {
+        var token = await RequestSigner();
+        var anonymous = _factory.CreateClient();
+
+        var response = await anonymous.PostAsJsonAsync($"/sign/learning-bond/{token}/acceptances", new { authority = true });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var accepted = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("Northgate Community Church Kids", accepted.GetProperty("organization").GetString());
+        Assert.Equal("Grace Mensah", accepted.GetProperty("requestedBy").GetString());
+        Assert.Equal("Rev. Angela Baptiste", accepted.GetProperty("name").GetString());
+        Assert.Equal("Board chair", accepted.GetProperty("title").GetString());
+        Assert.Equal("angela.baptiste@northgate.example", accepted.GetProperty("email").GetString());
+        Assert.Equal(2, accepted.GetProperty("version").GetInt32());
+        Assert.Equal(_factory.Clock.GetUtcNow(), accepted.GetProperty("acceptedAt").GetDateTimeOffset());
+        Assert.Equal("Rev. Angela Baptiste|Board chair|angela.baptiste@northgate.example|2|",
+            Scalar("SELECT AcceptedByName || '|' || SignerTitle || '|' || SignerEmail || '|' || AgreementVersion || '|' || COALESCE(AcceptedByMembershipId, '') FROM LearningBondAgreementAcceptances "
+            + $"WHERE OrganizationId = '{Upper(DatabaseSeeder.Northgate)}'"));
+        Assert.Equal("Signer: Rev. Angela Baptiste|Learning Bond data-handling agreement version 2 accepted by Rev. Angela Baptiste, Board chair",
+            Scalar("SELECT ActorName || '|' || Summary FROM AuditEntries WHERE Action = 'Created' AND RecordType = 'LearningBondAgreementAcceptance'"));
+
+        var grace = _factory.ClientFor(Grace);
+        var agreement = await grace.GetFromJsonAsync<JsonElement>("/learning-bond/agreement");
+        Assert.Equal("Rev. Angela Baptiste", agreement.GetProperty("acceptance").GetProperty("acceptedBy").GetString());
+        Assert.Equal(JsonValueKind.Null, agreement.GetProperty("signer").ValueKind);
+        var notice = Assert.Single((await grace.GetFromJsonAsync<JsonElement>("/notifications")).GetProperty("items").EnumerateArray());
+        Assert.Equal("agreement", notice.GetProperty("kind").GetString());
+        Assert.Equal("Rev. Angela Baptiste, Board chair, accepted the Learning Bond data-handling agreement version 2.", notice.GetProperty("text").GetString());
+        Assert.Equal("/settings/learning-bond/agreement", notice.GetProperty("link").GetString());
+        var (to, subject) = Email.Sent[^1];
+        Assert.Equal("grace@northgate.example", to);
+        Assert.Equal("Rev. Angela Baptiste accepted the Learning Bond agreement", subject);
+        Assert.DoesNotContain(token, string.Join('\n', Rows("SELECT Summary || COALESCE(BeforeJson, '') || COALESCE(AfterJson, '') FROM AuditEntries")), StringComparison.Ordinal);
+
+        var again = await anonymous.GetAsync($"/sign/learning-bond/{token}");
+        Assert.Equal(HttpStatusCode.Gone, again.StatusCode);
+        Assert.Equal("This link has expired. Ask Northgate Community Church Kids to send a new one.",
+            (await again.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("message").GetString());
+        Assert.Equal(HttpStatusCode.Gone, (await anonymous.PostAsJsonAsync($"/sign/learning-bond/{token}/acceptances", new { authority = true })).StatusCode);
+        Assert.Equal(HttpStatusCode.OK,
+            (await grace.PutAsJsonAsync("/settings/modules", new { on = new[] { "Roster", "RollCall", "QuickCards", "Messages", "LearningBond" } })).StatusCode);
+    }
+
     // Grace at Northgate turns Messages on (Learning Bond needs Roster and Messages before the agreement is offered) and names Angela.
     private async Task<string> RequestSigner()
     {

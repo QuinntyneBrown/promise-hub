@@ -2359,7 +2359,7 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.Property<long>("AcceptedAt")
                         .HasColumnType("INTEGER");
 
-                    b.Property<Guid>("AcceptedByMembershipId")
+                    b.Property<Guid?>("AcceptedByMembershipId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("AcceptedByName")
@@ -2371,6 +2371,14 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SignerEmail")
+                        .HasMaxLength(320)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SignerTitle")
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");

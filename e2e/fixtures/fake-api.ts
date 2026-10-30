@@ -146,6 +146,12 @@ const NOTIFICATION_KINDS: {
     hint: "When someone asks for a new invitation link.",
     receives: (m) => m.role === "Admin",
   },
+  {
+    key: "agreement",
+    name: "Learning Bond agreement",
+    hint: "When a named signer accepts the Learning Bond data-handling agreement.",
+    receives: (m) => m.role === "Admin" || m.role === "ProgramDirector",
+  },
 ];
 
 const can = {
@@ -3353,7 +3359,9 @@ export class FakeApi {
 
   /** POST /sign/learning-bond/{token}/acceptances (L2-137 criterion 2): anonymous; the requesting admin is told in the app and by email. */
   private learningBondAcceptAsSigner(route: Route, token: string): Promise<void> {
-    return this.learningBond.acceptAsSigner(route, token, (id) => this.organizationDetailsOf(id).name, "2026-11-05T21:30:00Z");
+    return this.learningBond.acceptAsSigner(route, token, (id) => this.organizationDetailsOf(id).name, "2026-11-05T21:30:00Z", (organizationId, membershipId, text) =>
+      this.notify(organizationId, [membershipId], "agreement", text, "/settings/learning-bond/agreement"),
+    );
   }
 
   /** GET /g/learning-bond/{token}: the organization from the link, then the module gate; every refusal is the same bare 404 (L2-162 criterion 6). */

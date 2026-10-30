@@ -20,6 +20,9 @@ public sealed class NotificationKinds(IModuleGate modules)
         new("mentoring", [ModuleId.Mentoring], "At-risk flags", "When a mentor flags a youth as at risk.", r => RolePermissions.Has(r, Permission.ReviewAtRiskFlags)),
         new("requests", [ModuleId.Roster], "Family data requests", "When a household asks for a copy or deletion of its data.", r => RolePermissions.Has(r, Permission.ManageSettings)),
         new("staff", [ModuleId.Roster], "Staff invitations", "When someone asks for a new invitation link.", r => RolePermissions.Has(r, Permission.ManageStaff)),
+        // Roster and Messages, not Learning Bond: the agreement is accepted before Learning Bond can be on (ADR 0077, ADR 0078).
+        new("agreement", [ModuleId.Roster, ModuleId.Messages], "Learning Bond agreement", "When a named signer accepts the Learning Bond data-handling agreement.",
+            r => RolePermissions.Has(r, Permission.ManageSettings)),
     ];
 
     /// <summary>The keys of the kinds whose modules are all on for the current organization.</summary>

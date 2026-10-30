@@ -344,6 +344,8 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
         {
             e.HasIndex(a => new { a.OrganizationId, a.AgreementVersion });
             e.Property(a => a.AcceptedByName).HasMaxLength(200);
+            e.Property(a => a.SignerTitle).HasMaxLength(Domain.LearningBond.LearningBondSignerRequest.MaximumText);
+            e.Property(a => a.SignerEmail).HasMaxLength(320);
             e.Property(a => a.AcceptedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
         });
         // A named signer's single-use link is kept only as its hash (L2-137).
