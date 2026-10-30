@@ -51,7 +51,8 @@ test.describe('Learning Bond signer page', () => {
     await signer.accept();
 
     await expect(signer.heading).toHaveText('Thank you, Rev. Angela Baptiste');
-    await expect(signer.accepted).toContainText('Accepted on Thu 5 Nov 2026 at 4:30 pm, version 2');
+    // The time is shown in the viewer's time zone, so only the day and version are fixed here.
+    await expect(signer.accepted).toContainText(/Accepted on Thu 5 Nov 2026 at \d{1,2}:30 [ap]m, version 2/);
     await expect(signer.accepted).toContainText('Recorded as Rev. Angela Baptiste, Board chair, angela.baptiste@northgate.example. Grace Mensah has been told. You can close this page.');
     expect(api.learningBond.hasAccepted('org-northgate')).toBe(true);
     expect(api.learningBond.adminEmails).toEqual([{ to: 'grace@northgate.example', subject: 'Rev. Angela Baptiste accepted the Learning Bond agreement' }]);
