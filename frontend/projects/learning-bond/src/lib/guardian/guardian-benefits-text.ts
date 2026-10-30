@@ -52,6 +52,29 @@ export interface GuardianBenefitsText {
   markedSent: string;
   markedSentText: (program: string) => string;
   backToBenefits: string;
+  remindersHeading: string;
+  remindersLead: string;
+  reminderTitle: (kind: string, subject: string) => string;
+  reminderWhen: (kind: string, date: string) => string;
+  turnOff: string;
+  turnOffLabel: (title: string) => string;
+  off: string;
+  noReminders: string;
+  noRemindersText: string;
+  yourReminders: string;
+  totalHeading: string;
+  unlockedLabel: string;
+  unlockedLine: (amount: string) => string;
+  nothingConfirmed: string;
+  appliedFor: (amount: string) => string;
+  seeTotal: string;
+  byChild: string;
+  childColumn: string;
+  streamColumn: string;
+  confirmedColumn: string;
+  appliedColumn: string;
+  family: string;
+  upTo: (amount: string) => string;
 }
 
 const en: GuardianBenefitsText = {
@@ -135,6 +158,42 @@ const en: GuardianBenefitsText = {
   markedSentText: (program) =>
     `You sent your ${program} form. The SIN box on it is left for you to fill in.`,
   backToBenefits: 'Back to your benefits',
+  remindersHeading: 'Your reminders',
+  remindersLead:
+    'One text at 10 am on each date that matters, with what to do and a link. Turn any off.',
+  reminderTitle: (kind, subject) =>
+    kind === 'Taxes'
+      ? `File your ${subject} taxes`
+      : kind === 'TurnsSix'
+        ? `${subject} turns 6`
+        : kind === 'TurnsEighteen'
+          ? `${subject} turns 18`
+          : `${subject} renews`,
+  reminderWhen: (kind, date) =>
+    kind === 'Taxes'
+      ? `${date}, then every March 15`
+      : kind === 'Renewal'
+        ? date
+        : `${date} · a text 30 days before`,
+  turnOff: 'Turn off',
+  turnOffLabel: (title) => `Turn off ${title}`,
+  off: 'Off',
+  noReminders: 'No reminders',
+  noRemindersText: 'Reminders appear after a benefits check.',
+  yourReminders: 'Your reminders',
+  totalHeading: 'Your total',
+  unlockedLabel: 'Unlocked so far',
+  unlockedLine: (amount) => `Unlocked so far: ${amount}`,
+  nothingConfirmed: 'Nothing confirmed yet',
+  appliedFor: (amount) => `Applied for: up to ${amount}`,
+  seeTotal: 'See your total',
+  byChild: 'By child and stream',
+  childColumn: 'Child',
+  streamColumn: 'Stream',
+  confirmedColumn: 'Confirmed',
+  appliedColumn: 'Applied for',
+  family: 'Your family',
+  upTo: (amount) => `up to ${amount}`,
 };
 
 const es: GuardianBenefitsText = {
@@ -194,6 +253,42 @@ const es: GuardianBenefitsText = {
   markSent: 'Marcar como enviado',
   markedSent: 'Marcado como enviado',
   backToBenefits: 'Volver a sus beneficios',
+  remindersHeading: 'Sus recordatorios',
+  remindersLead:
+    'Un mensaje a las 10 de la mañana en cada fecha que importa, con qué hacer y un enlace. Puede desactivar cualquiera.',
+  reminderTitle: (kind, subject) =>
+    kind === 'Taxes'
+      ? `Presente sus impuestos de ${subject}`
+      : kind === 'TurnsSix'
+        ? `${subject} cumple 6 años`
+        : kind === 'TurnsEighteen'
+          ? `${subject} cumple 18 años`
+          : `${subject} se renueva`,
+  reminderWhen: (kind, date) =>
+    kind === 'Taxes'
+      ? `${date}, y cada 15 de marzo`
+      : kind === 'Renewal'
+        ? date
+        : `${date} · un mensaje 30 días antes`,
+  turnOff: 'Desactivar',
+  turnOffLabel: (title) => `Desactivar ${title}`,
+  off: 'Desactivado',
+  noReminders: 'Sin recordatorios',
+  noRemindersText: 'Los recordatorios aparecen después de revisar los beneficios.',
+  yourReminders: 'Sus recordatorios',
+  totalHeading: 'Su total',
+  unlockedLabel: 'Desbloqueado hasta ahora',
+  unlockedLine: (amount) => `Desbloqueado hasta ahora: ${amount}`,
+  nothingConfirmed: 'Nada confirmado todavía',
+  appliedFor: (amount) => `Solicitado: hasta ${amount}`,
+  seeTotal: 'Ver su total',
+  byChild: 'Por hijo y programa',
+  childColumn: 'Hijo',
+  streamColumn: 'Programa',
+  confirmedColumn: 'Confirmado',
+  appliedColumn: 'Solicitado',
+  family: 'Su familia',
+  upTo: (amount) => `hasta ${amount}`,
 };
 
 const fr: GuardianBenefitsText = {
@@ -258,6 +353,42 @@ const fr: GuardianBenefitsText = {
   markSent: 'Marquer comme envoyé',
   markedSent: 'Marqué comme envoyé',
   backToBenefits: 'Retour à vos prestations',
+  remindersHeading: 'Vos rappels',
+  remindersLead:
+    'Un texto à 10 h à chaque date importante, avec quoi faire et un lien. Désactivez-en un au besoin.',
+  reminderTitle: (kind, subject) =>
+    kind === 'Taxes'
+      ? `Produire votre déclaration de ${subject}`
+      : kind === 'TurnsSix'
+        ? `${subject} aura 6 ans`
+        : kind === 'TurnsEighteen'
+          ? `${subject} aura 18 ans`
+          : `${subject} se renouvelle`,
+  reminderWhen: (kind, date) =>
+    kind === 'Taxes'
+      ? `${date}, puis chaque 15 mars`
+      : kind === 'Renewal'
+        ? date
+        : `${date} · un texto 30 jours avant`,
+  turnOff: 'Désactiver',
+  turnOffLabel: (title) => `Désactiver ${title}`,
+  off: 'Désactivé',
+  noReminders: 'Aucun rappel',
+  noRemindersText: 'Les rappels apparaissent après la vérification des prestations.',
+  yourReminders: 'Vos rappels',
+  totalHeading: 'Votre total',
+  unlockedLabel: 'Débloqué jusqu’ici',
+  unlockedLine: (amount) => `Débloqué jusqu’ici : ${amount}`,
+  nothingConfirmed: 'Rien de confirmé pour l’instant',
+  appliedFor: (amount) => `Demandé : jusqu’à ${amount}`,
+  seeTotal: 'Voir votre total',
+  byChild: 'Par enfant et par programme',
+  childColumn: 'Enfant',
+  streamColumn: 'Programme',
+  confirmedColumn: 'Confirmé',
+  appliedColumn: 'Demandé',
+  family: 'Votre famille',
+  upTo: (amount) => `jusqu’à ${amount}`,
 };
 
 export function guardianBenefitsText(code: string): GuardianBenefitsText {

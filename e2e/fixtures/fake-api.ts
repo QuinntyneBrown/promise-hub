@@ -2314,6 +2314,21 @@ export class FakeApi {
     ],
     [
       "GET",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/reminders$/,
+      (route, p) => this.learningBondReminders(route, p["token"]!),
+    ],
+    [
+      "PUT",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/reminders\/(?<id>[^/]+)\/off$/,
+      (route, p) => this.learningBondReminderOff(route, p["token"]!, p["id"]!),
+    ],
+    [
+      "GET",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/total$/,
+      (route, p) => this.learningBondTotal(route, p["token"]!),
+    ],
+    [
+      "GET",
       /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/benefits\/consent$/,
       (route, p) => this.benefitsConsentPage(route, p["token"]!),
     ],
@@ -4111,6 +4126,41 @@ export class FakeApi {
         fields: review.fields,
         document: a.document && !a.document.sentAt ? a.document : null,
         benefitsOffer: !this.learningBond.benefitsConsented.has(found.household.id) && !this.learningBond.benefitsDismissed.has(found.household.id),
+      },
+    });
+  }
+
+  /** GET /g/learning-bond/{token}/reminders (L2-157 criterion 1). */
+  private async learningBondReminders(route: Route, token: string): Promise<void> {
+    const scope = await this.learningBondGuardianScope(route, token);
+    if (!scope) return;
+    return route.fulfill({ json: { language: this.learningBondLinkOf(token)!.language, organization: "Harbourview Youth Collective", reminders: this.learningBond.dateReminders } });
+  }
+
+  /** PUT /g/learning-bond/{token}/reminders/{id}/off (L2-157 criterion 3). */
+  private async learningBondReminderOff(route: Route, token: string, id: string): Promise<void> {
+    const scope = await this.learningBondGuardianScope(route, token);
+    if (!scope) return;
+    const reminder = this.learningBond.dateReminders.find((r) => r.id === id);
+    if (!reminder) return route.fulfill({ status: 404 });
+    reminder.turnedOff = true;
+    return route.fulfill({ status: 204 });
+  }
+
+  /** GET /g/learning-bond/{token}/total (L2-158): the household's own total. */
+  private async learningBondTotal(route: Route, token: string): Promise<void> {
+    const scope = await this.learningBondGuardianScope(route, token);
+    if (!scope) return;
+    const lines = this.learningBond.totalLines;
+    const confirmed = lines.filter((l) => l.confirmed).reduce((s, l) => s + l.amount, 0);
+    return route.fulfill({
+      json: {
+        language: this.learningBondLinkOf(token)!.language,
+        organization: "Harbourview Youth Collective",
+        confirmed,
+        estimated: lines.filter((l) => !l.confirmed).reduce((s, l) => s + l.amount, 0),
+        nothingConfirmed: confirmed === 0,
+        lines,
       },
     });
   }

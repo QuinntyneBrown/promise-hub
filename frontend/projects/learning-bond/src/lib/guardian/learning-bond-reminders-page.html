@@ -1,0 +1,71 @@
+<ph-guardian-shell [organization]="organization()" [attr.lang]="language()">
+  @let t = text();
+  @let b = words();
+  @let r = result();
+  @if (!r) {
+    <h1 class="visually-hidden">{{ t.loading }}</h1>
+    <ph-skeleton shape="card" [attr.aria-label]="t.loading" />
+  } @else {
+    @switch (r.status) {
+      @case ('loaded') {
+        @let p = r.value;
+        <div class="stack">
+          <h1>{{ b.remindersHeading }}</h1>
+          <ph-agent-message [speaker]="t.speaker" [text]="b.remindersLead" />
+          @if (p.reminders.length) {
+            <ph-card [flush]="true">
+              <div data-testid="reminders">
+                <ph-list [label]="b.remindersHeading" [inset]="true">
+                  @for (item of p.reminders; track item.id) {
+                    <ph-list-item [title]="title(item)" [meta]="when(item)">
+                      @if (item.turnedOff) {
+                        <ph-badge>{{ b.off }}</ph-badge>
+                      } @else {
+                        <ph-button
+                          size="sm"
+                          variant="ghost"
+                          [label]="b.turnOffLabel(title(item))"
+                          (click)="turnOff(p, item)"
+                          >{{ b.turnOff }}</ph-button
+                        >
+                      }
+                    </ph-list-item>
+                  }
+                </ph-list>
+              </div>
+            </ph-card>
+          } @else {
+            <ph-card [flush]="true">
+              <ph-empty-state
+                icon="notifications"
+                [title]="b.noReminders"
+                [text]="b.noRemindersText"
+              />
+            </ph-card>
+          }
+          <div>
+            <ph-button variant="ghost" [link]="['/g/learning-bond', token()]">{{
+              t.familyPage
+            }}</ph-button>
+          </div>
+        </div>
+      }
+      @case ('gone') {
+        <h1>{{ t.expiredHeading }}</h1>
+        <ph-card>
+          <p class="plain">{{ t.expiredText(r.organization ?? '') }}</p>
+        </ph-card>
+      }
+      @default {
+        <h1>{{ t.pageTitle }}</h1>
+        <ph-card [flush]="true">
+          <ph-empty-state icon="warning" tone="error" [title]="t.errorTitle" [text]="t.errorText">
+            <ph-button variant="primary" icon="refresh" (click)="load()">{{
+              t.tryAgain
+            }}</ph-button>
+          </ph-empty-state>
+        </ph-card>
+      }
+    }
+  }
+</ph-guardian-shell>

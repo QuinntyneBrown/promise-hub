@@ -16,6 +16,8 @@ import { LearningBondApplicationChange } from './learning-bond-application-chang
 import { LearningBondEstimate } from './learning-bond-estimate';
 import { LearningBondProgress } from './learning-bond-progress';
 import { LearningBondPaused } from './learning-bond-paused';
+import { LearningBondReminders } from './learning-bond-reminders';
+import { LearningBondTotal } from './learning-bond-total';
 import { Benefits } from './benefits';
 import { BenefitsConsent } from './benefits-consent';
 import { BenefitsIntake } from './benefits-intake';
@@ -302,6 +304,25 @@ export class HttpLearningBondApi implements LearningBondApi {
           ),
         ),
     );
+  }
+
+  reminders(token: string): Observable<GuardianPageResult<LearningBondReminders>> {
+    return toGuardianPage(
+      this.http.get<LearningBondReminders>(`${this.guardianUrl(token)}/reminders`),
+    );
+  }
+
+  turnOffReminder(token: string, id: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.put<null>(
+        `${this.guardianUrl(token)}/reminders/${encodeURIComponent(id)}/off`,
+        null,
+      ),
+    );
+  }
+
+  total(token: string): Observable<GuardianPageResult<LearningBondTotal>> {
+    return toGuardianPage(this.http.get<LearningBondTotal>(`${this.guardianUrl(token)}/total`));
   }
 
   dismissBenefitsOffer(token: string): Observable<WriteOutcome> {

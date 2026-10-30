@@ -10,6 +10,8 @@ import type { LearningBondApplicationChange } from './learning-bond-application-
 import type { LearningBondEstimate } from './learning-bond-estimate';
 import type { LearningBondProgress } from './learning-bond-progress';
 import type { LearningBondPaused } from './learning-bond-paused';
+import type { LearningBondReminders } from './learning-bond-reminders';
+import type { LearningBondTotal } from './learning-bond-total';
 import type { Benefits } from './benefits';
 import type { BenefitsConsent } from './benefits-consent';
 import type { BenefitsIntake } from './benefits-intake';
@@ -141,6 +143,12 @@ export interface LearningBondApi {
   markBenefitSent(token: string, id: string): Observable<WriteOutcome>;
   /** The filled form's address, for a program the guardian sends themselves. */
   benefitFormUrl(token: string, id: string): string;
+  /** GET /g/learning-bond/{token}/reminders: the reminders still ahead (L2-157). */
+  reminders(token: string): Observable<GuardianPageResult<LearningBondReminders>>;
+  /** PUT /g/learning-bond/{token}/reminders/{id}/off: it is never sent (L2-157 criterion 3). */
+  turnOffReminder(token: string, id: string): Observable<WriteOutcome>;
+  /** GET /g/learning-bond/{token}/total: the household's running total (L2-158). */
+  total(token: string): Observable<GuardianPageResult<LearningBondTotal>>;
   /** GET /learning-bond/agreement: the current version, the organization's acceptance and the open signer request. */
   agreement(): Observable<LoadResult<LearningBondAgreement>>;
   /** POST /learning-bond/agreement/acceptances: accepts the current version; invalid without the authority box. */

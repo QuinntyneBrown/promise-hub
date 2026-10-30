@@ -98,6 +98,31 @@
               </ph-list>
             </div>
           </ph-card>
+          @if (total(); as sum) {
+            @if (sum.lines.length) {
+              @let b = benefitsWords();
+              <ph-card [title]="b.totalHeading">
+                <div class="stack" data-testid="learning-bond-total">
+                  <p class="plain">
+                    <strong>{{
+                      sum.nothingConfirmed
+                        ? b.nothingConfirmed
+                        : b.unlockedLine(t.amount(sum.confirmed))
+                    }}</strong>
+                  </p>
+                  @if (sum.estimated) {
+                    <p class="plain muted">{{ b.appliedFor(t.amount(sum.estimated)) }}</p>
+                  }
+                  <div class="cluster">
+                    <ph-button icon="arrow-right" [link]="['total']">{{ b.seeTotal }}</ph-button>
+                    <ph-button variant="ghost" [link]="['reminders']">{{
+                      b.yourReminders
+                    }}</ph-button>
+                  </div>
+                </div>
+              </ph-card>
+            }
+          }
           @if (page.benefits; as offer) {
             @let b = benefitsWords();
             @if (offer.offered) {
