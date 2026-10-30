@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 91 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="91" data-video-title="Report Learning Bond outcomes" data-parts="Introduction|The dashboard|By program|Export|Phone and roles|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 91</div>
+  <h1>Report Learning Bond outcomes</h1>
+  <p class="lead">Uptake and dollars unlocked, in counts and sums, never a family</p>
+</section>
+
+<section id="dashboard-clip" data-part="1" data-cue="Learning Bond in the menu opens the covered households" data-clip="clips/dashboard-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>The dashboard</h3><p>Six figures, a row per program, a period, the export.</p></div>
+</section>
+
+<section id="programs" data-part="2" data-cue="Below the figures, a row for each covered program.">
+  <h2>Fewer than 5, dollars withheld</h2>
+  <img class="shot" alt="By covered program with Winter Camp 2026 reading Fewer than 5" src="shots/desktop-programs.png">
+  <p class="muted small">LearningBondFigures · computed on read · ADR 0084</p>
+</section>
+
+<section id="export" data-part="3" data-cue="Export for funders writes the same figures">
+  <div class="cols">
+    <img class="shot" alt="Export for funders" src="shots/desktop-export.png">
+    <img class="shot" alt="The CSV is ready, kept 7 days" src="shots/desktop-export-ready.png">
+  </div>
+  <p class="muted small">POST /learning-bond/exports · &lt;5 and blank dollars · ReportExport · audited</p>
+</section>
+
+<section id="phone-clip" data-part="4" data-cue="On a phone, the figures stack in one column" data-clip="clips/dashboard-phone.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>On a phone</h3><p>One column, the key numbers.</p></div>
+</section>
+
+<section id="forbidden" data-part="4" data-cue="A youth worker who opens it">
+  <h2>Report roles only</h2>
+  <img class="shot" alt="Admins and program directors see the dashboard" src="shots/desktop-forbidden.png">
+</section>
+
+<section id="testing" data-part="5" data-cue="The API tests cover the zero state">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>LearningBondDashboardTests</code>: zero, Fewer than 5, 403, 404, another organization</li>
+    <li>The funder CSV: rows, markers, no names, audit, gone after 7 days</li>
+    <li><code>dashboard</code> spec · laptop and phone · axe</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="6" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Six figures, computed on read</li><li>Learning Bond and benefits, split</li><li>Fewer than 5: masked, dollars withheld</li><li>The funder CSV: per program and total, 7 days, audited</li></ul>
+  <p class="muted">Next: the agent that explains each step</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
