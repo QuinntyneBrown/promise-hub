@@ -116,4 +116,15 @@ In dependency order: the gate, cipher and audit first, then the admin side, then
 | 92 | [Model-backed Learning Bond agent](92-model-backed-learning-bond-agent.md) | Guardian | Supporting | Adds the model behind the same bubble without changing earlier tests. |
 
 
+Parallel waves (each wave starts after the one before is merged):
+
+1. 82
+2. 83
+3. 84 and 85 in parallel
+4. 86
+5. 87, 88 and 89 in parallel
+6. 90, 91 and 92 in parallel
+
+Critical path: 82, 83, 85, 86, 89, 90.
+
 Deferred from Waypoint: the standalone help and support pages, the server-side rendered public site, Waypoint's traceability script and architecture tests (PromiseHub does not write them), and a real donation payment provider.
