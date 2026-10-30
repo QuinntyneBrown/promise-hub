@@ -32,6 +32,7 @@ import {
   PhTextField,
 } from '@promisehub/components';
 import { guardianBenefitsText } from './guardian-benefits-text';
+import { LearningBondAgentBubble } from './learning-bond-agent-bubble';
 import { guardianLearningBondText } from './guardian-learning-bond-text';
 import {
   LearningBondWithdrawData,
@@ -67,6 +68,7 @@ type Step = 'contact' | 'code' | 'locked';
 })
 export class GuardianLearningBondPage implements OnInit {
   private readonly api = inject(LEARNING_BOND_API);
+  protected readonly agent = new LearningBondAgentBubble(this.api, inject(PhDialogs), 'Landing');
   private readonly guardian = inject(GUARDIAN_API);
 
   readonly token = input.required<string>();
@@ -118,6 +120,7 @@ export class GuardianLearningBondPage implements OnInit {
     this.result.set(null);
     this.api.guardianPage(this.token()).subscribe((r) => {
       this.result.set(r);
+      if (r.status === 'loaded') this.agent.load(this.token());
       if (r.status === 'loaded') this.loadTotal();
     });
   }

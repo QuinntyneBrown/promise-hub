@@ -121,6 +121,10 @@ public static class LearningBondGuardianEndpoints
             GuardianEndpoints.ToHttp(await handler.TurnOffAsync(GuardianEndpoints.Request(token, http), id, ct)));
         guardian.MapGet("/total", async (string token, LearningBondTotalHandler handler, HttpContext http, CancellationToken ct) =>
             GuardianEndpoints.ToHttp(await handler.GetAsync(GuardianEndpoints.Request(token, http), ct)));
+        guardian.MapPost("/agent", async (string token, AskLearningBondAgentRequest request, LearningBondAgent agent, HttpContext http, CancellationToken ct) =>
+            GuardianEndpoints.ToHttp(await agent.AskAsync(GuardianEndpoints.Request(token, http), request, ct)));
+        guardian.MapGet("/agent/conversation", async (string token, LearningBondAgent agent, HttpContext http, CancellationToken ct) =>
+            GuardianEndpoints.ToHttp(await agent.ConversationAsync(GuardianEndpoints.Request(token, http), ct)));
         guardian.MapPost("/callback", async (string token, CallbackRequest request, LearningBondGuardianHandler handler, HttpContext http, CancellationToken ct) =>
             await handler.RequestCallAsync(new GuardianRequest(token, http.Request.Cookies[GuardianEndpoints.DeviceCookie], http.Request.Headers.UserAgent.ToString()), request, ct)
                 switch

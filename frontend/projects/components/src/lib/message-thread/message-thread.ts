@@ -25,6 +25,14 @@ export class PhMessageThread {
   readonly busy = input(false);
   /** The server's error for the message, shown under the field. */
   readonly error = input<string | null>(null);
+  /** A hint under the field, such as what never to type in it. */
+  readonly help = input<string | null>(null);
+  /** The composer's words, in the reader's language. */
+  readonly composerLabel = input('Write a message');
+  readonly fieldLabel = input('Message');
+  readonly sendLabel = input('Send');
+  readonly notSentLabel = input('Not sent.');
+  readonly tryAgainLabel = input('Try again');
 
   /** The words being written; the page clears them once sent and keeps them when the server refuses them. */
   readonly draft = model('');

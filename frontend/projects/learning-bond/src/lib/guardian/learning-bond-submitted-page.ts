@@ -22,8 +22,10 @@ import {
   PhSkeleton,
   PhStepMarker,
   PhStepper,
+  PhDialogs,
 } from '@promisehub/components';
 import { guardianBenefitsText } from './guardian-benefits-text';
+import { LearningBondAgentBubble } from './learning-bond-agent-bubble';
 import { guardianLearningBondText } from './guardian-learning-bond-text';
 import { LearningBondApplicationRow } from './learning-bond-application-row';
 import { learningBondApplicationRows } from './learning-bond-application-rows';
@@ -62,6 +64,7 @@ interface NextStep {
 })
 export class LearningBondSubmittedPage implements OnInit {
   private readonly api = inject(LEARNING_BOND_API);
+  protected readonly agent = new LearningBondAgentBubble(this.api, inject(PhDialogs), 'Submitted');
 
   readonly token = input.required<string>();
   readonly childId = input.required<string>();
@@ -97,7 +100,10 @@ export class LearningBondSubmittedPage implements OnInit {
 
   protected load(): void {
     this.result.set(null);
-    this.api.progress(this.token(), this.childId()).subscribe((r) => this.result.set(r));
+    this.api.progress(this.token(), this.childId()).subscribe((r) => {
+      this.result.set(r);
+      if (r.status === 'loaded') this.agent.load(this.token());
+    });
   }
 
   /** Not now on the benefits offer is remembered; the offer stays on the guardian page (L2-153 criterion 1). */

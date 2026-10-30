@@ -19,6 +19,9 @@ import { LearningBondPaused } from './learning-bond-paused';
 import { LearningBondDashboard } from './learning-bond-dashboard';
 import { LearningBondExportCreated } from './learning-bond-export-created';
 import { LearningBondReminders } from './learning-bond-reminders';
+import { LearningBondAgentReply } from './learning-bond-agent-reply';
+import { LearningBondAgentStep } from './learning-bond-agent-step';
+import { LearningBondConversation } from './learning-bond-conversation';
 import { LearningBondTotal } from './learning-bond-total';
 import { Benefits } from './benefits';
 import { BenefitsConsent } from './benefits-consent';
@@ -343,6 +346,25 @@ export class HttpLearningBondApi implements LearningBondApi {
 
   total(token: string): Observable<GuardianPageResult<LearningBondTotal>> {
     return toGuardianPage(this.http.get<LearningBondTotal>(`${this.guardianUrl(token)}/total`));
+  }
+
+  askAgent(
+    token: string,
+    step: LearningBondAgentStep,
+    message?: string,
+  ): Observable<LearningBondAgentReply | null> {
+    return this.http
+      .post<LearningBondAgentReply>(`${this.guardianUrl(token)}/agent`, {
+        step,
+        message: message ?? null,
+      })
+      .pipe(catchError(() => of(null)));
+  }
+
+  agentConversation(token: string): Observable<LearningBondConversation | null> {
+    return this.http
+      .get<LearningBondConversation>(`${this.guardianUrl(token)}/agent/conversation`)
+      .pipe(catchError(() => of(null)));
   }
 
   dismissBenefitsOffer(token: string): Observable<WriteOutcome> {

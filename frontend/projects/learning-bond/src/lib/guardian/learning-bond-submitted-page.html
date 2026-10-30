@@ -41,7 +41,12 @@
                 />
               </div>
             }
-            <ph-agent-message [speaker]="t.speaker" [text]="p.explanation" />
+            <ph-agent-message [speaker]="t.speaker" [text]="agent.reply() ?? p.explanation" />
+            <div>
+              <ph-button variant="ghost" icon="sparkle" (click)="agent.open(token(), t)">{{
+                t.ask
+              }}</ph-button>
+            </div>
             @if (p.document; as d) {
               <ph-card [title]="t.documentTitle(p.provider, d.name, p.firstName)">
                 <div class="stack" data-testid="document-request">

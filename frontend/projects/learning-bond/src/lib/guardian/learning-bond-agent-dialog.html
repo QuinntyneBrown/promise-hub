@@ -1,0 +1,25 @@
+<ph-dialog [title]="data.text.askTitle">
+  @let t = data.text;
+  <div class="stack">
+    @if (conversation().length === 0) {
+      <ph-agent-message [speaker]="t.speaker" [text]="t.askEmpty" />
+    }
+    @if (failed()) {
+      <ph-alert tone="danger" [title]="t.failed" />
+    }
+    <ph-message-thread
+      [label]="t.askTitle"
+      [messages]="messages()"
+      [busy]="busy()"
+      [help]="t.askHint"
+      [composerLabel]="t.askTitle"
+      [fieldLabel]="t.askLabel"
+      [sendLabel]="t.send"
+      [(draft)]="draft"
+      (send)="send($event)"
+    />
+  </div>
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close()">{{ t.close }}</ph-button>
+  </ng-container>
+</ph-dialog>

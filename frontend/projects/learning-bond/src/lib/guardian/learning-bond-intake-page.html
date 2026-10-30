@@ -11,7 +11,12 @@
         <div class="stack">
           <ph-stepper [current]="2" [total]="5" [label]="t.step(2)" />
           <h1>{{ t.intakeHeading(i.firstName) }}</h1>
-          <ph-agent-message [speaker]="t.speaker" [text]="i.explanation" />
+          <ph-agent-message [speaker]="t.speaker" [text]="agent.reply() ?? i.explanation" />
+          <div>
+            <ph-button variant="ghost" icon="sparkle" (click)="agent.open(token(), t)">{{
+              t.ask
+            }}</ph-button>
+          </div>
           <ph-card [title]="t.recordTitle">
             <div class="stack" data-testid="intake-record">
               <p class="plain">

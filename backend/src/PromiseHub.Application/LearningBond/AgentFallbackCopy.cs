@@ -43,6 +43,38 @@ public static class AgentFallbackCopy
         _ => $"I filled in {provider}’s application from what I have. Check each field. Nothing has been sent yet; here’s exactly what goes, and to whom.",
     };
 
+    /// <summary>Reminders (L2-157).</summary>
+    public static string Reminders(string code) => code switch
+    {
+        "es" => "Un mensaje a las 10 de la mañana en cada fecha que importa, con qué hacer y un enlace. Puede desactivar cualquiera.",
+        "fr" => "Un texto à 10 h à chaque date importante, avec quoi faire et un lien. Désactivez-en un au besoin.",
+        _ => "One text at 10 am on each date that matters, with what to do and a link. Turn any off.",
+    };
+
+    /// <summary>The running total (L2-158).</summary>
+    public static string Total(string code) => code switch
+    {
+        "es" => "Esto es lo que su familia ya desbloqueó y lo que solicitó. Solo usted lo ve.",
+        "fr" => "Voici ce que votre famille a débloqué et ce qu’elle a demandé. Vous seule le voyez.",
+        _ => "Here’s what your family has unlocked and what it has applied for. Only you see this.",
+    };
+
+    /// <summary>A SIN typed into the chat (L2-146 criterion 7, L2-160 criterion 1): refused, never sent on.</summary>
+    public static string SinRefused(string code) => code switch
+    {
+        "es" => "Por favor, no escriba su SIN aquí. Va solo en la casilla del formulario.",
+        "fr" => "Veuillez ne pas écrire votre NAS ici. Il va seulement dans la case du formulaire.",
+        _ => "Please don’t type your SIN here. It goes only in the form field.",
+    };
+
+    /// <summary>What a removed number reads as in the kept conversation.</summary>
+    public static string NumberRemoved(string code) => code switch
+    {
+        "es" => "[número eliminado]",
+        "fr" => "[numéro supprimé]",
+        _ => "[number removed]",
+    };
+
     /// <summary>The benefits intake (L2-154): what is reused and how little more is asked.</summary>
     public static string BenefitsIntake(string code, IReadOnlyList<string> children) => code switch
     {

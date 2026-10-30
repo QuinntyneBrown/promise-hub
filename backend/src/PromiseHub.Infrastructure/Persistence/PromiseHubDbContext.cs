@@ -108,6 +108,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.LearningBond.LearningBondBenefitsCheck> LearningBondBenefitsChecks => Set<Domain.LearningBond.LearningBondBenefitsCheck>();
     public DbSet<Domain.LearningBond.LearningBondBenefitApplication> LearningBondBenefitApplications => Set<Domain.LearningBond.LearningBondBenefitApplication>();
     public DbSet<Domain.LearningBond.LearningBondDateReminder> LearningBondDateReminders => Set<Domain.LearningBond.LearningBondDateReminder>();
+    public DbSet<Domain.LearningBond.LearningBondAgentMessage> LearningBondAgentMessages => Set<Domain.LearningBond.LearningBondAgentMessage>();
     public DbSet<Domain.LearningBond.LearningBondSettings> LearningBondSettings => Set<Domain.LearningBond.LearningBondSettings>();
     public DbSet<DataRequest> DataRequests => Set<DataRequest>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
@@ -457,6 +458,15 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(a => a.UpdatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.Property(a => a.SubmittedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
             e.Property(a => a.StartedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+        });
+        // The household's conversation with the agent, its own to read (L2-160 criterion 6).
+        modelBuilder.Entity<Domain.LearningBond.LearningBondAgentMessage>(e =>
+        {
+            e.HasIndex(m => new { m.OrganizationId, m.HouseholdId, m.CreatedAt });
+            e.Property(m => m.Step).HasMaxLength(20);
+            e.Property(m => m.Role).HasMaxLength(20);
+            e.Property(m => m.Text).HasMaxLength(Domain.LearningBond.LearningBondAgentMessage.MaximumText);
+            e.Property(m => m.CreatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
         });
         // Reminders on the household's dates (L2-157).
         modelBuilder.Entity<Domain.LearningBond.LearningBondDateReminder>(e =>

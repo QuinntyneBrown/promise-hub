@@ -385,6 +385,18 @@ export class FakeLearningBond {
   /** The dashboard's raw figures per covered program name (LearningBondFigures); unset programs read 0. */
   readonly figures = new Map<string, { invited: number; started: number; completed: number; children: number; estLb: number; estBen: number; confLb: number; confBen: number }>();
 
+  /** step → the model's words for that step's bubble (ILanguageModel); a step with none keeps its approved fixed line. */
+  readonly agentLines = new Map<string, string>();
+
+  /** The model's answer to a question; null as when it is slow or down, so the fixed line stands. */
+  agentAnswer: string | null = null;
+
+  /** household → its conversation with the agent (LearningBondAgentMessage), readable by that household only. */
+  readonly agentConversations = new Map<string, { role: 'Guardian' | 'Agent'; text: string; step: string; at: string }[]>();
+
+  /** What reached the model: never a SIN (L2-160 criterion 1). */
+  readonly agentSent: string[] = [];
+
   /** When true, the provider refuses and nothing is sent. */
   providerFails = false;
 

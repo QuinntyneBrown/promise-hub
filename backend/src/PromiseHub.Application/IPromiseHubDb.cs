@@ -113,6 +113,7 @@ public interface IPromiseHubDb
     DbSet<Domain.LearningBond.LearningBondBenefitsCheck> LearningBondBenefitsChecks { get; }
     DbSet<Domain.LearningBond.LearningBondBenefitApplication> LearningBondBenefitApplications { get; }
     DbSet<Domain.LearningBond.LearningBondDateReminder> LearningBondDateReminders { get; }
+    DbSet<Domain.LearningBond.LearningBondAgentMessage> LearningBondAgentMessages { get; }
     DbSet<Domain.LearningBond.LearningBondSettings> LearningBondSettings { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

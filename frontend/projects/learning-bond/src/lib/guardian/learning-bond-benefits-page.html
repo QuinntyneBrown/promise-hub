@@ -17,7 +17,12 @@
           @for (blocked of p.blocked; track blocked) {
             <ph-alert tone="warning" [title]="blocked" />
           }
-          <ph-agent-message [speaker]="t.speaker" [text]="p.explanation" />
+          <ph-agent-message [speaker]="t.speaker" [text]="agent.reply() ?? p.explanation" />
+          <div>
+            <ph-button variant="ghost" icon="sparkle" (click)="agent.open(token(), t)">{{
+              t.ask
+            }}</ph-button>
+          </div>
           @if (p.incomeNote) {
             <ph-alert tone="info" [title]="p.incomeNote" />
           }

@@ -65,6 +65,15 @@ export interface GuardianLearningBondText {
   fixRequested: (organization: string, name: string) => string;
   /** The agent bubble's speaker name, read by screen readers (L2-163). */
   speaker: string;
+  /** The agent dialog (L2-160): ask a question, the conversation, and never a number in it. */
+  ask: string;
+  askTitle: string;
+  askLabel: string;
+  askHint: string;
+  askEmpty: string;
+  send: string;
+  you: string;
+  close: string;
   step: (n: number) => string;
   estimateHeading: (name: string, amount: string) => string;
   estimateNote: (name: string) => string;
@@ -256,6 +265,14 @@ const en: GuardianLearningBondText = {
   canadaLink: 'Learning Bond on canada.ca',
   step: (n) => `Step ${n} of 5`,
   speaker: 'Learning Bond',
+  ask: 'Ask a question',
+  askTitle: 'Ask Learning Bond',
+  askLabel: 'Your question',
+  askHint: 'Don’t type your SIN or any number here.',
+  askEmpty: 'Ask anything about this step. I explain; you decide.',
+  send: 'Send',
+  you: 'You',
+  close: 'Close',
   reviewHeading: (name) => `Check ${name}’s application`,
   providerTitle: 'RESP provider',
   recommended: 'Recommended',
@@ -453,6 +470,14 @@ const es: GuardianLearningBondText = {
   canadaLink: 'El Bono de Estudios en canada.ca',
   step: (n) => `Paso ${n} de 5`,
   speaker: 'Bono de Estudios',
+  ask: 'Hacer una pregunta',
+  askTitle: 'Pregunte al Bono de Estudios',
+  askLabel: 'Su pregunta',
+  askHint: 'No escriba su SIN ni ningún número aquí.',
+  askEmpty: 'Pregunte lo que quiera sobre este paso. Yo explico; usted decide.',
+  send: 'Enviar',
+  you: 'Usted',
+  close: 'Cerrar',
   reviewHeading: (name) => `Revise la solicitud de ${name}`,
   providerTitle: 'Proveedor del RESP',
   recommended: 'Recomendado',
@@ -652,6 +677,14 @@ const fr: GuardianLearningBondText = {
   canadaLink: 'Le Bon d’études sur canada.ca',
   step: (n) => `Étape ${n} sur 5`,
   speaker: 'Bon d’études',
+  ask: 'Poser une question',
+  askTitle: 'Demandez au Bon d’études',
+  askLabel: 'Votre question',
+  askHint: 'N’écrivez pas votre NAS ni aucun numéro ici.',
+  askEmpty: 'Posez une question sur cette étape. J’explique; vous décidez.',
+  send: 'Envoyer',
+  you: 'Vous',
+  close: 'Fermer',
   reviewHeading: (name) => `Vérifiez la demande de ${name}`,
   providerTitle: 'Fournisseur du REEE',
   recommended: 'Recommandé',

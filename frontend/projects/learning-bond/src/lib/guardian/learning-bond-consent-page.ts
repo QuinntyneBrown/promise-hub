@@ -26,7 +26,9 @@ import {
   PhSkeleton,
   PhStepper,
   PhTextField,
+  PhDialogs,
 } from '@promisehub/components';
+import { LearningBondAgentBubble } from './learning-bond-agent-bubble';
 import { guardianLearningBondText } from './guardian-learning-bond-text';
 
 /**
@@ -55,6 +57,7 @@ import { guardianLearningBondText } from './guardian-learning-bond-text';
 })
 export class LearningBondConsentPage implements OnInit {
   private readonly api = inject(LEARNING_BOND_API);
+  protected readonly agent = new LearningBondAgentBubble(this.api, inject(PhDialogs), 'Consent');
 
   readonly token = input.required<string>();
 
@@ -90,7 +93,10 @@ export class LearningBondConsentPage implements OnInit {
 
   protected load(): void {
     this.result.set(null);
-    this.api.consentPage(this.token()).subscribe((r) => this.result.set(r));
+    this.api.consentPage(this.token()).subscribe((r) => {
+      this.result.set(r);
+      if (r.status === 'loaded') this.agent.load(this.token());
+    });
   }
 
   protected toggle(childId: string, on: boolean): void {

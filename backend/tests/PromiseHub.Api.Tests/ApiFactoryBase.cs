@@ -64,6 +64,7 @@ public abstract class ApiFactoryBase : WebApplicationFactory<Program>
         builder.UseSetting("LearningBond:Webhooks:northfield", NorthfieldWebhookSecret);
         builder.UseSetting("LearningBond:Webhooks:maple-trust", "maple-test-secret");
         builder.UseSetting("LearningBond:Webhooks:ontario-child-benefit", "ocb-test-secret");
+        builder.UseSetting("LearningBond:Agent:TimeoutSeconds", "1");
         builder.ConfigureServices(services =>
         {
             services.AddSingleton<TimeProvider>(Clock);
@@ -73,6 +74,8 @@ public abstract class ApiFactoryBase : WebApplicationFactory<Program>
             services.AddSingleton<IEmailSender>(sp => sp.GetRequiredService<FakeEmailSender>());
             services.AddSingleton<FakeRespProviderChannel>();
             services.AddSingleton<FakeBenefitChannel>();
+            services.AddSingleton<FakeLanguageModel>();
+            services.AddSingleton<PromiseHub.Application.LearningBond.ILanguageModel>(sp => sp.GetRequiredService<FakeLanguageModel>());
             services.AddSingleton<PromiseHub.Application.LearningBond.IBenefitChannel>(sp => sp.GetRequiredService<FakeBenefitChannel>());
             services.AddSingleton<PromiseHub.Application.LearningBond.IRespProviderChannel>(sp => sp.GetRequiredService<FakeRespProviderChannel>());
             services.AddSingleton<FakePaymentProvider>();

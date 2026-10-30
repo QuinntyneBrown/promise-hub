@@ -11,7 +11,12 @@
         @let p = r.value;
         <div class="stack">
           <h1>{{ b.remindersHeading }}</h1>
-          <ph-agent-message [speaker]="t.speaker" [text]="b.remindersLead" />
+          <ph-agent-message [speaker]="t.speaker" [text]="agent.reply() ?? b.remindersLead" />
+          <div>
+            <ph-button variant="ghost" icon="sparkle" (click)="agent.open(token(), t)">{{
+              t.ask
+            }}</ph-button>
+          </div>
           @if (p.reminders.length) {
             <ph-card [flush]="true">
               <div data-testid="reminders">

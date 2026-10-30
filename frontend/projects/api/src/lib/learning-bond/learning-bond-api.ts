@@ -13,6 +13,9 @@ import type { LearningBondPaused } from './learning-bond-paused';
 import type { LearningBondDashboard } from './learning-bond-dashboard';
 import type { LearningBondExportCreated } from './learning-bond-export-created';
 import type { LearningBondReminders } from './learning-bond-reminders';
+import type { LearningBondAgentReply } from './learning-bond-agent-reply';
+import type { LearningBondAgentStep } from './learning-bond-agent-step';
+import type { LearningBondConversation } from './learning-bond-conversation';
 import type { LearningBondTotal } from './learning-bond-total';
 import type { Benefits } from './benefits';
 import type { BenefitsConsent } from './benefits-consent';
@@ -151,6 +154,14 @@ export interface LearningBondApi {
   turnOffReminder(token: string, id: string): Observable<WriteOutcome>;
   /** GET /g/learning-bond/{token}/total: the household's running total (L2-158). */
   total(token: string): Observable<GuardianPageResult<LearningBondTotal>>;
+  /** POST /g/learning-bond/{token}/agent: the agent on a step, with an optional question (L2-160); null when it failed, so the fixed line stands. */
+  askAgent(
+    token: string,
+    step: LearningBondAgentStep,
+    message?: string,
+  ): Observable<LearningBondAgentReply | null>;
+  /** GET /g/learning-bond/{token}/agent/conversation: the household's own conversation (L2-160 criterion 6); null when it failed. */
+  agentConversation(token: string): Observable<LearningBondConversation | null>;
   /** GET /learning-bond/dashboard: the figures for ViewReports, by program and period (L2-141). */
   dashboard(program: string | null, period: string): Observable<LoadResult<LearningBondDashboard>>;
   /** POST /learning-bond/exports: the funder CSV (L2-143); null when it failed. */
