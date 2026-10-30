@@ -1,0 +1,54 @@
+<form novalidate (ngSubmit)="submit()">
+  <ph-dialog
+    title="Ask someone else to sign"
+    description="They get a single-use link by email and need no PromiseHub account. The link works for 14 days."
+    icon="send"
+  >
+    <div class="stack">
+      @if (summary().length) {
+        <ph-error-summary title="Fix these to continue" [items]="summary()" />
+      }
+      @if (failed()) {
+        <ph-alert
+          tone="danger"
+          title="That didn’t go through"
+          text="No link was sent. Try again."
+        />
+      }
+      <ph-text-field
+        inputId="signer-name"
+        label="Their name"
+        name="name"
+        autocomplete="name"
+        [maxlength]="100"
+        [error]="errors()['name'] ?? null"
+        [(ngModel)]="name"
+      />
+      <ph-text-field
+        inputId="signer-title"
+        label="Their role or title"
+        name="title"
+        autocomplete="organization-title"
+        [maxlength]="100"
+        [error]="errors()['title'] ?? null"
+        [(ngModel)]="title"
+      />
+      <ph-text-field
+        inputId="signer-email"
+        label="Their email"
+        type="email"
+        name="email"
+        autocomplete="email"
+        [help]="emailHelp()"
+        [error]="errors()['email'] ?? null"
+        [(ngModel)]="email"
+      />
+    </div>
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" icon="send" [busy]="busy()"
+        >Send the link</ph-button
+      >
+    </ng-container>
+  </ph-dialog>
+</form>

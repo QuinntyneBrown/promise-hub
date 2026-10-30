@@ -72,6 +72,23 @@
                 </ph-alert>
               }
             </ph-card>
+          } @else if (a.signer; as signer) {
+            <ph-card title="Named signer" data-testid="agreement-signer">
+              <div class="stack">
+                <p class="waiting">
+                  <strong>Waiting for {{ signer.name }} to sign.</strong>
+                </p>
+                <p class="meta">{{ signerLine(signer) }}</p>
+                <div class="actions actions--start">
+                  <ph-button icon="send" [busy]="resending()" (click)="resend(signer)"
+                    >Resend</ph-button
+                  >
+                  <ph-button variant="ghost" [busy]="cancelling()" (click)="cancelSigner(signer)"
+                    >Cancel</ph-button
+                  >
+                </div>
+              </div>
+            </ph-card>
           } @else {
             <form class="stack" novalidate (ngSubmit)="accept()">
               @if (summary().length) {
@@ -90,7 +107,9 @@
                   />
                 </fieldset>
                 <div class="actions">
-                  <ph-button variant="ghost" icon="send">Ask someone else to sign</ph-button>
+                  <ph-button variant="ghost" icon="send" hasPopup="dialog" (click)="askSigner()"
+                    >Ask someone else to sign</ph-button
+                  >
                   <ph-button variant="primary" type="submit" icon="check" [busy]="accepting()"
                     >Accept</ph-button
                   >

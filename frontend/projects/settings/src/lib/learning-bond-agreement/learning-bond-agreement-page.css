@@ -57,3 +57,13 @@ fieldset {
   gap: var(--space-3);
   margin-top: var(--space-4);
 }
+.actions--start {
+  justify-content: flex-start;
+  margin-top: 0;
+}
+.waiting {
+  margin: 0;
+}
+.side .meta {
+  margin: 0;
+}

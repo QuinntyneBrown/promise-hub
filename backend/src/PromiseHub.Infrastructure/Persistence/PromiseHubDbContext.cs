@@ -94,6 +94,8 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.LearningBond.LearningBondAgreement> LearningBondAgreements => Set<Domain.LearningBond.LearningBondAgreement>();
     public DbSet<Domain.LearningBond.LearningBondAgreementAcceptance> LearningBondAgreementAcceptances => Set<Domain.LearningBond.LearningBondAgreementAcceptance>();
     public DbSet<Domain.LearningBond.LearningBondIntake> LearningBondIntakes => Set<Domain.LearningBond.LearningBondIntake>();
+    public DbSet<Domain.LearningBond.LearningBondSignerRequest> LearningBondSignerRequests => Set<Domain.LearningBond.LearningBondSignerRequest>();
+    public DbSet<Domain.LearningBond.LearningBondSettings> LearningBondSettings => Set<Domain.LearningBond.LearningBondSettings>();
     public DbSet<DataRequest> DataRequests => Set<DataRequest>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
     public DbSet<Domain.Incidents.IncidentFollowUp> IncidentFollowUps => Set<Domain.Incidents.IncidentFollowUp>();
@@ -343,6 +345,32 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.HasIndex(a => new { a.OrganizationId, a.AgreementVersion });
             e.Property(a => a.AcceptedByName).HasMaxLength(200);
             e.Property(a => a.AcceptedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+        });
+        // A named signer's single-use link is kept only as its hash (L2-137).
+        modelBuilder.Entity<Domain.LearningBond.LearningBondSignerRequest>(e =>
+        {
+            e.HasIndex(r => r.TokenHash).IsUnique();
+            e.Property(r => r.Name).HasMaxLength(Domain.LearningBond.LearningBondSignerRequest.MaximumText);
+            e.Property(r => r.Title).HasMaxLength(Domain.LearningBond.LearningBondSignerRequest.MaximumText);
+            e.Property(r => r.Email).HasMaxLength(320);
+            e.Property(r => r.TokenHash).HasMaxLength(64);
+            e.Property(r => r.RequestedByName).HasMaxLength(200);
+            e.Property(r => r.SentAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(r => r.ExpiresAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(r => r.CancelledAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.Property(r => r.UsedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+        });
+        // One settings row per organization: coverage, status roles and the sender name (L2-138, L2-139).
+        modelBuilder.Entity<Domain.LearningBond.LearningBondSettings>(e =>
+        {
+            e.HasIndex(s => s.OrganizationId).IsUnique();
+            e.Ignore(s => s.Programs);
+            e.Ignore(s => s.Roles);
+            e.Property(s => s.Coverage).HasConversion<string>().HasMaxLength(20);
+            e.Property(s => s.ProgramIds).HasMaxLength(4000);
+            e.Property(s => s.StatusRoles).HasMaxLength(200);
+            e.Property(s => s.SenderName).HasMaxLength(30);
+            e.Property(s => s.UpdatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
         });
         // The SIN is two columns: the ciphertext under the Learning Bond key and the last three digits (L2-159 criterion 1).
         modelBuilder.Entity<Domain.LearningBond.LearningBondIntake>(e =>

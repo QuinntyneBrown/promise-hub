@@ -126,6 +126,10 @@ export const routes: Routes = [
       ...moduleRoute('settings/learning-bond/agreement', ['Roster', 'Messages'], () =>
         import('@promisehub/settings').then((m) => m.learningBondAgreementRoutes),
       ),
+      // Settings › Learning Bond: the hub, coverage and invitation load only while Learning Bond is on (ADR 0077).
+      ...moduleRoute('settings/learning-bond', 'LearningBond', () =>
+        import('@promisehub/learning-bond').then((m) => m.settingsRoutes),
+      ),
       {
         path: 'settings',
         loadChildren: () => import('@promisehub/settings').then((m) => m.routes),

@@ -9,6 +9,9 @@ import { LearningBondAgreement } from './learning-bond-agreement';
 import { LearningBondApi } from './learning-bond-api';
 import { LearningBondLink } from './learning-bond-link';
 import { LearningBondStatus } from './learning-bond-status';
+import { LearningBondSettings } from './learning-bond-settings';
+import { RequestLearningBondSigner } from './request-learning-bond-signer';
+import { SaveLearningBondSettings } from './save-learning-bond-settings';
 
 @Injectable()
 export class HttpLearningBondApi implements LearningBondApi {
@@ -36,6 +39,37 @@ export class HttpLearningBondApi implements LearningBondApi {
       this.http.post<{ id: string }>(`${this.baseUrl}/learning-bond/agreement/acceptances`, {
         authority,
       }),
+    );
+  }
+
+  requestSigner(request: RequestLearningBondSigner): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<{ id: string }>(`${this.baseUrl}/learning-bond/agreement/signers`, request),
+    );
+  }
+
+  resendSigner(id: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(
+        `${this.baseUrl}/learning-bond/agreement/signers/${encodeURIComponent(id)}/resend`,
+        null,
+      ),
+    );
+  }
+
+  settings(): Observable<LoadResult<LearningBondSettings>> {
+    return toLoad(this.http.get<LearningBondSettings>(`${this.baseUrl}/learning-bond/settings`));
+  }
+
+  saveSettings(request: SaveLearningBondSettings): Observable<WriteOutcome> {
+    return toWrite(this.http.put<null>(`${this.baseUrl}/learning-bond/settings`, request));
+  }
+
+  cancelSigner(id: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.delete<null>(
+        `${this.baseUrl}/learning-bond/agreement/signers/${encodeURIComponent(id)}`,
+      ),
     );
   }
 }

@@ -5,6 +5,7 @@
   "peerDependencies": {
     "@angular/common": "^22.0.0",
     "@angular/core": "^22.0.0",
+    "@angular/forms": "^22.0.0",
     "@angular/router": "^22.0.0",
     "@promisehub/api": "0.0.0",
     "@promisehub/components": "0.0.0",

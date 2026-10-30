@@ -1,0 +1,82 @@
+<ph-breadcrumb [items]="crumbs" />
+<ph-page-header
+  title="Coverage"
+  subtitle="Which programs Learning Bond covers, and which staff see each family’s status."
+/>
+@switch (state()) {
+  @case ('forbidden') {
+    <ph-card [flush]="true">
+      <ph-empty-state icon="lock" title="Admins set coverage" text="Ask an admin or a program director.">
+        <ph-button link="/">Back to Today</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('error') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load coverage"
+        text="Check your connection and try again."
+      >
+        <ph-button variant="primary" icon="refresh" (click)="load()">Try again</ph-button>
+        <ph-button variant="ghost" link="/settings/learning-bond">Back to Learning Bond</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('loading') {
+    <div class="form" aria-busy="true" aria-label="Loading coverage">
+      <ph-skeleton shape="card" />
+      <ph-skeleton shape="card" />
+    </div>
+  }
+  @default {
+    <form class="form" novalidate (ngSubmit)="save()">
+      @if (summary().length) {
+        <ph-error-summary [items]="summary()" />
+      }
+      <ph-card title="Programs">
+        <div class="fields">
+          <div id="coverage">
+            <ph-radio-group
+              legend="Programs"
+              name="coverage"
+              [options]="modes()"
+              [error]="errors()['coverage'] ?? null"
+              [ngModel]="coverage()"
+              (ngModelChange)="coverage.set($event)"
+            />
+          </div>
+          <div id="programIds">
+            <ph-checkbox-group
+              legend="Chosen programs"
+              name="programIds"
+              hint="Archived programs aren’t listed."
+              [options]="programs()"
+              [error]="errors()['programIds'] ?? null"
+              [ngModel]="programIds()"
+              (ngModelChange)="programIds.set($event)"
+            />
+          </div>
+        </div>
+      </ph-card>
+      <ph-card title="Staff">
+        <div id="statusRoles">
+          <ph-checkbox-group
+            legend="Who sees each family’s status"
+            name="statusRoles"
+            hint="Mentors, volunteers and youth never see it. Status means where a family is in the steps, never what they entered."
+            [options]="roleOptions"
+            [error]="errors()['statusRoles'] ?? null"
+            [ngModel]="roles()"
+            (ngModelChange)="roles.set($event)"
+          />
+        </div>
+      </ph-card>
+      <div class="actions">
+        <ph-button variant="primary" type="submit" [busy]="saving()">Save changes</ph-button>
+        <ph-button variant="ghost" link="/settings/learning-bond">Cancel</ph-button>
+      </div>
+    </form>
+  }
+}

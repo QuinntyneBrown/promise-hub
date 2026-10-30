@@ -65,6 +65,43 @@ export class LearningBondAgreementPage extends BasePage {
     return this.page.getByRole('link', { name: 'Back to Learning Bond' });
   }
 
+  /** The ask-someone-else-to-sign dialog (dialog: learning-bond-signer). */
+  get signerDialog(): Locator {
+    return this.page.getByRole('dialog', { name: 'Ask someone else to sign' });
+  }
+
+  async askSigner(signer: { name: string; title: string; email: string }): Promise<void> {
+    await this.askSomeoneElse.click();
+    await this.signerDialog.getByLabel('Their name').fill(signer.name);
+    await this.signerDialog.getByLabel('Their role or title').fill(signer.title);
+    await this.signerDialog.getByLabel('Their email').fill(signer.email);
+  }
+
+  async sendTheLink(): Promise<void> {
+    await this.signerDialog.getByRole('button', { name: 'Send the link' }).click();
+  }
+
+  signerFieldError(field: 'name' | 'title' | 'email'): Locator {
+    return this.signerDialog.getByTestId(`signer-${field}-error`);
+  }
+
+  /** The named signer card while the request waits (learning-bond-agreement/waiting-signer). */
+  get waiting(): Locator {
+    return this.page.getByTestId('agreement-signer');
+  }
+
+  async resend(): Promise<void> {
+    await this.waiting.getByRole('button', { name: 'Resend' }).click();
+  }
+
+  async cancelSigner(): Promise<void> {
+    await this.waiting.getByRole('button', { name: 'Cancel' }).click();
+  }
+
+  get toast(): Locator {
+    return this.page.getByTestId('toast');
+  }
+
   get forbidden(): Locator {
     return this.page.getByRole('heading', { name: 'Admins accept the agreement' });
   }

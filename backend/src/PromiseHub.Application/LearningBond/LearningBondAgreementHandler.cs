@@ -11,7 +11,7 @@ namespace PromiseHub.Application.LearningBond;
 /// Reads and accepts the data-handling agreement for the signed-in membership's organization (L2-136, ADR 0076, ADR 0077). Served while
 /// Learning Bond is off, since the module cannot turn on before an acceptance; it reads no household, child or guardian (criterion 5).
 /// </summary>
-public sealed class LearningBondAgreementHandler(IPromiseHubDb db, ITenantContext tenant, IModuleGate modules, IAuditWriter audit, TimeProvider clock)
+public sealed class LearningBondAgreementHandler(IPromiseHubDb db, ITenantContext tenant, IModuleGate modules, LearningBondSignerHandler signers, IAuditWriter audit, TimeProvider clock)
 {
     public const string AuthorityMessage = "Confirm you have authority to accept this agreement, or ask someone else to sign.";
 
@@ -24,7 +24,7 @@ public sealed class LearningBondAgreementHandler(IPromiseHubDb db, ITenantContex
         var earlier = current is null ? acceptances.FirstOrDefault(a => a.AgreementVersion < agreement.Version) : null;
         return new LearningBondAgreementDto(agreement.Version, agreement.EffectiveOn,
             [new("What we collect", agreement.WhatWeCollect), new("Where it goes", agreement.WhereItGoes), new("What your organization sees", agreement.WhatYourOrganizationSees)],
-            Dto(current), Dto(earlier), null, await modules.IsOnAsync(ModuleId.LearningBond, cancellationToken));
+            Dto(current), Dto(earlier), SignerDto(await signers.OpenAsync(cancellationToken)), await modules.IsOnAsync(ModuleId.LearningBond, cancellationToken));
     }
 
     public async Task<Result> AcceptAsync(AcceptAgreementRequest request, CancellationToken cancellationToken = default)
@@ -40,6 +40,8 @@ public sealed class LearningBondAgreementHandler(IPromiseHubDb db, ITenantContex
         }
         var acceptance = new LearningBondAgreementAcceptance(Guid.NewGuid(), tenant.OrganizationId, agreement.Version, tenant.MembershipId, tenant.ActorName, clock.GetUtcNow());
         db.LearningBondAgreementAcceptances.Add(acceptance);
+        // Accepting closes a request still waiting for a named signer; the link stops working.
+        (await signers.OpenAsync(cancellationToken))?.Cancel(acceptance.AcceptedAt);
         audit.Record(new AuditEvent(AuditAction.Created, nameof(LearningBondAgreementAcceptance), acceptance.Id,
             $"Learning Bond data-handling agreement version {agreement.Version} accepted", After: new { AgreementVersion = agreement.Version }));
         await db.SaveChangesAsync(cancellationToken);
@@ -48,6 +50,9 @@ public sealed class LearningBondAgreementHandler(IPromiseHubDb db, ITenantContex
 
     private async Task<LearningBondAgreement> CurrentAsync(CancellationToken cancellationToken) =>
         await db.LearningBondAgreements.AsNoTracking().OrderByDescending(a => a.Version).FirstAsync(cancellationToken);
+
+    private static LearningBondSignerRequestDto? SignerDto(LearningBondSignerRequest? r) =>
+        r is null ? null : new(r.Id, r.Name, r.Title, r.Email, r.SentAt, r.ExpiresAt);
 
     private static LearningBondAcceptanceDto? Dto(LearningBondAgreementAcceptance? a) => a is null ? null : new(a.AgreementVersion, a.AcceptedByName, a.AcceptedAt);
 }
