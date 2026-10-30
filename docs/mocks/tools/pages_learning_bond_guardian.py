@@ -324,7 +324,7 @@ def next_steps(done: int = 0) -> str:
     items = [(f"{PROVIDER} opens Mateo’s RESP and confirms it received the application", "Usually within 5 business days. We’ll text you."),
              ("The Government of Canada checks your tax returns and approves the bond", "Up to 8 weeks."),
              ("The money is deposited in Mateo’s RESP", "We’ll text you the amount.")]
-    lis = "".join(f'<li class="list__item"><span class="estimate-card" aria-hidden="true">{icon("check", "icon--sm") if i < done else i + 1}</span><div class="list__body"><div class="list__title">{t}</div><div class="list__meta">{m}</div></div>{badge("Done", "success") if i < done else ""}</li>' for i, (t, m) in enumerate(items))
+    lis = "".join(f'<li class="list__item"><span class="step-marker{" step-marker--done" if i < done else ""}" aria-hidden="true">{icon("check", "icon--sm") if i < done else i + 1}</span><div class="list__body"><div class="list__title">{t}</div><div class="list__meta">{m}</div></div>{badge("Done", "success") if i < done else ""}</li>' for i, (t, m) in enumerate(items))
     chipd = f'<span class="chip" aria-label="{EXPECTED}">{icon("calendar", "icon--sm")}{EXPECTED}</span>'
     return card(f'<ol class="list" aria-label="What happens next">{lis}</ol>', title="What happens next", tid="next", cls="card--flush", footer=chipd)
 

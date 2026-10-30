@@ -86,6 +86,10 @@ message-thread|Message thread|.thread|form|Show a conversation between a mentor 
 org-logo|Organization logo|.org-logo|display|Show an organization's own uploaded logo in a square frame on a subtle surface, with its written name nearby, or its initials until it has one.
 site-nav|Site nav|.site-nav|navigation|Frame the public website at the top: the organization's name linking home, its public pages as links with the current one marked, and Sign in and Apply at the end; below 768px the links wrap onto their own row and nothing hides behind a menu.
 site-footer|Site footer|.site-footer|navigation|Close every public page with the organization's name, the same pages plus Privacy, and a quiet line with the city and who powers the pages.
+agent-message|Agent message|.chat|display|Let the Learning Bond agent say one short line per step in a bubble beside its face, with an optional hint under it; the line is the approved fixed wording until the model rephrases it, and a screen reader hears who is speaking.
+email-preview|Email preview|.email|display|Preview an email a guardian or a signer receives, with its title, text, one action and a quiet footer naming the sender, inside a card on the page that sends it.
+benefit-card|Benefit card|.benefit|display|Show one child benefit with its name, a badge saying whether to apply, send a document or that the family isn't eligible, its level and estimated amount, a line of why, one action and its source.
+step-marker|Step marker|.step-marker|display|Number the steps of what happens next in a round disc, and show a check once a step is done, with Done also said in words in the row.
 calendar|Calendar|.calendar|table|Show a month of sessions by week, Monday first: each day lists its sessions as links with their time, today is marked, and a cancelled session says so in words and is struck through. Below 640px it becomes an agenda of only the days with sessions.
 '''
 
