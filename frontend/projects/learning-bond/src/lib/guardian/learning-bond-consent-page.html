@@ -1,0 +1,105 @@
+<ph-guardian-shell [organization]="organization()" [attr.lang]="language()">
+  @let t = text();
+  @let r = result();
+  @if (!r) {
+    <h1 class="visually-hidden">{{ t.loading }}</h1>
+    <ph-skeleton shape="card" [attr.aria-label]="t.loading" />
+  } @else {
+    @switch (r.status) {
+      @case ('loaded') {
+        @let page = r.value;
+        <div class="stack">
+          @if (recorded().length) {
+            <h1>{{ t.thanks(firstName()) }}</h1>
+            <div data-testid="consent-recorded">
+              <ph-alert
+                tone="success"
+                [title]="t.consentRecorded(names(recorded()))"
+                [text]="t.consentRecordedText"
+              >
+                <ph-button size="sm" variant="primary" icon="arrow-right" link="../intake">{{
+                  t.toDetails(names(recorded().slice(0, 1)))
+                }}</ph-button>
+              </ph-alert>
+            </div>
+          } @else {
+            <h1>{{ t.consentHeading }}</h1>
+            <ph-agent-message [text]="page.explanation" />
+            @if (page.children.length) {
+              <form class="stack" novalidate (ngSubmit)="agree()">
+                @if (summary().length) {
+                  <ph-error-summary [title]="t.fixFirst" [items]="summary()" />
+                }
+                <ph-card>
+                  <div class="stack">
+                    <fieldset class="boxes" id="consent-children">
+                      <legend class="legend">{{ t.children }}</legend>
+                      @for (c of page.children; track c.id) {
+                        <ph-checkbox
+                          [inputId]="'consent-' + c.id"
+                          [label]="c.wording"
+                          [name]="'consent-' + c.id"
+                          [ngModel]="ticked().includes(c.id)"
+                          (ngModelChange)="toggle(c.id, $event)"
+                        />
+                      }
+                      @if (errors()['children']; as message) {
+                        <p class="error" data-testid="consent-children-error">{{ message }}</p>
+                      }
+                    </fieldset>
+                    <ph-text-field
+                      inputId="consent-typed-name"
+                      [label]="t.typedName"
+                      name="typedName"
+                      autocomplete="name"
+                      [error]="errors()['typedName'] ?? null"
+                      [(ngModel)]="typedName"
+                    />
+                    <ph-button
+                      variant="primary"
+                      type="submit"
+                      size="lg"
+                      icon="check"
+                      [busy]="busy()"
+                      >{{ t.agree }}</ph-button
+                    >
+                  </div>
+                </ph-card>
+              </form>
+            } @else {
+              <ph-alert tone="info" [title]="t.allConsented" />
+            }
+          }
+          @if (failed()) {
+            <ph-alert tone="danger" [title]="t.failed" />
+          }
+        </div>
+      }
+      @case ('verify') {
+        <h1>{{ t.verifyHeading }}</h1>
+        <ph-card>
+          <div class="stack">
+            <p class="plain">{{ t.verifyText }}</p>
+            <ph-button variant="primary" link="..">{{ t.continue }}</ph-button>
+          </div>
+        </ph-card>
+      }
+      @case ('gone') {
+        <h1>{{ t.expiredHeading }}</h1>
+        <ph-card>
+          <p class="plain">{{ t.expiredText(r.organization ?? '') }}</p>
+        </ph-card>
+      }
+      @default {
+        <h1>{{ t.consentHeading }}</h1>
+        <ph-card [flush]="true">
+          <ph-empty-state icon="warning" tone="error" [title]="t.errorTitle" [text]="t.errorText">
+            <ph-button variant="primary" icon="refresh" (click)="load()">{{
+              t.tryAgain
+            }}</ph-button>
+          </ph-empty-state>
+        </ph-card>
+      }
+    }
+  }
+</ph-guardian-shell>

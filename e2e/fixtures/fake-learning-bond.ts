@@ -301,6 +301,25 @@ export class FakeLearningBond {
     return route.fulfill({ status: 204 });
   }
 
+  /** Learning Bond consents given (LearningBondConsent with scope LearningBond); each starts the child's claim. */
+  readonly consents: { householdId: string; childId: string; typedName: string; language: string; wordingVersion: number }[] = [];
+
+  /** The exact consent wording for one child (LearningBondTexts.Consent). */
+  consentWording(code: 'en' | 'es' | 'fr', child: string): string {
+    if (code === 'es')
+      return `Acepto que Learning Bond recopile los números de seguro social de ${child} y míos y nuestra situación fiscal, y los envíe al proveedor de RESP que yo elija y al Gobierno de Canadá para solicitar el Bono de Estudios Canadiense.`;
+    if (code === 'fr')
+      return `J’accepte que Learning Bond recueille les numéros d’assurance sociale de ${child} et le mien ainsi que notre situation fiscale, et les envoie au fournisseur de REEE que je choisis et au gouvernement du Canada pour demander le Bon d’études canadien.`;
+    return `I agree that Learning Bond may collect ${child}’s and my social insurance numbers and tax-filing status and send them to the RESP provider I choose and the Government of Canada to apply for the Canada Learning Bond.`;
+  }
+
+  /** The consent step's agent line (AgentFallbackCopy.Consent). */
+  consentLine(code: 'en' | 'es' | 'fr', organization: string): string {
+    if (code === 'es') return `Antes de preguntar nada, necesito su permiso por cada hijo. Es distinto del consentimiento del programa que dio a ${organization}.`;
+    if (code === 'fr') return `Avant de vous demander quoi que ce soit, j’ai besoin de votre permission pour chaque enfant. Elle est distincte du consentement au programme donné à ${organization}.`;
+    return `Before I ask anything, I need your permission for each child. It’s separate from the program consent you gave ${organization}.`;
+  }
+
   /** Households whose guardian said they aren't interested (LearningBondInvitation.DeclinedAt). */
   readonly declined = new Set<string>();
 

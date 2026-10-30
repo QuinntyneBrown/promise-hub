@@ -31,9 +31,29 @@ export interface GuardianLearningBondText {
   failed: string;
   and: string;
   amount: (dollars: number) => string;
+  consentHeading: string;
+  children: string;
+  typedName: string;
+  agree: string;
+  fixFirst: string;
+  thanks: (name: string) => string;
+  consentRecorded: (names: string) => string;
+  consentRecordedText: string;
+  toDetails: (name: string) => string;
+  allConsented: string;
 }
 
 const en: GuardianLearningBondText = {
+  consentHeading: 'Your permission, for each child',
+  children: 'Children',
+  typedName: 'Type your full name to sign',
+  agree: 'Agree',
+  fixFirst: 'Fix this first',
+  thanks: (name) => `Thanks, ${name}`,
+  consentRecorded: (names) => `Consent recorded for ${names}`,
+  consentRecordedText: 'You can withdraw it any time from your family page.',
+  toDetails: (name) => `Continue to ${name}’s details`,
+  allConsented: 'You’ve given consent for every child who can claim.',
   pageTitle: 'Learning Bond for your family',
   loading: 'Loading your family’s page',
   heading: (names) => `${names} may be owed money for school after high school`,
@@ -68,6 +88,16 @@ const en: GuardianLearningBondText = {
 };
 
 const es: GuardianLearningBondText = {
+  consentHeading: 'Su permiso, por cada hijo',
+  children: 'Hijos',
+  typedName: 'Escriba su nombre completo para firmar',
+  agree: 'Acepto',
+  fixFirst: 'Corrija esto primero',
+  thanks: (name) => `Gracias, ${name}`,
+  consentRecorded: (names) => `Consentimiento registrado para ${names}`,
+  consentRecordedText: 'Puede retirarlo cuando quiera desde la página de su familia.',
+  toDetails: (name) => `Continuar con los datos de ${name}`,
+  allConsented: 'Ya dio su consentimiento para todos los hijos que pueden solicitarlo.',
   pageTitle: 'El Bono de Estudios para su familia',
   loading: 'Cargando la página de su familia',
   heading: (names, many) =>
@@ -104,6 +134,16 @@ const es: GuardianLearningBondText = {
 };
 
 const fr: GuardianLearningBondText = {
+  consentHeading: 'Votre permission, pour chaque enfant',
+  children: 'Enfants',
+  typedName: 'Tapez votre nom complet pour signer',
+  agree: 'J’accepte',
+  fixFirst: 'Corrigez ceci d’abord',
+  thanks: (name) => `Merci, ${name}`,
+  consentRecorded: (names) => `Consentement enregistré pour ${names}`,
+  consentRecordedText: 'Vous pouvez le retirer en tout temps depuis la page de votre famille.',
+  toDetails: (name) => `Continuer avec les renseignements de ${name}`,
+  allConsented: 'Vous avez donné votre consentement pour chaque enfant admissible.',
   pageTitle: 'Le Bon d’études pour votre famille',
   loading: 'Chargement de la page de votre famille',
   heading: (names, many) =>

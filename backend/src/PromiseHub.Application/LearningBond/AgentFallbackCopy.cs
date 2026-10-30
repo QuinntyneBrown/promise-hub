@@ -16,4 +16,12 @@ public static class AgentFallbackCopy
         _ => "The Canada Learning Bond is money the Government of Canada puts in a child’s RESP for families with lower incomes. "
             + $"You don’t need to put in any money. What you enter goes to the RESP provider and the Government of Canada, not to {organization}.",
     };
+
+    /// <summary>The consent step (L2-145): why each child needs its own permission.</summary>
+    public static string Consent(string code, string organization) => code switch
+    {
+        "es" => $"Antes de preguntar nada, necesito su permiso por cada hijo. Es distinto del consentimiento del programa que dio a {organization}.",
+        "fr" => $"Avant de vous demander quoi que ce soit, j’ai besoin de votre permission pour chaque enfant. Elle est distincte du consentement au programme donné à {organization}.",
+        _ => $"Before I ask anything, I need your permission for each child. It’s separate from the program consent you gave {organization}.",
+    };
 }

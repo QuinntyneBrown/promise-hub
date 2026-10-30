@@ -2439,6 +2439,92 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.ToTable("LearningBondCallRequests");
                 });
 
+            modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondClaim", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ChildId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ConsentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("HouseholdId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("StartedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("UpdatedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("OrganizationId", "HouseholdId", "ChildId");
+
+                    b.ToTable("LearningBondClaims");
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondConsent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ChildId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("GivenAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("HouseholdId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Scope")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TypedName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("WithdrawnAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("WordingVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("OrganizationId", "HouseholdId", "ChildId");
+
+                    b.ToTable("LearningBondConsents");
+                });
+
             modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondIntake", b =>
                 {
                     b.Property<Guid>("Id")
@@ -4889,6 +4975,24 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                 });
 
             modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondCallRequest", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondClaim", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondConsent", b =>
                 {
                     b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
                         .WithMany()

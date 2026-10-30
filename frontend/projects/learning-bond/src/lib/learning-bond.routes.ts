@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { LearningBondCoveragePage } from './coverage/learning-bond-coverage-page';
 import { LearningBondFamiliesPage } from './families/learning-bond-families-page';
 import { GuardianLearningBondPage } from './guardian/guardian-learning-bond-page';
+import { LearningBondConsentPage } from './guardian/learning-bond-consent-page';
 import { SettingsLearningBondPage } from './hub/settings-learning-bond-page';
 import { LearningBondInvitationPage } from './invitation/learning-bond-invitation-page';
 import { LearningBondLaunchPage } from './launch/learning-bond-launch-page';
@@ -56,5 +57,10 @@ export const guardianRoutes: Routes = [
     pathMatch: 'full',
     component: GuardianLearningBondPage,
     title: 'Learning Bond · PromiseHub',
+  },
+  {
+    path: 'consent',
+    component: LearningBondConsentPage,
+    title: 'Consent · Learning Bond · PromiseHub',
   },
 ];

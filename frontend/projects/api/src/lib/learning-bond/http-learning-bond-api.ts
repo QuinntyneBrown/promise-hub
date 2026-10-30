@@ -10,6 +10,7 @@ import { LearningBondApi } from './learning-bond-api';
 import { GuardianPageResult } from '../guardian/guardian-page-result';
 import { toGuardianPage } from '../guardian/to-guardian-page';
 import { GuardianLearningBond } from './guardian-learning-bond';
+import { LearningBondConsentPage } from './learning-bond-consent-page';
 import { LearningBondFamilies } from './learning-bond-families';
 import { LearningBondHousehold } from './learning-bond-household';
 import { LearningBondInviteOutcome } from './learning-bond-invite-outcome';
@@ -179,6 +180,26 @@ export class HttpLearningBondApi implements LearningBondApi {
       this.http.post<null>(`${this.baseUrl}/g/learning-bond/${encodeURIComponent(token)}/choice`, {
         choice,
       }),
+    );
+  }
+
+  consentPage(token: string): Observable<GuardianPageResult<LearningBondConsentPage>> {
+    return toGuardianPage(
+      this.http.get<LearningBondConsentPage>(
+        `${this.baseUrl}/g/learning-bond/${encodeURIComponent(token)}/consent`,
+      ),
+    );
+  }
+
+  giveConsent(token: string, childIds: string[], typedName: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(
+        `${this.baseUrl}/g/learning-bond/${encodeURIComponent(token)}/consents`,
+        {
+          childIds,
+          typedName,
+        },
+      ),
     );
   }
 

@@ -4,6 +4,7 @@ import type { WriteOutcome } from '../write-outcome';
 import type { LearningBondAgreement } from './learning-bond-agreement';
 import type { GuardianPageResult } from '../guardian/guardian-page-result';
 import type { GuardianLearningBond } from './guardian-learning-bond';
+import type { LearningBondConsentPage } from './learning-bond-consent-page';
 import type { LearningBondFamilies } from './learning-bond-families';
 import type { LearningBondHousehold } from './learning-bond-household';
 import type { LearningBondInviteOutcome } from './learning-bond-invite-outcome';
@@ -32,6 +33,10 @@ export interface LearningBondApi {
   guardianPage(token: string): Observable<GuardianPageResult<GuardianLearningBond>>;
   /** POST /g/learning-bond/{token}/choice: "NotNow" or "NotInterested". */
   choose(token: string, choice: 'NotNow' | 'NotInterested'): Observable<WriteOutcome>;
+  /** GET /g/learning-bond/{token}/consent: the children still to consent for (L2-145). */
+  consentPage(token: string): Observable<GuardianPageResult<LearningBondConsentPage>>;
+  /** POST /g/learning-bond/{token}/consents: one consent per ticked child; invalid by field. */
+  giveConsent(token: string, childIds: string[], typedName: string): Observable<WriteOutcome>;
   /** GET /learning-bond/agreement: the current version, the organization's acceptance and the open signer request. */
   agreement(): Observable<LoadResult<LearningBondAgreement>>;
   /** POST /learning-bond/agreement/acceptances: accepts the current version; invalid without the authority box. */

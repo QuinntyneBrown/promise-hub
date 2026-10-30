@@ -2291,6 +2291,8 @@ export class FakeApi {
     ],
     ["GET", /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/page$/, (route, p) => this.learningBondGuardianPage(route, p["token"]!)],
     ["POST", /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/choice$/, (route, p) => this.learningBondChoice(route, p["token"]!)],
+    ["GET", /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/consent$/, (route, p) => this.learningBondConsentPage(route, p["token"]!)],
+    ["POST", /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/consents$/, (route, p) => this.learningBondGiveConsent(route, p["token"]!)],
     [
       "GET",
       /^\/api\/g\/learning-bond\/(?<token>[^/]+)$/,
@@ -3637,6 +3639,57 @@ export class FakeApi {
         status: declined ? "NotInterested" : "Invited",
       },
     });
+  }
+
+  /** The household's children under 18 with an amount and no Learning Bond consent yet (LearningBondConsentHandler). */
+  private learningBondOpenChildren(household: FakeHousehold, organizationId: string): { id: string; firstName: string }[] {
+    const settings = this.learningBond.settingsOf(organizationId);
+    const roster = new Set(
+      this.programs
+        .filter((p) => p.organizationId === organizationId && p.status === "Active" && (settings.coverage === "AllPrograms" || settings.programIds.includes(p.id)))
+        .flatMap((p) => p.roster),
+    );
+    return [...household.children]
+      .filter((c) => roster.has(c.id) && c.dateOfBirth && Number(c.dateOfBirth.slice(0, 4)) > 2008)
+      .filter((c) => !this.learningBond.consents.some((k) => k.childId === c.id))
+      .sort((a, b) => a.firstName.localeCompare(b.firstName))
+      .map((c) => ({ id: c.id, firstName: c.firstName }));
+  }
+
+  /** GET /g/learning-bond/{token}/consent (L2-145 criterion 1). */
+  private async learningBondConsentPage(route: Route, token: string): Promise<void> {
+    const scope = await this.learningBondGuardianScope(route, token);
+    if (!scope) return;
+    const code = this.learningBond.links.get(token)!.language;
+    const organization = this.organizationDetailsOf(scope.organizationId).name;
+    return route.fulfill({
+      json: {
+        language: code,
+        organization,
+        explanation: this.learningBond.consentLine(code, organization),
+        wordingVersion: 1,
+        children: this.learningBondOpenChildren(scope.household, scope.organizationId).map((c) => ({ ...c, wording: this.learningBond.consentWording(code, c.firstName) })),
+      },
+    });
+  }
+
+  /** POST /g/learning-bond/{token}/consents (L2-145 criteria 2, 3 and 5). */
+  private async learningBondGiveConsent(route: Route, token: string): Promise<void> {
+    const scope = await this.learningBondGuardianScope(route, token);
+    if (!scope) return;
+    const b = route.request().postDataJSON() as { childIds?: string[]; typedName?: string };
+    const typed = (b.typedName ?? "").trim().replace(/\s+/g, " ");
+    const errors: Record<string, string> = {};
+    if (!b.childIds?.length) errors["children"] = "Tick at least one child.";
+    if (!typed) errors["typedName"] = "Type your full name to sign.";
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    const open = this.learningBondOpenChildren(scope.household, scope.organizationId);
+    if (b.childIds!.some((id) => !open.some((c) => c.id === id))) return route.fulfill({ status: 403, json: { code: "forbidden" } });
+    if (!scope.household.guardians.some((g) => g.name.toLowerCase() === typed.toLowerCase()))
+      return route.fulfill({ status: 422, json: { errors: { typedName: "Type the full name of a guardian of this household." } } });
+    const code = this.learningBond.links.get(token)!.language;
+    for (const childId of b.childIds!) this.learningBond.consents.push({ householdId: scope.household.id, childId, typedName: typed, language: code, wordingVersion: 1 });
+    return route.fulfill({ status: 201, json: { ids: b.childIds!.map((id) => `consent-${id}`) } });
   }
 
   /** POST /g/learning-bond/{token}/choice (L2-144 criterion 4). */

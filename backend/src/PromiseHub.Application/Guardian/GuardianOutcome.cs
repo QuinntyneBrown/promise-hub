@@ -18,6 +18,8 @@ public enum GuardianOutcome
 
     /// <summary>Too many codes asked for in a short time: wait 15 minutes (429).</summary>
     TooMany,
+    /// <summary>The request names something that isn't this household guardian's to decide (403).</summary>
+    Forbidden,
     NotFound,
     Conflict,
     Invalid,

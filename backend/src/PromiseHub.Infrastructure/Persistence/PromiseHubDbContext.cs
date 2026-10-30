@@ -98,6 +98,8 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.LearningBond.LearningBondSignerToken> LearningBondSignerTokens => Set<Domain.LearningBond.LearningBondSignerToken>();
     public DbSet<Domain.LearningBond.LearningBondInvitation> LearningBondInvitations => Set<Domain.LearningBond.LearningBondInvitation>();
     public DbSet<Domain.LearningBond.LearningBondCallRequest> LearningBondCallRequests => Set<Domain.LearningBond.LearningBondCallRequest>();
+    public DbSet<Domain.LearningBond.LearningBondConsent> LearningBondConsents => Set<Domain.LearningBond.LearningBondConsent>();
+    public DbSet<Domain.LearningBond.LearningBondClaim> LearningBondClaims => Set<Domain.LearningBond.LearningBondClaim>();
     public DbSet<Domain.LearningBond.LearningBondSettings> LearningBondSettings => Set<Domain.LearningBond.LearningBondSettings>();
     public DbSet<DataRequest> DataRequests => Set<DataRequest>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
@@ -380,6 +382,23 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(i => i.How).HasConversion<string>().HasMaxLength(20);
             e.Property(i => i.SentAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.Property(i => i.DeclinedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+        });
+        // Learning Bond consents and claims, per child, separate from every program consent (L2-145).
+        modelBuilder.Entity<Domain.LearningBond.LearningBondConsent>(e =>
+        {
+            e.HasIndex(c => new { c.OrganizationId, c.HouseholdId, c.ChildId });
+            e.Property(c => c.Scope).HasConversion<string>().HasMaxLength(20);
+            e.Property(c => c.TypedName).HasMaxLength(Domain.LearningBond.LearningBondConsent.MaximumName);
+            e.Property(c => c.Language).HasMaxLength(5);
+            e.Property(c => c.GivenAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(c => c.WithdrawnAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+        });
+        modelBuilder.Entity<Domain.LearningBond.LearningBondClaim>(e =>
+        {
+            e.HasIndex(c => new { c.OrganizationId, c.HouseholdId, c.ChildId });
+            e.Property(c => c.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(c => c.StartedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(c => c.UpdatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
         });
         // A guardian's call request: the number and time they gave, until the call is marked done (L2-142).
         modelBuilder.Entity<Domain.LearningBond.LearningBondCallRequest>(e =>

@@ -32,12 +32,34 @@ export class GuardianLearningBondPage extends BasePage {
     await this.page.getByRole('button', { name: /^(Continue|Continuar|Continuer)$/ }).click();
   }
 
+  async continue(): Promise<void> {
+    await this.page.getByRole('link', { name: /^(Continue|Continuar|Continuer)$/ }).click();
+  }
+
   async choose(label: string): Promise<void> {
     await this.page.getByRole('button', { name: label, exact: true }).click();
   }
 
   get confirmation(): Locator {
     return this.page.getByTestId('learning-bond-choice');
+  }
+
+  /** The consent step (mock: learning-bond-consent): one box per child with the exact wording, the typed name and Agree. */
+  consentBox(firstName: string): Locator {
+    return this.page.getByRole('checkbox', { name: new RegExp(`^I agree that Learning Bond may collect ${firstName}’s`) });
+  }
+
+  async sign(name: string): Promise<void> {
+    await this.page.getByLabel('Type your full name to sign').fill(name);
+    await this.page.getByRole('button', { name: 'Agree', exact: true }).click();
+  }
+
+  fieldError(field: 'children' | 'typed-name'): Locator {
+    return this.page.getByTestId(`consent-${field}-error`);
+  }
+
+  get consentRecorded(): Locator {
+    return this.page.getByTestId('consent-recorded');
   }
 
   async expectCodeStep(): Promise<void> {
