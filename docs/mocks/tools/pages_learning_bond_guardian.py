@@ -152,8 +152,8 @@ def guardian_learning_bond(S):
                + f'<div class="stack">{btn("Continue", "primary", size="lg", icon_name="arrow-right", href=page("learning-bond-consent"))}</div>' + g_footer())
     S.add("expired", "A revoked or unknown token: the page says the link has expired, as on every guardian page.",
           main='<h1>This link has expired</h1>' + card(f'<div class="stack"><p>Ask Harbourview Youth Collective for a new one.</p><div>{btn("Call 905-555-0100", "primary", icon_name="phone", href="tel:+19055550100")}</div></div>') + g_footer())
-    S.add("unavailable", "Learning Bond is off for the organization, or the organization is suspended: the page says it isn’t available and the endpoints answer 404.",
-          main='<h1>Learning Bond isn’t available</h1>' + card('<p>Harbourview Youth Collective isn’t offering Learning Bond right now. Nothing about your family was collected.</p>') + g_footer())
+    S.add("unavailable", "Learning Bond is off for the organization, the organization is suspended or the link is unknown: the endpoints answer 404 with no body, so the page names no organization and the learning-bond library is never downloaded (L2-162).",
+          main='<h1>Learning Bond isn’t available</h1>' + card('<p>The organization that sent this link isn’t offering Learning Bond right now. Nothing about your family was collected.</p>') + g_footer())
     S.add("loading", "The page loading after the code check.", main=loading_page("Learning Bond for your family"))
     S.add("error", "The page failed to load.", main='<h1>Learning Bond for your family</h1>' + failed_load("We couldn’t load your family’s page") + g_footer())
 
