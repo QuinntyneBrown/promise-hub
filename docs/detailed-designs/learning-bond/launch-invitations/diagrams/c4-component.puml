@@ -1,0 +1,42 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Launch invitations
+Container_Boundary(web, "Angular app") {
+  Component(launch, "LearningBondLaunchPage", "learning-bond", "counts, day or at the door, change, cancel")
+  Component(missing, "MissingContactsPage", "learning-bond", "households with neither contact")
+  Component(card, "Household Learning Bond card", "households", "status per child; Invite to Learning Bond")
+  Component(invdlg, "InviteHouseholdDialog", "households", "SMS preview, Send invitation, already-invited")
+  Component(client, "LEARNING_BOND_API", "api", "getLaunch, scheduleLaunch, cancelLaunch, inviteHousehold")
+}
+Container_Boundary(api, "API") {
+  Component(ep, "LearningBondEndpoints", "PromiseHub.Api", "GET, POST, PUT, DELETE /learning-bond/launch; POST /learning-bond/households/{id}/invitations")
+  Component(getl, "GetLaunchHandler", "Application/LearningBond", "counts, mode, date")
+  Component(sched, "ScheduleLaunchHandler", "Application/LearningBond", "422 rules, IJobScheduler, audit")
+  Component(invite, "InviteHouseholdHandler", "Application/LearningBond", "covered, 7-day rule, queue now")
+  Component(cov, "LearningBondCoverage", "Application/LearningBond", "covered households and channels")
+  Component(texts, "LearningBondTexts", "Application/LearningBond", "wording per language")
+  Component(mw, "MessageWriter", "Application/Messaging", "Queue(MessageSource.LearningBond)")
+  Component(gate, "LearningBondAgreementGate", "Application/LearningBond", "pending version blocks launch")
+}
+Container_Boundary(infra, "Infrastructure") {
+  Component(job, "LearningBondLaunchJob", "Infrastructure/LearningBond", "per tenant, 10:00 local")
+  Component(send, "MessageDispatchRunner", "Infrastructure/Messaging", "SMS cap, STOP, email fallback")
+}
+Rel(launch, client, "getLaunch, scheduleLaunch")
+Rel(missing, client, "getMissingContacts")
+Rel(card, client, "getHouseholdStatus")
+Rel(invdlg, client, "inviteHousehold")
+Rel(client, ep, "HTTPS")
+Rel(ep, getl, "HandleAsync")
+Rel(ep, sched, "HandleAsync")
+Rel(ep, invite, "HandleAsync")
+Rel(getl, cov, "counts")
+Rel(sched, gate, "PendingVersionAsync")
+Rel(sched, job, "IJobScheduler.Enqueue")
+Rel(job, cov, "covered households")
+Rel(job, texts, "Invitation(language, ...)")
+Rel(job, mw, "Queue")
+Rel(invite, texts, "Invitation")
+Rel(invite, mw, "Queue")
+Rel(mw, send, "Deliveries due now or at 10:00")
+@enduml

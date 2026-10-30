@@ -1,0 +1,33 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Remind and total dollars
+Container_Boundary(web, "Angular app") {
+  Component(rem, "RemindersPage", "learning-bond", "reminders with Turn off")
+  Component(tot, "TotalPage", "learning-bond", "Unlocked so far, Applied for")
+  Component(client, "LEARNING_BOND_API", "api", "listReminders, turnOffReminder, getTotal")
+}
+Container_Boundary(api, "API") {
+  Component(gep, "LearningBondGuardianEndpoints", "PromiseHub.Api", "/g/learning-bond/{token}/reminders, /total")
+  Component(wep, "LearningBondEndpoints", "PromiseHub.Api", "POST /learning-bond/webhooks/programs/{program}")
+  Component(planner, "ReminderPlanner", "Application/LearningBond", "upserts dated reminders")
+  Component(off, "TurnOffReminderHandler", "Application/LearningBond", "TurnedOffAt")
+  Component(total, "GetTotalHandler", "Application/LearningBond", "confirmed, applied for")
+  Component(hook, "ProgramWebhookHandler", "Application/LearningBond", "signature, once per event")
+  Component(mw, "MessageWriter", "Application/Messaging", "Queue(MessageSource.LearningBond)")
+  Component(job, "LearningBondReminderJob", "Infrastructure/LearningBond", "10:00 local, per tenant")
+  Component(verify, "IWebhookSignatureVerifier", "Infrastructure/LearningBond", "vendor signature")
+}
+System_Ext(program, "Benefit program", "Signed webhook")
+Rel(rem, client, "listReminders, turnOffReminder")
+Rel(tot, client, "getTotal")
+Rel(client, gep, "GET, POST")
+Rel(gep, off, "off")
+Rel(gep, total, "total")
+Rel(job, mw, "Queue one text per due reminder")
+Rel(job, planner, "due reminders")
+Rel(program, wep, "event")
+Rel(wep, hook, "HandleAsync")
+Rel(hook, verify, "Verify")
+Rel(hook, planner, "re-plan renewal")
+Rel(hook, mw, "benefit-started text")
+@enduml

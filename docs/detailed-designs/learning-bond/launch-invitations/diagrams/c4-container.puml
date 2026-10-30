@@ -1,0 +1,21 @@
+@startuml
+!include <C4/C4_Container>
+title C4 containers — Launch invitations
+Person(admin, "Admin")
+Person(staff, "Staff")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "Angular app", "Angular 22", "learning-bond (launch, missing contacts, cancel dialog), households (card, invite dialog), api, components")
+  Container(api, "API", ".NET 10 minimal APIs", "/learning-bond/launch, /learning-bond/households/{id}/invitations")
+  Container(jobs, "Job runner", "Hosted service", "LearningBondLaunchJob at 10:00 local; message send job (MessageDispatchRunner)")
+  ContainerDb(db, "Database", "SQL (SQLite in tests)", "LearningBondSettings, LearningBondInvitations, Messages, Deliveries, GuardianLinks, Jobs, AuditEntries")
+}
+System_Ext(sms, "SMS provider", "ISmsSender")
+System_Ext(mail, "Email provider", "IEmailSender")
+Rel(admin, web, "Uses", "HTTPS")
+Rel(staff, web, "Uses", "HTTPS")
+Rel(web, api, "JSON over HTTPS")
+Rel(api, db, "EF Core, tenant filter")
+Rel(jobs, db, "EF Core, TenantScope; exits when off, suspended or cancelled")
+Rel(jobs, sms, "Deliveries within the cap; STOP respected")
+Rel(jobs, mail, "Email-only guardians and fallback")
+@enduml

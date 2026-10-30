@@ -1,0 +1,15 @@
+@startuml
+!include <C4/C4_Container>
+title C4 containers — Support families with status only
+Person(staff, "Staff in a status role")
+Person(guardian, "Guardian")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "Angular app", "Angular 22", "learning-bond (families page, call outcome dialog, guardian callback dialog), api, components")
+  Container(api, "API", ".NET 10 minimal APIs", "GET /learning-bond/households, POST .../call-outcome (status roles); POST /g/learning-bond/{token}/callback")
+  ContainerDb(db, "Database", "SQL (SQLite in tests)", "LearningBondInvitations, LearningBondConsents, LearningBondClaims, LearningBondApplications, LearningBondCallRequests, Notifications, AuditEntries")
+}
+Rel(staff, web, "Uses", "HTTPS")
+Rel(guardian, web, "Uses the guardian page", "HTTPS")
+Rel(web, api, "JSON over HTTPS")
+Rel(api, db, "EF Core, tenant filter; status computed on read")
+@enduml

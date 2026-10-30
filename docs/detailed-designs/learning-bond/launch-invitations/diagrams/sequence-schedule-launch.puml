@@ -1,0 +1,55 @@
+@startuml
+title UML sequence — Schedule the launch and run the job (L2-140, L2-021, L2-022, L2-034)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Admin" as a
+box "Frontend — Angular app" #E0F2FE
+participant LearningBondLaunchPage as page
+participant LEARNING_BOND_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant ScheduleLaunchHandler as h
+participant LearningBondCoverage as cov
+participant LearningBondAgreementGate as gate
+participant MessageWriter as mw
+participant IAuditWriter as audit
+end box
+box "Infrastructure" #FEF0C7
+participant LearningBondLaunchJob as job
+participant MessageDispatchRunner as send
+end box
+database "Database" as db
+a -> page : picks a day; Schedule launch
+page -> client : scheduleLaunch(Scheduled, date)
+client -> api : POST /learning-bond/launch (RequireModule, ManageSettings)
+api -> h : HandleAsync
+h -> cov : CoveredHouseholdsAsync()
+alt no household has a guardian with a mobile number
+  api --> page : 422 no-phone-numbers (L2-140 c2)
+else date not tomorrow..90 days in the organization's time zone
+  api --> page : 422 "Choose a date from tomorrow to 90 days ahead." (c3)
+else a new agreement version is pending
+  h -> gate : PendingVersionAsync()
+  api --> page : 422 "A new version of the agreement needs accepting." (L2-136 c4)
+else ok
+  h -> db : LearningBondSettings.Schedule(date)
+  h -> db : IJobScheduler.Enqueue(LearningBondLaunchJob, 10:00 local on the date) (L2-034)
+  h -> audit : Updated on LearningBondSettings: "Launch" (L2-032)
+  api --> page : 201 "Scheduled for {date}, 10:00 am" (c3, c6)
+end
+== 10:00 local on the launch date ==
+job -> db : TenantScope: module on, organization not suspended, not cancelled; else exit (c7)
+job -> cov : CoveredHouseholdsAsync()
+loop each covered household with no LearningBondInvitation in 7 days (c5)
+  job -> db : GuardianLink for /g/learning-bond/{token}
+  job -> mw : Queue(MessageSource.LearningBond, text in the household's language, SMS to mobiles, email to email-only)
+  job -> db : LearningBondInvitation(household, now, channel)
+end
+job -> audit : Created, "{n} invitations queued"
+job -> db : SaveChanges
+send -> db : due Deliveries; SMS cap, STOP, email fallback (L2-021, L2-022)
+@enduml

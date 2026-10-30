@@ -1,0 +1,30 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Review and submit the application
+Container_Boundary(web, "Angular app") {
+  Component(page, "LearningBondReviewPage", "learning-bond", "provider, fields with Edit, Submit to {provider}")
+  Component(client, "LEARNING_BOND_API", "api", "prepareApplication, chooseProvider, editField, submit")
+}
+Container_Boundary(api, "API") {
+  Component(ep, "LearningBondGuardianEndpoints", "PromiseHub.Api", "POST .../applications, PATCH fields, PUT provider, POST submit")
+  Component(h, "LearningBondApplicationHandler", "Application/LearningBond", "PrepareAsync, EditFieldAsync, ChooseProviderAsync")
+  Component(sub, "SubmitApplicationHandler", "Application/LearningBond", "SubmitAsync; the only decrypting call site")
+  Component(rules, "HouseholdRules", "Application/Households", "address, phone, email validation")
+  Component(cipher, "ILearningBondCipher", "Application/LearningBond", "Decrypt in memory")
+  Component(channel, "IRespProviderChannel", "Application/LearningBond", "SubmitAsync")
+  Component(agent, "LearningBondAgent", "Application/LearningBond", "no submit tool")
+}
+Container_Boundary(infra, "Infrastructure") {
+  Component(fake, "FakeRespProviderChannel", "Infrastructure/LearningBond", "records every call; real channel deferred")
+}
+System_Ext(provider, "RESP provider", "Submission channel")
+Rel(page, client, "prepare, edit, choose, submit")
+Rel(client, ep, "POST, PATCH, PUT")
+Rel(ep, h, "PrepareAsync, EditFieldAsync, ChooseProviderAsync")
+Rel(ep, sub, "SubmitAsync")
+Rel(h, rules, "Validate")
+Rel(sub, cipher, "Decrypt")
+Rel(sub, channel, "SubmitAsync once")
+Rel(fake, channel, "implements")
+Rel(channel, provider, "payload with the SINs, after Submit only")
+@enduml

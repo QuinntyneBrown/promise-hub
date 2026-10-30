@@ -1,0 +1,50 @@
+@startuml
+title UML sequence — A callback requested and resolved (L2-142 c3, c4; L2-040; L2-032)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Guardian" as g
+actor "Site lead" as s
+box "Frontend — Angular app" #E0F2FE
+participant LearningBondCallbackDialog as cb
+participant LearningBondFamiliesPage as list
+participant CallOutcomeDialog as od
+participant LEARNING_BOND_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondGuardianEndpoints as gep
+participant LearningBondEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant GuardianAccess as ga
+participant RequestCallbackHandler as rc
+participant NotificationWriter as notify
+participant RecordCallOutcomeHandler as oc
+participant IAuditWriter as audit
+end box
+database "Database" as db
+g -> cb : number, Afternoons; Ask for a call
+cb -> client : requestCallback(token, request)
+client -> gep : POST /g/learning-bond/{token}/callback
+gep -> ga : ResolveAsync(token); module on, else 404 (L2-162)
+gep -> rc : HandleAsync(scope, request)
+rc -> rc : 10-digit number and a time of day, else 422
+rc -> db : LearningBondCallRequest(household, phone, time, now)
+rc -> db : members whose role is in StatusRoles
+rc -> notify : NotifyMembersAsync(ids, learning-bond-call-requested, "{household} asked for a call · {number} · {time}") (L2-040)
+rc -> audit : Created, actor "Guardian" (L2-032)
+rc -> db : SaveChanges
+gep --> cb : 204
+cb -> g : "{organization} will call you. They will see where you are in the steps, never your SIN." (c3)
+s -> list : opens the notice; the household reads Call requested
+s -> od : calls; Mark call done; Resumed
+od -> client : recordCallOutcome(householdId, Resumed)
+client -> api : POST /learning-bond/households/{id}/call-outcome (RequireModule, status role)
+api -> oc : HandleAsync
+oc -> db : open call request of the household under the tenant filter; 404 if none or foreign (c5)
+oc -> db : Resolve(Resumed, member, now)
+oc -> audit : Updated on LearningBondCallRequest with the outcome (c4)
+oc -> db : SaveChanges
+api --> od : 204
+od -> s : the status follows the claim again
+@enduml

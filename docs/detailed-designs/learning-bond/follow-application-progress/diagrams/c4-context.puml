@@ -1,0 +1,12 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — Follow the application's progress
+Person(guardian, "Guardian", "Carmen Rivera, after Mateo's application was sent")
+System(ph, "PromiseHub", "Learning Bond module of one organization")
+System_Ext(provider, "RESP provider", "Reports Received, Deposited and documents needed")
+System_Ext(sms, "SMS provider", "Carries the follow-up and reminder texts")
+Rel(guardian, ph, "Reads progress, uploads a document, chooses a reminder", "HTTPS, verified device")
+Rel(provider, ph, "Signed webhook per event", "HTTPS")
+Rel(ph, provider, "Sends a requested document on Send")
+Rel(ph, sms, "One text per event or reminder, in the household's language")
+@enduml

@@ -1,0 +1,9 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — Estimate the Learning Bond
+Person(guardian, "Guardian", "Carmen Rivera, after Mateo's intake")
+System(ph, "PromiseHub", "Learning Bond module; computes the estimate from a versioned rule")
+System_Ext(llm, "Language model", "Receives the computed figure as text; never computes it")
+Rel(guardian, ph, "Opens the estimate step", "HTTPS, verified device")
+Rel(ph, llm, "Optional rephrasing of the fixed sentence")
+@enduml

@@ -1,0 +1,9 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — List and apply for benefits
+Person(guardian, "Guardian", "Carmen Rivera, from a text link, no account")
+System(ph, "PromiseHub", "Learning Bond module of one organization; platform benefits catalogue")
+System_Ext(program, "Benefit programs", "Federal, provincial and municipal; API or a form the guardian sends")
+Rel(guardian, ph, "Reads each benefit's state, applies one at a time", "HTTPS")
+Rel(ph, program, "Submits one application on the guardian's request")
+@enduml

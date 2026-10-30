@@ -1,0 +1,47 @@
+@startuml
+title UML sequence — Save coverage and status roles (L2-138, L2-032)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Admin" as a
+box "Frontend — Angular app" #E0F2FE
+participant LearningBondCoveragePage as page
+participant LEARNING_BOND_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant GetLearningBondSettingsHandler as get
+participant LearningBondCoverage as cov
+participant SaveLearningBondSettingsHandler as h
+participant IAuditWriter as audit
+end box
+database "Database" as db
+a -> page : opens learning-bond-coverage
+page -> client : getSettings()
+client -> api : GET /learning-bond/settings (RequireModule, ManageSettings)
+api -> get : HandleAsync()
+get -> cov : ReachByProgramAsync()
+cov -> db : active programs, enrolled children under 18, households (tenant filter, L2-001)
+api --> page : coverage, statusRoles, programs with household counts (L2-138 c1)
+a -> page : Chosen programs with none ticked; Save
+client -> api : PUT /learning-bond/settings
+api -> h : HandleAsync
+h --> api : 422 "Choose at least one program." (c3)
+api --> page : 422; nothing changes
+a -> page : ticks two programs, Site lead and Youth worker; Save
+client -> api : PUT /learning-bond/settings
+api -> h : HandleAsync
+h -> db : programs by id under the tenant filter
+alt an id is missing or the program is archived
+  h --> api : 422 "Choose programs that are running." (c3; a foreign id is unknown)
+else running
+  h -> h : add Admin and Program director back; reject Mentor, Volunteer, Youth (c4)
+  h -> db : LearningBondSettings.SetCoverage, SetStatusRoles
+  h -> audit : Updated on LearningBondSettings: "Coverage, Programs, StatusRoles" (c2, L2-032)
+  h -> db : SaveChanges
+  api --> page : 204
+  page -> a : toast "Learning Bond settings saved"
+end
+@enduml

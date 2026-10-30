@@ -1,0 +1,27 @@
+@startuml
+title UML classes — Accept the data-handling agreement
+class LearningBondAgreement <<platform>> { Id Version EffectiveDate WhatWeCollect WhereItGoes WhatYourOrganizationSees }
+class LearningBondAgreementAcceptance { Id OrganizationId Version AcceptedBy MembershipId? SignerTitle? SignerEmail? AcceptedAt }
+class LearningBondSignerRequest { Id OrganizationId Name Title Email TokenHash RequestedByMembershipId SentAt ExpiresAt UsedAt? CancelledAt?
++IsOpen(now): bool }
+class AgreementDto <<record>> { Version EffectiveDate Sections Acceptance? SignerRequest? }
+class AcceptAgreementRequest <<record>> { Authority: bool }
+class SignerRequestBody <<record>> { Name Title Email }
+class GetAgreementHandler { +HandleAsync(): AgreementDto }
+class AcceptAgreementHandler { +HandleAsync(AcceptAgreementRequest): Result }
+class RequestSignerHandler { +HandleAsync(SignerRequestBody): Result
++ResendAsync(id)
++CancelAsync(id) }
+class SignerLinkAccess { +ResolveAsync(token): LearningBondSignerRequest? }
+class AcceptAgreementAsSignerHandler { +HandleAsync(request, Authority): Result }
+class LearningBondAgreementGate { +IsAcceptedAsync(): bool
++PendingVersionAsync(): int? }
+GetAgreementHandler ..> AgreementDto
+AcceptAgreementHandler ..> LearningBondAgreementAcceptance
+RequestSignerHandler ..> LearningBondSignerRequest
+SignerLinkAccess ..> LearningBondSignerRequest
+AcceptAgreementAsSignerHandler --> SignerLinkAccess
+AcceptAgreementAsSignerHandler ..> LearningBondAgreementAcceptance
+LearningBondAgreementGate ..> LearningBondAgreement
+LearningBondAgreementGate ..> LearningBondAgreementAcceptance
+@enduml

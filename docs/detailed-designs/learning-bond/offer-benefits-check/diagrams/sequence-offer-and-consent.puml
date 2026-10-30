@@ -1,0 +1,47 @@
+@startuml
+title UML sequence — Offer and consent (L2-153, L2-055, L2-032)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Guardian" as g
+box "Frontend — Angular app" #E0F2FE
+participant BenefitsOfferCard as card
+participant BenefitsConsentDialog as dlg
+participant LEARNING_BOND_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondGuardianEndpoints as api
+participant BenefitsConsentFilter as filter
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant GuardianAccess as ga
+participant DeclineBenefitsOfferHandler as dh
+participant GiveConsentHandler as ch
+end box
+database "Database" as db
+g -> card : learning-bond-submitted shows the offer (L2-153 c1)
+alt Not now
+  card -> client : declineBenefitsOffer(token)
+  client -> api : POST /g/learning-bond/{token}/benefits/offer/decline
+  api -> ga : ResolveAsync(token)
+  ga --> api : household and organization; module on, else 404
+  api -> dh : HandleAsync
+  dh -> db : BenefitsOfferDeclinedAt on LearningBondIntake, audit Offer declined
+  api --> card : 204; the offer stays on guardian-learning-bond
+else Check benefits
+  card -> dlg : opens learning-bond-benefits-offer
+  g -> dlg : ticks the Benefits wording, types the name
+  dlg -> client : giveConsent(token, scope Benefits)
+  client -> api : POST /g/learning-bond/{token}/consents
+  api -> ga : ResolveAsync(token)
+  api -> ch : HandleAsync(scope Benefits)
+  ch -> ch : wording version from LearningBondTexts; typed name present, else 422
+  ch -> db : LearningBondConsent Scope=Benefits, separate from every LearningBond consent (L2-153 c2)
+  ch -> db : audit Consent given (L2-032)
+  api --> dlg : 201; Continue to learning-bond-benefits-intake
+end
+g -> client : any benefits route before the consent
+client -> api : GET /g/learning-bond/{token}/benefits
+api -> filter : Benefits consent for the household?
+filter --> client : 403, no benefit question asked (L2-153 c3)
+@enduml

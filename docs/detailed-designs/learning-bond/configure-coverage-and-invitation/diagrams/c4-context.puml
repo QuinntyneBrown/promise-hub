@@ -1,0 +1,9 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — Configure coverage and the invitation
+Person(admin, "Admin", "Tom Nguyen")
+Person(staff, "Staff in a status role", "Jaylen Brooks, site lead")
+System(ph, "PromiseHub", "Learning Bond settings per organization; platform invitation text")
+Rel(admin, ph, "Chooses programs, status roles and the sender name", "HTTPS")
+Rel(ph, staff, "Shows household status to the chosen roles only")
+@enduml

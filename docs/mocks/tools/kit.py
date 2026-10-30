@@ -156,6 +156,7 @@ ICONS = {
     # Badges (prompt 64): medal icons a program director picks for a badge.
     "award": '<circle cx="12" cy="9" r="6"/><path d="m8.5 14-1.5 7 5-3 5 3-1.5-7"/>',
     "heart": '<path d="M12 21s-7-4.6-9-9a5 5 0 0 1 9-4 5 5 0 0 1 9 4c-2 4.4-9 9-9 9z"/>',
+    "sprout": '<path d="M12 21v-8M12 13c0-4 3-7 8-7 0 4-3 7-8 7zM12 13c0-3-2.5-5-6-5 0 3 2.5 5 6 5z"/>',
 }
 
 

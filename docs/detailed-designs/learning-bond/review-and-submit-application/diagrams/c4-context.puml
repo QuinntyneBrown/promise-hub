@@ -1,0 +1,11 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — Review and submit the application
+Person(guardian, "Guardian", "Carmen Rivera, reviewing Mateo's application")
+System(ph, "PromiseHub", "Learning Bond module of one organization")
+System_Ext(provider, "RESP provider", "Northfield Credit Union; opens the RESP and applies for the bond")
+System_Ext(canada, "Government of Canada", "Receives the application through the provider")
+Rel(guardian, ph, "Reviews, edits, taps Submit", "HTTPS, verified device")
+Rel(ph, provider, "IRespProviderChannel.SubmitAsync, only after Submit")
+Rel(provider, canada, "Files the Learning Bond application")
+@enduml

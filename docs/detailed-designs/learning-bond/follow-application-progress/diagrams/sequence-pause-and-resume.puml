@@ -1,0 +1,50 @@
+@startuml
+title UML sequence — Pause and resume a claim (L2-151, L2-034)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Guardian" as g
+box "Frontend — Angular app" #E0F2FE
+participant LearningBondPausedPage as page
+participant LEARNING_BOND_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondGuardianEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant LearningBondPauseHandler as h
+participant MessageWriter as writer
+participant IAuditWriter as audit
+end box
+box "Infrastructure" #FEF0C7
+participant LearningBondReminderJob as job
+participant LearningBondDestructionJob as destroy
+end box
+database "Database" as db
+g -> page : "Mateo doesn't have a SIN yet"
+page -> client : pauseClaim(token, childId, NeedsSin)
+client -> api : POST /g/learning-bond/{token}/children/{childId}/pause
+api -> h : PauseAsync (GuardianAccess, module on, trusted device)
+h -> db : claim Paused, PausedReason NeedsSin, ResumeStep ChildSin, PausedAt
+h -> audit : LearningBondClaimPaused(claim id, reason)
+h --> page : paused view with the Service Canada link in the household's language (L2-151 c1)
+g -> page : Yes, text me; Save
+page -> client : setReminder(token, childId, true)
+client -> api : PUT /g/learning-bond/{token}/children/{childId}/reminder
+api -> h : SetReminderAsync
+h -> db : LearningBondReminder due in 14 days and in 30 days
+h --> page : the two dates (L2-151 c3)
+... daily, per tenant ...
+job -> db : due reminders not sent; module on, not suspended, consent active, invitation not declined, no STOP
+job -> writer : Queue(MessageSource.LearningBond, resume text with the link)
+job -> db : SentAt; none after the second (L2-034 idempotency)
+... guardian returns with the SIN ...
+g -> page : opens the link
+page -> client : open(token)
+client -> api : GET /g/learning-bond/{token}
+api --> page : claim Paused with ResumeStep ChildSin; every stored answer kept (L2-151 c4)
+page -> g : Continue to the intake at Mateo's SIN
+... 180 days with no activity ...
+destroy -> db : claim Not completed; ChildSin ciphertext null; household status reads Not completed (L2-151 c5)
+destroy -> audit : LearningBondClaimClosed(claim id, Idle180Days)
+@enduml

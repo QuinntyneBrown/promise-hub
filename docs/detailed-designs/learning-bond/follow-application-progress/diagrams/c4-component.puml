@@ -1,0 +1,36 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Follow the application's progress
+Container_Boundary(web, "Angular app") {
+  Component(sent, "LearningBondSubmittedPage", "learning-bond", "what was sent, three steps, deposit window, document upload")
+  Component(paused, "LearningBondPausedPage", "learning-bond", "help, reminder offer, resume")
+  Component(client, "LEARNING_BOND_API", "api", "getProgress, uploadDocument, sendDocument, pauseClaim, setReminder")
+}
+Container_Boundary(api, "API") {
+  Component(epw, "LearningBondEndpoints", "PromiseHub.Api", "POST /learning-bond/webhooks/providers/{provider}")
+  Component(epg, "LearningBondGuardianEndpoints", "PromiseHub.Api", "progress, documents, pause, reminder")
+  Component(progress, "LearningBondProgressHandler", "Application/LearningBond", "GetAsync")
+  Component(webhook, "ProviderWebhookHandler", "Application/LearningBond", "HandleAsync, once per EventId")
+  Component(docs, "LearningBondDocumentHandler", "Application/LearningBond", "UploadAsync, SendAsync")
+  Component(pause, "LearningBondPauseHandler", "Application/LearningBond", "PauseAsync, SetReminderAsync")
+  Component(verifier, "IWebhookSignatureVerifier", "Application/LearningBond", "Verify")
+  Component(writer, "MessageWriter", "Application/Messaging", "Queue as MessageSource.LearningBond")
+}
+Container_Boundary(infra, "Infrastructure") {
+  Component(job, "LearningBondReminderJob", "Infrastructure/LearningBond", "daily per tenant; 14 and 30 days")
+  Component(fakev, "FakeWebhookSignatureVerifier", "Infrastructure/LearningBond", "real verifier deferred")
+}
+System_Ext(provider, "RESP provider", "Webhook source")
+Rel(sent, client, "getProgress, uploadDocument, sendDocument")
+Rel(paused, client, "pauseClaim, setReminder")
+Rel(client, epg, "GET, POST, PUT")
+Rel(epg, progress, "GetAsync")
+Rel(epg, docs, "UploadAsync, SendAsync")
+Rel(epg, pause, "PauseAsync, SetReminderAsync")
+Rel(provider, epw, "signed event")
+Rel(epw, webhook, "HandleAsync")
+Rel(webhook, verifier, "Verify")
+Rel(webhook, writer, "Queue follow-up text")
+Rel(job, writer, "Queue reminder text")
+Rel(fakev, verifier, "implements")
+@enduml

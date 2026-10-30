@@ -1,0 +1,13 @@
+@startuml
+!include <C4/C4_Container>
+title C4 containers — Give and withdraw Learning Bond consent
+Person(guardian, "Guardian")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "Angular app", "Angular 22", "learning-bond, api, components")
+  Container(api, "API", ".NET 10 minimal APIs", "LearningBondGuardianEndpoints, GuardianAccess, module gate, LearningBondConsentHandler")
+  ContainerDb(db, "Database", "SQL (SQLite in tests)", "LearningBondConsents, LearningBondClaims, LearningBondIntakes, LearningBondApplications, LearningBondReminders, AuditEntries")
+}
+Rel(guardian, web, "Uses", "HTTPS")
+Rel(web, api, "JSON over HTTPS, link token and device token")
+Rel(api, db, "EF Core, tenant filter for the link's organization; GuardianConsents untouched")
+@enduml

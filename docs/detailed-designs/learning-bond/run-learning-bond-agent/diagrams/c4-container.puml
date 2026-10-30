@@ -1,0 +1,15 @@
+@startuml
+!include <C4/C4_Container>
+title C4 containers — Run the Learning Bond agent
+Person(guardian, "Guardian")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "Angular app", "Angular 22", "learning-bond, api, components (ph-agent-bubble, ph-secret-field)")
+  Container(api, "API", ".NET 10 minimal APIs", "LearningBondGuardianEndpoints, LearningBondAgent, AgentRedactor, AgentTools, AgentFallbackCopy")
+  ContainerDb(db, "Database", "SQL (SQLite in tests)", "AgentConversations, AgentMessages, LearningBondClaims, LearningBondApplications, AuditEntries")
+}
+System_Ext(llm, "Language model", "Vendor behind ILanguageModel; FakeLanguageModel in tests")
+Rel(guardian, web, "Uses", "HTTPS")
+Rel(web, api, "JSON over HTTPS with the link token; 10 s client timeout")
+Rel(api, db, "EF Core, tenant filter for the link's organization")
+Rel(api, llm, "ILanguageModel.CompleteAsync, redacted context, 10 s budget")
+@enduml

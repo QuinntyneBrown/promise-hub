@@ -1,0 +1,11 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — Complete the intake
+Person(guardian, "Guardian", "Carmen Rivera, entering two SINs and a tax answer")
+System(ph, "PromiseHub", "Learning Bond module of one organization")
+System_Ext(vault, "Key vault", "Holds the Learning Bond key; never the database")
+System_Ext(llm, "Language model", "Receives redacted text only")
+Rel(guardian, ph, "Confirms the record, enters the numbers in fields", "HTTPS, verified device")
+Rel(ph, vault, "Reads the key for ILearningBondCipher")
+Rel(ph, llm, "AgentRedactor output, never a 9-digit number")
+@enduml

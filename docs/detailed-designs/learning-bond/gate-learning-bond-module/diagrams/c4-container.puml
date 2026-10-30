@@ -1,0 +1,19 @@
+@startuml
+!include <C4/C4_Container>
+title C4 containers — Gate the Learning Bond module
+Person(admin, "Admin")
+Person(guardian, "Guardian")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "Angular app", "Angular 22", "settings, learning-bond (lazy, only while on), api, components")
+  Container(api, "API", ".NET 10 minimal APIs", "RequireModule filter, LearningBondEndpoints, LearningBondGuardianEndpoints")
+  Container(jobs, "Job runner", "Hosted service", "LearningBondLaunchJob, LearningBondReminderJob, LearningBondDestructionJob per tenant")
+  ContainerDb(db, "Database", "SQL (SQLite in tests)", "ModuleConfigurations, LearningBondAgreementAcceptances, LearningBond* tenant tables, AuditEntries")
+}
+System_Ext(vendor, "RESP provider or benefit program", "Webhooks")
+Rel(admin, web, "Uses", "HTTPS")
+Rel(guardian, web, "Uses", "HTTPS")
+Rel(web, api, "JSON over HTTPS; reads /settings/modules once per session")
+Rel(vendor, api, "Webhooks; organization from the stored application")
+Rel(api, db, "EF Core, tenant filter")
+Rel(jobs, db, "EF Core, TenantScope; exits when the module is off")
+@enduml

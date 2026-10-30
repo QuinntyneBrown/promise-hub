@@ -1,0 +1,39 @@
+@startuml
+title UML sequence — Export for funders (L2-143, L2-025, L2-032)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Program director" as d
+box "Frontend — Angular app" #E0F2FE
+participant ExportLearningBondDialog as dlg
+participant LEARNING_BOND_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant ExportLearningBondHandler as h
+participant LearningBondFigures as fig
+participant ReportCsv as csv
+participant IAuditWriter as audit
+end box
+database "Database" as db
+d -> dlg : From, To; Export
+dlg -> client : export(from, to)
+client -> api : POST /learning-bond/exports (RequireModule; 404 when off, c4)
+api -> api : ViewReports? else 403 (c4)
+api -> h : HandleAsync(request)
+alt from after to
+  api --> dlg : 422 "Choose a start date on or before the end date."
+else valid
+  h -> db : covered programs; rows of the period (tenant filter)
+  h -> fig : Compute per program and total
+  h -> csv : one row per covered program and a total row; counts under 5 as "<5", dollars blank (c2)
+  h -> h : no name, contact, date of birth or identifier of a guardian or child (c3)
+  h -> db : ReportExport(kind LearningBond, "{organization}-learning-bond-{from}-{to}.csv", rows, expires in 7 days)
+  h -> audit : Created on ReportExport with kind and row count (c3, L2-032)
+  h -> db : SaveChanges
+  api --> dlg : 201 export id, file name, expiry (c1)
+  dlg -> d : Download; the link answers 410 after 7 days (L2-025)
+end
+@enduml

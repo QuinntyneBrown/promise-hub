@@ -1,0 +1,31 @@
+@startuml
+title UML classes — Remind and total dollars
+enum ReminderKind { FileTaxes TurnsSix TurnsEighteen BenefitRenewal }
+class LearningBondReminder { Id OrganizationId HouseholdId ChildId? ApplicationId? Kind DueOn TurnedOffAt? SentAt? }
+class LearningBondApplication { Id OrganizationId HouseholdId ChildId? Kind Program ProgramReference Status EstimatedAmount? ConfirmedAmount? }
+class ProgramEvent { EventId Program Reference Kind Amount? OccurredAt }
+class ReminderDto <<record>> { Id Kind Title DueOn TurnedOff }
+class TotalDto <<record>> { Confirmed Estimated Rows[] NothingConfirmed }
+class TotalRow <<record>> { ChildFirstName Stream Confirmed? Estimated? }
+class ReminderPlanner { +PlanAsync(household) }
+class TurnOffReminderHandler { +HandleAsync(scope, id) }
+class GetTotalHandler { +HandleAsync(scope): TotalDto }
+class ProgramWebhookHandler { +HandleAsync(program, payload, signature) }
+class LearningBondReminderJob { +RunAsync(tenantScope, now) }
+class MessageWriter { +Queue(source, title, body, channel, audience, request) }
+interface IWebhookSignatureVerifier { +Verify(program, payload, signature): bool }
+LearningBondReminder --> ReminderKind
+ReminderPlanner ..> LearningBondReminder
+ReminderPlanner ..> LearningBondApplication
+TurnOffReminderHandler ..> LearningBondReminder
+GetTotalHandler ..> LearningBondApplication
+GetTotalHandler ..> TotalDto
+TotalDto "1" *-- "0..*" TotalRow
+ProgramWebhookHandler --> IWebhookSignatureVerifier
+ProgramWebhookHandler ..> ProgramEvent
+ProgramWebhookHandler ..> LearningBondApplication
+ProgramWebhookHandler --> ReminderPlanner
+ProgramWebhookHandler --> MessageWriter
+LearningBondReminderJob ..> LearningBondReminder
+LearningBondReminderJob --> MessageWriter
+@enduml

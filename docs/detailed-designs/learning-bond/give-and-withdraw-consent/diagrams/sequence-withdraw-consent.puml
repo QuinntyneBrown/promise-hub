@@ -1,0 +1,35 @@
+@startuml
+title UML sequence — Withdraw consent for a child (L2-152, L2-058, L2-032)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Guardian" as g
+box "Frontend — Angular app" #E0F2FE
+participant WithdrawLearningBondConsentDialog as dlg
+participant LEARNING_BOND_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondGuardianEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant LearningBondConsentHandler as h
+participant IAuditWriter as audit
+end box
+database "Database" as db
+g -> dlg : Withdraw for Mateo, confirms
+dlg -> client : withdrawConsent(token, consentId)
+client -> api : DELETE /g/learning-bond/{token}/consents/{id}
+api -> h : WithdrawAsync (GuardianAccess, module on, trusted device)
+h -> db : consent by id within the household; else 404
+h -> db : WithdrawnAt = now
+h -> db : applications of Mateo in Draft or ReadyToSubmit -> Cancelled
+h -> db : LearningBondClaim.ChildSin.Ciphertext = null (Last3 kept)
+alt no other child of the household holds an active consent
+  h -> db : LearningBondIntake: guardian SIN ciphertext = null, tax-filing answer deleted
+end
+h -> db : LearningBondReminders of Mateo deleted
+note right of db : Submitted, Received and Deposited applications keep status, provider and dates (L2-152 c3)
+h -> audit : LearningBondConsentWithdrawn(child id, wording version)
+h --> dlg : 204
+dlg -> g : "Consent for Mateo withdrawn"; a later consent restarts the intake (L2-152 c4)
+@enduml

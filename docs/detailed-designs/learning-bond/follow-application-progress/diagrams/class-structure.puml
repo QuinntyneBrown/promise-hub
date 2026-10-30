@@ -1,0 +1,35 @@
+@startuml
+title UML classes — Follow the application's progress
+class ProviderWebhookHandler { +HandleAsync(provider, headers, body): IResult }
+class ProviderEvent <<record>> { EventId Reference Kind Amount DocumentName OccurredAt }
+enum ProviderEventKind { Received
+Deposited
+DocumentNeeded }
+interface IWebhookSignatureVerifier { +Verify(provider, headers, body): bool }
+class LearningBondApplication { Id OrganizationId ClaimId Status ProviderId ProviderReference SubmittedAt ReceivedAt DepositedAt DepositAmount AppliedEventIds }
+class LearningBondDocument { Id OrganizationId ApplicationId Name ContentType Size FileKey RequestedAt UploadedAt SentAt }
+class LearningBondDocumentHandler { +UploadAsync(GuardianRequest, applicationId, file): GuardianResult
++SendAsync(GuardianRequest, documentId): GuardianResult }
+class LearningBondProgressHandler { +GetAsync(GuardianRequest, applicationId): GuardianResult }
+class LearningBondProgressDto <<record>> { Provider SubmittedAt FieldsSent EstimateAmount RuleVersion StepsDone DepositWindowFrom DepositWindowTo OpenDocumentRequest }
+class LearningBondPauseHandler { +PauseAsync(GuardianRequest, childId, reason): GuardianResult
++SetReminderAsync(GuardianRequest, childId, remind): GuardianResult }
+class LearningBondClaim { Id OrganizationId ChildId Status PausedReason ResumeStep PausedAt LastActivityAt }
+class LearningBondReminder { Id OrganizationId ClaimId Kind DueOn SentAt TurnedOff }
+class LearningBondReminderJob { +Handle(payload, TenantScope) }
+class MessageWriter
+ProviderWebhookHandler ..> ProviderEvent
+ProviderEvent --> ProviderEventKind
+ProviderWebhookHandler --> IWebhookSignatureVerifier
+ProviderWebhookHandler ..> LearningBondApplication
+ProviderWebhookHandler ..> LearningBondDocument
+ProviderWebhookHandler --> MessageWriter
+LearningBondDocumentHandler ..> LearningBondDocument
+LearningBondProgressHandler ..> LearningBondProgressDto
+LearningBondPauseHandler ..> LearningBondClaim
+LearningBondPauseHandler ..> LearningBondReminder
+LearningBondReminderJob ..> LearningBondReminder
+LearningBondReminderJob --> MessageWriter
+LearningBondDocument --> LearningBondApplication
+LearningBondReminder --> LearningBondClaim
+@enduml

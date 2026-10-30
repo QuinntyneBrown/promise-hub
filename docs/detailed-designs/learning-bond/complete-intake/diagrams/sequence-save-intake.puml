@@ -1,0 +1,47 @@
+@startuml
+title UML sequence — Save the intake (L2-146, L2-159, L2-031)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Guardian" as g
+box "Frontend — Angular app" #E0F2FE
+participant LearningBondIntakePage as page
+participant LEARNING_BOND_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondGuardianEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant LearningBondIntakeHandler as h
+participant SinValidator as val
+participant ILearningBondCipher as cipher
+participant IAuditWriter as audit
+end box
+box "Infrastructure" #FEF0C7
+participant LearningBondCipher as impl
+end box
+database "Database" as db
+g -> page : Yes, that's right; two SINs; tax answer; Save and continue
+page -> client : saveIntake(token, childId, request)
+client -> api : PUT /g/learning-bond/{token}/children/{childId}/intake
+api -> h : SaveAsync (GuardianAccess, module on, trusted device, active consent for the child)
+h -> val : Check(guardianSin), Check(childSin)
+alt a SIN fails length, Luhn or first digit
+  h --> page : 422 "Check the number. A SIN has 9 digits, like 123 456 782." per field; nothing stored (L2-146 c3)
+else guardian SIN equals child SIN
+  h --> page : 422 "Each person has their own SIN." (L2-146 c4)
+else valid
+  h -> cipher : Encrypt(digits) for each SIN
+  cipher -> impl : AES-GCM under the key from configuration or vault
+  alt key missing
+    impl --> h : Unavailable
+    h --> page : 503 "Learning Bond is unavailable right now. Nothing was lost." (L2-159 c6)
+  else encrypted
+    impl --> h : EncryptedSin(Ciphertext, Last3)
+    h -> db : LearningBondIntake (guardian SIN, TaxFiled) once per household; LearningBondClaim.ChildSin
+    h -> audit : LearningBondIntakeSaved(fields: GuardianSin, ChildSin, TaxFiled)
+    h --> page : 200 LearningBondIntakeDto with Last3 only (L2-159 c2)
+    page -> g : next step; a second child later sees the guardian values masked with Change (L2-146 c5)
+  end
+end
+@enduml

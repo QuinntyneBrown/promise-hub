@@ -1,0 +1,47 @@
+@startuml
+title UML sequence — Review the application (L2-148, L2-011)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Guardian" as g
+box "Frontend — Angular app" #E0F2FE
+participant LearningBondReviewPage as page
+participant LEARNING_BOND_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondGuardianEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant LearningBondApplicationHandler as h
+participant HouseholdRules as rules
+participant IAuditWriter as audit
+end box
+database "Database" as db
+g -> page : Next: the RESP provider
+page -> client : prepareApplication(token, childId)
+client -> api : POST /g/learning-bond/{token}/children/{childId}/applications
+api -> h : PrepareAsync (GuardianAccess, module on, trusted device, consent, estimate)
+h -> db : RespProviders ordered as seeded; Household.Province
+alt no provider serves the province
+  h --> page : NoProvider = true, Government of Canada link; claim stays Started (L2-148 c2)
+else first provider serving the province
+  h -> db : Draft LearningBondApplication from Child, Household, Guardian; SINs by reference
+  h -> audit : LearningBondApplicationPrepared(application id, provider)
+  h --> page : LearningBondApplicationDto with Recommended, the fixed reason, OtherProviders, Last3 only (L2-148 c1, c3)
+  page -> g : provider card, every field with Edit, Submit to {provider}
+  opt Edit phone
+    g -> page : new phone, Save
+    page -> client : editField(token, applicationId, "Phone", value)
+    client -> api : PATCH /g/learning-bond/{token}/applications/{id}/fields/Phone
+    api -> h : EditFieldAsync
+    h -> rules : validate as the household record does (L2-011)
+    alt invalid
+      h --> page : 422 "Enter a 10-digit mobile number."
+    else valid
+      h -> db : application.Phone = value; ReviewVersion + 1; Household unchanged (L2-148 c4)
+      h -> audit : LearningBondApplicationEdited(field Phone)
+      h --> page : updated DTO with the new ReviewVersion
+    end
+  end
+end
+@enduml

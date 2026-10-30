@@ -1,0 +1,11 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — Accept the data-handling agreement
+Person(admin, "Admin", "Tom Nguyen")
+Person(signer, "Named signer", "Rev. Angela Baptiste, board chair; no account")
+System(ph, "PromiseHub", "Versioned agreement, acceptances per organization")
+System_Ext(mail, "Email provider", "Delivers the signer link and the admin's notice")
+Rel(admin, ph, "Reads and accepts, or names a signer", "HTTPS")
+Rel(signer, ph, "Accepts through a single-use link", "HTTPS, 14 days")
+Rel(ph, mail, "Sends from {organization} via PromiseHub")
+@enduml

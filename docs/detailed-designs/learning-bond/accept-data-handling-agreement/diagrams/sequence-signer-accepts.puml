@@ -1,0 +1,55 @@
+@startuml
+title UML sequence — A named signer accepts through the link (L2-137, L2-032)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Admin" as a
+actor "Signer" as s
+box "Frontend — Angular app" #E0F2FE
+participant LearningBondSignerDialog as dlg
+participant LearningBondSignerPage as spage
+participant LEARNING_BOND_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant RequestSignerHandler as req
+participant SignerLinkAccess as access
+participant AcceptAgreementAsSignerHandler as h
+participant NotificationWriter as notify
+participant IAuditWriter as audit
+end box
+box "Infrastructure" #FEF0C7
+participant IEmailSender as mail
+end box
+database "Database" as db
+a -> dlg : name, title, email; Send the link
+dlg -> client : requestSigner(body)
+client -> api : POST /learning-bond/agreement/signers
+api -> req : HandleAsync
+req -> req : name and title 1..100, email valid; else 422 by field (L2-137 c4)
+req -> db : cancel the open request of the tenant, if any (c5)
+req -> db : LearningBondSignerRequest(hash, expires in 14 days)
+req -> mail : link from "{organization} via PromiseHub" (c1)
+req -> audit : Created on LearningBondSignerRequest
+api --> dlg : 201 "Waiting for {name} to sign"
+s -> spage : opens /sign/learning-bond/{token}
+spage -> client : getSignerAgreement(token)
+client -> api : GET /sign/learning-bond/{token}
+api -> access : ResolveAsync(token)
+access -> db : request by hash across tenants; ResolveForJob(organization)
+alt used, expired, cancelled or replaced
+  api --> spage : 410 "This link has expired. Ask {organization} to send a new one." (c3)
+else open
+  api --> spage : the agreement text
+  s -> spage : ticks authority; Accept
+  client -> api : POST /sign/learning-bond/{token}/acceptances
+  api -> h : HandleAsync
+  h -> db : acceptance with name, title, email, version, now; request UsedAt (c2)
+  h -> notify : NotifyMembersAsync(requesting admin, learning-bond-agreement-signed)
+  h -> mail : acceptance notice to the admin
+  h -> audit : Created, actor "Signer: {name}" (L2-032)
+  api --> spage : 201 "Thank you"; the link stops working
+end
+@enduml

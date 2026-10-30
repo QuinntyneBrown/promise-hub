@@ -1,0 +1,15 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — Launch invitations
+Person(admin, "Admin", "Tom Nguyen")
+Person(staff, "Staff in a status role", "Jaylen Brooks, at check-in")
+Person(guardian, "Guardian", "Carmen Rivera")
+System(ph, "PromiseHub", "Schedules the launch; queues one invitation per covered household through Messages")
+System_Ext(sms, "SMS provider", "Delivers texts; STOP replies")
+System_Ext(mail, "Email provider", "Delivers the email invitation")
+Rel(admin, ph, "Schedules a day or chooses Staff invite at the door", "HTTPS")
+Rel(staff, ph, "Invites one household at the door", "HTTPS")
+Rel(ph, sms, "Texts at 10:00 local, within the SMS cap")
+Rel(ph, mail, "Emails guardians with email only")
+Rel(sms, guardian, "Invitation in the household's language")
+@enduml

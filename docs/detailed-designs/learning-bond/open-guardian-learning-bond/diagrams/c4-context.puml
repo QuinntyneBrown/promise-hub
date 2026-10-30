@@ -1,0 +1,11 @@
+@startuml
+!include <C4/C4_Context>
+title C4 system context — Open the guardian's Learning Bond page
+Person(guardian, "Guardian", "Carmen Rivera, household language Spanish")
+System(ph, "PromiseHub", "Learning Bond module of one organization")
+System_Ext(sms, "SMS provider", "Carries the invitation and the verification code")
+System_Ext(llm, "Language model", "Rephrases the approved explanation within 60 words")
+Rel(guardian, ph, "Taps the invitation link", "HTTPS, no sign-in")
+Rel(ph, sms, "Sends the code")
+Rel(ph, llm, "Asks for the welcome step; fixed copy after 10 s")
+@enduml

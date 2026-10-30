@@ -79,3 +79,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0073](0073-settings-open-on-organization-with-module-defaults-only-while-their-module-is-on.md) | Settings open on Organization; module defaults show only while their module is on |
 | [0074](0074-detailed-reports-are-computed-on-read-with-sections-per-module-and-imports-place-and-invite.md) | Detailed reports are computed on read, with a section per module; imports place youth in cohorts and invite them |
 | [0075](0075-the-public-website-reads-published-content-by-address-and-stores-visitor-requests-per-organization.md) | The public website reads published content by address and stores visitor requests per organization |
+| [0076](0076-learning-bond-keeps-financial-data-encrypted-and-submits-only-on-the-guardians-request.md) | Learning Bond keeps financial data encrypted and submits only on the guardian's request |

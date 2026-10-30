@@ -1,0 +1,47 @@
+@startuml
+title UML sequence — Save the module configuration with Learning Bond (L2-135, L2-004)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Admin" as a
+box "Frontend — Angular app" #E0F2FE
+participant SettingsModulesPage as page
+participant MODULES_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant ModuleEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant SaveModulesHandler as h
+participant ModuleRules as rules
+participant LearningBondAgreementGate as gate
+participant IAuditWriter as audit
+end box
+database "Database" as db
+a -> page : turns Learning Bond on, Messages off; Save
+page -> client : save(modules)
+client -> api : PUT /settings/modules
+api -> h : HandleAsync(on)
+h -> rules : Check(on)
+rules --> h : "Learning Bond needs Messages." (L2-135 c2)
+api --> page : 422 naming Messages; nothing stored
+page -> a : error beside Learning Bond (learning-bond-needs-messages)
+a -> page : turns Messages on; Save
+client -> api : PUT /settings/modules
+api -> h : HandleAsync(on)
+h -> rules : Check(on)
+rules --> h : no violation
+h -> gate : IsAcceptedAsync()
+gate -> db : current LearningBondAgreement version; acceptance for the tenant (L2-001)
+alt not accepted
+  gate --> h : false
+  api --> page : 422 "Accept the Learning Bond data-handling agreement first." (L2-135 c4)
+  page -> a : Read the agreement opens learning-bond-agreement
+else accepted
+  h -> db : ModuleConfiguration.Set(on)
+  h -> audit : ModuleChanged, before and after flags (L2-032)
+  h -> db : SaveChanges
+  api --> page : 200, count of modules on
+  page -> a : toast; the Settings › Learning Bond tab appears
+end
+@enduml

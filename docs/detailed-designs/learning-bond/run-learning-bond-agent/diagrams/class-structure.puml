@@ -1,0 +1,29 @@
+@startuml
+title UML classes — Run the Learning Bond agent
+enum AgentStep { Landing Consent Intake Estimate Review Submitted Benefits Reminders Total }
+class AgentContext <<record>> { Language Children: ChildSummary[] Statuses Figures }
+class ChildSummary <<record>> { FirstName Age ClaimStatus }
+class AgentRequest <<record>> { Step Message? }
+class AgentReplyDto <<record>> { Text Language FromFallback OfferCallback }
+class AgentConversation { Id OrganizationId HouseholdId StartedAt }
+class AgentMessage { Id ConversationId Step Role Text SentAt ToolsUsed[] }
+class LearningBondAgent { +ReplyAsync(scope, AgentRequest): AgentReplyDto }
+class AgentRedactor { +Redact(text): string +Redact(AgentContext): AgentContext }
+class AgentTools { +GetStatus(scope, childId?) +GetEstimate(scope, childId) +ListBenefits(scope) +ExplainStep(step) +OfferCallback() }
+class AgentFallbackCopy { +Line(step, language): string }
+interface ILanguageModel { +CompleteAsync(systemPrompt, context, tools, timeout): ModelReply }
+class ModelReply <<record>> { Text? ToolCalls[] }
+class FakeLanguageModel
+LearningBondAgent --> AgentRedactor
+LearningBondAgent --> AgentTools
+LearningBondAgent --> AgentFallbackCopy
+LearningBondAgent --> ILanguageModel
+LearningBondAgent ..> AgentContext
+LearningBondAgent ..> AgentReplyDto
+LearningBondAgent ..> AgentConversation
+AgentConversation "1" *-- "0..*" AgentMessage
+AgentContext "1" *-- "0..*" ChildSummary
+AgentMessage --> AgentStep
+ILanguageModel ..> ModelReply
+FakeLanguageModel ..|> ILanguageModel
+@enduml

@@ -9,7 +9,7 @@ T = STAFF["tom"]
 J = STAFF["jaylen"]
 R_SEC, R_COST, R_TTV, R_COMPL = "L1-016", "L1-020", "L1-004", "L1-015"
 
-SETTINGS_TABS = [("Organization", "settings-organization"), ("Modules", "settings-modules"), ("Staff and roles", "staff"), ("Notifications", "settings-notifications"), ("Privacy and data", "settings-privacy"), ("Billing", "billing")]
+SETTINGS_TABS = [("Organization", "settings-organization"), ("Modules", "settings-modules"), ("Staff and roles", "staff"), ("Notifications", "settings-notifications"), ("Privacy and data", "settings-privacy"), ("Billing", "billing"), ("Learning Bond", "settings-learning-bond")]
 
 
 def settings_nav(cur: str) -> str:

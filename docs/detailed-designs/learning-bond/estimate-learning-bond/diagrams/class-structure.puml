@@ -1,0 +1,20 @@
+@startuml
+title UML classes — Estimate the Learning Bond
+class LearningBondEstimateHandler { +GetAsync(GuardianRequest, childId): GuardianResult }
+class LearningBondRule <<platform, versioned>> { Version EffectiveFrom FirstYearAmount LaterYearAmount Cap EarliestBirthYear LastEligibleAge ClaimUntilAge
++Estimate(birthYear, currentYear): EstimateResult }
+class EstimateResult <<record>> { Applies Amount EligibleYears }
+class LearningBondClaim { Id OrganizationId ChildId Status PausedReason EstimateAmount RuleVersion EstimatedAt }
+class LearningBondIntake { HouseholdId TaxFiled TaxYear }
+class LearningBondEstimateDto <<record>> { FirstName Applies Amount RuleVersion Explanation Paused }
+enum PausedReason { None
+NeedsSin
+NeedsTaxReturn
+AwaitingRecordFix }
+LearningBondEstimateHandler --> LearningBondRule
+LearningBondRule ..> EstimateResult
+LearningBondEstimateHandler ..> LearningBondClaim
+LearningBondEstimateHandler ..> LearningBondIntake
+LearningBondEstimateHandler ..> LearningBondEstimateDto
+LearningBondClaim --> PausedReason
+@enduml

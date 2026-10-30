@@ -1,0 +1,32 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Accept the data-handling agreement
+Container_Boundary(web, "Angular app") {
+  Component(page, "LearningBondAgreementPage", "learning-bond", "three sections, authority box, Accept")
+  Component(dlg, "LearningBondSignerDialog", "learning-bond", "name, title, email")
+  Component(spage, "LearningBondSignerPage", "learning-bond", "anonymous /sign/learning-bond/:token")
+  Component(client, "LEARNING_BOND_API", "api", "getAgreement, accept, requestSigner, acceptAsSigner")
+}
+Container_Boundary(api, "API") {
+  Component(ep, "LearningBondEndpoints", "PromiseHub.Api", "GET /learning-bond/agreement, POST .../acceptances, POST .../signers, POST /sign/learning-bond/{token}/acceptances")
+  Component(get, "GetAgreementHandler", "Application/LearningBond", "version, text, acceptance, open signer request")
+  Component(accept, "AcceptAgreementHandler", "Application/LearningBond", "authority, store, audit")
+  Component(req, "RequestSignerHandler", "Application/LearningBond", "validate, replace open request, email")
+  Component(access, "SignerLinkAccess", "Application/LearningBond", "token hash → organization; 410 when spent")
+  Component(sacc, "AcceptAgreementAsSignerHandler", "Application/LearningBond", "store, close link, notify admin")
+  Component(notify, "NotificationWriter", "Application/Notifications", "NotifyMembersAsync")
+  Component(mailer, "IEmailSender", "Application", "signer link, acceptance notice")
+}
+Rel(page, client, "getAgreement, accept")
+Rel(dlg, client, "requestSigner")
+Rel(spage, client, "getSignerAgreement, acceptAsSigner")
+Rel(client, ep, "HTTPS")
+Rel(ep, get, "HandleAsync")
+Rel(ep, accept, "HandleAsync")
+Rel(ep, req, "HandleAsync")
+Rel(ep, access, "ResolveAsync(token)")
+Rel(ep, sacc, "HandleAsync")
+Rel(req, mailer, "SendAsync")
+Rel(sacc, notify, "requesting admin")
+Rel(sacc, mailer, "SendAsync")
+@enduml

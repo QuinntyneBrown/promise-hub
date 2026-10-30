@@ -1,0 +1,23 @@
+@startuml
+title UML classes — Give and withdraw Learning Bond consent
+class LearningBondConsentHandler { +GiveAsync(GuardianRequest, GiveLearningBondConsentRequest): GuardianResult
++WithdrawAsync(GuardianRequest, consentId): GuardianResult }
+class GiveLearningBondConsentRequest <<record>> { ChildIds TypedName WordingVersion }
+class LearningBondConsent { Id OrganizationId HouseholdId ChildId GuardianId Scope TypedName WordingVersion Language GivenAt WithdrawnAt }
+enum LearningBondConsentScope { LearningBond
+Benefits }
+class LearningBondClaim { Id OrganizationId ChildId ConsentId Status PausedReason ChildSin: EncryptedSin EstimateAmount RuleVersion }
+class LearningBondIntake { Id OrganizationId HouseholdId GuardianSin: EncryptedSin TaxFiled }
+class LearningBondApplication { Id ClaimId Kind Status ProviderId ReviewVersion SubmittedAt ReceivedAt DepositedAt }
+class LearningBondConsentDto <<record>> { Id ChildFirstName TypedName WordingVersion Language GivenAt }
+class GuardianConsent <<existing, untouched>>
+LearningBondConsentHandler ..> GiveLearningBondConsentRequest
+LearningBondConsentHandler ..> LearningBondConsent
+LearningBondConsentHandler ..> LearningBondClaim
+LearningBondConsentHandler ..> LearningBondIntake
+LearningBondConsentHandler ..> LearningBondApplication
+LearningBondConsentHandler ..> LearningBondConsentDto
+LearningBondConsent --> LearningBondConsentScope
+LearningBondClaim --> LearningBondConsent
+LearningBondApplication --> LearningBondClaim
+@enduml

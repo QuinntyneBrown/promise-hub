@@ -1,0 +1,45 @@
+@startuml
+title UML sequence — Reminder job (L2-157, L2-021, L2-022, L2-034)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Guardian" as g
+box "Frontend — Angular app" #E0F2FE
+participant RemindersPage as page
+participant LEARNING_BOND_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondGuardianEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant TurnOffReminderHandler as off
+participant MessageWriter as mw
+end box
+box "Backend — PromiseHub.Infrastructure" #FEF0C7
+participant "Job runner" as runner
+participant LearningBondReminderJob as job
+end box
+database "Database" as db
+g -> page : Turn off "Ontario Child Benefit renewal"
+page -> client : turnOffReminder(token, id)
+client -> api : POST /g/learning-bond/{token}/reminders/{id}/off
+api -> off : HandleAsync; another household's id answers 404
+off -> db : TurnedOffAt, audit Reminder turned off (L2-157 c3)
+api --> page : 204, Off badge with Undo
+runner -> job : RunAsync(tenantScope) at 10:00 in the organization's time zone (L2-157 c2)
+alt module off, organization suspended
+  job --> runner : exits without effect (L2-157 c4)
+else running
+  job -> db : reminders due today, SentAt null, TurnedOffAt null, Benefits consent not withdrawn
+  loop each due reminder
+    alt STOP replied by the household
+      job -> job : no text (L2-157 c3)
+    else
+      job -> mw : Queue(MessageSource.LearningBond, text in the household's language with what to do and a link, idempotency key reminderId) (L2-021)
+      mw -> db : one Message per household; email when no mobile or the SMS cap is reached (L2-022)
+    end
+    job -> db : SentAt, audit Reminder sent
+  end
+  job -> job : a reminder whose date passed while the module was off is never sent (L2-157 c4)
+end
+@enduml

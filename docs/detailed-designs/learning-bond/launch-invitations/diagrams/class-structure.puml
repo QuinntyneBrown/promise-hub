@@ -1,0 +1,32 @@
+@startuml
+title UML classes — Launch invitations
+class LearningBondSettings { Id OrganizationId Coverage ProgramIds StatusRoles SenderName LaunchMode? LaunchDate? CancelledAt?
++Schedule(date)
++LaunchAtTheDoor()
++Cancel(at) }
+enum LaunchMode { Scheduled AtTheDoor }
+class LearningBondInvitation { Id OrganizationId HouseholdId SentAt Channel MessageId }
+class LaunchDto <<record>> { HouseholdsCovered WithMobile EmailOnly Neither LaunchMode? LaunchDate? CancelledAt? PendingAgreementVersion? }
+class MissingContactDto <<record>> { HouseholdId Name Reason Programs }
+class ScheduleLaunchRequest <<record>> { Mode Date? }
+class InviteHouseholdResult <<record>> { InvitedAt Sent: bool }
+class GetLaunchHandler { +HandleAsync(): LaunchDto
++MissingContactsAsync(): MissingContactDto[] }
+class ScheduleLaunchHandler { +HandleAsync(ScheduleLaunchRequest): Result
++ChangeDateAsync(date): Result
++CancelAsync(): Result }
+class InviteHouseholdHandler { +HandleAsync(householdId): InviteHouseholdResult }
+class LearningBondLaunchJob { +Handle(payload, TenantScope) }
+class LearningBondCoverage { +CoveredHouseholdsAsync(): CoveredHousehold[] }
+class MessageWriter { +Queue(source, title, body, channel, audience, request, textFor, dueAt): Message }
+interface IJobScheduler { +Enqueue(organizationId, payload, dueAt) }
+LearningBondSettings --> LaunchMode
+ScheduleLaunchHandler ..> LearningBondSettings
+ScheduleLaunchHandler --> IJobScheduler
+LearningBondLaunchJob --> LearningBondCoverage
+LearningBondLaunchJob --> MessageWriter
+LearningBondLaunchJob ..> LearningBondInvitation
+InviteHouseholdHandler --> MessageWriter
+InviteHouseholdHandler ..> LearningBondInvitation
+GetLaunchHandler --> LearningBondCoverage
+@enduml

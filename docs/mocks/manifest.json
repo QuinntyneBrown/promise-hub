@@ -172,6 +172,8 @@
       ],
       "states": [
         "default",
+        "learning-bond-not-invited",
+        "learning-bond-off",
         "loading",
         "empty",
         "error",
@@ -1164,6 +1166,8 @@
         "single",
         "invalid",
         "blocked",
+        "learning-bond-needs-messages",
+        "learning-bond-agreement",
         "submitting",
         "success",
         "loading",
@@ -1267,6 +1271,7 @@
         "portal-fr",
         "portal-read",
         "messages-off",
+        "learning-bond-off",
         "expired",
         "error"
       ],
@@ -3223,6 +3228,573 @@
       }
     },
     {
+      "id": "settings-learning-bond",
+      "kind": "page",
+      "title": "Learning Bond settings",
+      "route": "/settings/learning-bond",
+      "requirements": [
+        "L2-135",
+        "L2-136",
+        "L2-138",
+        "L2-139",
+        "L2-140",
+        "L1-026",
+        "L2-161",
+        "L2-162",
+        "L2-163",
+        "L2-005",
+        "L2-001"
+      ],
+      "states": [
+        "default",
+        "not-accepted",
+        "new-version",
+        "launched",
+        "loading",
+        "error",
+        "forbidden"
+      ],
+      "not_applicable": {
+        "empty": "The hub always lists the agreement, coverage, invitation and launch."
+      }
+    },
+    {
+      "id": "learning-bond-agreement",
+      "kind": "page",
+      "title": "Learning Bond data-handling agreement",
+      "route": "/settings/learning-bond/agreement",
+      "requirements": [
+        "L2-136",
+        "L2-137",
+        "L1-026",
+        "L2-161",
+        "L2-162",
+        "L2-163",
+        "L2-005",
+        "L2-001"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "submitting",
+        "accepted",
+        "waiting-signer",
+        "signer",
+        "signer-accepted",
+        "signer-expired",
+        "loading",
+        "error",
+        "forbidden"
+      ],
+      "not_applicable": {
+        "empty": "The agreement always has a current version."
+      }
+    },
+    {
+      "id": "learning-bond-coverage",
+      "kind": "page",
+      "title": "Learning Bond coverage",
+      "route": "/settings/learning-bond/coverage",
+      "requirements": [
+        "L2-138",
+        "L1-026",
+        "L2-161",
+        "L2-162",
+        "L2-163",
+        "L2-005",
+        "L2-001"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "submitting",
+        "success",
+        "loading",
+        "error",
+        "forbidden"
+      ],
+      "not_applicable": {
+        "empty": "The roles list is fixed; the page is never empty."
+      }
+    },
+    {
+      "id": "learning-bond-invitation",
+      "kind": "page",
+      "title": "Learning Bond invitation",
+      "route": "/settings/learning-bond/invitation",
+      "requirements": [
+        "L2-139",
+        "L1-026",
+        "L2-161",
+        "L2-162",
+        "L2-163",
+        "L2-005",
+        "L2-001"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "submitting",
+        "success",
+        "loading",
+        "error",
+        "forbidden"
+      ],
+      "not_applicable": {
+        "empty": "The invitation always has the platform text."
+      }
+    },
+    {
+      "id": "learning-bond-launch",
+      "kind": "page",
+      "title": "Learning Bond launch",
+      "route": "/settings/learning-bond/launch",
+      "requirements": [
+        "L2-140",
+        "L1-026",
+        "L2-161",
+        "L2-162",
+        "L2-163",
+        "L2-005",
+        "L2-001"
+      ],
+      "states": [
+        "default",
+        "missing-contacts",
+        "blocked",
+        "invalid",
+        "submitting",
+        "scheduled",
+        "at-door",
+        "cancelled",
+        "loading",
+        "error",
+        "forbidden"
+      ],
+      "not_applicable": {
+        "empty": "The counts always show; six households with no contact is the state to see."
+      }
+    },
+    {
+      "id": "learning-bond-dashboard",
+      "kind": "page",
+      "title": "Learning Bond dashboard",
+      "route": "/learning-bond",
+      "requirements": [
+        "L2-141",
+        "L2-143",
+        "L1-026",
+        "L2-161",
+        "L2-162",
+        "L2-163",
+        "L2-005",
+        "L2-001"
+      ],
+      "states": [
+        "default",
+        "empty",
+        "suppressed",
+        "filtered",
+        "loading",
+        "error",
+        "forbidden"
+      ]
+    },
+    {
+      "id": "learning-bond-families",
+      "kind": "page",
+      "title": "Learning Bond households",
+      "route": "/learning-bond/families",
+      "requirements": [
+        "L2-142",
+        "L2-140",
+        "L1-026",
+        "L2-161",
+        "L2-162",
+        "L2-163",
+        "L2-005",
+        "L2-001"
+      ],
+      "states": [
+        "default",
+        "call-requested",
+        "no-results",
+        "long",
+        "empty",
+        "loading",
+        "error",
+        "forbidden"
+      ]
+    },
+    {
+      "id": "guardian-learning-bond",
+      "kind": "page",
+      "title": "Learning Bond for your family",
+      "route": "/g/learning-bond/:token",
+      "requirements": [
+        "L2-144",
+        "L2-152",
+        "L2-153",
+        "L2-158",
+        "L1-027",
+        "L1-028",
+        "L2-159",
+        "L2-160",
+        "L2-161",
+        "L2-162",
+        "L2-163",
+        "L2-026",
+        "L2-027"
+      ],
+      "states": [
+        "default",
+        "es",
+        "fr",
+        "verify",
+        "not-now",
+        "not-interested",
+        "in-progress",
+        "older-child",
+        "expired",
+        "unavailable",
+        "loading",
+        "error"
+      ],
+      "not_applicable": {
+        "empty": "A Learning Bond page is always about one household’s children."
+      }
+    },
+    {
+      "id": "learning-bond-consent",
+      "kind": "page",
+      "title": "Learning Bond consent",
+      "route": "/g/learning-bond/:token/consent",
+      "requirements": [
+        "L2-145",
+        "L1-027",
+        "L2-159",
+        "L2-160",
+        "L2-161",
+        "L2-162",
+        "L2-163",
+        "L2-026",
+        "L2-027"
+      ],
+      "states": [
+        "default",
+        "es",
+        "invalid",
+        "submitting",
+        "success",
+        "loading",
+        "error"
+      ],
+      "not_applicable": {
+        "empty": "A Learning Bond page is always about one household’s children."
+      }
+    },
+    {
+      "id": "learning-bond-intake",
+      "kind": "page",
+      "title": "Learning Bond intake",
+      "route": "/g/learning-bond/:token/intake",
+      "requirements": [
+        "L2-146",
+        "L2-151",
+        "L1-027",
+        "L2-159",
+        "L2-160",
+        "L2-161",
+        "L2-162",
+        "L2-163",
+        "L2-026",
+        "L2-027"
+      ],
+      "states": [
+        "default",
+        "es",
+        "invalid",
+        "fix-requested",
+        "second-child",
+        "resumed",
+        "no-sin",
+        "submitting",
+        "unavailable",
+        "loading",
+        "error"
+      ],
+      "not_applicable": {
+        "empty": "A Learning Bond page is always about one household’s children."
+      }
+    },
+    {
+      "id": "learning-bond-estimate",
+      "kind": "page",
+      "title": "Learning Bond estimate",
+      "route": "/g/learning-bond/:token/estimate",
+      "requirements": [
+        "L2-147",
+        "L1-027",
+        "L2-159",
+        "L2-160",
+        "L2-161",
+        "L2-162",
+        "L2-163",
+        "L2-026",
+        "L2-027"
+      ],
+      "states": [
+        "default",
+        "es",
+        "capped",
+        "needs-tax-return",
+        "loading",
+        "error"
+      ],
+      "not_applicable": {
+        "empty": "A Learning Bond page is always about one household’s children."
+      }
+    },
+    {
+      "id": "learning-bond-review",
+      "kind": "page",
+      "title": "Learning Bond review",
+      "route": "/g/learning-bond/:token/review",
+      "requirements": [
+        "L2-148",
+        "L2-149",
+        "L1-027",
+        "L2-159",
+        "L2-160",
+        "L2-161",
+        "L2-162",
+        "L2-163",
+        "L2-026",
+        "L2-027"
+      ],
+      "states": [
+        "default",
+        "es",
+        "choose-another",
+        "no-provider",
+        "edit",
+        "invalid",
+        "submitting",
+        "failed",
+        "loading",
+        "error"
+      ],
+      "not_applicable": {
+        "empty": "A Learning Bond page is always about one household’s children."
+      }
+    },
+    {
+      "id": "learning-bond-submitted",
+      "kind": "page",
+      "title": "Learning Bond submitted",
+      "route": "/g/learning-bond/:token/submitted",
+      "requirements": [
+        "L2-150",
+        "L2-153",
+        "L1-027",
+        "L1-028",
+        "L2-159",
+        "L2-160",
+        "L2-161",
+        "L2-162",
+        "L2-163",
+        "L2-026",
+        "L2-027"
+      ],
+      "states": [
+        "default",
+        "es",
+        "received",
+        "deposited",
+        "document-needed",
+        "document-sending",
+        "document-invalid",
+        "loading",
+        "error"
+      ],
+      "not_applicable": {
+        "empty": "A Learning Bond page is always about one household’s children."
+      }
+    },
+    {
+      "id": "learning-bond-paused",
+      "kind": "page",
+      "title": "Learning Bond paused",
+      "route": "/g/learning-bond/:token/paused",
+      "requirements": [
+        "L2-151",
+        "L1-027",
+        "L2-159",
+        "L2-160",
+        "L2-161",
+        "L2-162",
+        "L2-163",
+        "L2-026",
+        "L2-027"
+      ],
+      "states": [
+        "default",
+        "needs-tax-return",
+        "reminder-set",
+        "resumed",
+        "closed",
+        "loading",
+        "error"
+      ],
+      "not_applicable": {
+        "empty": "A Learning Bond page is always about one household’s children."
+      }
+    },
+    {
+      "id": "learning-bond-benefits-intake",
+      "kind": "page",
+      "title": "Benefits questions",
+      "route": "/g/learning-bond/:token/benefits/intake",
+      "requirements": [
+        "L2-154",
+        "L1-028",
+        "L2-159",
+        "L2-160",
+        "L2-161",
+        "L2-162",
+        "L2-163",
+        "L2-026",
+        "L2-027"
+      ],
+      "states": [
+        "default",
+        "es",
+        "invalid",
+        "income-changed",
+        "separated",
+        "not-sure-stops",
+        "submitting",
+        "loading",
+        "error"
+      ],
+      "not_applicable": {
+        "empty": "A Learning Bond page is always about one household’s children."
+      }
+    },
+    {
+      "id": "learning-bond-benefits",
+      "kind": "page",
+      "title": "Your benefits",
+      "route": "/g/learning-bond/:token/benefits",
+      "requirements": [
+        "L2-155",
+        "L2-156",
+        "L1-028",
+        "L2-159",
+        "L2-160",
+        "L2-161",
+        "L2-162",
+        "L2-163",
+        "L2-026",
+        "L2-027"
+      ],
+      "states": [
+        "default",
+        "all-received",
+        "no-municipal",
+        "income-changed-note",
+        "document-uploaded",
+        "loading",
+        "error"
+      ],
+      "not_applicable": {
+        "empty": "The catalogue always answers the federal entries; the state where the family gets everything is all-received."
+      }
+    },
+    {
+      "id": "learning-bond-benefit-review",
+      "kind": "page",
+      "title": "Benefit application",
+      "route": "/g/learning-bond/:token/benefits/:benefit",
+      "requirements": [
+        "L2-156",
+        "L2-149",
+        "L1-028",
+        "L2-159",
+        "L2-160",
+        "L2-161",
+        "L2-162",
+        "L2-163",
+        "L2-026",
+        "L2-027"
+      ],
+      "states": [
+        "default",
+        "es",
+        "pdf-form",
+        "submitting",
+        "submitted",
+        "failed",
+        "loading",
+        "error"
+      ],
+      "not_applicable": {
+        "empty": "A Learning Bond page is always about one household’s children."
+      }
+    },
+    {
+      "id": "learning-bond-reminders",
+      "kind": "page",
+      "title": "Learning Bond reminders",
+      "route": "/g/learning-bond/:token/reminders",
+      "requirements": [
+        "L2-157",
+        "L1-028",
+        "L2-159",
+        "L2-160",
+        "L2-161",
+        "L2-162",
+        "L2-163",
+        "L2-026",
+        "L2-027"
+      ],
+      "states": [
+        "default",
+        "turned-off",
+        "empty",
+        "es",
+        "loading",
+        "error"
+      ]
+    },
+    {
+      "id": "learning-bond-total",
+      "kind": "page",
+      "title": "Learning Bond total",
+      "route": "/g/learning-bond/:token/total",
+      "requirements": [
+        "L2-158",
+        "L1-028",
+        "L2-159",
+        "L2-160",
+        "L2-161",
+        "L2-162",
+        "L2-163",
+        "L2-026",
+        "L2-027"
+      ],
+      "states": [
+        "default",
+        "nothing-confirmed",
+        "es",
+        "loading",
+        "error"
+      ],
+      "not_applicable": {
+        "empty": "A Learning Bond page is always about one household’s children."
+      }
+    },
+    {
       "id": "check-in-sheet",
       "kind": "dialog",
       "title": "Check in Kevin Tran",
@@ -4962,6 +5534,174 @@
       ]
     },
     {
+      "id": "learning-bond-signer",
+      "kind": "dialog",
+      "title": "Ask someone else to sign",
+      "opens_from": "learning-bond-agreement",
+      "requirements": [
+        "L2-137",
+        "L1-026",
+        "L2-161",
+        "L2-162",
+        "L2-163"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed",
+        "success"
+      ]
+    },
+    {
+      "id": "learning-bond-cancel-launch",
+      "kind": "dialog",
+      "title": "Cancel the launch?",
+      "opens_from": "learning-bond-launch",
+      "requirements": [
+        "L2-140",
+        "L1-026",
+        "L2-161",
+        "L2-162",
+        "L2-163"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "not_applicable": {
+        "invalid": "Confirming needs no input."
+      }
+    },
+    {
+      "id": "export-learning-bond",
+      "kind": "dialog",
+      "title": "Export for funders",
+      "opens_from": "learning-bond-dashboard",
+      "requirements": [
+        "L2-143",
+        "L2-025",
+        "L2-032",
+        "L1-026",
+        "L2-161",
+        "L2-162",
+        "L2-163"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed",
+        "success"
+      ]
+    },
+    {
+      "id": "learning-bond-call-outcome",
+      "kind": "dialog",
+      "title": "Mark the call with Linh Tran done",
+      "opens_from": "learning-bond-families",
+      "requirements": [
+        "L2-142",
+        "L1-026",
+        "L2-161",
+        "L2-162",
+        "L2-163"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ]
+    },
+    {
+      "id": "learning-bond-invite-household",
+      "kind": "dialog",
+      "title": "Invite the Petrov household to Learning Bond",
+      "opens_from": "learning-bond-families",
+      "requirements": [
+        "L2-140",
+        "L2-142",
+        "L1-026",
+        "L2-161",
+        "L2-162",
+        "L2-163"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed",
+        "already-invited"
+      ],
+      "not_applicable": {
+        "invalid": "There is nothing to type."
+      }
+    },
+    {
+      "id": "learning-bond-callback",
+      "kind": "dialog",
+      "title": "I’d rather talk to someone",
+      "opens_from": "guardian-learning-bond",
+      "requirements": [
+        "L2-142",
+        "L1-027",
+        "L2-161",
+        "L2-162",
+        "L2-163"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed",
+        "success"
+      ]
+    },
+    {
+      "id": "withdraw-learning-bond-consent",
+      "kind": "dialog",
+      "title": "Withdraw consent for Mateo?",
+      "opens_from": "guardian-learning-bond",
+      "requirements": [
+        "L2-152",
+        "L2-058",
+        "L1-027",
+        "L2-161",
+        "L2-162",
+        "L2-163"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "failed",
+        "success"
+      ],
+      "not_applicable": {
+        "invalid": "Confirming needs no input."
+      }
+    },
+    {
+      "id": "learning-bond-benefits-offer",
+      "kind": "dialog",
+      "title": "Check your child benefits?",
+      "opens_from": "learning-bond-submitted",
+      "requirements": [
+        "L2-153",
+        "L1-028",
+        "L2-161",
+        "L2-162",
+        "L2-163"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed",
+        "success"
+      ]
+    },
+    {
       "id": "toast",
       "kind": "notification",
       "title": "Toast",
@@ -5058,6 +5798,83 @@
         "stacked",
         "es"
       ]
+    },
+    {
+      "id": "learning-bond-sms",
+      "kind": "notification",
+      "title": "Learning Bond text",
+      "opens_from": "guardian-learning-bond",
+      "requirements": [
+        "L2-139",
+        "L2-150",
+        "L2-151",
+        "L2-157",
+        "L2-158",
+        "L1-027",
+        "L1-028",
+        "L2-161",
+        "L2-162",
+        "L2-163"
+      ],
+      "states": [
+        "info",
+        "es",
+        "success",
+        "deposited",
+        "warning",
+        "paused-reminder",
+        "reminder",
+        "benefit-started",
+        "danger"
+      ]
+    },
+    {
+      "id": "learning-bond-staff-notice",
+      "kind": "notification",
+      "title": "Learning Bond staff notices",
+      "opens_from": "learning-bond-families",
+      "requirements": [
+        "L2-136",
+        "L2-137",
+        "L2-138",
+        "L2-140",
+        "L2-142",
+        "L1-026",
+        "L2-161",
+        "L2-162",
+        "L2-163"
+      ],
+      "states": [
+        "info",
+        "success",
+        "warning",
+        "danger",
+        "invited"
+      ]
+    },
+    {
+      "id": "learning-bond-email",
+      "kind": "notification",
+      "title": "Learning Bond emails",
+      "opens_from": "learning-bond-agreement",
+      "requirements": [
+        "L2-137",
+        "L2-139",
+        "L2-140",
+        "L1-026",
+        "L2-161",
+        "L2-162",
+        "L2-163"
+      ],
+      "states": [
+        "info",
+        "success",
+        "invitation"
+      ],
+      "not_applicable": {
+        "warning": "Learning Bond sends no warning email; a needed document is texted (learning-bond-sms/warning).",
+        "danger": "Learning Bond sends no failure email; failures surface to staff as toasts (learning-bond-staff-notice/danger)."
+      }
     }
   ]
 }

@@ -1,0 +1,56 @@
+@startuml
+title UML sequence — Program webhook updates the total (L2-158, L2-032)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Guardian" as g
+participant "Benefit program" as program
+box "Frontend — Angular app" #E0F2FE
+participant TotalPage as page
+participant LEARNING_BOND_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondEndpoints as wep
+participant LearningBondGuardianEndpoints as gep
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant ProgramWebhookHandler as hook
+participant ReminderPlanner as planner
+participant MessageWriter as mw
+participant GetTotalHandler as total
+end box
+box "Backend — PromiseHub.Infrastructure" #FEF0C7
+participant IWebhookSignatureVerifier as verify
+end box
+database "Database" as db
+program -> wep : POST /learning-bond/webhooks/programs/ontario-child-benefit (BenefitStarted, reference, event id)
+wep -> hook : HandleAsync
+hook -> verify : Verify(program, payload, signature)
+alt invalid signature
+  hook --> program : 401, nothing stored
+else valid
+  hook -> db : LearningBondApplication by the program's reference; organization from the row, never the payload
+  alt module off in that organization or no application
+    hook --> program : 404
+  else event id already applied
+    hook --> program : 200, nothing changes
+  else new event
+    hook -> db : ConfirmedAmount = first-year amount, Status=Received, event id recorded, audit Program event (L2-032)
+    hook -> planner : PlanAsync(household) for the renewal date from the catalogue
+    hook -> total : HandleAsync(household)
+    total --> hook : confirmed total of this household only (L2-158 c4)
+    hook -> mw : Queue(MessageSource.LearningBond, "Ontario Child Benefit has started for your family. You've unlocked $3,080 so far.") (L2-158 c2)
+    hook --> program : 200
+  end
+end
+g -> page : opens learning-bond-total
+page -> client : getTotal(token)
+client -> gep : GET /g/learning-bond/{token}/total
+gep -> total : HandleAsync(scope)
+total -> db : LearningBondApplication rows of the household, by child and stream
+alt nothing confirmed
+  gep --> page : "Nothing confirmed yet" with what is applied for (L2-158 c3)
+else
+  gep --> page : "Unlocked so far: $3,080", "Applied for: up to $1,700" (L2-158 c1)
+end
+@enduml

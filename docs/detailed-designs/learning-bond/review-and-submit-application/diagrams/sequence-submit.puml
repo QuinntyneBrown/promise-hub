@@ -1,0 +1,56 @@
+@startuml
+title UML sequence — Submit the application (L2-149, L2-159, L2-032)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Guardian" as g
+box "Frontend — Angular app" #E0F2FE
+participant LearningBondReviewPage as page
+participant LEARNING_BOND_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondGuardianEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant SubmitApplicationHandler as sub
+participant ILearningBondCipher as cipher
+participant IRespProviderChannel as channel
+participant IAuditWriter as audit
+end box
+box "Infrastructure" #FEF0C7
+participant FakeRespProviderChannel as fake
+end box
+database "Database" as db
+note over fake : zero calls recorded before this point (L2-149 c1)
+g -> page : Submit to Northfield Credit Union
+page -> client : submit(token, applicationId, reviewVersion)
+client -> api : POST /g/learning-bond/{token}/applications/{id}/submit
+api -> sub : SubmitAsync (GuardianAccess, module on)
+alt device not trusted or reviewVersion differs from the stored one
+  sub --> page : 409; nothing sent (L2-149 c4)
+else SubmissionKey already present (double tap or retry)
+  sub --> page : 202 with the stored result; nothing sent (L2-149 c3)
+else first submit
+  sub -> db : status Submitted, SubmittedAt, SubmissionKey saved
+  sub -> cipher : Decrypt(beneficiary SIN), Decrypt(caregiver SIN) in memory
+  alt key unavailable
+    sub -> db : status back to ReadyToSubmit, SubmissionKey cleared
+    sub --> page : 503 "Learning Bond is unavailable right now. Nothing was lost."
+  else decrypted
+    sub -> channel : SubmitAsync(provider, payload)
+    channel -> fake : one call recorded
+    alt Accepted with reference
+      fake --> sub : ChannelResult(Accepted, reference)
+      sub -> db : ProviderReference saved
+      sub -> audit : LearningBondApplicationSubmitted(application id, provider, ReviewVersion); no SIN (L2-149 c2)
+      sub --> page : 202
+      page -> g : learning-bond-submitted
+    else Refused or Unreachable
+      fake --> sub : ChannelResult(Unreachable)
+      sub -> db : status ReadyToSubmit, SubmissionKey cleared
+      sub --> page : 502 not-sent
+      page -> g : "We couldn't send it. Nothing was sent. Try again." (L2-149 c5)
+    end
+  end
+end
+@enduml

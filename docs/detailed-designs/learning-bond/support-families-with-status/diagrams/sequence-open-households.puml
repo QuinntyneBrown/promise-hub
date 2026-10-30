@@ -1,0 +1,43 @@
+@startuml
+title UML sequence — Open the covered households list (L2-142 c1, c2, c5; L2-161)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Site lead" as s
+box "Frontend — Angular app" #E0F2FE
+participant LearningBondFamiliesPage as page
+participant LEARNING_BOND_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant StatusRolesPolicy as policy
+participant LearningBondHouseholdsHandler as h
+participant LearningBondCoverage as cov
+participant LearningBondStatus as status
+participant IAuditWriter as audit
+end box
+database "Database" as db
+s -> page : opens learning-bond-families (item shown only to status roles)
+page -> client : getHouseholds(filter)
+client -> api : GET /learning-bond/households (RequireModule)
+api -> policy : AuthorizeAsync(member's role)
+policy -> db : LearningBondSettings.StatusRoles of the tenant
+alt role not in the status roles
+  api --> page : 403 (c5)
+  page -> s : "Your role doesn't see Learning Bond status"
+else authorized
+  api -> h : HandleAsync(filter)
+  h -> cov : CoveredHouseholdsAsync()
+  h -> db : invitations, consents, claims, applications, open call requests of those households (tenant filter, L2-001)
+  loop each household
+    h -> status : Compute(rows) and ChangedAt
+  end
+  h -> h : filter by status, program and query; page
+  h -> audit : Viewed on LearningBondHouseholds (L2-161 c1)
+  h -> db : SaveChanges
+  api --> page : name, guardian, language, programs, status, last change; no SIN, income, benefit or amount (c1, c2)
+  page -> s : table with status badges and filters
+end
+@enduml

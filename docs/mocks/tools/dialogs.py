@@ -417,8 +417,8 @@ def change_password(S):
 # ------------------------------------------------------------------ Shell: main menu, account menu, session expired, offline queue
 @screen("main-menu", "dialog", "Main menu", opens_from="today", reqs=["L1-014"], na={"busy": "A menu has no submit.", "invalid": "A menu has no inputs."})
 def main_menu(S):
-    staff_links = [("today", "Today", "home"), ("check-in", "Check-in", "clipboard"), ("quick-card", "Quick Cards", "heart-pulse"), ("families", "Families", "users"), ("events", "Events", "calendar"), ("slips", "Slips", "clipboard"), ("programs", "Programs", "list"), ("messages", "Messages", "message"), ("reports", "Reports", "chart"), ("incidents", "Incidents", "flag"), ("attendance-history", "Attendance", "table"), ("settings-organization", "Settings", "settings"), ("notifications", "Notifications", "bell"), ("account", "Your account", "user")]
-    director_links = staff_links[:10] + [("applications", "Applications", "inbox"), ("curriculum-tracks", "Curriculum", "star")] + staff_links[10:]
+    staff_links = [("today", "Today", "home"), ("check-in", "Check-in", "clipboard"), ("quick-card", "Quick Cards", "heart-pulse"), ("families", "Families", "users"), ("events", "Events", "calendar"), ("slips", "Slips", "clipboard"), ("programs", "Programs", "list"), ("messages", "Messages", "message"), ("reports", "Reports", "chart"), ("incidents", "Incidents", "flag"), ("attendance-history", "Attendance", "table"), ("learning-bond-families", "Learning Bond", "sprout"), ("settings-organization", "Settings", "settings"), ("notifications", "Notifications", "bell"), ("account", "Your account", "user")]
+    director_links = staff_links[:10] + [("applications", "Applications", "inbox"), ("curriculum-tracks", "Curriculum", "star")] + [(("learning-bond-dashboard" if s == "learning-bond-families" else s), t, i) for s, t, i in staff_links[10:]]
     tail = [("notifications", "Notifications", "bell"), ("account", "Your account", "user")]
 
     def drawer(user=STAFF["jaylen"], current="today", links=staff_links):
@@ -427,7 +427,7 @@ def main_menu(S):
                 f'<div class="nav-drawer__header"><span class="nav-drawer__title" id="menu-title">Menu</span><button class="btn btn--ghost btn--icon" type="button" aria-label="Close menu" autofocus>{icon("x")}</button></div>'
                 f'<div class="nav-drawer__nav">{items}<div class="menu__divider" aria-hidden="true"></div><a class="nav-drawer__link" href="{page("signed-out")}">{icon("log-out")}Sign out</a></div>'
                 f'<div style="padding: var(--space-3) var(--space-4); border-top: var(--border-width-hairline) solid var(--color-border-default);" class="cluster cluster--snug">{avatar(user)}<div><div style="font: var(--text-label);">{esc(user["name"])}</div><div class="text-caption">{esc(user["role"])} · {ORG_SHORT}</div></div></div></nav>')
-    S.add("default", "The More menu on a phone: every section, current one marked, sign out at the end.", **over("today", overlays=drawer()))
+    S.add("default", "The More menu on a phone: every section, current one marked, sign out at the end; Learning Bond shows while the module is on and the role is in its status roles.", **over("today", overlays=drawer()))
     S.add("director", "The same menu for the program director, from Programs; Applications shows while Roster is on and Curriculum while Learning is on.", **over("programs", overlays=drawer(STAFF["marisol"], "programs", director_links)))
     S.add("admin", "Tom’s menu (Admin): People sits beside Settings; only admins see it.", **over("today", overlays=drawer(STAFF["tom"], "today", director_links[:-3] + [("people", "People", "users")] + director_links[-3:])))
     S.add("youth", "A youth’s menu: Today, Learning, Schedule (while Roster is on), Messages and Announcements (while Messages is on), notifications and account only; no staff sections, no Settings.",
@@ -1165,3 +1165,56 @@ def start_donation(S):
           **over("site-get-involved", overlays=box(alert_html=failed_alert("We couldn’t start your payment", "Nothing was charged. Try again."))))
     S.add("unavailable", "Online giving isn’t set up for this organization: no pledge is saved and the visitor is pointed to Contact.",
           **over("site-get-involved", overlays=box(alert_html=alert("info", "Online giving isn’t available yet", "Write to us from the contact page and we’ll help you give."))))
+
+
+# ------------------------------------------------------------------ Learning Bond (L1-026 to L1-029; pages_learning_bond.py and pages_learning_bond_guardian.py)
+from pages_learning_bond import LAUNCH_DATE, SENDER, PROVIDER  # noqa: E402
+from pages_learning_bond_guardian import CONSENT_BEN  # noqa: E402
+R_SD_X = ["L2-161", "L2-162", "L2-163"]
+
+simple("learning-bond-signer", "Ask someone else to sign", "learning-bond-agreement", ["L2-137", "L1-026"] + R_SD_X, "They get a single-use link by email and need no PromiseHub account. The link works for 14 days.",
+       lambda e: field("sname", "Their name", value="" if e else "Rev. Angela Baptiste", required=True, error=(e or {}).get("sname", ""), autofocus=True)
+                 + field("stitle", "Their role or title", value="" if e else "Board chair", required=True, error=(e or {}).get("stitle", ""))
+                 + field("semail", "Their email", type_="email", value="angela.baptiste" if e else "angela.baptiste@harbourview.example", required=True, error=(e or {}).get("semail", ""), help_=f"Sent from “{ORG} via PromiseHub”."),
+       "Send the link", icon_name="mail", invalid_err={"sname": "Enter the signer’s name.", "stitle": "Enter the signer’s role or title.", "semail": "Enter an email like name@example.org."},
+       success_body=f'<p><strong>Waiting for Rev. Angela Baptiste to sign.</strong></p><p class="text-muted">Emailed Thu 5 Nov, 4:02 pm. You’ll be told when they accept. A new request replaces this one and cancels its link.</p>')
+
+simple("learning-bond-cancel-launch", "Cancel the launch?", "learning-bond-launch", ["L2-140", "L1-026"] + R_SD_X, f"Scheduled for {LAUNCH_DATE}, 10:00 am. Nothing has been sent.",
+       lambda e: '<p>No invitation goes out. You can schedule a new day any time. Cancelling is recorded in the audit log.</p>',
+       "Cancel launch", base_state="scheduled", icon_name="x-circle", danger=True, na={"invalid": "Confirming needs no input."})
+
+simple("export-learning-bond", "Export for funders", "learning-bond-dashboard", ["L2-143", "L2-025", "L2-032", "L1-026"] + R_SD_X, "One row per covered program and a total: counts and dollars, never a family. Counts under 5 read “<5” and their dollars are blank.",
+       lambda e: f'<div class="two-col">{field("from", "From", type_="date", value="2026-09-01", error=(e or {}).get("from", ""))}{field("to", "To", type_="date", value="2026-11-05")}</div>'
+                 + facts([("Columns", "Households invited, started and completed; children with a Learning Bond application; estimated and confirmed dollars split by Learning Bond and benefits; confirmed dollars per completed household"), ("File", "harbourview-youth-collective-learning-bond-2026-09-01-2026-11-05.csv")])
+                 + alert("info", "Logged", "Recorded in the audit log with the row count. The link works for 7 days.", role="status"),
+       "Export", icon_name="download", invalid_err={"from": "Choose a start date on or before the end date."},
+       success_body=f'<p>harbourview-youth-collective-learning-bond-2026-09-01-2026-11-05.csv is ready: 3 programs and a total row. The link works until Thu 12 Nov.</p><div class="cluster">{btn("Download", "primary", icon_name="download")}</div>')
+
+simple("learning-bond-call-outcome", "Mark the call with Linh Tran done", "learning-bond-families", ["L2-142", "L1-026"] + R_SD_X, "289-555-0119 · asked today at 2:10 pm · afternoons.",
+       lambda e: fieldset("Outcome", choice("out", "Resumed", small="She’ll carry on from her link.", checked=not e, invalid=bool(e)) + choice("out", "Not interested", small="No more texts about the Learning Bond.", invalid=bool(e)) + choice("out", "No answer", small="Stays as Call requested; try again later.", invalid=bool(e)), error=(e or {}).get("out", ""), fid="out")
+                 + f'<p class="hint">{icon("lock", "icon--sm")} You see where she is in the steps, never her SIN or income.</p>',
+       "Save outcome", base_state="call-requested", icon_name="phone", invalid_err={"out": "Choose what happened."})
+
+simple("learning-bond-invite-household", "Invite the Petrov household to Learning Bond", "learning-bond-families", ["L2-140", "L2-142", "L1-026"] + R_SD_X, "One text to Elena Petrova now, in English, naming Nikolai.",
+       lambda e: sms(f"{SENDER}: Nikolai may be owed up to $2,000 for school after high school. It costs nothing. Tap to check: hbv.ph/sd/9p2m (STOP to opt out)") + '<p class="hint">Counts toward the monthly SMS cap. A household isn’t invited twice within 7 days.</p>',
+       "Send invitation", icon_name="send", na={"invalid": "There is nothing to type."},
+       extra_states={"already-invited": ("A household invited within the last 7 days: the button is replaced by when.",
+                                         dialog_box("Invite the Rivera household to Learning Bond", "", alert("info", "Invited Thu 5 Nov", "Carmen Rivera got the text at 10:00 am. Invite again from Thu 12 Nov if she hasn’t started."), btn("Close", "", attrs=" autofocus"), icon_name="send"))})
+
+simple("learning-bond-callback", "I’d rather talk to someone", "guardian-learning-bond", ["L2-142", "L1-027"] + R_SD_X, f"{ORG} will call you. They will see where you are in the steps, never your SIN.",
+       lambda e: field("cb-phone", "Best number", type_="tel", value="905-555" if e else "905-555-0142", inputmode="tel", autocomplete="tel", required=True, error=(e or {}).get("cb-phone", ""), autofocus=True)
+                 + fieldset("Best time", choice("cb-when", "Mornings", small="9 am to noon") + choice("cb-when", "Afternoons", small="Noon to 5 pm", checked=True) + choice("cb-when", "Evenings", small="5 to 8 pm")),
+       "Ask for a call", base_state="in-progress", icon_name="phone", invalid_err={"cb-phone": "Enter a 10-digit mobile number."},
+       success_body=f'<p>{ORG} will call you. They will see where you are in the steps, never your SIN.</p><p class="text-muted">Asked Thu 5 Nov, 4:52 pm · afternoons · 905-555-0142.</p>')
+
+simple("withdraw-learning-bond-consent", "Withdraw consent for Mateo?", "guardian-learning-bond", ["L2-152", "L2-058", "L1-027"] + R_SD_X, f"We’ll stop and delete Mateo’s information here. Anything already sent to {PROVIDER} stays with them; contact them to close the RESP.",
+       lambda e: facts([("Stops", "Any unsubmitted application for Mateo is cancelled. His SIN and intake answers are deleted; so is yours if no other child still has consent. No more texts about him."),
+                        ("Stays", f"The status, provider and dates of what was already sent, with no SIN, so you and the dashboard can still read them. The RESP at {PROVIDER} is theirs to close: 1-800-555-0199.")]),
+       "Withdraw consent", base_state="in-progress", icon_name="shield", danger=True, na={"invalid": "Confirming needs no input."},
+       success_body="<p>Consent for Mateo withdrawn, Thu 5 Nov, 4:55 pm. His information here is deleted. If you give consent again later, the questions start from the beginning.</p>")
+
+simple("learning-bond-benefits-offer", "Check your child benefits?", "learning-bond-submitted", ["L2-153", "L1-028"] + R_SD_X, "About 3 questions. Benefit details need a consent of their own, separate from the Learning Bond.",
+       lambda e: fieldset("Consent", choice("bconsent", CONSENT_BEN, type_="checkbox", checked=not e, invalid="bconsent" in (e or {})), error=(e or {}).get("bconsent", ""), fid="bconsent")
+                 + field("bsig", "Type your full name to sign", value="" if e else "Carmen Rivera", autocomplete="name", required=True, error=(e or {}).get("bsig", "")),
+       "Agree and check", cancel="Not now", icon_name="check", invalid_err={"bconsent": "Tick the box to continue, or choose Not now.", "bsig": "Type your full name to sign."},
+       success_body=f'<p>Consent recorded with scope Benefits, Thu 5 Nov, 4:30 pm. Three quick questions next.</p><div>{btn("Continue", "primary", icon_name="arrow-right", href=page("learning-bond-benefits-intake"))}</div>')

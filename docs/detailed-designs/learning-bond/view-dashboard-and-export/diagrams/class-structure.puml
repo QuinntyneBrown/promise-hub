@@ -1,0 +1,30 @@
+@startuml
+title UML classes — View the dashboard and export for funders
+class LearningBondApplication { Id OrganizationId HouseholdId ChildId Kind ProviderOrProgram Status Estimate ConfirmedAmount SubmittedAt DepositedAt }
+enum ApplicationKind { LearningBond Benefit }
+enum ApplicationStatus { Draft ReadyToSubmit Submitted Received Deposited Cancelled }
+class LearningBondInvitation { Id OrganizationId HouseholdId SentAt }
+class LearningBondConsent { Id OrganizationId HouseholdId ChildId Scope GivenAt }
+class DashboardFilter <<record>> { ProgramId? Period }
+enum Period { Last30Days Last90Days AllTime }
+class LearningBondFiguresDto <<record>> { Invited Started Completed ChildrenWithApplication EstimatedTotal EstimatedLearningBond EstimatedBenefits ConfirmedTotal ConfirmedLearningBond ConfirmedBenefits Suppressed: bool }
+class ProgramFiguresDto <<record>> { ProgramId Name Figures }
+class DashboardDto <<record>> { Overall: LearningBondFiguresDto Programs: ProgramFiguresDto[] PendingAgreementVersion? }
+class ExportLearningBondRequest <<record>> { From To }
+class ExportCreatedDto <<record>> { ExportId FileName Rows ExpiresAt }
+class ReportExport { Id OrganizationId Kind FileName Content Rows CreatedBy CreatedAt ExpiresAt }
+class LearningBondFigures <<static>> { +Compute(rows, households): LearningBondFiguresDto
++Suppress(figures, minimum 5): LearningBondFiguresDto }
+class LearningBondDashboardHandler { +HandleAsync(DashboardFilter): DashboardDto }
+class ExportLearningBondHandler { +HandleAsync(ExportLearningBondRequest): ExportCreatedDto }
+LearningBondApplication --> ApplicationKind
+LearningBondApplication --> ApplicationStatus
+DashboardFilter --> Period
+LearningBondDashboardHandler --> LearningBondFigures
+LearningBondDashboardHandler ..> DashboardDto
+ExportLearningBondHandler --> LearningBondFigures
+ExportLearningBondHandler ..> ReportExport
+LearningBondFigures ..> LearningBondApplication
+LearningBondFigures ..> LearningBondInvitation
+LearningBondFigures ..> LearningBondConsent
+@enduml

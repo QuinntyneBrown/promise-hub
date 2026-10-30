@@ -1,0 +1,44 @@
+@startuml
+title UML sequence — Get the estimate (L2-147)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Guardian" as g
+box "Frontend — Angular app" #E0F2FE
+participant LearningBondEstimatePage as page
+participant LEARNING_BOND_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondGuardianEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant LearningBondEstimateHandler as h
+participant LearningBondRule as rule
+participant IAuditWriter as audit
+end box
+database "Database" as db
+g -> page : opens the estimate step
+page -> client : getEstimate(token, childId)
+client -> api : GET /g/learning-bond/{token}/children/{childId}/estimate
+api -> h : GetAsync (GuardianAccess, module on, trusted device, active consent)
+h -> db : Child.BirthDate, LearningBondIntake.TaxFiled, current LearningBondRule by EffectiveFrom
+alt intake not complete for this child
+  h --> page : 409 intake-incomplete
+else born before EarliestBirthYear
+  h --> page : Applies = false, "{first name} was born before 2004, so the Learning Bond doesn't apply." (L2-147 c3)
+else applies
+  h -> rule : Estimate(2019, 2026)
+  rule --> h : EstimateResult(true, 1200, 8 years) (L2-147 c1, c2)
+  h -> db : LearningBondClaim.EstimateAmount = 1200, RuleVersion = rule.Version (L2-147 c5)
+  alt TaxFiled is No or Not sure
+    h -> db : claim Paused, PausedReason NeedsTaxReturn (L2-147 c4)
+    h -> audit : LearningBondEstimated(claim id, rule version)
+    h --> page : Amount, RuleVersion, Paused = NeedsTaxReturn
+    page -> g : "up to $1,200" with "You'll need to file to receive it", See how to file
+  else TaxFiled is Yes
+    h -> audit : LearningBondEstimated(claim id, rule version)
+    h --> page : LearningBondEstimateDto
+    page -> g : "Mateo may be owed up to $1,200.", Next: the RESP provider
+  end
+end
+@enduml

@@ -1,0 +1,26 @@
+@startuml
+title UML classes — Configure coverage and the invitation
+class LearningBondSettings { Id OrganizationId Coverage ProgramIds: Guid[] StatusRoles: Role[] SenderName LaunchMode? LaunchDate? CancelledAt? UpdatedAt
++SetCoverage(coverage, programIds)
++SetStatusRoles(roles)
++SetSenderName(name) }
+enum Coverage { AllPrograms ChosenPrograms }
+class LearningBondSettingsDto <<record>> { Coverage ProgramIds StatusRoles Programs: ProgramReachDto[] }
+class ProgramReachDto <<record>> { ProgramId Name Households }
+class SaveLearningBondSettingsRequest <<record>> { Coverage ProgramIds StatusRoles }
+class InvitationDto <<record>> { SenderName Previews: InvitationPreviewDto[] }
+class InvitationPreviewDto <<record>> { Language Sms Segments EmailSubject EmailBody }
+class SaveInvitationRequest <<record>> { SenderName }
+class SenderNameRule <<static>> { +Check(name): string? }
+class LearningBondCoverage { +CoveredHouseholdsAsync(settings): CoveredHousehold[]
++ReachByProgramAsync(): ProgramReachDto[] }
+class CoveredHousehold <<record>> { HouseholdId Language Children Guardians }
+class LearningBondTexts <<static>> { +Invitation(language, sender, children, link): string
++InvitationEmail(language, sender, children, link): string }
+LearningBondSettings --> Coverage
+LearningBondCoverage ..> LearningBondSettings
+LearningBondCoverage ..> CoveredHousehold
+SaveLearningBondSettingsRequest ..> LearningBondSettings
+SaveInvitationRequest ..> SenderNameRule
+InvitationDto ..> LearningBondTexts
+@enduml

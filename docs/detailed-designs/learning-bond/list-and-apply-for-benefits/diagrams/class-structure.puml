@@ -1,0 +1,33 @@
+@startuml
+title UML classes — List and apply for benefits
+enum BenefitLevel { Federal Provincial Municipal }
+enum BenefitChannel { Api PdfForm }
+enum BenefitState { ApplyNow NeedDocument NotEligible AlreadyReceived }
+enum ApplicationStatus { Draft ReadyToSubmit Submitted Received Deposited Cancelled }
+class BenefitCatalogueEntry { Id Name Level Province Municipality? RuleVersion EligibilityRule EstimateFormula? SourceLink EffectiveDate Channel RenewalRule RequiredDocument? }
+class BenefitEstimate { Id OrganizationId HouseholdId CatalogueEntryId RuleVersion State Reason AnnualAmount? IncomeChangedNote ComputedAt }
+class LearningBondApplication { Id OrganizationId HouseholdId Kind Program Fields ReviewVersion Status IdempotencyKey? SubmittedAt? EstimatedAmount? ConfirmedAmount? }
+class LearningBondDocument { Id OrganizationId ApplicationId Name Ciphertext SentAt? }
+class BenefitDto <<record>> { Name Level State Reason AnnualAmount RuleVersion SourceLink IncomeChangedNote }
+class ListBenefitsHandler { +HandleAsync(scope): BenefitDto[] }
+class BenefitRuleEvaluator { +Evaluate(entry, facts, children): BenefitEstimate }
+class UploadBenefitDocumentHandler { +HandleAsync(scope, benefitId, file) }
+class SubmitApplicationHandler { +HandleAsync(scope, id, reviewVersion): 202 }
+class MarkSentHandler { +HandleAsync(scope, id) }
+interface IBenefitProgramChannel { +SubmitAsync(application, documents): ChannelResult }
+interface IBenefitFormRenderer { +RenderAsync(application): PdfFile }
+ListBenefitsHandler --> BenefitRuleEvaluator
+ListBenefitsHandler ..> BenefitCatalogueEntry
+ListBenefitsHandler ..> BenefitEstimate
+ListBenefitsHandler ..> BenefitDto
+BenefitEstimate --> BenefitState
+BenefitCatalogueEntry --> BenefitLevel
+BenefitCatalogueEntry --> BenefitChannel
+LearningBondApplication "1" *-- "0..*" LearningBondDocument
+LearningBondApplication --> ApplicationStatus
+UploadBenefitDocumentHandler ..> LearningBondDocument
+SubmitApplicationHandler --> IBenefitProgramChannel
+SubmitApplicationHandler --> IBenefitFormRenderer
+SubmitApplicationHandler ..> LearningBondApplication
+MarkSentHandler ..> LearningBondApplication
+@enduml

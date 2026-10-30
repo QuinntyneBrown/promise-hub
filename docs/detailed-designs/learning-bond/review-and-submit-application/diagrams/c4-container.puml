@@ -1,0 +1,15 @@
+@startuml
+!include <C4/C4_Container>
+title C4 containers — Review and submit the application
+Person(guardian, "Guardian")
+System_Boundary(ph, "PromiseHub") {
+  Container(web, "Angular app", "Angular 22", "learning-bond, api, components")
+  Container(api, "API", ".NET 10 minimal APIs", "LearningBondGuardianEndpoints, LearningBondApplicationHandler, SubmitApplicationHandler, ILearningBondCipher, IRespProviderChannel")
+  ContainerDb(db, "Database", "SQL (SQLite in tests)", "RespProviders (platform), LearningBondApplications, LearningBondClaims, LearningBondIntakes, Households, AuditEntries")
+}
+System_Ext(provider, "RESP provider", "Submission channel")
+Rel(guardian, web, "Uses", "HTTPS")
+Rel(web, api, "JSON over HTTPS, link token, device token, review version")
+Rel(api, db, "EF Core, tenant filter; SubmissionKey saved before the call")
+Rel(api, provider, "SubmitAsync once per application; FakeRespProviderChannel in tests")
+@enduml

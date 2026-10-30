@@ -1,0 +1,27 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — View the dashboard and export for funders
+Container_Boundary(web, "Angular app") {
+  Component(dash, "LearningBondDashboardPage", "learning-bond", "six stats, filters, table by program")
+  Component(dlg, "ExportLearningBondDialog", "learning-bond", "period, columns, Download")
+  Component(client, "LEARNING_BOND_API", "api", "getDashboard, export")
+}
+Container_Boundary(api, "API") {
+  Component(ep, "LearningBondEndpoints", "PromiseHub.Api", "GET /learning-bond/dashboard, POST /learning-bond/exports")
+  Component(dh, "LearningBondDashboardHandler", "Application/LearningBond", "filter, aggregate, suppress")
+  Component(eh, "ExportLearningBondHandler", "Application/LearningBond", "rows, CSV, ReportExport kind LearningBond")
+  Component(fig, "LearningBondFigures", "Application/LearningBond", "counts and sums from rows; <5 rule")
+  Component(cov, "LearningBondCoverage", "Application/LearningBond", "covered programs")
+  Component(csv, "ReportCsv", "Application/Reports", "CSV writer")
+}
+Rel(dash, client, "getDashboard(filter)")
+Rel(dlg, client, "export(from, to)")
+Rel(client, ep, "HTTPS")
+Rel(ep, dh, "HandleAsync")
+Rel(ep, eh, "HandleAsync")
+Rel(dh, cov, "covered programs")
+Rel(dh, fig, "Compute")
+Rel(eh, cov, "covered programs")
+Rel(eh, fig, "Compute per program and total")
+Rel(eh, csv, "Write")
+@enduml

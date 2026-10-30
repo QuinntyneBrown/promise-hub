@@ -1,0 +1,40 @@
+@startuml
+title UML sequence — Accept the agreement (L2-136, L2-032)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Admin" as a
+box "Frontend — Angular app" #E0F2FE
+participant LearningBondAgreementPage as page
+participant LEARNING_BOND_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondEndpoints as api
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant GetAgreementHandler as get
+participant AcceptAgreementHandler as h
+participant IAuditWriter as audit
+end box
+database "Database" as db
+a -> page : opens learning-bond-agreement
+page -> client : getAgreement()
+client -> api : GET /learning-bond/agreement (ManageSettings)
+api -> get : HandleAsync()
+get -> db : current LearningBondAgreement; acceptance for the tenant (L2-001)
+api --> page : version, effective date, three sections (L2-136 c1)
+a -> page : Accept without the authority box
+page -> client : accept(authority: false)
+client -> api : POST /learning-bond/agreement/acceptances
+api -> h : HandleAsync
+h --> api : 422 "Confirm you have authority to accept this agreement, or ask someone else to sign." (c3)
+api --> page : 422; nothing stored
+a -> page : ticks the box; Accept
+client -> api : POST /learning-bond/agreement/acceptances
+api -> h : HandleAsync
+h -> db : LearningBondAgreementAcceptance(organization, version, name, membership, now)
+h -> audit : Created on LearningBondAgreementAcceptance with the version (c2, L2-032)
+h -> db : SaveChanges
+api --> page : 201
+page -> a : "Accepted by Tom Nguyen on {date}, version {n}"
+@enduml

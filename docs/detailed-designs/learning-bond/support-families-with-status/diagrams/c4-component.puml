@@ -1,0 +1,35 @@
+@startuml
+!include <C4/C4_Component>
+title C4 components — Support families with status only
+Container_Boundary(web, "Angular app") {
+  Component(list, "LearningBondFamiliesPage", "learning-bond", "households, status badges, filters")
+  Component(outcome, "CallOutcomeDialog", "learning-bond", "Resumed, Not interested, No answer")
+  Component(cb, "LearningBondCallbackDialog", "learning-bond (guardian shell)", "number, time of day")
+  Component(client, "LEARNING_BOND_API", "api", "getHouseholds, recordCallOutcome, requestCallback")
+}
+Container_Boundary(api, "API") {
+  Component(ep, "LearningBondEndpoints", "PromiseHub.Api", "GET /learning-bond/households; POST /learning-bond/households/{id}/call-outcome")
+  Component(gep, "LearningBondGuardianEndpoints", "PromiseHub.Api", "POST /g/learning-bond/{token}/callback")
+  Component(policy, "StatusRolesPolicy", "Application/LearningBond", "role in StatusRoles, else 403")
+  Component(hh, "LearningBondHouseholdsHandler", "Application/LearningBond", "covered households with status")
+  Component(status, "LearningBondStatus", "Application/LearningBond", "eleven values, computed on read")
+  Component(cov, "LearningBondCoverage", "Application/LearningBond", "covered households")
+  Component(rc, "RequestCallbackHandler", "Application/LearningBond", "store request, notify status roles")
+  Component(oc, "RecordCallOutcomeHandler", "Application/LearningBond", "close request, audit")
+  Component(ga, "GuardianAccess", "Application/Guardian", "tenant from the link")
+  Component(notify, "NotificationWriter", "Application/Notifications", "NotifyMembersAsync")
+}
+Rel(list, client, "getHouseholds")
+Rel(outcome, client, "recordCallOutcome")
+Rel(cb, client, "requestCallback")
+Rel(client, ep, "HTTPS")
+Rel(client, gep, "HTTPS")
+Rel(ep, policy, "authorize")
+Rel(ep, hh, "HandleAsync")
+Rel(ep, oc, "HandleAsync")
+Rel(hh, cov, "covered households")
+Rel(hh, status, "Compute per household")
+Rel(gep, ga, "ResolveAsync")
+Rel(gep, rc, "HandleAsync")
+Rel(rc, notify, "members whose role is in StatusRoles")
+@enduml

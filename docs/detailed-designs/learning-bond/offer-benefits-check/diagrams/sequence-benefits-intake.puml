@@ -1,0 +1,46 @@
+@startuml
+title UML sequence — Benefits intake with the custody branch (L2-154, L2-032)
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+actor "Guardian" as g
+box "Frontend — Angular app" #E0F2FE
+participant BenefitsIntakePage as page
+participant LEARNING_BOND_API as client
+end box
+box "Backend — PromiseHub.Api" #D1FADF
+participant LearningBondGuardianEndpoints as api
+participant BenefitsConsentFilter as filter
+end box
+box "Backend — PromiseHub.Application" #ECFDF3
+participant SaveBenefitsIntakeHandler as h
+end box
+box "Backend — PromiseHub.Infrastructure" #FEF0C7
+participant ILearningBondCipher as cipher
+end box
+database "Database" as db
+g -> page : opens learning-bond-benefits-intake
+page -> page : shows household size, marital status, Canada Child Benefit now, income changed; nothing already answered (L2-154 c1)
+g -> page : chooses Separated
+page -> page : shows who claims each child: Me, The other parent, We share, Not sure (L2-154 c4)
+g -> page : Check my benefits
+page -> client : saveBenefitsIntake(token, request)
+client -> api : PUT /g/learning-bond/{token}/benefits/intake
+api -> filter : Benefits consent present, else 403
+api -> h : HandleAsync
+h -> h : size 1 to 15, status and Canada Child Benefit in their lists
+alt invalid
+  h --> page : 422 "Enter how many people live with you, from 1 to 15." or "Choose one." per field (L2-154 c2)
+else valid
+  h -> cipher : Encrypt(household size, marital status, Canada Child Benefit, income changed)
+  alt key unavailable
+    h --> page : 503 "Learning Bond is unavailable right now. Nothing was lost."
+  else encrypted
+    h -> db : LearningBondIntake facts; IncomeChanged noted for every estimate (L2-154 c3)
+    h -> db : ChildBenefitsFact per child: Not sure marks CheckStopped; The other parent excludes the child
+    h -> db : audit Intake saved naming the fields, never the values (L2-032)
+    api --> page : 200 BenefitsIntakeDto with StoppedChildren
+    page -> g : "We can't check benefits for Sofía until it's clear who claims them. Staff can help." with I'd rather talk to someone
+  end
+end
+@enduml

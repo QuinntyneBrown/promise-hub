@@ -1,0 +1,33 @@
+@startuml
+title UML classes — Review and submit the application
+class LearningBondApplicationHandler { +PrepareAsync(GuardianRequest, childId): GuardianResult
++EditFieldAsync(GuardianRequest, applicationId, field, value): GuardianResult
++ChooseProviderAsync(GuardianRequest, applicationId, providerId): GuardianResult }
+class SubmitApplicationHandler { +SubmitAsync(GuardianRequest, applicationId, reviewVersion): GuardianResult }
+class RespProvider <<platform>> { Id Name NoFee AdministersLearningBond Provinces Channel ProcessingDays }
+class LearningBondApplication { Id OrganizationId ClaimId Kind Status ProviderId BeneficiaryName BeneficiaryBirthDate CaregiverName Address Phone Email Language ReviewVersion SubmissionKey ProviderReference SubmittedAt }
+enum ApplicationStatus { Draft
+ReadyToSubmit
+Submitted
+Received
+Deposited
+Cancelled }
+interface IRespProviderChannel { +SubmitAsync(provider, payload): ChannelResult }
+class ChannelResult <<record>> { Outcome Reference }
+enum ChannelOutcome { Accepted
+Refused
+Unreachable }
+class FakeRespProviderChannel { Calls }
+class LearningBondApplicationDto <<record>> { Id Status Provider Recommended Reason OtherProviders Fields ReviewVersion NoProvider BeneficiarySinLast3 CaregiverSinLast3 }
+LearningBondApplicationHandler ..> RespProvider
+LearningBondApplicationHandler ..> LearningBondApplication
+LearningBondApplicationHandler ..> LearningBondApplicationDto
+SubmitApplicationHandler ..> LearningBondApplication
+SubmitApplicationHandler --> IRespProviderChannel
+SubmitApplicationHandler --> ILearningBondCipher
+IRespProviderChannel ..> ChannelResult
+ChannelResult --> ChannelOutcome
+FakeRespProviderChannel ..|> IRespProviderChannel
+LearningBondApplication --> ApplicationStatus
+LearningBondApplication --> RespProvider
+@enduml
