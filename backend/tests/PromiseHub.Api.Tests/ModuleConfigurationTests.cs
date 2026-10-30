@@ -14,10 +14,10 @@ public sealed class ModuleConfigurationTests : IAsyncLifetime
     private static readonly Guid Grace = DatabaseSeeder.MembershipId(DatabaseSeeder.Northgate, "grace@northgate.example");
     private static readonly Guid HarbourviewMateo = DatabaseSeeder.ChildId(DatabaseSeeder.Harbourview, "Mateo Rivera");
 
-    // The eight operations modules Harbourview's seed turns on; Learning, Mentoring and Public website follow in the catalog (ADR 0043).
+    // The eight operations modules Harbourview's seed turns on; Learning, Mentoring, Public website and Learning Bond follow in the catalog (ADR 0043, ADR 0076).
     private static readonly string[] All = ["Roster", "Slips", "RollCall", "QuickCards", "Pickup", "Messages", "Incidents", "Reports"];
-    private static readonly string[] Catalog = [.. All, "Learning", "Mentoring", "PublicWebsite"];
-    private static readonly string[] Seeded = [.. All, "Learning", "Mentoring"];
+    private static readonly string[] Catalog = [.. All, "Learning", "Mentoring", "PublicWebsite", "LearningBond"];
+    private static readonly string[] Seeded = [.. All, "Learning", "Mentoring", "LearningBond"];
 
     private readonly PromiseHubApiFactory _factory = new();
 

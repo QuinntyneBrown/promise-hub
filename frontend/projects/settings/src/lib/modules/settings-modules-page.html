@@ -46,7 +46,7 @@
           <ph-list-item
             [title]="m.name"
             [meta]="m.description"
-            [caption]="on().has(m.id) ? needsCaption(m.needs) : null"
+            [caption]="needsCaption(m.id, m.needs)"
             [error]="errors()[m.id] ?? null"
             [muted]="!on().has(m.id)"
           >

@@ -34,7 +34,8 @@
       "@promisehub/learning": ["./projects/learning/src/public-api.ts"],
       "@promisehub/curriculum": ["./projects/curriculum/src/public-api.ts"],
       "@promisehub/mentoring": ["./projects/mentoring/src/public-api.ts"],
-      "@promisehub/website": ["./projects/website/src/public-api.ts"]
+      "@promisehub/website": ["./projects/website/src/public-api.ts"],
+      "@promisehub/learning-bond": ["./projects/learning-bond/src/public-api.ts"]
     }
   },
   "angularCompilerOptions": {

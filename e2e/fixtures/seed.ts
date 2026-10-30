@@ -2,7 +2,7 @@
 
 export type ModuleId =
   | 'Roster' | 'Slips' | 'RollCall' | 'QuickCards' | 'Pickup' | 'Messages' | 'Incidents' | 'Reports'
-  | 'Learning' | 'Mentoring' | 'PublicWebsite';
+  | 'Learning' | 'Mentoring' | 'PublicWebsite' | 'LearningBond';
 
 /** Mirrors backend ModuleCatalog: names, order and dependencies. */
 export const moduleCatalog: { id: ModuleId; name: string; needs: ModuleId[] }[] = [
@@ -18,6 +18,8 @@ export const moduleCatalog: { id: ModuleId; name: string; needs: ModuleId[] }[] 
   { id: 'Learning', name: 'Learning', needs: ['Roster'] },
   { id: 'Mentoring', name: 'Mentoring', needs: ['Roster'] },
   { id: 'PublicWebsite', name: 'Public website', needs: ['Roster'] },
+  // Learning Bond (ADR 0076): needs Roster and Messages, and the data-handling agreement accepted before it turns on.
+  { id: 'LearningBond', name: 'Learning Bond', needs: ['Roster', 'Messages'] },
 ];
 
 export interface Organization {
@@ -28,6 +30,10 @@ export interface Organization {
   plan: 'Free' | 'Standard' | 'Plus';
   modules: ModuleId[];
 }
+
+/** The current data-handling agreement version and the organizations that accepted it (backend DatabaseSeeder): Harbourview only. */
+export const learningBondAgreementVersion = 2;
+export const learningBondAcceptances: string[] = ['org-harbourview'];
 
 export interface Membership {
   id: string;
@@ -44,8 +50,8 @@ export const organizations: Organization[] = [
     city: 'Hamilton, Ontario',
     slug: 'harbourview',
     plan: 'Standard',
-    // The whole suite plus Learning and Mentoring; Public website stays off (ADR 0043).
-    modules: ['Roster', 'Slips', 'RollCall', 'QuickCards', 'Pickup', 'Messages', 'Incidents', 'Reports', 'Learning', 'Mentoring'],
+    // The whole suite plus Learning, Mentoring and Learning Bond; Public website stays off (ADR 0043, ADR 0076).
+    modules: ['Roster', 'Slips', 'RollCall', 'QuickCards', 'Pickup', 'Messages', 'Incidents', 'Reports', 'Learning', 'Mentoring', 'LearningBond'],
   },
   { id: 'org-northgate', name: 'Northgate Community Church Kids', city: 'Burlington, Ontario', slug: 'northgate', plan: 'Free', modules: ['Roster', 'RollCall', 'QuickCards'] },
 ];

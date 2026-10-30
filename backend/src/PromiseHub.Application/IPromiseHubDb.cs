@@ -96,6 +96,9 @@ public interface IPromiseHubDb
     DbSet<Domain.Website.DonationPledge> DonationPledges { get; }
     DbSet<Domain.Curriculum.BadgeAward> BadgeAwards { get; }
     DbSet<Domain.Curriculum.ProgressionStage> ProgressionStages { get; }
+    DbSet<Domain.LearningBond.LearningBondAgreement> LearningBondAgreements { get; }
+    DbSet<Domain.LearningBond.LearningBondAgreementAcceptance> LearningBondAgreementAcceptances { get; }
+    DbSet<Domain.LearningBond.LearningBondIntake> LearningBondIntakes { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

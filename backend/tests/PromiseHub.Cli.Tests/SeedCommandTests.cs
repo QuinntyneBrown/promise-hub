@@ -55,7 +55,7 @@ public sealed class SeedCommandTests : IDisposable
             "Northgate Community Church Kids|Samuel Boateng|Mentor|",
         ], people);
         Assert.Equal(
-            ["Harbourview Youth Collective|Roster,Slips,RollCall,QuickCards,Pickup,Messages,Incidents,Reports,Learning,Mentoring|harbourview",
+            ["Harbourview Youth Collective|Roster,Slips,RollCall,QuickCards,Pickup,Messages,Incidents,Reports,Learning,Mentoring,LearningBond|harbourview",
              "Northgate Community Church Kids|Roster,RollCall,QuickCards|northgate"],
             Query("SELECT o.Name || '|' || c.ModulesOn || '|' || o.WebsiteSlug FROM Organizations o JOIN ModuleConfigurations c ON c.OrganizationId = o.Id ORDER BY o.Name"));
     }

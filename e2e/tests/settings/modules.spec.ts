@@ -6,7 +6,7 @@ import { ShellPage } from '../../pages/shell.page';
 test.describe('Settings › Modules', () => {
   test.use({ signedInAs: 'm-tom' });
 
-  test('Given an admin, when Settings › Modules opens, then every module is listed with the whole suite, Learning and Mentoring on', async ({ page }) => {
+  test('Given an admin, when Settings › Modules opens, then every module is listed with the whole suite, Learning, Mentoring and Learning Bond on', async ({ page }) => {
     const modules = new SettingsModulesPage(page);
 
     await modules.open();
@@ -23,8 +23,9 @@ test.describe('Settings › Modules', () => {
       'Learning',
       'Mentoring',
       'Public website',
+      'Learning Bond',
     ]);
-    await expect(modules.summary).toHaveText('10 of 11 modules on');
+    await expect(modules.summary).toHaveText('11 of 12 modules on');
     await expect(modules.toggle('Reports')).toBeChecked();
     await expect(modules.toggle('Learning')).toBeChecked();
     await expect(modules.toggle('Public website')).not.toBeChecked();
@@ -37,14 +38,14 @@ test.describe('Settings › Modules', () => {
     const shell = new ShellPage(page);
     await modules.open();
 
-    for (const name of ['Permission slips', 'Quick Cards', 'Pickup', 'Messages', 'Incident log', 'Reports', 'Learning', 'Mentoring']) {
+    for (const name of ['Permission slips', 'Quick Cards', 'Pickup', 'Messages', 'Incident log', 'Reports', 'Learning', 'Mentoring', 'Learning Bond']) {
       await modules.set(name, false);
     }
     await modules.save();
 
     await expect(modules.toast).toContainText('Modules saved');
     await expect(modules.toast).toContainText('2 on');
-    await expect(modules.summary).toHaveText('2 of 11 modules on');
+    await expect(modules.summary).toHaveText('2 of 12 modules on');
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Welcome, Tom');
     expect(await shell.visibleNavigationLabels()).toEqual(['Today', 'Check-in', 'Families', 'More']);
@@ -59,7 +60,7 @@ test.describe('Settings › Modules', () => {
 
     await expect(modules.error('Pickup')).toHaveText('Pickup needs Roll Call.');
     await expect(modules.toast).toBeHidden();
-    // Eleven modules scroll the presets under the sticky top bar, which axe reads as overlapping targets.
+    // Twelve modules scroll the presets under the sticky top bar, which axe reads as overlapping targets.
     await modules.scrollToTop();
     await modules.expectAccessible();
   });
@@ -75,7 +76,7 @@ test.describe('Settings › Modules', () => {
     await expect(modules.toggle('Quick Cards')).toBeChecked();
     await expect(modules.toggle('Permission slips')).not.toBeChecked();
     await expect(modules.toggle('Reports')).not.toBeChecked();
-    await expect(modules.summary).toHaveText('3 of 11 modules on');
+    await expect(modules.summary).toHaveText('3 of 12 modules on');
   });
 
   // L2-004 criterion 6: Learning, Mentoring and Public website each say they need the roster, and the whole suite leaves them off.
@@ -91,7 +92,7 @@ test.describe('Settings › Modules', () => {
     }
     await modules.preset('Whole suite');
     await expect(modules.toggle('Learning')).not.toBeChecked();
-    await expect(modules.summary).toHaveText('8 of 11 modules on');
+    await expect(modules.summary).toHaveText('8 of 12 modules on');
   });
 
   // L2-004 criterion 7 (settings-modules/blocked).
@@ -100,7 +101,7 @@ test.describe('Settings › Modules', () => {
     await modules.open();
     await modules.set('Learning', true);
     await modules.set('Mentoring', true);
-    for (const name of ['Roster', 'Permission slips', 'Roll Call', 'Quick Cards', 'Pickup', 'Messages', 'Incident log', 'Reports']) {
+    for (const name of ['Roster', 'Permission slips', 'Roll Call', 'Quick Cards', 'Pickup', 'Messages', 'Incident log', 'Reports', 'Learning Bond']) {
       await modules.set(name, false);
     }
 
@@ -108,6 +109,7 @@ test.describe('Settings › Modules', () => {
 
     await expect(modules.error('Roster')).toHaveText('Learning and Mentoring need the roster.');
     await expect(modules.toast).toBeHidden();
+    await modules.scrollToTop();
     await modules.expectAccessible();
   });
 });

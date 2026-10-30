@@ -39,5 +39,21 @@ public sealed class TenantContext : ITenantContext
         IsResolved = true;
     }
 
+    /// <summary>A background job whose actions the audit attributes to "System" (L2-161), such as destroying a SIN.</summary>
+    public void ResolveForSystem(Guid organizationId)
+    {
+        OrganizationId = organizationId;
+        ActorName = "System";
+        IsResolved = true;
+    }
+
+    /// <summary>A guardian acting through a link (L2-161): the organization comes from the link and the audit names the actor "Guardian".</summary>
+    public void ResolveForGuardian(Guid organizationId)
+    {
+        OrganizationId = organizationId;
+        ActorName = "Guardian";
+        IsResolved = true;
+    }
+
     public static TenantContext System() => new() { IsSystem = true, ActorName = "System" };
 }

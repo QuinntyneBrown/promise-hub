@@ -1,6 +1,6 @@
 # 0076: Learning Bond keeps financial data encrypted and submits only on the guardian's request
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-10-29
 
 ## Context

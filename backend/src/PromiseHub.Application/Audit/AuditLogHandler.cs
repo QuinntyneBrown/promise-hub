@@ -46,6 +46,7 @@ public sealed class AuditLogHandler(IPromiseHubDb db, IAuditWriter audit, TimePr
             var text = query.Q.Trim();
             entries = entries.Where(e => e.ActorName.Contains(text, StringComparison.OrdinalIgnoreCase)
                 || e.RecordType.Contains(text, StringComparison.OrdinalIgnoreCase)
+                || e.RecordType.Contains(text.Replace(" ", "", StringComparison.Ordinal), StringComparison.OrdinalIgnoreCase)
                 || e.Summary.Contains(text, StringComparison.OrdinalIgnoreCase));
         }
         return [.. entries.OrderByDescending(e => e.OccurredAt)];

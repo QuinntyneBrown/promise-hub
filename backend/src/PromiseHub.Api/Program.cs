@@ -21,6 +21,9 @@ builder.Services.AddSingleton<IFileStore>(new PromiseHub.Infrastructure.Storage.
     builder.Configuration["Storage:RootPath"] ?? Path.Combine(builder.Environment.ContentRootPath, "App_Data", "files")));
 builder.Services.AddSingleton(new PromiseHub.Application.Curriculum.LessonVideoOptions(
     builder.Configuration.GetValue<long?>("Lessons:MaxVideoBytes") ?? PromiseHub.Application.Curriculum.LessonVideoOptions.DefaultMaxBytes));
+// Learning Bond (ADR 0076): SINs are encrypted under LearningBond:Key, 32 bytes base64 from configuration or a key vault, never the database.
+builder.Services.AddSingleton<PromiseHub.Application.LearningBond.ILearningBondCipher>(
+    new PromiseHub.Infrastructure.LearningBond.LearningBondCipher(builder.Configuration["LearningBond:Key"]));
 builder.Services.AddSingleton(new PromiseHub.Application.Guardian.GuardianLinkOptions(builder.Configuration["Guardian:LinkBaseUrl"] ?? "http://localhost:4317"));
 // Enums travel as their names, as the DTOs already do.
 builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
@@ -83,6 +86,8 @@ app.MapInvitationEndpoints();
 app.MapSettingsEndpoints();
 app.MapParticipantModuleEndpoints();
 app.MapWebsiteEndpoints();
+app.MapLearningBondEndpoints();
+app.MapLearningBondGuardianEndpoints();
 app.MapLearningEndpoints();
 app.MapCurriculumEndpoints();
 app.MapMentoringEndpoints();

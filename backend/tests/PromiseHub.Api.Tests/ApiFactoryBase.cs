@@ -43,6 +43,9 @@ public abstract class ApiFactoryBase : WebApplicationFactory<Program>
     /// <summary>The shared secret the SMS provider sends with inbound texts in tests; not a real credential.</summary>
     public const string InboundSmsSecret = "test-inbound-secret";
 
+    /// <summary>A Learning Bond key generated for this test host (ADR 0076); real keys come from configuration or a key vault.</summary>
+    public static readonly string LearningBondKey = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
+
     public FakeTimeProvider Clock { get; } = new(new DateTimeOffset(2026, 11, 5, 21, 12, 0, TimeSpan.Zero));
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -54,6 +57,7 @@ public abstract class ApiFactoryBase : WebApplicationFactory<Program>
         builder.UseSetting("Privacy:Retention", "false");
         builder.UseSetting("Ops:Alerts", "false");
         builder.UseSetting("Sms:InboundSecret", InboundSmsSecret);
+        builder.UseSetting("LearningBond:Key", LearningBondKey);
         builder.ConfigureServices(services =>
         {
             services.AddSingleton<TimeProvider>(Clock);

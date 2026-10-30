@@ -74,6 +74,14 @@ export const MODULE_CATALOG: {
     description: 'Your organization’s public pages.',
     needs: ['Roster'],
   },
+  // Learning Bond (ADR 0076): needs Roster and Messages, and the data-handling agreement accepted before it turns on; no preset turns it on.
+  {
+    id: 'LearningBond',
+    name: 'Learning Bond',
+    description:
+      'Claims every dollar the government already owes your child, from birth to university.',
+    needs: ['Roster', 'Messages'],
+  },
 ];
 
 /** The eight operations modules of the "Whole suite" preset. */
