@@ -30,6 +30,15 @@ Backend:
 
 Tenant and module gate: the staff endpoints are in the `/learning-bond` group behind `RequireModule(ModuleId.LearningBond)` and `StatusRolesPolicy`; the guardian endpoint takes its tenant from the link. Another organization's household answers 404 (criterion 5). Audited: opening the list, each call request and each outcome.
 
+## Built in prompt 85
+
+- `LearningBondFamiliesHandler` answers `GET /learning-bond/households?status=&program=` for roles in the status roles: the covered households in name order with their primary guardian, programs, status and last change, the covered programs to filter by, and the count. The status (`LearningBondFamilyStatus`) is computed from the household's records: Not invited, Invited (its latest invitation), Call requested (an open call request, with the number and time of day so staff can call) and Not interested; the claim's steps (Started, Paused, Submitted, Deposited) arrive with the claim.
+- The session carries `learningBondStatus` (Learning Bond on and the role in the status roles), and the shell's Learning Bond menu item requires it, so a role outside the status roles has no item.
+- Call requests: `LearningBondGuardianHandler.RequestCallAsync` answers `POST /g/learning-bond/{token}/callback` (200 with "{organization} will call you…", 422 by field, 404 for an unknown link, a suspended organization or the module off), stores a `LearningBondCallRequest` (migration `LearningBondCallRequests`) and notifies the members in the status roles with the new kind `learning-bond`. `LearningBondHouseholdHandler.RecordCallAsync` answers `POST /learning-bond/households/{id}/call-outcome`: Resumed and Not interested close the request, No answer keeps it open, each audited; no open request answers 409.
+- Frontend: `LearningBondFamiliesPage` (Status and Program `ph-select`s, a `ph-list` with a `ph-badge` per status and Mark call done) and `LearningBondCallOutcomeDialog` in `learning-bond`. The guardian's own I'd rather talk to someone dialog arrives with the guardian pages (prompt 86); its API is in place.
+- An integration test (`LearningBondFamiliesTests`) asserts that no staff Learning Bond response names a SIN, income, marital status, household size, benefit, estimate or amount (L2-142 criterion 2).
+- Acceptance tests: `backend/tests/PromiseHub.Api.Tests/LearningBondFamiliesTests.cs`, `LearningBondCallbackTests.cs` and `e2e/tests/learning-bond/families.spec.ts`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

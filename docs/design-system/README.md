@@ -37,7 +37,7 @@ Edit tokens and shared component CSS first. Edit catalogue metadata and generato
 
 | Page | Purpose |
 |---|---|
-| [Button](components/button.html) | Trigger a single explicit action, such as checking a child in or sending a slip. |
+| [Button](components/button.html) | Trigger a single explicit action, such as checking a child in or sending a slip. A disabled button points with aria-describedby to the visible text that says why, as a blocked Launch does. |
 | [Button group](components/button-group.html) | Group related choices, such as a youth's tracks, so exactly one is pressed without creating several primary actions. |
 | [Link](components/link.html) | Navigate to a household, event or record with a named destination. |
 | [Menu](components/menu.html) | Offer secondary account actions without obscuring the current task. |

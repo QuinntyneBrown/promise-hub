@@ -1191,8 +1191,8 @@ simple("export-learning-bond", "Export for funders", "learning-bond-dashboard", 
        success_body=f'<p>harbourview-youth-collective-learning-bond-2026-09-01-2026-11-05.csv is ready: 3 programs and a total row. The link works until Thu 12 Nov.</p><div class="cluster">{btn("Download", "primary", icon_name="download")}</div>')
 
 simple("learning-bond-call-outcome", "Mark the call with Linh Tran done", "learning-bond-families", ["L2-142", "L1-026"] + R_SD_X, "289-555-0119 · asked today at 2:10 pm · afternoons.",
-       lambda e: fieldset("Outcome", choice("out", "Resumed", small="She’ll carry on from her link.", checked=not e, invalid=bool(e)) + choice("out", "Not interested", small="No more texts about the Learning Bond.", invalid=bool(e)) + choice("out", "No answer", small="Stays as Call requested; try again later.", invalid=bool(e)), error=(e or {}).get("out", ""), fid="out")
-                 + f'<p class="hint">{icon("lock", "icon--sm")} You see where she is in the steps, never her SIN or income.</p>',
+       lambda e: fieldset("Outcome", choice("out", "Resumed", small="They carry on from their link.", checked=not e, invalid=bool(e)) + choice("out", "Not interested", small="No more texts about the Learning Bond.", invalid=bool(e)) + choice("out", "No answer", small="Stays as Call requested; try again later.", invalid=bool(e)), error=(e or {}).get("out", ""), fid="out")
+                 + '<p class="hint">You see where they are in the steps, never a SIN or income.</p>',
        "Save outcome", base_state="call-requested", icon_name="phone", invalid_err={"out": "Choose what happened."})
 
 simple("learning-bond-invite-household", "Invite the Petrov household to Learning Bond", "learning-bond-families", ["L2-140", "L2-142", "L1-026"] + R_SD_X, "One text to Elena Petrova now, in English, naming Nikolai.",

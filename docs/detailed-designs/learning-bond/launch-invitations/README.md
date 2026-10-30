@@ -30,6 +30,17 @@ Backend:
 
 Tenant and module gate: the launch endpoints are in the `/learning-bond` group behind `RequireModule(ModuleId.LearningBond)`; the job runs per tenant and reads the household, guardians and children of that organization only. Audited: schedule, change, cancel, the job's send and each invitation at the door. The DTOs carry counts, dates and channel availability; no guardian contact leaves the API except on the missing-contacts list, which names the household and the reason only.
 
+## Built in prompt 85
+
+ADR 0079 replaces the scheduler this design assumed: a scheduled launch is a due row on `LearningBondSettings` (`LaunchMode`, `LaunchDate`, `LaunchedAt`; migration `LearningBondLaunch`) that `MessageDispatchRunner` hands to `LearningBondLaunchHandler.SendDueAsync` on each pass, per organization, skipping suspended ones. One handler (`LearningBondLaunchHandler`) answers `GET`, `POST`, `PUT` and `DELETE /learning-bond/launch` and `GET .../missing-contacts`, where this design names three.
+
+- Counts: `LearningBondCoverage.CoveredAsync` answers each covered household with its covered programs (names and ids) and eligible children's first names. A household is reached by text when a guardian has a mobile number, by email when none has one but a guardian has an email that hasn't bounced.
+- Sending: `LearningBondInvitationSender` queues one message per household through `MessageWriter` as `MessageSource.LearningBond` (gated by the Learning Bond module in `SendQueuedDeliveriesHandler`, and not prefixed again with the organization's name, since the text starts with the sender name), texting each guardian with a mobile number (their working email as the fallback) and emailing guardians with an email only. The text and the email title name each eligible child with the verb agreeing (`LearningBondTexts.Names`), and carry the household's own link from `GuardianLinkIssuer.IssueLearningBond`. A `LearningBondInvitation` row is written in the same save. Cancelling clears the mode; after the launch has sent, scheduling again is refused with "Learning Bond has launched. Staff invite new families at the door."
+- At the door: `LearningBondHouseholdHandler` answers `GET /learning-bond/households/{id}` (the household card) and `POST .../invitations` for roles in the status roles (`LearningBondStatusRoles`). The household card (`LearningBondHouseholdCard`) and `LearningBondInviteDialog` live in the `households` library; the card is composed only while the module is on and hides itself for any other answer.
+- Frontend: `LearningBondLaunchPage` (the When form; while scheduled, the form only moves the day) and `LearningBondMissingContactsPage` in `learning-bond`, `LearningBondCancelLaunchDialog`; the hub's Launch card links to it. `ph-button` gained `describedBy` so a disabled Launch points at its reason.
+- Deferred: honouring STOP inside PromiseHub (no inbound SMS exists yet; ADR 0079), the launched hub card with the dashboard link (the dashboard is a later prompt), and a dead-letter staff notice for failed sends.
+- Acceptance tests: `backend/tests/PromiseHub.Api.Tests/LearningBondLaunchTests.cs`, `LearningBondInviteTests.cs`, `e2e/tests/learning-bond/launch.spec.ts` and `invite-household.spec.ts`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

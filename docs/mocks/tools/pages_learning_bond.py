@@ -328,13 +328,18 @@ def learning_bond_launch(S):
                      ("Email only", str(email), "Invited by email"), ("Neither", str(neither), f'<a href="{page("learning-bond-launch", "missing-contacts")}">View households to collect from</a>')])
 
     def form(*, mode="day", date="2026-11-09", err="", busy=False, disabled_reason=""):
-        when = fieldset("When", choice("when", "Send invitations on a day", small="At 10:00 am Eastern. Texts count toward the monthly SMS cap; opt-outs and email fallback apply.", checked=mode == "day")
-                        + field("date", "Day", type_="date", value=date, error=err, help_="From tomorrow to 90 days ahead.", attrs=' style="max-width: 14rem;"')
-                        + choice("when", "Staff invite at the door", small="No mass send. Staff tap Invite to Learning Bond on a household at check-in.", checked=mode == "door"), fid="when")
+        day = field("date", "Day", type_="date", value=date, error=err, help_="From tomorrow to 90 days ahead.", attrs=' style="max-width: 14rem;"')
+        if mode == "move":
+            # A scheduled launch: the form only moves its day (prompt 85).
+            when = day
+        else:
+            when = fieldset("When", choice("when", "Send invitations on a day", small="At 10:00 am, your organization’s time. Texts count toward the monthly SMS cap; the email fallback applies.", checked=mode == "day")
+                            + field("date", "Day", type_="date", value=date, error=err, help_="From tomorrow to 90 days ahead.", attrs=' style="max-width: 14rem;"')
+                            + choice("when", "Staff invite at the door", small="No mass send. Staff tap Invite to Learning Bond on a household at check-in.", checked=mode == "door"), fid="when")
         if disabled_reason:
             acts = f'<div class="form-actions cluster"><p class="field__error" id="launch-error">{esc(disabled_reason)}</p>{btn("Launch", "primary", disabled=True, attrs=" aria-describedby=\"launch-error\"")}</div>'
         else:
-            acts = form_actions("Schedule launch" if mode == "day" else "Launch without a mass send", page("settings-learning-bond"), busy=busy)
+            acts = form_actions({"day": "Schedule launch", "move": "Change the date"}.get(mode, "Launch without a mass send"), page("settings-learning-bond"), busy=busy)
         return f'<form class="stack form-width--lg" action="#" method="post" novalidate>{form_summary([("date", err)]) if err else ""}{card(when, title="How", tid="how")}{acts}</form>'
 
     S.add("default", "The households covered and how each can be reached, then a day to send or Staff invite at the door.", nav="settings", user=T, main=hdr + counts() + form(),
@@ -347,11 +352,11 @@ def learning_bond_launch(S):
     S.add("invalid", "A date in the past: 422 and the rule.", nav="settings", user=T, main=hdr + counts() + form(date="2026-11-01", err="Choose a date from tomorrow to 90 days ahead."))
     S.add("submitting", "Scheduling the launch.", nav="settings", user=T, main=hdr + counts() + form(busy=True))
     S.add("scheduled", "Scheduled: the day, what goes out, and Change the date or Cancel until the job starts.", nav="settings", user=T,
-          main=hdr + alert("success", f"Scheduled for {LAUNCH_DATE}, 10:00 am", "97 texts and 9 emails. Change the date or cancel any time before then.",
-                           actions=btn("Change the date", "", size="sm") + btn("Cancel launch", "ghost", size="sm", data_href=dialog("learning-bond-cancel-launch"))) + counts() + form())
+          main=hdr + alert("success", f"Scheduled for {LAUNCH_DATE}, 10:00 am", "97 by text and 9 by email. Change the date or cancel any time before then.",
+                           actions=btn("Cancel launch", "ghost", size="sm", data_href=dialog("learning-bond-cancel-launch"))) + counts() + form(mode="move"))
     S.add("at-door", "Staff invite at the door: no mass send; Invite to Learning Bond appears on covered households for roles that see status.", nav="settings", user=T,
-          main=hdr + alert("info", "Staff invite at the door", "Nothing is sent in bulk. Site leads and youth workers tap Invite to Learning Bond on a household at check-in.",
-                           actions=btn("Covered households", "", size="sm", href=page("learning-bond-families"))) + counts() + form(mode="door"))
+          main=hdr + alert("info", "Staff invite at the door", "Nothing is sent in bulk. Staff whose role sees status tap Invite to Learning Bond on a household at check-in.")
+          + counts() + form(mode="door"))
     S.add("cancelled", "The scheduled launch was cancelled: nothing was sent; audited.", nav="settings", user=T, main=hdr + counts() + form(),
           toast_html=toast_region(toast("info", "Launch cancelled", "Nothing was sent. Schedule a new day when you’re ready.")))
     S.add("loading", "Launch loading.", nav="settings", user=T, main=crumbs("Launch") + page_header("Launch", "") + skeleton_kpis(4) + skeleton_form(2))
@@ -406,24 +411,24 @@ def learning_bond_dashboard(S):
 
 # ------------------------------------------------------------------ Covered households and their status
 def family_row(name, guardian, program, st, when, *, call=False):
-    acts = ""
+    # As built (prompt 85): a list item per household linking to it, its status as a badge, the number to call while a call is requested.
+    acts = badge(st, STATUS_KIND[st])
+    meta = f"{guardian} · {program} · {when}"
     if st == "Call requested":
-        acts = btn("Mark call done", "primary", size="sm", data_href=dialog("learning-bond-call-outcome"))
-    elif st == "Not invited":
-        acts = btn("Invite to Learning Bond", "", size="sm", data_href=dialog("learning-bond-invite-household"))
-    return [f'<a class="list-link" href="{page("household")}"><span class="avatar avatar--sm" aria-hidden="true">{name[:2].upper()}</span><div><div class="list__title">{esc(name)}</div><div class="list__meta">{esc(guardian)}</div></div></a>',
-            badge(st, STATUS_KIND[st]), esc(program), esc(when), f'<div class="row-actions">{acts}</div>']
+        meta += " · 289-555-0119 · afternoons"
+        acts += btn("Mark call done", "primary", size="sm", data_href=dialog("learning-bond-call-outcome"))
+    return list_item(name, meta, href=page("household"), end=acts, lead=f'<span class="avatar avatar--sm" aria-hidden="true">{name[:2].upper()}</span>')
 
 
 def families_toolbar(q="", status_="All", program="All programs"):
-    return (f'<div class="toolbar"><form role="search" class="input-group" style="flex: 1 1 14rem;"><label class="visually-hidden" for="fam-q">Find a household</label>'
-            f'<input class="input" id="fam-q" type="search" value="{esc(q)}" placeholder="Find a household"><span class="input-group__btn btn btn--ghost btn--icon" aria-hidden="true">{icon("search")}</span></form>'
-            + chips([(s, s == status_) for s in ["All", "Not invited", "Invited", "Started", "Paused", "Submitted", "Deposited", "Call requested"]], "Status")
-            + select("fam-prog", "Program", ["All programs", "After‑School Tutoring", "Saturday Sports"], selected=program, visually_hidden_label=True) + "</div>")
+    return ('<div class="toolbar">'
+            + select("fam-status", "Status", ["All", "Not invited", "Invited", "Started", "Paused: needs a SIN", "Paused: needs a tax return", "Paused: needs a document",
+                                               "Submitted", "Deposited", "Call requested", "Not completed", "Not interested"], selected=status_)
+            + select("fam-prog", "Program", ["All programs", "After‑School Tutoring", "Saturday Sports"], selected=program) + "</div>")
 
 
 def families_table(rows=None):
-    return table("Covered households", ["Household", "Status", "Program", "Last change", "Actions"], rows if rows is not None else [family_row(*h) for h in HOUSEHOLDS], hide_sm={2, 3}, cls="table-wrap--names")
+    return ul_list(rows if rows is not None else [family_row(*h) for h in HOUSEHOLDS], label="Covered households")
 
 
 @screen("learning-bond-families", "page", "Learning Bond households", route="/learning-bond/families", reqs=R_FAMILIES, na={})
