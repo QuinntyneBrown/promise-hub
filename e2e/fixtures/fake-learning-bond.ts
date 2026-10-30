@@ -198,7 +198,7 @@ export class FakeLearningBond {
   }
 
   /** GET /learning-bond/agreement (L2-136 criterion 1). */
-  agreement(route: Route, m: Membership, moduleOn: boolean): Promise<void> {
+  agreement(route: Route, m: Membership, moduleOn: boolean, organizationName: string): Promise<void> {
     const own = this.acceptances.filter((a) => a.organizationId === m.organizationId).sort((a, b) => b.version - a.version);
     const current = own.find((a) => a.version === this.version);
     const earlier = current ? undefined : own.find((a) => a.version < this.version);
@@ -210,17 +210,26 @@ export class FakeLearningBond {
         sections,
         acceptance: dto(current),
         earlierAcceptance: dto(earlier),
-        signer: this.signerDto(this.signers.get(m.organizationId)),
+        signer: this.signerDto(this.signers.get(m.organizationId), organizationName),
         moduleOn,
       },
     });
   }
 
-  /** The open request as the API answers it: never the token. */
-  private signerDto(signer?: FakeLearningBondSigner): Omit<FakeLearningBondSigner, 'token' | 'requestedBy' | 'requestedByMembershipId'> | null {
+  /** The open request as the API answers it, with the email the signer received (LearningBondSignerEmailDto): never the token. */
+  private signerDto(signer: FakeLearningBondSigner | undefined, organization: string) {
     if (!signer) return null;
-    const { token: _token, requestedBy: _requestedBy, requestedByMembershipId: _requestedByMembershipId, ...dto } = signer;
-    return dto;
+    const { token: _token, requestedBy, requestedByMembershipId: _requestedByMembershipId, ...dto } = signer;
+    const preview = {
+      title: `${requestedBy} asked you to accept the Learning Bond data-handling agreement`,
+      text:
+        `Hello ${signer.name}. ${organization} wants to offer Learning Bond, which helps families claim the Canada Learning Bond and child benefits. ` +
+        'Someone with authority has to accept a one-page agreement about what it collects and where it goes. ' +
+        `${requestedBy} named you, as ${signer.title}. No PromiseHub account is needed. The link works once, for 14 days.`,
+      action: 'Read and accept',
+      footer: `${organization} via PromiseHub`,
+    };
+    return { ...dto, preview };
   }
 
   /** POST /learning-bond/agreement/acceptances (L2-136 criteria 2 and 3). */

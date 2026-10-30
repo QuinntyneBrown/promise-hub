@@ -1,0 +1,15 @@
+<ph-dialog
+  title="Email preview"
+  [description]="'Sent to ' + signer.name + ' at ' + signer.email + '.'"
+  icon="inbox"
+>
+  <ph-email-preview
+    [title]="signer.preview.title"
+    [text]="signer.preview.text"
+    [action]="signer.preview.action"
+    [footer]="signer.preview.footer"
+  />
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close()">Close</ph-button>
+  </ng-container>
+</ph-dialog>

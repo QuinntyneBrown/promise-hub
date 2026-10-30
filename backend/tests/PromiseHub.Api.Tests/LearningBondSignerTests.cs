@@ -111,6 +111,28 @@ public sealed class LearningBondSignerTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, (await jaylen.DeleteAsync($"/learning-bond/agreement/signers/{id}")).StatusCode);
     }
 
+    // L2-137 criterion 11: the admin sees the email the signer received, in the words that were sent, without the link.
+    [Fact]
+    public async Task The_waiting_request_carries_the_email_the_signer_received_without_its_link()
+    {
+        var tom = _factory.ClientFor(Tom);
+        await Request(tom);
+
+        var preview = (await tom.GetFromJsonAsync<JsonElement>("/learning-bond/agreement")).GetProperty("signer").GetProperty("preview");
+
+        Assert.Equal("Tom Nguyen asked you to accept the Learning Bond data-handling agreement", preview.GetProperty("title").GetString());
+        Assert.Equal("Hello Rev. Angela Baptiste. Harbourview Youth Collective wants to offer Learning Bond, which helps families claim the Canada Learning Bond "
+            + "and child benefits. Someone with authority has to accept a one-page agreement about what it collects and where it goes. Tom Nguyen named you, "
+            + "as Board chair. No PromiseHub account is needed. The link works once, for 14 days.", preview.GetProperty("text").GetString());
+        Assert.Equal("Read and accept", preview.GetProperty("action").GetString());
+        Assert.Equal("Harbourview Youth Collective via PromiseHub", preview.GetProperty("footer").GetString());
+        var body = Assert.Single(Email.Bodies).Body;
+        Assert.Contains(preview.GetProperty("title").GetString()!, body, StringComparison.Ordinal);
+        Assert.Contains(preview.GetProperty("text").GetString()!, body, StringComparison.Ordinal);
+        Assert.Contains("Read and accept: ", body, StringComparison.Ordinal);
+        Assert.DoesNotContain("/sign/learning-bond/", preview.ToString(), StringComparison.Ordinal);
+    }
+
     private static async Task<string> Request(HttpClient client)
     {
         var response = await client.PostAsJsonAsync("/learning-bond/agreement/signers", Angela);

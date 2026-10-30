@@ -468,6 +468,7 @@ export * from './lib/learning-bond/learning-bond-agreement';
 export * from './lib/learning-bond/learning-bond-agreement-section';
 export * from './lib/learning-bond/learning-bond-acceptance';
 export * from './lib/learning-bond/learning-bond-signer-request';
+export * from './lib/learning-bond/learning-bond-signer-email';
 export * from './lib/learning-bond/request-learning-bond-signer';
 export * from './lib/learning-bond/learning-bond-signer-agreement';
 export * from './lib/learning-bond/learning-bond-signer-acceptance';

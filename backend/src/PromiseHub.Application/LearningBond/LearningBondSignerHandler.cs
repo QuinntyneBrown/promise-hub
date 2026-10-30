@@ -99,7 +99,6 @@ public sealed class LearningBondSignerHandler(IPromiseHubDb db, ITenantContext t
         var organization = await db.Organizations.AsNoTracking().Where(o => o.Id == tenant.OrganizationId).Select(o => o.Name).SingleAsync(cancellationToken);
         var link = $"{links.BaseUrl.TrimEnd('/')}/sign/learning-bond/{token}";
         await email.SendAsync(signer.Email, $"{organization} via PromiseHub: please accept the Learning Bond data-handling agreement",
-            $"{signer.RequestedByName} asked you, as {signer.Title}, to accept the Learning Bond data-handling agreement for {organization}. "
-            + $"No PromiseHub account is needed. The link works once, for 14 days: {link}\n\n{organization} via PromiseHub", cancellationToken);
+            LearningBondSignerEmailDto.For(signer, organization).Body(link), cancellationToken);
     }
 }

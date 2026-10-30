@@ -3245,7 +3245,7 @@ export class FakeApi {
   private async learningBondAgreement(route: Route): Promise<void> {
     const m = await this.learningBondAgreementCaller(route);
     if (!m) return;
-    return this.learningBond.agreement(route, m, this.modules.get(m.organizationId)!.includes("LearningBond"));
+    return this.learningBond.agreement(route, m, this.modules.get(m.organizationId)!.includes("LearningBond"), this.organizationDetailsOf(m.organizationId).name);
   }
 
   /** POST /learning-bond/agreement/acceptances (L2-136 criteria 2 and 3). */
