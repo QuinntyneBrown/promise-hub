@@ -20,6 +20,7 @@ import {
   PhList,
   PhListItem,
   PhSkeleton,
+  PhStepper,
 } from '@promisehub/components';
 import { guardianLearningBondText } from './guardian-learning-bond-text';
 import { LearningBondFieldData, LearningBondFieldDialog } from './learning-bond-field-dialog';
@@ -53,6 +54,7 @@ interface ReviewRow {
     PhList,
     PhListItem,
     PhSkeleton,
+    PhStepper,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './learning-bond-review-page.html',

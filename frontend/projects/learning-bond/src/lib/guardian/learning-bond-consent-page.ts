@@ -24,6 +24,7 @@ import {
   PhErrorSummary,
   PhGuardianShell,
   PhSkeleton,
+  PhStepper,
   PhTextField,
 } from '@promisehub/components';
 import { guardianLearningBondText } from './guardian-learning-bond-text';
@@ -45,6 +46,7 @@ import { guardianLearningBondText } from './guardian-learning-bond-text';
     PhErrorSummary,
     PhGuardianShell,
     PhSkeleton,
+    PhStepper,
     PhTextField,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

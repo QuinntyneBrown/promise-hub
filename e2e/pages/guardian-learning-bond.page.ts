@@ -141,6 +141,11 @@ export class GuardianLearningBondPage extends BasePage {
     return this.page.getByTestId('review-not-sent');
   }
 
+  /** Where the claim is: Consent, Your details, Estimate, Review and submit, Sent. */
+  get stepper(): Locator {
+    return this.page.getByTestId('stepper');
+  }
+
   async expectCodeStep(): Promise<void> {
     await expect(this.heading).toHaveText(/^(Check it’s you|Confirme que es usted|Confirmez que c’est vous)$/);
   }

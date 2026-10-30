@@ -9,6 +9,7 @@
       @case ('loaded') {
         @let a = r.value;
         <div class="stack">
+          <ph-stepper [current]="4" [total]="5" [label]="t.step(4)" />
           @if (a.noProvider) {
             <h1>{{ t.noProviderHeading }}</h1>
             <ph-agent-message [speaker]="t.speaker" [text]="t.noProviderText" />

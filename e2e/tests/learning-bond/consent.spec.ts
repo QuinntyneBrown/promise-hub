@@ -10,6 +10,16 @@ test.describe('A guardian gives Learning Bond consent', () => {
     api.trustGuardianDevice('hh-rivera');
   });
 
+  // L2-163 translated (learning-bond-consent/es).
+  test('Given a Spanish-speaking household, when Carmen continues, then the step reads in Spanish', async ({ page, api }) => {
+    api.learningBond.links.set('tok-lb-rivera', { householdId: 'hh-rivera', organizationId: 'org-harbourview', language: 'es' });
+    const learningBond = new GuardianLearningBondPage(page);
+    await learningBond.openLink('tok-lb-rivera');
+    await learningBond.continue();
+
+    await expect(learningBond.stepper).toContainText('Paso 1 de 5');
+  });
+
   // L2-145 criteria 1 to 3 (learning-bond-consent/default, invalid, success).
   test('Given Carmen continues, when she agrees for Mateo only, then one consent is recorded and the intake comes next', async ({ page, api }) => {
     const learningBond = new GuardianLearningBondPage(page);
@@ -17,6 +27,7 @@ test.describe('A guardian gives Learning Bond consent', () => {
     await learningBond.continue();
 
     await expect(learningBond.heading).toHaveText('Your permission, for each child');
+    await expect(learningBond.stepper).toContainText('Step 1 of 5');
     await expect(learningBond.agent).toContainText('It’s separate from the program consent you gave Harbourview Youth Collective.');
     await expect(learningBond.consentBox('Mateo')).not.toBeChecked();
     await expect(learningBond.consentBox('Sofía')).not.toBeChecked();

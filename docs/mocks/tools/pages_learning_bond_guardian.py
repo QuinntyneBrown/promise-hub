@@ -274,8 +274,7 @@ def app_review(fields=APP_FIELDS, *, editing: str = "", err: str = "", lang="en"
     rows = []
     for k, v in fields:
         if k == editing:
-            rows.append(f'<div><dt>{esc(k)}</dt><dd>{field("edit-" + k.lower(), k, type_="tel" if k == "Phone" else "text", value=v, error=err, autofocus=True, help_="For this application only. Your household record isn’t changed.")}'
-                        f'<div class="cluster">{btn("Save", "primary", size="sm", type_="submit")}{btn("Cancel", "ghost", size="sm")}</div></dd></div>')
+            rows.append(f'<div><dt>{esc(k)}</dt><dd class="cluster cluster--between"><span class="field__error">Add your address before you submit.</span>{btn("Edit", "ghost", size="sm", aria_label=f"Edit {k}")}</dd></div>')
         else:
             ed = "" if "SIN" in k or k == "Provider" else btn("Editar" if lang == "es" else "Edit", "ghost", size="sm", aria_label=f"Edit {k}")
             rows.append(f'<div><dt>{esc(k)}</dt><dd class="cluster cluster--between"><span>{v}</span>{ed}</dd></div>')
@@ -306,12 +305,11 @@ def learning_bond_review(S):
     S.add("default", "The recommended provider and why, every field of the pre-filled application with Edit (SINs masked, no Edit on them), and Submit to Northfield Credit Union as the only way to send.", main=body(),
           notes=note("Before Submit, no request carrying the family’s data has been made to the provider or any government service. Submit is the guardian’s own request with the review’s version; the agent has no tool that submits (L2-149).", "top: 4rem; right: 1rem;"))
     S.add("es", "The review in Spanish.", lang="Español", html_lang="es", main=body(lang="es"))
-    S.add("choose-another", "Choose another: the other no-fee providers serving Ontario, from the platform’s list.", main=body(choosing=True))
+    S.add("choose-another", "Choose another opens the learning-bond-choose-provider dialog: the no-fee providers serving Ontario, from the platform’s list.", main=body(choosing=True))
     S.add("no-provider", "No provider on the list serves the household’s province: the page says so, offers the Government of Canada link, and the claim stays Started.",
           main=steps(3) + '<h1>No provider yet for your province</h1>' + agent("None of the no-fee providers we work with serves Nunavut yet. Your claim stays saved; I’ll text you when one does.")
                + card(f'<p>You can still open an RESP and claim the bond yourself.</p><div>{btn("Learning Bond on canada.ca", "", icon_name="globe", href="https://www.canada.ca/en/services/benefits/education/education-savings/learning-bond.html", attrs=" target=\"_blank\" rel=\"noopener\"")}</div>') + g_footer())
-    S.add("edit", "Editing the phone for this application only; the household record isn’t changed.", main=body(editing="Phone"))
-    S.add("invalid", "An edited phone that isn’t ten digits: validated as on the household record.", main=body(editing="Phone", err="Enter a 10-digit mobile number."))
+    S.add("edit", "Edit opens the learning-bond-edit-field dialog for that field, for this application only; the household record isn’t changed. A missing address is flagged on its row.", main=body(editing="Address"))
     S.add("submitting", "Sending once; a double tap or retry sends nothing more.", main=body(busy=True))
     S.add("failed", "The provider refused or was unreachable: the application stays Ready to submit and nothing was sent.",
           main=body(alert_html=alert("danger", "We couldn’t send it. Nothing was sent. Try again.", f"{PROVIDER} didn’t answer. Your application is saved exactly as you reviewed it.")))

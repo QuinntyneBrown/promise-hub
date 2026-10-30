@@ -19,6 +19,7 @@ test.describe('A guardian reviews and submits the Learning Bond application', ()
     await learningBond.openReview('tok-lb-rivera', 'c-mateo');
 
     await expect(learningBond.heading).toHaveText('Check Mateo’s application');
+    await expect(learningBond.stepper).toContainText('Step 4 of 5');
     await expect(learningBond.provider).toContainText('Northfield Credit Union');
     await expect(learningBond.provider).toContainText('No fees, no deposit needed, and it handles the Learning Bond');
     await expect(learningBond.reviewField('Mateo’s SIN')).toContainText('••• ••• 459');

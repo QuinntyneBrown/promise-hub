@@ -16,6 +16,7 @@ import {
   PhEmptyState,
   PhGuardianShell,
   PhSkeleton,
+  PhStepper,
 } from '@promisehub/components';
 import { guardianLearningBondText } from './guardian-learning-bond-text';
 
@@ -25,7 +26,16 @@ import { guardianLearningBondText } from './guardian-learning-bond-text';
  */
 @Component({
   selector: 'ph-learning-bond-estimate-page',
-  imports: [PhAgentMessage, PhAlert, PhButton, PhCard, PhEmptyState, PhGuardianShell, PhSkeleton],
+  imports: [
+    PhAgentMessage,
+    PhAlert,
+    PhButton,
+    PhCard,
+    PhEmptyState,
+    PhGuardianShell,
+    PhSkeleton,
+    PhStepper,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './learning-bond-estimate-page.html',
   styleUrl: './guardian-learning-bond-page.css',

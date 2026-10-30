@@ -3583,7 +3583,6 @@
         "choose-another",
         "no-provider",
         "edit",
-        "invalid",
         "submitting",
         "failed",
         "loading",
@@ -5661,6 +5660,44 @@
         "invalid",
         "failed",
         "success"
+      ]
+    },
+    {
+      "id": "learning-bond-edit-field",
+      "kind": "dialog",
+      "title": "Change phone",
+      "opens_from": "learning-bond-review",
+      "requirements": [
+        "L2-148",
+        "L1-027",
+        "L2-161",
+        "L2-162",
+        "L2-163"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ]
+    },
+    {
+      "id": "learning-bond-choose-provider",
+      "kind": "dialog",
+      "title": "Choose a provider",
+      "opens_from": "learning-bond-review",
+      "requirements": [
+        "L2-148",
+        "L1-027",
+        "L2-161",
+        "L2-162",
+        "L2-163"
+      ],
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
       ]
     },
     {

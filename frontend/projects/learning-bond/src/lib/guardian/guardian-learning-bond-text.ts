@@ -65,6 +65,7 @@ export interface GuardianLearningBondText {
   fixRequested: (organization: string, name: string) => string;
   /** The agent bubble's speaker name, read by screen readers (L2-163). */
   speaker: string;
+  step: (n: number) => string;
   estimateHeading: (name: string, amount: string) => string;
   estimateNote: (name: string) => string;
   bornBefore: (name: string) => string;
@@ -108,6 +109,7 @@ export interface GuardianLearningBondText {
 }
 
 const en: GuardianLearningBondText = {
+  step: (n) => `Step ${n} of 5`,
   speaker: 'Learning Bond',
   reviewHeading: (name) => `Check ${name}’s application`,
   providerTitle: 'RESP provider',
@@ -221,6 +223,7 @@ const en: GuardianLearningBondText = {
 };
 
 const es: GuardianLearningBondText = {
+  step: (n) => `Paso ${n} de 5`,
   speaker: 'Bono de Estudios',
   reviewHeading: (name) => `Revise la solicitud de ${name}`,
   providerTitle: 'Proveedor del RESP',
@@ -336,6 +339,7 @@ const es: GuardianLearningBondText = {
 };
 
 const fr: GuardianLearningBondText = {
+  step: (n) => `Étape ${n} sur 5`,
   speaker: 'Bon d’études',
   reviewHeading: (name) => `Vérifiez la demande de ${name}`,
   providerTitle: 'Fournisseur du REEE',
