@@ -11,19 +11,15 @@
         @let p = r.value;
         <div class="stack">
           <h1>{{ b.totalHeading }}</h1>
-          <ph-card>
-            <div class="stack">
-              <div data-testid="total-unlocked">
-                <ph-stat
-                  [label]="b.unlockedLabel"
-                  [value]="p.nothingConfirmed ? b.nothingConfirmed : t.amount(p.confirmed)"
-                />
-              </div>
-              <p class="plain muted" data-testid="total-applied">
-                {{ b.appliedFor(t.amount(p.estimated)) }}
-              </p>
-            </div>
-          </ph-card>
+          <div data-testid="total-unlocked">
+            <ph-stat
+              [label]="b.unlockedLabel"
+              [value]="p.nothingConfirmed ? b.nothingConfirmed : t.amount(p.confirmed)"
+            />
+          </div>
+          <p class="plain muted" data-testid="total-applied">
+            {{ b.appliedFor(t.amount(p.estimated)) }}
+          </p>
           @if (p.lines.length) {
             <ph-table [caption]="b.byChild" [columns]="columns()" [rows]="rows(p)" />
           }
