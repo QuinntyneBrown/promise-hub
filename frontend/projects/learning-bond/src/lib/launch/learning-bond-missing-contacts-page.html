@@ -1,0 +1,58 @@
+<ph-breadcrumb [items]="crumbs" />
+<ph-page-header title="Households to collect from" [subtitle]="subtitle()">
+  <ph-button link="/settings/learning-bond/launch">Back to launch</ph-button>
+</ph-page-header>
+@switch (state()) {
+  @case ('forbidden') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="lock"
+        title="Admins launch Learning Bond"
+        text="Ask an admin or a program director."
+      >
+        <ph-button link="/">Back to Today</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('error') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load the households"
+        text="Check your connection and try again."
+      >
+        <ph-button variant="primary" icon="refresh" (click)="load()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('loading') {
+    <ph-skeleton shape="card" aria-label="Loading the households" />
+  }
+  @default {
+    @if (households().length) {
+      <ph-card [flush]="true">
+        <ph-list label="Households to collect from">
+          @for (h of households(); track h.householdId) {
+            <ph-list-item
+              [title]="h.name"
+              [meta]="meta(h)"
+              [avatar]="h.name"
+              [link]="['/families', h.householdId]"
+            >
+              <ph-badge tone="danger">No mobile</ph-badge>
+            </ph-list-item>
+          }
+        </ph-list>
+      </ph-card>
+    } @else {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="check"
+          title="Every covered household can be reached"
+          text="Each has a guardian with a mobile number or an email."
+        />
+      </ph-card>
+    }
+  }
+}

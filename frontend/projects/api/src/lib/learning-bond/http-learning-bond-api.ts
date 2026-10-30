@@ -7,7 +7,9 @@ import { LoadResult } from '../load-result';
 import { WriteOutcome } from '../write-outcome';
 import { LearningBondAgreement } from './learning-bond-agreement';
 import { LearningBondApi } from './learning-bond-api';
+import { LearningBondLaunch } from './learning-bond-launch';
 import { LearningBondLink } from './learning-bond-link';
+import { LearningBondMissingContact } from './learning-bond-missing-contact';
 import { LearningBondStatus } from './learning-bond-status';
 import { LearningBondInvitation } from './learning-bond-invitation';
 import { LearningBondOverview } from './learning-bond-overview';
@@ -75,6 +77,20 @@ export class HttpLearningBondApi implements LearningBondApi {
           ),
         ),
       );
+  }
+
+  launch(): Observable<LoadResult<LearningBondLaunch>> {
+    return toLoad(this.http.get<LearningBondLaunch>(`${this.baseUrl}/learning-bond/launch`));
+  }
+
+  missingContacts(): Observable<LoadResult<LearningBondMissingContact[]>> {
+    return toLoad(
+      this.http
+        .get<{
+          households: LearningBondMissingContact[];
+        }>(`${this.baseUrl}/learning-bond/launch/missing-contacts`)
+        .pipe(map((r) => r.households)),
+    );
   }
 
   agreement(): Observable<LoadResult<LearningBondAgreement>> {

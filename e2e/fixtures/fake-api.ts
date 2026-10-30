@@ -2272,6 +2272,8 @@ export class FakeApi {
     ["GET", /^\/api\/learning-bond\/invitation$/, (route) => this.learningBondInvitation(route)],
     ["PUT", /^\/api\/learning-bond\/invitation$/, (route) => this.learningBondSaveInvitation(route)],
     ["GET", /^\/api\/learning-bond\/overview$/, (route) => this.learningBondOverview(route)],
+    ["GET", /^\/api\/learning-bond\/launch$/, (route) => this.learningBondLaunch(route)],
+    ["GET", /^\/api\/learning-bond\/launch\/missing-contacts$/, (route) => this.learningBondMissingContacts(route)],
     ["POST", /^\/api\/learning-bond\/agreement\/signers\/(?<id>[^/]+)\/resend$/, (route, p) => this.learningBondResendSigner(route, p["id"]!)],
     ["DELETE", /^\/api\/learning-bond\/agreement\/signers\/(?<id>[^/]+)$/, (route, p) => this.learningBondCancelSigner(route, p["id"]!)],
     ["GET", /^\/api\/sign\/learning-bond\/(?<token>[^/]+)$/, (route, p) => this.learningBond.signerAgreement(route, p["token"]!, (id) => this.organizationDetailsOf(id).name)],
@@ -3322,6 +3324,64 @@ export class FakeApi {
     const m = await this.learningBondAdmin(route);
     if (!m) return;
     return this.learningBond.saveInvitation(route, m);
+  }
+
+  /**
+   * The households the organization's coverage reaches (LearningBondCoverage.CoveredAsync): each with the covered programs reaching it and
+   * how it can be reached, in household-name order.
+   */
+  private learningBondCovered(organizationId: string): { household: FakeHousehold; programs: string[]; reach: "Mobile" | "EmailOnly" | "Neither" }[] {
+    const settings = this.learningBond.settingsOf(organizationId);
+    const programs = this.learningBondPrograms(organizationId).filter((p) => settings.coverage === "AllPrograms" || settings.programIds.includes(p.id));
+    return this.households
+      .filter((h) => h.organizationId === organizationId && programs.some((p) => p.households.includes(h.id)))
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((household) => ({
+        household,
+        programs: programs.filter((p) => p.households.includes(household.id)).map((p) => p.name),
+        reach: household.guardians.some((g) => g.mobile)
+          ? ("Mobile" as const)
+          : household.guardians.some((g) => g.email && !g.emailBounced)
+            ? ("EmailOnly" as const)
+            : ("Neither" as const),
+      }));
+  }
+
+  /** GET /learning-bond/launch (L2-140 criteria 1 and 2): counts and dates only. */
+  private async learningBondLaunch(route: Route): Promise<void> {
+    const m = await this.learningBondAdmin(route);
+    if (!m) return;
+    const covered = this.learningBondCovered(m.organizationId);
+    const count = (reach: string) => covered.filter((c) => c.reach === reach).length;
+    return this.learningBond.launch(route, m, {
+      covered: covered.length,
+      mobile: count("Mobile"),
+      emailOnly: count("EmailOnly"),
+      neither: count("Neither"),
+      programs: [...new Set(covered.flatMap((c) => c.programs))].sort(),
+    });
+  }
+
+  /** GET /learning-bond/launch/missing-contacts (L2-140 criterion 1): names and programs, never a contact. */
+  private async learningBondMissingContacts(route: Route): Promise<void> {
+    const m = await this.learningBondAdmin(route);
+    if (!m) return;
+    const households = this.learningBondCovered(m.organizationId)
+      .filter((c) => c.reach === "Neither")
+      .map((c) => ({
+        householdId: c.household.id,
+        name: c.household.name,
+        guardian: [...c.household.guardians].sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.name.localeCompare(b.name))[0]?.name ?? null,
+        programs: c.programs.join(", "),
+      }));
+    return route.fulfill({ json: { households } });
+  }
+
+  /** Changes a guardian's mobile number and email, as an edit of the household would. */
+  setGuardianContact(householdId: string, guardianName: string, contact: { mobile: string | null; email: string | null }): void {
+    const guardian = this.households.find((h) => h.id === householdId)!.guardians.find((g) => g.name === guardianName)!;
+    guardian.mobile = contact.mobile;
+    guardian.email = contact.email;
   }
 
   /** GET /learning-bond/overview (L2-136 criteria 4 and 9). */

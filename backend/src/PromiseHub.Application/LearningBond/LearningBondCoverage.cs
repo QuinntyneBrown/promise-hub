@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PromiseHub.Application.Mentoring;
+using PromiseHub.Domain.LearningBond;
 using PromiseHub.Domain.Programs;
 
 namespace PromiseHub.Application.LearningBond;
@@ -26,6 +27,22 @@ public sealed class LearningBondCoverage(IPromiseHubDb db, OrganizationToday tod
     {
         var reached = await ReachedAsync(cancellationToken);
         return reached.Where(r => programIds is null || programIds.Contains(r.ProgramId)).Select(r => r.HouseholdId).Distinct().Count();
+    }
+
+    /// <summary>
+    /// The households the organization's coverage reaches now, each with the names of the covered programs that reach it, in household-name
+    /// order: every running program, or the chosen ones (L2-138). Launch and the families list start from these.
+    /// </summary>
+    public async Task<IReadOnlyList<(Guid HouseholdId, IReadOnlyList<string> Programs)>> CoveredAsync(CancellationToken cancellationToken = default)
+    {
+        var settings = await db.LearningBondSettings.AsNoTracking().FirstOrDefaultAsync(cancellationToken);
+        var chosen = settings is { Coverage: LearningBondCoverageMode.ChosenPrograms } ? settings.Programs : null;
+        var reached = (await ReachedAsync(cancellationToken)).Where(r => chosen is null || chosen.Contains(r.ProgramId)).ToList();
+        var ids = reached.Select(r => r.HouseholdId).Distinct().ToList();
+        var programs = await db.Programs.AsNoTracking().Select(p => new { p.Id, p.Name }).ToDictionaryAsync(p => p.Id, p => p.Name, cancellationToken);
+        var names = await db.Households.AsNoTracking().Where(h => ids.Contains(h.Id) && h.DeletedAt == null).ToDictionaryAsync(h => h.Id, h => h.Name, cancellationToken);
+        return [.. ids.Where(names.ContainsKey).OrderBy(id => names[id], StringComparer.CurrentCulture)
+            .Select(id => (id, (IReadOnlyList<string>)[.. reached.Where(r => r.HouseholdId == id).Select(r => programs[r.ProgramId]).Distinct().Order(StringComparer.CurrentCulture)]))];
     }
 
     private async Task<List<(Guid ProgramId, Guid HouseholdId)>> ReachedAsync(CancellationToken cancellationToken)

@@ -479,6 +479,8 @@ export * from './lib/learning-bond/learning-bond-coverage-mode';
 export * from './lib/learning-bond/learning-bond-settings';
 export * from './lib/learning-bond/save-learning-bond-settings';
 export * from './lib/learning-bond/learning-bond-overview';
+export * from './lib/learning-bond/learning-bond-launch';
+export * from './lib/learning-bond/learning-bond-missing-contact';
 export * from './lib/learning-bond/learning-bond-invitation';
 export * from './lib/learning-bond/learning-bond-invitation-language';
 export * from './lib/session/participant-roles';

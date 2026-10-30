@@ -284,6 +284,22 @@ export class FakeLearningBond {
     return route.fulfill({ status: 204 });
   }
 
+  /** GET /learning-bond/launch (L2-140): the counts the fake API computes, the launch range from tomorrow to 90 days ahead (today is Thu 5 Nov 2026). */
+  launch(route: Route, m: Membership, counts: { covered: number; mobile: number; emailOnly: number; neither: number; programs: string[] }): Promise<void> {
+    return route.fulfill({
+      json: {
+        ...counts,
+        noPhoneNumbers: counts.mobile === 0,
+        mode: null,
+        date: null,
+        launchedAt: null,
+        earliest: '2026-11-06',
+        latest: '2027-02-03',
+        launchBlocked: this.hasAccepted(m.organizationId) ? null : 'A new version of the agreement needs accepting.',
+      },
+    });
+  }
+
   settingsOf(organizationId: string): FakeLearningBondSettings {
     return this.settings.get(organizationId) ?? { coverage: 'AllPrograms', programIds: [], statusRoles: [...fixedRoles], senderName: null };
   }

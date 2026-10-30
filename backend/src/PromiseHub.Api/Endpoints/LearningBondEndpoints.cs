@@ -27,6 +27,8 @@ public static class LearningBondEndpoints
         settings.MapPut("/invitation", async (SaveInvitationRequest request, LearningBondInvitationHandler handler, CancellationToken ct) =>
             (await handler.SaveAsync(request, ct)).ToHttp());
         settings.MapGet("/overview", (LearningBondOverviewHandler handler, CancellationToken ct) => handler.GetAsync(ct));
+        settings.MapGet("/launch", (LearningBondLaunchHandler handler, CancellationToken ct) => handler.GetAsync(ct));
+        settings.MapGet("/launch/missing-contacts", (LearningBondLaunchHandler handler, CancellationToken ct) => handler.MissingContactsAsync(ct));
 
         var agreement = app.MapGroup("/learning-bond/agreement").RequirePermission(Permission.ManageSettings).RequireModule(ModuleId.Roster).RequireModule(ModuleId.Messages);
         agreement.MapGet(string.Empty, (LearningBondAgreementHandler handler, CancellationToken ct) => handler.GetAsync(ct));

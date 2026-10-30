@@ -1,0 +1,25 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.counts {
+  display: grid;
+  gap: var(--layout-gutter);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+}
+.more {
+  margin: 0;
+}
+.blocked {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+.reason {
+  margin: 0;
+  color: var(--color-danger-fg);
+  font: var(--text-body-sm);
+}

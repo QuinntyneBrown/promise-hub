@@ -2,6 +2,8 @@ import { Routes } from '@angular/router';
 import { LearningBondCoveragePage } from './coverage/learning-bond-coverage-page';
 import { SettingsLearningBondPage } from './hub/settings-learning-bond-page';
 import { LearningBondInvitationPage } from './invitation/learning-bond-invitation-page';
+import { LearningBondLaunchPage } from './launch/learning-bond-launch-page';
+import { LearningBondMissingContactsPage } from './launch/learning-bond-missing-contacts-page';
 
 /** Staff pages under /learning-bond, loaded only while Learning Bond is on (L2-162 criterion 3). Screens arrive with prompt 85 onward. */
 export const routes: Routes = [];
@@ -26,6 +28,16 @@ export const settingsRoutes: Routes = [
     path: 'invitation',
     component: LearningBondInvitationPage,
     title: 'Invitation · Learning Bond · PromiseHub',
+  },
+  {
+    path: 'launch',
+    component: LearningBondLaunchPage,
+    title: 'Launch · Learning Bond · PromiseHub',
+  },
+  {
+    path: 'launch/missing-contacts',
+    component: LearningBondMissingContactsPage,
+    title: 'Households to collect from · Learning Bond · PromiseHub',
   },
 ];
 
