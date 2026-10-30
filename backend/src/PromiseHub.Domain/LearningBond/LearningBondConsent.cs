@@ -41,4 +41,7 @@ public sealed class LearningBondConsent : ITenantOwned
     public bool InForce => WithdrawnAt is null && ClosedAt is null;
 
     public void Close(DateTimeOffset now) => ClosedAt ??= now;
+
+    /// <summary>The guardian withdraws it (L2-152).</summary>
+    public void Withdraw(DateTimeOffset now) => WithdrawnAt ??= now;
 }

@@ -1,4 +1,5 @@
 import type { GuardianLearningBondChild } from './guardian-learning-bond-child';
+import type { GuardianLearningBondConsent } from './guardian-learning-bond-consent';
 
 /** GET /g/learning-bond/{token}/page: the guardian's page for a verified device (L2-144). */
 export interface GuardianLearningBond {
@@ -9,4 +10,6 @@ export interface GuardianLearningBond {
   explanation: string;
   children: GuardianLearningBondChild[];
   status: string;
+  /** Your consents, each with Withdraw (L2-152). */
+  consents?: GuardianLearningBondConsent[];
 }

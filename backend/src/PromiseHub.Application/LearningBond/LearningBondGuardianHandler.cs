@@ -97,7 +97,24 @@ public sealed class LearningBondGuardianHandler(GuardianAccess access, TenantCon
             : invitation is null ? LearningBondFamilyStatus.NotInvited
             : invitation.DeclinedAt is not null ? LearningBondFamilyStatus.NotInterested : LearningBondFamilyStatus.Invited;
         return GuardianResult.Of(GuardianOutcome.Ok, new GuardianLearningBondDto(code, scope.Organization.Name, scope.Organization.Phone,
-            AgentFallbackCopy.Welcome(code, scope.Organization.Name), children, status.ToString()));
+            AgentFallbackCopy.Welcome(code, scope.Organization.Name), children, status.ToString(), await ConsentsAsync(scope.Household.Id, cancellationToken)));
+    }
+
+    /// <summary>Your consents (L2-152 criterion 1): each consent in force, with the provider of the child's latest application.</summary>
+    private async Task<IReadOnlyList<GuardianLearningBondConsentDto>> ConsentsAsync(Guid householdId, CancellationToken cancellationToken)
+    {
+        var consents = (await db.LearningBondConsents.AsNoTracking().Where(c => c.HouseholdId == householdId && c.Scope == LearningBondConsentScope.LearningBond
+            && c.WithdrawnAt == null && c.ClosedAt == null).ToListAsync(cancellationToken)).OrderBy(c => c.GivenAt).ToList();
+        var childIds = consents.Select(c => c.ChildId).ToList();
+        var names = await db.Children.AsNoTracking().Where(c => childIds.Contains(c.Id)).ToDictionaryAsync(c => c.Id, c => c.FirstName, cancellationToken);
+        var applications = (await db.LearningBondApplications.AsNoTracking().Where(a => a.HouseholdId == householdId).ToListAsync(cancellationToken))
+            .Where(a => a.Status != LearningBondApplicationStatus.Cancelled).ToList();
+        return [.. consents.Select(c =>
+        {
+            var latest = applications.Where(a => a.ChildId == c.ChildId).OrderByDescending(a => a.CreatedAt).FirstOrDefault();
+            return new GuardianLearningBondConsentDto(c.Id, c.ChildId, names.GetValueOrDefault(c.ChildId, string.Empty), c.TypedName, c.GivenAt, c.WordingVersion,
+                latest?.Provider, latest?.SubmittedAt is not null);
+        })];
     }
 
     /// <summary>Not now changes nothing; I'm not interested marks the household's invitation declined, audited (L2-144 criterion 4).</summary>

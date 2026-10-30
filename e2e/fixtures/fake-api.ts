@@ -2313,6 +2313,11 @@ export class FakeApi {
       (route, p) => this.learningBondSendDocument(route, p["token"]!, p["id"]!),
     ],
     [
+      "DELETE",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/consents\/(?<id>[^/]+)$/,
+      (route, p) => this.learningBondWithdraw(route, p["token"]!, p["id"]!),
+    ],
+    [
       "POST",
       /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/children\/(?<child>[^/]+)\/pause$/,
       (route, p) => this.learningBondPause(route, p["token"]!, p["child"]!),
@@ -3754,6 +3759,21 @@ export class FakeApi {
         explanation: this.learningBond.welcome(code, organization),
         children,
         status: declined ? "NotInterested" : "Invited",
+        consents: this.learningBond.consents
+          .filter((k) => k.householdId === household.id)
+          .map((k) => {
+            const application = [...this.learningBond.applications.values()].find((a) => a.childId === k.childId && a.status !== "Cancelled");
+            return {
+              id: `consent-${k.childId}`,
+              childId: k.childId,
+              firstName: household.children.find((c) => c.id === k.childId)!.firstName,
+              typedName: k.typedName,
+              givenAt: "2026-11-05T21:08:00Z",
+              wordingVersion: k.wordingVersion,
+              provider: application?.provider ?? null,
+              sent: !!application && ["Submitted", "Received", "Deposited"].includes(application.status),
+            };
+          }),
       },
     });
   }
@@ -4027,6 +4047,20 @@ export class FakeApi {
         document: a.document && !a.document.sentAt ? a.document : null,
       },
     });
+  }
+
+  /** DELETE /g/learning-bond/{token}/consents/{id} (L2-152): the child's data goes; the guardian's too when no other child has consent. */
+  private async learningBondWithdraw(route: Route, token: string, consentId: string): Promise<void> {
+    const scope = await this.learningBondGuardianScope(route, token);
+    if (!scope) return;
+    const index = this.learningBond.consents.findIndex((k) => k.householdId === scope.household.id && `consent-${k.childId}` === consentId);
+    if (index < 0) return route.fulfill({ status: 404 });
+    const [withdrawn] = this.learningBond.consents.splice(index, 1);
+    this.learningBond.claims.delete(withdrawn!.childId);
+    for (const a of this.learningBond.applications.values())
+      if (a.childId === withdrawn!.childId && ["Draft", "ReadyToSubmit"].includes(a.status)) a.status = "Cancelled";
+    if (!this.learningBond.consents.some((k) => k.householdId === scope.household.id)) this.learningBond.intakes.delete(scope.household.id);
+    return route.fulfill({ status: 204 });
   }
 
   /** POST .../children/{childId}/pause (L2-151 criterion 1): only for a child with no SIN yet. */

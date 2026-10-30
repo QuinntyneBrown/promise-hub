@@ -156,9 +156,41 @@ export interface GuardianLearningBondText {
   resumeEstimate: (name: string) => string;
   pickUp: string;
   continueClaim: (name: string) => string;
+  consentsTitle: string;
+  consentRow: (name: string) => string;
+  consentMeta: (typed: string, date: string, version: number) => string;
+  withdraw: string;
+  withdrawFor: (name: string) => string;
+  withdrawTitle: (name: string) => string;
+  withdrawText: (name: string, provider: string | null) => string;
+  withdrawStops: string;
+  withdrawStopsText: (name: string) => string;
+  withdrawStays: string;
+  withdrawStaysText: (provider: string | null) => string;
+  withdrawConfirm: string;
+  withdrawnTitle: (name: string) => string;
+  withdrawnText: string;
 }
 
 const en: GuardianLearningBondText = {
+  consentsTitle: 'Your consents',
+  consentRow: (name) => `${name} · Learning Bond`,
+  consentMeta: (typed, date, version) => `Signed ${typed} · ${date} · wording v${version}`,
+  withdraw: 'Withdraw',
+  withdrawFor: (name) => `Withdraw consent for ${name}`,
+  withdrawTitle: (name) => `Withdraw consent for ${name}?`,
+  withdrawText: (name, provider) =>
+    `We’ll stop and delete ${name}’s information here. Anything already sent to ${provider ?? 'the RESP provider'} stays with them; contact them to close the RESP.`,
+  withdrawStops: 'Stops',
+  withdrawStopsText: (name) =>
+    `Any unsent application for ${name} is cancelled. ${name}’s SIN and answers are deleted, and yours too if no other child still has consent. No more texts about ${name}.`,
+  withdrawStays: 'Stays',
+  withdrawStaysText: (provider) =>
+    `The status, provider and dates of what was already sent, with no SIN.${provider ? ` The RESP at ${provider} is theirs to close.` : ''}`,
+  withdrawConfirm: 'Withdraw consent',
+  withdrawnTitle: (name) => `Consent for ${name} withdrawn`,
+  withdrawnText:
+    'Their information here is deleted. If you give consent again later, the questions start from the beginning.',
   noSinYet: (name) => `${name} doesn’t have a SIN yet`,
   whatToDo: 'What to do now',
   pausedHeading: (name) => `${name}’s claim is paused`,
@@ -336,6 +368,24 @@ const en: GuardianLearningBondText = {
 };
 
 const es: GuardianLearningBondText = {
+  consentsTitle: 'Sus consentimientos',
+  consentRow: (name) => `${name} · Bono de Estudios`,
+  consentMeta: (typed, date, version) => `Firmado por ${typed} · ${date} · texto v${version}`,
+  withdraw: 'Retirar',
+  withdrawFor: (name) => `Retirar el consentimiento de ${name}`,
+  withdrawTitle: (name) => `¿Retirar el consentimiento de ${name}?`,
+  withdrawText: (name, provider) =>
+    `Dejaremos de usar y borraremos aquí la información de ${name}. Lo que ya se envió a ${provider ?? 'el proveedor del RESP'} queda con ellos; contáctelos para cerrar el RESP.`,
+  withdrawStops: 'Se detiene',
+  withdrawStopsText: (name) =>
+    `Se cancela cualquier solicitud de ${name} sin enviar. Se borran el SIN y las respuestas de ${name}, y los suyos si ningún otro hijo tiene consentimiento. No más mensajes sobre ${name}.`,
+  withdrawStays: 'Se queda',
+  withdrawStaysText: (provider) =>
+    `El estado, el proveedor y las fechas de lo que ya se envió, sin ningún SIN.${provider ? ` El RESP en ${provider} lo cierran ellos.` : ''}`,
+  withdrawConfirm: 'Retirar el consentimiento',
+  withdrawnTitle: (name) => `Consentimiento de ${name} retirado`,
+  withdrawnText:
+    'Su información aquí se borró. Si vuelve a dar su consentimiento, las preguntas empiezan desde el principio.',
   noSinYet: (name) => `${name} todavía no tiene SIN`,
   whatToDo: 'Qué hacer ahora',
   pausedHeading: (name) => `La solicitud de ${name} está en pausa`,
@@ -517,6 +567,24 @@ const es: GuardianLearningBondText = {
 };
 
 const fr: GuardianLearningBondText = {
+  consentsTitle: 'Vos consentements',
+  consentRow: (name) => `${name} · Bon d’études`,
+  consentMeta: (typed, date, version) => `Signé par ${typed} · ${date} · texte v${version}`,
+  withdraw: 'Retirer',
+  withdrawFor: (name) => `Retirer le consentement pour ${name}`,
+  withdrawTitle: (name) => `Retirer le consentement pour ${name}?`,
+  withdrawText: (name, provider) =>
+    `Nous arrêterons et supprimerons ici les renseignements de ${name}. Ce qui a déjà été envoyé à ${provider ?? 'le fournisseur du REEE'} reste chez eux; contactez-les pour fermer le REEE.`,
+  withdrawStops: 'Ce qui s’arrête',
+  withdrawStopsText: (name) =>
+    `Toute demande non envoyée pour ${name} est annulée. Le NAS et les réponses de ${name} sont supprimés, et les vôtres si aucun autre enfant n’a de consentement. Plus de textos au sujet de ${name}.`,
+  withdrawStays: 'Ce qui reste',
+  withdrawStaysText: (provider) =>
+    `Le statut, le fournisseur et les dates de ce qui a déjà été envoyé, sans aucun NAS.${provider ? ` Le REEE chez ${provider} est à fermer avec eux.` : ''}`,
+  withdrawConfirm: 'Retirer le consentement',
+  withdrawnTitle: (name) => `Consentement pour ${name} retiré`,
+  withdrawnText:
+    'Ses renseignements ici sont supprimés. Si vous redonnez votre consentement, les questions recommencent depuis le début.',
   noSinYet: (name) => `${name} n’a pas encore de NAS`,
   whatToDo: 'Que faire maintenant',
   pausedHeading: (name) => `La demande de ${name} est en pause`,

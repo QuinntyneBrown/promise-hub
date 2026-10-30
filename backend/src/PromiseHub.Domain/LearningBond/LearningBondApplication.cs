@@ -79,6 +79,16 @@ public sealed class LearningBondApplication : ITenantOwned
         UpdatedAt = now;
     }
 
+    /// <summary>Consent withdrawn before it was sent (L2-152 criterion 2): it can never be sent.</summary>
+    public void Cancel(DateTimeOffset now)
+    {
+        if (Editable)
+        {
+            Status = LearningBondApplicationStatus.Cancelled;
+            UpdatedAt = now;
+        }
+    }
+
     /// <summary>The provider received it (L2-150 criterion 2); a later status is never moved back.</summary>
     public void MarkReceived(DateTimeOffset now)
     {

@@ -206,6 +206,19 @@ export class GuardianLearningBondPage extends BasePage {
     return this.page.getByTestId('reminder-saved');
   }
 
+  /** Your consents: one row per child with Withdraw. */
+  get consents(): Locator {
+    return this.page.getByTestId('learning-bond-consents');
+  }
+
+  async withdraw(firstName: string): Promise<void> {
+    await this.page.getByRole('button', { name: `Withdraw consent for ${firstName}` }).click();
+  }
+
+  get withdrawn(): Locator {
+    return this.page.getByTestId('consent-withdrawn');
+  }
+
   async expectCodeStep(): Promise<void> {
     await expect(this.heading).toHaveText(/^(Check it’s you|Confirme que es usted|Confirmez que c’est vous)$/);
   }

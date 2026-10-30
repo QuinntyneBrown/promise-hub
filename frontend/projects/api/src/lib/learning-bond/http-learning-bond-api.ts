@@ -298,6 +298,14 @@ export class HttpLearningBondApi implements LearningBondApi {
     );
   }
 
+  withdrawConsent(token: string, consentId: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.delete<null>(
+        `${this.baseUrl}/g/learning-bond/${encodeURIComponent(token)}/consents/${encodeURIComponent(consentId)}`,
+      ),
+    );
+  }
+
   pauseClaim(token: string, childId: string): Observable<WriteOutcome> {
     return toWrite(
       this.http.post<null>(this.childUrl(token, childId, '/pause'), { reason: 'NeedsSin' }),

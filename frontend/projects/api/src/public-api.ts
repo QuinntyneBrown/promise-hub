@@ -495,6 +495,7 @@ export * from './lib/learning-bond/learning-bond-application-change';
 export * from './lib/learning-bond/learning-bond-submit-outcome';
 export * from './lib/learning-bond/learning-bond-progress';
 export * from './lib/learning-bond/learning-bond-paused';
+export * from './lib/learning-bond/guardian-learning-bond-consent';
 export * from './lib/learning-bond/learning-bond-document-request';
 export * from './lib/learning-bond/save-learning-bond-intake';
 export * from './lib/guardian/to-guardian-page';

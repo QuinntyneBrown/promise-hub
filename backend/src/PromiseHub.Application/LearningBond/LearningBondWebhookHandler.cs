@@ -86,7 +86,11 @@ public sealed class LearningBondWebhookHandler(IPromiseHubDb db, IProviderWebhoo
         }
         db.LearningBondProviderEvents.Add(new LearningBondProviderEvent(Guid.NewGuid(), application.OrganizationId, provider.Name, report.EventId, application.Id,
             report.Kind, now));
-        await texter.QueueAsync(household.Id, $"Learning Bond: {child.FirstName}", text, cancellationToken);
+        var consent = await db.LearningBondConsents.AsNoTracking().SingleAsync(c => c.Id == claim.ConsentId, cancellationToken);
+        if (consent.InForce)
+        {
+            await texter.QueueAsync(household.Id, $"Learning Bond: {child.FirstName}", text, cancellationToken);
+        }
         audit.Record(new AuditEvent(AuditAction.Updated, nameof(LearningBondApplication), application.Id,
             $"Learning Bond application for {child.FirstName}: {provider.Name} reported {report.Kind}"));
         await db.SaveChangesAsync(cancellationToken);
