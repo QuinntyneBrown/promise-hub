@@ -1,7 +1,7 @@
 # Estimates
 
 - Overall effort: 610 days
-- Complete: 78%
+- Complete: 79%
 
 | Subsystem | Effort | Complete |
 |---|---|---|
@@ -29,7 +29,7 @@
 | [curriculum](curriculum.md) | 27 days | 97% |
 | [mentoring](mentoring.md) | 37 days | 100% |
 | [website](website.md) | 23 days | 94% |
-| [learning-bond](learning-bond.md) | 93 days | 54% |
+| [learning-bond](learning-bond.md) | 93 days | 56% |
 
 ## Roadmap
 
@@ -39,4 +39,4 @@
 4. Messaging, notifications, permission slips and guardian experiences: delivery controls, notification center, signing, reminders, localized guardian pages and incidents.
 5. Reports, billing and audit: computation and export, plan metering and payments, then organization audit search.
 6. Waypoint journeys (prompts 50 to 81) are delivered on the merge foundation; what remains is their deferred work, such as the public website's staff inbox and a real payment provider (ADR 0075).
-7. Learning Bond (`L2-135` to `L2-163`, ADR 0076): the module gate and agreement, coverage and launch, the guardian claim, the benefits check, the agent and the dashboard; the module gate, the encrypted SIN store and the audit entries are built (prompt 82), and so are the agreement with a named signer request, coverage, the invitation preview and the Settings hub (prompt 83), the signer's own page (prompt 84), and the launch, the invitation at the door, the covered households with their status and call requests (prompt 85), and the guardian claim: the page from the link, per-child consent, the intake with encrypted SINs, the estimate, the review with a recommended provider and Submit, and the card on the guardian home (prompt 86). Following a claim is built too: the submitted page, the signed provider webhook applied once per event, documents sent only on Send, pauses with reminders at 14 and 30 days, resuming from the link and the 180-day close (prompt 87, ADR 0081). A real provider channel, inbound STOP, the model-backed agent (prompt 92) and withdrawing consent (prompt 88) remain.
+7. Learning Bond (`L2-135` to `L2-163`, ADR 0076): the module gate and agreement, coverage and launch, the guardian claim, the benefits check, the agent and the dashboard; the module gate, the encrypted SIN store and the audit entries are built (prompt 82), and so are the agreement with a named signer request, coverage, the invitation preview and the Settings hub (prompt 83), the signer's own page (prompt 84), and the launch, the invitation at the door, the covered households with their status and call requests (prompt 85), and the guardian claim: the page from the link, per-child consent, the intake with encrypted SINs, the estimate, the review with a recommended provider and Submit, and the card on the guardian home (prompt 86). Following a claim is built too: the submitted page, the signed provider webhook applied once per event, documents sent only on Send, pauses with reminders at 14 and 30 days, resuming from the link and the 180-day close (prompt 87, ADR 0081), and withdrawing consent for a child, which destroys the child's financial data and keeps only what a provider already holds (prompt 88). A real provider channel, inbound STOP and the model-backed agent (prompt 92) remain.
