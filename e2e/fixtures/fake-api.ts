@@ -89,6 +89,7 @@ const NOTIFICATION_MODULES: Record<string, ModuleId[]> = {
   mentoring: ["Mentoring"],
   requests: ["Roster"],
   staff: ["Roster"],
+  agreement: ["Roster", "Messages"],
 };
 
 /** The kinds a member may choose, in order, with who receives each (L2-111). Mirrors backend NotificationKinds. */

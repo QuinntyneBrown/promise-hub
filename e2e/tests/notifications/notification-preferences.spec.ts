@@ -173,10 +173,11 @@ test.describe("Choose notifications as a program director", () => {
 
     await preferences.open();
 
-    await expect(preferences.switches).toHaveCount(3);
+    await expect(preferences.switches).toHaveCount(4);
     await expect(preferences.choice("Incidents to review")).toBeChecked();
     await expect(preferences.choice("At-risk flags")).toBeChecked();
     await expect(preferences.choice("Family data requests")).toBeChecked();
+    await expect(preferences.choice("Learning Bond agreement")).toBeChecked();
   });
 });
 
