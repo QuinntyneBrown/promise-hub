@@ -1,7 +1,14 @@
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { LEARNING_BOND_API, LearningBondApplication } from '@promisehub/api';
+import { Observable } from 'rxjs';
+import {
+  BenefitReview,
+  BenefitReviewChange,
+  LEARNING_BOND_API,
+  LearningBondApplication,
+  LearningBondApplicationChange,
+} from '@promisehub/api';
 import { PhAlert, PhButton, PhDialog, PhTextField } from '@promisehub/components';
 import { GuardianLearningBondText } from './guardian-learning-bond-text';
 
@@ -10,6 +17,8 @@ export interface LearningBondFieldData {
   token: string;
   applicationId: string;
   field: 'address' | 'phone' | 'email';
+  /** A benefit's application rather than the Learning Bond one (L2-156). */
+  benefit?: boolean;
   label: string;
   value: string;
   text: GuardianLearningBondText;
@@ -25,7 +34,7 @@ export interface LearningBondFieldData {
 export class LearningBondFieldDialog {
   private readonly api = inject(LEARNING_BOND_API);
   protected readonly data = inject<LearningBondFieldData>(DIALOG_DATA);
-  protected readonly ref = inject<DialogRef<LearningBondApplication>>(DialogRef);
+  protected readonly ref = inject<DialogRef<LearningBondApplication | BenefitReview>>(DialogRef);
 
   protected value = this.data.value;
   protected readonly error = signal<string | null>(null);
@@ -40,13 +49,24 @@ export class LearningBondFieldDialog {
     if (this.busy()) return;
     this.busy.set(true);
     this.failed.set(false);
-    this.api
-      .editApplicationField(this.data.token, this.data.applicationId, this.data.field, this.value)
-      .subscribe((r) => {
-        this.busy.set(false);
-        if (r.status === 'saved') this.ref.close(r.value);
-        else if (r.status === 'invalid') this.error.set(r.errors['value'] ?? null);
-        else this.failed.set(true);
-      });
+    const call: Observable<LearningBondApplicationChange | BenefitReviewChange> = this.data.benefit
+      ? this.api.editBenefitField(
+          this.data.token,
+          this.data.applicationId,
+          this.data.field,
+          this.value,
+        )
+      : this.api.editApplicationField(
+          this.data.token,
+          this.data.applicationId,
+          this.data.field,
+          this.value,
+        );
+    call.subscribe((r) => {
+      this.busy.set(false);
+      if (r.status === 'saved') this.ref.close(r.value);
+      else if (r.status === 'invalid') this.error.set(r.errors['value'] ?? null);
+      else this.failed.set(true);
+    });
   }
 }

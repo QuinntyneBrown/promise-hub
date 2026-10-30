@@ -1,0 +1,75 @@
+<ph-guardian-shell [organization]="organization()" [attr.lang]="language()">
+  @let t = text();
+  @let b = words();
+  @let r = result();
+  @if (!r) {
+    <h1 class="visually-hidden">{{ t.loading }}</h1>
+    <ph-skeleton shape="card" [attr.aria-label]="t.loading" />
+  } @else {
+    @switch (r.status) {
+      @case ('loaded') {
+        @let c = r.value;
+        <div class="stack">
+          <h1>{{ b.consentHeading }}</h1>
+          <p class="plain lede">{{ b.consentLead }}</p>
+          @if (c.given) {
+            <div>
+              <ph-button variant="primary" icon="arrow-right" link="../intake">{{
+                b.intakeHeading
+              }}</ph-button>
+            </div>
+          } @else {
+            <ph-card>
+              <form class="stack" novalidate (ngSubmit)="agree()">
+                @if (failed()) {
+                  <ph-alert tone="danger" [title]="t.failed" />
+                }
+                <ph-checkbox
+                  inputId="benefits-consent"
+                  [label]="c.wording"
+                  name="agreed"
+                  [error]="errors()['agreed'] ?? null"
+                  [(ngModel)]="agreed"
+                />
+                <ph-text-field
+                  inputId="benefits-typed-name"
+                  [label]="b.typedName"
+                  name="typedName"
+                  autocomplete="name"
+                  [error]="errors()['typedName'] ?? null"
+                  [(ngModel)]="typedName"
+                />
+                <div>
+                  <ph-button
+                    variant="primary"
+                    size="lg"
+                    type="submit"
+                    icon="check"
+                    [busy]="busy()"
+                    >{{ b.agree }}</ph-button
+                  >
+                </div>
+              </form>
+            </ph-card>
+          }
+        </div>
+      }
+      @case ('gone') {
+        <h1>{{ t.expiredHeading }}</h1>
+        <ph-card>
+          <p class="plain">{{ t.expiredText(r.organization ?? '') }}</p>
+        </ph-card>
+      }
+      @default {
+        <h1>{{ t.pageTitle }}</h1>
+        <ph-card [flush]="true">
+          <ph-empty-state icon="warning" tone="error" [title]="t.errorTitle" [text]="t.errorText">
+            <ph-button variant="primary" icon="refresh" (click)="load()">{{
+              t.tryAgain
+            }}</ph-button>
+          </ph-empty-state>
+        </ph-card>
+      }
+    }
+  }
+</ph-guardian-shell>

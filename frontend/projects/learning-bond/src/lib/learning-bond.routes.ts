@@ -8,6 +8,10 @@ import { LearningBondEstimatePage } from './guardian/learning-bond-estimate-page
 import { LearningBondReviewPage } from './guardian/learning-bond-review-page';
 import { LearningBondSubmittedPage } from './guardian/learning-bond-submitted-page';
 import { LearningBondPausedPage } from './guardian/learning-bond-paused-page';
+import { LearningBondBenefitsConsentPage } from './guardian/learning-bond-benefits-consent-page';
+import { LearningBondBenefitsIntakePage } from './guardian/learning-bond-benefits-intake-page';
+import { LearningBondBenefitsPage } from './guardian/learning-bond-benefits-page';
+import { LearningBondBenefitReviewPage } from './guardian/learning-bond-benefit-review-page';
 import { SettingsLearningBondPage } from './hub/settings-learning-bond-page';
 import { LearningBondInvitationPage } from './invitation/learning-bond-invitation-page';
 import { LearningBondLaunchPage } from './launch/learning-bond-launch-page';
@@ -92,5 +96,25 @@ export const guardianRoutes: Routes = [
     path: 'children/:childId/paused',
     component: LearningBondPausedPage,
     title: 'Paused · Learning Bond · PromiseHub',
+  },
+  {
+    path: 'benefits/consent',
+    component: LearningBondBenefitsConsentPage,
+    title: 'Benefits consent · Learning Bond · PromiseHub',
+  },
+  {
+    path: 'benefits/intake',
+    component: LearningBondBenefitsIntakePage,
+    title: 'Benefits questions · Learning Bond · PromiseHub',
+  },
+  {
+    path: 'benefits',
+    component: LearningBondBenefitsPage,
+    title: 'Your benefits · Learning Bond · PromiseHub',
+  },
+  {
+    path: 'benefits/:key',
+    component: LearningBondBenefitReviewPage,
+    title: 'Benefit application · Learning Bond · PromiseHub',
   },
 ];

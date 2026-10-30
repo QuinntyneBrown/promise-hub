@@ -13,7 +13,8 @@ export class GuardianLearningBondPage extends BasePage {
 
   /** The agent's line, read with its speaker. */
   get agent(): Locator {
-    return this.page.getByTestId('agent-text');
+    // The page's own bubble; an offer further down may carry another.
+    return this.page.getByTestId('agent-text').first();
   }
 
   get children(): Locator {

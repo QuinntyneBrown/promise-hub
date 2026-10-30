@@ -10,6 +10,12 @@ import type { LearningBondApplicationChange } from './learning-bond-application-
 import type { LearningBondEstimate } from './learning-bond-estimate';
 import type { LearningBondProgress } from './learning-bond-progress';
 import type { LearningBondPaused } from './learning-bond-paused';
+import type { Benefits } from './benefits';
+import type { BenefitsConsent } from './benefits-consent';
+import type { BenefitsIntake } from './benefits-intake';
+import type { SaveBenefitsIntake } from './save-benefits-intake';
+import type { BenefitReview } from './benefit-review';
+import type { BenefitReviewChange } from './benefit-review-change';
 import type { LearningBondSubmitOutcome } from './learning-bond-submit-outcome';
 import type { LearningBondIntake } from './learning-bond-intake';
 import type { SaveLearningBondIntake } from './save-learning-bond-intake';
@@ -102,6 +108,39 @@ export interface LearningBondApi {
   ): Observable<LearningBondPaused | null>;
   /** DELETE /g/learning-bond/{token}/consents/{id}: withdraws a child's consent; its information here is deleted (L2-152). */
   withdrawConsent(token: string, consentId: string): Observable<WriteOutcome>;
+  /** POST /g/learning-bond/{token}/benefits/offer/dismiss: Not now on the confirmation (L2-153 criterion 1). */
+  dismissBenefitsOffer(token: string): Observable<WriteOutcome>;
+  /** GET /g/learning-bond/{token}/benefits/consent: the Benefits consent's wording (L2-153 criterion 2). */
+  benefitsConsent(token: string): Observable<GuardianPageResult<BenefitsConsent>>;
+  /** POST /g/learning-bond/{token}/consents with scope Benefits. */
+  giveBenefitsConsent(token: string, typedName: string): Observable<WriteOutcome>;
+  /** GET /g/learning-bond/{token}/benefits/intake (L2-154). */
+  benefitsIntake(token: string): Observable<GuardianPageResult<BenefitsIntake>>;
+  /** PUT /g/learning-bond/{token}/benefits/intake (L2-154). */
+  saveBenefitsIntake(token: string, answers: SaveBenefitsIntake): Observable<WriteOutcome>;
+  /** GET /g/learning-bond/{token}/benefits: each benefit and its state (L2-155, L2-156). */
+  benefits(token: string): Observable<GuardianPageResult<Benefits>>;
+  /** POST /g/learning-bond/{token}/benefits/{key}/document: the document a program needs (L2-156 criterion 5). */
+  uploadBenefitDocument(token: string, key: string, file: File): Observable<WriteOutcome>;
+  /** POST /g/learning-bond/{token}/benefits/{key}/applications: one benefit's application, prepared. */
+  prepareBenefit(token: string, key: string): Observable<GuardianPageResult<BenefitReview>>;
+  /** PATCH /g/learning-bond/{token}/benefits/applications/{id}/fields/{field}: this application only. */
+  editBenefitField(
+    token: string,
+    id: string,
+    field: string,
+    value: string,
+  ): Observable<BenefitReviewChange>;
+  /** POST /g/learning-bond/{token}/benefits/applications/{id}/submit: this one benefit, once. */
+  submitBenefit(
+    token: string,
+    id: string,
+    reviewVersion: number,
+  ): Observable<LearningBondSubmitOutcome>;
+  /** POST /g/learning-bond/{token}/benefits/applications/{id}/sent: the guardian sent the form themselves. */
+  markBenefitSent(token: string, id: string): Observable<WriteOutcome>;
+  /** The filled form's address, for a program the guardian sends themselves. */
+  benefitFormUrl(token: string, id: string): string;
   /** GET /learning-bond/agreement: the current version, the organization's acceptance and the open signer request. */
   agreement(): Observable<LoadResult<LearningBondAgreement>>;
   /** POST /learning-bond/agreement/acceptances: accepts the current version; invalid without the authority box. */

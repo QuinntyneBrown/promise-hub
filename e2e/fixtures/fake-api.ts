@@ -2313,6 +2313,61 @@ export class FakeApi {
       (route, p) => this.learningBondSendDocument(route, p["token"]!, p["id"]!),
     ],
     [
+      "GET",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/benefits\/consent$/,
+      (route, p) => this.benefitsConsentPage(route, p["token"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/benefits\/offer\/dismiss$/,
+      (route, p) => this.benefitsDismiss(route, p["token"]!),
+    ],
+    [
+      "GET",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/benefits\/intake$/,
+      (route, p) => this.benefitsIntake(route, p["token"]!),
+    ],
+    [
+      "PUT",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/benefits\/intake$/,
+      (route, p) => this.benefitsSaveIntake(route, p["token"]!),
+    ],
+    [
+      "GET",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/benefits$/,
+      (route, p) => this.benefitsList(route, p["token"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/benefits\/(?<key>[a-z-]+)\/document$/,
+      (route, p) => this.benefitsDocument(route, p["token"]!, p["key"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/benefits\/(?<key>[a-z-]+)\/applications$/,
+      (route, p) => this.benefitsPrepare(route, p["token"]!, p["key"]!),
+    ],
+    [
+      "PATCH",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/benefits\/applications\/(?<id>[^/]+)\/fields\/(?<field>[^/]+)$/,
+      (route, p) => this.benefitsEditField(route, p["token"]!, p["id"]!, p["field"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/benefits\/applications\/(?<id>[^/]+)\/submit$/,
+      (route, p) => this.benefitsSubmit(route, p["token"]!, p["id"]!),
+    ],
+    [
+      "GET",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/benefits\/applications\/(?<id>[^/]+)\/form$/,
+      (route, p) => this.benefitsForm(route, p["token"]!, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/benefits\/applications\/(?<id>[^/]+)\/sent$/,
+      (route, p) => this.benefitsMarkSent(route, p["token"]!, p["id"]!),
+    ],
+    [
       "DELETE",
       /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/consents\/(?<id>[^/]+)$/,
       (route, p) => this.learningBondWithdraw(route, p["token"]!, p["id"]!),
@@ -3759,6 +3814,10 @@ export class FakeApi {
         explanation: this.learningBond.welcome(code, organization),
         children,
         status: declined ? "NotInterested" : "Invited",
+        benefits: {
+          offered: !this.learningBond.benefitsConsented.has(household.id),
+          consented: this.learningBond.benefitsConsented.has(household.id),
+        },
         consents: this.learningBond.consents
           .filter((k) => k.householdId === household.id)
           .map((k) => {
@@ -3814,8 +3873,14 @@ export class FakeApi {
   private async learningBondGiveConsent(route: Route, token: string): Promise<void> {
     const scope = await this.learningBondGuardianScope(route, token);
     if (!scope) return;
-    const b = route.request().postDataJSON() as { childIds?: string[]; typedName?: string };
+    const b = route.request().postDataJSON() as { childIds?: string[]; typedName?: string; scope?: string };
     const typed = (b.typedName ?? "").trim().replace(/\s+/g, " ");
+    // The Benefits consent: its own wording and scope, never a Learning Bond consent (L2-153 criterion 2).
+    if (b.scope === "Benefits") {
+      if (!typed) return route.fulfill({ status: 422, json: { errors: { typedName: "Type your full name to sign." } } });
+      this.learningBond.benefitsConsented.add(scope.household.id);
+      return route.fulfill({ status: 201, json: { ids: [] } });
+    }
     const errors: Record<string, string> = {};
     if (!b.childIds?.length) errors["children"] = "Tick at least one child.";
     if (!typed) errors["typedName"] = "Type your full name to sign.";
@@ -4045,8 +4110,235 @@ export class FakeApi {
         expectedTo: "2027-02-28",
         fields: review.fields,
         document: a.document && !a.document.sentAt ? a.document : null,
+        benefitsOffer: !this.learningBond.benefitsConsented.has(found.household.id) && !this.learningBond.benefitsDismissed.has(found.household.id),
       },
     });
+  }
+
+  /** The fake benefits catalogue for Harbourview (BenefitCatalogue: federal, Ontario and Hamilton). */
+  private static readonly BENEFITS = [
+    { key: "canada-child-benefit", name: "Canada Child Benefit", level: "Federal", perChild: 6748, channel: "Electronic", source: "Canada Revenue Agency", document: null as string | null },
+    { key: "child-disability-benefit", name: "Child Disability Benefit", level: "Federal", perChild: 3411, channel: "Electronic", source: "Canada Revenue Agency", document: null as string | null },
+    { key: "ontario-child-benefit", name: "Ontario Child Benefit", level: "Provincial", perChild: 840, channel: "Electronic", source: "Ontario Ministry of Children, Community and Social Services", document: null as string | null },
+    { key: "hamilton-recreation-assistance", name: "Hamilton Recreation Assistance", level: "Municipal", perChild: null as number | null, channel: "Form", source: "City of Hamilton", document: "proof of address" as string | null },
+  ];
+
+  /** The Learning Bond guardian scope and a Benefits consent in force, or 403 (LearningBondBenefitsAccess). */
+  private async benefitsScope(route: Route, token: string): Promise<{ household: FakeHousehold; organizationId: string } | null> {
+    const scope = await this.learningBondGuardianScope(route, token);
+    if (!scope) return null;
+    if (!this.learningBond.benefitsConsented.has(scope.household.id)) {
+      await route.fulfill({ status: 403, json: { code: "forbidden" } });
+      return null;
+    }
+    return scope;
+  }
+
+  private async benefitsConsentPage(route: Route, token: string): Promise<void> {
+    const scope = await this.learningBondGuardianScope(route, token);
+    if (!scope) return;
+    return route.fulfill({
+      json: {
+        language: this.learningBondLinkOf(token)!.language,
+        organization: "Harbourview Youth Collective",
+        wording:
+          "I agree that Learning Bond may use what I’ve already given, plus my household size, marital status and whether I get the Canada Child Benefit, to check and apply for child benefits I choose.",
+        wordingVersion: 1,
+        given: this.learningBond.benefitsConsented.has(scope.household.id),
+      },
+    });
+  }
+
+  private async benefitsDismiss(route: Route, token: string): Promise<void> {
+    const scope = await this.learningBondGuardianScope(route, token);
+    if (!scope) return;
+    this.learningBond.benefitsDismissed.add(scope.household.id);
+    return route.fulfill({ status: 204 });
+  }
+
+  private async benefitsIntake(route: Route, token: string): Promise<void> {
+    const scope = await this.benefitsScope(route, token);
+    if (!scope) return;
+    const a = this.learningBond.benefitsAnswers.get(scope.household.id);
+    return route.fulfill({
+      json: {
+        language: this.learningBondLinkOf(token)!.language,
+        organization: "Harbourview Youth Collective",
+        explanation: "I’ll reuse Mateo and Sofía’s details, your SIN and your tax answer. I need at most three more facts.",
+        children: scope.household.children.map((c) => ({ id: c.id, firstName: c.firstName, age: null, claims: null })),
+        sinGiven: !!this.learningBond.intakes.get(scope.household.id)?.guardianLast3,
+        taxAnswered: !!this.learningBond.intakes.get(scope.household.id)?.taxFiled,
+        householdSize: a?.householdSize ?? null,
+        maritalStatus: a?.maritalStatus ?? null,
+        ccbNow: a?.ccbNow ?? null,
+        incomeChanged: a?.incomeChanged ?? null,
+      },
+    });
+  }
+
+  private async benefitsSaveIntake(route: Route, token: string): Promise<void> {
+    const scope = await this.benefitsScope(route, token);
+    if (!scope) return;
+    const b = route.request().postDataJSON() as { householdSize?: number; maritalStatus?: string; ccbNow?: string; incomeChanged?: string | null };
+    const errors: Record<string, string> = {};
+    if (!b.householdSize || b.householdSize < 1 || b.householdSize > 15) errors["householdSize"] = "Enter how many people live with you, from 1 to 15.";
+    if (!["Married", "CommonLaw", "Separated", "Divorced", "Widowed", "Single"].includes(b.maritalStatus ?? "")) errors["maritalStatus"] = "Choose one.";
+    if (!["Yes", "No", "NotSure"].includes(b.ccbNow ?? "")) errors["ccbNow"] = "Choose one.";
+    if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
+    this.learningBond.benefitsAnswers.set(scope.household.id, { householdSize: b.householdSize!, maritalStatus: b.maritalStatus!, ccbNow: b.ccbNow!, incomeChanged: b.incomeChanged ?? null });
+    return route.fulfill({ status: 204 });
+  }
+
+  private async benefitsList(route: Route, token: string): Promise<void> {
+    const scope = await this.benefitsScope(route, token);
+    if (!scope) return;
+    const a = this.learningBond.benefitsAnswers.get(scope.household.id);
+    if (!a) return route.fulfill({ status: 409, json: { code: "intake-incomplete" } });
+    const kids = scope.household.children.length;
+    const benefits = FakeApi.BENEFITS.map((e) => {
+      const app = this.learningBond.benefitApplications.get(e.key);
+      const state =
+        app && ["Submitted", "MarkedSent"].includes(app.status)
+          ? "Submitted"
+          : e.key === "canada-child-benefit" && a.ccbNow === "Yes"
+            ? "AlreadyGet"
+            : e.key === "child-disability-benefit"
+              ? "NotEligible"
+              : e.document && !app?.documentFile
+                ? "NeedDocument"
+                : "ApplyNow";
+      return {
+        key: e.key,
+        name: e.name,
+        level: e.level,
+        amount: e.perChild ? e.perChild * kids : null,
+        state,
+        reason: state === "NotEligible" ? "Neither Mateo nor Sofía has an approved Disability Tax Credit certificate." : null,
+        document: e.document,
+        documentFile: app?.documentFile ?? null,
+        channel: e.channel,
+        source: e.source,
+        sourceLink: "https://www.canada.ca/",
+        ruleVersion: "2026-07",
+        applicationId: app?.id ?? null,
+      };
+    });
+    return route.fulfill({
+      json: {
+        language: this.learningBondLinkOf(token)!.language,
+        organization: "Harbourview Youth Collective",
+        explanation: "Here’s what Hamilton, Ontario and Canada likely owe your family. Apply to each one on its own; I never send anything for you.",
+        benefits,
+        blocked: [],
+        incomeNote: a.incomeChanged === "Yes" ? "These estimates use your last tax return. A big change this year can change them." : null,
+        localNote: null,
+        allReceived: false,
+      },
+    });
+  }
+
+  private async benefitsDocument(route: Route, token: string, key: string): Promise<void> {
+    const scope = await this.benefitsScope(route, token);
+    if (!scope) return;
+    const head = (route.request().postDataBuffer() ?? Buffer.alloc(0)).subarray(0, 600).toString("latin1");
+    const name = /filename="([^"]+)"/.exec(head)?.[1] ?? "";
+    if (!/\.(pdf|jpe?g|png)$/i.test(name)) return route.fulfill({ status: 422, json: { errors: { file: "Choose a PDF, JPEG or PNG up to 10 MB." } } });
+    const app = this.learningBond.benefitApplications.get(key) ?? { id: `benefit-${key}`, address: null, reviewVersion: 1, status: "Draft", documentFile: null };
+    app.documentFile = name;
+    this.learningBond.benefitApplications.set(key, app);
+    return route.fulfill({ json: { id: `doc-${key}`, fileName: name } });
+  }
+
+  private benefitReview(token: string, key: string): object {
+    const e = FakeApi.BENEFITS.find((x) => x.key === key)!;
+    const app = this.learningBond.benefitApplications.get(key)!;
+    const form = e.channel === "Form";
+    return {
+      id: app.id,
+      language: this.learningBondLinkOf(token)!.language,
+      organization: "Harbourview Youth Collective",
+      explanation: form
+        ? `${e.name} takes this one on paper or by email. I filled in the form; you send it, then tell me.`
+        : "I filled this in from what you’ve given. Check each field; nothing is sent until you tap Submit.",
+      benefitKey: key,
+      program: e.name,
+      channel: e.channel,
+      status: app.status,
+      reviewVersion: app.reviewVersion,
+      amount: e.perChild ? e.perChild * 2 : null,
+      documentFile: app.documentFile,
+      sendTo: form ? "recassist@hamilton.example or 71 Main St W, Hamilton" : null,
+      fields: {
+        applicantName: "Carmen Rivera",
+        applicantSin: "212",
+        maritalStatus: "Single",
+        householdSize: "3",
+        children: "Mateo (2017-03-14), Sofía (2014-06-02)",
+        address: app.address,
+        phone: "905-555-0142",
+        email: "carmen.rivera@example.com",
+        canadaChildBenefit: "Receiving",
+        program: e.name,
+      },
+    };
+  }
+
+  private async benefitsPrepare(route: Route, token: string, key: string): Promise<void> {
+    const scope = await this.benefitsScope(route, token);
+    if (!scope) return;
+    if (!FakeApi.BENEFITS.some((e) => e.key === key)) return route.fulfill({ status: 404 });
+    if (!this.learningBond.benefitApplications.has(key))
+      this.learningBond.benefitApplications.set(key, { id: `benefit-${key}`, address: null, reviewVersion: 1, status: "Draft", documentFile: null });
+    return route.fulfill({ json: this.benefitReview(token, key) });
+  }
+
+  private benefitKeyOf(id: string): string | undefined {
+    return [...this.learningBond.benefitApplications.entries()].find(([, a]) => a.id === id)?.[0];
+  }
+
+  private async benefitsEditField(route: Route, token: string, id: string, field: string): Promise<void> {
+    const scope = await this.benefitsScope(route, token);
+    if (!scope) return;
+    const key = this.benefitKeyOf(id);
+    if (!key) return route.fulfill({ status: 404 });
+    const value = ((route.request().postDataJSON() as { value?: string }).value ?? "").trim();
+    const app = this.learningBond.benefitApplications.get(key)!;
+    if (field !== "address" || value.length < 10) return route.fulfill({ status: 422, json: { errors: { value: "Enter the street address, city and postal code." } } });
+    app.address = value;
+    app.reviewVersion++;
+    app.status = "ReadyToSubmit";
+    return route.fulfill({ json: this.benefitReview(token, key) });
+  }
+
+  private async benefitsSubmit(route: Route, token: string, id: string): Promise<void> {
+    const scope = await this.benefitsScope(route, token);
+    if (!scope) return;
+    const key = this.benefitKeyOf(id);
+    if (!key) return route.fulfill({ status: 404 });
+    const app = this.learningBond.benefitApplications.get(key)!;
+    if (app.status === "Submitted") return route.fulfill({ status: 202, json: { id, status: "Submitted" } });
+    const { reviewVersion } = route.request().postDataJSON() as { reviewVersion?: number };
+    if (reviewVersion !== app.reviewVersion) return route.fulfill({ status: 409, json: { code: "stale-review" } });
+    if (app.status !== "ReadyToSubmit") return route.fulfill({ status: 409, json: { code: "incomplete" } });
+    app.status = "Submitted";
+    this.learningBond.benefitSubmissions.push(key);
+    return route.fulfill({ status: 202, json: { id, status: "Submitted" } });
+  }
+
+  private async benefitsForm(route: Route, token: string, id: string): Promise<void> {
+    const scope = await this.benefitsScope(route, token);
+    if (!scope) return;
+    if (!this.benefitKeyOf(id)) return route.fulfill({ status: 404 });
+    return route.fulfill({ contentType: "application/pdf", body: Buffer.from("%PDF-1.4\n% Hamilton Recreation Assistance application\n%%EOF\n") });
+  }
+
+  private async benefitsMarkSent(route: Route, token: string, id: string): Promise<void> {
+    const scope = await this.benefitsScope(route, token);
+    if (!scope) return;
+    const key = this.benefitKeyOf(id);
+    if (!key) return route.fulfill({ status: 404 });
+    this.learningBond.benefitApplications.get(key)!.status = "MarkedSent";
+    return route.fulfill({ status: 204 });
   }
 
   /** DELETE /g/learning-bond/{token}/consents/{id} (L2-152): the child's data goes; the guardian's too when no other child has consent. */

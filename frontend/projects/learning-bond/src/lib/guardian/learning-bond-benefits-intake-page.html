@@ -1,0 +1,97 @@
+<ph-guardian-shell [organization]="organization()" [attr.lang]="language()">
+  @let t = text();
+  @let b = words();
+  @let r = result();
+  @if (!r) {
+    <h1 class="visually-hidden">{{ t.loading }}</h1>
+    <ph-skeleton shape="card" [attr.aria-label]="t.loading" />
+  } @else {
+    @switch (r.status) {
+      @case ('loaded') {
+        @let i = r.value;
+        <div class="stack">
+          <h1>{{ b.intakeHeading }}</h1>
+          <ph-agent-message [speaker]="t.speaker" [text]="i.explanation" />
+          <form class="stack" novalidate (ngSubmit)="save()">
+            @if (failed()) {
+              <ph-alert tone="danger" [title]="t.failed" />
+            }
+            <ph-card [title]="b.householdTitle">
+              <div class="stack">
+                <ph-text-field
+                  inputId="benefits-size"
+                  [label]="b.sizeLabel"
+                  type="number"
+                  inputmode="numeric"
+                  name="size"
+                  [error]="errors()['householdSize'] ?? null"
+                  [(ngModel)]="size"
+                />
+                <ph-select
+                  inputId="benefits-marital"
+                  [label]="b.maritalLabel"
+                  name="marital"
+                  [options]="maritalOptions()"
+                  [error]="errors()['maritalStatus'] ?? null"
+                  [(ngModel)]="marital"
+                />
+                <ph-radio-group
+                  [legend]="b.ccbLegend"
+                  name="ccb"
+                  [options]="ccbOptions()"
+                  [error]="errors()['ccbNow'] ?? null"
+                  [(ngModel)]="ccb"
+                />
+                <ph-radio-group
+                  [legend]="b.incomeLegend"
+                  name="income"
+                  [options]="incomeOptions()"
+                  [(ngModel)]="income"
+                />
+                <p class="hint">{{ b.incomeHint }}</p>
+                @if (separated()) {
+                  @for (c of i.children; track c.id) {
+                    <ph-radio-group
+                      [legend]="b.claimsLegend(c.firstName)"
+                      [name]="'claims-' + c.id"
+                      [options]="claimsOptions()"
+                      [error]="errors()['custody.' + c.id] ?? null"
+                      [(ngModel)]="custody[c.id]"
+                    />
+                  }
+                  <p class="hint">{{ b.claimsHint }}</p>
+                }
+              </div>
+            </ph-card>
+            <div>
+              <ph-button
+                variant="primary"
+                size="lg"
+                type="submit"
+                icon="arrow-right"
+                [busy]="busy()"
+                >{{ b.checkMine }}</ph-button
+              >
+            </div>
+          </form>
+        </div>
+      }
+      @case ('gone') {
+        <h1>{{ t.expiredHeading }}</h1>
+        <ph-card>
+          <p class="plain">{{ t.expiredText(r.organization ?? '') }}</p>
+        </ph-card>
+      }
+      @default {
+        <h1>{{ t.pageTitle }}</h1>
+        <ph-card [flush]="true">
+          <ph-empty-state icon="warning" tone="error" [title]="t.errorTitle" [text]="t.errorText">
+            <ph-button variant="primary" icon="refresh" (click)="load()">{{
+              t.tryAgain
+            }}</ph-button>
+          </ph-empty-state>
+        </ph-card>
+      }
+    }
+  }
+</ph-guardian-shell>

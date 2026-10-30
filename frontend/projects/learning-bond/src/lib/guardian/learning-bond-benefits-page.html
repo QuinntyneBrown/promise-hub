@@ -1,0 +1,97 @@
+<ph-guardian-shell [organization]="organization()" [attr.lang]="language()">
+  @let t = text();
+  @let b = words();
+  @let r = result();
+  @if (!r) {
+    <h1 class="visually-hidden">{{ t.loading }}</h1>
+    <ph-skeleton shape="card" [attr.aria-label]="t.loading" />
+  } @else {
+    @switch (r.status) {
+      @case ('loaded') {
+        @let p = r.value;
+        <div class="stack">
+          <h1>{{ b.listHeading }}</h1>
+          @if (p.localNote) {
+            <ph-alert tone="info" [title]="p.localNote" />
+          }
+          @for (blocked of p.blocked; track blocked) {
+            <ph-alert tone="warning" [title]="blocked" />
+          }
+          <ph-agent-message [speaker]="t.speaker" [text]="p.explanation" />
+          @if (p.incomeNote) {
+            <ph-alert tone="info" [title]="p.incomeNote" />
+          }
+          @if (p.allReceived) {
+            <ph-card [flush]="true">
+              <ph-empty-state
+                icon="check-circle"
+                [title]="b.allReceived"
+                [text]="b.allReceivedText"
+              />
+            </ph-card>
+          }
+          @for (item of p.benefits; track item.key) {
+            @if (open(item)) {
+              <ph-benefit-card
+                [name]="item.name"
+                [level]="item.level"
+                [amount]="amount(item)"
+                [state]="b.states[item.state]"
+                [tone]="tone(item)"
+                [text]="line(item)"
+                [source]="b.ruleOf(item.source, item.ruleVersion)"
+              >
+                @if (item.state === 'ApplyNow') {
+                  <ph-button
+                    variant="primary"
+                    icon="arrow-right"
+                    [link]="['/g/learning-bond', token(), 'benefits', item.key]"
+                    >{{ b.applyNow }}</ph-button
+                  >
+                } @else if (item.state === 'NeedDocument' && item.document) {
+                  <ph-file-upload
+                    [inputId]="'benefit-file-' + item.key"
+                    [title]="b.upload(item.document)"
+                    accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                    [busy]="uploading() === item.key"
+                    [error]="uploadError()[item.key] ?? null"
+                    (fileSelected)="upload(item, $event)"
+                  />
+                }
+              </ph-benefit-card>
+            }
+          }
+          @if (already(p.benefits).length) {
+            <ph-card [title]="b.alreadyTitle" [flush]="true">
+              <div data-testid="benefits-already">
+                <ph-list [label]="b.alreadyTitle" [inset]="true">
+                  @for (item of already(p.benefits); track item.key) {
+                    <ph-list-item [title]="item.name" [meta]="item.level">
+                      <ph-badge tone="success">{{ b.states['AlreadyGet'] }}</ph-badge>
+                    </ph-list-item>
+                  }
+                </ph-list>
+              </div>
+            </ph-card>
+          }
+        </div>
+      }
+      @case ('gone') {
+        <h1>{{ t.expiredHeading }}</h1>
+        <ph-card>
+          <p class="plain">{{ t.expiredText(r.organization ?? '') }}</p>
+        </ph-card>
+      }
+      @default {
+        <h1>{{ t.pageTitle }}</h1>
+        <ph-card [flush]="true">
+          <ph-empty-state icon="warning" tone="error" [title]="t.errorTitle" [text]="t.errorText">
+            <ph-button variant="primary" icon="refresh" (click)="load()">{{
+              t.tryAgain
+            }}</ph-button>
+          </ph-empty-state>
+        </ph-card>
+      }
+    }
+  }
+</ph-guardian-shell>

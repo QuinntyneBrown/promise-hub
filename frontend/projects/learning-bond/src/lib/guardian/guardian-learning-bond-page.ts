@@ -30,6 +30,7 @@ import {
   PhSkeleton,
   PhTextField,
 } from '@promisehub/components';
+import { guardianBenefitsText } from './guardian-benefits-text';
 import { guardianLearningBondText } from './guardian-learning-bond-text';
 import {
   LearningBondWithdrawData,
@@ -76,6 +77,7 @@ export class GuardianLearningBondPage implements OnInit {
   protected readonly errors = signal<Record<string, string>>({});
   protected readonly chosen = signal<'NotNow' | 'NotInterested' | null>(null);
   protected readonly withdrawnName = signal<string | null>(null);
+  protected readonly benefitsWords = computed(() => guardianBenefitsText(this.language()));
   private readonly dialogs = inject(PhDialogs);
   protected contact = '';
   protected code = '';

@@ -19,4 +19,6 @@ export interface LearningBondProgress {
   expectedTo: string;
   fields: LearningBondApplicationFields;
   document: LearningBondDocumentRequest | null;
+  /** Show the benefits offer: no Benefits consent and Not now not chosen (L2-153 criterion 1). */
+  benefitsOffer?: boolean;
 }
