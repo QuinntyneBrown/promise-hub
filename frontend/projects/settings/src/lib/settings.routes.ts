@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { LearningBondAgreementPage } from './learning-bond-agreement/learning-bond-agreement-page';
 import { SettingsModulesPage } from './modules/settings-modules-page';
 import { SettingsOrganizationPage } from './organization/settings-organization-page';
 import { SettingsNotificationsPage } from './notifications/settings-notifications-page';
@@ -33,5 +34,17 @@ export const setupRoutes: Routes = [
     path: 'organization',
     component: SetupOrganizationPage,
     title: 'Your organization · Set up · PromiseHub',
+  },
+];
+
+/**
+ * The Learning Bond data-handling agreement, mounted at /settings/learning-bond/agreement while Roster and Messages are on: it is read and
+ * accepted before Learning Bond can be on, so it is served from Settings rather than the learning-bond library (ADR 0077).
+ */
+export const learningBondAgreementRoutes: Routes = [
+  {
+    path: '',
+    component: LearningBondAgreementPage,
+    title: 'Learning Bond agreement · Settings · PromiseHub',
   },
 ];

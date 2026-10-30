@@ -242,6 +242,7 @@ public static class DependencyInjection
         services.AddScoped<Website.WebsiteRequestLimit>();
         services.AddScoped<Website.WebsiteRequestsHandler>();
         services.AddScoped<LearningBond.LearningBondAgreementGate>();
+        services.AddScoped<LearningBond.LearningBondAgreementHandler>();
         services.AddScoped<LearningBond.LearningBondGuardianHandler>();
         services.AddScoped<LearningBond.LearningBondSinDestroyer>();
         return services;

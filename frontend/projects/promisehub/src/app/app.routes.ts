@@ -122,6 +122,10 @@ export const routes: Routes = [
         path: 'settings/staff',
         loadChildren: () => import('@promisehub/administration').then((m) => m.routes),
       },
+      // The Learning Bond agreement is served while Learning Bond is off, so long as Roster and Messages are on (ADR 0077).
+      ...moduleRoute('settings/learning-bond/agreement', ['Roster', 'Messages'], () =>
+        import('@promisehub/settings').then((m) => m.learningBondAgreementRoutes),
+      ),
       {
         path: 'settings',
         loadChildren: () => import('@promisehub/settings').then((m) => m.routes),

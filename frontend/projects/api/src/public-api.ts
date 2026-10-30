@@ -462,4 +462,8 @@ export * from './lib/learning-bond/learning-bond-link';
 export * from './lib/learning-bond/learning-bond-status';
 export * from './lib/learning-bond/learning-bond-api';
 export * from './lib/learning-bond/learning-bond-api.token';
+export * from './lib/learning-bond/learning-bond-agreement';
+export * from './lib/learning-bond/learning-bond-agreement-section';
+export * from './lib/learning-bond/learning-bond-acceptance';
+export * from './lib/learning-bond/learning-bond-signer-request';
 export * from './lib/session/participant-roles';

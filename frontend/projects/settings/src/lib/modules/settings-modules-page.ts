@@ -39,6 +39,8 @@ export class SettingsModulesPage {
   private readonly toasts = inject(ToastService);
 
   protected readonly sections = SETTINGS_SECTIONS;
+  /** The refusal that offers Read the agreement beside Learning Bond (L2-135 criterion 4). */
+  protected readonly agreementFirst = 'Accept the Learning Bond data-handling agreement first.';
   protected readonly catalog = MODULE_CATALOG;
   protected readonly presets = MODULE_PRESETS;
   protected readonly state = signal<'loading' | 'loaded' | 'forbidden' | 'error'>('loading');
