@@ -87,3 +87,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0081](0081-provider-webhooks-are-hmac-signed-and-claim-reminders-run-in-the-dispatch-runner.md) | Provider webhooks are HMAC-signed, and claim reminders run in the dispatch runner |
 | [0082](0082-the-benefits-check-keeps-its-own-consent-answers-and-one-application-per-benefit.md) | The benefits check keeps its own consent, its answers encrypted, and one application per benefit |
 | [0083](0083-date-reminders-are-sent-on-their-day-and-the-total-is-computed-from-the-records.md) | Date reminders are sent on their day, and the total is computed from the records |
+| [0084](0084-learning-bond-figures-are-computed-on-read-and-suppressed-where-they-rest-on-few-households.md) | Learning Bond figures are computed on read and suppressed where they rest on few households |
