@@ -38,6 +38,32 @@
   }
   @default {
     @if (launch(); as l) {
+      @if (l.mode === 'Scheduled' && l.date && !l.launchedAt) {
+        <div data-testid="launch-status">
+          <ph-alert
+            tone="success"
+            [title]="'Scheduled for ' + day(l.date) + ', 10:00 am'"
+            [text]="
+              l.mobile +
+              ' by text and ' +
+              l.emailOnly +
+              ' by email. Change the date or cancel any time before then.'
+            "
+          >
+            <ph-button size="sm" variant="ghost" hasPopup="dialog" (click)="cancel(l)"
+              >Cancel launch</ph-button
+            >
+          </ph-alert>
+        </div>
+      } @else if (l.mode === 'AtTheDoor') {
+        <div data-testid="launch-status">
+          <ph-alert
+            tone="info"
+            title="Staff invite at the door"
+            text="Nothing is sent in bulk. Staff whose role sees status tap Invite to Learning Bond on a household at check-in."
+          />
+        </div>
+      }
       <div class="counts" data-testid="launch-counts">
         <ph-stat
           label="Households covered"
@@ -67,6 +93,50 @@
             >Launch</ph-button
           >
         </div>
+      } @else if (!l.launchedAt) {
+        <form class="form" novalidate (ngSubmit)="submit()">
+          @if (summary().length) {
+            <ph-error-summary [items]="summary()" />
+          }
+          <ph-card title="How">
+            <div class="fields">
+              @if (!pending()) {
+                <div id="launch-mode">
+                  <ph-radio-group
+                    legend="When"
+                    name="mode"
+                    [options]="modes"
+                    [error]="errors()['mode'] || errors()['launch'] || null"
+                    [ngModel]="mode()"
+                    (ngModelChange)="setMode($event)"
+                  />
+                </div>
+              }
+              @if (mode() === 'Scheduled') {
+                <ph-text-field
+                  inputId="launch-day"
+                  label="Day"
+                  type="date"
+                  name="date"
+                  help="From tomorrow to 90 days ahead."
+                  [error]="errors()['date'] ?? null"
+                  [ngModel]="date()"
+                  (ngModelChange)="date.set($event)"
+                />
+              }
+            </div>
+          </ph-card>
+          <div class="actions">
+            <ph-button variant="ghost" link="/settings/learning-bond">Back</ph-button>
+            <ph-button variant="primary" type="submit" [busy]="saving()">{{
+              pending()
+                ? 'Change the date'
+                : mode() === 'Scheduled'
+                  ? 'Schedule launch'
+                  : 'Launch without a mass send'
+            }}</ph-button>
+          </div>
+        </form>
       }
     }
   }

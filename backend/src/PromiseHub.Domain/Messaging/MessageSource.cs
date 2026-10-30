@@ -17,4 +17,7 @@ public enum MessageSource
 
     /// <summary>Surveys to guardians; part of the Reports module.</summary>
     Survey,
+
+    /// <summary>Learning Bond invitations; part of the Learning Bond module, and their text already starts with the sender name (ADR 0079).</summary>
+    LearningBond,
 }

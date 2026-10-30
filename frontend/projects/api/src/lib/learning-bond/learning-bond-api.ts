@@ -47,6 +47,12 @@ export interface LearningBondApi {
   launch(): Observable<LoadResult<LearningBondLaunch>>;
   /** GET /learning-bond/launch/missing-contacts: covered households with no mobile number or email. */
   missingContacts(): Observable<LoadResult<LearningBondMissingContact[]>>;
+  /** POST /learning-bond/launch: schedules for a day (yyyy-mm-dd) or chooses at the door; invalid by field. */
+  scheduleLaunch(mode: 'Scheduled' | 'AtTheDoor', date: string | null): Observable<WriteOutcome>;
+  /** PUT /learning-bond/launch: moves a scheduled launch that hasn't sent. */
+  moveLaunch(date: string): Observable<WriteOutcome>;
+  /** DELETE /learning-bond/launch: cancels a launch that hasn't sent; nothing goes out. */
+  cancelLaunch(): Observable<WriteOutcome>;
   /** GET /learning-bond/invitation: the sender name and the wording in each language the households use. */
   invitation(): Observable<LoadResult<LearningBondInvitation>>;
   /** PUT /learning-bond/invitation: the sender name; invalid unless 1 to 30 letters, numbers and spaces. */

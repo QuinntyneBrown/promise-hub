@@ -30,22 +30,28 @@ public sealed class LearningBondCoverage(IPromiseHubDb db, OrganizationToday tod
     }
 
     /// <summary>
-    /// The households the organization's coverage reaches now, each with the names of the covered programs that reach it, in household-name
-    /// order: every running program, or the chosen ones (L2-138). Launch and the families list start from these.
+    /// The households the organization's coverage reaches now, in household-name order, each with the covered programs that reach it and
+    /// its eligible children: every running program, or the chosen ones (L2-138). Launch and the families list start from these.
     /// </summary>
-    public async Task<IReadOnlyList<(Guid HouseholdId, IReadOnlyList<string> Programs)>> CoveredAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<LearningBondCoveredHousehold>> CoveredAsync(CancellationToken cancellationToken = default)
     {
         var settings = await db.LearningBondSettings.AsNoTracking().FirstOrDefaultAsync(cancellationToken);
         var chosen = settings is { Coverage: LearningBondCoverageMode.ChosenPrograms } ? settings.Programs : null;
-        var reached = (await ReachedAsync(cancellationToken)).Where(r => chosen is null || chosen.Contains(r.ProgramId)).ToList();
+        var reached = (await EnrolledAsync(cancellationToken)).Where(r => chosen is null || chosen.Contains(r.ProgramId)).ToList();
         var ids = reached.Select(r => r.HouseholdId).Distinct().ToList();
         var programs = await db.Programs.AsNoTracking().Select(p => new { p.Id, p.Name }).ToDictionaryAsync(p => p.Id, p => p.Name, cancellationToken);
         var names = await db.Households.AsNoTracking().Where(h => ids.Contains(h.Id) && h.DeletedAt == null).ToDictionaryAsync(h => h.Id, h => h.Name, cancellationToken);
         return [.. ids.Where(names.ContainsKey).OrderBy(id => names[id], StringComparer.CurrentCulture)
-            .Select(id => (id, (IReadOnlyList<string>)[.. reached.Where(r => r.HouseholdId == id).Select(r => programs[r.ProgramId]).Distinct().Order(StringComparer.CurrentCulture)]))];
+            .Select(id => new LearningBondCoveredHousehold(id,
+                [.. reached.Where(r => r.HouseholdId == id).Select(r => programs[r.ProgramId]).Distinct().Order(StringComparer.CurrentCulture)],
+                [.. reached.Where(r => r.HouseholdId == id).Select(r => r.Child).Distinct().Order(StringComparer.CurrentCulture)]))];
     }
 
-    private async Task<List<(Guid ProgramId, Guid HouseholdId)>> ReachedAsync(CancellationToken cancellationToken)
+    private async Task<List<(Guid ProgramId, Guid HouseholdId)>> ReachedAsync(CancellationToken cancellationToken) =>
+        [.. (await EnrolledAsync(cancellationToken)).Select(r => (r.ProgramId, r.HouseholdId))];
+
+    /// <summary>Each active enrollment of a child under 18 (or with no date of birth) in a running program, with the child's first name.</summary>
+    private async Task<List<(Guid ProgramId, Guid HouseholdId, string Child)>> EnrolledAsync(CancellationToken cancellationToken)
     {
         var on = await today.GetAsync(cancellationToken);
         var rows = await (
@@ -54,6 +60,6 @@ public sealed class LearningBondCoverage(IPromiseHubDb db, OrganizationToday tod
             join c in db.Children.AsNoTracking() on e.ChildId equals c.Id
             where e.EndedAt == null && p.Status == ProgramStatus.Active
             select new { e.ProgramId, c.HouseholdId, Child = c }).ToListAsync(cancellationToken);
-        return [.. rows.Where(r => r.Child.AgeOn(on) is null or < 18).Select(r => (r.ProgramId, r.HouseholdId))];
+        return [.. rows.Where(r => r.Child.AgeOn(on) is null or < 18).Select(r => (r.ProgramId, r.HouseholdId, r.Child.FirstName))];
     }
 }

@@ -1,3 +1,4 @@
+using PromiseHub.Application;
 using PromiseHub.Api.Authorization;
 using PromiseHub.Api.Modules;
 using PromiseHub.Application.Identity;
@@ -29,6 +30,11 @@ public static class LearningBondEndpoints
         settings.MapGet("/overview", (LearningBondOverviewHandler handler, CancellationToken ct) => handler.GetAsync(ct));
         settings.MapGet("/launch", (LearningBondLaunchHandler handler, CancellationToken ct) => handler.GetAsync(ct));
         settings.MapGet("/launch/missing-contacts", (LearningBondLaunchHandler handler, CancellationToken ct) => handler.MissingContactsAsync(ct));
+        settings.MapPost("/launch", async (ScheduleLaunchRequest request, LearningBondLaunchHandler handler, CancellationToken ct) =>
+            LaunchResult(await handler.ScheduleAsync(request, ct)));
+        settings.MapPut("/launch", async (MoveLaunchRequest request, LearningBondLaunchHandler handler, CancellationToken ct) =>
+            (await handler.MoveAsync(request, ct)).ToHttp());
+        settings.MapDelete("/launch", async (LearningBondLaunchHandler handler, CancellationToken ct) => (await handler.CancelAsync(ct)).ToHttp());
 
         var agreement = app.MapGroup("/learning-bond/agreement").RequirePermission(Permission.ManageSettings).RequireModule(ModuleId.Roster).RequireModule(ModuleId.Messages);
         agreement.MapGet(string.Empty, (LearningBondAgreementHandler handler, CancellationToken ct) => handler.GetAsync(ct));
@@ -42,4 +48,10 @@ public static class LearningBondEndpoints
             (await handler.CancelAsync(id, ct)).ToHttp());
         return app;
     }
+
+    // No mobile number on any covered household answers 422 with code no-phone-numbers (L2-140 criterion 2).
+    private static IResult LaunchResult(Result result) =>
+        result is { Status: ResultStatus.Invalid, Errors: { } errors } && errors.TryGetValue("launch", out var message) && message == LearningBondLaunchHandler.NoPhoneNumbersMessage
+            ? Results.Json(new { code = "no-phone-numbers", errors }, statusCode: StatusCodes.Status422UnprocessableEntity)
+            : result.ToHttp("/learning-bond/launch");
 }

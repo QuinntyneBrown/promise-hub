@@ -93,6 +93,20 @@ export class HttpLearningBondApi implements LearningBondApi {
     );
   }
 
+  scheduleLaunch(mode: 'Scheduled' | 'AtTheDoor', date: string | null): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<{ id: string }>(`${this.baseUrl}/learning-bond/launch`, { mode, date }),
+    );
+  }
+
+  moveLaunch(date: string): Observable<WriteOutcome> {
+    return toWrite(this.http.put<null>(`${this.baseUrl}/learning-bond/launch`, { date }));
+  }
+
+  cancelLaunch(): Observable<WriteOutcome> {
+    return toWrite(this.http.delete<null>(`${this.baseUrl}/learning-bond/launch`));
+  }
+
   agreement(): Observable<LoadResult<LearningBondAgreement>> {
     return toLoad(this.http.get<LearningBondAgreement>(`${this.baseUrl}/learning-bond/agreement`));
   }

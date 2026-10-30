@@ -96,6 +96,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.LearningBond.LearningBondIntake> LearningBondIntakes => Set<Domain.LearningBond.LearningBondIntake>();
     public DbSet<Domain.LearningBond.LearningBondSignerRequest> LearningBondSignerRequests => Set<Domain.LearningBond.LearningBondSignerRequest>();
     public DbSet<Domain.LearningBond.LearningBondSignerToken> LearningBondSignerTokens => Set<Domain.LearningBond.LearningBondSignerToken>();
+    public DbSet<Domain.LearningBond.LearningBondInvitation> LearningBondInvitations => Set<Domain.LearningBond.LearningBondInvitation>();
     public DbSet<Domain.LearningBond.LearningBondSettings> LearningBondSettings => Set<Domain.LearningBond.LearningBondSettings>();
     public DbSet<DataRequest> DataRequests => Set<DataRequest>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
@@ -371,6 +372,13 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(t => t.TokenHash).HasMaxLength(64);
             e.Property(t => t.IssuedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
         });
+        // One row per household invitation, written with its message, so the 7-day rule never invites twice (L2-140, ADR 0079).
+        modelBuilder.Entity<Domain.LearningBond.LearningBondInvitation>(e =>
+        {
+            e.HasIndex(i => new { i.OrganizationId, i.HouseholdId });
+            e.Property(i => i.How).HasConversion<string>().HasMaxLength(20);
+            e.Property(i => i.SentAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+        });
         // One settings row per organization: coverage, status roles and the sender name (L2-138, L2-139).
         modelBuilder.Entity<Domain.LearningBond.LearningBondSettings>(e =>
         {
@@ -382,6 +390,8 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(s => s.StatusRoles).HasMaxLength(200);
             e.Property(s => s.SenderName).HasMaxLength(30);
             e.Property(s => s.UpdatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(s => s.LaunchMode).HasConversion<string>().HasMaxLength(20);
+            e.Property(s => s.LaunchedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
         });
         // The SIN is two columns: the ciphertext under the Learning Bond key and the last three digits (L2-159 criterion 1).
         modelBuilder.Entity<Domain.LearningBond.LearningBondIntake>(e =>

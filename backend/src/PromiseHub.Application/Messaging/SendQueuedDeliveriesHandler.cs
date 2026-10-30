@@ -25,7 +25,7 @@ public sealed class SendQueuedDeliveriesHandler(IPromiseHubDb db, ITenantContext
         var messageIds = due.Select(d => d.MessageId).Distinct().ToList();
         var on = await modules.OnAsync(cancellationToken);
         var messages = (await db.Messages.Where(m => messageIds.Contains(m.Id)).ToListAsync(cancellationToken))
-            .Where(m => on.Contains(m.Source switch { MessageSource.Slips => ModuleId.Slips, MessageSource.Enrollment => ModuleId.Roster, MessageSource.NoShow => ModuleId.RollCall, MessageSource.Pickup => ModuleId.Pickup, MessageSource.Survey => ModuleId.Reports, _ => ModuleId.Messages }))
+            .Where(m => on.Contains(m.Source switch { MessageSource.Slips => ModuleId.Slips, MessageSource.Enrollment => ModuleId.Roster, MessageSource.NoShow => ModuleId.RollCall, MessageSource.Pickup => ModuleId.Pickup, MessageSource.Survey => ModuleId.Reports, MessageSource.LearningBond => ModuleId.LearningBond, _ => ModuleId.Messages }))
             .ToDictionary(m => m.Id);
         due = [.. due.Where(d => messages.ContainsKey(d.MessageId))];
         if (due.Count == 0)
@@ -39,7 +39,8 @@ public sealed class SendQueuedDeliveriesHandler(IPromiseHubDb db, ITenantContext
             var message = messages[delivery.MessageId];
             if (delivery.Channel == Channel.Sms)
             {
-                var text = SmsText.For(organization.Name, delivery.Text ?? message.Body);
+                // A Learning Bond invitation already starts with its sender name (ADR 0079).
+                var text = message.Source == MessageSource.LearningBond ? delivery.Text ?? message.Body : SmsText.For(organization.Name, delivery.Text ?? message.Body);
                 var segments = SmsSegments.Count(text);
                 if (!period.TryReserve(segments))
                 {

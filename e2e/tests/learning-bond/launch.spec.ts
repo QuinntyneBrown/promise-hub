@@ -52,6 +52,63 @@ test.describe('Learning Bond launch', () => {
   });
 });
 
+test.describe('Learning Bond launch: when it goes out', () => {
+  test.use({ signedInAs: 'm-tom' });
+
+  // L2-140 criterion 3 (learning-bond-launch/invalid, scheduled).
+  test('Given a past day the rule shows; given Mon 9 Nov, then the launch is scheduled for 10:00 am and audited', async ({ page, api }) => {
+    const launch = new LearningBondLaunchPage(page);
+    await launch.open();
+
+    await launch.schedule('2026-11-05');
+    await expect(launch.dayError).toHaveText('Choose a date from tomorrow to 90 days ahead.');
+    await launch.expectAccessible();
+
+    await launch.schedule('2026-11-09');
+
+    await expect(launch.status).toContainText('Scheduled for Mon 9 Nov 2026, 10:00 am');
+    await expect(launch.status).toContainText('4 by text and 0 by email. Change the date or cancel any time before then.');
+    expect(api.learningBond.launchAudit.map((a) => a.summary)).toEqual(['Learning Bond launch scheduled for Mon 9 Nov 2026']);
+    await launch.expectAccessible();
+  });
+
+  // L2-140 criterion 6 (learning-bond-launch/scheduled, cancelled; learning-bond-cancel-launch).
+  test('Given a scheduled launch, when Tom changes the date and then cancels, then nothing is sent and both are audited', async ({ page, api }) => {
+    const launch = new LearningBondLaunchPage(page);
+    await launch.open();
+    await launch.schedule('2026-11-09');
+    await expect(launch.status).toContainText('Mon 9 Nov 2026');
+
+    await launch.changeTheDate('2026-11-10');
+    await expect(launch.status).toContainText('Scheduled for Tue 10 Nov 2026, 10:00 am');
+
+    await launch.cancelLaunch();
+    await expect(launch.cancelDialog).toContainText('Nothing has been sent.');
+    await launch.expectAccessible();
+    await launch.confirmCancel();
+
+    await expect(launch.toast.last()).toContainText('Launch cancelled');
+    await expect(launch.status).toHaveCount(0);
+    expect(api.learningBond.launchAudit.map((a) => a.summary)).toEqual([
+      'Learning Bond launch scheduled for Mon 9 Nov 2026',
+      'Learning Bond launch moved to Tue 10 Nov 2026',
+      'Learning Bond launch cancelled; nothing was sent',
+    ]);
+  });
+
+  // L2-140 criterion 4 (learning-bond-launch/at-door).
+  test('Given Tom chooses Staff invite at the door, then nothing is sent in bulk and the page says staff invite at check-in', async ({ page }) => {
+    const launch = new LearningBondLaunchPage(page);
+    await launch.open();
+
+    await launch.launchAtTheDoor();
+
+    await expect(launch.status).toContainText('Staff invite at the door');
+    await expect(launch.status).toContainText('Nothing is sent in bulk.');
+    await launch.expectAccessible();
+  });
+});
+
 test.describe('Learning Bond launch for a site lead', () => {
   test.use({ signedInAs: 'm-jaylen' });
 

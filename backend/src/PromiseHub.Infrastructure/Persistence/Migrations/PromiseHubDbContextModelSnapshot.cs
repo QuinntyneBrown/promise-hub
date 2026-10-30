@@ -2429,6 +2429,38 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.ToTable("LearningBondIntakes");
                 });
 
+            modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondInvitation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("HouseholdId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("How")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("MessageId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("SentAt")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("OrganizationId", "HouseholdId");
+
+                    b.ToTable("LearningBondInvitations");
+                });
+
             modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondSettings", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2439,6 +2471,16 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("LaunchDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LaunchMode")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("LaunchedAt")
+                        .HasColumnType("INTEGER");
 
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("TEXT");
@@ -4795,6 +4837,15 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                 });
 
             modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondIntake", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondInvitation", b =>
                 {
                     b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
                         .WithMany()

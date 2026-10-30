@@ -284,20 +284,68 @@ export class FakeLearningBond {
     return route.fulfill({ status: 204 });
   }
 
+  /** organization → its launch as chosen (LearningBondSettings.LaunchMode, LaunchDate, LaunchedAt). */
+  readonly launches = new Map<string, { mode: 'Scheduled' | 'AtTheDoor'; date: string | null; launchedAt: string | null }>();
+
+  /** Audit summaries the fake records for launch changes, as the backend writes them. */
+  readonly launchAudit: { organizationId: string; summary: string }[] = [];
+
   /** GET /learning-bond/launch (L2-140): the counts the fake API computes, the launch range from tomorrow to 90 days ahead (today is Thu 5 Nov 2026). */
   launch(route: Route, m: Membership, counts: { covered: number; mobile: number; emailOnly: number; neither: number; programs: string[] }): Promise<void> {
+    const launch = this.launches.get(m.organizationId);
     return route.fulfill({
       json: {
         ...counts,
         noPhoneNumbers: counts.mobile === 0,
-        mode: null,
-        date: null,
-        launchedAt: null,
+        mode: launch?.mode ?? null,
+        date: launch?.date ?? null,
+        launchedAt: launch?.launchedAt ?? null,
         earliest: '2026-11-06',
         latest: '2027-02-03',
         launchBlocked: this.hasAccepted(m.organizationId) ? null : 'A new version of the agreement needs accepting.',
       },
     });
+  }
+
+  /** POST /learning-bond/launch (L2-140 criteria 2 to 4): the day from Fri 6 Nov 2026 to Wed 3 Feb 2027, a mobile number, the current version accepted. */
+  scheduleLaunch(route: Route, m: Membership, mobile: number): Promise<void> {
+    const body = route.request().postDataJSON() as { mode?: string; date?: string };
+    const invalid = (field: string, message: string) => route.fulfill({ status: 422, json: { errors: { [field]: message } } });
+    if (body.mode !== 'Scheduled' && body.mode !== 'AtTheDoor') return invalid('mode', 'Choose a day or Staff invite at the door.');
+    if (this.launches.get(m.organizationId)?.launchedAt) return invalid('launch', 'Learning Bond has launched. Staff invite new families at the door.');
+    if (body.mode === 'Scheduled' && !inLaunchRange(body.date)) return invalid('date', 'Choose a date from tomorrow to 90 days ahead.');
+    if (!this.hasAccepted(m.organizationId)) return invalid('launch', 'A new version of the agreement needs accepting.');
+    if (body.mode === 'Scheduled' && mobile === 0)
+      return route.fulfill({
+        status: 422,
+        json: { code: 'no-phone-numbers', errors: { launch: 'Add guardians’ mobile numbers before launching. Staff can collect them at check-in.' } },
+      });
+    this.launches.set(m.organizationId, { mode: body.mode, date: body.mode === 'Scheduled' ? body.date! : null, launchedAt: null });
+    this.launchAudit.push({
+      organizationId: m.organizationId,
+      summary: body.mode === 'Scheduled' ? `Learning Bond launch scheduled for ${launchDay(body.date!)}` : 'Learning Bond launch: staff invite at the door',
+    });
+    return route.fulfill({ status: 201, json: { id: `launch-${m.organizationId}` } });
+  }
+
+  /** PUT /learning-bond/launch (L2-140 criterion 6): moves a scheduled launch that hasn't sent. */
+  moveLaunch(route: Route, m: Membership): Promise<void> {
+    const launch = this.launches.get(m.organizationId);
+    if (launch?.mode !== 'Scheduled' || launch.launchedAt) return route.fulfill({ status: 404 });
+    const { date } = route.request().postDataJSON() as { date?: string };
+    if (!inLaunchRange(date)) return route.fulfill({ status: 422, json: { errors: { date: 'Choose a date from tomorrow to 90 days ahead.' } } });
+    launch.date = date!;
+    this.launchAudit.push({ organizationId: m.organizationId, summary: `Learning Bond launch moved to ${launchDay(date!)}` });
+    return route.fulfill({ status: 204 });
+  }
+
+  /** DELETE /learning-bond/launch (L2-140 criterion 6): cancels a launch that hasn't sent; nothing goes out. */
+  cancelLaunch(route: Route, m: Membership): Promise<void> {
+    const launch = this.launches.get(m.organizationId);
+    if (!launch || launch.launchedAt) return route.fulfill({ status: 404 });
+    this.launches.delete(m.organizationId);
+    this.launchAudit.push({ organizationId: m.organizationId, summary: 'Learning Bond launch cancelled; nothing was sent' });
+    return route.fulfill({ status: 204 });
   }
 
   settingsOf(organizationId: string): FakeLearningBondSettings {
@@ -468,4 +516,15 @@ const texts = {
 
 function addDays(iso: string, days: number): string {
   return new Date(new Date(iso).getTime() + days * 86_400_000).toISOString();
+}
+
+/** A launch day from tomorrow to 90 days ahead: Fri 6 Nov 2026 to Wed 3 Feb 2027 (L2-140 criterion 3). */
+function inLaunchRange(date?: string): boolean {
+  return !!date && /^\d{4}-\d{2}-\d{2}$/.test(date) && date >= '2026-11-06' && date <= '2027-02-03';
+}
+
+/** "Mon 9 Nov 2026", as the backend writes a day in the audit. */
+function launchDay(date: string): string {
+  const d = new Date(`${date}T12:00:00Z`);
+  return `${d.toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'UTC' })} ${d.getUTCDate()} ${d.toLocaleDateString('en-GB', { month: 'short', timeZone: 'UTC' })} ${d.getUTCFullYear()}`;
 }

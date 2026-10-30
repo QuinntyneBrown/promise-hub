@@ -1,0 +1,21 @@
+<ph-dialog
+  title="Cancel the launch?"
+  [description]="'Scheduled for ' + when + ', 10:00 am. Nothing has been sent.'"
+  tone="danger"
+>
+  <p class="body">
+    No invitation goes out. You can schedule a new day any time. Cancelling is recorded in the audit
+    log.
+  </p>
+  @if (failed()) {
+    <ph-alert
+      tone="danger"
+      title="That didn’t work"
+      text="The launch is still scheduled. Try again."
+    />
+  }
+  <ng-container ngProjectAs="[phDialogFooter]">
+    <ph-button (click)="ref.close()">Keep it</ph-button>
+    <ph-button variant="danger" [busy]="busy()" (click)="confirm()">Cancel launch</ph-button>
+  </ng-container>
+</ph-dialog>

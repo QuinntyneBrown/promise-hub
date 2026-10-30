@@ -2273,6 +2273,9 @@ export class FakeApi {
     ["PUT", /^\/api\/learning-bond\/invitation$/, (route) => this.learningBondSaveInvitation(route)],
     ["GET", /^\/api\/learning-bond\/overview$/, (route) => this.learningBondOverview(route)],
     ["GET", /^\/api\/learning-bond\/launch$/, (route) => this.learningBondLaunch(route)],
+    ["POST", /^\/api\/learning-bond\/launch$/, (route) => this.learningBondLaunchChange(route, "POST")],
+    ["PUT", /^\/api\/learning-bond\/launch$/, (route) => this.learningBondLaunchChange(route, "PUT")],
+    ["DELETE", /^\/api\/learning-bond\/launch$/, (route) => this.learningBondLaunchChange(route, "DELETE")],
     ["GET", /^\/api\/learning-bond\/launch\/missing-contacts$/, (route) => this.learningBondMissingContacts(route)],
     ["POST", /^\/api\/learning-bond\/agreement\/signers\/(?<id>[^/]+)\/resend$/, (route, p) => this.learningBondResendSigner(route, p["id"]!)],
     ["DELETE", /^\/api\/learning-bond\/agreement\/signers\/(?<id>[^/]+)$/, (route, p) => this.learningBondCancelSigner(route, p["id"]!)],
@@ -3360,6 +3363,15 @@ export class FakeApi {
       neither: count("Neither"),
       programs: [...new Set(covered.flatMap((c) => c.programs))].sort(),
     });
+  }
+
+  /** POST, PUT and DELETE /learning-bond/launch (L2-140 criteria 2 to 6): schedule, move or cancel. */
+  private async learningBondLaunchChange(route: Route, method: "POST" | "PUT" | "DELETE"): Promise<void> {
+    const m = await this.learningBondAdmin(route);
+    if (!m) return;
+    if (method === "PUT") return this.learningBond.moveLaunch(route, m);
+    if (method === "DELETE") return this.learningBond.cancelLaunch(route, m);
+    return this.learningBond.scheduleLaunch(route, m, this.learningBondCovered(m.organizationId).filter((c) => c.reach === "Mobile").length);
   }
 
   /** GET /learning-bond/launch/missing-contacts (L2-140 criterion 1): names and programs, never a contact. */
