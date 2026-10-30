@@ -91,6 +91,9 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.Website.DonationPledge> DonationPledges => Set<Domain.Website.DonationPledge>();
     public DbSet<Domain.Curriculum.BadgeAward> BadgeAwards => Set<Domain.Curriculum.BadgeAward>();
     public DbSet<Domain.Curriculum.ProgressionStage> ProgressionStages => Set<Domain.Curriculum.ProgressionStage>();
+    public DbSet<Domain.LearningBond.LearningBondAgreement> LearningBondAgreements => Set<Domain.LearningBond.LearningBondAgreement>();
+    public DbSet<Domain.LearningBond.LearningBondAgreementAcceptance> LearningBondAgreementAcceptances => Set<Domain.LearningBond.LearningBondAgreementAcceptance>();
+    public DbSet<Domain.LearningBond.LearningBondIntake> LearningBondIntakes => Set<Domain.LearningBond.LearningBondIntake>();
     public DbSet<DataRequest> DataRequests => Set<DataRequest>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
     public DbSet<Domain.Incidents.IncidentFollowUp> IncidentFollowUps => Set<Domain.Incidents.IncidentFollowUp>();
@@ -326,6 +329,31 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(m => m.Topic).HasMaxLength(40);
             e.Property(m => m.Message).HasMaxLength(Domain.Website.ContactMessage.MaximumMessage);
             e.Property(m => m.CreatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+        });
+        // Learning Bond (ADR 0076): the agreement is platform data; acceptances and intakes belong to one organization.
+        modelBuilder.Entity<Domain.LearningBond.LearningBondAgreement>(e =>
+        {
+            e.HasIndex(a => a.Version).IsUnique();
+            e.Property(a => a.WhatWeCollect).HasMaxLength(4000);
+            e.Property(a => a.WhereItGoes).HasMaxLength(4000);
+            e.Property(a => a.WhatYourOrganizationSees).HasMaxLength(4000);
+        });
+        modelBuilder.Entity<Domain.LearningBond.LearningBondAgreementAcceptance>(e =>
+        {
+            e.HasIndex(a => new { a.OrganizationId, a.AgreementVersion });
+            e.Property(a => a.AcceptedByName).HasMaxLength(200);
+            e.Property(a => a.AcceptedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+        });
+        // The SIN is two columns: the ciphertext under the Learning Bond key and the last three digits (L2-159 criterion 1).
+        modelBuilder.Entity<Domain.LearningBond.LearningBondIntake>(e =>
+        {
+            e.HasIndex(i => new { i.OrganizationId, i.HouseholdId }).IsUnique();
+            e.Ignore(i => i.GuardianSin);
+            e.Property(i => i.GuardianSinCiphertext).HasMaxLength(200);
+            e.Property(i => i.GuardianSinLast3).HasMaxLength(3);
+            e.Property(i => i.CreatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(i => i.UpdatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(i => i.GuardianSinDestroyedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
         });
         modelBuilder.Entity<Domain.Website.VolunteerInterest>(e =>
         {

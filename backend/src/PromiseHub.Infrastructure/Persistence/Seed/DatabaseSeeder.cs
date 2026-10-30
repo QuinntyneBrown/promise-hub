@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using PromiseHub.Application.Identity;
 using PromiseHub.Domain.Households;
 using PromiseHub.Domain.Identity;
+using PromiseHub.Domain.LearningBond;
 using PromiseHub.Domain.Organizations;
 using PromiseHub.Domain.Programs;
 using PromiseHub.Domain.Slips;
@@ -33,8 +34,13 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
 
         // Harbourview runs the whole suite; Northgate, on the Free plan, runs check-in only (L2-004, L2-005).
         // Harbourview also runs Learning and Mentoring; Public website stays off everywhere (ADR 0043).
-        Modules(Harbourview, [.. ModuleCatalog.Suite, ModuleId.Learning, ModuleId.Mentoring]);
+        // Harbourview also runs Learning Bond, with the current data-handling agreement accepted by Tom; Northgate has it off (L2-162 criterion 5).
+        Modules(Harbourview, [.. ModuleCatalog.Suite, ModuleId.Learning, ModuleId.Mentoring, ModuleId.LearningBond]);
         Modules(Northgate, [ModuleId.Roster, ModuleId.RollCall, ModuleId.QuickCards]);
+
+        SeedAgreement();
+        Add(new LearningBondAgreementAcceptance(SeedIds.Of($"learning-bond-acceptance:{Harbourview}:{AgreementVersion}"), Harbourview, AgreementVersion,
+            MembershipId(Harbourview, "tom@harbourview.example"), "Tom Nguyen", new DateTimeOffset(2026, 10, 29, 15, 0, 0, TimeSpan.Zero)));
 
         Staff(Harbourview, "Jaylen Okafor", "jaylen@harbourview.example", Role.SiteLead);
         Staff(Harbourview, "Marisol Delgado", "marisol@harbourview.example", Role.ProgramDirector);
@@ -155,6 +161,14 @@ public sealed class DatabaseSeeder(PromiseHubDbContext db, IPasswordHasher hashe
                 StageId(organizationId, items[i].Stage)));
         }
     }
+
+    /// <summary>The current version of the platform's data-handling agreement (ADR 0076); its legal text is still to be supplied.</summary>
+    public const int AgreementVersion = 2;
+
+    private void SeedAgreement() => Add(new LearningBondAgreement(SeedIds.Of($"learning-bond-agreement:{AgreementVersion}"), AgreementVersion, new DateOnly(2026, 10, 1),
+        "Learning Bond collects, with each guardian’s per-child consent, the guardian’s and each child’s social insurance number, whether the family filed last year’s tax return, and, for the child benefits check, household size, marital status and whether the family receives the Canada Child Benefit. Names, dates of birth, address, phone and email come from your roster.",
+        "Social insurance numbers, income and benefit details are sent only to the RESP provider the guardian chooses and to the Government of Canada (Employment and Social Development Canada), and to the benefit programs the guardian applies to. They are encrypted with a key your organization never holds, decrypted only to send an application the guardian submitted, and destroyed once the provider or program has received it.",
+        "Your staff see each family’s completion status and the organization’s counts and totals. No one in your organization, including platform administrators, can read a social insurance number, income answer, marital status, benefit or dollar amount of a family. Every Learning Bond action is in your audit log without those values."));
 
     public static Guid MembershipId(Guid organizationId, string email) => SeedIds.Of($"membership:{organizationId}:{email}");
 

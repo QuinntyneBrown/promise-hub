@@ -67,8 +67,9 @@ export class SettingsModulesPage {
     });
   }
 
-  protected needsCaption(needs: ModuleId[]): string | null {
-    const missing = needs.filter((n) => !this.on().has(n));
+  /** Every module it needs while a module is off; while it is on, only those still off (L2-135 criterion 1). */
+  protected needsCaption(module: ModuleId, needs: ModuleId[]): string | null {
+    const missing = this.on().has(module) ? needs.filter((n) => !this.on().has(n)) : needs;
     return missing.length ? `Needs ${missing.map((n) => this.name(n)).join(' and ')}` : null;
   }
 

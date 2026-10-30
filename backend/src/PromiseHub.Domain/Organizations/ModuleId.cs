@@ -14,4 +14,5 @@ public enum ModuleId
     Learning,
     Mentoring,
     PublicWebsite,
+    LearningBond,
 }

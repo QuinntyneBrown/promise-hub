@@ -5,6 +5,7 @@ import { MaintenancePage } from './errors/maintenance/maintenance-page';
 import { NotFoundPage } from './errors/not-found/not-found-page';
 import { OfflinePage } from './errors/offline/offline-page';
 import { ServerErrorPage } from './errors/server-error/server-error-page';
+import { learningBondLinkOn } from './modules/learning-bond-link.guard';
 import { moduleRoute } from './modules/module-route';
 import { websiteOn } from './modules/website.guard';
 import { Shell } from './shell/shell';
@@ -32,6 +33,28 @@ export const routes: Routes = [
     path: 'welcome',
     canActivate: [authGuard],
     loadChildren: () => import('@promisehub/account').then((m) => m.welcomeRoutes),
+  },
+  // Learning Bond guardian pages: the library loads only when the server answers the link (ADR 0076, L2-162).
+  {
+    path: 'g/learning-bond/:token',
+    canMatch: [learningBondLinkOn],
+    loadChildren: () => import('@promisehub/learning-bond').then((m) => m.guardianRoutes),
+  },
+  {
+    path: 'g/learning-bond/:token',
+    loadComponent: () =>
+      import('./errors/learning-bond-unavailable/learning-bond-unavailable-page').then(
+        (m) => m.LearningBondUnavailablePage,
+      ),
+    title: 'Learning Bond isn’t available',
+  },
+  {
+    path: 'g/learning-bond/:token/**',
+    loadComponent: () =>
+      import('./errors/learning-bond-unavailable/learning-bond-unavailable-page').then(
+        (m) => m.LearningBondUnavailablePage,
+      ),
+    title: 'Learning Bond isn’t available',
   },
   // Guardian pages: anonymous, reached by a link and a code; the server answers for the link's organization.
   { path: 'g', loadChildren: () => import('@promisehub/guardian').then((m) => m.routes) },
@@ -174,6 +197,9 @@ export const routes: Routes = [
       ),
       ...moduleRoute('mentoring', 'Mentoring', () =>
         import('@promisehub/mentoring').then((m) => m.routes),
+      ),
+      ...moduleRoute('learning-bond', 'LearningBond', () =>
+        import('@promisehub/learning-bond').then((m) => m.routes),
       ),
       { path: 'forbidden', component: ForbiddenPage, title: 'No access · PromiseHub' },
       {

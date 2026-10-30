@@ -34,6 +34,23 @@ Backend:
 
 Tenant and module gate: every Learning Bond table carries `OrganizationId` under the tenant filter; a request from another organization, or while the module is off, answers 404 and never confirms that a record exists. Staff DTOs carry statuses, counts and dates only, never a SIN, income, marital status, household size, benefit name or dollar amount of a family.
 
+Encrypted store (L2-159, ADR 0076): `EncryptedSin` (Domain) is the ciphertext and the last three digits, with `Masked` ("*** *** 123") as its only string form; `SocialInsuranceNumber.Normalize` refuses a value that is not nine digits with a valid check digit, without repeating it. `ILearningBondCipher` (Application) is implemented by `LearningBondCipher` (Infrastructure `LearningBond/`): AES-256-GCM under `LearningBond:Key` (32 bytes, base64, from configuration or a key vault, never the database), a fresh nonce per value and a ciphertext bound to its purpose; with no usable key it is unavailable and encrypts nothing. `LearningBondIntake` holds the guardian's SIN as two columns. `LearningBondSinDestroyer` drops the ciphertext, keeps the last three digits and audits "Learning Bond: guardian SIN destroyed; last three digits kept" as System.
+
+Open questions: none. Decisions taken while building (prompt 82):
+
+- The staff module check is `GET /learning-bond`, answering `{ on: true }` while the module is on and 404 otherwise; it is what later staff screens build on.
+- The guardian door is `GET /g/learning-bond/{token}`, answering `{ organization, language }`; until the launch (prompt 85) mints dedicated Learning Bond links, any household link resolves. Every refusal (unknown or revoked link, suspended organization, module off) is the same bare 404, and opening a link while the module is off is audited as `AccessDenied` on `LearningBondLink` by "Guardian" for the link's organization.
+- The frontend shows the 404 with the app's `LearningBondUnavailablePage` (as `SiteNotFoundPage` does for the public website), so the `learning-bond` library is never downloaded; the page names no organization because the 404 carries none.
+- Settings › Modules shows every module a module needs while it is off ("Needs Roster and Messages") and only those still off while it is on.
+- The audit search also matches record types written without spaces, so "Learning Bond" finds `LearningBond…` records; the module change entry adds "Learning Bond turned on" or "turned off".
+- The agreement is seeded as version 2 (effective 1 October 2026) with Harbourview's acceptance by Tom; reading and accepting it is prompt 83, which also adds the Read the agreement link beside the switch.
+
+Deferred: webhooks (`/learning-bond/webhooks/**`) arrive with the applications they name (prompt 86); `LearningBondDestructionJob` and its daily schedule arrive with the claims and applications whose status triggers it (prompts 86 and 88); the claims in several statuses of the seed arrive with the claim (prompt 86).
+
+## Built so far
+
+Prompt 82 delivered the module end to end with no screen of its own: `ModuleId.LearningBond` with its name and needs, the agreement gate in `SaveModulesHandler`, `LearningBondEndpoints` and `LearningBondGuardianEndpoints`, `LearningBondGuardianHandler`, the encrypted store above, the audit entries, migration `LearningBondFoundation` (`LearningBondAgreements`, `LearningBondAgreementAcceptances`, `LearningBondIntakes`) and the seed (Harbourview on with the agreement accepted, Northgate off). Frontend: `MODULE_CATALOG` and Settings › Modules, the empty `learning-bond` library with its staff and guardian route tables, `LEARNING_BOND_API` with `HttpLearningBondApi`, the shell's module route and link guard, and the fake API in `e2e/fixtures/fake-learning-bond.ts`. Acceptance tests: `backend/tests/PromiseHub.Api.Tests/LearningBondModuleTests.cs`, `backend/tests/PromiseHub.Api.Tests/LearningBondAuditTests.cs`, `backend/tests/PromiseHub.Infrastructure.Tests/LearningBondCipherTests.cs`, `backend/tests/PromiseHub.Infrastructure.Tests/LearningBondSinStorageTests.cs` and `e2e/tests/learning-bond/module-gate.spec.ts`.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |

@@ -9,4 +9,5 @@ export type ModuleId =
   | 'Reports'
   | 'Learning'
   | 'Mentoring'
-  | 'PublicWebsite';
+  | 'PublicWebsite'
+  | 'LearningBond';

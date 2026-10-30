@@ -430,6 +430,30 @@
         }
       }
     },
+    "learning-bond": {
+      "projectType": "library",
+      "root": "projects/learning-bond",
+      "sourceRoot": "projects/learning-bond/src",
+      "prefix": "ph",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "options": {
+            "project": "projects/learning-bond/ng-package.json",
+            "tsConfig": "projects/learning-bond/tsconfig.lib.json"
+          }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "projects/learning-bond/**/*.ts",
+              "projects/learning-bond/**/*.html"
+            ]
+          }
+        }
+      }
+    },
     "promisehub": {
       "projectType": "application",
       "root": "projects/promisehub",

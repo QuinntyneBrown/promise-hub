@@ -10,6 +10,7 @@ import {
   seedHouseholds,
 } from "./households";
 import { FakeBadges } from "./fake-badges";
+import { FakeLearningBond } from "./fake-learning-bond";
 import { FakeCurriculum } from "./fake-curriculum";
 import { FakeProgression } from "./fake-progression";
 import { FakeJourney } from "./fake-journey";
@@ -2253,6 +2254,12 @@ export class FakeApi {
       /^\/api\/programs\/(?<id>[^/]+)\/youth\/(?<child>[^/]+)\/mentor$/,
       (route, p) => this.removeYouthMentor(route, p["id"]!, p["child"]!),
     ],
+    ["GET", /^\/api\/learning-bond$/, (route) => this.learningBondStatus(route)],
+    [
+      "GET",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)$/,
+      (route, p) => this.learningBondLink(route, p["token"]!),
+    ],
     [
       "GET",
       /^\/api\/website\/(?<slug>[^/]+)$/,
@@ -3177,6 +3184,24 @@ export class FakeApi {
       }
     }
     return this.reject(route);
+  }
+
+  /** GET /learning-bond: signed in, and 404 while Learning Bond is off for the caller's organization (L2-162 criterion 7). */
+  private learningBondStatus(route: Route): Promise<void> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) return this.unauthenticated(route);
+    if (!this.modules.get(m.organizationId)!.includes("LearningBond"))
+      return route.fulfill({ status: 404 });
+    return route.fulfill({ json: { on: true } });
+  }
+
+  /** GET /g/learning-bond/{token}: the organization from the link, then the module gate; every refusal is the same bare 404 (L2-162 criterion 6). */
+  private learningBondLink(route: Route, token: string): Promise<void> {
+    const link = this.learningBond.links.get(token);
+    if (!link || !this.modules.get(link.organizationId)!.includes("LearningBond"))
+      return route.fulfill({ status: 404 });
+    const organization = organizations.find((o) => o.id === link.organizationId)!;
+    return route.fulfill({ json: { organization: organization.name, language: link.language } });
   }
 
   private unauthenticated(route: Route): Promise<void> {
@@ -5005,6 +5030,8 @@ export class FakeApi {
   }
 
   private readonly websiteState = new FakeWebsite();
+  /** Learning Bond links and agreement acceptances (ADR 0076). */
+  private readonly learningBond = new FakeLearningBond();
   private readonly websiteRequestState = new FakeWebsiteRequests(() => NOW);
 
   /** The requests visitors sent to an organization's public website, oldest first (L2-134). */
@@ -6375,6 +6402,18 @@ export class FakeApi {
           module: m.id,
           message: `${m.name} needs ${missing.map(name).join(" and ")}.`,
         });
+    }
+    // Learning Bond turns on only once the current agreement is accepted; once on it stays on (L2-135 criterion 4).
+    if (
+      !errors.length &&
+      on.includes("LearningBond") &&
+      !this.modules.get(organizationId)!.includes("LearningBond") &&
+      !this.learningBond.acceptances.has(organizationId)
+    ) {
+      errors.push({
+        module: "LearningBond",
+        message: "Accept the Learning Bond data-handling agreement first.",
+      });
     }
     if (errors.length) {
       return route.fulfill({ status: 422, json: { errors } });

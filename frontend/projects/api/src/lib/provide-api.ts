@@ -80,6 +80,8 @@ import { HttpMentoringApi } from './mentoring/http-mentoring-api';
 import { MENTORING_API } from './mentoring/mentoring-api.token';
 import { HttpWebsiteApi } from './website/http-website-api';
 import { WEBSITE_API } from './website/website-api.token';
+import { HttpLearningBondApi } from './learning-bond/http-learning-bond-api';
+import { LEARNING_BOND_API } from './learning-bond/learning-bond-api.token';
 import { TODAY_API } from './today/today-api.token';
 import { HttpPickupApi } from './pickups/http-pickup-api';
 import { PICKUP_API } from './pickups/pickup-api.token';
@@ -137,5 +139,6 @@ export function provideApi(): EnvironmentProviders {
     { provide: CURRICULUM_API, useClass: HttpCurriculumApi },
     { provide: MENTORING_API, useClass: HttpMentoringApi },
     { provide: WEBSITE_API, useClass: HttpWebsiteApi },
+    { provide: LEARNING_BOND_API, useClass: HttpLearningBondApi },
   ]);
 }

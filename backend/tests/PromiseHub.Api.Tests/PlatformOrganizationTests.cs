@@ -28,7 +28,8 @@ public sealed class PlatformOrganizationTests : IAsyncLifetime
         Assert.Equal("Standard", harbourview.GetProperty("plan").GetString());
         // Seven children plus Nadia Haddad, whose youth account the seed links (ADR 0043).
         Assert.Equal(8, harbourview.GetProperty("activeChildren").GetInt32());
-        Assert.Equal(10, harbourview.GetProperty("modulesOn").GetInt32());
+        // The whole suite, Learning, Mentoring and Learning Bond (ADR 0076).
+        Assert.Equal(11, harbourview.GetProperty("modulesOn").GetInt32());
         Assert.Equal("Active", harbourview.GetProperty("status").GetString());
         Assert.Equal("SettingUp", northgate.GetProperty("status").GetString());
     }

@@ -28,7 +28,16 @@ export class SettingsModulesPage extends BasePage {
     return this.list.getByRole('switch', { name: `${name} on` });
   }
 
-  /** The dependency caption of a module that is on while a module it needs is off. */
+  /** A module's one-line description. */
+  description(name: string): Locator {
+    return this.item(name).getByTestId('list-meta');
+  }
+
+  private item(name: string): Locator {
+    return this.list.getByRole('listitem').filter({ has: this.page.getByTestId('list-title').getByText(name, { exact: true }) });
+  }
+
+  /** The dependency caption of a module: every module it needs while it is off, and those still off while it is on. */
   needs(name: string): Locator {
     return this.list.getByRole('listitem').filter({ has: this.page.getByTestId('list-title').getByText(name, { exact: true }) }).getByText(/^Needs /);
   }
