@@ -22,7 +22,7 @@ public sealed class LearningBondFamiliesHandler(IPromiseHubDb db, LearningBondCo
         var invitations = await db.LearningBondInvitations.AsNoTracking().Where(i => ids.Contains(i.HouseholdId)).Select(i => new { i.HouseholdId, i.SentAt, i.DeclinedAt })
             .ToListAsync(cancellationToken);
         var calls = await db.LearningBondCallRequests.AsNoTracking().Where(r => ids.Contains(r.HouseholdId)).ToListAsync(cancellationToken);
-        var claims = await db.LearningBondClaims.AsNoTracking().Where(c => ids.Contains(c.HouseholdId)).Select(c => new { c.HouseholdId, c.UpdatedAt, c.PausedReason })
+        var claims = await db.LearningBondClaims.AsNoTracking().Where(c => ids.Contains(c.HouseholdId)).Select(c => new { c.HouseholdId, c.UpdatedAt, c.PausedReason, c.Status })
             .ToListAsync(cancellationToken);
         var rows = covered.Select(c =>
         {
@@ -38,7 +38,7 @@ public sealed class LearningBondFamiliesHandler(IPromiseHubDb db, LearningBondCo
             }
             else if (claims.Where(x => x.HouseholdId == c.HouseholdId).OrderByDescending(x => x.UpdatedAt).FirstOrDefault() is { } claim)
             {
-                state = claim.PausedReason switch
+                state = claim.Status == LearningBondClaimStatus.Submitted ? LearningBondFamilyStatus.Submitted : claim.PausedReason switch
                 {
                     LearningBondPausedReason.NeedsTaxReturn => LearningBondFamilyStatus.PausedNeedsTaxReturn,
                     LearningBondPausedReason.NeedsSin => LearningBondFamilyStatus.PausedNeedsSin,

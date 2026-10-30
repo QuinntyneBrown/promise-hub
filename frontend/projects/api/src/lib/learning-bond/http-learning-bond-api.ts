@@ -11,7 +11,10 @@ import { GuardianPageResult } from '../guardian/guardian-page-result';
 import { toGuardianPage } from '../guardian/to-guardian-page';
 import { GuardianLearningBond } from './guardian-learning-bond';
 import { LearningBondConsentPage } from './learning-bond-consent-page';
+import { LearningBondApplication } from './learning-bond-application';
+import { LearningBondApplicationChange } from './learning-bond-application-change';
 import { LearningBondEstimate } from './learning-bond-estimate';
+import { LearningBondSubmitOutcome } from './learning-bond-submit-outcome';
 import { LearningBondIntake } from './learning-bond-intake';
 import { SaveLearningBondIntake } from './save-learning-bond-intake';
 import { LearningBondFamilies } from './learning-bond-families';
@@ -230,6 +233,81 @@ export class HttpLearningBondApi implements LearningBondApi {
     return toGuardianPage(
       this.http.get<LearningBondEstimate>(this.childUrl(token, childId, '/estimate')),
     );
+  }
+
+  prepareApplication(
+    token: string,
+    childId: string,
+  ): Observable<GuardianPageResult<LearningBondApplication>> {
+    return toGuardianPage(
+      this.http.post<LearningBondApplication>(this.childUrl(token, childId, '/applications'), null),
+    );
+  }
+
+  editApplicationField(
+    token: string,
+    id: string,
+    field: string,
+    value: string,
+  ): Observable<LearningBondApplicationChange> {
+    return this.change(
+      this.http.patch<LearningBondApplication>(
+        `${this.applicationUrl(token, id)}/fields/${encodeURIComponent(field)}`,
+        { value },
+      ),
+    );
+  }
+
+  chooseProvider(
+    token: string,
+    id: string,
+    name: string,
+  ): Observable<LearningBondApplicationChange> {
+    return this.change(
+      this.http.put<LearningBondApplication>(`${this.applicationUrl(token, id)}/provider`, {
+        name,
+      }),
+    );
+  }
+
+  submitApplication(
+    token: string,
+    id: string,
+    reviewVersion: number,
+  ): Observable<LearningBondSubmitOutcome> {
+    return this.http
+      .post<unknown>(`${this.applicationUrl(token, id)}/submit`, { reviewVersion })
+      .pipe(
+        map((): LearningBondSubmitOutcome => ({ status: 'sent' })),
+        catchError((error: HttpErrorResponse) =>
+          of<LearningBondSubmitOutcome>(
+            error.status === 502
+              ? { status: 'not-sent' }
+              : error.status === 409
+                ? { status: error.error?.code === 'stale-review' ? 'stale' : 'incomplete' }
+                : { status: 'error' },
+          ),
+        ),
+      );
+  }
+
+  private change(
+    call: Observable<LearningBondApplication>,
+  ): Observable<LearningBondApplicationChange> {
+    return call.pipe(
+      map((value): LearningBondApplicationChange => ({ status: 'saved', value })),
+      catchError((error: HttpErrorResponse) =>
+        of<LearningBondApplicationChange>(
+          error.status === 422
+            ? { status: 'invalid', errors: error.error?.errors ?? {} }
+            : { status: 'error' },
+        ),
+      ),
+    );
+  }
+
+  private applicationUrl(token: string, id: string): string {
+    return `${this.baseUrl}/g/learning-bond/${encodeURIComponent(token)}/applications/${encodeURIComponent(id)}`;
   }
 
   private childUrl(token: string, childId: string, rest: string): string {

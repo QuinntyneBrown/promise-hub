@@ -5,7 +5,10 @@ import type { LearningBondAgreement } from './learning-bond-agreement';
 import type { GuardianPageResult } from '../guardian/guardian-page-result';
 import type { GuardianLearningBond } from './guardian-learning-bond';
 import type { LearningBondConsentPage } from './learning-bond-consent-page';
+import type { LearningBondApplication } from './learning-bond-application';
+import type { LearningBondApplicationChange } from './learning-bond-application-change';
 import type { LearningBondEstimate } from './learning-bond-estimate';
+import type { LearningBondSubmitOutcome } from './learning-bond-submit-outcome';
 import type { LearningBondIntake } from './learning-bond-intake';
 import type { SaveLearningBondIntake } from './save-learning-bond-intake';
 import type { LearningBondFamilies } from './learning-bond-families';
@@ -52,6 +55,30 @@ export interface LearningBondApi {
   requestRecordFix(token: string, childId: string, note: string): Observable<WriteOutcome>;
   /** GET /g/learning-bond/{token}/children/{childId}/estimate: the rule's amount; conflict until the intake is complete. */
   estimate(token: string, childId: string): Observable<GuardianPageResult<LearningBondEstimate>>;
+  /** POST /g/learning-bond/{token}/children/{childId}/applications: the child's application, prepared once and reviewed (L2-148). */
+  prepareApplication(
+    token: string,
+    childId: string,
+  ): Observable<GuardianPageResult<LearningBondApplication>>;
+  /** PATCH /g/learning-bond/{token}/applications/{id}/fields/{field}: a value for this application only (L2-148 criterion 4). */
+  editApplicationField(
+    token: string,
+    id: string,
+    field: string,
+    value: string,
+  ): Observable<LearningBondApplicationChange>;
+  /** PUT /g/learning-bond/{token}/applications/{id}/provider: another provider that serves the province (L2-148 criterion 1). */
+  chooseProvider(
+    token: string,
+    id: string,
+    name: string,
+  ): Observable<LearningBondApplicationChange>;
+  /** POST /g/learning-bond/{token}/applications/{id}/submit: the only way it is sent, with the review's version (L2-149). */
+  submitApplication(
+    token: string,
+    id: string,
+    reviewVersion: number,
+  ): Observable<LearningBondSubmitOutcome>;
   /** GET /learning-bond/agreement: the current version, the organization's acceptance and the open signer request. */
   agreement(): Observable<LoadResult<LearningBondAgreement>>;
   /** POST /learning-bond/agreement/acceptances: accepts the current version; invalid without the authority box. */

@@ -2303,6 +2303,26 @@ export class FakeApi {
       (route, p) => this.learningBondSaveIntake(route, p["token"]!, p["child"]!),
     ],
     [
+      "POST",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/children\/(?<child>[^/]+)\/applications$/,
+      (route, p) => this.learningBondPrepare(route, p["token"]!, p["child"]!),
+    ],
+    [
+      "PATCH",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/applications\/(?<id>[^/]+)\/fields\/(?<field>[^/]+)$/,
+      (route, p) => this.learningBondEditField(route, p["token"]!, p["id"]!, p["field"]!),
+    ],
+    [
+      "PUT",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/applications\/(?<id>[^/]+)\/provider$/,
+      (route, p) => this.learningBondChooseProvider(route, p["token"]!, p["id"]!),
+    ],
+    [
+      "POST",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/applications\/(?<id>[^/]+)\/submit$/,
+      (route, p) => this.learningBondSubmit(route, p["token"]!, p["id"]!),
+    ],
+    [
       "GET",
       /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/children\/(?<child>[^/]+)\/estimate$/,
       (route, p) => this.learningBondEstimate(route, p["token"]!, p["child"]!),
@@ -3794,6 +3814,128 @@ export class FakeApi {
         needsTaxReturn: intake.taxFiled !== "Yes",
       },
     });
+  }
+
+  /** The platform's no-fee RESP providers and the provinces each serves (RespProviders). */
+  private static readonly RESP_PROVIDERS: [string, string[]][] = [
+    ["Northfield Credit Union", ["ON", "MB", "SK", "AB", "BC"]],
+    ["Maple Trust RESP", ["NL", "PE", "NS", "NB", "QC", "ON", "MB", "SK", "AB", "BC", "YT", "NT"]],
+    ["Prairie Co-op Education Savings", ["MB", "SK", "AB"]],
+  ];
+
+  private learningBondReview(token: string, id: string): object {
+    const a = this.learningBond.applications.get(id)!;
+    const household = this.households.find((h) => h.id === a.householdId)!;
+    const child = household.children.find((c) => c.id === a.childId)!;
+    const primary = [...household.guardians].sort((x, y) => Number(y.isPrimary) - Number(x.isPrimary))[0]!;
+    const serving = FakeApi.RESP_PROVIDERS.filter(([, provinces]) => provinces.includes(a.province)).map(([name]) => name);
+    const provider = a.provider ?? "Northfield Credit Union";
+    return {
+      id,
+      language: this.learningBond.links.get(token)!.language,
+      organization: "Harbourview Youth Collective",
+      explanation: `I filled in ${provider}’s application from what I have. Check each field. Nothing has been sent yet; here’s exactly what goes, and to whom.`,
+      childId: a.childId,
+      firstName: child.firstName,
+      status: a.status,
+      reviewVersion: a.reviewVersion,
+      province: a.province,
+      provider: a.provider,
+      reason: "No fees, no deposit needed, and it handles the Learning Bond",
+      providers: serving,
+      noProvider: serving.length === 0,
+      fields: {
+        beneficiaryName: `${child.firstName} ${child.lastName}`,
+        dateOfBirth: child.dateOfBirth,
+        childSin: this.learningBond.claims.get(a.childId)?.childLast3 ?? null,
+        caregiverName: primary.name,
+        address: a.address,
+        guardianSin: this.learningBond.intakes.get(a.householdId)?.guardianLast3 ?? null,
+        phone: a.phone,
+        email: a.email,
+        language: household.language,
+      },
+    };
+  }
+
+  /** POST /g/learning-bond/{token}/children/{childId}/applications (L2-148): prepared once the estimate is in. */
+  private async learningBondPrepare(route: Route, token: string, childId: string): Promise<void> {
+    const found = await this.learningBondConsentedChild(route, token, childId);
+    if (!found) return;
+    const intake = this.learningBond.intakes.get(found.household.id);
+    if (intake?.taxFiled !== "Yes" || !this.learningBond.claims.get(childId)?.childLast3) return route.fulfill({ status: 409, json: { code: "not-ready" } });
+    let id = [...this.learningBond.applications.entries()].find(([, a]) => a.childId === childId)?.[0];
+    if (!id) {
+      id = `app-${childId}`;
+      const primary = [...found.household.guardians].sort((x, y) => Number(y.isPrimary) - Number(x.isPrimary))[0]!;
+      this.learningBond.applications.set(id, {
+        childId,
+        householdId: found.household.id,
+        province: "ON",
+        provider: "Northfield Credit Union",
+        phone: primary.mobile,
+        email: primary.email,
+        address: null,
+        reviewVersion: 1,
+        status: "Draft",
+      });
+    }
+    return route.fulfill({ json: this.learningBondReview(token, id) });
+  }
+
+  /** PATCH .../applications/{id}/fields/{field} (L2-148 criterion 4): this application only. */
+  private async learningBondEditField(route: Route, token: string, id: string, field: string): Promise<void> {
+    const scope = await this.learningBondGuardianScope(route, token);
+    if (!scope) return;
+    const a = this.learningBond.applications.get(id);
+    if (!a || a.householdId !== scope.household.id) return route.fulfill({ status: 404 });
+    const value = ((route.request().postDataJSON() as { value?: string }).value ?? "").trim();
+    const invalid = (message: string) => route.fulfill({ status: 422, json: { errors: { value: message } } });
+    if (field === "phone") {
+      const digits = value.replace(/\D/g, "");
+      if (digits.length !== 10) return invalid("Enter a 10-digit mobile number.");
+      a.phone = `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+    } else if (field === "email") {
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value)) return invalid("Enter an email like name@example.org.");
+      a.email = value;
+    } else if (field === "address") {
+      if (value.length < 10 || value.length > 200) return invalid("Enter the street address, city and postal code.");
+      a.address = value;
+    } else return invalid("This field can’t be changed here.");
+    a.reviewVersion++;
+    a.status = a.address && a.provider ? "ReadyToSubmit" : "Draft";
+    return route.fulfill({ json: this.learningBondReview(token, id) });
+  }
+
+  /** PUT .../applications/{id}/provider (L2-148 criterion 1): a provider that serves the province. */
+  private async learningBondChooseProvider(route: Route, token: string, id: string): Promise<void> {
+    const scope = await this.learningBondGuardianScope(route, token);
+    if (!scope) return;
+    const a = this.learningBond.applications.get(id);
+    if (!a || a.householdId !== scope.household.id) return route.fulfill({ status: 404 });
+    const { name } = route.request().postDataJSON() as { name?: string };
+    if (!FakeApi.RESP_PROVIDERS.some(([n, provinces]) => n === name && provinces.includes(a.province)))
+      return route.fulfill({ status: 422, json: { errors: { provider: "Choose a provider that serves your province." } } });
+    a.provider = name!;
+    a.reviewVersion++;
+    a.status = a.address ? "ReadyToSubmit" : "Draft";
+    return route.fulfill({ json: this.learningBondReview(token, id) });
+  }
+
+  /** POST .../applications/{id}/submit (L2-149): once, with the review's version; a failed provider sends nothing. */
+  private async learningBondSubmit(route: Route, token: string, id: string): Promise<void> {
+    const scope = await this.learningBondGuardianScope(route, token);
+    if (!scope) return;
+    const a = this.learningBond.applications.get(id);
+    if (!a || a.householdId !== scope.household.id) return route.fulfill({ status: 404 });
+    if (a.status === "Submitted") return route.fulfill({ status: 202, json: { id, status: "Submitted" } });
+    const { reviewVersion } = route.request().postDataJSON() as { reviewVersion?: number };
+    if (reviewVersion !== a.reviewVersion) return route.fulfill({ status: 409, json: { code: "stale-review" } });
+    if (a.status !== "ReadyToSubmit") return route.fulfill({ status: 409, json: { code: "incomplete" } });
+    if (this.learningBond.providerFails) return route.fulfill({ status: 502, json: { code: "not-sent" } });
+    this.learningBond.submissions.push({ applicationId: id, provider: a.provider! });
+    a.status = "Submitted";
+    return route.fulfill({ status: 202, json: { id, status: "Submitted" } });
   }
 
   /** POST /g/learning-bond/{token}/children/{childId}/intake/record-fix (L2-146 criterion 1). */

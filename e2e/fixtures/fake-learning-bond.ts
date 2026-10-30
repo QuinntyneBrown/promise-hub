@@ -334,6 +334,18 @@ export class FakeLearningBond {
     return `I already have ${child}’s name and date of birth from the enrolment. I’ll only ask for what’s missing: numbers go in the boxes, never in a message to me.`;
   }
 
+  /** application id → the application as reviewed (LearningBondApplication); the fake keeps no SIN. */
+  readonly applications = new Map<
+    string,
+    { childId: string; householdId: string; province: string; provider: string | null; phone: string | null; email: string | null; address: string | null; reviewVersion: number; status: string }
+  >();
+
+  /** Applications the fake provider received (IRespProviderChannel): nothing is here before Submit. */
+  readonly submissions: { applicationId: string; provider: string }[] = [];
+
+  /** When true, the provider refuses and nothing is sent. */
+  providerFails = false;
+
   /** Households whose guardian said they aren't interested (LearningBondInvitation.DeclinedAt). */
   readonly declined = new Set<string>();
 

@@ -1,0 +1,22 @@
+<form novalidate (ngSubmit)="use()">
+  <ph-dialog [title]="data.text.chooseTitle">
+    <div class="stack">
+      @if (failed()) {
+        <ph-alert tone="danger" [title]="data.text.failed" />
+      }
+      <ph-radio-group
+        [legend]="data.text.chooseLegend"
+        name="provider"
+        [options]="options()"
+        [error]="error()"
+        [(ngModel)]="provider"
+      />
+    </div>
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">{{ data.text.cancel }}</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">{{
+        data.text.useProvider
+      }}</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

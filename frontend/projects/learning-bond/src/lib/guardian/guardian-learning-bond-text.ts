@@ -70,9 +70,78 @@ export interface GuardianLearningBondText {
   taxReturnText: (name: string) => string;
   toReview: (name: string) => string;
   backToDetails: string;
+  reviewHeading: (name: string) => string;
+  providerTitle: string;
+  recommended: string;
+  chooseAnother: string;
+  chooseTitle: string;
+  chooseLegend: string;
+  useProvider: string;
+  cancel: string;
+  save: string;
+  applicationTitle: string;
+  fieldName: string;
+  fieldBirth: string;
+  fieldChildSin: (name: string) => string;
+  fieldCaregiver: string;
+  fieldAddress: string;
+  fieldGuardianSin: string;
+  fieldPhone: string;
+  fieldEmail: string;
+  fieldLanguage: string;
+  edit: (label: string) => string;
+  editButton: string;
+  editTitle: (label: string) => string;
+  editHint: string;
+  addAddress: string;
+  sendsTo: (name: string, provider: string) => string;
+  submitTo: (provider: string) => string;
+  sentTitle: (name: string, provider: string) => string;
+  sentText: string;
+  notSentTitle: string;
+  notSentText: (provider: string) => string;
+  staleTitle: string;
+  noProviderHeading: string;
+  noProviderText: string;
 }
 
 const en: GuardianLearningBondText = {
+  reviewHeading: (name) => `Check ${name}’s application`,
+  providerTitle: 'RESP provider',
+  recommended: 'Recommended',
+  chooseAnother: 'Choose another',
+  chooseTitle: 'Choose a provider',
+  chooseLegend: 'No-fee RESP providers that administer the Learning Bond',
+  useProvider: 'Use this provider',
+  cancel: 'Cancel',
+  save: 'Save',
+  applicationTitle: 'RESP and Learning Bond application',
+  fieldName: 'Name',
+  fieldBirth: 'Date of birth',
+  fieldChildSin: (name) => `${name}’s SIN`,
+  fieldCaregiver: 'Primary caregiver',
+  fieldAddress: 'Address',
+  fieldGuardianSin: 'Your SIN',
+  fieldPhone: 'Phone',
+  fieldEmail: 'Email',
+  fieldLanguage: 'Language',
+  edit: (label) => `Edit ${label}`,
+  editButton: 'Edit',
+  editTitle: (label) => `Change ${label.toLowerCase()}`,
+  editHint: 'For this application only. Your family’s record isn’t changed.',
+  addAddress: 'Add your address before you submit.',
+  sendsTo: (name, provider) =>
+    `This sends ${name}’s application to ${provider} and the Government of Canada.`,
+  submitTo: (provider) => `Submit to ${provider}`,
+  sentTitle: (name, provider) => `${name}’s application went to ${provider}.`,
+  sentText: 'We’ll text you when it’s received. Nothing else for you to do now.',
+  notSentTitle: 'We couldn’t send it. Nothing was sent. Try again.',
+  notSentText: (provider) =>
+    `${provider} didn’t answer. Your application is saved exactly as you reviewed it.`,
+  staleTitle: 'The application changed since you opened it. Check it again, then submit.',
+  noProviderHeading: 'No provider yet for your province',
+  noProviderText:
+    'None of the no-fee providers we work with serves your province yet. Your claim stays saved.',
   estimateHeading: (name, amount) => `${name} may be owed up to ${amount}.`,
   estimateNote: (name) =>
     `Based on the years since ${name} was born. The Government of Canada confirms the amount from your tax returns.`,
@@ -149,6 +218,42 @@ const en: GuardianLearningBondText = {
 };
 
 const es: GuardianLearningBondText = {
+  reviewHeading: (name) => `Revise la solicitud de ${name}`,
+  providerTitle: 'Proveedor del RESP',
+  recommended: 'Recomendado',
+  chooseAnother: 'Elegir otro',
+  chooseTitle: 'Elija un proveedor',
+  chooseLegend: 'Proveedores de RESP sin comisiones que gestionan el Bono de Estudios',
+  useProvider: 'Usar este proveedor',
+  cancel: 'Cancelar',
+  save: 'Guardar',
+  applicationTitle: 'Solicitud de RESP y Bono de Estudios',
+  fieldName: 'Nombre',
+  fieldBirth: 'Fecha de nacimiento',
+  fieldChildSin: (name) => `SIN de ${name}`,
+  fieldCaregiver: 'Cuidador principal',
+  fieldAddress: 'Dirección',
+  fieldGuardianSin: 'Su SIN',
+  fieldPhone: 'Teléfono',
+  fieldEmail: 'Correo',
+  fieldLanguage: 'Idioma',
+  edit: (label) => `Editar ${label}`,
+  editButton: 'Editar',
+  editTitle: (label) => `Cambiar ${label.toLowerCase()}`,
+  editHint: 'Solo para esta solicitud. El registro de su familia no cambia.',
+  addAddress: 'Agregue su dirección antes de enviar.',
+  sendsTo: (name, provider) =>
+    `Esto envía la solicitud de ${name} a ${provider} y al Gobierno de Canadá.`,
+  submitTo: (provider) => `Enviar a ${provider}`,
+  sentTitle: (name, provider) => `La solicitud de ${name} se envió a ${provider}.`,
+  sentText: 'Le enviaremos un mensaje cuando la reciban. No tiene que hacer nada más por ahora.',
+  notSentTitle: 'No pudimos enviarla. No se envió nada. Inténtelo de nuevo.',
+  notSentText: (provider) =>
+    `${provider} no respondió. Su solicitud está guardada tal como la revisó.`,
+  staleTitle: 'La solicitud cambió desde que la abrió. Revísela otra vez y envíela.',
+  noProviderHeading: 'Todavía no hay proveedor para su provincia',
+  noProviderText:
+    'Ninguno de los proveedores sin comisiones con los que trabajamos atiende su provincia todavía. Su solicitud queda guardada.',
   estimateHeading: (name, amount) => `${name} podría tener derecho a hasta ${amount}.`,
   estimateNote: (name) =>
     `Según los años desde que nació ${name}. El Gobierno de Canadá confirma el monto con sus declaraciones de impuestos.`,
@@ -227,6 +332,44 @@ const es: GuardianLearningBondText = {
 };
 
 const fr: GuardianLearningBondText = {
+  reviewHeading: (name) => `Vérifiez la demande de ${name}`,
+  providerTitle: 'Fournisseur du REEE',
+  recommended: 'Recommandé',
+  chooseAnother: 'En choisir un autre',
+  chooseTitle: 'Choisir un fournisseur',
+  chooseLegend: 'Fournisseurs de REEE sans frais qui gèrent le Bon d’études',
+  useProvider: 'Utiliser ce fournisseur',
+  cancel: 'Annuler',
+  save: 'Enregistrer',
+  applicationTitle: 'Demande de REEE et de Bon d’études',
+  fieldName: 'Nom',
+  fieldBirth: 'Date de naissance',
+  fieldChildSin: (name) => `NAS de ${name}`,
+  fieldCaregiver: 'Principal responsable',
+  fieldAddress: 'Adresse',
+  fieldGuardianSin: 'Votre NAS',
+  fieldPhone: 'Téléphone',
+  fieldEmail: 'Courriel',
+  fieldLanguage: 'Langue',
+  edit: (label) => `Modifier ${label}`,
+  editButton: 'Modifier',
+  editTitle: (label) => `Modifier ${label.toLowerCase()}`,
+  editHint: 'Pour cette demande seulement. Le dossier de votre famille ne change pas.',
+  addAddress: 'Ajoutez votre adresse avant d’envoyer.',
+  sendsTo: (name, provider) =>
+    `Ceci envoie la demande de ${name} à ${provider} et au gouvernement du Canada.`,
+  submitTo: (provider) => `Envoyer à ${provider}`,
+  sentTitle: (name, provider) => `La demande de ${name} a été envoyée à ${provider}.`,
+  sentText:
+    'Nous vous écrirons quand elle sera reçue. Vous n’avez rien d’autre à faire pour l’instant.',
+  notSentTitle: 'Nous n’avons pas pu l’envoyer. Rien n’a été envoyé. Réessayez.',
+  notSentText: (provider) =>
+    `${provider} n’a pas répondu. Votre demande est enregistrée telle que vous l’avez vérifiée.`,
+  staleTitle:
+    'La demande a changé depuis que vous l’avez ouverte. Vérifiez-la de nouveau, puis envoyez-la.',
+  noProviderHeading: 'Pas encore de fournisseur pour votre province',
+  noProviderText:
+    'Aucun des fournisseurs sans frais avec qui nous travaillons ne sert encore votre province. Votre demande reste enregistrée.',
   estimateHeading: (name, amount) => `${name} pourrait recevoir jusqu’à ${amount}.`,
   estimateNote: (name) =>
     `Selon les années depuis la naissance de ${name}. Le gouvernement du Canada confirme le montant à partir de vos déclarations de revenus.`,

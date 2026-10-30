@@ -100,6 +100,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.LearningBond.LearningBondCallRequest> LearningBondCallRequests => Set<Domain.LearningBond.LearningBondCallRequest>();
     public DbSet<Domain.LearningBond.LearningBondConsent> LearningBondConsents => Set<Domain.LearningBond.LearningBondConsent>();
     public DbSet<Domain.LearningBond.LearningBondClaim> LearningBondClaims => Set<Domain.LearningBond.LearningBondClaim>();
+    public DbSet<Domain.LearningBond.LearningBondApplication> LearningBondApplications => Set<Domain.LearningBond.LearningBondApplication>();
     public DbSet<Domain.LearningBond.LearningBondSettings> LearningBondSettings => Set<Domain.LearningBond.LearningBondSettings>();
     public DbSet<DataRequest> DataRequests => Set<DataRequest>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
@@ -403,6 +404,22 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(c => c.ChildSinLast3).HasMaxLength(3);
             e.Property(c => c.StartedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.Property(c => c.UpdatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+        });
+        // A child's application: contact details for this application only and the review version Submit quotes (L2-148, L2-149).
+        modelBuilder.Entity<Domain.LearningBond.LearningBondApplication>(e =>
+        {
+            e.HasIndex(a => new { a.OrganizationId, a.ClaimId });
+            e.HasIndex(a => a.SubmissionKey).IsUnique();
+            e.Property(a => a.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(a => a.Province).HasMaxLength(2);
+            e.Property(a => a.Provider).HasMaxLength(100);
+            e.Property(a => a.Phone).HasMaxLength(20);
+            e.Property(a => a.Email).HasMaxLength(320);
+            e.Property(a => a.Address).HasMaxLength(Domain.LearningBond.LearningBondApplication.MaximumAddress);
+            e.Property(a => a.ProviderReference).HasMaxLength(100);
+            e.Property(a => a.CreatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(a => a.UpdatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(a => a.SubmittedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
         });
         // A guardian's call request: the number and time they gave, until the call is marked done (L2-142).
         modelBuilder.Entity<Domain.LearningBond.LearningBondCallRequest>(e =>

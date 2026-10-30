@@ -21,6 +21,10 @@ public enum GuardianOutcome
     /// <summary>The request names something that isn't this household guardian's to decide (403).</summary>
     Forbidden,
     NotFound,
+    /// <summary>Taken and sent, or already sent before (202).</summary>
+    Accepted,
+    /// <summary>A third party refused or didn't answer; nothing was sent and it can be tried again (502).</summary>
+    NotSent,
     /// <summary>A service the request needs isn't available, such as the Learning Bond key (503); nothing is stored.</summary>
     Unavailable,
     Conflict,

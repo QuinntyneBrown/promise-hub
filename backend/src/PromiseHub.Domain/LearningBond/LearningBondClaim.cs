@@ -54,6 +54,13 @@ public sealed class LearningBondClaim : ITenantOwned
         UpdatedAt = now;
     }
 
+    public void MarkSubmitted(DateTimeOffset now)
+    {
+        Status = LearningBondClaimStatus.Submitted;
+        PausedReason = null;
+        UpdatedAt = now;
+    }
+
     public void Pause(LearningBondPausedReason reason, DateTimeOffset now)
     {
         Status = LearningBondClaimStatus.Paused;

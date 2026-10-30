@@ -33,6 +33,14 @@ public static class AgentFallbackCopy
         _ => $"I worked this out from {child}’s birth year with the Government of Canada’s rules. It isn’t a promise: the Government confirms it from your tax returns.",
     };
 
+    /// <summary>The review (L2-148, L2-149): what was filled in, and that nothing is sent before Submit.</summary>
+    public static string Review(string code, string provider) => code switch
+    {
+        "es" => $"Rellené la solicitud de {provider} con lo que ya tengo. Revise cada dato. Nada se envía hasta que toque Enviar.",
+        "fr" => $"J’ai rempli la demande de {provider} avec ce que j’ai déjà. Vérifiez chaque champ. Rien n’est envoyé avant que vous touchiez Envoyer.",
+        _ => $"I filled in {provider}’s application from what I have. Check each field. Nothing has been sent yet; here’s exactly what goes, and to whom.",
+    };
+
     /// <summary>The consent step (L2-145): why each child needs its own permission.</summary>
     public static string Consent(string code, string organization) => code switch
     {

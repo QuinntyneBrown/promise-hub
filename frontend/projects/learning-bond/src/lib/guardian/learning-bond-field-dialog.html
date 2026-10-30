@@ -1,0 +1,22 @@
+<form novalidate (ngSubmit)="save()">
+  <ph-dialog [title]="data.text.editTitle(data.label)">
+    <div class="stack">
+      @if (failed()) {
+        <ph-alert tone="danger" [title]="data.text.failed" />
+      }
+      <ph-text-field
+        inputId="application-field"
+        [label]="data.label"
+        [type]="inputType()"
+        name="value"
+        [help]="data.text.editHint"
+        [error]="error()"
+        [(ngModel)]="value"
+      />
+    </div>
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">{{ data.text.cancel }}</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">{{ data.text.save }}</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

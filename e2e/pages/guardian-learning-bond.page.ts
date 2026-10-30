@@ -104,6 +104,43 @@ export class GuardianLearningBondPage extends BasePage {
     return this.page.getByTestId('estimate-note');
   }
 
+  async openReview(token: string, childId: string): Promise<void> {
+    await super.open(`/g/learning-bond/${token}/children/${childId}/review`);
+  }
+
+  get provider(): Locator {
+    return this.page.getByTestId('review-provider');
+  }
+
+  /** One field of the application under review, such as "Phone". */
+  reviewField(label: string): Locator {
+    return this.page.getByTestId('review-fields').getByRole('listitem').filter({ hasText: label });
+  }
+
+  async editField(label: string, value: string): Promise<void> {
+    await this.page.getByRole('button', { name: `Edit ${label}` }).click();
+    await this.page.getByRole('dialog').getByLabel(label, { exact: true }).fill(value);
+    await this.page.getByRole('dialog').getByRole('button', { name: 'Save' }).click();
+  }
+
+  async chooseProvider(name: string): Promise<void> {
+    await this.page.getByRole('button', { name: 'Choose another' }).click();
+    await this.page.getByRole('dialog').getByRole('radio', { name }).check();
+    await this.page.getByRole('dialog').getByRole('button', { name: 'Use this provider' }).click();
+  }
+
+  submitButton(provider: string): Locator {
+    return this.page.getByRole('button', { name: `Submit to ${provider}` });
+  }
+
+  get sent(): Locator {
+    return this.page.getByTestId('review-sent');
+  }
+
+  get notSent(): Locator {
+    return this.page.getByTestId('review-not-sent');
+  }
+
   async expectCodeStep(): Promise<void> {
     await expect(this.heading).toHaveText(/^(Check it’s you|Confirme que es usted|Confirmez que c’est vous)$/);
   }
