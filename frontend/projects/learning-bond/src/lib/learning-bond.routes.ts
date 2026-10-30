@@ -6,6 +6,7 @@ import { LearningBondConsentPage } from './guardian/learning-bond-consent-page';
 import { LearningBondIntakePage } from './guardian/learning-bond-intake-page';
 import { LearningBondEstimatePage } from './guardian/learning-bond-estimate-page';
 import { LearningBondReviewPage } from './guardian/learning-bond-review-page';
+import { LearningBondSubmittedPage } from './guardian/learning-bond-submitted-page';
 import { SettingsLearningBondPage } from './hub/settings-learning-bond-page';
 import { LearningBondInvitationPage } from './invitation/learning-bond-invitation-page';
 import { LearningBondLaunchPage } from './launch/learning-bond-launch-page';
@@ -80,5 +81,10 @@ export const guardianRoutes: Routes = [
     path: 'children/:childId/review',
     component: LearningBondReviewPage,
     title: 'Review · Learning Bond · PromiseHub',
+  },
+  {
+    path: 'children/:childId/submitted',
+    component: LearningBondSubmittedPage,
+    title: 'Sent · Learning Bond · PromiseHub',
   },
 ];

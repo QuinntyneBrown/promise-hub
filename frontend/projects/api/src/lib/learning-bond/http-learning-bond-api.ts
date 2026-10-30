@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse, HttpParams, HttpResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, map, of } from 'rxjs';
+import { Observable, catchError, map, of, throwError } from 'rxjs';
 import { API_BASE_URL } from '../api-base-url';
 import { toLoad, toWrite } from '../http-results';
 import { LoadResult } from '../load-result';
@@ -14,6 +14,7 @@ import { LearningBondConsentPage } from './learning-bond-consent-page';
 import { LearningBondApplication } from './learning-bond-application';
 import { LearningBondApplicationChange } from './learning-bond-application-change';
 import { LearningBondEstimate } from './learning-bond-estimate';
+import { LearningBondProgress } from './learning-bond-progress';
 import { LearningBondSubmitOutcome } from './learning-bond-submit-outcome';
 import { LearningBondIntake } from './learning-bond-intake';
 import { SaveLearningBondIntake } from './save-learning-bond-intake';
@@ -289,6 +290,22 @@ export class HttpLearningBondApi implements LearningBondApi {
           ),
         ),
       );
+  }
+
+  progress(
+    token: string,
+    childId: string,
+  ): Observable<GuardianPageResult<LearningBondProgress | null>> {
+    // 409 means not sent yet: the page says so rather than failing.
+    return toGuardianPage(
+      this.http
+        .get<LearningBondProgress>(this.childUrl(token, childId, '/progress'))
+        .pipe(
+          catchError((error: HttpErrorResponse) =>
+            error.status === 409 ? of(null) : throwError(() => error),
+          ),
+        ),
+    );
   }
 
   private change(

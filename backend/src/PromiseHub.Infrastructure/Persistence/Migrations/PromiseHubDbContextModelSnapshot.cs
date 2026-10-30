@@ -2409,6 +2409,12 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.Property<long>("CreatedAt")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("DepositAmount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("DepositedAt")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Email")
                         .HasMaxLength(320)
                         .HasColumnType("TEXT");
@@ -2435,6 +2441,9 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(2)
                         .HasColumnType("TEXT");
+
+                    b.Property<long?>("ReceivedAt")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("ReviewVersion")
                         .HasColumnType("INTEGER");
@@ -2616,6 +2625,53 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.HasIndex("OrganizationId", "HouseholdId", "ChildId");
 
                     b.ToTable("LearningBondConsents");
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondDocument", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ContentType")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FileName")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("RequestedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("SentAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("StorageKey")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("UploadedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("OrganizationId", "ApplicationId");
+
+                    b.ToTable("LearningBondDocuments");
                 });
 
             modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondIntake", b =>
@@ -5099,6 +5155,15 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                 });
 
             modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondConsent", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondDocument", b =>
                 {
                     b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
                         .WithMany()

@@ -46,6 +46,12 @@ public sealed class LearningBondApplication : ITenantOwned
 
     public string? ProviderReference { get; private set; }
     public DateTimeOffset? SubmittedAt { get; private set; }
+    public DateTimeOffset? ReceivedAt { get; private set; }
+    public DateTimeOffset? DepositedAt { get; private set; }
+
+    /// <summary>The dollars the provider reported deposited (L2-150 criteria 2 and 5).</summary>
+    public int? DepositAmount { get; private set; }
+
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
 

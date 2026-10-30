@@ -14,7 +14,6 @@ import {
   PhBadge,
   PhButton,
   PhCard,
-  formatDate,
   PhDialogs,
   PhEmptyState,
   PhGuardianShell,
@@ -24,19 +23,13 @@ import {
   PhStepper,
 } from '@promisehub/components';
 import { guardianLearningBondText } from './guardian-learning-bond-text';
+import { LearningBondApplicationRow } from './learning-bond-application-row';
+import { learningBondApplicationRows } from './learning-bond-application-rows';
 import { LearningBondFieldData, LearningBondFieldDialog } from './learning-bond-field-dialog';
 import {
   LearningBondProviderData,
   LearningBondProviderDialog,
 } from './learning-bond-provider-dialog';
-
-/** One row of the application under review; an editable one has its field. */
-interface ReviewRow {
-  label: string;
-  value: string;
-  field: LearningBondFieldData['field'] | null;
-  error: string | null;
-}
 
 /**
  * The review (learning-bond-review, L2-148, L2-149): the recommended provider and why, with Choose another; every field of the pre-filled
@@ -96,34 +89,11 @@ export class LearningBondReviewPage implements OnInit {
     });
   }
 
-  protected rows(a: LearningBondApplication): ReviewRow[] {
-    const t = this.text();
-    const f = a.fields;
-    const masked = (last3: string | null) => (last3 ? `••• ••• ${last3}` : '—');
-    return [
-      { label: t.fieldName, value: f.beneficiaryName, field: null, error: null },
-      {
-        label: t.fieldBirth,
-        value: f.dateOfBirth ? formatDate(f.dateOfBirth) : '—',
-        field: null,
-        error: null,
-      },
-      { label: t.fieldChildSin(a.firstName), value: masked(f.childSin), field: null, error: null },
-      { label: t.fieldCaregiver, value: f.caregiverName, field: null, error: null },
-      {
-        label: t.fieldAddress,
-        value: f.address ?? '—',
-        field: 'address',
-        error: f.address ? null : t.addAddress,
-      },
-      { label: t.fieldGuardianSin, value: masked(f.guardianSin), field: null, error: null },
-      { label: t.fieldPhone, value: f.phone ?? '—', field: 'phone', error: null },
-      { label: t.fieldEmail, value: f.email ?? '—', field: 'email', error: null },
-      { label: t.fieldLanguage, value: f.language, field: null, error: null },
-    ];
+  protected rows(a: LearningBondApplication): LearningBondApplicationRow[] {
+    return learningBondApplicationRows(this.text(), a.firstName, a.fields);
   }
 
-  protected edit(a: LearningBondApplication, row: ReviewRow): void {
+  protected edit(a: LearningBondApplication, row: LearningBondApplicationRow): void {
     const data: LearningBondFieldData = {
       token: this.token(),
       applicationId: a.id,

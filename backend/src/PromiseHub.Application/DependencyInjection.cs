@@ -265,6 +265,7 @@ public static class DependencyInjection
         services.AddScoped<LearningBond.LearningBondEstimateHandler>();
         services.AddScoped<LearningBond.LearningBondApplicationHandler>();
         services.AddScoped<LearningBond.LearningBondSubmitHandler>();
+        services.AddScoped<LearningBond.LearningBondProgressHandler>();
         services.AddScoped<LearningBond.LearningBondGuardianHandler>();
         services.AddScoped<LearningBond.LearningBondSinDestroyer>();
         return services;

@@ -8,6 +8,7 @@ import type { LearningBondConsentPage } from './learning-bond-consent-page';
 import type { LearningBondApplication } from './learning-bond-application';
 import type { LearningBondApplicationChange } from './learning-bond-application-change';
 import type { LearningBondEstimate } from './learning-bond-estimate';
+import type { LearningBondProgress } from './learning-bond-progress';
 import type { LearningBondSubmitOutcome } from './learning-bond-submit-outcome';
 import type { LearningBondIntake } from './learning-bond-intake';
 import type { SaveLearningBondIntake } from './save-learning-bond-intake';
@@ -79,6 +80,11 @@ export interface LearningBondApi {
     id: string,
     reviewVersion: number,
   ): Observable<LearningBondSubmitOutcome>;
+  /** GET /g/learning-bond/{token}/children/{childId}/progress: the sent application; loaded with null while it isn't sent yet (L2-150). */
+  progress(
+    token: string,
+    childId: string,
+  ): Observable<GuardianPageResult<LearningBondProgress | null>>;
   /** GET /learning-bond/agreement: the current version, the organization's acceptance and the open signer request. */
   agreement(): Observable<LoadResult<LearningBondAgreement>>;
   /** POST /learning-bond/agreement/acceptances: accepts the current version; invalid without the authority box. */

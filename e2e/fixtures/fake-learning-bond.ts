@@ -337,7 +337,19 @@ export class FakeLearningBond {
   /** application id → the application as reviewed (LearningBondApplication); the fake keeps no SIN. */
   readonly applications = new Map<
     string,
-    { childId: string; householdId: string; province: string; provider: string | null; phone: string | null; email: string | null; address: string | null; reviewVersion: number; status: string }
+    {
+      childId: string;
+      householdId: string;
+      province: string;
+      provider: string | null;
+      phone: string | null;
+      email: string | null;
+      address: string | null;
+      reviewVersion: number;
+      status: string;
+      depositAmount?: number | null;
+      document?: { id: string; name: string; fileName: string | null; sentAt: string | null } | null;
+    }
   >();
 
   /** Applications the fake provider received (IRespProviderChannel): nothing is here before Submit. */

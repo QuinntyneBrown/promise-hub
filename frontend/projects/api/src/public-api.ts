@@ -493,6 +493,8 @@ export * from './lib/learning-bond/learning-bond-application';
 export * from './lib/learning-bond/learning-bond-application-fields';
 export * from './lib/learning-bond/learning-bond-application-change';
 export * from './lib/learning-bond/learning-bond-submit-outcome';
+export * from './lib/learning-bond/learning-bond-progress';
+export * from './lib/learning-bond/learning-bond-document-request';
 export * from './lib/learning-bond/save-learning-bond-intake';
 export * from './lib/guardian/to-guardian-page';
 export * from './lib/learning-bond/learning-bond-family-status-labels';

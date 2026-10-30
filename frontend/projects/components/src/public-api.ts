@@ -56,6 +56,7 @@ export * from './lib/file-upload/file-upload';
 export * from './lib/roster-mapping/roster-mapping';
 export * from './lib/roster-mapping/roster-mapping-row';
 export * from './lib/stepper/stepper';
+export * from './lib/step-marker/step-marker';
 export * from './lib/guardian-shell/guardian-shell';
 export * from './lib/site-nav/site-nav';
 export * from './lib/site-nav/site-link';

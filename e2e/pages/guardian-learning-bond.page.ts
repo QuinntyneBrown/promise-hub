@@ -150,6 +150,24 @@ export class GuardianLearningBondPage extends BasePage {
     return this.page.getByTestId('stepper');
   }
 
+  async openSubmitted(token: string, childId: string): Promise<void> {
+    await super.open(`/g/learning-bond/${token}/children/${childId}/submitted`);
+  }
+
+  /** What happens next: the three steps, each with its marker. */
+  get nextSteps(): Locator {
+    return this.page.getByTestId('next-steps').getByRole('listitem');
+  }
+
+  get depositWindow(): Locator {
+    return this.page.getByTestId('deposit-window');
+  }
+
+  /** One field of what was sent, such as "Mateo’s SIN". */
+  sentField(label: string): Locator {
+    return this.page.getByTestId('sent-fields').getByRole('listitem').filter({ hasText: label });
+  }
+
   async expectCodeStep(): Promise<void> {
     await expect(this.heading).toHaveText(/^(Check it’s you|Confirme que es usted|Confirmez que c’est vous)$/);
   }

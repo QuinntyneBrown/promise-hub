@@ -41,6 +41,14 @@ public static class AgentFallbackCopy
         _ => $"I filled in {provider}’s application from what I have. Check each field. Nothing has been sent yet; here’s exactly what goes, and to whom.",
     };
 
+    /// <summary>After Submit (L2-150): what was sent and what comes next.</summary>
+    public static string Submitted(string code, string provider) => code switch
+    {
+        "es" => $"Listo. {provider} tiene la solicitud. Le enviaré un mensaje en cada paso; no tiene que hacer nada más ahora.",
+        "fr" => $"C’est fait. {provider} a la demande. Je vous écrirai à chaque étape; vous n’avez rien d’autre à faire pour l’instant.",
+        _ => $"Done. {provider} has the application. I’ll text you at each step; there’s nothing else for you to do now.",
+    };
+
     /// <summary>The consent step (L2-145): why each child needs its own permission.</summary>
     public static string Consent(string code, string organization) => code switch
     {

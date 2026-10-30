@@ -1,0 +1,16 @@
+:host {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--size-avatar-md);
+  height: var(--size-avatar-md);
+  border-radius: var(--radius-full);
+  background: var(--color-accent-subtle);
+  color: var(--color-fg-accent);
+  font: var(--text-label);
+  line-height: 1;
+}
+:host(.done) {
+  background: var(--color-success-bg);
+  color: var(--color-success-icon);
+}

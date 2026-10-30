@@ -107,9 +107,44 @@ export interface GuardianLearningBondText {
   noProviderHeading: string;
   noProviderText: string;
   canadaLink: string;
+  locale: string;
+  sentHeading: (provider: string, date: string) => string;
+  seeNext: string;
+  nextTitle: string;
+  nextStep1: (provider: string, name: string) => string;
+  nextStep1Meta: string;
+  nextStep2: string;
+  nextStep2Meta: string;
+  nextStep3: (name: string) => string;
+  nextStep3Meta: string;
+  done: string;
+  expected: (from: string, to: string) => string;
+  sentTitle2: string;
+  estimateLine: (amount: string) => string;
+  familyPage: string;
+  notSentHeading: string;
+  backToReview: string;
 }
 
 const en: GuardianLearningBondText = {
+  locale: 'en-GB',
+  sentHeading: (provider, date) => `Sent to ${provider} on ${date}`,
+  seeNext: 'See what happens next',
+  nextTitle: 'What happens next',
+  nextStep1: (provider, name) =>
+    `${provider} opens ${name}’s RESP and confirms it received the application`,
+  nextStep1Meta: 'Usually within 5 business days. We’ll text you.',
+  nextStep2: 'The Government of Canada checks your tax returns and approves the bond',
+  nextStep2Meta: 'Up to 8 weeks.',
+  nextStep3: (name) => `The money is deposited in ${name}’s RESP`,
+  nextStep3Meta: 'We’ll text you the amount.',
+  done: 'Done',
+  expected: (from, to) => `Expected ${from} – ${to}`,
+  sentTitle2: 'What was sent',
+  estimateLine: (amount) => `Estimate up to ${amount}`,
+  familyPage: 'Your family page',
+  notSentHeading: 'This application isn’t sent yet',
+  backToReview: 'Back to the review',
   canadaLink: 'Learning Bond on canada.ca',
   step: (n) => `Step ${n} of 5`,
   speaker: 'Learning Bond',
@@ -225,6 +260,24 @@ const en: GuardianLearningBondText = {
 };
 
 const es: GuardianLearningBondText = {
+  locale: 'es',
+  sentHeading: (provider, date) => `Enviado a ${provider} el ${date}`,
+  seeNext: 'Ver qué pasa ahora',
+  nextTitle: 'Qué pasa ahora',
+  nextStep1: (provider, name) =>
+    `${provider} abre el RESP de ${name} y confirma que recibió la solicitud`,
+  nextStep1Meta: 'Normalmente en 5 días hábiles. Le enviaremos un mensaje.',
+  nextStep2: 'El Gobierno de Canadá revisa sus declaraciones de impuestos y aprueba el bono',
+  nextStep2Meta: 'Hasta 8 semanas.',
+  nextStep3: (name) => `El dinero se deposita en el RESP de ${name}`,
+  nextStep3Meta: 'Le enviaremos el monto.',
+  done: 'Hecho',
+  expected: (from, to) => `Previsto ${from} – ${to}`,
+  sentTitle2: 'Lo que se envió',
+  estimateLine: (amount) => `Estimación hasta ${amount}`,
+  familyPage: 'Su página familiar',
+  notSentHeading: 'Esta solicitud todavía no se envió',
+  backToReview: 'Volver a la revisión',
   canadaLink: 'El Bono de Estudios en canada.ca',
   step: (n) => `Paso ${n} de 5`,
   speaker: 'Bono de Estudios',
@@ -342,6 +395,24 @@ const es: GuardianLearningBondText = {
 };
 
 const fr: GuardianLearningBondText = {
+  locale: 'fr-CA',
+  sentHeading: (provider, date) => `Envoyée à ${provider} le ${date}`,
+  seeNext: 'Voir la suite',
+  nextTitle: 'La suite',
+  nextStep1: (provider, name) =>
+    `${provider} ouvre le REEE de ${name} et confirme avoir reçu la demande`,
+  nextStep1Meta: 'Habituellement en 5 jours ouvrables. Nous vous écrirons.',
+  nextStep2: 'Le gouvernement du Canada vérifie vos déclarations de revenus et approuve le bon',
+  nextStep2Meta: 'Jusqu’à 8 semaines.',
+  nextStep3: (name) => `L’argent est versé dans le REEE de ${name}`,
+  nextStep3Meta: 'Nous vous écrirons le montant.',
+  done: 'Fait',
+  expected: (from, to) => `Prévu du ${from} au ${to}`,
+  sentTitle2: 'Ce qui a été envoyé',
+  estimateLine: (amount) => `Estimation jusqu’à ${amount}`,
+  familyPage: 'Votre page familiale',
+  notSentHeading: 'Cette demande n’est pas encore envoyée',
+  backToReview: 'Retour à la vérification',
   canadaLink: 'Le Bon d’études sur canada.ca',
   step: (n) => `Étape ${n} sur 5`,
   speaker: 'Bon d’études',

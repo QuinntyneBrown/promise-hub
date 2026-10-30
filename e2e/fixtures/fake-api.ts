@@ -2303,6 +2303,11 @@ export class FakeApi {
       (route, p) => this.learningBondSaveIntake(route, p["token"]!, p["child"]!),
     ],
     [
+      "GET",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/children\/(?<child>[^/]+)\/progress$/,
+      (route, p) => this.learningBondProgress(route, p["token"]!, p["child"]!),
+    ],
+    [
       "POST",
       /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/children\/(?<child>[^/]+)\/applications$/,
       (route, p) => this.learningBondPrepare(route, p["token"]!, p["child"]!),
@@ -3951,6 +3956,36 @@ export class FakeApi {
     a.reviewVersion++;
     a.status = a.address ? "ReadyToSubmit" : "Draft";
     return route.fulfill({ json: this.learningBondReview(token, id) });
+  }
+
+  /** GET /g/learning-bond/{token}/children/{childId}/progress (L2-150 criterion 1): sent Thu 5 Nov 2026, the window from Northfield's 71 to 115 days. */
+  private async learningBondProgress(route: Route, token: string, childId: string): Promise<void> {
+    const found = await this.learningBondConsentedChild(route, token, childId);
+    if (!found) return;
+    const id = [...this.learningBond.applications.entries()].find(([, a]) => a.childId === childId && ["Submitted", "Received", "Deposited"].includes(a.status))?.[0];
+    if (!id) return route.fulfill({ status: 409, json: { code: "not-submitted" } });
+    const a = this.learningBond.applications.get(id)!;
+    const review = this.learningBondReview(token, id) as { language: string; organization: string; firstName: string; fields: object };
+    return route.fulfill({
+      json: {
+        language: review.language,
+        organization: review.organization,
+        explanation: `Done. ${a.provider} has the application. I’ll text you at each step; there’s nothing else for you to do now.`,
+        applicationId: id,
+        childId,
+        firstName: review.firstName,
+        provider: a.provider,
+        status: a.status,
+        submittedAt: "2026-11-05T21:12:00Z",
+        estimate: this.learningBond.estimate(Number(found.child.dateOfBirth!.slice(0, 4))),
+        depositAmount: a.depositAmount ?? null,
+        stepsDone: a.status === "Received" ? 1 : a.status === "Deposited" ? 3 : 0,
+        expectedFrom: "2027-01-15",
+        expectedTo: "2027-02-28",
+        fields: review.fields,
+        document: a.document ?? null,
+      },
+    });
   }
 
   /** POST .../applications/{id}/submit (L2-149): once, with the review's version; a failed provider sends nothing. */
