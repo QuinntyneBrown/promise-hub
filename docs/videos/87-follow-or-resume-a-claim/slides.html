@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 87 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="87" data-video-title="Follow or resume a claim" data-parts="Introduction|What was sent|The webhook|A document|A pause|Picking it up|Tax and closing|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 87</div>
+  <h1>Follow or resume a claim</h1>
+  <p class="lead">From Submit to the deposit, and back from a pause to where it stopped</p>
+</section>
+
+<section id="journey" data-part="0" data-cue="This video follows what comes next.">
+  <h2>After Submit</h2>
+  <ul>
+    <li>The provider reports back; Carmen is texted</li>
+    <li>A document goes only on Send</li>
+    <li>A paused claim picks up where it stopped</li>
+  </ul>
+  <p class="muted small">L2-150 · L2-151 · ADR 0081</p>
+</section>
+
+<section id="sent-clip" data-part="1" data-cue="Right after Submit, Carmen sees where the application went" data-clip="clips/sent-phone.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>What was sent</h3><p>Three steps, the window, the fields.</p></div>
+</section>
+
+<section id="received" data-part="1" data-cue="A few days later Northfield reports">
+  <div class="cols">
+    <img class="shot" alt="What happens next with the deposit window" src="shots/phone-next-steps.png">
+    <img class="shot" alt="Northfield Credit Union received Mateo’s application" src="shots/phone-received.png">
+  </div>
+</section>
+
+<section id="webhook" data-part="2" data-cue="The provider calls a webhook.">
+  <h2>Signed, applied once, texted</h2>
+  <ul>
+    <li><code>POST /learning-bond/webhooks/providers/{provider}</code></li>
+    <li><code>X-PromiseHub-Signature: sha256=…</code> under the provider's secret</li>
+    <li>Found by the provider's reference; module on, or 404</li>
+    <li>Each event id once; texts through Messages</li>
+  </ul>
+  <p class="muted small">LearningBondWebhookHandler · LearningBondProviderEvent · LearningBondGuardianTexter</p>
+</section>
+
+<section id="document-clip" data-part="3" data-cue="Northfield asks for proof of address." data-clip="clips/document-phone.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>A document</h3><p>Chosen, kept, sent on Send; then the deposit.</p></div>
+</section>
+
+<section id="deposit" data-part="3" data-cue="Weeks later the deposit lands">
+  <div class="cols">
+    <img class="shot" alt="Proof of address went to Northfield Credit Union." src="shots/phone-document-sent.png">
+    <img class="shot" alt="$1,400 was deposited in Mateo’s RESP" src="shots/phone-deposited.png">
+  </div>
+</section>
+
+<section id="paused-clip" data-part="4" data-cue="Sofía doesn't have a social insurance number yet" data-clip="clips/paused-phone.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>A pause</h3><p>How to get a SIN, a reminder, and back.</p></div>
+</section>
+
+<section id="resumed" data-part="5" data-cue="Giving Sofía's number ends the pause">
+  <div class="cols">
+    <img class="shot" alt="Pick up where you left off beside Sofía" src="shots/phone-reopened.png">
+    <img class="shot" alt="Sofía’s details with Carmen’s SIN kept" src="shots/phone-resumed.png">
+  </div>
+</section>
+
+<section id="states-clip" data-part="6" data-cue="On a laptop the same pages read in one wide column." data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>No tax return</h3><p>What to do now and the free clinic finder.</p></div>
+</section>
+
+<section id="testing" data-part="7" data-cue="The API tests cover">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>LearningBondProgressTests</code>, <code>WebhookTests</code>, <code>DocumentTests</code></li>
+    <li><code>LearningBondPauseTests</code>: reminders, resume, the 180-day close</li>
+    <li>Unsigned, unknown, another provider's, another household, the module off</li>
+    <li><code>submitted</code> and <code>paused</code> specs · laptop and phone · axe</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="8" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Where it went, and when to expect the money</li><li>Provider events: signed, once, texted</li><li>A document leaves only on Send</li><li>A pause helps, reminds twice, picks up where it stopped</li></ul>
+  <p class="muted">Next: withdraw Learning Bond consent</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
