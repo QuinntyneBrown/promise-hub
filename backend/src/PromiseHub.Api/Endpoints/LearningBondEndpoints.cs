@@ -41,6 +41,13 @@ public static class LearningBondEndpoints
                 _ => Results.NotFound(),
             });
 
+        // The dashboard and the funder export (L2-141, L2-143): ViewReports only, behind the module gate.
+        var reports = learningBond.MapGroup(string.Empty).RequirePermission(Permission.ViewReports);
+        reports.MapGet("/dashboard", async (Guid? program, string? period, LearningBondDashboardHandler handler, CancellationToken ct) =>
+            Results.Ok(await handler.GetAsync(program, period, ct)));
+        reports.MapPost("/exports", async (LearningBondExportRequest request, LearningBondDashboardHandler handler, CancellationToken ct) =>
+            Results.Json(await handler.ExportAsync(request, ct), statusCode: StatusCodes.Status201Created));
+
         // Settings › Learning Bond (L2-136 criterion 9, L2-138, L2-139): admins only, behind the module gate.
         var settings = learningBond.MapGroup(string.Empty).RequirePermission(Permission.ManageSettings);
         settings.MapGet("/settings", (LearningBondSettingsHandler handler, CancellationToken ct) => handler.GetAsync(ct));

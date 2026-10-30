@@ -1,0 +1,45 @@
+<form novalidate (ngSubmit)="export()">
+  <ph-dialog
+    title="Export for funders"
+    description="One row per covered program and a total: counts and dollars, never a family. Counts under 5 read “<5” and their dollars are blank."
+  >
+    @if (ready(); as file) {
+      <div data-testid="export-ready">
+        <ph-alert
+          tone="success"
+          [title]="file.fileName"
+          [text]="file.rows + ' rows. The link works for 7 days.'"
+        >
+          <ph-button variant="primary" size="sm" icon="download" [href]="api.exportUrl(file.id)"
+            >Download</ph-button
+          >
+        </ph-alert>
+      </div>
+    } @else {
+      @if (failed()) {
+        <ph-alert
+          tone="danger"
+          title="That didn’t go through"
+          text="Nothing was created. Try again."
+        />
+      }
+      <ph-select
+        inputId="export-period"
+        label="Period"
+        name="period"
+        [options]="periods"
+        [(ngModel)]="period"
+      />
+    }
+    <ng-container ngProjectAs="[phDialogFooter]">
+      @if (ready()) {
+        <ph-button variant="primary" (click)="ref.close(true)">Done</ph-button>
+      } @else {
+        <ph-button (click)="ref.close()">Cancel</ph-button>
+        <ph-button variant="primary" type="submit" icon="download" [busy]="busy()"
+          >Export</ph-button
+        >
+      }
+    </ng-container>
+  </ph-dialog>
+</form>

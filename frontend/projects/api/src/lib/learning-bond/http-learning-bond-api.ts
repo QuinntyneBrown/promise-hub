@@ -16,6 +16,8 @@ import { LearningBondApplicationChange } from './learning-bond-application-chang
 import { LearningBondEstimate } from './learning-bond-estimate';
 import { LearningBondProgress } from './learning-bond-progress';
 import { LearningBondPaused } from './learning-bond-paused';
+import { LearningBondDashboard } from './learning-bond-dashboard';
+import { LearningBondExportCreated } from './learning-bond-export-created';
 import { LearningBondReminders } from './learning-bond-reminders';
 import { LearningBondTotal } from './learning-bond-total';
 import { Benefits } from './benefits';
@@ -304,6 +306,24 @@ export class HttpLearningBondApi implements LearningBondApi {
           ),
         ),
     );
+  }
+
+  dashboard(program: string | null, period: string): Observable<LoadResult<LearningBondDashboard>> {
+    let params = new HttpParams().set('period', period);
+    if (program) params = params.set('program', program);
+    return toLoad(
+      this.http.get<LearningBondDashboard>(`${this.baseUrl}/learning-bond/dashboard`, { params }),
+    );
+  }
+
+  exportForFunders(period: string): Observable<LearningBondExportCreated | null> {
+    return this.http
+      .post<LearningBondExportCreated>(`${this.baseUrl}/learning-bond/exports`, { period })
+      .pipe(catchError(() => of(null)));
+  }
+
+  exportUrl(id: string): string {
+    return `${this.baseUrl}/reports/exports/${encodeURIComponent(id)}`;
   }
 
   reminders(token: string): Observable<GuardianPageResult<LearningBondReminders>> {

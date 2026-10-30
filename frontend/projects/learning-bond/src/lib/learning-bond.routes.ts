@@ -14,6 +14,7 @@ import { LearningBondBenefitsPage } from './guardian/learning-bond-benefits-page
 import { LearningBondBenefitReviewPage } from './guardian/learning-bond-benefit-review-page';
 import { LearningBondRemindersPage } from './guardian/learning-bond-reminders-page';
 import { LearningBondTotalPage } from './guardian/learning-bond-total-page';
+import { LearningBondDashboardPage } from './dashboard/learning-bond-dashboard-page';
 import { SettingsLearningBondPage } from './hub/settings-learning-bond-page';
 import { LearningBondInvitationPage } from './invitation/learning-bond-invitation-page';
 import { LearningBondLaunchPage } from './launch/learning-bond-launch-page';
@@ -21,6 +22,12 @@ import { LearningBondMissingContactsPage } from './launch/learning-bond-missing-
 
 /** Staff pages under /learning-bond, loaded only while Learning Bond is on (L2-162 criterion 3). */
 export const routes: Routes = [
+  {
+    path: '',
+    pathMatch: 'full',
+    component: LearningBondDashboardPage,
+    title: 'Learning Bond · PromiseHub',
+  },
   {
     path: 'families',
     component: LearningBondFamiliesPage,

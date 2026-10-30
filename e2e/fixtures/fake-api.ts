@@ -2274,6 +2274,8 @@ export class FakeApi {
     ["GET", /^\/api\/learning-bond\/overview$/, (route) => this.learningBondOverview(route)],
     ["GET", /^\/api\/learning-bond\/launch$/, (route) => this.learningBondLaunch(route)],
     ["GET", /^\/api\/learning-bond\/households$/, (route) => this.learningBondFamilies(route)],
+    ["GET", /^\/api\/learning-bond\/dashboard$/, (route) => this.learningBondDashboard(route)],
+    ["POST", /^\/api\/learning-bond\/exports$/, (route) => this.learningBondExport(route)],
     ["GET", /^\/api\/learning-bond\/households\/(?<id>[^/]+)$/, (route, p) => this.learningBondHousehold(route, p["id"]!)],
     ["POST", /^\/api\/learning-bond\/households\/(?<id>[^/]+)\/invitations$/, (route, p) => this.learningBondInvite(route, p["id"]!)],
     ["POST", /^\/api\/learning-bond\/households\/(?<id>[^/]+)\/call-outcome$/, (route, p) => this.learningBondCallOutcome(route, p["id"]!)],
@@ -3537,6 +3539,99 @@ export class FakeApi {
   }
 
   /** GET /learning-bond/households (L2-142 criteria 1 and 5): each covered household's status and last change, by status and program. */
+  /** ViewReports, behind the module gate (L2-141 criterion 4). */
+  private async learningBondReports(route: Route): Promise<Membership | null> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) {
+      await this.unauthenticated(route);
+      return null;
+    }
+    if (!this.modules.get(m.organizationId)!.includes("LearningBond")) {
+      await route.fulfill({ status: 404 });
+      return null;
+    }
+    if (!["Admin", "ProgramDirector", "SiteLead"].includes(m.role)) {
+      await route.fulfill({ status: 403, json: { code: "forbidden" } });
+      return null;
+    }
+    return m;
+  }
+
+  /** The raw figures of the covered programs, summed (LearningBondFigures). */
+  private learningBondFigureSet(names: string[]) {
+    const zero = { invited: 0, started: 0, completed: 0, children: 0, estLb: 0, estBen: 0, confLb: 0, confBen: 0 };
+    return names.map((n) => this.learningBond.figures.get(n) ?? zero).reduce(
+      (a, b) => ({
+        invited: a.invited + b.invited,
+        started: a.started + b.started,
+        completed: a.completed + b.completed,
+        children: a.children + b.children,
+        estLb: a.estLb + b.estLb,
+        estBen: a.estBen + b.estBen,
+        confLb: a.confLb + b.confLb,
+        confBen: a.confBen + b.confBen,
+      }),
+      zero,
+    );
+  }
+
+  private static figuresDto(program: string | null, f: { invited: number; started: number; completed: number; children: number; estLb: number; estBen: number; confLb: number; confBen: number }) {
+    const count = (n: number) => (n > 0 && n < 5 ? "FewerThan5" : String(n));
+    const suppressed = (f.started > 0 && f.started < 5) || (f.completed > 0 && f.completed < 5);
+    return {
+      program,
+      invited: count(f.invited),
+      started: count(f.started),
+      completed: count(f.completed),
+      children: count(f.children),
+      estimated: suppressed ? null : { total: f.estLb + f.estBen, learningBond: f.estLb, benefits: f.estBen },
+      confirmed: suppressed ? null : { total: f.confLb + f.confBen, learningBond: f.confLb, benefits: f.confBen },
+    };
+  }
+
+  /** GET /learning-bond/dashboard (L2-141). */
+  private async learningBondDashboard(route: Route): Promise<void> {
+    const m = await this.learningBondReports(route);
+    if (!m) return;
+    const url = new URL(route.request().url());
+    const programs = this.learningBondPrograms(m.organizationId).map((p) => ({ id: p.id, name: p.name, households: p.households }));
+    const chosen = programs.find((p) => p.id === url.searchParams.get("program"));
+    const names = chosen ? [chosen.name] : programs.map((p) => p.name);
+    const all = this.learningBondFigureSet(names);
+    return route.fulfill({
+      json: {
+        programs,
+        period: url.searchParams.get("period") ?? "all",
+        program: chosen?.id ?? null,
+        all: FakeApi.figuresDto(null, all),
+        rows: names.map((n) => FakeApi.figuresDto(n, this.learningBondFigureSet([n]))),
+        empty: all.invited === 0 && all.started === 0 && all.completed === 0,
+      },
+    });
+  }
+
+  /** POST /learning-bond/exports (L2-143): the figures per covered program and a total, suppressed. */
+  private async learningBondExport(route: Route): Promise<void> {
+    const m = await this.learningBondReports(route);
+    if (!m) return;
+    const names = this.learningBondPrograms(m.organizationId).map((p) => p.name);
+    const row = (label: string, f: ReturnType<FakeApi["learningBondFigureSet"]>) => {
+      const c = (n: number) => (n > 0 && n < 5 ? "<5" : String(n));
+      const s = (f.started > 0 && f.started < 5) || (f.completed > 0 && f.completed < 5);
+      const d = (n: number) => (s ? "" : String(n));
+      return [label, c(f.invited), c(f.started), c(f.completed), c(f.children), d(f.estLb), d(f.estBen), d(f.confLb), d(f.confBen), s || !f.completed ? "" : String(Math.floor((f.confLb + f.confBen) / f.completed))].join(",");
+    };
+    const csv = [
+      "Program,Households invited,Started,Completed,Children with a Learning Bond application,Estimated Learning Bond,Estimated benefits,Confirmed Learning Bond,Confirmed benefits,Confirmed per completed household",
+      ...names.map((n) => row(`"${n}"`, this.learningBondFigureSet([n]))),
+      row("Total", this.learningBondFigureSet(names)),
+    ].join("\n");
+    const id = `export-lb-${this.reportExports.size + 1}`;
+    const fileName = "harbourview-youth-collective-learning-bond-all-2026-11-05.csv";
+    this.reportExports.set(id, { organizationId: m.organizationId, fileName, csv });
+    return route.fulfill({ status: 201, json: { id, fileName, rows: names.length + 1, expiresAt: "2026-11-12T21:12:00Z" } });
+  }
+
   private async learningBondFamilies(route: Route): Promise<void> {
     const m = await this.learningBondStaff(route);
     if (!m) return;
