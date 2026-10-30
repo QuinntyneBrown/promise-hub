@@ -25,5 +25,9 @@
   "CDN": "C D N",
   "UTC": "U T C",
   "ID": "I D",
-  "IDs": "I Ds"
+  "IDs": "I Ds",
+  "SIN": "S I N",
+  "SINs": "S I Ns",
+  "AES": "A E S",
+  "GCM": "G C M"
 }

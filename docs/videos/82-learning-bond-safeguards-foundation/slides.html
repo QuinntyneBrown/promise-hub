@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 82 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="82" data-video-title="Learning Bond safeguards" data-parts="Introduction|Twelfth module|Refused twice|Turning it on|Unreachable|Guardian link|Encrypted|Destroyed and audited|Phone and states|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 82</div>
+  <h1>Learning Bond safeguards</h1>
+  <p class="lead">The module gate, the encrypted store and the audit, built before the first Learning Bond screen</p>
+</section>
+
+<section id="three" data-part="0" data-cue="Before a single family sees a Learning Bond screen">
+  <h2>Three foundations first</h2>
+  <ul>
+    <li>Off everywhere until an organization chooses it, behind an accepted agreement</li>
+    <li>A social insurance number never exists in clear text</li>
+    <li>Every action in the organization’s audit log, never the values</li>
+  </ul>
+  <p class="muted small">ADR 0076 · L2-135 · L2-159 · L2-161 · L2-162</p>
+</section>
+
+<section id="module" data-part="1" data-cue="Learning Bond is the twelfth module of PromiseHub.">
+  <h2>The twelfth module needs Roster and Messages</h2>
+  <img class="shot" alt="Settings › Modules at Northgate with Learning Bond off and Needs Roster and Messages" src="shots/desktop-northgate-off.png">
+  <p class="muted small">ModuleId.LearningBond · ModuleCatalog.Needs → [Roster, Messages] · not in any preset</p>
+</section>
+
+<section id="refused-clip" data-part="2" data-cue="Grace Mensah is the admin at Northgate" data-clip="clips/refused-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Refused twice</h3><p>Grace at Northgate: Messages, then the agreement.</p></div>
+</section>
+
+<section id="refused" data-part="2" data-cue="Refused a second time">
+  <div class="cols">
+    <img class="shot" alt="Learning Bond needs Messages beside the switch" src="shots/desktop-needs-messages.png">
+    <img class="shot" alt="Accept the Learning Bond data-handling agreement first" src="shots/desktop-agreement.png">
+  </div>
+  <p class="muted small">PUT /settings/modules → 422 · ModuleRules · LearningBondAgreementGate in SaveModulesHandler</p>
+</section>
+
+<section id="turn-on-clip" data-part="3" data-cue="At Harbourview Youth Collective, Tom Nguyen accepted version two" data-clip="clips/turn-on-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Turning it on</h3><p>Tom at Harbourview, agreement version 2 accepted.</p></div>
+</section>
+
+<section id="turn-on" data-part="3" data-cue="Once it is on, a new agreement version does not switch it off.">
+  <h2>On, off and on again</h2>
+  <img class="shot" alt="Modules saved at Harbourview" src="shots/desktop-saved.png">
+  <p class="muted small">Off hides, never deletes · back on needs no new acceptance · a new version does not switch it off</p>
+</section>
+
+<section id="redirect-clip" data-part="4" data-cue="While Learning Bond is off, every Learning Bond endpoint answers not found" data-clip="clips/redirect-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Off means unreachable</h3><p>/learning-bond sends Grace to Today.</p></div>
+</section>
+
+<section id="redirect" data-part="4" data-cue="The Learning Bond library is never even downloaded">
+  <h2>Not served, not rendered, not downloaded</h2>
+  <ul>
+    <li><code>LearningBondEndpoints</code>: <code>/learning-bond</code> with <code>RequireModule(ModuleId.LearningBond)</code> → 404</li>
+    <li><code>moduleRoute('learning-bond', 'LearningBond', …)</code>: redirect to Today</li>
+    <li><code>frontend/projects/learning-bond/</code> loaded only while the session has it on</li>
+  </ul>
+  <p class="muted small">L2-005 · L2-162 criteria 3 and 7</p>
+</section>
+
+<section id="guardian-clip" data-part="5" data-cue="Guardians have no account, so the organization comes from the link itself." data-clip="clips/guardian-phone.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>A guardian’s link</h3><p>Carmen opens a link while the module is off.</p></div>
+</section>
+
+<section id="guardian" data-part="5" data-cue="An unknown link gets exactly the same page">
+  <div class="cols">
+    <img class="shot" alt="Learning Bond isn't available on a phone" src="shots/phone-unavailable.png">
+    <ul>
+      <li><code>GET /g/learning-bond/{token}</code>: organization from the link, then the module</li>
+      <li>Off, suspended or unknown: the same bare 404</li>
+      <li><code>LearningBondUnavailablePage</code> names no organization</li>
+      <li>Audited as AccessDenied by “Guardian”</li>
+    </ul>
+  </div>
+</section>
+
+<section id="encrypted" data-part="6" data-cue="A SIN is stored as two things only">
+  <h2>Encrypted at the field</h2>
+  <ul>
+    <li><code>EncryptedSin</code>: <code>Ciphertext</code> and <code>Last3</code>; <code>Masked</code> is its only string</li>
+    <li><code>LearningBondCipher</code>: AES-256-GCM under <code>LearningBond:Key</code>, outside the database</li>
+    <li>Fresh nonce per value; altered or foreign ciphertext refused</li>
+    <li><code>SocialInsuranceNumber.Normalize</code>: nine digits and a check digit, never echoed</li>
+    <li>No key: unavailable, nothing stored</li>
+  </ul>
+  <p class="muted small">L2-159 criteria 1, 2, 6, 7 and 8</p>
+</section>
+
+<section id="mask" data-part="6" data-cue="The only string a SIN ever turns into is its mask">
+  <h2>*** *** 286</h2>
+  <p class="lead">The last three digits are all anyone ever sees</p>
+  <p class="muted small">LearningBondIntakes: GuardianSinCiphertext · GuardianSinLast3</p>
+</section>
+
+<section id="destroyed" data-part="7" data-cue="When a SIN is no longer needed">
+  <h2>Destroyed, and audited without the value</h2>
+  <ul>
+    <li><code>LearningBondSinDestroyer</code>: ciphertext gone, last three digits kept</li>
+    <li>Audited by System: “Learning Bond: guardian SIN destroyed; last three digits kept”</li>
+    <li>Module changes say “Learning Bond turned on” or “turned off”</li>
+    <li>Searching for Learning Bond finds them, in its own organization only</li>
+  </ul>
+  <p class="muted small">L2-159 criterion 4 · L2-161 criteria 3 and 4</p>
+</section>
+
+<section id="phone-clip" data-part="8" data-cue="Settings, Modules works on a phone" data-clip="clips/modules-phone.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>On a phone</h3><p>Each module with what it needs.</p></div>
+</section>
+
+<section id="states" data-part="8" data-cue="A site lead who opens it is told that admins configure modules.">
+  <div class="cols">
+    <img class="shot" alt="Settings › Modules on a phone" src="shots/phone-modules.png">
+    <div>
+      <img class="shot" alt="We couldn't load modules" src="shots/desktop-error.png">
+      <img class="shot" alt="Admins configure modules" src="shots/desktop-forbidden.png">
+    </div>
+  </div>
+</section>
+
+<section id="testing" data-part="9" data-cue="LearningBondModuleTests covers the dependencies">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>LearningBondModuleTests</code>: needs, agreement, staff and guardian doors, a second organization, audit search</li>
+    <li><code>LearningBondAuditTests</code>: a known test SIN in no log line; entries per organization</li>
+    <li><code>LearningBondCipherTests</code>, <code>LearningBondSinStorageTests</code>: round trip, mask, tampering, no key, destruction</li>
+    <li><code>e2e/tests/learning-bond/module-gate.spec.ts</code>: laptop and phone, axe, fake API</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="10" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Roster, Messages and an accepted agreement before it turns on</li><li>Off means 404 everywhere; the library never loads</li><li>A SIN is ciphertext and three digits; destroying keeps the three</li><li>Every action audited, never the value</li></ul>
+  <p class="muted">Next: Tom accepts the agreement and chooses coverage</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
