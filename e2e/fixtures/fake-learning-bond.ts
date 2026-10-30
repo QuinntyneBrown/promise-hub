@@ -343,6 +343,9 @@ export class FakeLearningBond {
   /** Applications the fake provider received (IRespProviderChannel): nothing is here before Submit. */
   readonly submissions: { applicationId: string; provider: string }[] = [];
 
+  /** The province a new application is prepared for, from the organization's time zone (RespProviders.ProvinceOf). */
+  province = 'ON';
+
   /** When true, the provider refuses and nothing is sent. */
   providerFails = false;
 

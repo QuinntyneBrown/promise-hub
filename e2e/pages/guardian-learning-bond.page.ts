@@ -137,6 +137,10 @@ export class GuardianLearningBondPage extends BasePage {
     return this.page.getByTestId('review-sent');
   }
 
+  get canadaLink(): Locator {
+    return this.page.getByRole('link', { name: /canada\.ca/ });
+  }
+
   get notSent(): Locator {
     return this.page.getByTestId('review-not-sent');
   }

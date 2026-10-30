@@ -49,6 +49,17 @@ test.describe('A guardian reviews and submits the Learning Bond application', ()
     await expect(learningBond.submitButton('Maple Trust RESP')).toBeVisible();
   });
 
+  // L2-148 criterion 2 (learning-bond-review/no-provider).
+  test('Given no provider serves the province, then the page says so and links to the Government of Canada', async ({ page, api }) => {
+    api.learningBond.province = 'NU';
+    const learningBond = new GuardianLearningBondPage(page);
+    await learningBond.openReview('tok-lb-rivera', 'c-mateo');
+
+    await expect(learningBond.heading).toHaveText('No provider yet for your province');
+    await expect(learningBond.canadaLink).toHaveAttribute('href', 'https://www.canada.ca/en/services/benefits/education/education-savings/learning-bond.html');
+    await learningBond.expectAccessible();
+  });
+
   // L2-149 criterion 5 (learning-bond-review/failed).
   test('Given the provider doesn’t answer, then nothing was sent and Carmen can try again', async ({ page, api }) => {
     const learningBond = new GuardianLearningBondPage(page);

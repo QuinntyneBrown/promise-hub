@@ -87,6 +87,20 @@ public sealed class LearningBondApplicationTests : IAsyncLifetime
         Assert.Equal("Started", Scalar("SELECT Status FROM LearningBondClaims"));
     }
 
+    // L2-148, L2-162: an application belongs to its household; another household's link can't change or submit it.
+    [Fact]
+    public async Task Another_households_link_cannot_change_or_submit_the_application()
+    {
+        var carmen = await Estimated();
+        var id = await Prepare(carmen);
+        var linh = await new LearningBondGuardianClient(_factory).OpenAsync("Tran", "905-555-0163");
+
+        Assert.Equal(HttpStatusCode.NotFound, (await linh.Http.PatchAsJsonAsync(linh.Path($"/applications/{id}/fields/phone"), new { value = "905 555 0177" })).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await linh.Http.PostAsJsonAsync(linh.Path($"/applications/{id}/submit"), new { reviewVersion = 1 })).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await linh.Http.PostAsync(linh.Path($"/children/{Mateo}/applications"), null)).StatusCode);
+        Assert.Equal("905-555-0142", Scalar("SELECT Phone FROM LearningBondApplications"));
+    }
+
     // L2-148: no application before the estimate.
     [Fact]
     public async Task Before_the_estimate_an_application_answers_409()

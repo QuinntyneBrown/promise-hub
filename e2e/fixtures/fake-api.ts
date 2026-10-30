@@ -3902,8 +3902,8 @@ export class FakeApi {
       this.learningBond.applications.set(id, {
         childId,
         householdId: found.household.id,
-        province: "ON",
-        provider: "Northfield Credit Union",
+        province: this.learningBond.province,
+        provider: FakeApi.RESP_PROVIDERS.find(([, provinces]) => provinces.includes(this.learningBond.province))?.[0] ?? null,
         phone: primary.mobile,
         email: primary.email,
         address: null,

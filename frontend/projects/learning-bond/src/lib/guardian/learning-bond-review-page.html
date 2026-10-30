@@ -13,6 +13,14 @@
           @if (a.noProvider) {
             <h1>{{ t.noProviderHeading }}</h1>
             <ph-agent-message [speaker]="t.speaker" [text]="t.noProviderText" />
+            <div>
+              <ph-button
+                icon="globe"
+                href="https://www.canada.ca/en/services/benefits/education/education-savings/learning-bond.html"
+                target="_blank"
+                >{{ t.canadaLink }}</ph-button
+              >
+            </div>
           } @else if (outcome() === 'sent') {
             <h1>{{ t.reviewHeading(a.firstName) }}</h1>
             <div data-testid="review-sent">

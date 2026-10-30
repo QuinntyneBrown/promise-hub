@@ -6,7 +6,7 @@
 
 Terms used in this document:
 
-- **provider catalogue** — `RespProviders`: platform rows with `Name`, `NoFee`, `AdministersLearningBond`, `Provinces`, `Channel`, `ProcessingDays`; identical for every organization and editable by no organization
+- **provider catalogue** — `RespProviders.All`: a static platform list of `RespProvider` (`Name`, `NoFee`, `AdministersLearningBond`, `Provinces`, `Channel`), identical for every organization and editable by none (ADR 0080)
 - **recommendation** — first catalogue entry whose `Provinces` include the household's province, with the fixed reason "No fees, no deposit needed, and it handles the Learning Bond"
 - **review version** — `LearningBondApplication.ReviewVersion`, incremented by every edit and every provider change; Submit shall quote the current value
 - **idempotency key** — `LearningBondApplication.SubmissionKey`, written before the channel is called so a repeat finds it and sends nothing
@@ -17,17 +17,35 @@ Every route resolves the tenant through `GuardianAccess` and answers 404 when th
 
 Frontend:
 
-- **`LearningBondReviewPage`** (`frontend/projects/learning-bond/`, route `/g/learning-bond/:token/review`) — `ph-card` RESP provider with the name, `ph-badge` Recommended, the reason sentence and Choose another, which swaps in a `ph-radio-group` of every catalogue entry serving the province; `ph-card` RESP and Learning Bond application as a facts list with `ph-button` Edit on every field except the two masked SINs and the provider; an Edit opens a `ph-dialog` with one `ph-text-field` validated on save (`L2-011` rules) and the help "For this application only. Your household record isn't changed."; the line "This sends {first name}'s application to {provider} and the Government of Canada." above `ph-button` Submit to {provider} with a busy state that ignores a second tap; `ph-alert` danger for the failed send; the no-provider state shows the Government of Canada link and no Submit.
-- **`LEARNING_BOND_API.prepareApplication(token, childId)`**, **`chooseProvider(token, applicationId, providerId)`**, **`editField(token, applicationId, field, value)`**, **`submit(token, applicationId, reviewVersion)`**.
+- **`LearningBondReviewPage`** (`frontend/projects/learning-bond/`, route `/g/learning-bond/:token/children/:childId/review`) has:
+  - `ph-stepper` showing Step 4 of 5, then the `ph-agent-message` fixed line.
+  - A `ph-card` for the RESP provider: the name, a `ph-badge` Recommended, the reason sentence, and Choose another, which opens `LearningBondProviderDialog` (a CDK dialog with a `ph-radio-group` of the providers serving the province).
+  - A `ph-card` for the RESP and Learning Bond application: a `ph-list` of every field, the SINs masked. Address, phone and email each have a `ph-button` Edit that opens `LearningBondFieldDialog`, a CDK dialog with one `ph-text-field`, validated on the server, and the help "For this application only. Your family’s record isn’t changed."
+  - The line "This sends {first name}’s application to {provider} and the Government of Canada.", above `ph-button` Submit to {provider}, whose busy state ignores a second tap.
+  - A `ph-alert` for each outcome: success for sent, danger for not sent, warning for stale.
+  - With no provider, the Government of Canada link and no Submit.
+- **API methods on `LEARNING_BOND_API`**: `prepareApplication(token, childId)`, `editApplicationField(token, id, field, value)`, `chooseProvider(token, id, name)` and `submitApplication(token, id, reviewVersion)`.
 
 Backend:
 
-- **`LearningBondApplicationHandler.PrepareAsync`** (`PromiseHub.Application/LearningBond/`) — scope, module gate, trusted device, active consent, estimate present. Creates or reloads the child's `Draft` `LearningBondApplication` of kind `LearningBond`: beneficiary name and date of birth from `Child`, caregiver name, address, phone, email and language from `Household` and `Guardian`, both SINs by reference to the stored `EncryptedSin` values (never copied in clear), and the recommended `RespProvider`. With no provider serving the province the application stays absent, the claim stays `Started`, and the DTO carries `NoProvider = true` with the Government of Canada link (`L2-148` criterion 2).
-- **`LearningBondApplicationHandler.EditFieldAsync`** — validates address, phone and email exactly as the household record does (`HouseholdRules`, 422 with the same messages), stores the value on the application only, increments `ReviewVersion`, audits `LearningBondApplicationEdited(field)`. `Household` is unchanged (`L2-148` criterion 4). **`ChooseProviderAsync`** sets the provider from the catalogue and increments `ReviewVersion`; the application moves to `ReadyToSubmit` when every field is present.
-- **`SubmitApplicationHandler.SubmitAsync`** — requires `ReviewVersion` equal to the stored one and a trusted device, else 409 and nothing sent. When `SubmissionKey` already exists, answers 202 with the stored result and calls nothing (`L2-149` criterion 3). Otherwise, in one save: status `Submitted`, `SubmittedAt`, `SubmissionKey`; then `ILearningBondCipher.Decrypt` for both SINs in memory, the payload for `IRespProviderChannel.SubmitAsync`, and the provider's reference stored as `ProviderReference`. The only decrypting call site in the module is this method. `Unavailable` from the cipher answers 503 "Learning Bond is unavailable right now. Nothing was lost." before the status changes. A `Refused` or `Unreachable` result resets `ReadyToSubmit`, clears `SubmissionKey` and answers 502 `not-sent`; a retry sends once (`L2-149` criterion 5).
-- **`IRespProviderChannel`** (`Application/LearningBond/`), **`FakeRespProviderChannel`** (`Infrastructure/LearningBond/`) — the fake records every call so tests assert zero calls before Submit and one after; a real channel is deferred (ADR 0076).
-- **`LearningBondAgent`** — tools `GetStatus`, `GetEstimate`, `ListBenefits`, `ExplainStep`, `OfferCallback`; no tool reaches `SubmitApplicationHandler` (`L2-149` criterion 4).
-- **`POST /g/learning-bond/{token}/children/{childId}/applications`** (prepare), **`PATCH /g/learning-bond/{token}/applications/{id}/fields/{field}`**, **`PUT /g/learning-bond/{token}/applications/{id}/provider`**, **`POST /g/learning-bond/{token}/applications/{id}/submit`** — `LearningBondGuardianEndpoints`.
+- **`LearningBondApplicationHandler.PrepareAsync`** (`PromiseHub.Application/LearningBond/`) runs in the guardian scope, behind the module gate and on a trusted device.
+  - It answers 403 for a child without a claim, and 409 `not-ready` before the estimate or while the claim is paused.
+  - Otherwise it creates or reloads the child's open `LearningBondApplication`. The province comes from `RespProviders.ProvinceOf(organization time zone)`, the provider is the first one serving it, and the phone and email come from the primary guardian.
+  - The beneficiary name, date of birth, caregiver name and language are read from the records on every review. The SINs are only referenced, as their last three digits.
+  - With no provider serving the province, the provider is null and the DTO carries `NoProvider = true` (`L2-148` criterion 2).
+- **`LearningBondApplicationHandler.EditFieldAsync`** handles the phone (ten digits, formatted `905-555-0177`), email, address (10 to 200 characters) and province.
+  - It answers 422 with the field's message, stores the value on the application only, increments `ReviewVersion` and audits Updated with the field's name.
+  - The household record is unchanged (`L2-148` criterion 4), and a SIN can't be edited here.
+- **`LearningBondApplicationHandler.ChooseProviderAsync`** accepts only a catalogue entry serving the province (otherwise 422 "Choose a provider that serves your province.") and increments `ReviewVersion`. The application is `ReadyToSubmit` once it has both a provider and an address.
+- **`LearningBondSubmitHandler.SubmitAsync`** works in this order:
+  1. An application already Submitted answers 202 and calls nothing (`L2-149` criterion 3).
+  2. Otherwise `ReviewVersion` must equal the stored value (409 `stale-review`), and the application must be `ReadyToSubmit` (409 `incomplete`).
+  3. The cipher must be available (503).
+  4. It writes and saves `SubmissionKey`, decrypts both SINs in memory (the only decrypting call site in the module) and calls `IRespProviderChannel.SubmitAsync`.
+  5. A send marks the application and the claim Submitted, stores `ProviderReference` and audits Submitted on `LearningBondApplication`, naming the provider and no SIN. A refusal answers 502 `not-sent`, the application stays `ReadyToSubmit`, and a retry reuses the key (`L2-149` criterion 5).
+- **The channel and its fake.** `IRespProviderChannel` is in `Application/LearningBond/`. Until a provider is integrated, `UnconfiguredRespProviderChannel` (`Infrastructure/LearningBond/`) answers not sent (ADR 0080). `FakeRespProviderChannel` (`PromiseHub.Api.Tests`) records every call, so tests assert zero calls before Submit and one after.
+- **The agent** has no tool that reaches `LearningBondSubmitHandler` (`L2-149` criterion 4). Its model-backed answers are prompt 92.
+- **Endpoints**, in `LearningBondGuardianEndpoints`: `POST /g/learning-bond/{token}/children/{childId}/applications` (prepare), `PATCH /g/learning-bond/{token}/applications/{id}/fields/{field}`, `PUT /g/learning-bond/{token}/applications/{id}/provider` and `POST /g/learning-bond/{token}/applications/{id}/submit`.
 
 ## Requirements
 

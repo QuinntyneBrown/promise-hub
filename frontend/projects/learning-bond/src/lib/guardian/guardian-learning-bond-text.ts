@@ -106,9 +106,11 @@ export interface GuardianLearningBondText {
   staleTitle: string;
   noProviderHeading: string;
   noProviderText: string;
+  canadaLink: string;
 }
 
 const en: GuardianLearningBondText = {
+  canadaLink: 'Learning Bond on canada.ca',
   step: (n) => `Step ${n} of 5`,
   speaker: 'Learning Bond',
   reviewHeading: (name) => `Check ${name}’s application`,
@@ -223,6 +225,7 @@ const en: GuardianLearningBondText = {
 };
 
 const es: GuardianLearningBondText = {
+  canadaLink: 'El Bono de Estudios en canada.ca',
   step: (n) => `Paso ${n} de 5`,
   speaker: 'Bono de Estudios',
   reviewHeading: (name) => `Revise la solicitud de ${name}`,
@@ -339,6 +342,7 @@ const es: GuardianLearningBondText = {
 };
 
 const fr: GuardianLearningBondText = {
+  canadaLink: 'Le Bon d’études sur canada.ca',
   step: (n) => `Étape ${n} sur 5`,
   speaker: 'Bon d’études',
   reviewHeading: (name) => `Vérifiez la demande de ${name}`,
