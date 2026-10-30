@@ -32,23 +32,10 @@
             </div>
           } @else {
             <h1>{{ t.reviewHeading(a.firstName) }}</h1>
-            @if (outcome() === 'not-sent' || outcome() === 'error') {
-              <div data-testid="review-not-sent">
-                <ph-alert
-                  tone="danger"
-                  [title]="t.notSentTitle"
-                  [text]="t.notSentText(a.provider ?? '')"
-                />
-              </div>
-            } @else if (outcome() === 'stale') {
-              <ph-alert tone="warning" [title]="t.staleTitle" />
-            } @else if (outcome() === 'incomplete') {
-              <ph-alert tone="warning" [title]="t.addAddress" />
-            }
             <ph-agent-message [speaker]="t.speaker" [text]="a.explanation" />
             <ph-card [title]="t.providerTitle">
               <div class="stack" data-testid="review-provider">
-                <p class="plain">
+                <p class="plain provider">
                   <strong>{{ a.provider }}</strong>
                   <ph-badge tone="success">{{ t.recommended }}</ph-badge>
                 </p>
@@ -64,7 +51,7 @@
             </ph-card>
             <ph-card [title]="t.applicationTitle" [flush]="true">
               <div data-testid="review-fields">
-                <ph-list [label]="t.applicationTitle">
+                <ph-list [label]="t.applicationTitle" [inset]="true">
                   @for (row of rows(a); track row.label) {
                     <ph-list-item [title]="row.label" [meta]="row.value" [error]="row.error">
                       @if (row.field) {
@@ -84,6 +71,19 @@
               </div>
             </ph-card>
             <p class="plain muted">{{ t.sendsTo(a.firstName, a.provider ?? '') }}</p>
+            @if (outcome() === 'not-sent' || outcome() === 'error') {
+              <div data-testid="review-not-sent">
+                <ph-alert
+                  tone="danger"
+                  [title]="t.notSentTitle"
+                  [text]="t.notSentText(a.provider ?? '')"
+                />
+              </div>
+            } @else if (outcome() === 'stale') {
+              <ph-alert tone="warning" [title]="t.staleTitle" />
+            } @else if (outcome() === 'incomplete') {
+              <ph-alert tone="warning" [title]="t.addAddress" />
+            }
             <ph-button
               variant="primary"
               size="lg"

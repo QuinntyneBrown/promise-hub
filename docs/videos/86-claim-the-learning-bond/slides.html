@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 86 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="86" data-video-title="Claim the Learning Bond" data-parts="Introduction|The code|What it is|Consent|Details|Estimate|Review|Submit|Spanish and failures|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 86</div>
+  <h1>Claim the Learning Bond</h1>
+  <p class="lead">From a text link to an application on its way, with no account and no money in</p>
+</section>
+
+<section id="journey" data-part="0" data-cue="This video follows Carmen Rivera">
+  <h2>Five steps on a phone</h2>
+  <ul>
+    <li>Consent for each child</li>
+    <li>Two SINs and one tax question, once</li>
+    <li>An estimate from a rule, a review, and Submit</li>
+  </ul>
+  <p class="muted small">L2-144 to L2-149 · L2-159 · ADR 0076 · ADR 0080</p>
+</section>
+
+<section id="link-clip" data-part="1" data-cue="Carmen taps the link in her text." data-clip="clips/link-phone.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>The link</h3><p>The code, the page, consent for Mateo.</p></div>
+</section>
+
+<section id="page" data-part="2" data-cue="Mateo and Sofía are listed">
+  <div class="cols">
+    <img class="shot" alt="The texted code comes first" src="shots/phone-code.png">
+    <img class="shot" alt="Mateo and Sofía with up to what each may be owed" src="shots/phone-learning-bond.png">
+  </div>
+</section>
+
+<section id="consent" data-part="3" data-cue="She ticks Mateo, types her name and agrees.">
+  <div class="cols">
+    <img class="shot" alt="Your permission, for each child" src="shots/phone-consent.png">
+    <img class="shot" alt="Consent recorded for Mateo" src="shots/phone-consent-recorded.png">
+  </div>
+  <p class="muted small">LearningBondConsent · scope LearningBond · wording version · audited</p>
+</section>
+
+<section id="claim-clip" data-part="4" data-cue="The intake confirms what enrolment already holds" data-clip="clips/claim-phone.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>The claim</h3><p>Details, estimate, review, Submit.</p></div>
+</section>
+
+
+<section id="estimate" data-part="5" data-cue="Mateo was born in 2017">
+  <div class="cols">
+    <img class="shot" alt="Mateo may be owed up to $1,400." src="shots/phone-estimate.png">
+    <div>
+      <h2>A rule, never the model</h2>
+      <ul>
+        <li>$500, then $100 a year to 15</li>
+        <li>At most $2,000; born 2004 or later</li>
+        <li>The rule's version is recorded</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="review" data-part="6" data-cue="The review recommends a no-fee RESP provider">
+  <div class="cols">
+    <img class="shot" alt="Check Mateo’s application" src="shots/phone-review.png">
+    <img class="shot" alt="Change address, for this application only" src="shots/phone-edit-address.png">
+  </div>
+</section>
+
+<section id="choose" data-part="6" data-cue="Choose another shows the others">
+  <h2>The platform's list, the same for everyone</h2>
+  <img class="shot" alt="Choose a provider" src="shots/desktop-choose-provider.png">
+</section>
+
+<section id="submit" data-part="7" data-cue="Nothing has left PromiseHub yet.">
+  <div class="cols">
+    <img class="shot" alt="Mateo’s application went to Northfield Credit Union." src="shots/phone-sent.png">
+    <img class="shot" alt="The Learning Bond card on Carmen’s family page" src="shots/phone-home-card.png">
+  </div>
+  <p class="muted small">POST …/applications/{id}/submit · review version · 202 · sent once · audited without a SIN</p>
+</section>
+
+<section id="spanish-clip" data-part="8" data-cue="Carmen's household speaks Spanish" data-clip="clips/spanish-phone.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>En español</h3><p>The page and the step counter.</p></div>
+</section>
+
+<section id="states-clip" data-part="8" data-cue="On a laptop the review reads the same" data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>When things fail</h3><p>Not sent, no provider, no tax return.</p></div>
+</section>
+
+
+<section id="testing" data-part="9" data-cue="The API tests cover">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>LearningBondGuardianPageTests</code>, <code>ConsentTests</code>, <code>IntakeTests</code>, <code>EstimateTests</code></li>
+    <li><code>LearningBondApplicationTests</code>, <code>SubmitTests</code> with a fake provider channel</li>
+    <li>Another household, another organization, the module off</li>
+    <li>Six browser specs · laptop and phone · axe</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="10" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>A code first on a new device</li><li>Consent child by child</li><li>A SIN typed once, shown by three digits</li><li>The estimate comes from a rule</li><li>Nothing leaves before Submit</li></ul>
+  <p class="muted">Next: follow or resume a claim</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

@@ -14,6 +14,7 @@ import {
   PhBadge,
   PhButton,
   PhCard,
+  formatDate,
   PhDialogs,
   PhEmptyState,
   PhGuardianShell,
@@ -101,7 +102,12 @@ export class LearningBondReviewPage implements OnInit {
     const masked = (last3: string | null) => (last3 ? `••• ••• ${last3}` : '—');
     return [
       { label: t.fieldName, value: f.beneficiaryName, field: null, error: null },
-      { label: t.fieldBirth, value: f.dateOfBirth ?? '—', field: null, error: null },
+      {
+        label: t.fieldBirth,
+        value: f.dateOfBirth ? formatDate(f.dateOfBirth) : '—',
+        field: null,
+        error: null,
+      },
       { label: t.fieldChildSin(a.firstName), value: masked(f.childSin), field: null, error: null },
       { label: t.fieldCaregiver, value: f.caregiverName, field: null, error: null },
       {
