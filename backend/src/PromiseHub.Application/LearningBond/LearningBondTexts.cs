@@ -51,6 +51,17 @@ public static class LearningBondTexts
         _ => $"{provider} needs {document} for {child}. Tap to send it: {link}",
     };
 
+    /// <summary>The version of the Benefits consent wording (L2-153 criterion 2).</summary>
+    public const int BenefitsConsentVersion = 1;
+
+    /// <summary>The Benefits consent, separate from the Learning Bond one (L2-153 criterion 2).</summary>
+    public static string BenefitsConsent(string code) => code switch
+    {
+        "es" => "Acepto que Learning Bond use lo que ya di, más el tamaño de mi hogar, mi estado civil y si recibo el Beneficio por Hijos de Canadá, para revisar y solicitar los beneficios por hijos que yo elija.",
+        "fr" => "J’accepte que Learning Bond utilise ce que j’ai déjà donné, plus la taille de mon ménage, mon état civil et si je reçois l’Allocation canadienne pour enfants, pour vérifier et demander les prestations pour enfants que je choisis.",
+        _ => "I agree that Learning Bond may use what I’ve already given, plus my household size, marital status and whether I get the Canada Child Benefit, to check and apply for child benefits I choose.",
+    };
+
     /// <summary>A reminder to pick a paused claim back up (L2-151 criterion 3).</summary>
     public static string Reminder(string code, string sender, string child, string link) => code switch
     {

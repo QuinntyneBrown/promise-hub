@@ -9,7 +9,7 @@ namespace PromiseHub.Application.LearningBond;
 /// steps reached and the deposit window from the provider's stated processing days, counted from the day it was sent where the organization is.
 /// </summary>
 public sealed class LearningBondProgressHandler(IPromiseHubDb db, LearningBondGuardianScope guardianScope, LearningBondClaimFinder claims,
-    LearningBondApplicationHandler applications)
+    LearningBondApplicationHandler applications, LearningBondBenefitsAccess benefits)
 {
     public async Task<GuardianResult> GetAsync(GuardianRequest request, Guid childId, CancellationToken cancellationToken = default)
     {
@@ -37,7 +37,9 @@ public sealed class LearningBondProgressHandler(IPromiseHubDb db, LearningBondGu
         return GuardianResult.Of(GuardianOutcome.Ok, new LearningBondProgressDto(code, scope.Organization.Name, AgentFallbackCopy.Submitted(code, provider.Name),
             application.Id, childId, review.FirstName, provider.Name, application.Status.ToString(), application.SubmittedAt.Value, claim.EstimateAmount,
             application.DepositAmount, StepsDone(application.Status), sent.AddDays(provider.ProcessingDaysMin), sent.AddDays(provider.ProcessingDaysMax),
-            review.Fields, document is null ? null : new LearningBondDocumentRequestDto(document.Id, document.Name, document.FileName, document.SentAt)));
+            review.Fields, document is null ? null : new LearningBondDocumentRequestDto(document.Id, document.Name, document.FileName, document.SentAt),
+            !await benefits.ConsentedAsync(scope.Household.Id, cancellationToken)
+            && (await db.LearningBondBenefitsChecks.AsNoTracking().FirstOrDefaultAsync(c => c.HouseholdId == scope.Household.Id, cancellationToken))?.OfferDismissedAt is null));
     }
 
     /// <summary>The provider received it (1), the Government approved it (2, known only once it is deposited) and the deposit landed (3).</summary>

@@ -105,6 +105,8 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.LearningBond.LearningBondProviderEvent> LearningBondProviderEvents => Set<Domain.LearningBond.LearningBondProviderEvent>();
     public DbSet<Domain.LearningBond.LearningBondReminder> LearningBondReminders => Set<Domain.LearningBond.LearningBondReminder>();
     public DbSet<Domain.LearningBond.LearningBondReminderChoice> LearningBondChoices => Set<Domain.LearningBond.LearningBondReminderChoice>();
+    public DbSet<Domain.LearningBond.LearningBondBenefitsCheck> LearningBondBenefitsChecks => Set<Domain.LearningBond.LearningBondBenefitsCheck>();
+    public DbSet<Domain.LearningBond.LearningBondBenefitApplication> LearningBondBenefitApplications => Set<Domain.LearningBond.LearningBondBenefitApplication>();
     public DbSet<Domain.LearningBond.LearningBondSettings> LearningBondSettings => Set<Domain.LearningBond.LearningBondSettings>();
     public DbSet<DataRequest> DataRequests => Set<DataRequest>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
@@ -428,6 +430,31 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(a => a.SubmittedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
             e.Property(a => a.ReceivedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
             e.Property(a => a.DepositedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+        });
+        // The household's benefits check: Not now and the answers as ciphertext (L2-153, L2-154).
+        modelBuilder.Entity<Domain.LearningBond.LearningBondBenefitsCheck>(e =>
+        {
+            e.HasIndex(c => new { c.OrganizationId, c.HouseholdId }).IsUnique();
+            e.Property(c => c.AnswersCiphertext).HasMaxLength(4000);
+            e.Property(c => c.OfferDismissedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.Property(c => c.CreatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(c => c.UpdatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+        });
+        // One benefit's application, sent on its own (L2-156).
+        modelBuilder.Entity<Domain.LearningBond.LearningBondBenefitApplication>(e =>
+        {
+            e.HasIndex(a => new { a.OrganizationId, a.HouseholdId, a.BenefitKey }).IsUnique();
+            e.HasIndex(a => a.SubmissionKey).IsUnique();
+            e.Property(a => a.BenefitKey).HasMaxLength(100);
+            e.Property(a => a.RuleVersion).HasMaxLength(20);
+            e.Property(a => a.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(a => a.Address).HasMaxLength(Domain.LearningBond.LearningBondApplication.MaximumAddress);
+            e.Property(a => a.Phone).HasMaxLength(20);
+            e.Property(a => a.Email).HasMaxLength(320);
+            e.Property(a => a.Reference).HasMaxLength(100);
+            e.Property(a => a.CreatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(a => a.UpdatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
+            e.Property(a => a.SubmittedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
         });
         // Reminders to pick a paused claim back up, and the guardian's answer (L2-151 criterion 3).
         modelBuilder.Entity<Domain.LearningBond.LearningBondReminder>(e =>

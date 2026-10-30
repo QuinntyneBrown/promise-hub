@@ -71,6 +71,8 @@ public abstract class ApiFactoryBase : WebApplicationFactory<Program>
             services.AddSingleton<FakeEmailSender>();
             services.AddSingleton<IEmailSender>(sp => sp.GetRequiredService<FakeEmailSender>());
             services.AddSingleton<FakeRespProviderChannel>();
+            services.AddSingleton<FakeBenefitChannel>();
+            services.AddSingleton<PromiseHub.Application.LearningBond.IBenefitChannel>(sp => sp.GetRequiredService<FakeBenefitChannel>());
             services.AddSingleton<PromiseHub.Application.LearningBond.IRespProviderChannel>(sp => sp.GetRequiredService<FakeRespProviderChannel>());
             services.AddSingleton<FakePaymentProvider>();
             services.AddSingleton<PromiseHub.Application.Website.IPaymentProvider>(sp => sp.GetRequiredService<FakePaymentProvider>());
