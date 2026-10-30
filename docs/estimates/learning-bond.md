@@ -2,7 +2,7 @@
 
 | Design | Effort | Complete |
 |---|---|---|
-| accept-data-handling-agreement | 5 days | 60% |
+| accept-data-handling-agreement | 5 days | 90% |
 | complete-intake | 8 days | 10% |
 | configure-coverage-and-invitation | 4 days | 90% |
 | estimate-learning-bond | 3 days | 0% |
