@@ -63,6 +63,7 @@ public abstract class ApiFactoryBase : WebApplicationFactory<Program>
         builder.UseSetting("LearningBond:Key", LearningBondKey);
         builder.UseSetting("LearningBond:Webhooks:northfield", NorthfieldWebhookSecret);
         builder.UseSetting("LearningBond:Webhooks:maple-trust", "maple-test-secret");
+        builder.UseSetting("LearningBond:Webhooks:ontario-child-benefit", "ocb-test-secret");
         builder.ConfigureServices(services =>
         {
             services.AddSingleton<TimeProvider>(Clock);

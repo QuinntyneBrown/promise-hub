@@ -115,6 +115,12 @@ public static class LearningBondGuardianEndpoints
         });
         guardian.MapPost("/benefits/applications/{id:guid}/sent", async (string token, Guid id, LearningBondBenefitApplicationHandler handler, HttpContext http, CancellationToken ct) =>
             GuardianEndpoints.ToHttp(await handler.MarkSentAsync(GuardianEndpoints.Request(token, http), id, ct)));
+        guardian.MapGet("/reminders", async (string token, LearningBondRemindersHandler handler, HttpContext http, CancellationToken ct) =>
+            GuardianEndpoints.ToHttp(await handler.ListAsync(GuardianEndpoints.Request(token, http), ct)));
+        guardian.MapPut("/reminders/{id:guid}/off", async (string token, Guid id, LearningBondRemindersHandler handler, HttpContext http, CancellationToken ct) =>
+            GuardianEndpoints.ToHttp(await handler.TurnOffAsync(GuardianEndpoints.Request(token, http), id, ct)));
+        guardian.MapGet("/total", async (string token, LearningBondTotalHandler handler, HttpContext http, CancellationToken ct) =>
+            GuardianEndpoints.ToHttp(await handler.GetAsync(GuardianEndpoints.Request(token, http), ct)));
         guardian.MapPost("/callback", async (string token, CallbackRequest request, LearningBondGuardianHandler handler, HttpContext http, CancellationToken ct) =>
             await handler.RequestCallAsync(new GuardianRequest(token, http.Request.Cookies[GuardianEndpoints.DeviceCookie], http.Request.Headers.UserAgent.ToString()), request, ct)
                 switch

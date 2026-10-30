@@ -14,7 +14,7 @@ namespace PromiseHub.Application.LearningBond;
 /// paused with no activity for 180 days closes as Not completed, its SINs destroyed. Nothing runs while the module is off.
 /// </summary>
 public sealed class LearningBondClaimJob(IPromiseHubDb db, ITenantContext tenant, IModuleGate modules, LearningBondGuardianTexter texter, GuardianLinkIssuer links, IAuditWriter audit,
-    TimeProvider clock)
+    LearningBondBenefitsAccess benefits, TimeProvider clock)
 {
     public static readonly TimeSpan CloseAfter = TimeSpan.FromDays(180);
 
@@ -26,6 +26,7 @@ public sealed class LearningBondClaimJob(IPromiseHubDb db, ITenantContext tenant
         }
         var now = clock.GetUtcNow();
         await SendRemindersAsync(now, cancellationToken);
+        await SendDateRemindersAsync(now, cancellationToken);
         await CloseIdleAsync(now, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
     }
@@ -65,6 +66,53 @@ public sealed class LearningBondClaimJob(IPromiseHubDb db, ITenantContext tenant
             await texter.QueueAsync(household.Id, $"Learning Bond: {child.FirstName}",
                 LearningBondTexts.Reminder(GuardianLanguage.Code(household.Language), sender, child.FirstName, link), cancellationToken);
             audit.Record(new AuditEvent(AuditAction.Sent, nameof(LearningBondReminder), claim.Id, $"Learning Bond reminder sent for {child.FirstName}"));
+        }
+    }
+
+    /// <summary>
+    /// Date reminders (L2-157 criteria 2 to 4): each on its day from 10:00 where the organization is, once, while the Benefits consent is in
+    /// force; one whose day passed unsent is missed, never sent late. A tax reminder sent sets next year's.
+    /// </summary>
+    private async Task SendDateRemindersAsync(DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var ahead = (await db.LearningBondDateReminders.Where(r => r.SentAt == null && r.MissedAt == null && r.TurnedOffAt == null).ToListAsync(cancellationToken)).ToList();
+        if (ahead.Count == 0)
+        {
+            return;
+        }
+        var organization = await db.Organizations.AsNoTracking().SingleAsync(o => o.Id == tenant.OrganizationId, cancellationToken);
+        var local = TimeZoneInfo.ConvertTime(now, TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone));
+        var today = DateOnly.FromDateTime(local.DateTime);
+        var sender = await db.LearningBondSettings.AsNoTracking().Select(s => s.SenderName).FirstOrDefaultAsync(cancellationToken) ?? SenderNameRule.Default(organization.Name);
+        foreach (var reminder in ahead)
+        {
+            if (reminder.DueOn < today)
+            {
+                reminder.MarkMissed(now);
+                continue;
+            }
+            if (reminder.DueOn > today || local.Hour < 10)
+            {
+                continue;
+            }
+            reminder.MarkSent(now);
+            if (!await benefits.ConsentedAsync(reminder.HouseholdId, cancellationToken))
+            {
+                continue;
+            }
+            var household = await db.Households.AsNoTracking().SingleAsync(h => h.Id == reminder.HouseholdId, cancellationToken);
+            var names = await db.Children.AsNoTracking().Where(c => c.HouseholdId == household.Id).ToDictionaryAsync(c => c.Id, c => c.FirstName, cancellationToken);
+            var code = GuardianLanguage.Code(household.Language);
+            var link = $"{links.IssueLearningBond(household.Id)}/reminders";
+            await texter.QueueAsync(household.Id, $"Learning Bond: {reminder.Kind}",
+                LearningBondTexts.DateReminder(code, sender, reminder.Kind.ToString(), LearningBondRemindersHandler.Subject(reminder, names), reminder.EventOn, link), cancellationToken);
+            audit.Record(new AuditEvent(AuditAction.Sent, nameof(LearningBondDateReminder), reminder.Id, $"Learning Bond reminder sent: {reminder.Kind}"));
+            if (reminder.Kind == LearningBondDateReminderKind.Taxes)
+            {
+                var next = reminder.EventOn.AddYears(1);
+                db.LearningBondDateReminders.Add(new LearningBondDateReminder(Guid.NewGuid(), reminder.OrganizationId, reminder.HouseholdId, LearningBondDateReminderKind.Taxes,
+                    null, null, next, next));
+            }
         }
     }
 

@@ -22,6 +22,18 @@ public static class LearningBondWebhookEndpoints
                 _ => Results.BadRequest(),
             };
         }).AllowAnonymous();
+        app.MapPost("/learning-bond/webhooks/programs/{program}", async (string program, HttpContext http, LearningBondProgramWebhookHandler handler, CancellationToken ct) =>
+        {
+            using var reader = new StreamReader(http.Request.Body);
+            var body = await reader.ReadToEndAsync(ct);
+            return await handler.HandleAsync(program, body, http.Request.Headers["X-PromiseHub-Signature"].FirstOrDefault(), ct) switch
+            {
+                ProviderWebhookOutcome.Applied => Results.Ok(),
+                ProviderWebhookOutcome.Unauthorized => Results.Unauthorized(),
+                ProviderWebhookOutcome.NotFound => Results.NotFound(),
+                _ => Results.BadRequest(),
+            };
+        }).AllowAnonymous();
         return app;
     }
 }

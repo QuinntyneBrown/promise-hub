@@ -38,6 +38,11 @@ public sealed class LearningBondBenefitApplication : ITenantOwned
     public Guid? SubmissionKey { get; private set; }
     public string? Reference { get; private set; }
     public DateTimeOffset? SubmittedAt { get; private set; }
+    /// <summary>The first year's amount a program confirmed when the benefit started (L2-158 criterion 2).</summary>
+    public int? ConfirmedAmount { get; private set; }
+
+    public DateTimeOffset? StartedAt { get; private set; }
+
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
 
@@ -66,6 +71,13 @@ public sealed class LearningBondBenefitApplication : ITenantOwned
     {
         Status = LearningBondBenefitApplicationStatus.MarkedSent;
         SubmittedAt ??= now;
+        UpdatedAt = now;
+    }
+
+    public void MarkStarted(int amount, DateTimeOffset now)
+    {
+        ConfirmedAmount = amount;
+        StartedAt ??= now;
         UpdatedAt = now;
     }
 
