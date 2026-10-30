@@ -3280,8 +3280,13 @@
         "accepted-off",
         "waiting-signer",
         "signer",
+        "signer-invalid",
+        "signer-submitting",
+        "signer-loading",
+        "signer-error",
         "signer-accepted",
         "signer-expired",
+        "signer-unknown",
         "loading",
         "error",
         "forbidden"

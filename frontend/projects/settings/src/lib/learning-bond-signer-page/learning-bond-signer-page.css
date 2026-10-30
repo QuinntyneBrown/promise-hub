@@ -1,0 +1,55 @@
+:host {
+  display: block;
+}
+h1 {
+  font: var(--text-h2);
+  margin: 0 0 var(--space-2);
+  overflow-wrap: anywhere;
+}
+.lede,
+.meta {
+  color: var(--color-fg-muted);
+  margin: 0;
+}
+.lede {
+  font: var(--text-body);
+}
+.meta {
+  font: var(--text-body-sm);
+}
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-gutter);
+}
+.reading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  font: var(--text-body);
+  line-height: var(--line-height-relaxed);
+  overflow-wrap: anywhere;
+}
+.reading p,
+.plain {
+  margin: 0;
+}
+.reading section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.section-title {
+  font: var(--text-h4);
+  margin: 0;
+}
+fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-4);
+}

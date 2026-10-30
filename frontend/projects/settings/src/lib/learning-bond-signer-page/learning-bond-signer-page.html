@@ -1,0 +1,87 @@
+<ph-guardian-shell [organization]="organization()">
+  @switch (state()) {
+    @case ('loading') {
+      <h1 class="visually-hidden">Learning Bond data-handling agreement</h1>
+      <div aria-busy="true" aria-label="Loading the agreement" class="stack">
+        <ph-skeleton shape="card" />
+        <ph-skeleton shape="card" />
+      </div>
+    }
+    @case ('error') {
+      <h1>Learning Bond data-handling agreement</h1>
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="warning"
+          tone="error"
+          title="We couldn’t load the agreement"
+          text="Check your connection and try again."
+        >
+          <ph-button variant="primary" icon="refresh" (click)="load()">Try again</ph-button>
+        </ph-empty-state>
+      </ph-card>
+    }
+    @case ('expired') {
+      <h1>This link has expired</h1>
+      <ph-card>
+        <p class="plain" data-testid="signer-expired">{{ expiredText() }}</p>
+      </ph-card>
+    }
+    @case ('accepted') {
+      @if (acceptance(); as a) {
+        <h1>Thank you, {{ a.name }}</h1>
+        <ph-card data-testid="signer-accepted">
+          <ph-alert tone="success" [title]="acceptedTitle(a)" [text]="acceptedText(a)" />
+        </ph-card>
+      }
+    }
+    @default {
+      @if (agreement(); as a) {
+        <div class="stack">
+          <div>
+            <h1>Accept the Learning Bond data-handling agreement for {{ a.organization }}</h1>
+            <p class="lede" data-testid="signer-requested-by">{{ requestedByLine(a) }}</p>
+          </div>
+          <ph-card>
+            <div class="reading" data-testid="agreement-text">
+              <p class="meta">{{ versionLine(a) }}</p>
+              @for (section of a.sections; track section.title; let i = $index) {
+                <section [attr.aria-labelledby]="'signer-section-' + i">
+                  <h2 class="section-title" [id]="'signer-section-' + i">{{ section.title }}</h2>
+                  <p>{{ section.text }}</p>
+                </section>
+              }
+            </div>
+          </ph-card>
+          <form class="stack" novalidate (ngSubmit)="accept()">
+            @if (summary().length) {
+              <ph-error-summary [items]="summary()" />
+            }
+            <ph-card>
+              <fieldset class="stack">
+                <legend class="section-title">Authority</legend>
+                <ph-checkbox
+                  inputId="authority"
+                  [label]="authorityLabel(a)"
+                  [error]="error()"
+                  name="authority"
+                  [ngModel]="authority()"
+                  (ngModelChange)="authority.set($event)"
+                />
+              </fieldset>
+              <div class="actions">
+                <ph-button
+                  variant="primary"
+                  type="submit"
+                  size="lg"
+                  icon="check"
+                  [busy]="accepting()"
+                  >Accept</ph-button
+                >
+              </div>
+            </ph-card>
+          </form>
+        </div>
+      }
+    }
+  }
+</ph-guardian-shell>

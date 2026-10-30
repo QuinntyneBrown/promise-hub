@@ -1,1 +1,6 @@
-export { routes, setupRoutes, learningBondAgreementRoutes } from './lib/settings.routes';
+export {
+  routes,
+  setupRoutes,
+  learningBondAgreementRoutes,
+  learningBondSignerRoutes,
+} from './lib/settings.routes';

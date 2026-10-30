@@ -17,7 +17,7 @@ export interface FakeLearningBondAcceptance {
   acceptedAt: string;
 }
 
-/** An open request for a named signer (L2-137); the fake keeps no token. */
+/** An open request for a named signer (L2-137). The API never answers the token; the fake keeps the current one so tests can open the link. */
 export interface FakeLearningBondSigner {
   id: string;
   name: string;
@@ -25,6 +25,13 @@ export interface FakeLearningBondSigner {
   email: string;
   sentAt: string;
   expiresAt: string;
+  token: string;
+  requestedBy: string;
+}
+
+/** Every signer link the fake has minted: its organization; a link is open only while it is its organization's current one. */
+interface FakeLearningBondSignerLink {
+  organizationId: string;
 }
 
 /** An organization's Learning Bond settings row (ADR 0076); absent until first saved. */
@@ -93,6 +100,65 @@ export class FakeLearningBond {
 
   private nextSigner = 1;
 
+  private nextSignerToken = 1;
+
+  /** token → the organization of every signer link ever minted, so a dead link answers 410 and an unknown one 404 (L2-137 criterion 9). */
+  readonly signerLinks = new Map<string, FakeLearningBondSignerLink>();
+
+  /** Whether an organization is suspended (the fake API's own record); its signer links answer 410. */
+  isSuspended: (organizationId: string) => boolean = () => false;
+
+  private mintSignerToken(organizationId: string): string {
+    const token = `tok-signer-${this.nextSignerToken++}`;
+    this.signerLinks.set(token, { organizationId });
+    return token;
+  }
+
+  /** Names a signer for an organization as its admin would, and answers the link's token (the one in the email). */
+  nameSigner(organizationId: string, requestedBy: string, signer: { name: string; title: string; email: string }, now = '2026-11-05T21:12:00Z'): string {
+    const token = this.mintSignerToken(organizationId);
+    this.signers.set(organizationId, { id: `signer-${this.nextSigner++}`, ...signer, sentAt: now, expiresAt: addDays(now, 14), token, requestedBy });
+    return token;
+  }
+
+  /** The open request a signer link belongs to, or the status its endpoints answer: 410 for a dead link, 404 for an unknown one. */
+  private signerOf(token: string): { organizationId: string; signer: FakeLearningBondSigner } | 404 | 410 {
+    const link = this.signerLinks.get(token);
+    if (!link) return 404;
+    const signer = this.signers.get(link.organizationId);
+    if (signer?.token !== token || this.isSuspended(link.organizationId)) return 410;
+    return { organizationId: link.organizationId, signer };
+  }
+
+  private expiredLink(route: Route, organizationName: (id: string) => string, token: string, status: 404 | 410): Promise<void> {
+    if (status === 404) return route.fulfill({ status: 404 });
+    const organization = organizationName(this.signerLinks.get(token)!.organizationId);
+    return route.fulfill({ status: 410, json: { organization, message: `This link has expired. Ask ${organization} to send a new one.` } });
+  }
+
+  /** GET /sign/learning-bond/{token} (L2-137 criteria 8 and 9): anonymous, whether Learning Bond is on or off. */
+  signerAgreement(route: Route, token: string, organizationName: (id: string) => string): Promise<void> {
+    const found = this.signerOf(token);
+    if (typeof found === 'number') return this.expiredLink(route, organizationName, token, found);
+    const { signer, organizationId } = found;
+    return route.fulfill({
+      json: { organization: organizationName(organizationId), requestedBy: signer.requestedBy, name: signer.name, title: signer.title, version: this.version, effectiveOn: this.effectiveOn, sections },
+    });
+  }
+
+  /** POST /sign/learning-bond/{token}/acceptances (L2-137 criteria 2 and 8): the authority box first; a refusal uses nothing up. */
+  acceptAsSigner(route: Route, token: string, organizationName: (id: string) => string, now: string): Promise<void> {
+    const found = this.signerOf(token);
+    if (typeof found === 'number') return this.expiredLink(route, organizationName, token, found);
+    const { signer, organizationId } = found;
+    const body = route.request().postDataJSON() as { authority?: boolean };
+    const organization = organizationName(organizationId);
+    if (!body.authority) return route.fulfill({ status: 422, json: { errors: { authority: `Confirm you have authority to accept this agreement for ${organization}.` } } });
+    if (!this.hasAccepted(organizationId)) this.acceptances.push({ organizationId, version: this.version, acceptedBy: signer.name, acceptedAt: now });
+    this.signers.delete(organizationId);
+    return route.fulfill({ status: 201, json: { organization, name: signer.name, title: signer.title, email: signer.email, version: this.version, acceptedAt: now, requestedBy: signer.requestedBy } });
+  }
+
   /** organization → its settings row; absent means every program, Admin and Program director, and the organization's name as sender. */
   readonly settings = new Map<string, FakeLearningBondSettings>();
 
@@ -128,10 +194,17 @@ export class FakeLearningBond {
         sections,
         acceptance: dto(current),
         earlierAcceptance: dto(earlier),
-        signer: this.signers.get(m.organizationId) ?? null,
+        signer: this.signerDto(this.signers.get(m.organizationId)),
         moduleOn,
       },
     });
+  }
+
+  /** The open request as the API answers it: never the token. */
+  private signerDto(signer?: FakeLearningBondSigner): Omit<FakeLearningBondSigner, 'token' | 'requestedBy'> | null {
+    if (!signer) return null;
+    const { token: _token, requestedBy: _requestedBy, ...dto } = signer;
+    return dto;
   }
 
   /** POST /learning-bond/agreement/acceptances (L2-136 criteria 2 and 3). */
@@ -155,7 +228,7 @@ export class FakeLearningBond {
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) errors['email'] = 'Enter an email like name@example.org.';
     if (Object.keys(errors).length) return route.fulfill({ status: 422, json: { errors } });
     const id = `signer-${this.nextSigner++}`;
-    this.signers.set(m.organizationId, { id, name, title, email, sentAt: now, expiresAt: addDays(now, 14) });
+    this.signers.set(m.organizationId, { id, name, title, email, sentAt: now, expiresAt: addDays(now, 14), token: this.mintSignerToken(m.organizationId), requestedBy: m.personName });
     this.signerEmails.push({ to: email, subject: `${organizationName} via PromiseHub: please accept the Learning Bond data-handling agreement` });
     return route.fulfill({ status: 201, json: { id } });
   }
@@ -164,7 +237,7 @@ export class FakeLearningBond {
   resendSigner(route: Route, m: Membership, id: string, organizationName: string, now: string): Promise<void> {
     const signer = this.signers.get(m.organizationId);
     if (signer?.id !== id) return route.fulfill({ status: 404 });
-    this.signers.set(m.organizationId, { ...signer, sentAt: now, expiresAt: addDays(now, 14) });
+    this.signers.set(m.organizationId, { ...signer, sentAt: now, expiresAt: addDays(now, 14), token: this.mintSignerToken(m.organizationId) });
     this.signerEmails.push({ to: signer.email, subject: `${organizationName} via PromiseHub: please accept the Learning Bond data-handling agreement` });
     return route.fulfill({ status: 204 });
   }

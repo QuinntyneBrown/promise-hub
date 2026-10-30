@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { LearningBondAgreementPage } from './learning-bond-agreement/learning-bond-agreement-page';
+import { LearningBondSignerPage } from './learning-bond-signer-page/learning-bond-signer-page';
 import { SettingsModulesPage } from './modules/settings-modules-page';
 import { SettingsOrganizationPage } from './organization/settings-organization-page';
 import { SettingsNotificationsPage } from './notifications/settings-notifications-page';
@@ -46,5 +47,17 @@ export const learningBondAgreementRoutes: Routes = [
     path: '',
     component: LearningBondAgreementPage,
     title: 'Learning Bond agreement · Settings · PromiseHub',
+  },
+];
+
+/**
+ * The named signer's own page behind the emailed link, mounted anonymously at /sign/learning-bond: no session and no module guard, since it
+ * is served while Learning Bond is off and the server decides from the link (ADR 0078).
+ */
+export const learningBondSignerRoutes: Routes = [
+  {
+    path: ':token',
+    component: LearningBondSignerPage,
+    title: 'Learning Bond agreement · PromiseHub',
   },
 ];
