@@ -14,7 +14,7 @@ namespace PromiseHub.Application.LearningBond;
 /// revoked link, a suspended organization and the module off all answer null, so the endpoint's 404 never confirms which it was.
 /// </summary>
 public sealed class LearningBondGuardianHandler(GuardianAccess access, TenantContext tenant, IModuleGate modules, IAuditWriter audit, IPromiseHubDb db,
-    LearningBondStaffNotifier staff, LearningBondGuardianScope guardianScope, LearningBondFamilyChildren familyChildren, TimeProvider clock)
+    LearningBondStaffNotifier staff, LearningBondGuardianScope guardianScope, LearningBondFamilyChildren familyChildren, TimeProvider clock, LearningBondBenefitsAccess benefits)
 {
     public async Task<LearningBondGuardianDto?> GetAsync(GuardianRequest request, CancellationToken cancellationToken = default)
     {
@@ -97,7 +97,8 @@ public sealed class LearningBondGuardianHandler(GuardianAccess access, TenantCon
             : invitation is null ? LearningBondFamilyStatus.NotInvited
             : invitation.DeclinedAt is not null ? LearningBondFamilyStatus.NotInterested : LearningBondFamilyStatus.Invited;
         return GuardianResult.Of(GuardianOutcome.Ok, new GuardianLearningBondDto(code, scope.Organization.Name, scope.Organization.Phone,
-            AgentFallbackCopy.Welcome(code, scope.Organization.Name), children, status.ToString(), await ConsentsAsync(scope.Household.Id, cancellationToken)));
+            AgentFallbackCopy.Welcome(code, scope.Organization.Name), children, status.ToString(), await ConsentsAsync(scope.Household.Id, cancellationToken),
+            new GuardianBenefitsOfferDto(!await benefits.ConsentedAsync(scope.Household.Id, cancellationToken), await benefits.ConsentedAsync(scope.Household.Id, cancellationToken))));
     }
 
     /// <summary>Your consents (L2-152 criterion 1): each consent in force, with the provider of the child's latest application.</summary>

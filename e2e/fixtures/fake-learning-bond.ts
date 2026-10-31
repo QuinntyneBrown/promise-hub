@@ -361,6 +361,21 @@ export class FakeLearningBond {
   /** Documents the fake provider received (IRespProviderChannel.SendDocumentAsync): nothing is here before Send. */
   readonly documentsSent: { documentId: string; fileName: string }[] = [];
 
+  /** Households that chose Not now on the benefits offer (LearningBondBenefitsCheck.OfferDismissedAt). */
+  readonly benefitsDismissed = new Set<string>();
+
+  /** Households with a Benefits consent in force (LearningBondConsent, scope Benefits). */
+  readonly benefitsConsented = new Set<string>();
+
+  /** household → the benefits intake's answers (LearningBondBenefitsCheck, kept as ciphertext by the real API). */
+  readonly benefitsAnswers = new Map<string, { householdSize: number; maritalStatus: string; ccbNow: string; incomeChanged: string | null }>();
+
+  /** benefit key → its application (LearningBondBenefitApplication) for the Riveras. */
+  readonly benefitApplications = new Map<string, { id: string; address: string | null; reviewVersion: number; status: string; documentFile: string | null }>();
+
+  /** Benefit applications the fake programs received (IBenefitChannel): nothing is here before Submit. */
+  readonly benefitSubmissions: string[] = [];
+
   /** When true, the provider refuses and nothing is sent. */
   providerFails = false;
 

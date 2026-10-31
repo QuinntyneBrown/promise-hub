@@ -16,19 +16,31 @@ The catalogue is read without a tenant filter; every application, document and e
 
 Frontend:
 
-- **`BenefitsPage`** (`learning-bond-benefits`) — one `ph-card` per entry with `ph-badge` for the state, the level and amount ("About $1,680 a year", "Amount varies"), the one-line reason, the source and rule version in a caption, and `ph-button` Apply now or Upload; `ph-alert` info "We don't know local programs for {city} yet." when no municipality matches; the all-received empty state "You're already getting every benefit we know about." with See your reminders; `ph-skeleton` while loading.
-- **`BenefitDocumentDialog`** — `ph-dialog` with the file input for the named document; the upload binds the document to that benefit's application only.
-- **`BenefitReviewPage`** (`learning-bond-benefit-review`) — the application review component shared with the Learning Bond review (every field with Edit, SIN as `Last3`), one `ph-button` Submit to {program}; for a PDF channel, Download the filled form (PDF), how to send it, and Mark as sent; `ph-alert` success after 202, danger "We couldn't send it. Nothing was sent. Try again." on failure.
-- **`LEARNING_BOND_API`** — `listBenefits(token)`, `uploadBenefitDocument(token, benefitId, file)`, `getBenefitApplication(token, id)`, `updateBenefitField(token, id, field, value)`, `submitApplication(token, id, reviewVersion)`, `markSent(token, id)`.
+- **`LearningBondBenefitsPage`** (route `/g/learning-bond/:token/benefits`) shows:
+  - the agent's line;
+  - the notes: local programs unknown, a child the check stopped for, and the income note;
+  - each benefit not already received as the library's `ph-benefit-card`, with its name, a state badge, level and amount ("About $1,680 a year" or "Amount varies"), one line of why, the action and its source with the rule version.
+
+  The actions are Apply now (a link to the benefit's page), or `ph-file-upload` for Need a document. Not eligible has none. You already get these is a `ph-list` of received benefits. When the family gets everything, an empty state says so. There is no Submit all.
+- **`LearningBondBenefitReviewPage`** (route `.../benefits/:key`):
+  - For an electronic program: the fields as a `ph-list`, with Edit (in `LearningBondFieldDialog`, which edits either kind of application) on address, phone and email, the line "This sends your application to the {program}. Only this one.", and Submit to {program}.
+  - For a form program: Send it yourself, with Attach and Send to, a link to Download the filled form (PDF), and Mark as sent.
+- **API methods on `LEARNING_BOND_API`**: `benefits`, `uploadBenefitDocument`, `prepareBenefit`, `editBenefitField`, `submitBenefit`, `markBenefitSent` and `benefitFormUrl`.
 
 Backend:
 
-- **`BenefitCatalogue`** (`Domain/LearningBond/`) — `BenefitCatalogueEntry` rows seeded by the Cli with `RuleVersion`, `EligibilityRule`, `EstimateFormula?`, `SourceLink`, `Level`, `Province`, `Municipality?`, `Channel` (`Api` or `PdfForm`), `RenewalRule`; no organization edits it.
-- **`ListBenefitsHandler`** — reads the household province from its address and the organization's city from Settings › Organization, selects the matching entries, evaluates each rule with `BenefitRuleEvaluator` against the decrypted facts in memory, answers `BenefitDto` (name, level, state, reason, estimated annual amount as a whole dollar, "Amount varies" counted as $0, rule version, source link, income-changed note). A child whose custody answer is The other parent or Not sure is left out of every entry. Each answer stores a `BenefitEstimate` with the rule version it used; a later rule version never rewrites it.
-- **`UploadBenefitDocumentHandler`** — stores the file through `IFileStore` encrypted by `ILearningBondCipher` as a `LearningBondDocument` bound to one application; moves the state from `NeedDocument` to `ApplyNow`.
-- **`PrepareBenefitApplicationHandler`** — builds the draft `LearningBondApplication` (`Kind = Benefit`) from the intake and the enrolment record, assigns `ReviewVersion`; `UpdateBenefitFieldHandler` edits one field and increments the version.
-- **`SubmitApplicationHandler`** — the one handler of `../review-and-submit-application/README.md`: requires the current `ReviewVersion` (409), marks `Submitted`, records the idempotency key, then `IBenefitProgramChannel.SubmitAsync` with the fields and that application's documents only; a repeat answers the same 202; a refused channel resets `ReadyToSubmit`. `PdfForm` channels answer the filled PDF from `IBenefitFormRenderer`; `MarkSentHandler` sets `Submitted` on the guardian's request.
-- **Endpoints** (`LearningBondGuardianEndpoints.cs`, behind `BenefitsConsentFilter`) — `GET /g/learning-bond/{token}/benefits`, `POST .../benefits/{benefit}/documents`, `GET .../applications/{id}`, `PATCH .../applications/{id}/fields/{field}`, `POST .../applications/{id}/submit`, `GET .../applications/{id}/form.pdf`, `POST .../applications/{id}/sent`.
+- **`LearningBondBenefitsHandler.ListAsync`** answers 409 until the intake is done. It takes `BenefitCatalogue.For(province, city)` and the children the household may claim for: Not sure stops the check for a child, and The other parent leaves the child out.
+  - Each entry gets exactly one state: Submitted once applied for, AlreadyGet, NotEligible with its reason, NeedDocument until its document is kept, otherwise ApplyNow.
+  - The amount is the rule's per-child amount summed over those children, or null.
+  - The response also carries the rule version, the source and link, the local note when the city matches no municipality, the income note, and whether everything is already received (ADR 0082).
+- **`LearningBondBenefitApplicationHandler`**:
+  - `PrepareAsync` makes one `LearningBondBenefitApplication` per benefit, with contact details reused from the Learning Bond application or the primary guardian.
+  - `UploadDocumentAsync` accepts a PDF, JPEG or PNG up to 10 MB and keeps it encrypted as a `LearningBondDocument` on that application.
+  - `EditFieldAsync` handles address, phone and email, moving the review version.
+  - `SubmitAsync`, for electronic programs only, requires the review version and a complete application. It writes the key first, decrypts the guardian's SIN in memory, sends once through `IBenefitChannel` with a 202, and audits as `Submitted` without a SIN.
+  - `FormAsync` builds the one-page PDF with the SIN boxes left blank (`LearningBondFormPdf`).
+  - `MarkSentAsync` records the guardian's own act.
+- **Endpoints**, in `LearningBondGuardianEndpoints`: `GET /g/learning-bond/{token}/benefits`, `POST .../benefits/{key}/document`, `POST .../benefits/{key}/applications`, `PATCH .../benefits/applications/{id}/fields/{field}`, `POST .../benefits/applications/{id}/submit`, `GET .../benefits/applications/{id}/form` and `POST .../benefits/applications/{id}/sent`.
 
 ## Requirements
 

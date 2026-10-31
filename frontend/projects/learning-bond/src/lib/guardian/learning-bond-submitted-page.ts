@@ -23,6 +23,7 @@ import {
   PhStepMarker,
   PhStepper,
 } from '@promisehub/components';
+import { guardianBenefitsText } from './guardian-benefits-text';
 import { guardianLearningBondText } from './guardian-learning-bond-text';
 import { LearningBondApplicationRow } from './learning-bond-application-row';
 import { learningBondApplicationRows } from './learning-bond-application-rows';
@@ -81,6 +82,8 @@ export class LearningBondSubmittedPage implements OnInit {
     return r?.status === 'verify' || r?.status === 'gone' ? r.organization : null;
   });
 
+  protected readonly benefitsWords = computed(() => guardianBenefitsText(this.language()));
+  protected readonly offerDismissed = signal(false);
   protected readonly uploading = signal(false);
   protected readonly sending = signal(false);
   protected readonly chosen = signal<string | null>(null);
@@ -95,6 +98,12 @@ export class LearningBondSubmittedPage implements OnInit {
   protected load(): void {
     this.result.set(null);
     this.api.progress(this.token(), this.childId()).subscribe((r) => this.result.set(r));
+  }
+
+  /** Not now on the benefits offer is remembered; the offer stays on the guardian page (L2-153 criterion 1). */
+  protected dismissOffer(): void {
+    this.offerDismissed.set(true);
+    this.api.dismissBenefitsOffer(this.token()).subscribe();
   }
 
   /** Keeps the chosen file encrypted on the server; nothing reaches the provider until Send (L2-150 criterion 6). */

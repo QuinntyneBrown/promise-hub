@@ -38,6 +38,10 @@ public sealed class LearningBondConsentHandler(IPromiseHubDb db, LearningBondGua
             return gate;
         }
         var household = scope!.Household;
+        if (consent.Scope == nameof(LearningBondConsentScope.Benefits))
+        {
+            return await GiveBenefitsAsync(scope, consent, cancellationToken);
+        }
         var ticked = (consent.ChildIds ?? []).Distinct().ToList();
         var typed = string.Join(' ', (consent.TypedName ?? string.Empty).Split(' ', StringSplitOptions.RemoveEmptyEntries));
         var errors = new Dictionary<string, string>();
@@ -81,6 +85,43 @@ public sealed class LearningBondConsentHandler(IPromiseHubDb db, LearningBondGua
     }
 
     /// <summary>The household's children under 18 with an amount and no Learning Bond consent in force.</summary>
+    /// <summary>
+    /// The Benefits consent (L2-153 criteria 2 and 4): its own wording, one record per child under 18 with scope Benefits, never counted as a
+    /// Learning Bond consent; no claim is started.
+    /// </summary>
+    private async Task<GuardianResult> GiveBenefitsAsync(GuardianScope scope, GiveLearningBondConsentRequest consent, CancellationToken cancellationToken)
+    {
+        var household = scope.Household;
+        var typed = string.Join(' ', (consent.TypedName ?? string.Empty).Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        if (typed.Length == 0)
+        {
+            return GuardianResult.Invalid("typedName", NoNameMessage);
+        }
+        var guardians = await db.Guardians.AsNoTracking().Where(g => g.HouseholdId == household.Id).Select(g => g.Name).ToListAsync(cancellationToken);
+        if (!guardians.Any(g => string.Equals(g, typed, StringComparison.OrdinalIgnoreCase)) || typed.Length > LearningBondConsent.MaximumName)
+        {
+            return GuardianResult.Invalid("typedName", NotGuardianMessage);
+        }
+        var now = clock.GetUtcNow();
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, TimeZoneInfo.FindSystemTimeZoneById(scope.Organization.TimeZone)).DateTime);
+        var given = await db.LearningBondConsents.AsNoTracking().Where(c => c.HouseholdId == household.Id && c.Scope == LearningBondConsentScope.Benefits
+            && c.WithdrawnAt == null && c.ClosedAt == null).Select(c => c.ChildId).ToListAsync(cancellationToken);
+        var children = (await db.Children.AsNoTracking().Where(c => c.HouseholdId == household.Id).ToListAsync(cancellationToken))
+            .Where(c => c.AgeOn(today) is null or < 18 && !given.Contains(c.Id)).ToList();
+        var code = GuardianLanguage.Code(household.Language);
+        var ids = new List<Guid>();
+        foreach (var child in children)
+        {
+            var benefits = new LearningBondConsent(Guid.NewGuid(), household.OrganizationId, household.Id, child.Id, LearningBondConsentScope.Benefits, typed,
+                LearningBondTexts.BenefitsConsentVersion, code, now);
+            db.LearningBondConsents.Add(benefits);
+            audit.Record(new AuditEvent(AuditAction.Created, nameof(LearningBondConsent), benefits.Id, $"Benefits consent given for {child.FirstName} by {typed}"));
+            ids.Add(benefits.Id);
+        }
+        await db.SaveChangesAsync(cancellationToken);
+        return GuardianResult.Of(GuardianOutcome.Created, new { ids });
+    }
+
     private async Task<List<GuardianLearningBondChildDto>> OpenChildrenAsync(Guid householdId, string timeZone, CancellationToken cancellationToken)
     {
         var consented = await db.LearningBondConsents.AsNoTracking()

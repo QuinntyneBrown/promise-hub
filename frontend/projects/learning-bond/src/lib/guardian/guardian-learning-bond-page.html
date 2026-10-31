@@ -98,6 +98,25 @@
               </ph-list>
             </div>
           </ph-card>
+          @if (page.benefits; as offer) {
+            @let b = benefitsWords();
+            @if (offer.offered) {
+              <ph-card [title]="b.offerTitle">
+                <div class="stack" data-testid="benefits-offer">
+                  <ph-agent-message [speaker]="t.speaker" [text]="b.offerText" />
+                  <div>
+                    <ph-button variant="primary" [link]="['benefits', 'consent']">{{
+                      b.check
+                    }}</ph-button>
+                  </div>
+                </div>
+              </ph-card>
+            } @else if (offer.consented) {
+              <div>
+                <ph-button icon="arrow-right" [link]="['benefits']">{{ b.yourBenefits }}</ph-button>
+              </div>
+            }
+          }
           @if (withdrawnName(); as name) {
             <div data-testid="consent-withdrawn">
               <ph-alert tone="success" [title]="t.withdrawnTitle(name)" [text]="t.withdrawnText" />

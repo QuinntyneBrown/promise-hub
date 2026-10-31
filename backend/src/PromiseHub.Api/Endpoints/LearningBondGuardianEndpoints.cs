@@ -72,6 +72,49 @@ public static class LearningBondGuardianEndpoints
             HttpContext http, CancellationToken ct) => GuardianEndpoints.ToHttp(await handler.SetReminderAsync(GuardianEndpoints.Request(token, http), childId, request, ct)));
         guardian.MapDelete("/consents/{id:guid}", async (string token, Guid id, LearningBondWithdrawHandler handler, HttpContext http, CancellationToken ct) =>
             GuardianEndpoints.ToHttp(await handler.WithdrawAsync(GuardianEndpoints.Request(token, http), id, ct)));
+        guardian.MapPost("/benefits/offer/dismiss", async (string token, LearningBondBenefitsHandler handler, HttpContext http, CancellationToken ct) =>
+            GuardianEndpoints.ToHttp(await handler.DismissOfferAsync(GuardianEndpoints.Request(token, http), ct)));
+        guardian.MapGet("/benefits/consent", async (string token, LearningBondBenefitsHandler handler, HttpContext http, CancellationToken ct) =>
+            GuardianEndpoints.ToHttp(await handler.ConsentPageAsync(GuardianEndpoints.Request(token, http), ct)));
+        guardian.MapGet("/benefits/intake", async (string token, LearningBondBenefitsHandler handler, HttpContext http, CancellationToken ct) =>
+            GuardianEndpoints.ToHttp(await handler.IntakeAsync(GuardianEndpoints.Request(token, http), ct)));
+        guardian.MapPut("/benefits/intake", async (string token, SaveBenefitsIntakeRequest request, LearningBondBenefitsHandler handler, HttpContext http, CancellationToken ct) =>
+            GuardianEndpoints.ToHttp(await handler.SaveIntakeAsync(GuardianEndpoints.Request(token, http), request, ct)));
+        guardian.MapGet("/benefits", async (string token, LearningBondBenefitsHandler handler, HttpContext http, CancellationToken ct) =>
+            GuardianEndpoints.ToHttp(await handler.ListAsync(GuardianEndpoints.Request(token, http), ct)));
+        guardian.MapPost("/benefits/{key}/document", async (string token, string key, LearningBondBenefitApplicationHandler handler, HttpContext http, CancellationToken ct) =>
+        {
+            IFormCollection form;
+            try
+            {
+                form = await http.Request.ReadFormAsync(ct);
+            }
+            catch (Exception e) when (e is InvalidDataException or BadHttpRequestException)
+            {
+                return GuardianEndpoints.ToHttp(GuardianResult.Invalid("file", LearningBondDocumentHandler.FileMessage));
+            }
+            if (form.Files.GetFile("file") is not { } file)
+            {
+                return GuardianEndpoints.ToHttp(GuardianResult.Invalid("file", LearningBondDocumentHandler.FileMessage));
+            }
+            await using var stream = file.OpenReadStream();
+            return GuardianEndpoints.ToHttp(await handler.UploadDocumentAsync(GuardianEndpoints.Request(token, http), key, file.FileName, file.ContentType, file.Length, stream, ct));
+        }).DisableAntiforgery().WithMetadata(new Microsoft.AspNetCore.Mvc.RequestSizeLimitAttribute(32 * 1024 * 1024));
+        guardian.MapPost("/benefits/{key}/applications", async (string token, string key, LearningBondBenefitApplicationHandler handler, HttpContext http, CancellationToken ct) =>
+            GuardianEndpoints.ToHttp(await handler.PrepareAsync(GuardianEndpoints.Request(token, http), key, ct)));
+        guardian.MapPatch("/benefits/applications/{id:guid}/fields/{field}", async (string token, Guid id, string field, LearningBondFieldValueRequest request,
+            LearningBondBenefitApplicationHandler handler, HttpContext http, CancellationToken ct) =>
+            GuardianEndpoints.ToHttp(await handler.EditFieldAsync(GuardianEndpoints.Request(token, http), id, field, request, ct)));
+        guardian.MapPost("/benefits/applications/{id:guid}/submit", async (string token, Guid id, SubmitLearningBondApplicationRequest request,
+            LearningBondBenefitApplicationHandler handler, HttpContext http, CancellationToken ct) =>
+            GuardianEndpoints.ToHttp(await handler.SubmitAsync(GuardianEndpoints.Request(token, http), id, request, ct)));
+        guardian.MapGet("/benefits/applications/{id:guid}/form", async (string token, Guid id, LearningBondBenefitApplicationHandler handler, HttpContext http, CancellationToken ct) =>
+        {
+            var (gate, pdf, name) = await handler.FormAsync(GuardianEndpoints.Request(token, http), id, ct);
+            return gate is not null ? GuardianEndpoints.ToHttp(gate) : Results.File(pdf!, "application/pdf", name);
+        });
+        guardian.MapPost("/benefits/applications/{id:guid}/sent", async (string token, Guid id, LearningBondBenefitApplicationHandler handler, HttpContext http, CancellationToken ct) =>
+            GuardianEndpoints.ToHttp(await handler.MarkSentAsync(GuardianEndpoints.Request(token, http), id, ct)));
         guardian.MapPost("/callback", async (string token, CallbackRequest request, LearningBondGuardianHandler handler, HttpContext http, CancellationToken ct) =>
             await handler.RequestCallAsync(new GuardianRequest(token, http.Request.Cookies[GuardianEndpoints.DeviceCookie], http.Request.Headers.UserAgent.ToString()), request, ct)
                 switch

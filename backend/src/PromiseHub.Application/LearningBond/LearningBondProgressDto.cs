@@ -6,4 +6,4 @@ namespace PromiseHub.Application.LearningBond;
 /// </summary>
 public sealed record LearningBondProgressDto(string Language, string Organization, string Explanation, Guid ApplicationId, Guid ChildId, string FirstName,
     string Provider, string Status, DateTimeOffset SubmittedAt, int? Estimate, int? DepositAmount, int StepsDone, DateOnly ExpectedFrom, DateOnly ExpectedTo,
-    LearningBondApplicationFieldsDto Fields, LearningBondDocumentRequestDto? Document);
+    LearningBondApplicationFieldsDto Fields, LearningBondDocumentRequestDto? Document, bool BenefitsOffer = false);

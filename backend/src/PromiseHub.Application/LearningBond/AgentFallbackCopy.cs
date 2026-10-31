@@ -43,6 +43,33 @@ public static class AgentFallbackCopy
         _ => $"I filled in {provider}’s application from what I have. Check each field. Nothing has been sent yet; here’s exactly what goes, and to whom.",
     };
 
+    /// <summary>The benefits intake (L2-154): what is reused and how little more is asked.</summary>
+    public static string BenefitsIntake(string code, IReadOnlyList<string> children) => code switch
+    {
+        "es" => $"Reutilizaré los datos de {string.Join(" y ", children)}, su SIN y su respuesta sobre impuestos. Necesito como mucho tres datos más.",
+        "fr" => $"Je réutilise les renseignements de {string.Join(" et ", children)}, votre NAS et votre réponse sur l’impôt. Il me faut au plus trois faits de plus.",
+        _ => $"I’ll reuse {string.Join(" and ", children)}’s details, your SIN and your tax answer. I need at most three more facts.",
+    };
+
+    /// <summary>The benefits list (L2-156): each one applied for on its own.</summary>
+    public static string Benefits(string code, string place) => code switch
+    {
+        "es" => $"Esto es lo que {place} y Canadá probablemente le deben a su familia. Solicite cada uno por separado; nunca envío nada por usted.",
+        "fr" => $"Voici ce que {place} et le Canada doivent probablement à votre famille. Faites chaque demande séparément; je n’envoie jamais rien à votre place.",
+        _ => $"Here’s what {place} and Canada likely owe your family. Apply to each one on its own; I never send anything for you.",
+    };
+
+    /// <summary>A benefit application under review (L2-156 criterion 2).</summary>
+    public static string BenefitReview(string code, bool form, string program) => (code, form) switch
+    {
+        ("es", true) => $"{program} recibe esta solicitud en papel o por correo. Rellené el formulario; usted lo envía y luego me avisa.",
+        ("es", _) => "Lo rellené con lo que ya tengo. Revise cada dato; nada se envía hasta que toque Enviar.",
+        ("fr", true) => $"{program} reçoit cette demande sur papier ou par courriel. J’ai rempli le formulaire; vous l’envoyez, puis vous me le dites.",
+        ("fr", _) => "Je l’ai rempli avec ce que j’ai déjà. Vérifiez chaque champ; rien n’est envoyé avant que vous touchiez Envoyer.",
+        (_, true) => $"{program} takes this one on paper or by email. I filled in the form; you send it, then tell me.",
+        _ => "I filled this in from what you’ve given. Check each field; nothing is sent until you tap Submit.",
+    };
+
     /// <summary>A paused claim (L2-151 criteria 1 and 2): what is missing, and that everything is kept.</summary>
     public static string Paused(string code, string child, LearningBondPausedReason? reason) => (code, reason) switch
     {

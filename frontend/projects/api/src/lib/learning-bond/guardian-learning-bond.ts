@@ -1,5 +1,6 @@
 import type { GuardianLearningBondChild } from './guardian-learning-bond-child';
 import type { GuardianLearningBondConsent } from './guardian-learning-bond-consent';
+import type { GuardianBenefitsOffer } from './guardian-benefits-offer';
 
 /** GET /g/learning-bond/{token}/page: the guardian's page for a verified device (L2-144). */
 export interface GuardianLearningBond {
@@ -12,4 +13,6 @@ export interface GuardianLearningBond {
   status: string;
   /** Your consents, each with Withdraw (L2-152). */
   consents?: GuardianLearningBondConsent[];
+  /** The benefits check (L2-153). */
+  benefits?: GuardianBenefitsOffer | null;
 }

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 89 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="89" data-video-title="Check child benefits" data-parts="Introduction|Offer and consent|Three questions|One state each|Apply now|A form|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 89</div>
+  <h1>Check child benefits</h1>
+  <p class="lead">Every benefit a family may be missing, one state each, applied for one at a time</p>
+</section>
+
+<section id="check-clip" data-part="1" data-cue="On Mateo's confirmation, the agent offers" data-clip="clips/check-phone.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>The check</h3><p>The offer, its consent, three questions, the list.</p></div>
+</section>
+
+<section id="questions" data-part="2" data-cue="The answers are stored encrypted, never in clear.">
+  <div class="cols">
+    <img class="shot" alt="Your permission for the benefits check" src="shots/phone-consent.png">
+    <img class="shot" alt="Three questions" src="shots/phone-questions.png">
+  </div>
+</section>
+
+<section id="states" data-part="3" data-cue="Each benefit shows exactly one state.">
+  <div class="cols">
+    <img class="shot" alt="Ontario Child Benefit: Apply now; Hamilton: Need a document" src="shots/phone-benefits.png">
+    <img class="shot" alt="Child Disability Benefit: Not eligible, with the reason" src="shots/phone-not-eligible.png">
+  </div>
+  <p class="muted small">BenefitCatalogue · versioned rules on the server · ADR 0082</p>
+</section>
+
+<section id="apply-clip" data-part="4" data-cue="Apply now opens the Ontario Child Benefit's own application" data-clip="clips/apply-phone.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Apply now</h3><p>One benefit, one Submit.</p></div>
+</section>
+
+<section id="form-clip" data-part="5" data-cue="Hamilton takes its program on paper or by email." data-clip="clips/form-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>A form she sends</h3><p>Proof of address, the filled PDF, Mark as sent.</p></div>
+</section>
+
+<section id="testing" data-part="6" data-cue="The API tests cover the offer">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>LearningBondBenefitsTests</code>: consent and 403, intake, states and amounts, local note</li>
+    <li>One benefit sent once; the form never prints a SIN; another household: 404</li>
+    <li><code>benefits</code> spec · laptop and phone · axe</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="7" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Its own consent; three questions</li><li>One state per benefit, from the platform's rules</li><li>One application at a time, only on Submit</li><li>A paper form never carries a full SIN</li></ul>
+  <p class="muted">Next: reminders and the running total</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

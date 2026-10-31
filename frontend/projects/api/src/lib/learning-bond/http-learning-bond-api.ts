@@ -16,6 +16,12 @@ import { LearningBondApplicationChange } from './learning-bond-application-chang
 import { LearningBondEstimate } from './learning-bond-estimate';
 import { LearningBondProgress } from './learning-bond-progress';
 import { LearningBondPaused } from './learning-bond-paused';
+import { Benefits } from './benefits';
+import { BenefitsConsent } from './benefits-consent';
+import { BenefitsIntake } from './benefits-intake';
+import { SaveBenefitsIntake } from './save-benefits-intake';
+import { BenefitReview } from './benefit-review';
+import { BenefitReviewChange } from './benefit-review-change';
 import { LearningBondSubmitOutcome } from './learning-bond-submit-outcome';
 import { LearningBondIntake } from './learning-bond-intake';
 import { SaveLearningBondIntake } from './save-learning-bond-intake';
@@ -296,6 +302,104 @@ export class HttpLearningBondApi implements LearningBondApi {
           ),
         ),
     );
+  }
+
+  dismissBenefitsOffer(token: string): Observable<WriteOutcome> {
+    return toWrite(this.http.post<null>(`${this.guardianUrl(token)}/benefits/offer/dismiss`, null));
+  }
+
+  benefitsConsent(token: string): Observable<GuardianPageResult<BenefitsConsent>> {
+    return toGuardianPage(
+      this.http.get<BenefitsConsent>(`${this.guardianUrl(token)}/benefits/consent`),
+    );
+  }
+
+  giveBenefitsConsent(token: string, typedName: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(`${this.guardianUrl(token)}/consents`, { scope: 'Benefits', typedName }),
+    );
+  }
+
+  benefitsIntake(token: string): Observable<GuardianPageResult<BenefitsIntake>> {
+    return toGuardianPage(
+      this.http.get<BenefitsIntake>(`${this.guardianUrl(token)}/benefits/intake`),
+    );
+  }
+
+  saveBenefitsIntake(token: string, answers: SaveBenefitsIntake): Observable<WriteOutcome> {
+    return toWrite(this.http.put<null>(`${this.guardianUrl(token)}/benefits/intake`, answers));
+  }
+
+  benefits(token: string): Observable<GuardianPageResult<Benefits>> {
+    return toGuardianPage(this.http.get<Benefits>(`${this.guardianUrl(token)}/benefits`));
+  }
+
+  uploadBenefitDocument(token: string, key: string, file: File): Observable<WriteOutcome> {
+    const form = new FormData();
+    form.append('file', file, file.name);
+    return toWrite(
+      this.http.post<{ id: string }>(
+        `${this.guardianUrl(token)}/benefits/${encodeURIComponent(key)}/document`,
+        form,
+      ),
+    );
+  }
+
+  prepareBenefit(token: string, key: string): Observable<GuardianPageResult<BenefitReview>> {
+    return toGuardianPage(
+      this.http.post<BenefitReview>(
+        `${this.guardianUrl(token)}/benefits/${encodeURIComponent(key)}/applications`,
+        null,
+      ),
+    );
+  }
+
+  editBenefitField(
+    token: string,
+    id: string,
+    field: string,
+    value: string,
+  ): Observable<BenefitReviewChange> {
+    return this.http
+      .patch<BenefitReview>(`${this.benefitUrl(token, id)}/fields/${encodeURIComponent(field)}`, {
+        value,
+      })
+      .pipe(
+        map((value): BenefitReviewChange => ({ status: 'saved', value })),
+        catchError((error: HttpErrorResponse) =>
+          of<BenefitReviewChange>(
+            error.status === 422
+              ? { status: 'invalid', errors: error.error?.errors ?? {} }
+              : { status: 'error' },
+          ),
+        ),
+      );
+  }
+
+  submitBenefit(
+    token: string,
+    id: string,
+    reviewVersion: number,
+  ): Observable<LearningBondSubmitOutcome> {
+    return this.outcome(
+      this.http.post<unknown>(`${this.benefitUrl(token, id)}/submit`, { reviewVersion }),
+    );
+  }
+
+  markBenefitSent(token: string, id: string): Observable<WriteOutcome> {
+    return toWrite(this.http.post<null>(`${this.benefitUrl(token, id)}/sent`, null));
+  }
+
+  benefitFormUrl(token: string, id: string): string {
+    return `${this.benefitUrl(token, id)}/form`;
+  }
+
+  private guardianUrl(token: string): string {
+    return `${this.baseUrl}/g/learning-bond/${encodeURIComponent(token)}`;
+  }
+
+  private benefitUrl(token: string, id: string): string {
+    return `${this.guardianUrl(token)}/benefits/applications/${encodeURIComponent(id)}`;
   }
 
   withdrawConsent(token: string, consentId: string): Observable<WriteOutcome> {

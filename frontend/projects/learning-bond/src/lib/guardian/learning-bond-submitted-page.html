@@ -103,6 +103,22 @@
                 <p phCardFooter class="plain muted">{{ t.estimateLine(t.amount(p.estimate)) }}</p>
               }
             </ph-card>
+            @if (p.benefitsOffer && !offerDismissed()) {
+              @let b = benefitsWords();
+              <ph-card [title]="b.offerTitle">
+                <div class="stack" data-testid="benefits-offer">
+                  <ph-agent-message [speaker]="t.speaker" [text]="b.offerText" />
+                  <div class="cluster">
+                    <ph-button
+                      variant="primary"
+                      [link]="['/g/learning-bond', token(), 'benefits', 'consent']"
+                      >{{ b.check }}</ph-button
+                    >
+                    <ph-button variant="ghost" (click)="dismissOffer()">{{ b.notNow }}</ph-button>
+                  </div>
+                </div>
+              </ph-card>
+            }
             <div>
               <ph-button variant="ghost" [link]="['/g/learning-bond', token()]">{{
                 t.familyPage
