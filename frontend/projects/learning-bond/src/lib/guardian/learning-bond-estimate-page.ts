@@ -17,7 +17,9 @@ import {
   PhGuardianShell,
   PhSkeleton,
   PhStepper,
+  PhDialogs,
 } from '@promisehub/components';
+import { LearningBondAgentBubble } from './learning-bond-agent-bubble';
 import { guardianLearningBondText } from './guardian-learning-bond-text';
 
 /**
@@ -42,6 +44,7 @@ import { guardianLearningBondText } from './guardian-learning-bond-text';
 })
 export class LearningBondEstimatePage implements OnInit {
   private readonly api = inject(LEARNING_BOND_API);
+  protected readonly agent = new LearningBondAgentBubble(this.api, inject(PhDialogs), 'Estimate');
 
   readonly token = input.required<string>();
   readonly childId = input.required<string>();
@@ -64,6 +67,9 @@ export class LearningBondEstimatePage implements OnInit {
 
   protected load(): void {
     this.result.set(null);
-    this.api.estimate(this.token(), this.childId()).subscribe((r) => this.result.set(r));
+    this.api.estimate(this.token(), this.childId()).subscribe((r) => {
+      this.result.set(r);
+      if (r.status === 'loaded') this.agent.load(this.token());
+    });
   }
 }

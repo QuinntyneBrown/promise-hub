@@ -53,13 +53,18 @@ def steps(cur: int, names=STEPS) -> str:
     return g_steps(cur, len(names), "Learning Bond steps" if names is STEPS else "Benefits steps") + f'<p class="visually-hidden">{esc(names[cur])}</p>'
 
 
-def agent(text: str, *, hint: str = "") -> str:
+ASK = {"en": "Ask a question", "es": "Hacer una pregunta", "fr": "Poser une question"}
+
+
+def agent(text: str, *, hint: str = "", ask: str = "") -> str:
+    """The agent's bubble; `ask` adds the ghost button that opens `learning-bond-ask` under it, on the eight step pages (L2-160)."""
     h = f'<p class="chat__hint">{esc(hint)}</p>' if hint else ""
+    a = f'<div>{btn(ask, "ghost", icon_name="sparkle", data_href=dialog("learning-bond-ask"))}</div>' if ask else ""
     return (f'<div class="chat" aria-label="Learning Bond"><div class="bubble"><span class="bubble__face icon-tile" aria-hidden="true">{icon("sprout")}</span>'
-            f'<p class="bubble__text"><span class="visually-hidden">Learning Bond: </span>{text}</p></div>{h}</div>')
+            f'<p class="bubble__text"><span class="visually-hidden">Learning Bond: </span>{text}</p></div>{h}</div>{a}')
 
 
-AGENT_NOTE = note("The agent’s line is the approved fixed wording for this step; the language model may rephrase it within 60 words in the household’s language, and never states an amount the rules didn’t compute. If the model is slow or down, this wording shows as is (L2-160).", "top: 4rem; right: 1rem;")
+AGENT_NOTE = note("The agent’s line is the approved fixed wording for this step; the language model may rephrase it within 60 words in the household’s language, and never states an amount the rules didn’t compute. If the model is slow or down, this wording shows as is. Ask a question opens learning-bond-ask (L2-160).", "top: 4rem; right: 1rem;")
 
 
 def sin_field(fid: str, label: str, *, value: str = "", masked: str = "", error: str = "", change: bool = False) -> str:
@@ -116,7 +121,7 @@ def guardian_learning_bond(S):
         acts = (f'<div class="stack">{btn(c["cont"], "primary", size="lg", icon_name="arrow-right", href=page("learning-bond-consent", "es" if lang == "es" else "default"))}'
                 f'<div class="cluster" style="justify-content: center;">{btn(c["later"], "", href=page("guardian-learning-bond", "not-now"))}{btn(c["no"], "ghost", href=page("guardian-learning-bond", "not-interested"))}</div>'
                 f'<p class="hint center">{c["about"]}</p></div>')
-        return f'<h1>{c["h1"]}</h1>' + agent(c["agent"]) + kids + acts + g_footer()
+        return f'<h1>{c["h1"]}</h1>' + agent(c["agent"], ask=ASK[lang]) + kids + acts + g_footer()
 
     S.add("default", "Carmen taps the link on a verified device: three sentences from the agent, each child in a covered program with the amount they may be owed, Continue, Not now, I’m not interested.", main=landing(),
           notes=AGENT_NOTE)
@@ -146,7 +151,7 @@ def guardian_learning_bond(S):
     S.add("in-progress", "Reopened later: Mateo submitted with the deposit window, Sofía started, the running total, the benefits offer kept after Not now, and Your consents with Withdraw.", main=in_progress(),
           notes=note("The benefits offer stays here once Not now was chosen on the confirmation page (L2-153). Withdraw opens the dialog that says what stops and what doesn’t (L2-152).", "top: 4rem; right: 1rem;"))
     S.add("older-child", "The Haddad household: Yusuf (13) can be claimed for; Nadia (18) is named with the rule for 18 to 20 and no claim is offered for her.", lang="English",
-          main='<h1>Yusuf may be owed money for school after high school</h1>' + agent(T["en"]["agent"].replace("Harbourview Youth Collective", "Harbourview Youth Collective"))
+          main='<h1>Yusuf may be owed money for school after high school</h1>' + agent(T["en"]["agent"].replace("Harbourview Youth Collective", "Harbourview Youth Collective"), ask=ASK["en"])
                + card(ul_list([list_item("Yusuf Haddad", "13 · After‑School Tutoring", lead=child_lead(CHILD["yusuf"]), end=badge("Up to $1,800", "info")),
                                list_item("Nadia Haddad", "Nadia can claim the Learning Bond for themselves until they turn 21.", lead='<span class="avatar avatar--sm avatar--sage" aria-hidden="true">NH</span>')], card=False, label="Your children"), title="Your children", tid="kids", cls="card--flush")
                + f'<div class="stack">{btn("Continue", "primary", size="lg", icon_name="arrow-right", href=page("learning-bond-consent"))}</div>' + g_footer())
@@ -174,7 +179,7 @@ def learning_bond_consent(S):
                 + field("sig", sig_label, value="" if "sig" in e else "Carmen Rivera", autocomplete="name", error=e.get("sig", ""), required=True)
                 + f'<p class="hint">{"Signed on this phone · Thu 5 Nov 2026 · wording version 2" if lang == "en" else "Firmado en este teléfono · jue 5 nov 2026 · versión 2 del texto"}</p>')
         summary = form_summary([(k, v) for k, v in e.items()]) if e else ""
-        return (steps(0) + f'<h1>{h1}</h1>' + agent(lead) + f'<form class="card stack" action="#" method="post" novalidate>{summary}{body}{btn(agree, "primary", type_="submit", size="lg", busy=busy, icon_name="check")}</form>' + g_footer())
+        return (steps(0) + f'<h1>{h1}</h1>' + agent(lead, ask=ASK[lang]) + f'<form class="card stack" action="#" method="post" novalidate>{summary}{body}{btn(agree, "primary", type_="submit", size="lg", busy=busy, icon_name="check")}</form>' + g_footer())
     S.add("default", "One unticked box per eligible child with the exact wording, a typed full name and Agree; Mateo ticked, Sofía not yet.", main=form(), notes=AGENT_NOTE)
     S.add("es", "The consent in Spanish.", lang="Español", html_lang="es", main=form(lang="es"))
     S.add("invalid", "No child ticked and no name typed: 422 with both messages; nothing is stored.", main=form(err={"kid": "Tick at least one child.", "sig": "Type your full name to sign."}, checked=()))
@@ -212,13 +217,13 @@ def learning_bond_intake(S):
         e = err or {}
         summary = form_summary([(k, v) for k, v in e.items()]) if e else ""
         return (steps(1) + f'<h1>{child["name"].split()[0]}’s details</h1>' + alert_html
-                + agent(f"I already have {child['name'].split()[0]}’s name and birthday from the enrolment. I’ll ask only for what’s missing: the numbers go in the boxes, never in a message to me.")
+                + agent(f"I already have {child['name'].split()[0]}’s name and birthday from the enrolment. I’ll ask only for what’s missing: the numbers go in the boxes, never in a message to me.", ask=ASK["en"])
                 + f'<form class="stack" action="#" method="post" novalidate>{summary}{confirm_card(child, dob)}{numbers(err=err, child=child, **kw)}{btn("Save and continue", "primary", type_="submit", size="lg", busy=busy, icon_name="arrow-right")}</form>'
                 + f'<p class="hint center">Encrypted with a key Harbourview never holds. Shown only as the last 3 digits once saved.</p>' + talk_link() + g_footer())
     S.add("default", "Mateo’s name and date of birth for confirmation, then the only three questions: Carmen’s SIN, Mateo’s SIN and the tax return; SIN fields are masked with Show.", main=form(),
           notes=note("A 9-digit number typed into any free-text message to the agent is removed before it is stored or sent to the model, and the agent asks for it in the box instead (L2-146).", "top: 4rem; right: 1rem;"))
     S.add("es", "The intake in Spanish.", lang="Español", html_lang="es",
-          main=steps(1) + '<h1>Los datos de Mateo</h1>' + agent("Ya tengo el nombre y la fecha de nacimiento de Mateo de la inscripción. Solo le pediré lo que falta: los números van en las casillas, nunca en un mensaje para mí.")
+          main=steps(1) + '<h1>Los datos de Mateo</h1>' + agent("Ya tengo el nombre y la fecha de nacimiento de Mateo de la inscripción. Solo le pediré lo que falta: los números van en las casillas, nunca en un mensaje para mí.", ask=ASK["es"])
                + f'<form class="stack" action="#" method="post" novalidate>{card(facts([("Nombre", "Mateo Rivera"), ("Fecha de nacimiento", "14 mar 2017")]) + f"<div class=\"cluster\">{btn("Sí, es correcto", "primary", icon_name="check")}{btn("Corregir", "ghost", href=page("guardian-update"))}</div>", title="De la inscripción de Mateo", tid="confirm")}'
                + card(sin_field("gsin", "Su número de seguro social") + sin_field("csin", "Número de seguro social de Mateo") + f'<p><a href="{page("learning-bond-paused")}">Mateo aún no tiene NAS</a></p>'
                       + fieldset("¿Su familia presentó la declaración de impuestos de 2025?", choice("tax", "Sí") + choice("tax", "No") + choice("tax", "No estoy segura"), fid="tax"), title="Lo que todavía necesito", tid="numbers")
@@ -254,7 +259,7 @@ def learning_bond_estimate(S):
             nxt, a = "Next: the RESP provider", "Every year from birth to the year a child turns 15 counts: $500 for the first and $100 for each year after, up to $2,000."
         body = card(f'<p class="stat__label">{"Estimación" if lang == "es" else "Estimate"}</p><p class="stat__value">{amount}</p><p class="text-muted">{why}</p>' + extra)
         act = f'<div class="stack">{btn(nxt, "primary", size="lg", icon_name="arrow-right", href=page("learning-bond-review", "es" if lang == "es" else "default"))}</div>' if cont else ""
-        return steps(2) + f'<h1>{h1}</h1>' + agent(a) + body + act + g_footer()
+        return steps(2) + f'<h1>{h1}</h1>' + agent(a, ask=ASK[lang]) + body + act + g_footer()
     S.add("default", "Mateo, born 2017, in 2026: ten years, $500 + 9 × $100 = up to $1,400, computed by the versioned rule on the server, never by the model.", main=est(),
           notes=note("The rule (Canada Learning Bond, version 2026-01) and its effective date are recorded with the estimate (L2-147).", "top: 4rem; right: 1rem;"))
     S.add("es", "The estimate in Spanish.", lang="Español", html_lang="es", main=est(lang="es"))
@@ -300,14 +305,14 @@ def learning_bond_review(S):
         line = (f"Esto envía la solicitud de Mateo a {PROVIDER} y al Gobierno de Canadá." if es else f"This sends Mateo’s application to {PROVIDER} and the Government of Canada.")
         submit = btn(f"{'Enviar a' if es else 'Submit to'} {PROVIDER}", "primary", type_="submit", size="lg", busy=busy, icon_name="send", disabled=bool(editing))
         app = card(app_review(editing=editing, err=err, lang=lang), title="Solicitud de RESP y Bono de Estudios" if es else "RESP and Learning Bond application", tid="app")
-        return (steps(3) + f'<h1>{h1}</h1>' + alert_html + agent(a) + provider_card(choosing=choosing, lang=lang)
+        return (steps(3) + f'<h1>{h1}</h1>' + alert_html + agent(a, ask=ASK[lang]) + provider_card(choosing=choosing, lang=lang)
                 + f'<form class="stack" action="#" method="post" novalidate>{app}<p class="hint">{line}</p>{submit}</form>' + talk_link() + g_footer())
     S.add("default", "The recommended provider and why, every field of the pre-filled application with Edit (SINs masked, no Edit on them), and Submit to Northfield Credit Union as the only way to send.", main=body(),
           notes=note("Before Submit, no request carrying the family’s data has been made to the provider or any government service. Submit is the guardian’s own request with the review’s version; the agent has no tool that submits (L2-149).", "top: 4rem; right: 1rem;"))
     S.add("es", "The review in Spanish.", lang="Español", html_lang="es", main=body(lang="es"))
     S.add("choose-another", "Choose another opens the learning-bond-choose-provider dialog: the no-fee providers serving Ontario, from the platform’s list.", main=body(choosing=True))
     S.add("no-provider", "No provider on the list serves the household’s province: the page says so, offers the Government of Canada link, and the claim stays Started.",
-          main=steps(3) + '<h1>No provider yet for your province</h1>' + agent("None of the no-fee providers we work with serves Nunavut yet. Your claim stays saved; I’ll text you when one does.")
+          main=steps(3) + '<h1>No provider yet for your province</h1>' + agent("None of the no-fee providers we work with serves Nunavut yet. Your claim stays saved; I’ll text you when one does.", ask=ASK["en"])
                + card(f'<p>You can still open an RESP and claim the bond yourself.</p><div>{btn("Learning Bond on canada.ca", "", icon_name="globe", href="https://www.canada.ca/en/services/benefits/education/education-savings/learning-bond.html", attrs=" target=\"_blank\" rel=\"noopener\"")}</div>') + g_footer())
     S.add("edit", "Edit opens the learning-bond-edit-field dialog for that field, for this application only; the household record isn’t changed. A missing address is flagged on its row.", main=body(editing="Address"))
     S.add("submitting", "Sending once; a double tap or retry sends nothing more.", main=body(busy=True))
@@ -345,7 +350,7 @@ def learning_bond_submitted(S):
         a = "Listo. Esto es lo que se envió, a quién y qué pasa ahora." if es else "Done. Here’s what was sent, to whom and what happens next. I’ll text you as Northfield and the Government of Canada report back."
         fields = card(facts(SENT_FIELDS) + f'<p class="text-muted">{"Enviado 4:20 pm · estimación hasta $1,400" if es else "Sent 4:20 pm · estimate up to $1,400 · rule version 2026-01"}</p>', title="Lo que se envió" if es else "What was sent", tid="sent")
         acts = f'<div class="cluster">{btn("Empezar la solicitud de Sofía" if es else "Start Sofía’s claim", "", icon_name="arrow-right", href=page("learning-bond-intake", "second-child"))}{btn("Su página familiar" if es else "Your family page", "ghost", href=page("guardian-learning-bond", "in-progress"))}</div>'
-        return steps(4) + f'<h1>{h1}</h1>' + alert_html + agent(a) + next_steps(done) + extra + fields + offer(lang=lang) + acts + g_footer()
+        return steps(4) + f'<h1>{h1}</h1>' + alert_html + agent(a, ask=ASK[lang]) + next_steps(done) + extra + fields + offer(lang=lang) + acts + g_footer()
     S.add("default", "Sent to Northfield Credit Union on Thu 5 Nov 2026: the fields sent (SINs masked), the estimate, what happens next in three steps, the expected deposit window, and the benefits offer.", main=sent(),
           notes=note("The deposit window comes from the provider’s stated processing time. Check benefits opens the Benefits consent (L2-153); Not now is remembered and the offer stays on the family page.", "top: 4rem; right: 1rem;"))
     S.add("es", "The confirmation in Spanish.", lang="Español", html_lang="es", main=sent(lang="es"))
@@ -441,7 +446,7 @@ def learning_bond_benefits(S):
     rem = f'<p class="center"><a href="{page("learning-bond-reminders")}">Your reminders</a> · <a href="{page("learning-bond-total")}">Your total</a></p>'
 
     def pg(items, *, lead="Here’s what Hamilton, Ontario and Canada likely owe your family. Apply to each one on its own; I never send anything for you.", alert_html=""):
-        return steps(2, BSTEPS) + '<h1>Your family’s benefits</h1>' + alert_html + agent(lead) + items + rem + talk_link() + g_footer()
+        return steps(2, BSTEPS) + '<h1>Your family’s benefits</h1>' + alert_html + agent(lead, ask=ASK["en"]) + items + rem + talk_link() + g_footer()
     S.add("default", "Each likely benefit with exactly one of Apply now, Need a document or Not eligible with a reason, and You already get these; estimates from the catalogue’s versioned rules.", main=pg(ocb() + hra + cdb + have),
           notes=note("The catalogue is the platform’s: federal and provincial entries for every province and territory, municipal ones where the organization’s city matches. Estimates are computed by its rules on the server, never by the model (L2-155). There is no Submit all (L2-156).", "top: 4rem; right: 1rem;"))
     S.add("all-received", "The family already receives every likely benefit; reminders are still set.", main=pg(have.replace('Canada Child Benefit", "Federal', 'Canada Child Benefit", "Federal') + card(empty("You’re already getting every benefit we know about.", "I’ll remind you when one needs renewing.", action=btn("See your reminders", "primary", href=page("learning-bond-reminders")), icon_name="check-circle"), cls="card--flush"), lead="Good news."))
@@ -491,12 +496,12 @@ def learning_bond_reminders(S):
     def lst(items, off=()):
         rows = [list_item(t, m, lead=f'<span class="icon-tile" aria-hidden="true">{icon(i)}</span>', end=(badge("Off") if t in off else btn("Turn off", "ghost", size="sm", aria_label=f"Turn off {t}"))) for t, m, i in items]
         return card(ul_list(rows, card=False, label="Your reminders"), cls="card--flush")
-    intro = '<h1>Your reminders</h1>' + agent("One text at 10 am on each date that matters, with what to do and a link. Turn any off.")
+    intro = '<h1>Your reminders</h1>' + agent("One text at 10 am on each date that matters, with what to do and a link. Turn any off.", ask=ASK["en"])
     S.add("default", "Filing taxes on March 15 each year, each child turning 6 or 18 thirty days before, and each benefit’s renewal, each with Turn off.", main=intro + lst(REMINDERS) + g_footer(),
           notes=note("Mateo and Sofía are past 6, so no “turns 6” reminder. Sent by the organization’s reminder job in the household’s language; email when there’s no mobile or the SMS cap is reached; never after STOP (L2-157).", "top: 4rem; right: 1rem;"))
     S.add("turned-off", "The renewal reminder turned off: it is never sent.", main=intro + lst(REMINDERS, off=("Ontario Child Benefit renewal",)) + g_footer(), toast_html=toast_region(toast("success", "Reminder turned off", "Ontario Child Benefit renewal", action="Undo")))
     S.add("empty", "No reminder ahead.", main=intro + card(empty("No reminders", "Reminders appear after a benefits check.", action=btn("Check benefits", "primary", href=page("learning-bond-benefits-intake")), icon_name="bell"), cls="card--flush") + g_footer())
-    S.add("es", "Reminders in Spanish.", lang="Español", html_lang="es", main='<h1>Sus recordatorios</h1>' + agent("Un mensaje a las 10 de la mañana en cada fecha que importa, con qué hacer y un enlace. Puede desactivar cualquiera.")
+    S.add("es", "Reminders in Spanish.", lang="Español", html_lang="es", main='<h1>Sus recordatorios</h1>' + agent("Un mensaje a las 10 de la mañana en cada fecha que importa, con qué hacer y un enlace. Puede desactivar cualquiera.", ask=ASK["es"])
           + card(ul_list([list_item("Presente sus impuestos de 2026", "lun 15 mar 2027, y cada 15 de marzo", lead=f'<span class="icon-tile" aria-hidden="true">{icon("calendar")}</span>', end=btn("Desactivar", "ghost", size="sm"))], card=False, label="Sus recordatorios"), cls="card--flush") + g_footer())
     S.add("loading", "Loading.", main=loading_page("Your reminders"))
     S.add("error", "Failed to load.", main='<h1>Your reminders</h1>' + failed_load("We couldn’t load your reminders") + g_footer())

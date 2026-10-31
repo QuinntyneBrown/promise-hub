@@ -15,6 +15,6 @@
 | open-guardian-learning-bond | 5 days | 80% |
 | remind-and-total-dollars | 6 days | 90% |
 | review-and-submit-application | 8 days | 80% |
-| run-learning-bond-agent | 7 days | 20% |
+| run-learning-bond-agent | 7 days | 90% |
 | support-families-with-status | 5 days | 70% |
 | view-dashboard-and-export | 5 days | 90% |

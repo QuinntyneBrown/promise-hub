@@ -23,8 +23,10 @@ import {
   PhList,
   PhListItem,
   PhSkeleton,
+  PhDialogs,
 } from '@promisehub/components';
 import { guardianBenefitsText } from './guardian-benefits-text';
+import { LearningBondAgentBubble } from './learning-bond-agent-bubble';
 import { guardianLearningBondText } from './guardian-learning-bond-text';
 
 /** The household's reminders (learning-bond-reminders, L2-157): each date that matters with Turn off; none before a benefits check. */
@@ -47,6 +49,7 @@ import { guardianLearningBondText } from './guardian-learning-bond-text';
 })
 export class LearningBondRemindersPage implements OnInit {
   protected readonly api = inject(LEARNING_BOND_API);
+  protected readonly agent = new LearningBondAgentBubble(this.api, inject(PhDialogs), 'Reminders');
 
   readonly token = input.required<string>();
 
@@ -69,7 +72,10 @@ export class LearningBondRemindersPage implements OnInit {
 
   protected load(): void {
     this.result.set(null);
-    this.api.reminders(this.token()).subscribe((r) => this.result.set(r));
+    this.api.reminders(this.token()).subscribe((r) => {
+      this.result.set(r);
+      if (r.status === 'loaded') this.agent.load(this.token());
+    });
   }
 
   protected title(r: LearningBondDateReminder): string {

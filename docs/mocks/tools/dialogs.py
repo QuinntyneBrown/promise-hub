@@ -1207,6 +1207,41 @@ simple("learning-bond-callback", "I’d rather talk to someone", "guardian-learn
        "Ask for a call", base_state="in-progress", icon_name="phone", invalid_err={"cb-phone": "Enter a 10-digit mobile number."},
        success_body=f'<p>{ORG} will call you. They will see where you are in the steps, never your SIN.</p><p class="text-muted">Asked Thu 5 Nov, 4:52 pm · afternoons · 905-555-0142.</p>')
 
+@screen("learning-bond-ask", "dialog", "Ask Learning Bond", opens_from="learning-bond-estimate", reqs=["L2-160", "L2-163", "L1-029"] + R_SD_X,
+        na={"invalid": "Any question may be sent; a number that looks like a SIN is refused by the server (sin-refused), never by the field.",
+            "empty": "The opening line is the empty state (default)."})
+def learning_bond_ask(S):
+    from pages_learning_bond_guardian import agent  # noqa: E402
+    question = "Does it cost anything?"
+    answer = "No. Claiming it is free, and the money stays in Mateo’s RESP."
+
+    def log(lines):
+        items = "".join(f'<li class="thread__message{" thread__message--mine" if mine else ""}"><p class="thread__bubble">{esc(text)}</p>'
+                        f'<span class="thread__meta">{"You" if mine else "Learning Bond"}</span></li>' for mine, text in lines)
+        return f'<ol class="thread__log" aria-label="Ask Learning Bond" aria-live="polite">{items}</ol>'
+
+    def box(lines=(), *, value="", busy=False, alert_html=""):
+        opening = "" if lines else agent("Ask anything about this step. I explain; you decide.")
+        composer = (f'<form class="thread__composer" action="#" aria-label="Ask Learning Bond">'
+                    + textarea("ask-body", "Your question", value=value, rows=2, help_="Don’t type your SIN or any number here.", attrs="" if busy else " autofocus")
+                    + btn("Send", "primary", icon_name="send", type_="submit", busy=busy) + "</form>")
+        body = opening + alert_html + f'<div class="thread">{log(lines)}{composer}</div>'
+        return dialog_box("Ask Learning Bond", "", body, btn("Close", ""), icon_name="sparkle")
+
+    S.add("default", "Opened from Ask a question under the bubble: the opening agent line, an empty question and Send. Nothing is sent until she taps Send.",
+          **over("learning-bond-estimate", overlays=box()),
+          notes=note("POST /g/learning-bond/{token}/agent with the step and her question; the model sees only first names, ages, statuses and the rules’ figures (L2-160).", "top: 4rem; right: 1rem;"))
+    S.add("answered", "Carmen asked whether it costs anything: her question (You) and the answer (Learning Bond), kept for her household only.",
+          **over("learning-bond-estimate", overlays=box([(True, question), (False, answer)])),
+          notes=note("The answer is shown only if it is 60 words or fewer, has no nine-digit number and states only amounts the rules produced; otherwise the step’s approved line answers.", "top: 4rem; right: 1rem;"))
+    S.add("busy", "Sending: her question stays in the field and Send is busy; Close still works.",
+          **over("learning-bond-estimate", overlays=box(value=question, busy=True)))
+    S.add("sin-refused", "She typed her SIN: the server refuses it with a fixed line before the model and keeps it only as [number removed].",
+          **over("learning-bond-estimate", overlays=box([(True, "My SIN is [number removed]"), (False, "Please don’t type your SIN here. It goes only in the form field.")])))
+    S.add("failed", "Sending failed: a danger alert, and her words stay in the field to send again.",
+          **over("learning-bond-estimate", overlays=box(value=question, alert_html=failed_alert("That didn’t go through. Try again.", ""))))
+
+
 simple("learning-bond-edit-field", "Change phone", "learning-bond-review", ["L2-148", "L1-027"] + R_SD_X, "For this application only. Your family’s record isn’t changed.",
        lambda e: field("application-field", "Phone", type_="tel", value="555-0142" if e else "905-555-0142", inputmode="tel", autocomplete="tel", required=True, error=(e or {}).get("application-field", ""), autofocus=True),
        "Save", icon_name="edit", invalid_err={"application-field": "Enter a 10-digit mobile number."})

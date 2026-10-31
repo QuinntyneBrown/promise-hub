@@ -32,6 +32,12 @@ public static class DependencyInjection
         services.AddSingleton<PromiseHub.Application.LearningBond.IRespProviderChannel, LearningBond.UnconfiguredRespProviderChannel>();
         services.AddSingleton<PromiseHub.Application.LearningBond.IProviderWebhookVerifier, LearningBond.HmacProviderWebhookVerifier>();
         services.AddSingleton<PromiseHub.Application.LearningBond.IBenefitChannel, LearningBond.UnconfiguredBenefitChannel>();
+        // Claude answers behind the agent's bubble only when a key is configured; otherwise every step keeps its fixed line (ADR 0085).
+        services.AddSingleton<PromiseHub.Application.LearningBond.ILanguageModel>(sp =>
+            string.IsNullOrWhiteSpace(sp.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>()["LearningBond:Agent:ApiKey"])
+                ? new LearningBond.UnconfiguredLanguageModel()
+                : new LearningBond.ClaudeLanguageModel(sp.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>()));
+        services.AddSingleton<PromiseHub.Application.LearningBond.ILearningBondAgentSettings, LearningBond.ConfiguredLearningBondAgentSettings>();
         // The open event streams (L2-107, ADR 0068): one hub per API instance, published to through the port.
         services.AddSingleton<Messaging.RealtimeHub>();
         services.AddSingleton<Application.Messaging.IRealtimeEvents>(sp => sp.GetRequiredService<Messaging.RealtimeHub>());

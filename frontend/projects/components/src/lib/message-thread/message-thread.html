@@ -12,8 +12,10 @@
       <p class="bubble">{{ m.body }}</p>
       <span class="meta" [class.failed]="m.state === 'failed'">
         @if (m.state === 'failed') {
-          Not sent.
-          <ph-button variant="ghost" size="sm" (click)="retry.emit(m.id)">Try again</ph-button>
+          {{ notSentLabel() }}
+          <ph-button variant="ghost" size="sm" (click)="retry.emit(m.id)">{{
+            tryAgainLabel()
+          }}</ph-button>
         } @else {
           {{ m.meta }}
         }
@@ -22,11 +24,12 @@
   }
 </ol>
 @if (composer()) {
-  <form class="composer" [attr.aria-label]="'Write a message'" (ngSubmit)="submit()">
+  <form class="composer" [attr.aria-label]="composerLabel()" (ngSubmit)="submit()">
     <ph-textarea
       class="field"
       inputId="message-body"
-      label="Message"
+      [label]="fieldLabel()"
+      [help]="help()"
       name="body"
       [rows]="2"
       [error]="error()"
@@ -35,8 +38,13 @@
       (ngModelChange)="draft.set($event ?? '')"
       (keydown)="keydown($event)"
     />
-    <ph-button variant="primary" icon="send" type="submit" [busy]="busy()" [disabled]="disabled()"
-      >Send</ph-button
+    <ph-button
+      variant="primary"
+      icon="send"
+      type="submit"
+      [busy]="busy()"
+      [disabled]="disabled()"
+      >{{ sendLabel() }}</ph-button
     >
   </form>
 }

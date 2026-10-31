@@ -22,6 +22,7 @@ import {
   PhSkeleton,
   PhStepper,
 } from '@promisehub/components';
+import { LearningBondAgentBubble } from './learning-bond-agent-bubble';
 import { guardianLearningBondText } from './guardian-learning-bond-text';
 import { LearningBondApplicationRow } from './learning-bond-application-row';
 import { learningBondApplicationRows } from './learning-bond-application-rows';
@@ -56,6 +57,7 @@ import {
 })
 export class LearningBondReviewPage implements OnInit {
   private readonly api = inject(LEARNING_BOND_API);
+  protected readonly agent = new LearningBondAgentBubble(this.api, inject(PhDialogs), 'Review');
   private readonly dialogs = inject(PhDialogs);
 
   readonly token = input.required<string>();
@@ -85,6 +87,7 @@ export class LearningBondReviewPage implements OnInit {
     this.result.set(null);
     this.api.prepareApplication(this.token(), this.childId()).subscribe((r) => {
       this.result.set(r);
+      if (r.status === 'loaded') this.agent.load(this.token());
       if (r.status === 'loaded' && r.value.status === 'Submitted') this.outcome.set('sent');
     });
   }

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 92 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="92" data-video-title="The model-backed Learning Bond agent" data-parts="Introduction|The fixed line first|Ask a question|What the model sees|Safeguards|In her language|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 92</div>
+  <h1>The model-backed Learning Bond agent</h1>
+  <p class="lead">A language model behind the same bubble, explaining and never acting</p>
+</section>
+
+<section id="estimate-clip" data-part="1" data-cue="Carmen opens Mateo's estimate." data-clip="clips/estimate-phone.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>The fixed line first</h3><p>The approved line, then the model's words; then a question.</p></div>
+</section>
+
+<section id="lines" data-part="1" data-cue="Here it explains the fourteen hundred dollars">
+  <h2>Replaced only when it comes in time</h2>
+  <div class="cols">
+    <img class="shot" alt="The approved fixed line" src="shots/phone-fixed-line.png">
+    <img class="shot" alt="The model's words in the same bubble" src="shots/phone-model-line.png">
+  </div>
+  <p class="muted small">POST /g/learning-bond/{token}/agent · fixed, reply, source · 10 s</p>
+</section>
+
+<section id="ask" data-part="2" data-cue="Under the bubble, Ask a question opens a dialog.">
+  <h2>Ask a question</h2>
+  <div class="cols">
+    <img class="shot" alt="The Ask dialog, empty" src="shots/phone-ask-empty.png">
+    <img class="shot" alt="Her question and the answer" src="shots/phone-ask-answered.png">
+  </div>
+  <p class="muted small">ph-message-thread · GET .../agent/conversation · the household's own</p>
+</section>
+
+<section id="context" data-part="3" data-cue="The model is told only what the step needs.">
+  <h2>What the model sees</h2>
+  <ul>
+    <li>Language, first names, ages, statuses, the rules' figures</li>
+    <li>Never a SIN, birth date, address, phone, email or answer</li>
+    <li>Five read-only tools: <code>GetStatus</code>, <code>GetEstimate</code>, <code>ListBenefits</code>, <code>ExplainStep</code>, <code>OfferCallback</code></li>
+    <li>No tool to consent, submit or withdraw</li>
+  </ul>
+</section>
+
+<section id="safeguards-clip" data-part="4" data-cue="On a laptop, the model is down" data-clip="clips/safeguards-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Safeguards</h3><p>Model down, a SIN refused, a send that fails.</p></div>
+</section>
+
+<section id="checks" data-part="4" data-cue="A reply longer than sixty words">
+  <h2>Refused before the model</h2>
+  <img class="shot" alt="A SIN typed in the chat is refused and removed" src="shots/desktop-sin-refused.png">
+  <p class="muted small">60 words · only the rules' amounts · no nine digits · else the fixed line</p>
+</section>
+
+<section id="spanish-clip" data-part="5" data-cue="Carmen's family reads Spanish" data-clip="clips/spanish-phone.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>In her language</h3><p>The household's language, every time.</p></div>
+</section>
+
+<section id="provider" data-part="5" data-cue="With credentials configured">
+  <h2>Audited, configured</h2>
+  <ul>
+    <li>Audit by step and tool name, never by content</li>
+    <li><code>ILanguageModel</code> · Claude through the Anthropic SDK when a key is set</li>
+    <li>No key: every step keeps its approved line</li>
+  </ul>
+  <p class="muted small">ADR 0085 · ClaudeLanguageModel · UnconfiguredLanguageModel</p>
+</section>
+
+<section id="testing" data-part="6" data-cue="The API tests use a fake model">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>LearningBondAgentTests</code> with <code>FakeLanguageModel</code>: replace, timeout, failure, context, SIN</li>
+    <li>Tools for one household, refused tools, invented amounts, audit, 404, another organization</li>
+    <li><code>agent</code> spec · phone and laptop · axe</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="7" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>The approved line first; the model's words when they pass</li><li>First names, ages, statuses, computed figures</li><li>Read-only tools, one household</li><li>A SIN in the chat never reaches the model</li></ul>
+  <p class="muted">The Learning Bond journey is complete</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

@@ -22,8 +22,10 @@ import {
   PhList,
   PhListItem,
   PhSkeleton,
+  PhDialogs,
 } from '@promisehub/components';
 import { guardianBenefitsText } from './guardian-benefits-text';
+import { LearningBondAgentBubble } from './learning-bond-agent-bubble';
 import { guardianLearningBondText } from './guardian-learning-bond-text';
 
 /** The family’s benefits (L2-155, L2-156): each with exactly one state as a benefit card, the notes, and You already get these; no Submit all. */
@@ -49,6 +51,7 @@ import { guardianLearningBondText } from './guardian-learning-bond-text';
 })
 export class LearningBondBenefitsPage implements OnInit {
   protected readonly api = inject(LEARNING_BOND_API);
+  protected readonly agent = new LearningBondAgentBubble(this.api, inject(PhDialogs), 'Benefits');
 
   readonly token = input.required<string>();
 
@@ -71,7 +74,10 @@ export class LearningBondBenefitsPage implements OnInit {
 
   protected load(): void {
     this.result.set(null);
-    this.api.benefits(this.token()).subscribe((r) => this.result.set(r));
+    this.api.benefits(this.token()).subscribe((r) => {
+      this.result.set(r);
+      if (r.status === 'loaded') this.agent.load(this.token());
+    });
   }
 
   protected readonly uploadError = signal<Record<string, string>>({});

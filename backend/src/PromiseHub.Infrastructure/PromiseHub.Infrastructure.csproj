@@ -4,6 +4,7 @@
     <ProjectReference Include="../PromiseHub.Application/PromiseHub.Application.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Anthropic" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     <PackageReference Include="Microsoft.Extensions.Identity.Core" />
   </ItemGroup>

@@ -2325,6 +2325,16 @@ export class FakeApi {
       (route, p) => this.learningBondReminderOff(route, p["token"]!, p["id"]!),
     ],
     [
+      "POST",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/agent$/,
+      (route, p) => this.learningBondAgent(route, p["token"]!),
+    ],
+    [
+      "GET",
+      /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/agent\/conversation$/,
+      (route, p) => this.learningBondAgentConversation(route, p["token"]!),
+    ],
+    [
       "GET",
       /^\/api\/g\/learning-bond\/(?<token>[^/]+)\/total$/,
       (route, p) => this.learningBondTotal(route, p["token"]!),
@@ -4240,6 +4250,40 @@ export class FakeApi {
     if (!reminder) return route.fulfill({ status: 404 });
     reminder.turnedOff = true;
     return route.fulfill({ status: 204 });
+  }
+
+  /**
+   * POST /g/learning-bond/{token}/agent (L2-160): the model's words for the step, or null so the fixed line stands; a SIN in a question is
+   * refused in the household's language, never sent to the model and kept removed.
+   */
+  private async learningBondAgent(route: Route, token: string): Promise<void> {
+    const scope = await this.learningBondGuardianScope(route, token);
+    if (!scope) return;
+    const body = route.request().postDataJSON() as { step?: string; message?: string | null };
+    const step = body.step ?? "Landing";
+    const message = (body.message ?? "").trim();
+    const language = this.learningBondLinkOf(token)!.language;
+    const nine = /(?<!\d)\d{3}[\s-]?\d{3}[\s-]?\d{3}(?!\d)/g;
+    const conversation = this.learningBond.agentConversations.get(scope.household.id) ?? [];
+    this.learningBond.agentConversations.set(scope.household.id, conversation);
+    const at = new Date().toISOString();
+    if (message && message.match(nine)) {
+      const refusal = { es: "Por favor, no escriba su SIN aquí. Va solo en la casilla del formulario.", fr: "Veuillez ne pas écrire votre NAS ici. Il va seulement dans la case du formulaire.", en: "Please don’t type your SIN here. It goes only in the form field." }[language];
+      const removed = { es: "[número eliminado]", fr: "[numéro supprimé]", en: "[number removed]" }[language];
+      conversation.push({ role: "Guardian", text: message.replace(nine, removed), step, at }, { role: "Agent", text: refusal, step, at });
+      return route.fulfill({ json: { step, fixed: "", reply: refusal, source: "fixed" } });
+    }
+    if (message) this.learningBond.agentSent.push(message);
+    const reply = message ? this.learningBond.agentAnswer : (this.learningBond.agentLines.get(step) ?? null);
+    if (message) conversation.push({ role: "Guardian", text: message, step, at }, { role: "Agent", text: reply ?? "", step, at });
+    return route.fulfill({ json: { step, fixed: "", reply, source: reply ? "model" : "fixed" } });
+  }
+
+  /** GET /g/learning-bond/{token}/agent/conversation (L2-160 criterion 6): the household's own messages. */
+  private async learningBondAgentConversation(route: Route, token: string): Promise<void> {
+    const scope = await this.learningBondGuardianScope(route, token);
+    if (!scope) return;
+    return route.fulfill({ json: { messages: this.learningBond.agentConversations.get(scope.household.id) ?? [] } });
   }
 
   /** GET /g/learning-bond/{token}/total (L2-158): the household's own total. */

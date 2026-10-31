@@ -36,7 +36,12 @@
             </div>
           } @else {
             <h1>{{ t.reviewHeading(a.firstName) }}</h1>
-            <ph-agent-message [speaker]="t.speaker" [text]="a.explanation" />
+            <ph-agent-message [speaker]="t.speaker" [text]="agent.reply() ?? a.explanation" />
+            <div>
+              <ph-button variant="ghost" icon="sparkle" (click)="agent.open(token(), t)">{{
+                t.ask
+              }}</ph-button>
+            </div>
             <ph-card [title]="t.providerTitle">
               <div class="stack" data-testid="review-provider">
                 <p class="plain provider">
