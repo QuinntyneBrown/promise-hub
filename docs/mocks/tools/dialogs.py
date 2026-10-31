@@ -1223,7 +1223,7 @@ def learning_bond_ask(S):
     def box(lines=(), *, value="", busy=False, alert_html=""):
         opening = "" if lines else agent("Ask anything about this step. I explain; you decide.")
         composer = (f'<form class="thread__composer" action="#" aria-label="Ask Learning Bond">'
-                    + textarea("ask-body", "Your question", value=value, rows=2, help_="Don’t type your SIN or any number here.", attrs="" if busy else " autofocus")
+                    + textarea("ask-body", "Your question", value=value, rows=4, help_="Don’t type your SIN or any number here.", attrs="" if busy else " autofocus")
                     + btn("Send", "primary", icon_name="send", type_="submit", busy=busy) + "</form>")
         body = opening + alert_html + f'<div class="thread">{log(lines)}{composer}</div>'
         return dialog_box("Ask Learning Bond", "", body, btn("Close", ""), icon_name="sparkle")

@@ -215,7 +215,7 @@ def thread(lines, *, mine_label: str = "You", new_last: bool = False, extra: str
 
 def composer(*, value: str = "", busy: bool = False, error: str = "", disabled: bool = False) -> str:
     return (f'<form class="thread__composer" action="#" aria-label="Write a message">'
-            + textarea("msg-body", "Message", value=value, rows=2, error=error, attrs=" disabled" if disabled else "")
+            + textarea("msg-body", "Message", value=value, rows=4, error=error, attrs=" disabled" if disabled else "")
             + btn("Send", "primary", icon_name="send", type_="submit", busy=busy, disabled=disabled) + "</form>")
 
 
