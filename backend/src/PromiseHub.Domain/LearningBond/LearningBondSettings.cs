@@ -5,7 +5,7 @@ namespace PromiseHub.Domain.LearningBond;
 /// <summary>
 /// An organization's one Learning Bond settings row (ADR 0076): which programs it covers, which staff roles see a family's status and the
 /// invitation's sender name. With no row the organization covers every program, Admin and Program director see status, and the sender is
-/// the organization's name.
+/// the organization's name. It also holds the launch (L2-140, ADR 0079): a scheduled one is a due row the dispatch runner sends.
 /// </summary>
 public sealed class LearningBondSettings : ITenantOwned
 {
@@ -37,6 +37,18 @@ public sealed class LearningBondSettings : ITenantOwned
 
     public string? SenderName { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
+
+    /// <summary>How invitations go out once chosen; null before a launch is chosen or after one is cancelled.</summary>
+    public LearningBondLaunchMode? LaunchMode { get; private set; }
+
+    /// <summary>The day a scheduled launch sends, at 10:00 in the organization's time zone.</summary>
+    public DateOnly? LaunchDate { get; private set; }
+
+    /// <summary>When the scheduled launch sent; it cannot be changed after.</summary>
+    public DateTimeOffset? LaunchedAt { get; private set; }
+
+    /// <summary>A scheduled launch waiting for its day.</summary>
+    public bool LaunchPending => LaunchMode == LearningBondLaunchMode.Scheduled && LaunchedAt is null;
 
     public IReadOnlyList<Guid> Programs => [.. ProgramIds.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(Guid.Parse)];
 
@@ -75,4 +87,28 @@ public sealed class LearningBondSettings : ITenantOwned
         SenderName = senderName;
         UpdatedAt = now;
     }
+
+    /// <summary>Chooses how invitations go out: on <paramref name="date"/>, or at the door with no date.</summary>
+    public void ChooseLaunch(LearningBondLaunchMode mode, DateOnly? date, DateTimeOffset now)
+    {
+        LaunchMode = mode;
+        LaunchDate = mode == LearningBondLaunchMode.Scheduled ? date : null;
+        UpdatedAt = now;
+    }
+
+    public void MoveLaunch(DateOnly date, DateTimeOffset now)
+    {
+        LaunchDate = date;
+        UpdatedAt = now;
+    }
+
+    /// <summary>Cancels a launch that hasn't sent: nothing goes out.</summary>
+    public void CancelLaunch(DateTimeOffset now)
+    {
+        LaunchMode = null;
+        LaunchDate = null;
+        UpdatedAt = now;
+    }
+
+    public void MarkLaunched(DateTimeOffset now) => LaunchedAt ??= now;
 }

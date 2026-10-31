@@ -34,4 +34,12 @@ public sealed class GuardianLinkIssuer(IPromiseHubDb db, ITenantContext tenant, 
         db.GuardianLinks.Add(new GuardianLink(Guid.NewGuid(), tenant.OrganizationId, householdId, null, null, GuardianTokens.Hash(token), clock.GetUtcNow()));
         return $"{options.BaseUrl.TrimEnd('/')}/g/home/{token}";
     }
+
+    /// <summary>A household's Learning Bond link, carried by its invitation (L2-140 criterion 10, ADR 0079); only the token's hash is kept.</summary>
+    public string IssueLearningBond(Guid householdId)
+    {
+        var token = GuardianTokens.New();
+        db.GuardianLinks.Add(new GuardianLink(Guid.NewGuid(), tenant.OrganizationId, householdId, null, null, GuardianTokens.Hash(token), clock.GetUtcNow()));
+        return $"{options.BaseUrl.TrimEnd('/')}/g/learning-bond/{token}";
+    }
 }

@@ -17,18 +17,23 @@ public static class LearningBondTexts
         _ => "English",
     };
 
-    public static string Sms(string code, string sender, string child, string link) => code switch
+    public static string Sms(string code, string sender, string child, string link) => Sms(code, sender, [child], link);
+
+    /// <summary>The text naming each eligible child of a household, with the verb agreeing (L2-140).</summary>
+    public static string Sms(string code, string sender, IReadOnlyList<string> children, string link) => code switch
     {
-        "es" => $"{sender}: {child} podría tener derecho a hasta $2,000 para estudiar después de la secundaria. No cuesta nada. Toque para comprobarlo: {link} (STOP para salir)",
-        "fr" => $"{sender} : {child} pourrait recevoir jusqu’à 2 000 $ pour ses études après le secondaire. C’est gratuit. Touchez pour vérifier : {link} (STOP pour arrêter)",
-        _ => $"{sender}: {child} may be owed up to $2,000 for school after high school. It costs nothing. Tap to check: {link} (STOP to opt out)",
+        "es" => $"{sender}: {Names(code, children)} {(children.Count > 1 ? "podrían" : "podría")} tener derecho a hasta $2,000 para estudiar después de la secundaria. No cuesta nada. Toque para comprobarlo: {link} (STOP para salir)",
+        "fr" => $"{sender} : {Names(code, children)} {(children.Count > 1 ? "pourraient" : "pourrait")} recevoir jusqu’à 2 000 $ pour ses études après le secondaire. C’est gratuit. Touchez pour vérifier : {link} (STOP pour arrêter)",
+        _ => $"{sender}: {Names(code, children)} may be owed up to $2,000 for school after high school. It costs nothing. Tap to check: {link} (STOP to opt out)",
     };
 
-    public static string EmailTitle(string code, string child) => code switch
+    public static string EmailTitle(string code, string child) => EmailTitle(code, [child]);
+
+    public static string EmailTitle(string code, IReadOnlyList<string> children) => code switch
     {
-        "es" => $"{child} podría tener derecho a hasta $2,000 para estudiar",
-        "fr" => $"{child} pourrait recevoir jusqu’à 2 000 $ pour ses études",
-        _ => $"{child} may be owed up to $2,000 for school after high school",
+        "es" => $"{Names(code, children)} {(children.Count > 1 ? "podrían" : "podría")} tener derecho a hasta $2,000 para estudiar",
+        "fr" => $"{Names(code, children)} {(children.Count > 1 ? "pourraient" : "pourrait")} recevoir jusqu’à 2 000 $ pour ses études",
+        _ => $"{Names(code, children)} may be owed up to $2,000 for school after high school",
     };
 
     public static string EmailText(string code, string guardian) => code switch
@@ -56,6 +61,13 @@ public static class LearningBondTexts
     public const string SampleChild = "Maya";
     public const string SampleGuardian = "Alex";
     public const string SampleLink = "promisehub.ca/lb/4r7k9x";
+
+    /// <summary>"Mateo", "Mateo and Sofía", "Ana, Mateo and Sofía", with the language's "and".</summary>
+    public static string Names(string code, IReadOnlyList<string> children)
+    {
+        var and = code switch { "es" => "y", "fr" => "et", _ => "and" };
+        return children.Count <= 1 ? string.Concat(children) : $"{string.Join(", ", children.Take(children.Count - 1))} {and} {children[^1]}";
+    }
 
     private static string Place(string organization, string? city) =>
         string.IsNullOrWhiteSpace(city) ? organization : $"{organization}, {city.Split(',')[0].Trim()}";

@@ -23,6 +23,32 @@ export class HouseholdPage extends BasePage {
     return this.page.getByRole('dialog');
   }
 
+  async openHousehold(householdId: string): Promise<void> {
+    await super.open(`/families/${householdId}`);
+  }
+
+  /** The Learning Bond card (mock: household, state learning-bond-not-invited): status only, never a SIN or an amount. */
+  get learningBond(): Locator {
+    return this.page.getByTestId('learning-bond-card');
+  }
+
+  async inviteToLearningBond(): Promise<void> {
+    await this.learningBond.getByRole('button', { name: 'Invite to Learning Bond' }).click();
+  }
+
+  /** The Invite the {name} household to Learning Bond dialog (mock: learning-bond-invite-household). */
+  get inviteDialog(): Locator {
+    return this.page.getByRole('dialog', { name: /^Invite the .* household to Learning Bond$/ });
+  }
+
+  async sendInvitation(): Promise<void> {
+    await this.inviteDialog.getByRole('button', { name: 'Send invitation' }).click();
+  }
+
+  get toast(): Locator {
+    return this.page.getByTestId('toast');
+  }
+
   async expectOpen(name: string): Promise<void> {
     await expect(this.heading).toHaveText(`${name} household`);
   }
@@ -54,7 +80,9 @@ export class HouseholdPage extends BasePage {
   }
 
   async editGuardian(name: string, values: { mobile?: string; canPickUp?: boolean }): Promise<void> {
-    await this.guardian(name).getByRole('button', { name: `Edit ${name}` }).click();
+    await this.guardian(name)
+      .getByRole('button', { name: `Edit ${name}` })
+      .click();
     await expect(this.dialog).toBeVisible();
     if (values.mobile !== undefined) await this.dialog.getByLabel('Mobile').fill(values.mobile);
     if (values.canPickUp !== undefined) await this.dialog.getByRole('switch', { name: 'Approved to pick up' }).setChecked(values.canPickUp);

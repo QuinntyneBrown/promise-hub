@@ -1,3 +1,4 @@
+using PromiseHub.Application;
 using PromiseHub.Api.Authorization;
 using PromiseHub.Api.Modules;
 using PromiseHub.Application.Identity;
@@ -18,6 +19,28 @@ public static class LearningBondEndpoints
         var learningBond = app.MapGroup("/learning-bond").RequireModule(ModuleId.LearningBond);
         learningBond.MapGet(string.Empty, () => Results.Ok(new LearningBondStatusDto(On: true)));
 
+        // A household's card and the invitation at the door (L2-140 criteria 4, 5 and 8): staff whose role is in the status roles, checked
+        // by the handler since the organization chooses them.
+        learningBond.MapGet("/households", async (string? status, Guid? program, LearningBondFamiliesHandler handler, CancellationToken ct) =>
+            await handler.ListAsync(status, program, ct) is (true, { } list) ? Results.Ok(list) : Result.Forbidden.ToHttp());
+        learningBond.MapGet("/households/{id:guid}", async (Guid id, LearningBondHouseholdHandler handler, CancellationToken ct) =>
+            await handler.GetAsync(id, ct) switch
+            {
+                (ResultStatus.Done, { } card) => Results.Ok(card),
+                (ResultStatus.Forbidden, _) => Result.Forbidden.ToHttp(),
+                _ => Results.NotFound(),
+            });
+        learningBond.MapPost("/households/{id:guid}/call-outcome", async (Guid id, CallOutcomeRequest request, LearningBondHouseholdHandler handler, CancellationToken ct) =>
+            (await handler.RecordCallAsync(id, request, ct)).ToHttp());
+        learningBond.MapPost("/households/{id:guid}/invitations", async (Guid id, LearningBondHouseholdHandler handler, CancellationToken ct) =>
+            await handler.InviteAsync(id, ct) switch
+            {
+                { Status: ResultStatus.Created, InvitedAt: var at } => Results.Json(new { invitedAt = at }, statusCode: StatusCodes.Status201Created),
+                { Status: ResultStatus.Done, InvitedAt: var at } => Results.Ok(new { invitedAt = at }),
+                { Status: ResultStatus.Forbidden } => Result.Forbidden.ToHttp(),
+                _ => Results.NotFound(),
+            });
+
         // Settings › Learning Bond (L2-136 criterion 9, L2-138, L2-139): admins only, behind the module gate.
         var settings = learningBond.MapGroup(string.Empty).RequirePermission(Permission.ManageSettings);
         settings.MapGet("/settings", (LearningBondSettingsHandler handler, CancellationToken ct) => handler.GetAsync(ct));
@@ -27,6 +50,13 @@ public static class LearningBondEndpoints
         settings.MapPut("/invitation", async (SaveInvitationRequest request, LearningBondInvitationHandler handler, CancellationToken ct) =>
             (await handler.SaveAsync(request, ct)).ToHttp());
         settings.MapGet("/overview", (LearningBondOverviewHandler handler, CancellationToken ct) => handler.GetAsync(ct));
+        settings.MapGet("/launch", (LearningBondLaunchHandler handler, CancellationToken ct) => handler.GetAsync(ct));
+        settings.MapGet("/launch/missing-contacts", (LearningBondLaunchHandler handler, CancellationToken ct) => handler.MissingContactsAsync(ct));
+        settings.MapPost("/launch", async (ScheduleLaunchRequest request, LearningBondLaunchHandler handler, CancellationToken ct) =>
+            LaunchResult(await handler.ScheduleAsync(request, ct)));
+        settings.MapPut("/launch", async (MoveLaunchRequest request, LearningBondLaunchHandler handler, CancellationToken ct) =>
+            (await handler.MoveAsync(request, ct)).ToHttp());
+        settings.MapDelete("/launch", async (LearningBondLaunchHandler handler, CancellationToken ct) => (await handler.CancelAsync(ct)).ToHttp());
 
         var agreement = app.MapGroup("/learning-bond/agreement").RequirePermission(Permission.ManageSettings).RequireModule(ModuleId.Roster).RequireModule(ModuleId.Messages);
         agreement.MapGet(string.Empty, (LearningBondAgreementHandler handler, CancellationToken ct) => handler.GetAsync(ct));
@@ -40,4 +70,10 @@ public static class LearningBondEndpoints
             (await handler.CancelAsync(id, ct)).ToHttp());
         return app;
     }
+
+    // No mobile number on any covered household answers 422 with code no-phone-numbers (L2-140 criterion 2).
+    private static IResult LaunchResult(Result result) =>
+        result is { Status: ResultStatus.Invalid, Errors: { } errors } && errors.TryGetValue("launch", out var message) && message == LearningBondLaunchHandler.NoPhoneNumbersMessage
+            ? Results.Json(new { code = "no-phone-numbers", errors }, statusCode: StatusCodes.Status422UnprocessableEntity)
+            : result.ToHttp("/learning-bond/launch");
 }

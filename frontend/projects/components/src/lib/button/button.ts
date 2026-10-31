@@ -34,6 +34,8 @@ export class PhButton {
   readonly current = input(false);
   readonly hasPopup = input<'dialog' | 'menu' | null>(null);
   readonly expanded = input<boolean | null>(null);
+  /** The id of the text that explains the button, such as why it is disabled. */
+  readonly describedBy = input<string | null>(null);
 
   protected classes(): string {
     return [

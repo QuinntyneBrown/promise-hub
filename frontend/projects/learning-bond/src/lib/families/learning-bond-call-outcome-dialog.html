@@ -1,0 +1,25 @@
+<form novalidate (ngSubmit)="save()">
+  <ph-dialog [title]="title()" [description]="description()" icon="phone">
+    <div class="stack">
+      @if (failed()) {
+        <ph-alert
+          tone="danger"
+          title="That didn’t go through"
+          text="Nothing was recorded. Try again."
+        />
+      }
+      <ph-radio-group
+        legend="Outcome"
+        name="outcome"
+        [options]="outcomes"
+        [error]="error()"
+        [(ngModel)]="outcome"
+      />
+      <p class="text-caption">You see where they are in the steps, never a SIN or income.</p>
+    </div>
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">Cancel</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">Save outcome</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

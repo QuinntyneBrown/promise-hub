@@ -9,12 +9,12 @@
 | follow-application-progress | 9 days | 0% |
 | gate-learning-bond-module | 4 days | 80% |
 | give-and-withdraw-consent | 5 days | 0% |
-| launch-invitations | 6 days | 0% |
+| launch-invitations | 6 days | 80% |
 | list-and-apply-for-benefits | 8 days | 0% |
 | offer-benefits-check | 5 days | 0% |
 | open-guardian-learning-bond | 5 days | 0% |
 | remind-and-total-dollars | 6 days | 0% |
 | review-and-submit-application | 8 days | 0% |
 | run-learning-bond-agent | 7 days | 0% |
-| support-families-with-status | 5 days | 0% |
+| support-families-with-status | 5 days | 70% |
 | view-dashboard-and-export | 5 days | 0% |

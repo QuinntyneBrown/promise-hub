@@ -1,0 +1,95 @@
+<ph-page-header title="Learning Bond households" [subtitle]="subtitle()" />
+@switch (state()) {
+  @case ('forbidden') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="lock"
+        title="Your role doesn’t see Learning Bond status"
+        text="Ask an admin to add your role in Settings › Learning Bond › Coverage."
+      >
+        <ph-button link="/">Back to Today</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('error') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load households"
+        text="Check your connection and try again."
+      >
+        <ph-button variant="primary" icon="refresh" (click)="load()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('loading') {
+    <ph-skeleton shape="card" aria-label="Loading households" />
+  }
+  @default {
+    @if (list(); as l) {
+      @if (l.covered === 0) {
+        <ph-card [flush]="true">
+          <ph-empty-state
+            icon="families"
+            title="No covered households yet"
+            text="Families appear here once a child is enrolled in a covered program."
+          />
+        </ph-card>
+      } @else {
+        <div class="toolbar">
+          <ph-select
+            inputId="lb-status"
+            label="Status"
+            name="status"
+            [options]="statuses"
+            [ngModel]="status()"
+            (ngModelChange)="filter({ status: $event })"
+          />
+          <ph-select
+            inputId="lb-program"
+            label="Program"
+            name="program"
+            [options]="programs()"
+            [ngModel]="program()"
+            (ngModelChange)="filter({ program: $event })"
+          />
+        </div>
+        @if (l.households.length) {
+          <ph-card [flush]="true">
+            <ph-list label="Covered households">
+              @for (f of l.households; track f.householdId) {
+                <ph-list-item
+                  [title]="f.name"
+                  [meta]="meta(f)"
+                  [caption]="call(f)"
+                  [avatar]="f.name"
+                  [link]="['/families', f.householdId]"
+                >
+                  <ph-badge [tone]="tone(f)">{{ label(f) }}</ph-badge>
+                  @if (f.status === 'CallRequested') {
+                    <ph-button
+                      size="sm"
+                      variant="primary"
+                      hasPopup="dialog"
+                      (click)="markCallDone(f)"
+                      >Mark call done</ph-button
+                    >
+                  }
+                </ph-list-item>
+              }
+            </ph-list>
+          </ph-card>
+        } @else {
+          <ph-card [flush]="true">
+            <ph-empty-state
+              icon="search"
+              title="No household matches these filters"
+              text="Choose another status or program."
+            />
+          </ph-card>
+        }
+      }
+    }
+  }
+}

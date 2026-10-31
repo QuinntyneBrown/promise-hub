@@ -23,6 +23,9 @@ public sealed class NotificationKinds(IModuleGate modules)
         // Roster and Messages, not Learning Bond: the agreement is accepted before Learning Bond can be on (ADR 0077, ADR 0078).
         new("agreement", [ModuleId.Roster, ModuleId.Messages], "Learning Bond agreement", "When a named signer accepts the Learning Bond data-handling agreement.",
             r => RolePermissions.Has(r, Permission.ManageSettings)),
+        // The roles an organization may put in Learning Bond's status roles; only those it chose are notified (L2-142 criterion 3).
+        new("learning-bond", [ModuleId.LearningBond], "Learning Bond call requests", "When a family asks for a call about Learning Bond.",
+            r => Domain.LearningBond.LearningBondSettings.OfferedRoles.Contains(r)),
     ];
 
     /// <summary>The keys of the kinds whose modules are all on for the current organization.</summary>

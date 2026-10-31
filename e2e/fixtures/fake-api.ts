@@ -2272,6 +2272,15 @@ export class FakeApi {
     ["GET", /^\/api\/learning-bond\/invitation$/, (route) => this.learningBondInvitation(route)],
     ["PUT", /^\/api\/learning-bond\/invitation$/, (route) => this.learningBondSaveInvitation(route)],
     ["GET", /^\/api\/learning-bond\/overview$/, (route) => this.learningBondOverview(route)],
+    ["GET", /^\/api\/learning-bond\/launch$/, (route) => this.learningBondLaunch(route)],
+    ["GET", /^\/api\/learning-bond\/households$/, (route) => this.learningBondFamilies(route)],
+    ["GET", /^\/api\/learning-bond\/households\/(?<id>[^/]+)$/, (route, p) => this.learningBondHousehold(route, p["id"]!)],
+    ["POST", /^\/api\/learning-bond\/households\/(?<id>[^/]+)\/invitations$/, (route, p) => this.learningBondInvite(route, p["id"]!)],
+    ["POST", /^\/api\/learning-bond\/households\/(?<id>[^/]+)\/call-outcome$/, (route, p) => this.learningBondCallOutcome(route, p["id"]!)],
+    ["POST", /^\/api\/learning-bond\/launch$/, (route) => this.learningBondLaunchChange(route, "POST")],
+    ["PUT", /^\/api\/learning-bond\/launch$/, (route) => this.learningBondLaunchChange(route, "PUT")],
+    ["DELETE", /^\/api\/learning-bond\/launch$/, (route) => this.learningBondLaunchChange(route, "DELETE")],
+    ["GET", /^\/api\/learning-bond\/launch\/missing-contacts$/, (route) => this.learningBondMissingContacts(route)],
     ["POST", /^\/api\/learning-bond\/agreement\/signers\/(?<id>[^/]+)\/resend$/, (route, p) => this.learningBondResendSigner(route, p["id"]!)],
     ["DELETE", /^\/api\/learning-bond\/agreement\/signers\/(?<id>[^/]+)$/, (route, p) => this.learningBondCancelSigner(route, p["id"]!)],
     ["GET", /^\/api\/sign\/learning-bond\/(?<token>[^/]+)$/, (route, p) => this.learningBond.signerAgreement(route, p["token"]!, (id) => this.organizationDetailsOf(id).name)],
@@ -3324,6 +3333,200 @@ export class FakeApi {
     return this.learningBond.saveInvitation(route, m);
   }
 
+  /**
+   * The households the organization's coverage reaches (LearningBondCoverage.CoveredAsync): each with the covered programs reaching it and
+   * how it can be reached, in household-name order.
+   */
+  private learningBondCovered(organizationId: string): { household: FakeHousehold; programs: string[]; reach: "Mobile" | "EmailOnly" | "Neither" }[] {
+    const settings = this.learningBond.settingsOf(organizationId);
+    const programs = this.learningBondPrograms(organizationId).filter((p) => settings.coverage === "AllPrograms" || settings.programIds.includes(p.id));
+    return this.households
+      .filter((h) => h.organizationId === organizationId && programs.some((p) => p.households.includes(h.id)))
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((household) => ({
+        household,
+        programs: programs.filter((p) => p.households.includes(household.id)).map((p) => p.name),
+        reach: household.guardians.some((g) => g.mobile)
+          ? ("Mobile" as const)
+          : household.guardians.some((g) => g.email && !g.emailBounced)
+            ? ("EmailOnly" as const)
+            : ("Neither" as const),
+      }));
+  }
+
+  /** GET /learning-bond/launch (L2-140 criteria 1 and 2): counts and dates only. */
+  private async learningBondLaunch(route: Route): Promise<void> {
+    const m = await this.learningBondAdmin(route);
+    if (!m) return;
+    const covered = this.learningBondCovered(m.organizationId);
+    const count = (reach: string) => covered.filter((c) => c.reach === reach).length;
+    return this.learningBond.launch(route, m, {
+      covered: covered.length,
+      mobile: count("Mobile"),
+      emailOnly: count("EmailOnly"),
+      neither: count("Neither"),
+      programs: [...new Set(covered.flatMap((c) => c.programs))].sort(),
+    });
+  }
+
+  /** A caller whose role is in the status roles, with Learning Bond on: 404 while off (the module gate first), then 403 (L2-140 criterion 8). */
+  private async learningBondStaff(route: Route): Promise<Membership | null> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) {
+      await this.unauthenticated(route);
+      return null;
+    }
+    if (!this.modules.get(m.organizationId)!.includes("LearningBond")) {
+      await route.fulfill({ status: 404 });
+      return null;
+    }
+    if (!this.learningBond.settingsOf(m.organizationId).statusRoles.includes(m.role)) {
+      await route.fulfill({ status: 403, json: { code: "forbidden" } });
+      return null;
+    }
+    return m;
+  }
+
+  /** GET /learning-bond/households (L2-142 criteria 1 and 5): each covered household's status and last change, by status and program. */
+  private async learningBondFamilies(route: Route): Promise<void> {
+    const m = await this.learningBondStaff(route);
+    if (!m) return;
+    const url = new URL(route.request().url());
+    const status = url.searchParams.get("status");
+    const program = url.searchParams.get("program");
+    const covered = this.learningBondCovered(m.organizationId);
+    const programs = this.learningBondPrograms(m.organizationId).filter((p) => covered.some((c) => c.programs.includes(p.name)));
+    const rows = covered.map((c) => {
+      const invited = this.learningBond.invitations.filter((i) => i.householdId === c.household.id).map((i) => i.sentAt).sort().at(-1) ?? null;
+      const open = this.learningBond.callRequests.find((r) => r.householdId === c.household.id && !r.outcome);
+      const notInterested = this.learningBond.callRequests.find((r) => r.householdId === c.household.id && r.outcome === "NotInterested");
+      const guardian = [...c.household.guardians].sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.name.localeCompare(b.name))[0]?.name ?? null;
+      return {
+        programIds: programs.filter((p) => c.programs.includes(p.name)).map((p) => p.id),
+        row: {
+          householdId: c.household.id,
+          name: c.household.name,
+          guardian,
+          programs: c.programs.join(", "),
+          status: open ? "CallRequested" : notInterested ? "NotInterested" : invited ? "Invited" : "NotInvited",
+          changedAt: open?.requestedAt ?? invited,
+          callPhone: open?.phone ?? null,
+          callWhen: open?.when ?? null,
+        },
+      };
+    });
+    return route.fulfill({
+      json: {
+        covered: covered.length,
+        programs: programs.map((p) => ({ id: p.id, name: p.name, households: covered.filter((c) => c.programs.includes(p.name)).length })),
+        households: rows.filter((r) => (!status || r.row.status === status) && (!program || r.programIds.includes(program))).map((r) => r.row),
+      },
+    });
+  }
+
+  /** GET /learning-bond/households/{id} (L2-140 criteria 4 and 5): the household card; another organization's household is 404. */
+  private async learningBondHousehold(route: Route, id: string): Promise<void> {
+    const m = await this.learningBondStaff(route);
+    if (!m) return;
+    const household = this.households.find((h) => h.id === id && h.organizationId === m.organizationId);
+    if (!household) return route.fulfill({ status: 404 });
+    const covered = this.learningBondCovered(m.organizationId).find((c) => c.household.id === id);
+    const children = covered ? this.learningBondChildren(m.organizationId, id) : [];
+    const code = household.language === "Spanish" ? "es" : household.language === "French" ? "fr" : "en";
+    const sender = this.learningBond.settingsOf(m.organizationId).senderName ?? this.organizationDetailsOf(m.organizationId).name;
+    const sms = this.learningBond.invitationSms(code, sender, children);
+    return route.fulfill({
+      json: {
+        householdId: id,
+        name: household.name,
+        covered: !!covered,
+        programs: covered?.programs ?? [],
+        children,
+        invitedAt: this.learningBond.invitedAt(id, NOW.toISOString()),
+        recipients: household.guardians.filter((g) => g.mobile || (g.email && !g.emailBounced)).map((g) => g.name),
+        language: { en: "English", es: "Spanish", fr: "French" }[code],
+        sms,
+        smsCharacters: sms.length,
+        smsSegments: Math.ceil(sms.length / (/^[\x00-\x7F£¥èéùìòÇØøÅåÄÖÑÜäöñüà§¿¡’]*$/.test(sms) && sms.length <= 160 ? 160 : 153)),
+      },
+    });
+  }
+
+  /** POST /learning-bond/households/{id}/invitations (L2-140 criteria 4 and 5): 201 now, or 200 with when inside 7 days. */
+  private async learningBondInvite(route: Route, id: string): Promise<void> {
+    const m = await this.learningBondStaff(route);
+    if (!m) return;
+    if (!this.learningBondCovered(m.organizationId).some((c) => c.household.id === id)) return route.fulfill({ status: 404 });
+    const now = NOW.toISOString();
+    const when = this.learningBond.invitedAt(id, now);
+    if (when) return route.fulfill({ json: { invitedAt: when } });
+    this.learningBond.invitations.push({ organizationId: m.organizationId, householdId: id, sentAt: now });
+    return route.fulfill({ status: 201, json: { invitedAt: now } });
+  }
+
+  /** POST /learning-bond/households/{id}/call-outcome (L2-142 criteria 4 and 7): No answer keeps the request open; none open is 409. */
+  private async learningBondCallOutcome(route: Route, id: string): Promise<void> {
+    const m = await this.learningBondStaff(route);
+    if (!m) return;
+    const household = this.households.find((h) => h.id === id && h.organizationId === m.organizationId);
+    if (!household) return route.fulfill({ status: 404 });
+    const { outcome } = route.request().postDataJSON() as { outcome?: string };
+    if (!["Resumed", "NotInterested", "NoAnswer"].includes(outcome ?? "")) return route.fulfill({ status: 422, json: { errors: { outcome: "Choose how the call went." } } });
+    const open = this.learningBond.callRequests.filter((r) => r.householdId === id && !r.outcome);
+    if (!open.length) return route.fulfill({ status: 409, json: { code: "conflict" } });
+    if (outcome !== "NoAnswer") for (const r of open) r.outcome = outcome!;
+    this.learningBond.callAudit.push(
+      `Learning Bond call with the ${household.name} household done: ${{ Resumed: "Resumed", NotInterested: "Not interested", NoAnswer: "No answer" }[outcome!]}`,
+    );
+    return route.fulfill({ status: 204 });
+  }
+
+  /** The first names of a household's children the coverage reaches, in name order. */
+  private learningBondChildren(organizationId: string, householdId: string): string[] {
+    const settings = this.learningBond.settingsOf(organizationId);
+    const roster = new Set(
+      this.programs
+        .filter((p) => p.organizationId === organizationId && p.status === "Active" && (settings.coverage === "AllPrograms" || settings.programIds.includes(p.id)))
+        .flatMap((p) => p.roster),
+    );
+    return this.households
+      .find((h) => h.id === householdId)!
+      .children.filter((c) => roster.has(c.id))
+      .map((c) => c.firstName)
+      .sort((a, b) => a.localeCompare(b));
+  }
+
+  /** POST, PUT and DELETE /learning-bond/launch (L2-140 criteria 2 to 6): schedule, move or cancel. */
+  private async learningBondLaunchChange(route: Route, method: "POST" | "PUT" | "DELETE"): Promise<void> {
+    const m = await this.learningBondAdmin(route);
+    if (!m) return;
+    if (method === "PUT") return this.learningBond.moveLaunch(route, m);
+    if (method === "DELETE") return this.learningBond.cancelLaunch(route, m);
+    return this.learningBond.scheduleLaunch(route, m, this.learningBondCovered(m.organizationId).filter((c) => c.reach === "Mobile").length);
+  }
+
+  /** GET /learning-bond/launch/missing-contacts (L2-140 criterion 1): names and programs, never a contact. */
+  private async learningBondMissingContacts(route: Route): Promise<void> {
+    const m = await this.learningBondAdmin(route);
+    if (!m) return;
+    const households = this.learningBondCovered(m.organizationId)
+      .filter((c) => c.reach === "Neither")
+      .map((c) => ({
+        householdId: c.household.id,
+        name: c.household.name,
+        guardian: [...c.household.guardians].sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.name.localeCompare(b.name))[0]?.name ?? null,
+        programs: c.programs.join(", "),
+      }));
+    return route.fulfill({ json: { households } });
+  }
+
+  /** Changes a guardian's mobile number and email, as an edit of the household would. */
+  setGuardianContact(householdId: string, guardianName: string, contact: { mobile: string | null; email: string | null }): void {
+    const guardian = this.households.find((h) => h.id === householdId)!.guardians.find((g) => g.name === guardianName)!;
+    guardian.mobile = contact.mobile;
+    guardian.email = contact.email;
+  }
+
   /** GET /learning-bond/overview (L2-136 criteria 4 and 9). */
   private async learningBondOverview(route: Route): Promise<void> {
     const m = await this.learningBondAdmin(route);
@@ -3399,6 +3602,8 @@ export class FakeApi {
         modules: this.modules.get(organization.id),
         membershipId: membership.id,
         display: this.displayOf(membership.email),
+        learningBondStatus:
+          this.modules.get(organization.id)!.includes("LearningBond") && this.learningBond.settingsOf(organization.id).statusRoles.includes(membership.role),
       },
     });
   }

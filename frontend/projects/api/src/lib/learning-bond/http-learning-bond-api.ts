@@ -1,4 +1,4 @@
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams, HttpResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, of } from 'rxjs';
 import { API_BASE_URL } from '../api-base-url';
@@ -7,7 +7,12 @@ import { LoadResult } from '../load-result';
 import { WriteOutcome } from '../write-outcome';
 import { LearningBondAgreement } from './learning-bond-agreement';
 import { LearningBondApi } from './learning-bond-api';
+import { LearningBondFamilies } from './learning-bond-families';
+import { LearningBondHousehold } from './learning-bond-household';
+import { LearningBondInviteOutcome } from './learning-bond-invite-outcome';
+import { LearningBondLaunch } from './learning-bond-launch';
 import { LearningBondLink } from './learning-bond-link';
+import { LearningBondMissingContact } from './learning-bond-missing-contact';
 import { LearningBondStatus } from './learning-bond-status';
 import { LearningBondInvitation } from './learning-bond-invitation';
 import { LearningBondOverview } from './learning-bond-overview';
@@ -75,6 +80,87 @@ export class HttpLearningBondApi implements LearningBondApi {
           ),
         ),
       );
+  }
+
+  launch(): Observable<LoadResult<LearningBondLaunch>> {
+    return toLoad(this.http.get<LearningBondLaunch>(`${this.baseUrl}/learning-bond/launch`));
+  }
+
+  missingContacts(): Observable<LoadResult<LearningBondMissingContact[]>> {
+    return toLoad(
+      this.http
+        .get<{
+          households: LearningBondMissingContact[];
+        }>(`${this.baseUrl}/learning-bond/launch/missing-contacts`)
+        .pipe(map((r) => r.households)),
+    );
+  }
+
+  families(
+    status: string | null,
+    programId: string | null,
+  ): Observable<LoadResult<LearningBondFamilies>> {
+    let params = new HttpParams();
+    if (status) params = params.set('status', status);
+    if (programId) params = params.set('program', programId);
+    return toLoad(
+      this.http.get<LearningBondFamilies>(`${this.baseUrl}/learning-bond/households`, { params }),
+    );
+  }
+
+  recordCall(householdId: string, outcome: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(
+        `${this.baseUrl}/learning-bond/households/${encodeURIComponent(householdId)}/call-outcome`,
+        { outcome },
+      ),
+    );
+  }
+
+  household(householdId: string): Observable<LoadResult<LearningBondHousehold>> {
+    return toLoad(
+      this.http.get<LearningBondHousehold>(
+        `${this.baseUrl}/learning-bond/households/${encodeURIComponent(householdId)}`,
+      ),
+    );
+  }
+
+  inviteHousehold(householdId: string): Observable<LearningBondInviteOutcome> {
+    return this.http
+      .post<{ invitedAt: string }>(
+        `${this.baseUrl}/learning-bond/households/${encodeURIComponent(householdId)}/invitations`,
+        null,
+        { observe: 'response' },
+      )
+      .pipe(
+        map((r: HttpResponse<{ invitedAt: string }>): LearningBondInviteOutcome => ({
+          status: r.status === 201 ? 'invited' : 'already',
+          invitedAt: r.body!.invitedAt,
+        })),
+        catchError((error: HttpErrorResponse) =>
+          of<LearningBondInviteOutcome>(
+            error.status === 404
+              ? { status: 'not-found' }
+              : error.status === 403
+                ? { status: 'forbidden' }
+                : { status: 'error' },
+          ),
+        ),
+      );
+  }
+
+  scheduleLaunch(mode: 'Scheduled' | 'AtTheDoor', date: string | null): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<{ id: string }>(`${this.baseUrl}/learning-bond/launch`, { mode, date }),
+    );
+  }
+
+  moveLaunch(date: string): Observable<WriteOutcome> {
+    return toWrite(this.http.put<null>(`${this.baseUrl}/learning-bond/launch`, { date }));
+  }
+
+  cancelLaunch(): Observable<WriteOutcome> {
+    return toWrite(this.http.delete<null>(`${this.baseUrl}/learning-bond/launch`));
   }
 
   agreement(): Observable<LoadResult<LearningBondAgreement>> {

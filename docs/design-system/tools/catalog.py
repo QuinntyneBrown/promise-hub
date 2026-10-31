@@ -2,7 +2,7 @@
 
 # slug | title | evidence selector | semantics | purpose
 ROWS = '''
-button|Button|.btn|button|Trigger a single explicit action, such as checking a child in or sending a slip.
+button|Button|.btn|button|Trigger a single explicit action, such as checking a child in or sending a slip. A disabled button points with aria-describedby to the visible text that says why, as a blocked Launch does.
 button-group|Button group|.button-group|button|Group related choices, such as a youth's tracks, so exactly one is pressed without creating several primary actions.
 link|Link|a.list-link|link|Navigate to a household, event or record with a named destination.
 menu|Menu|.menu|menu|Offer secondary account actions without obscuring the current task.

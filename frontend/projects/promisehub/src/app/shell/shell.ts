@@ -126,7 +126,7 @@ export class Shell {
   /** Only sections whose module is on (L2-005) and that serve the role (L2-038, ADR 0043). */
   protected readonly navigation = computed(() => {
     const s = this.session();
-    return s ? navigationFor(s.modules, s.role) : [];
+    return s ? navigationFor(s.modules, s.role, s) : [];
   });
 
   /** Youth, mentors and volunteers have no search (L2-038 criterion 6). */

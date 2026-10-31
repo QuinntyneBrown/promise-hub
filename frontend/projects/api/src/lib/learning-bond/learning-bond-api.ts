@@ -2,7 +2,12 @@ import type { Observable } from 'rxjs';
 import type { LoadResult } from '../load-result';
 import type { WriteOutcome } from '../write-outcome';
 import type { LearningBondAgreement } from './learning-bond-agreement';
+import type { LearningBondFamilies } from './learning-bond-families';
+import type { LearningBondHousehold } from './learning-bond-household';
+import type { LearningBondInviteOutcome } from './learning-bond-invite-outcome';
+import type { LearningBondLaunch } from './learning-bond-launch';
 import type { LearningBondLink } from './learning-bond-link';
+import type { LearningBondMissingContact } from './learning-bond-missing-contact';
 import type { LearningBondStatus } from './learning-bond-status';
 import type { LearningBondInvitation } from './learning-bond-invitation';
 import type { LearningBondOverview } from './learning-bond-overview';
@@ -41,6 +46,27 @@ export interface LearningBondApi {
   saveSettings(request: SaveLearningBondSettings): Observable<WriteOutcome>;
   /** GET /learning-bond/overview: the hub's agreement, coverage, invitation and launch summary. */
   overview(): Observable<LoadResult<LearningBondOverview>>;
+  /** GET /learning-bond/launch: the covered households, how each can be reached, and the launch as chosen. */
+  launch(): Observable<LoadResult<LearningBondLaunch>>;
+  /** GET /learning-bond/launch/missing-contacts: covered households with no mobile number or email. */
+  missingContacts(): Observable<LoadResult<LearningBondMissingContact[]>>;
+  /** GET /learning-bond/households: the covered households and their status, by status and program; forbidden outside the status roles. */
+  families(
+    status: string | null,
+    programId: string | null,
+  ): Observable<LoadResult<LearningBondFamilies>>;
+  /** POST /learning-bond/households/{id}/call-outcome: "Resumed", "NotInterested" or "NoAnswer"; conflict with no open call request. */
+  recordCall(householdId: string, outcome: string): Observable<WriteOutcome>;
+  /** GET /learning-bond/households/{id}: the household's card; forbidden outside the status roles. */
+  household(householdId: string): Observable<LoadResult<LearningBondHousehold>>;
+  /** POST /learning-bond/households/{id}/invitations: invites at the door, or answers when it was invited within 7 days. */
+  inviteHousehold(householdId: string): Observable<LearningBondInviteOutcome>;
+  /** POST /learning-bond/launch: schedules for a day (yyyy-mm-dd) or chooses at the door; invalid by field. */
+  scheduleLaunch(mode: 'Scheduled' | 'AtTheDoor', date: string | null): Observable<WriteOutcome>;
+  /** PUT /learning-bond/launch: moves a scheduled launch that hasn't sent. */
+  moveLaunch(date: string): Observable<WriteOutcome>;
+  /** DELETE /learning-bond/launch: cancels a launch that hasn't sent; nothing goes out. */
+  cancelLaunch(): Observable<WriteOutcome>;
   /** GET /learning-bond/invitation: the sender name and the wording in each language the households use. */
   invitation(): Observable<LoadResult<LearningBondInvitation>>;
   /** PUT /learning-bond/invitation: the sender name; invalid unless 1 to 30 letters, numbers and spaces. */

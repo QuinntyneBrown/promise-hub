@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 85 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="85" data-video-title="Launch Learning Bond invitations" data-parts="Introduction|Plan|Collect|A day|Cancel|Sending|At the door|Households|Call request|Phone and states|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 85</div>
+  <h1>Launch Learning Bond invitations</h1>
+  <p class="lead">A day for every covered household, or one family at a time at the door, and the status staff see</p>
+</section>
+
+<section id="journey" data-part="0" data-cue="This video follows Tom Nguyen">
+  <h2>From settings to families</h2>
+  <ul>
+    <li>Tom plans the launch: counts, a day, or at the door</li>
+    <li>Staff invite a household from its page</li>
+    <li>Staff in the status roles see each family's status and take call requests</li>
+  </ul>
+  <p class="muted small">L2-140 · L2-142 · L2-139 · ADR 0079</p>
+</section>
+
+<section id="launch-clip" data-part="1" data-cue="Tom opens Settings, Learning Bond, and chooses Plan the launch." data-clip="clips/launch-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Plan the launch</h3><p>Counts, contacts, a day, cancel.</p></div>
+</section>
+
+<section id="day" data-part="3" data-cue="Tom chooses Send invitations on a day.">
+  <div class="cols">
+    <img class="shot" alt="Choose a date from tomorrow to 90 days ahead" src="shots/desktop-launch-invalid.png">
+    <img class="shot" alt="Scheduled for Mon 9 Nov 2026, 10:00 am" src="shots/desktop-launch-scheduled.png">
+  </div>
+</section>
+
+<section id="cancel" data-part="4" data-cue="Until the day comes">
+  <h2>Cancel the launch?</h2>
+  <img class="shot" alt="Cancel the launch? Nothing has been sent." src="shots/desktop-cancel-launch.png">
+  <p class="muted small">DELETE /learning-bond/launch · audited · nothing sent</p>
+</section>
+
+<section id="sending" data-part="5" data-cue="On the day, at ten o'clock">
+  <h2>How the launch sends</h2>
+  <ul>
+    <li>A due row the send job picks up, per organization (ADR 0079)</li>
+    <li>Through Messages: SMS cap and email fallback</li>
+    <li>In the household's language, naming each eligible child, with its own link</li>
+    <li>Never twice in 7 days; nothing while suspended or off</li>
+  </ul>
+  <p class="muted small">LearningBondLaunchHandler · LearningBondInvitationSender · MessageSource.LearningBond</p>
+</section>
+
+<section id="door-clip" data-part="6" data-cue="Instead of a day, Tom can choose Staff invite at the door." data-clip="clips/door-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>At the door</h3><p>The household card and its invitation.</p></div>
+</section>
+
+<section id="door" data-part="6" data-cue="Send invitation texts her at once">
+  <div class="cols">
+    <img class="shot" alt="Invite the Thompson household to Learning Bond" src="shots/desktop-invite-dialog.png">
+    <img class="shot" alt="Invited Thu 5 Nov" src="shots/desktop-household-invited.png">
+  </div>
+</section>
+
+<section id="families-clip" data-part="7" data-cue="Staff in the status roles also have Learning Bond in their menu." data-clip="clips/families-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Covered households</h3><p>Status, filters, a call request.</p></div>
+</section>
+
+<section id="families" data-part="7" data-cue="Nothing else about a claim ever appears here">
+  <h2>Status, and nothing else</h2>
+  <img class="shot" alt="Learning Bond households with Not invited, Invited and Call requested" src="shots/desktop-families.png">
+  <p class="muted small">GET /learning-bond/households · status roles only</p>
+</section>
+
+<section id="call" data-part="8" data-cue="Linh Tran would rather talk to someone.">
+  <div class="cols">
+    <img class="shot" alt="Mark the call with Linh Tran done: Not interested" src="shots/desktop-call-outcome.png">
+    <img class="shot" alt="Tran: Not interested" src="shots/desktop-families-done.png">
+  </div>
+</section>
+
+<section id="phone-clip" data-part="9" data-cue="The households and the launch work on a phone" data-clip="clips/families-phone.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>On a phone</h3><p>One column at a time.</p></div>
+</section>
+
+<section id="states" data-part="9" data-cue="When no covered household has a mobile number">
+  <div class="cols">
+    <img class="shot" alt="Add guardians' mobile numbers before launching" src="shots/desktop-launch-blocked.png">
+    <img class="shot" alt="Your role doesn't see Learning Bond status" src="shots/desktop-families-forbidden.png">
+  </div>
+</section>
+
+<section id="testing" data-part="10" data-cue="The API tests cover">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>LearningBondLaunchTests</code>: counts, range, block, the send at ten, never twice, moved, cancelled, suspended, off</li>
+    <li><code>LearningBondInviteTests</code>, <code>LearningBondFamiliesTests</code>, <code>LearningBondCallbackTests</code></li>
+    <li>Another organization and a role outside the status roles in every suite</li>
+    <li><code>launch</code>, <code>invite-household</code>, <code>families</code> specs · laptop and phone · axe</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="11" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>The launch page shows counts, never contacts</li><li>A scheduled launch sends at 10:00 on its day, once per household</li><li>At the door: one household at a time, never twice in 7 days</li><li>Staff see status and call requests only</li></ul>
+  <p class="muted">Next: a guardian claims the Learning Bond</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

@@ -82,3 +82,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0076](0076-learning-bond-keeps-financial-data-encrypted-and-submits-only-on-the-guardians-request.md) | Learning Bond keeps financial data encrypted and submits only on the guardian's request |
 | [0077](0077-the-learning-bond-agreement-is-served-before-the-module-is-on-from-the-settings-library.md) | The Learning Bond agreement is served before the module is on, from the settings library |
 | [0078](0078-the-learning-bond-signer-page-is-anonymous-and-lives-in-the-settings-library.md) | The Learning Bond signer page is anonymous and lives in the settings library |
+| [0079](0079-learning-bond-launches-are-due-rows-the-dispatch-runner-sends.md) | Learning Bond launches are due rows the dispatch runner sends |

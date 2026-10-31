@@ -38,9 +38,13 @@ public sealed class MessageDispatchRunner(IServiceScopeFactory scopes, TimeProvi
                 .Where(e => e.NoShowAlert && e.Status != Domain.Events.EventStatus.Cancelled)
                 .Select(e => new { e.OrganizationId, e.StartsAt, e.EndsAt }).ToListAsync(cancellationToken))
                 .Where(e => e.StartsAt + Application.Attendance.NoShowRules.MinDelay <= now && e.EndsAt > now).Select(e => e.OrganizationId);
+            // A scheduled Learning Bond launch not yet sent; the handler decides whether its day and 10:00 have come (ADR 0079).
+            var withLaunches = await db.LearningBondSettings.IgnoreQueryFilters().AsNoTracking()
+                .Where(s => s.LaunchMode == Domain.LearningBond.LearningBondLaunchMode.Scheduled && s.LaunchedAt == null)
+                .Select(s => s.OrganizationId).ToListAsync(cancellationToken);
             // A suspended organization sends nothing; its queue waits until it is reinstated (L2-003).
             var suspended = await db.Organizations.AsNoTracking().Where(o => o.SuspendedAt != null).Select(o => o.Id).ToListAsync(cancellationToken);
-            organizations = [.. withDeliveries.Union(withSlips).Union(withReminders).Union(withSessions).Except(suspended)];
+            organizations = [.. withDeliveries.Union(withSlips).Union(withReminders).Union(withSessions).Union(withLaunches).Except(suspended)];
         }
         foreach (var organizationId in organizations)
         {
@@ -49,6 +53,7 @@ public sealed class MessageDispatchRunner(IServiceScopeFactory scopes, TimeProvi
             await scope.ServiceProvider.GetRequiredService<SendDueSlipsHandler>().HandleAsync(cancellationToken);
             await scope.ServiceProvider.GetRequiredService<SendDueRemindersHandler>().HandleAsync(cancellationToken);
             await scope.ServiceProvider.GetRequiredService<Application.Attendance.SendNoShowAlertsHandler>().HandleAsync(cancellationToken);
+            await scope.ServiceProvider.GetRequiredService<Application.LearningBond.LearningBondLaunchHandler>().SendDueAsync(cancellationToken);
             await scope.ServiceProvider.GetRequiredService<SendQueuedDeliveriesHandler>().HandleAsync(cancellationToken);
         }
     }

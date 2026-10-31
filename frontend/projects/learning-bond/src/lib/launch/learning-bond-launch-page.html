@@ -1,0 +1,143 @@
+<ph-breadcrumb [items]="crumbs" />
+<ph-page-header
+  title="Launch"
+  subtitle="One invitation per covered household, naming each eligible child, in the household’s language."
+/>
+@switch (state()) {
+  @case ('forbidden') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="lock"
+        title="Admins launch Learning Bond"
+        text="Ask an admin or a program director."
+      >
+        <ph-button link="/">Back to Today</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('error') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load the launch"
+        text="Check your connection and try again."
+      >
+        <ph-button variant="primary" icon="refresh" (click)="load()">Try again</ph-button>
+        <ph-button variant="ghost" link="/settings/learning-bond">Back to Learning Bond</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('loading') {
+    <div class="counts" aria-busy="true" aria-label="Loading the launch">
+      <ph-skeleton shape="card" />
+      <ph-skeleton shape="card" />
+      <ph-skeleton shape="card" />
+      <ph-skeleton shape="card" />
+    </div>
+  }
+  @default {
+    @if (launch(); as l) {
+      @if (l.mode === 'Scheduled' && l.date && !l.launchedAt) {
+        <div data-testid="launch-status">
+          <ph-alert
+            tone="success"
+            [title]="'Scheduled for ' + day(l.date) + ', 10:00 am'"
+            [text]="
+              l.mobile +
+              ' by text and ' +
+              l.emailOnly +
+              ' by email. Change the date or cancel any time before then.'
+            "
+          >
+            <ph-button size="sm" variant="ghost" hasPopup="dialog" (click)="cancel(l)"
+              >Cancel launch</ph-button
+            >
+          </ph-alert>
+        </div>
+      } @else if (l.mode === 'AtTheDoor') {
+        <div data-testid="launch-status">
+          <ph-alert
+            tone="info"
+            title="Staff invite at the door"
+            text="Nothing is sent in bulk. Staff whose role sees status tap Invite to Learning Bond on a household at check-in."
+          />
+        </div>
+      }
+      <div class="counts" data-testid="launch-counts">
+        <ph-stat
+          label="Households covered"
+          [value]="'' + l.covered"
+          [caption]="programsCaption(l)"
+        />
+        <ph-stat label="With a mobile number" [value]="'' + l.mobile" caption="Invited by text" />
+        <ph-stat label="Email only" [value]="'' + l.emailOnly" caption="Invited by email" />
+        <ph-stat label="Neither" [value]="'' + l.neither" caption="Collect at check-in" />
+      </div>
+      @if (l.neither > 0) {
+        <p class="more">
+          <ph-button
+            variant="ghost"
+            size="sm"
+            link="/settings/learning-bond/launch/missing-contacts"
+            >View households to collect from</ph-button
+          >
+        </p>
+      }
+      @if (l.noPhoneNumbers) {
+        <div class="blocked">
+          <p class="reason" id="launch-blocked" data-testid="launch-blocked">
+            {{ noPhoneNumbers }}
+          </p>
+          <ph-button variant="primary" [disabled]="true" describedBy="launch-blocked"
+            >Launch</ph-button
+          >
+        </div>
+      } @else if (!l.launchedAt) {
+        <form class="form" novalidate (ngSubmit)="submit()">
+          @if (summary().length) {
+            <ph-error-summary [items]="summary()" />
+          }
+          <ph-card title="How">
+            <div class="fields">
+              @if (!pending()) {
+                <div id="launch-mode">
+                  <ph-radio-group
+                    legend="When"
+                    name="mode"
+                    [options]="modes"
+                    [error]="errors()['mode'] || errors()['launch'] || null"
+                    [ngModel]="mode()"
+                    (ngModelChange)="setMode($event)"
+                  />
+                </div>
+              }
+              @if (mode() === 'Scheduled') {
+                <ph-text-field
+                  inputId="launch-day"
+                  label="Day"
+                  type="date"
+                  name="date"
+                  help="From tomorrow to 90 days ahead."
+                  [error]="errors()['date'] ?? null"
+                  [ngModel]="date()"
+                  (ngModelChange)="date.set($event)"
+                />
+              }
+            </div>
+          </ph-card>
+          <div class="actions">
+            <ph-button variant="ghost" link="/settings/learning-bond">Back</ph-button>
+            <ph-button variant="primary" type="submit" [busy]="saving()">{{
+              pending()
+                ? 'Change the date'
+                : mode() === 'Scheduled'
+                  ? 'Schedule launch'
+                  : 'Launch without a mass send'
+            }}</ph-button>
+          </div>
+        </form>
+      }
+    }
+  }
+}
