@@ -15,6 +15,7 @@ import {
   GuardianPageResult,
   LEARNING_BOND_API,
   GuardianLearningBondConsent,
+  LearningBondTotal,
 } from '@promisehub/api';
 import {
   PhAgentMessage,
@@ -77,6 +78,8 @@ export class GuardianLearningBondPage implements OnInit {
   protected readonly errors = signal<Record<string, string>>({});
   protected readonly chosen = signal<'NotNow' | 'NotInterested' | null>(null);
   protected readonly withdrawnName = signal<string | null>(null);
+  /** The running total, once there is something to show (L2-158 criterion 1). */
+  protected readonly total = signal<LearningBondTotal | null>(null);
   protected readonly benefitsWords = computed(() => guardianBenefitsText(this.language()));
   private readonly dialogs = inject(PhDialogs);
   protected contact = '';
@@ -113,7 +116,16 @@ export class GuardianLearningBondPage implements OnInit {
 
   protected load(): void {
     this.result.set(null);
-    this.api.guardianPage(this.token()).subscribe((r) => this.result.set(r));
+    this.api.guardianPage(this.token()).subscribe((r) => {
+      this.result.set(r);
+      if (r.status === 'loaded') this.loadTotal();
+    });
+  }
+
+  private loadTotal(): void {
+    this.api
+      .total(this.token())
+      .subscribe((r) => this.total.set(r.status === 'loaded' ? r.value : null));
   }
 
   /** Withdraw for a child (L2-152): the dialog says what stops and what stays; once withdrawn the page reloads. */

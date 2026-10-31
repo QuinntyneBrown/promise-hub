@@ -376,6 +376,12 @@ export class FakeLearningBond {
   /** Benefit applications the fake programs received (IBenefitChannel): nothing is here before Submit. */
   readonly benefitSubmissions: string[] = [];
 
+  /** The household's date reminders still ahead (LearningBondDateReminder). */
+  readonly dateReminders: { id: string; kind: string; subject: string; dueOn: string; eventOn: string; turnedOff: boolean }[] = [];
+
+  /** The household's running total lines (LearningBondTotals). */
+  readonly totalLines: { child: string | null; stream: string; amount: number; confirmed: boolean }[] = [];
+
   /** When true, the provider refuses and nothing is sent. */
   providerFails = false;
 

@@ -13,7 +13,7 @@ namespace PromiseHub.Application.LearningBond;
 /// guardian sends, the filled PDF and Mark as sent. There is no Submit all; nothing leaves before the guardian's own act.
 /// </summary>
 public sealed class LearningBondBenefitApplicationHandler(IPromiseHubDb db, LearningBondBenefitsAccess access, ILearningBondCipher cipher, IFileStore files,
-    IBenefitChannel channel, IAuditWriter audit, TimeProvider clock)
+    IBenefitChannel channel, LearningBondDatePlanner planner, IAuditWriter audit, TimeProvider clock)
 {
     public async Task<GuardianResult> PrepareAsync(GuardianRequest request, string benefitKey, CancellationToken cancellationToken = default)
     {
@@ -174,6 +174,8 @@ public sealed class LearningBondBenefitApplicationHandler(IPromiseHubDb db, Lear
         // Never a SIN in the audit (L2-159, L2-161).
         audit.Record(new AuditEvent(AuditAction.Submitted, nameof(LearningBondBenefitApplication), application.Id, $"Benefit application submitted: {entry.Name}"));
         await db.SaveChangesAsync(cancellationToken);
+        await planner.SyncAsync(application.OrganizationId, application.HouseholdId, scope.Organization.TimeZone, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
         return Accepted(application);
     }
 
@@ -215,7 +217,7 @@ public sealed class LearningBondBenefitApplicationHandler(IPromiseHubDb db, Lear
     /// <summary>The guardian sent the form themselves and says so (L2-156 criterion 2).</summary>
     public async Task<GuardianResult> MarkSentAsync(GuardianRequest request, Guid applicationId, CancellationToken cancellationToken = default)
     {
-        var (gate, _, application, entry) = await OwnAsync(request, applicationId, cancellationToken);
+        var (gate, scope, application, entry) = await OwnAsync(request, applicationId, cancellationToken);
         if (gate is not null)
         {
             return gate;
@@ -228,6 +230,8 @@ public sealed class LearningBondBenefitApplicationHandler(IPromiseHubDb db, Lear
         {
             application.MarkSentByGuardian(clock.GetUtcNow());
             audit.Record(new AuditEvent(AuditAction.Sent, nameof(LearningBondBenefitApplication), application.Id, $"Benefit form marked sent by the guardian: {entry.Name}"));
+            await db.SaveChangesAsync(cancellationToken);
+            await planner.SyncAsync(application.OrganizationId, application.HouseholdId, scope!.Organization.TimeZone, cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
         }
         return GuardianResult.Of(GuardianOutcome.Done);

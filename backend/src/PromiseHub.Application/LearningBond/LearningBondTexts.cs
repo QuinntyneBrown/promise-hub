@@ -62,6 +62,36 @@ public static class LearningBondTexts
         _ => "I agree that Learning Bond may use what I’ve already given, plus my household size, marital status and whether I get the Canada Child Benefit, to check and apply for child benefits I choose.",
     };
 
+    /// <summary>A reminder on a date that matters (L2-157 criterion 2): what to do and the link.</summary>
+    public static string DateReminder(string code, string sender, string kind, string subject, DateOnly on, string link)
+    {
+        var day = on.ToString(code switch { "es" => "d 'de' MMMM", "fr" => "d MMMM", _ => "MMMM d" },
+            System.Globalization.CultureInfo.GetCultureInfo(code switch { "es" => "es", "fr" => "fr-CA", _ => "en-CA" }));
+        return (code, kind) switch
+        {
+            ("es", "Taxes") => $"{sender}: recordatorio: presente sus impuestos de {subject} antes del 30 de abril para seguir recibiendo sus beneficios. {link} (STOP para salir)",
+            ("es", "TurnsSix") => $"{sender}: {subject} cumple 6 años el {day}. El Beneficio por Hijos de Canadá cambia a los 6. {link} (STOP para salir)",
+            ("es", "TurnsEighteen") => $"{sender}: {subject} cumple 18 años el {day}. Algunos beneficios cambian a los 18; esto es lo que hay que hacer. {link} (STOP para salir)",
+            ("es", _) => $"{sender}: {subject} se renueva el {day}. Presente sus impuestos a tiempo para que siga. {link} (STOP para salir)",
+            ("fr", "Taxes") => $"{sender} : rappel : produisez votre déclaration de {subject} avant le 30 avril pour continuer à recevoir vos prestations. {link} (STOP pour arrêter)",
+            ("fr", "TurnsSix") => $"{sender} : {subject} aura 6 ans le {day}. L’Allocation canadienne pour enfants change à 6 ans. {link} (STOP pour arrêter)",
+            ("fr", "TurnsEighteen") => $"{sender} : {subject} aura 18 ans le {day}. Certaines prestations changent à 18 ans; voici quoi faire. {link} (STOP pour arrêter)",
+            ("fr", _) => $"{sender} : {subject} se renouvelle le {day}. Produisez votre déclaration à temps pour qu’elle continue. {link} (STOP pour arrêter)",
+            (_, "Taxes") => $"{sender}: reminder: file your {subject} taxes by April 30 to keep your benefits coming. {link} (STOP to opt out)",
+            (_, "TurnsSix") => $"{sender}: {subject} turns 6 on {day}. The Canada Child Benefit changes at 6. {link} (STOP to opt out)",
+            (_, "TurnsEighteen") => $"{sender}: {subject} turns 18 on {day}. Some benefits change at 18; here’s what to do. {link} (STOP to opt out)",
+            _ => $"{sender}: {subject} renews on {day}. File your taxes on time so it continues. {link} (STOP to opt out)",
+        };
+    }
+
+    /// <summary>A benefit started, with the new total (L2-158 criterion 2).</summary>
+    public static string BenefitStarted(string code, string benefit, int total) => code switch
+    {
+        "es" => $"{benefit} comenzó para su familia. Ya desbloqueó ${total:N0} hasta ahora.",
+        "fr" => $"{benefit} a commencé pour votre famille. Vous avez débloqué {total.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("fr-CA"))} $ jusqu’ici.",
+        _ => $"{benefit} has started for your family. You’ve unlocked ${total:N0} so far.",
+    };
+
     /// <summary>A reminder to pick a paused claim back up (L2-151 criterion 3).</summary>
     public static string Reminder(string code, string sender, string child, string link) => code switch
     {

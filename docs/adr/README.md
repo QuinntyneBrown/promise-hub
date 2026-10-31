@@ -86,3 +86,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0080](0080-learning-bond-providers-and-province-are-code-and-the-address-is-asked-on-the-review.md) | Learning Bond providers and the province live in code, and the review asks for the address |
 | [0081](0081-provider-webhooks-are-hmac-signed-and-claim-reminders-run-in-the-dispatch-runner.md) | Provider webhooks are HMAC-signed, and claim reminders run in the dispatch runner |
 | [0082](0082-the-benefits-check-keeps-its-own-consent-answers-and-one-application-per-benefit.md) | The benefits check keeps its own consent, its answers encrypted, and one application per benefit |
+| [0083](0083-date-reminders-are-sent-on-their-day-and-the-total-is-computed-from-the-records.md) | Date reminders are sent on their day, and the total is computed from the records |

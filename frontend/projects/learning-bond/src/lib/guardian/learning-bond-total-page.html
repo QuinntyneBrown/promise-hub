@@ -1,0 +1,54 @@
+<ph-guardian-shell [organization]="organization()" [attr.lang]="language()">
+  @let t = text();
+  @let b = words();
+  @let r = result();
+  @if (!r) {
+    <h1 class="visually-hidden">{{ t.loading }}</h1>
+    <ph-skeleton shape="card" [attr.aria-label]="t.loading" />
+  } @else {
+    @switch (r.status) {
+      @case ('loaded') {
+        @let p = r.value;
+        <div class="stack">
+          <h1>{{ b.totalHeading }}</h1>
+          <div data-testid="total-unlocked">
+            <ph-stat
+              [label]="b.unlockedLabel"
+              [value]="p.nothingConfirmed ? b.nothingConfirmed : t.amount(p.confirmed)"
+            />
+          </div>
+          <p class="plain muted" data-testid="total-applied">
+            {{ b.appliedFor(t.amount(p.estimated)) }}
+          </p>
+          @if (p.lines.length) {
+            <ph-table [caption]="b.byChild" [columns]="columns()" [rows]="rows(p)" />
+          }
+          <div class="cluster">
+            <ph-button variant="ghost" [link]="['/g/learning-bond', token()]">{{
+              t.familyPage
+            }}</ph-button>
+            <ph-button variant="ghost" [link]="['/g/learning-bond', token(), 'reminders']">{{
+              b.yourReminders
+            }}</ph-button>
+          </div>
+        </div>
+      }
+      @case ('gone') {
+        <h1>{{ t.expiredHeading }}</h1>
+        <ph-card>
+          <p class="plain">{{ t.expiredText(r.organization ?? '') }}</p>
+        </ph-card>
+      }
+      @default {
+        <h1>{{ t.pageTitle }}</h1>
+        <ph-card [flush]="true">
+          <ph-empty-state icon="warning" tone="error" [title]="t.errorTitle" [text]="t.errorText">
+            <ph-button variant="primary" icon="refresh" (click)="load()">{{
+              t.tryAgain
+            }}</ph-button>
+          </ph-empty-state>
+        </ph-card>
+      }
+    }
+  }
+</ph-guardian-shell>

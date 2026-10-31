@@ -46,7 +46,9 @@ public sealed class MessageDispatchRunner(IServiceScopeFactory scopes, TimeProvi
             var withClaims = (await db.LearningBondReminders.IgnoreQueryFilters().AsNoTracking().Where(r => r.SentAt == null && r.CancelledAt == null)
                     .Select(r => r.OrganizationId).ToListAsync(cancellationToken))
                 .Union(await db.LearningBondClaims.IgnoreQueryFilters().AsNoTracking().Where(c => c.Status == Domain.LearningBond.LearningBondClaimStatus.Paused)
-                    .Select(c => c.OrganizationId).ToListAsync(cancellationToken));
+                    .Select(c => c.OrganizationId).ToListAsync(cancellationToken))
+                .Union(await db.LearningBondDateReminders.IgnoreQueryFilters().AsNoTracking().Where(r => r.SentAt == null && r.MissedAt == null && r.TurnedOffAt == null)
+                    .Select(r => r.OrganizationId).ToListAsync(cancellationToken));
             // A suspended organization sends nothing; its queue waits until it is reinstated (L2-003).
             var suspended = await db.Organizations.AsNoTracking().Where(o => o.SuspendedAt != null).Select(o => o.Id).ToListAsync(cancellationToken);
             organizations = [.. withDeliveries.Union(withSlips).Union(withReminders).Union(withSessions).Union(withLaunches).Union(withClaims).Except(suspended)];

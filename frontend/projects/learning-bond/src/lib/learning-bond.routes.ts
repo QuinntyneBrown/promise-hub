@@ -12,6 +12,8 @@ import { LearningBondBenefitsConsentPage } from './guardian/learning-bond-benefi
 import { LearningBondBenefitsIntakePage } from './guardian/learning-bond-benefits-intake-page';
 import { LearningBondBenefitsPage } from './guardian/learning-bond-benefits-page';
 import { LearningBondBenefitReviewPage } from './guardian/learning-bond-benefit-review-page';
+import { LearningBondRemindersPage } from './guardian/learning-bond-reminders-page';
+import { LearningBondTotalPage } from './guardian/learning-bond-total-page';
 import { SettingsLearningBondPage } from './hub/settings-learning-bond-page';
 import { LearningBondInvitationPage } from './invitation/learning-bond-invitation-page';
 import { LearningBondLaunchPage } from './launch/learning-bond-launch-page';
@@ -116,5 +118,15 @@ export const guardianRoutes: Routes = [
     path: 'benefits/:key',
     component: LearningBondBenefitReviewPage,
     title: 'Benefit application · Learning Bond · PromiseHub',
+  },
+  {
+    path: 'reminders',
+    component: LearningBondRemindersPage,
+    title: 'Reminders · Learning Bond · PromiseHub',
+  },
+  {
+    path: 'total',
+    component: LearningBondTotalPage,
+    title: 'Your total · Learning Bond · PromiseHub',
   },
 ];

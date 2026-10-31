@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 90 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="90" data-video-title="Get reminders and track dollars unlocked" data-parts="Introduction|Reminders|Sending|The total|Only hers|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 90</div>
+  <h1>Get reminders and track dollars unlocked</h1>
+  <p class="lead">A text on each date that matters, and the dollars a family has unlocked so far</p>
+</section>
+
+<section id="reminders-clip" data-part="1" data-cue="When the benefits check finishes" data-clip="clips/reminders-phone.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Your reminders</h3><p>Taxes, renewals, birthdays; Turn off.</p></div>
+</section>
+
+<section id="sending" data-part="2" data-cue="On its day, at ten in the morning">
+  <h2>On its day, once</h2>
+  <ul>
+    <li>10:00 in the organization's time zone, through Messages</li>
+    <li>Email when there's no mobile or the SMS cap is reached</li>
+    <li>Never after Turn off, while suspended, or without the Benefits consent</li>
+    <li>A day missed while the module was off is never sent late</li>
+  </ul>
+  <p class="muted small">LearningBondDatePlanner · LearningBondClaimJob · ADR 0083</p>
+</section>
+
+<section id="total-clip" data-part="3" data-cue="Carmen's family page now carries her total." data-clip="clips/total-phone.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>The total</h3><p>Unlocked, applied for, by child and stream.</p></div>
+</section>
+
+<section id="total-desktop-clip" data-part="3" data-cue="When a program reports that a benefit has started" data-clip="clips/total-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Started, or nothing yet</h3><p>The table, and nothing confirmed yet.</p></div>
+</section>
+
+<section id="hers" data-part="4" data-cue="The total is computed from her household's records">
+  <h2>Only hers</h2>
+  <ul>
+    <li>Computed from the household's own records on each visit</li>
+    <li>Another household's amounts never appear</li>
+    <li>No staff endpoint for it</li>
+  </ul>
+  <p class="muted small">GET /g/learning-bond/{token}/total · POST /learning-bond/webhooks/programs/{program}</p>
+</section>
+
+<section id="testing" data-part="5" data-cue="The API tests cover the reminders">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>LearningBondRemindersTests</code>: the dates, once at 10, off, missed, the total, the started text</li>
+    <li>Another household's total; an unsigned program event</li>
+    <li><code>reminders-total</code> spec · laptop and phone · axe</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="6" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Reminders from the household's dates; any can be off</li><li>One text at 10 on its day, never late</li><li>Unlocked and applied for, by child and stream</li><li>The total is the family's alone</li></ul>
+  <p class="muted">Next: the dashboard, in counts and dollars</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

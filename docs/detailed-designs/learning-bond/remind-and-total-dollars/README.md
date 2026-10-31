@@ -16,19 +16,22 @@ Both jobs and both pages run in the link's organization; the webhook takes its o
 
 Frontend:
 
-- **`RemindersPage`** (`learning-bond-reminders`) — `ph-card` list with one row per reminder (`ph-date-badge`, kind, date line) and `ph-button` Turn off with an accessible label naming the reminder; a `ph-badge` Off once turned off, with an Undo toast; empty state "No reminders" with Check benefits.
-- **`TotalPage`** (`learning-bond-total`) — `ph-stat` "Unlocked so far" with "Applied for" beneath, `ph-table` By child and stream with Confirmed and Applied for columns and a Total row; "Nothing confirmed yet" when nothing is confirmed. Amounts follow the household's locale ("1 200 $" in French).
-- **`learning-bond-sms`** — the reminder and benefit-started texts previewed with `ph-sms-preview` in the mocks; the texts themselves are platform copy from `LearningBondTexts`.
-- **`LEARNING_BOND_API`** — `listReminders(token)`, `turnOffReminder(token, id)`, `getTotal(token)`.
+- **`LearningBondRemindersPage`** (route `/g/learning-bond/:token/reminders`): the agent's line, then the reminders still ahead as a `ph-list`. Each has its words in the guardian's language: File your {year} taxes, {first name} turns 6 or 18, or {benefit} renews. The date follows, and a ghost Turn off labelled with the reminder, or an Off badge once it is off. With none, an empty state says reminders appear after a benefits check.
+- **`LearningBondTotalPage`** (route `.../total`): `ph-stat` Unlocked so far (or Nothing confirmed yet), the Applied for line, and `ph-table` By child and stream, with Confirmed and Applied for columns.
+- **The total card.** `GuardianLearningBondPage` shows Unlocked so far, Applied for, See your total and Your reminders once the total has lines.
+- **API methods on `LEARNING_BOND_API`**: `reminders`, `turnOffReminder` and `total`.
 
 Backend:
 
-- **`ReminderPlanner`** — after a benefits check (also when every benefit is already received) and after each submission or program event, upserts the household's reminders: March 15 of the next year for `FileTaxes`, the date 30 days before each child's sixth and eighteenth birthday still ahead, and the catalogue entry's `RenewalRule` for each received or applied-for benefit. A date already past is never created.
-- **`TurnOffReminderHandler`** — sets `TurnedOffAt`; the job skips it for good; audits Reminder turned off.
-- **`LearningBondReminderJob`** (`Infrastructure/LearningBond/`) — a per-tenant recurring job of `run-background-jobs` scheduled at 10:00 in the organization's time zone. It exits without effect when the module is off, the organization is suspended or the household's Benefits consent is withdrawn; otherwise it queues one `MessageWriter.Queue(MessageSource.LearningBond, …)` per due reminder in the household's language with what to do and a link, with the idempotency key `(reminderId)`, and sets `SentAt`. The send job applies the SMS cap, the email fallback and STOP. When the module is turned back on, only reminders whose date is still ahead resume.
-- **`GetTotalHandler`** — sums the household's `LearningBondApplication` rows: `ConfirmedAmount` of `Deposited` Learning Bond applications and started benefits, `EstimatedAmount` of `Submitted` and `Received` ones, grouped by child and stream; answers `TotalDto`. Rows of another household are never read.
-- **`ProgramWebhookHandler`** — `POST /learning-bond/webhooks/programs/{program}` verifies the signature through `IWebhookSignatureVerifier`, finds the application by the program's reference, takes the organization from it (404 when the module is off there), applies each event once by its id (`BenefitStarted` sets `ConfirmedAmount` to the first-year amount and `Status = Received`), re-plans the renewal reminder, queues the benefit-started text with the new total and audits Program event.
-- **Endpoints** — `GET /g/learning-bond/{token}/reminders`, `POST .../reminders/{id}/off`, `GET .../total` (`LearningBondGuardianEndpoints.cs`); the webhook route is anonymous and signed (`LearningBondEndpoints.cs`).
+- **`LearningBondDatePlanner.SyncAsync`** runs after the benefits intake is saved and after a benefit application is submitted or marked sent. It adds the date reminders idempotently (ADR 0083).
+- **`LearningBondRemindersHandler`**: `ListAsync` returns the household's reminders not yet sent or missed (kind, subject, due and event dates, turned off). `TurnOffAsync` handles the household's own reminders only, otherwise 404.
+- **`LearningBondClaimJob.SendDateRemindersAsync`** runs per organization from the dispatch runner:
+  - it sends a reminder due today from 10:00 local, once, through `LearningBondGuardianTexter` with `LearningBondTexts.DateReminder`, while the Benefits consent is in force;
+  - it marks a reminder whose day passed unsent as missed;
+  - a tax reminder sent sets next year's.
+- **`LearningBondTotals.LinesAsync`** and **`LearningBondTotalHandler.GetAsync`** compute the household's own lines: Learning Bond deposits or estimates per child, and benefits confirmed or estimated, split by the catalogue's per-child rule.
+- **`LearningBondProgramWebhookHandler.HandleAsync`** checks, in order: the signature for the program (otherwise 401); the benefit application, by the program's reference (otherwise 404); the module on in its organization (otherwise 404); and the event id, applied once. It records `ConfirmedAmount` and `StartedAt`, and, while the Benefits consent is in force, texts "{benefit} has started for your family. You've unlocked ${total} so far." in the household's language.
+- **Endpoints**: `GET /g/learning-bond/{token}/reminders`, `PUT .../reminders/{id}/off` and `GET .../total` in `LearningBondGuardianEndpoints`, and `POST /learning-bond/webhooks/programs/{program}` in `LearningBondWebhookEndpoints`.
 
 ## Requirements
 

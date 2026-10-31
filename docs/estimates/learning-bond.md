@@ -13,7 +13,7 @@
 | list-and-apply-for-benefits | 8 days | 80% |
 | offer-benefits-check | 5 days | 90% |
 | open-guardian-learning-bond | 5 days | 80% |
-| remind-and-total-dollars | 6 days | 0% |
+| remind-and-total-dollars | 6 days | 90% |
 | review-and-submit-application | 8 days | 80% |
 | run-learning-bond-agent | 7 days | 20% |
 | support-families-with-status | 5 days | 70% |

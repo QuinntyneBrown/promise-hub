@@ -107,6 +107,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.LearningBond.LearningBondReminderChoice> LearningBondChoices => Set<Domain.LearningBond.LearningBondReminderChoice>();
     public DbSet<Domain.LearningBond.LearningBondBenefitsCheck> LearningBondBenefitsChecks => Set<Domain.LearningBond.LearningBondBenefitsCheck>();
     public DbSet<Domain.LearningBond.LearningBondBenefitApplication> LearningBondBenefitApplications => Set<Domain.LearningBond.LearningBondBenefitApplication>();
+    public DbSet<Domain.LearningBond.LearningBondDateReminder> LearningBondDateReminders => Set<Domain.LearningBond.LearningBondDateReminder>();
     public DbSet<Domain.LearningBond.LearningBondSettings> LearningBondSettings => Set<Domain.LearningBond.LearningBondSettings>();
     public DbSet<DataRequest> DataRequests => Set<DataRequest>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
@@ -455,6 +456,17 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(a => a.CreatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.Property(a => a.UpdatedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.Property(a => a.SubmittedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.Property(a => a.StartedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+        });
+        // Reminders on the household's dates (L2-157).
+        modelBuilder.Entity<Domain.LearningBond.LearningBondDateReminder>(e =>
+        {
+            e.HasIndex(r => new { r.OrganizationId, r.HouseholdId, r.DueOn });
+            e.Property(r => r.Kind).HasConversion<string>().HasMaxLength(20);
+            e.Property(r => r.BenefitKey).HasMaxLength(100);
+            e.Property(r => r.TurnedOffAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.Property(r => r.SentAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+            e.Property(r => r.MissedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
         });
         // Reminders to pick a paused claim back up, and the guardian's answer (L2-151 criterion 3).
         modelBuilder.Entity<Domain.LearningBond.LearningBondReminder>(e =>

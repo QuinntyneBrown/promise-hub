@@ -10,8 +10,8 @@ namespace PromiseHub.Application.LearningBond;
 /// The benefits check (L2-153 to L2-156): the offer and Not now, the Benefits consent page, the intake that reuses the Learning Bond answers
 /// and asks at most three facts more, and the list of benefits with exactly one state each, computed by the catalogue's rules.
 /// </summary>
-public sealed class LearningBondBenefitsHandler(IPromiseHubDb db, LearningBondGuardianScope guardianScope, LearningBondBenefitsAccess access, IAuditWriter audit,
-    TimeProvider clock)
+public sealed class LearningBondBenefitsHandler(IPromiseHubDb db, LearningBondGuardianScope guardianScope, LearningBondBenefitsAccess access, LearningBondDatePlanner planner,
+    IAuditWriter audit, TimeProvider clock)
 {
     public const string SizeMessage = "Enter how many people live with you, from 1 to 15.";
     public const string ChooseMessage = "Choose one.";
@@ -110,6 +110,9 @@ public sealed class LearningBondBenefitsHandler(IPromiseHubDb db, LearningBondGu
         check.SetAnswers(access.Encrypt(new BenefitAnswers(body.HouseholdSize!.Value, body.MaritalStatus!, body.CcbNow!, body.IncomeChanged, custody)), clock.GetUtcNow());
         // Field names only, never a value (L2-159, L2-161).
         audit.Record(new AuditEvent(AuditAction.Updated, nameof(LearningBondBenefitsCheck), check.Id, "Benefits intake saved: household size, marital status, Canada Child Benefit"));
+        await db.SaveChangesAsync(cancellationToken);
+        // The check is done: the reminders on the household's dates follow (L2-157 criterion 1).
+        await planner.SyncAsync(scope!.Household.OrganizationId, scope.Household.Id, scope.Organization.TimeZone, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return GuardianResult.Of(GuardianOutcome.Done);
     }
