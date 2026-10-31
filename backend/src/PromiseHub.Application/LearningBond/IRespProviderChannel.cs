@@ -4,4 +4,7 @@ namespace PromiseHub.Application.LearningBond;
 public interface IRespProviderChannel
 {
     Task<RespSubmissionResult> SubmitAsync(RespSubmission submission, CancellationToken cancellationToken);
+
+    /// <summary>Sends a document the provider asked for (L2-150 criterion 6), only on the guardian's Send.</summary>
+    Task<RespSubmissionResult> SendDocumentAsync(RespDocument document, CancellationToken cancellationToken);
 }

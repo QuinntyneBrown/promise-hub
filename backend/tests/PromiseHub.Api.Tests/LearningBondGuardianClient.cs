@@ -44,6 +44,19 @@ internal sealed partial class LearningBondGuardianClient(PromiseHubApiFactory fa
 
     public string Path(string rest = "") => $"/g/learning-bond/{Token}{rest}";
 
+    /// <summary>Consent, the intake, the estimate, the review with an address and Submit for one child: the claim as prompt 86 leaves it.</summary>
+    public async Task<string> SubmitAsync(Guid childId, string typedName, string guardianSin, string childSin)
+    {
+        await Http.PostAsJsonAsync(Path("/consents"), new { childIds = new[] { childId }, typedName });
+        await Http.PutAsJsonAsync(Path($"/children/{childId}/intake"), new { guardianSin, childSin, taxFiled = "Yes" });
+        await Http.GetAsync(Path($"/children/{childId}/estimate"));
+        var id = (await (await Http.PostAsync(Path($"/children/{childId}/applications"), null)).Content.ReadFromJsonAsync<System.Text.Json.JsonElement>()).GetProperty("id").GetString()!;
+        var version = (await (await Http.PatchAsJsonAsync(Path($"/applications/{id}/fields/address"), new { value = "42 Barton St E, Hamilton ON L8L 2V6" }))
+            .Content.ReadFromJsonAsync<System.Text.Json.JsonElement>()).GetProperty("reviewVersion").GetInt32();
+        Assert.Equal(HttpStatusCode.Accepted, (await Http.PostAsJsonAsync(Path($"/applications/{id}/submit"), new { reviewVersion = version })).StatusCode);
+        return id;
+    }
+
     [GeneratedRegex(@"\b\d{6}\b")]
     private static partial Regex CodePattern();
 }

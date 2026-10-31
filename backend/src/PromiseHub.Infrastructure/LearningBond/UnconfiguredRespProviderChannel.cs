@@ -9,4 +9,6 @@ namespace PromiseHub.Infrastructure.LearningBond;
 public sealed class UnconfiguredRespProviderChannel : IRespProviderChannel
 {
     public Task<RespSubmissionResult> SubmitAsync(RespSubmission submission, CancellationToken cancellationToken) => Task.FromResult(RespSubmissionResult.NotSent);
+
+    public Task<RespSubmissionResult> SendDocumentAsync(RespDocument document, CancellationToken cancellationToken) => Task.FromResult(RespSubmissionResult.NotSent);
 }

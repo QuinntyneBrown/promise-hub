@@ -61,10 +61,38 @@ public sealed class LearningBondClaim : ITenantOwned
         UpdatedAt = now;
     }
 
+    public void MarkDeposited(DateTimeOffset now)
+    {
+        Status = LearningBondClaimStatus.Deposited;
+        UpdatedAt = now;
+    }
+
+    /// <summary>When it paused, for the 180-day close (L2-151 criterion 5).</summary>
+    public DateTimeOffset? PausedAt { get; private set; }
+
+    /// <summary>The claim goes on from where it stopped, every answer kept (L2-151 criterion 4).</summary>
+    public void Resume(DateTimeOffset now)
+    {
+        Status = LearningBondClaimStatus.Started;
+        PausedReason = null;
+        PausedAt = null;
+        UpdatedAt = now;
+    }
+
+    /// <summary>Closed after 180 idle days: Not completed, the child's SIN destroyed and its last three digits kept (L2-151 criterion 5, L2-159).</summary>
+    public void Close(DateTimeOffset now)
+    {
+        Status = LearningBondClaimStatus.NotCompleted;
+        PausedReason = null;
+        ChildSinCiphertext = null;
+        UpdatedAt = now;
+    }
+
     public void Pause(LearningBondPausedReason reason, DateTimeOffset now)
     {
         Status = LearningBondClaimStatus.Paused;
         PausedReason = reason;
+        PausedAt = now;
         UpdatedAt = now;
     }
 }

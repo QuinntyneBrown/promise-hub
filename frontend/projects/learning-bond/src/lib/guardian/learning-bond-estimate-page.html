@@ -24,6 +24,11 @@
                   [text]="t.taxReturnText(e.firstName)"
                 />
               </div>
+              <div>
+                <ph-button variant="primary" icon="arrow-right" link="../paused">{{
+                  t.whatToDo
+                }}</ph-button>
+              </div>
             } @else {
               <ph-button variant="primary" size="lg" icon="arrow-right" link="../review">{{
                 t.toReview(e.firstName)

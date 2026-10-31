@@ -28,7 +28,11 @@
                 tone="success"
                 [title]="t.sentTitle(a.firstName, a.provider ?? '')"
                 [text]="t.sentText"
-              />
+              >
+                <ph-button variant="primary" size="sm" icon="arrow-right" link="../submitted">{{
+                  t.seeNext
+                }}</ph-button>
+              </ph-alert>
             </div>
           } @else {
             <h1>{{ t.reviewHeading(a.firstName) }}</h1>

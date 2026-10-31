@@ -1,0 +1,109 @@
+<ph-guardian-shell [organization]="organization()" [attr.lang]="language()">
+  @let t = text();
+  @let r = result();
+  @if (!r) {
+    <h1 class="visually-hidden">{{ t.loading }}</h1>
+    <ph-skeleton shape="card" [attr.aria-label]="t.loading" />
+  } @else {
+    @switch (r.status) {
+      @case ('loaded') {
+        @let p = r.value;
+        <div class="stack">
+          <h1>{{ t.pausedHeading(p.firstName) }}</h1>
+          <p class="plain">
+            <ph-badge tone="warning" data-testid="paused-badge">{{
+              t.pausedBadge(p.reason)
+            }}</ph-badge>
+          </p>
+          <ph-agent-message [speaker]="t.speaker" [text]="p.explanation" />
+          @if (p.reason === 'NeedsSin') {
+            <ph-card [title]="t.sinHowTitle(p.firstName)">
+              <div class="stack">
+                <ol class="steps-list">
+                  @for (step of t.sinHowSteps(p.firstName); track $index) {
+                    <li>{{ step }}</li>
+                  }
+                </ol>
+                @if (p.helpLink) {
+                  <div>
+                    <ph-button icon="globe" [href]="p.helpLink" target="_blank">{{
+                      t.sinApply
+                    }}</ph-button>
+                  </div>
+                }
+              </div>
+            </ph-card>
+          } @else if (p.reason === 'NeedsTaxReturn') {
+            <ph-card [title]="t.taxHowTitle">
+              <div class="stack">
+                <p class="plain">{{ t.taxHowText }}</p>
+                @if (p.helpLink) {
+                  <div>
+                    <ph-button icon="globe" [href]="p.helpLink" target="_blank">{{
+                      t.taxFind
+                    }}</ph-button>
+                  </div>
+                }
+              </div>
+            </ph-card>
+          }
+          @if (p.reminder === true && p.reminderDates.length === 2) {
+            <div data-testid="reminder-saved">
+              <ph-alert
+                tone="success"
+                [title]="t.reminderSet(day(p.reminderDates[0]), day(p.reminderDates[1]))"
+                [text]="t.reminderSetText"
+              />
+            </div>
+          } @else if (p.reminder === false) {
+            <div data-testid="reminder-saved">
+              <ph-alert tone="info" [title]="t.reminderNone" />
+            </div>
+          } @else {
+            <ph-card>
+              <form class="stack" novalidate (ngSubmit)="save()">
+                @if (failed()) {
+                  <ph-alert tone="danger" [title]="t.failed" />
+                }
+                <ph-radio-group
+                  [legend]="t.remindLegend"
+                  name="remind"
+                  [options]="options()"
+                  [(ngModel)]="remind"
+                />
+                <div>
+                  <ph-button variant="primary" type="submit" [busy]="busy()">{{
+                    t.save
+                  }}</ph-button>
+                </div>
+              </form>
+            </ph-card>
+          }
+          <div>
+            <ph-button variant="primary" icon="arrow-right" [link]="'../' + p.resumeStep">{{
+              p.resumeStep === 'estimate'
+                ? t.resumeEstimate(p.firstName)
+                : t.resumeIntake(p.firstName)
+            }}</ph-button>
+          </div>
+        </div>
+      }
+      @case ('gone') {
+        <h1>{{ t.expiredHeading }}</h1>
+        <ph-card>
+          <p class="plain">{{ t.expiredText(r.organization ?? '') }}</p>
+        </ph-card>
+      }
+      @default {
+        <h1>{{ t.pageTitle }}</h1>
+        <ph-card [flush]="true">
+          <ph-empty-state icon="warning" tone="error" [title]="t.errorTitle" [text]="t.errorText">
+            <ph-button variant="primary" icon="refresh" (click)="load()">{{
+              t.tryAgain
+            }}</ph-button>
+          </ph-empty-state>
+        </ph-card>
+      }
+    }
+  }
+</ph-guardian-shell>

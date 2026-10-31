@@ -2409,6 +2409,12 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.Property<long>("CreatedAt")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("DepositAmount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("DepositedAt")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Email")
                         .HasMaxLength(320)
                         .HasColumnType("TEXT");
@@ -2435,6 +2441,9 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(2)
                         .HasColumnType("TEXT");
+
+                    b.Property<long?>("ReceivedAt")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("ReviewVersion")
                         .HasColumnType("INTEGER");
@@ -2543,6 +2552,9 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("TEXT");
 
+                    b.Property<long?>("PausedAt")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("PausedReason")
                         .HasMaxLength(30)
                         .HasColumnType("TEXT");
@@ -2578,6 +2590,9 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid>("ChildId")
                         .HasColumnType("TEXT");
+
+                    b.Property<long?>("ClosedAt")
+                        .HasColumnType("INTEGER");
 
                     b.Property<long>("GivenAt")
                         .HasColumnType("INTEGER");
@@ -2616,6 +2631,56 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.HasIndex("OrganizationId", "HouseholdId", "ChildId");
 
                     b.ToTable("LearningBondConsents");
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondDocument", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ContentType")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FileName")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("RequestedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("SentAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("StorageKey")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("SubmissionKey")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("UploadedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("OrganizationId", "ApplicationId");
+
+                    b.ToTable("LearningBondDocuments");
                 });
 
             modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondIntake", b =>
@@ -2694,6 +2759,106 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.HasIndex("OrganizationId", "HouseholdId");
 
                     b.ToTable("LearningBondInvitations");
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondProviderEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EventId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("ReceivedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("Provider", "EventId")
+                        .IsUnique();
+
+                    b.ToTable("LearningBondProviderEvents");
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondReminder", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("CancelledAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("ClaimId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("DueAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("HouseholdId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("SentAt")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("OrganizationId", "ClaimId");
+
+                    b.ToTable("LearningBondReminders");
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondReminderChoice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("ChosenAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("ClaimId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Remind")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("OrganizationId", "ClaimId");
+
+                    b.ToTable("LearningBondChoices");
                 });
 
             modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondSettings", b =>
@@ -5107,6 +5272,15 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondDocument", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondIntake", b =>
                 {
                     b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
@@ -5117,6 +5291,33 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                 });
 
             modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondInvitation", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondProviderEvent", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondReminder", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondReminderChoice", b =>
                 {
                     b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
                         .WithMany()

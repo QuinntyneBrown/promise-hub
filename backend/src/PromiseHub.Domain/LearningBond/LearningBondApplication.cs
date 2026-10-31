@@ -46,6 +46,12 @@ public sealed class LearningBondApplication : ITenantOwned
 
     public string? ProviderReference { get; private set; }
     public DateTimeOffset? SubmittedAt { get; private set; }
+    public DateTimeOffset? ReceivedAt { get; private set; }
+    public DateTimeOffset? DepositedAt { get; private set; }
+
+    /// <summary>The dollars the provider reported deposited (L2-150 criteria 2 and 5).</summary>
+    public int? DepositAmount { get; private set; }
+
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
 
@@ -70,6 +76,26 @@ public sealed class LearningBondApplication : ITenantOwned
         Status = LearningBondApplicationStatus.Submitted;
         ProviderReference = reference;
         SubmittedAt = now;
+        UpdatedAt = now;
+    }
+
+    /// <summary>The provider received it (L2-150 criterion 2); a later status is never moved back.</summary>
+    public void MarkReceived(DateTimeOffset now)
+    {
+        ReceivedAt ??= now;
+        if (Status == LearningBondApplicationStatus.Submitted)
+        {
+            Status = LearningBondApplicationStatus.Received;
+        }
+        UpdatedAt = now;
+    }
+
+    public void MarkDeposited(int amount, DateTimeOffset now)
+    {
+        ReceivedAt ??= now;
+        DepositedAt = now;
+        DepositAmount = amount;
+        Status = LearningBondApplicationStatus.Deposited;
         UpdatedAt = now;
     }
 

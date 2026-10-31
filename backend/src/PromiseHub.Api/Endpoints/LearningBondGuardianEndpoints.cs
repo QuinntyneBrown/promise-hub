@@ -42,6 +42,34 @@ public static class LearningBondGuardianEndpoints
             HttpContext http, CancellationToken ct) => GuardianEndpoints.ToHttp(await handler.ChooseProviderAsync(GuardianEndpoints.Request(token, http), id, request, ct)));
         guardian.MapPost("/applications/{id:guid}/submit", async (string token, Guid id, SubmitLearningBondApplicationRequest request, LearningBondSubmitHandler handler,
             HttpContext http, CancellationToken ct) => GuardianEndpoints.ToHttp(await handler.SubmitAsync(GuardianEndpoints.Request(token, http), id, request, ct)));
+        guardian.MapGet("/children/{childId:guid}/progress", async (string token, Guid childId, LearningBondProgressHandler handler, HttpContext http,
+            CancellationToken ct) => GuardianEndpoints.ToHttp(await handler.GetAsync(GuardianEndpoints.Request(token, http), childId, ct)));
+        guardian.MapPost("/documents/{id:guid}/file", async (string token, Guid id, LearningBondDocumentHandler handler, HttpContext http, CancellationToken ct) =>
+        {
+            IFormCollection form;
+            try
+            {
+                form = await http.Request.ReadFormAsync(ct);
+            }
+            catch (Exception e) when (e is InvalidDataException or BadHttpRequestException)
+            {
+                return GuardianEndpoints.ToHttp(GuardianResult.Invalid("file", LearningBondDocumentHandler.FileMessage));
+            }
+            if (form.Files.GetFile("file") is not { } file)
+            {
+                return GuardianEndpoints.ToHttp(GuardianResult.Invalid("file", LearningBondDocumentHandler.FileMessage));
+            }
+            await using var stream = file.OpenReadStream();
+            return GuardianEndpoints.ToHttp(await handler.UploadAsync(GuardianEndpoints.Request(token, http), id, file.FileName, file.ContentType, file.Length, stream, ct));
+        }).DisableAntiforgery().WithMetadata(new Microsoft.AspNetCore.Mvc.RequestSizeLimitAttribute(32 * 1024 * 1024));
+        guardian.MapPost("/documents/{id:guid}/send", async (string token, Guid id, LearningBondDocumentHandler handler, HttpContext http, CancellationToken ct) =>
+            GuardianEndpoints.ToHttp(await handler.SendAsync(GuardianEndpoints.Request(token, http), id, ct)));
+        guardian.MapPost("/children/{childId:guid}/pause", async (string token, Guid childId, PauseLearningBondClaimRequest request, LearningBondPauseHandler handler,
+            HttpContext http, CancellationToken ct) => GuardianEndpoints.ToHttp(await handler.PauseAsync(GuardianEndpoints.Request(token, http), childId, request, ct)));
+        guardian.MapGet("/children/{childId:guid}/paused", async (string token, Guid childId, LearningBondPauseHandler handler, HttpContext http, CancellationToken ct) =>
+            GuardianEndpoints.ToHttp(await handler.GetAsync(GuardianEndpoints.Request(token, http), childId, ct)));
+        guardian.MapPut("/children/{childId:guid}/reminder", async (string token, Guid childId, LearningBondReminderRequest request, LearningBondPauseHandler handler,
+            HttpContext http, CancellationToken ct) => GuardianEndpoints.ToHttp(await handler.SetReminderAsync(GuardianEndpoints.Request(token, http), childId, request, ct)));
         guardian.MapPost("/callback", async (string token, CallbackRequest request, LearningBondGuardianHandler handler, HttpContext http, CancellationToken ct) =>
             await handler.RequestCallAsync(new GuardianRequest(token, http.Request.Cookies[GuardianEndpoints.DeviceCookie], http.Request.Headers.UserAgent.ToString()), request, ct)
                 switch

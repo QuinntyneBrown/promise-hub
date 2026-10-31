@@ -150,6 +150,62 @@ export class GuardianLearningBondPage extends BasePage {
     return this.page.getByTestId('stepper');
   }
 
+  async openSubmitted(token: string, childId: string): Promise<void> {
+    await super.open(`/g/learning-bond/${token}/children/${childId}/submitted`);
+  }
+
+  /** What happens next: the three steps, each with its marker. */
+  get nextSteps(): Locator {
+    return this.page.getByTestId('next-steps').getByRole('listitem');
+  }
+
+  /** What the provider last reported: received, deposited or a document needed. */
+  get progressNotice(): Locator {
+    return this.page.getByTestId('progress-notice');
+  }
+
+  /** Chooses a file for the requested document; it is kept, not sent. */
+  async chooseDocument(name: string, mimeType: string, size = 1200): Promise<void> {
+    await this.page
+      .getByTestId('document-request')
+      .locator('input[type=file]')
+      .setInputFiles({ name, mimeType, buffer: Buffer.alloc(size, 37) });
+  }
+
+  get documentRequest(): Locator {
+    return this.page.getByTestId('document-request');
+  }
+
+  get documentSent(): Locator {
+    return this.page.getByTestId('document-sent');
+  }
+
+  get depositWindow(): Locator {
+    return this.page.getByTestId('deposit-window');
+  }
+
+  /** One field of what was sent, such as "Mateo’s SIN". */
+  sentField(label: string): Locator {
+    return this.page.getByTestId('sent-fields').getByRole('listitem').filter({ hasText: label });
+  }
+
+  async openPaused(token: string, childId: string): Promise<void> {
+    await super.open(`/g/learning-bond/${token}/children/${childId}/paused`);
+  }
+
+  get pausedBadge(): Locator {
+    return this.page.getByTestId('paused-badge');
+  }
+
+  async remind(answer: 'Yes, text me' | 'No thanks'): Promise<void> {
+    await this.page.getByRole('radio', { name: answer }).check();
+    await this.page.getByRole('button', { name: 'Save', exact: true }).click();
+  }
+
+  get reminderSaved(): Locator {
+    return this.page.getByTestId('reminder-saved');
+  }
+
   async expectCodeStep(): Promise<void> {
     await expect(this.heading).toHaveText(/^(Check it’s you|Confirme que es usted|Confirmez que c’est vous)$/);
   }

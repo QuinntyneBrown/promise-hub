@@ -106,6 +106,24 @@ export class GuardianLearningBondPage implements OnInit {
     this.api.guardianPage(this.token()).subscribe((r) => this.result.set(r));
   }
 
+  /** Where a started claim goes on from (L2-151 criterion 4): its pause, its details, or what happens next. */
+  protected resume(c: GuardianLearningBondChild): { label: string; link: string[] } | null {
+    const t = this.text();
+    const base = ['/g/learning-bond', this.token(), 'children', c.id];
+    switch (c.claim) {
+      case 'Paused':
+        return { label: t.pickUp, link: [...base, 'paused'] };
+      case 'Started':
+        return { label: t.continueClaim(c.firstName), link: [...base, 'intake'] };
+      case 'Submitted':
+      case 'Received':
+      case 'Deposited':
+        return { label: t.seeNext, link: [...base, 'submitted'] };
+      default:
+        return null;
+    }
+  }
+
   protected badge(c: GuardianLearningBondChild): string {
     return this.text().upTo(this.text().amount(c.amount ?? 0));
   }

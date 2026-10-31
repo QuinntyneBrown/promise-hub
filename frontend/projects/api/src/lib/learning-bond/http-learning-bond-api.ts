@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse, HttpParams, HttpResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, map, of } from 'rxjs';
+import { Observable, catchError, map, of, throwError } from 'rxjs';
 import { API_BASE_URL } from '../api-base-url';
 import { toLoad, toWrite } from '../http-results';
 import { LoadResult } from '../load-result';
@@ -14,6 +14,8 @@ import { LearningBondConsentPage } from './learning-bond-consent-page';
 import { LearningBondApplication } from './learning-bond-application';
 import { LearningBondApplicationChange } from './learning-bond-application-change';
 import { LearningBondEstimate } from './learning-bond-estimate';
+import { LearningBondProgress } from './learning-bond-progress';
+import { LearningBondPaused } from './learning-bond-paused';
 import { LearningBondSubmitOutcome } from './learning-bond-submit-outcome';
 import { LearningBondIntake } from './learning-bond-intake';
 import { SaveLearningBondIntake } from './save-learning-bond-intake';
@@ -275,20 +277,80 @@ export class HttpLearningBondApi implements LearningBondApi {
     id: string,
     reviewVersion: number,
   ): Observable<LearningBondSubmitOutcome> {
-    return this.http
-      .post<unknown>(`${this.applicationUrl(token, id)}/submit`, { reviewVersion })
-      .pipe(
-        map((): LearningBondSubmitOutcome => ({ status: 'sent' })),
-        catchError((error: HttpErrorResponse) =>
-          of<LearningBondSubmitOutcome>(
-            error.status === 502
-              ? { status: 'not-sent' }
-              : error.status === 409
-                ? { status: error.error?.code === 'stale-review' ? 'stale' : 'incomplete' }
-                : { status: 'error' },
+    return this.outcome(
+      this.http.post<unknown>(`${this.applicationUrl(token, id)}/submit`, { reviewVersion }),
+    );
+  }
+
+  progress(
+    token: string,
+    childId: string,
+  ): Observable<GuardianPageResult<LearningBondProgress | null>> {
+    // 409 means not sent yet: the page says so rather than failing.
+    return toGuardianPage(
+      this.http
+        .get<LearningBondProgress>(this.childUrl(token, childId, '/progress'))
+        .pipe(
+          catchError((error: HttpErrorResponse) =>
+            error.status === 409 ? of(null) : throwError(() => error),
           ),
         ),
-      );
+    );
+  }
+
+  pauseClaim(token: string, childId: string): Observable<WriteOutcome> {
+    return toWrite(
+      this.http.post<null>(this.childUrl(token, childId, '/pause'), { reason: 'NeedsSin' }),
+    );
+  }
+
+  paused(token: string, childId: string): Observable<GuardianPageResult<LearningBondPaused>> {
+    return toGuardianPage(
+      this.http.get<LearningBondPaused>(this.childUrl(token, childId, '/paused')),
+    );
+  }
+
+  setReminder(
+    token: string,
+    childId: string,
+    remind: boolean,
+  ): Observable<LearningBondPaused | null> {
+    return this.http
+      .put<LearningBondPaused>(this.childUrl(token, childId, '/reminder'), { remind })
+      .pipe(catchError(() => of(null)));
+  }
+
+  uploadDocument(token: string, documentId: string, file: File): Observable<WriteOutcome> {
+    const form = new FormData();
+    form.append('file', file, file.name);
+    return toWrite(
+      this.http.post<{ id: string }>(`${this.documentUrl(token, documentId)}/file`, form),
+    );
+  }
+
+  sendDocument(token: string, documentId: string): Observable<LearningBondSubmitOutcome> {
+    return this.outcome(
+      this.http.post<unknown>(`${this.documentUrl(token, documentId)}/send`, null),
+    );
+  }
+
+  private documentUrl(token: string, documentId: string): string {
+    return `${this.baseUrl}/g/learning-bond/${encodeURIComponent(token)}/documents/${encodeURIComponent(documentId)}`;
+  }
+
+  private outcome(call: Observable<unknown>): Observable<LearningBondSubmitOutcome> {
+    return call.pipe(
+      map((): LearningBondSubmitOutcome => ({ status: 'sent' })),
+      catchError((error: HttpErrorResponse) =>
+        of<LearningBondSubmitOutcome>(
+          error.status === 502
+            ? { status: 'not-sent' }
+            : error.status === 409
+              ? { status: error.error?.code === 'stale-review' ? 'stale' : 'incomplete' }
+              : { status: 'error' },
+        ),
+      ),
+    );
   }
 
   private change(

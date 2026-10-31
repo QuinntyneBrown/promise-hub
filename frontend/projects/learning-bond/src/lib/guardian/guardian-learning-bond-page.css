@@ -71,6 +71,12 @@ h1 {
   align-items: center;
   gap: var(--space-2);
 }
+.steps-list {
+  margin: 0;
+  padding-inline-start: var(--space-5);
+  display: grid;
+  gap: var(--space-2);
+}
 .muted {
   color: var(--color-fg-muted);
 }

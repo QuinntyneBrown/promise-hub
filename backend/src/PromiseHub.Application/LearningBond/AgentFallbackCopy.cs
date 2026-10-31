@@ -1,3 +1,5 @@
+using PromiseHub.Domain.LearningBond;
+
 namespace PromiseHub.Application.LearningBond;
 
 /// <summary>
@@ -39,6 +41,28 @@ public static class AgentFallbackCopy
         "es" => $"Rellené la solicitud de {provider} con lo que ya tengo. Revise cada dato. Nada se envía hasta que toque Enviar.",
         "fr" => $"J’ai rempli la demande de {provider} avec ce que j’ai déjà. Vérifiez chaque champ. Rien n’est envoyé avant que vous touchiez Envoyer.",
         _ => $"I filled in {provider}’s application from what I have. Check each field. Nothing has been sent yet; here’s exactly what goes, and to whom.",
+    };
+
+    /// <summary>A paused claim (L2-151 criteria 1 and 2): what is missing, and that everything is kept.</summary>
+    public static string Paused(string code, string child, LearningBondPausedReason? reason) => (code, reason) switch
+    {
+        ("es", LearningBondPausedReason.NeedsSin) => $"{child} necesita un número de seguro social para el Bono. Se pide gratis a Service Canada; le dejo el enlace. Todo lo que ya me dio queda guardado.",
+        ("es", LearningBondPausedReason.NeedsTaxReturn) => "El Bono necesita la declaración de impuestos del año pasado. Hay clínicas gratuitas que la hacen por usted; le dejo el buscador. Todo lo demás queda guardado.",
+        ("es", _) => $"La solicitud de {child} espera a que Harbourview corrija el registro. Todo queda guardado.",
+        ("fr", LearningBondPausedReason.NeedsSin) => $"{child} a besoin d’un numéro d’assurance sociale pour le Bon. On le demande gratuitement à Service Canada; voici le lien. Tout ce que vous m’avez donné est gardé.",
+        ("fr", LearningBondPausedReason.NeedsTaxReturn) => "Le Bon demande la déclaration de revenus de l’an dernier. Des comptoirs gratuits la font pour vous; voici l’outil pour en trouver un. Le reste est gardé.",
+        ("fr", _) => $"La demande de {child} attend que le dossier soit corrigé. Tout est gardé.",
+        (_, LearningBondPausedReason.NeedsSin) => $"{child} needs a social insurance number for the Learning Bond. You can apply for free through Service Canada; here’s the link. Everything you gave me is kept.",
+        (_, LearningBondPausedReason.NeedsTaxReturn) => "The Learning Bond needs last year’s tax return. Free tax clinics can file it for you; here’s where to find one. Everything else is kept.",
+        _ => $"{child}’s claim is waiting for the record to be fixed. Everything is kept.",
+    };
+
+    /// <summary>After Submit (L2-150): what was sent and what comes next.</summary>
+    public static string Submitted(string code, string provider) => code switch
+    {
+        "es" => $"Listo. {provider} tiene la solicitud. Le enviaré un mensaje en cada paso; no tiene que hacer nada más ahora.",
+        "fr" => $"C’est fait. {provider} a la demande. Je vous écrirai à chaque étape; vous n’avez rien d’autre à faire pour l’instant.",
+        _ => $"Done. {provider} has the application. I’ll text you at each step; there’s nothing else for you to do now.",
     };
 
     /// <summary>The consent step (L2-145): why each child needs its own permission.</summary>

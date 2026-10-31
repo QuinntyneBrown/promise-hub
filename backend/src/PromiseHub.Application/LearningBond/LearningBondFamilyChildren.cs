@@ -18,6 +18,10 @@ public sealed class LearningBondFamilyChildren(IPromiseHubDb db, LearningBondCov
                               join p in db.Programs.AsNoTracking() on e.ProgramId equals p.Id
                               where e.EndedAt == null && programIds.Contains(e.ProgramId)
                               select new { e.ChildId, p.Name }).ToListAsync(cancellationToken);
+        var consents = await db.LearningBondConsents.AsNoTracking().Where(c => c.HouseholdId == householdId && c.Scope == LearningBondConsentScope.LearningBond
+            && c.WithdrawnAt == null && c.ClosedAt == null).Select(c => c.Id).ToListAsync(cancellationToken);
+        var claims = await db.LearningBondClaims.AsNoTracking().Where(c => c.HouseholdId == householdId && consents.Contains(c.ConsentId))
+            .ToDictionaryAsync(c => c.ChildId, c => c.Status.ToString(), cancellationToken);
         var children = new List<GuardianLearningBondChildDto>();
         foreach (var child in (await db.Children.AsNoTracking().Where(c => c.HouseholdId == householdId).ToListAsync(cancellationToken))
                      .OrderBy(c => c.FirstName, StringComparer.CurrentCulture))
@@ -31,7 +35,7 @@ public sealed class LearningBondFamilyChildren(IPromiseHubDb db, LearningBondCov
             else if (age is null or < 18 && programs.Count > 0)
             {
                 children.Add(new(child.Id, child.FirstName, age, programs,
-                    child.DateOfBirth is { } born ? LearningBondRule.Current.Estimate(born.Year, today.Year) : null, false));
+                    child.DateOfBirth is { } born ? LearningBondRule.Current.Estimate(born.Year, today.Year) : null, false, claims.GetValueOrDefault(child.Id)));
             }
         }
         return children;

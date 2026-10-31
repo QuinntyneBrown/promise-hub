@@ -27,6 +27,38 @@ public static class LearningBondTexts
         _ => $"{sender}: {Names(code, children)} may be owed up to $2,000 for school after high school. It costs nothing. Tap to check: {link} (STOP to opt out)",
     };
 
+    /// <summary>The provider received the application (L2-150 criterion 2).</summary>
+    public static string Received(string code, string provider, string child) => code switch
+    {
+        "es" => $"{provider} recibió la solicitud de {child}.",
+        "fr" => $"{provider} a reçu la demande de {child}.",
+        _ => $"{provider} received {child}’s application.",
+    };
+
+    /// <summary>The bond was deposited, with the amount (L2-150 criterion 2).</summary>
+    public static string Deposited(string code, int amount, string child) => code switch
+    {
+        "es" => $"Se depositaron ${amount:N0} en el RESP de {child}.",
+        "fr" => $"{amount.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("fr-CA"))} $ ont été versés dans le REEE de {child}.",
+        _ => $"${amount:N0} was deposited in {child}’s RESP.",
+    };
+
+    /// <summary>The provider needs a document, with the link it is sent from (L2-150 criteria 2 and 6).</summary>
+    public static string DocumentNeeded(string code, string provider, string document, string child, string link) => code switch
+    {
+        "es" => $"{provider} necesita {document} para {child}. Toque para enviarlo: {link}",
+        "fr" => $"{provider} a besoin de {document} pour {child}. Touchez pour l’envoyer : {link}",
+        _ => $"{provider} needs {document} for {child}. Tap to send it: {link}",
+    };
+
+    /// <summary>A reminder to pick a paused claim back up (L2-151 criterion 3).</summary>
+    public static string Reminder(string code, string sender, string child, string link) => code switch
+    {
+        "es" => $"{sender}: la solicitud del Bono de Estudios de {child} le espera. Toque para seguir donde lo dejó: {link} (STOP para salir)",
+        "fr" => $"{sender} : la demande de Bon d’études de {child} vous attend. Touchez pour reprendre là où vous étiez : {link} (STOP pour arrêter)",
+        _ => $"{sender}: {child}’s Learning Bond claim is waiting for you. Tap to pick up where you left off: {link} (STOP to opt out)",
+    };
+
     public static string EmailTitle(string code, string child) => EmailTitle(code, [child]);
 
     public static string EmailTitle(string code, IReadOnlyList<string> children) => code switch

@@ -324,7 +324,7 @@ export class FakeLearningBond {
   readonly intakes = new Map<string, { guardianLast3: string | null; taxFiled: string | null }>();
 
   /** child → its SIN's last three digits and whether a record fix was asked (LearningBondClaim). The fake keeps no whole SIN. */
-  readonly claims = new Map<string, { childLast3: string | null; recordFix: string | null }>();
+  readonly claims = new Map<string, { childLast3: string | null; recordFix: string | null; paused?: 'NeedsSin' | 'NeedsTaxReturn' | null; reminder?: boolean | null }>();
 
   /** The intake's agent line (AgentFallbackCopy.Intake). */
   intakeLine(code: 'en' | 'es' | 'fr', child: string): string {
@@ -337,7 +337,19 @@ export class FakeLearningBond {
   /** application id → the application as reviewed (LearningBondApplication); the fake keeps no SIN. */
   readonly applications = new Map<
     string,
-    { childId: string; householdId: string; province: string; provider: string | null; phone: string | null; email: string | null; address: string | null; reviewVersion: number; status: string }
+    {
+      childId: string;
+      householdId: string;
+      province: string;
+      provider: string | null;
+      phone: string | null;
+      email: string | null;
+      address: string | null;
+      reviewVersion: number;
+      status: string;
+      depositAmount?: number | null;
+      document?: { id: string; name: string; fileName: string | null; sentAt: string | null } | null;
+    }
   >();
 
   /** Applications the fake provider received (IRespProviderChannel): nothing is here before Submit. */
@@ -345,6 +357,9 @@ export class FakeLearningBond {
 
   /** The province a new application is prepared for, from the organization's time zone (RespProviders.ProvinceOf). */
   province = 'ON';
+
+  /** Documents the fake provider received (IRespProviderChannel.SendDocumentAsync): nothing is here before Send. */
+  readonly documentsSent: { documentId: string; fileName: string }[] = [];
 
   /** When true, the provider refuses and nothing is sent. */
   providerFails = false;

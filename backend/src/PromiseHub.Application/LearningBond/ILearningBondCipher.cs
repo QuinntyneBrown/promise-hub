@@ -16,4 +16,9 @@ public interface ILearningBondCipher
 
     /// <summary>The nine digits. Throws <see cref="LearningBondCipherException"/> when destroyed, altered or under another key.</summary>
     string Decrypt(EncryptedSin sin);
+
+    /// <summary>A document the provider asked for, encrypted under the same key with its own purpose (L2-150 criterion 6, L2-159).</summary>
+    byte[] EncryptDocument(byte[] content);
+
+    byte[] DecryptDocument(byte[] ciphertext);
 }

@@ -13,9 +13,9 @@ public static class RespProviders
 
     public static readonly IReadOnlyList<RespProvider> All =
     [
-        new("Northfield Credit Union", ["ON", "MB", "SK", "AB", "BC"], "northfield"),
-        new("Maple Trust RESP", ["NL", "PE", "NS", "NB", "QC", "ON", "MB", "SK", "AB", "BC", "YT", "NT"], "maple-trust"),
-        new("Prairie Co-op Education Savings", ["MB", "SK", "AB"], "prairie-coop"),
+        new("Northfield Credit Union", ["ON", "MB", "SK", "AB", "BC"], "northfield", 71, 115),
+        new("Maple Trust RESP", ["NL", "PE", "NS", "NB", "QC", "ON", "MB", "SK", "AB", "BC", "YT", "NT"], "maple-trust", 60, 120),
+        new("Prairie Co-op Education Savings", ["MB", "SK", "AB"], "prairie-coop", 45, 90),
     ];
 
     public static IReadOnlyList<RespProvider> Serving(string province) => [.. All.Where(p => p.Provinces.Contains(province))];

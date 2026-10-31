@@ -12,7 +12,7 @@ namespace PromiseHub.Application.LearningBond;
 /// answer belong to the household and are reused for every child. Only for a child with Learning Bond consent in force.
 /// </summary>
 public sealed class LearningBondIntakeHandler(IPromiseHubDb db, LearningBondGuardianScope guardianScope, LearningBondClaimFinder claims, ILearningBondCipher cipher,
-    LearningBondStaffNotifier staff, IAuditWriter audit, TimeProvider clock)
+    LearningBondStaffNotifier staff, LearningBondPauseHandler pauses, IAuditWriter audit, TimeProvider clock)
 {
     public const string SinMessage = "Check the number. A SIN has 9 digits, like 123 456 782.";
     public const string SameSinMessage = "Each person has their own SIN.";
@@ -103,6 +103,11 @@ public sealed class LearningBondIntakeHandler(IPromiseHubDb db, LearningBondGuar
         {
             intake.SetTaxFiled(answer, now);
             saved.Add("tax return");
+        }
+        // The SIN that was missing has come: the claim goes on from here (L2-151 criterion 4).
+        if (childSin is not null && claim.PausedReason == LearningBondPausedReason.NeedsSin)
+        {
+            await pauses.ResumeAsync(claim, cancellationToken);
         }
         if (saved.Count > 0)
         {
