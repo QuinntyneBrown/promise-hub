@@ -1,0 +1,124 @@
+<ph-breadcrumb [items]="crumbs()" />
+<ph-page-header title="Learning Bond data-handling agreement" [subtitle]="subtitle()" />
+@switch (state()) {
+  @case ('forbidden') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="lock"
+        title="Admins accept the agreement"
+        text="Ask an admin or a program director."
+      >
+        <ph-button link="/">Back to Today</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('error') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load the agreement"
+        text="Check your connection and try again."
+      >
+        <ph-button variant="primary" icon="refresh" (click)="load()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('loading') {
+    <div class="split" aria-busy="true" aria-label="Loading the agreement">
+      <ph-skeleton shape="card" />
+      <ph-skeleton shape="card" />
+    </div>
+  }
+  @default {
+    @if (agreement(); as a) {
+      <div class="split">
+        <ph-card>
+          <div class="reading" data-testid="agreement-text">
+            <p class="meta" data-testid="agreement-version">{{ versionLine(a) }}</p>
+            @for (section of a.sections; track section.title; let i = $index) {
+              <section [attr.aria-labelledby]="'agreement-section-' + i">
+                <h2 class="section-title" [id]="'agreement-section-' + i">{{ section.title }}</h2>
+                <p>{{ section.text }}</p>
+              </section>
+            }
+          </div>
+        </ph-card>
+        <div class="side">
+          @if (a.acceptance; as accepted) {
+            <ph-card data-testid="agreement-accepted">
+              @if (a.moduleOn) {
+                <ph-alert
+                  tone="success"
+                  [title]="acceptedTitle(accepted)"
+                  text="Recorded in the audit log. No family data has been collected yet."
+                >
+                  <ph-button size="sm" variant="primary" link="/settings/learning-bond/coverage"
+                    >Choose coverage</ph-button
+                  >
+                  <ph-button size="sm" variant="ghost" link="/settings/learning-bond"
+                    >Back to Learning Bond</ph-button
+                  >
+                </ph-alert>
+              } @else {
+                <ph-alert
+                  tone="success"
+                  [title]="acceptedTitle(accepted)"
+                  text="Recorded in the audit log. Turn Learning Bond on in Modules to choose coverage and the invitation."
+                >
+                  <ph-button size="sm" variant="primary" link="/settings/modules"
+                    >Turn on Learning Bond</ph-button
+                  >
+                </ph-alert>
+              }
+            </ph-card>
+          } @else if (a.signer; as signer) {
+            <ph-card title="Named signer" data-testid="agreement-signer">
+              <div class="stack">
+                <p class="waiting">
+                  <strong>Waiting for {{ signer.name }} to sign.</strong>
+                </p>
+                <p class="meta">{{ signerLine(signer) }}</p>
+                <div class="actions actions--start">
+                  <ph-button icon="send" [busy]="resending()" (click)="resend(signer)"
+                    >Resend</ph-button
+                  >
+                  <ph-button variant="ghost" [busy]="cancelling()" (click)="cancelSigner(signer)"
+                    >Cancel</ph-button
+                  >
+                </div>
+              </div>
+            </ph-card>
+          } @else {
+            <form class="stack" novalidate (ngSubmit)="accept()">
+              @if (summary().length) {
+                <ph-error-summary [items]="summary()" />
+              }
+              <ph-card>
+                <fieldset class="stack">
+                  <legend class="section-title">Authority</legend>
+                  <ph-checkbox
+                    inputId="authority"
+                    [label]="'I have authority to accept this agreement for ' + organization()"
+                    [error]="error()"
+                    name="authority"
+                    [ngModel]="authority()"
+                    (ngModelChange)="authority.set($event)"
+                  />
+                </fieldset>
+                <div class="actions">
+                  <ph-button variant="ghost" icon="send" hasPopup="dialog" (click)="askSigner()"
+                    >Ask someone else to sign</ph-button
+                  >
+                  <ph-button variant="primary" type="submit" icon="check" [busy]="accepting()"
+                    >Accept</ph-button
+                  >
+                </div>
+              </ph-card>
+            </form>
+          }
+        </div>
+      </div>
+    }
+  }
+}

@@ -39,7 +39,10 @@ export class SettingsModulesPage extends BasePage {
 
   /** The dependency caption of a module: every module it needs while it is off, and those still off while it is on. */
   needs(name: string): Locator {
-    return this.list.getByRole('listitem').filter({ has: this.page.getByTestId('list-title').getByText(name, { exact: true }) }).getByText(/^Needs /);
+    return this.list
+      .getByRole('listitem')
+      .filter({ has: this.page.getByTestId('list-title').getByText(name, { exact: true }) })
+      .getByText(/^Needs /);
   }
 
   error(name: string): Locator {
@@ -60,6 +63,11 @@ export class SettingsModulesPage extends BasePage {
 
   async scrollToTop(): Promise<void> {
     await this.page.getByRole('heading', { level: 1, name: 'Modules' }).scrollIntoViewIfNeeded();
+  }
+
+  /** The link beside Learning Bond's refusal "Accept the Learning Bond data-handling agreement first." */
+  get readTheAgreement(): Locator {
+    return this.list.getByRole('link', { name: 'Read the agreement' });
   }
 
   async save(): Promise<void> {

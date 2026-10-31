@@ -10,7 +10,7 @@ import {
   seedHouseholds,
 } from "./households";
 import { FakeBadges } from "./fake-badges";
-import { FakeLearningBond } from "./fake-learning-bond";
+import { FakeLearningBond, type FakeLearningBondProgram } from "./fake-learning-bond";
 import { FakeCurriculum } from "./fake-curriculum";
 import { FakeProgression } from "./fake-progression";
 import { FakeJourney } from "./fake-journey";
@@ -149,6 +149,8 @@ const NOTIFICATION_KINDS: {
 ];
 
 const can = {
+  manageSettings: (m: Membership) =>
+    ["Admin", "ProgramDirector"].includes(m.role),
   writeHouseholds: (m: Membership) =>
     ["Admin", "ProgramDirector"].includes(m.role),
   deleteHouseholds: (m: Membership) => m.role === "Admin",
@@ -2255,6 +2257,16 @@ export class FakeApi {
       (route, p) => this.removeYouthMentor(route, p["id"]!, p["child"]!),
     ],
     ["GET", /^\/api\/learning-bond$/, (route) => this.learningBondStatus(route)],
+    ["GET", /^\/api\/learning-bond\/agreement$/, (route) => this.learningBondAgreement(route)],
+    ["POST", /^\/api\/learning-bond\/agreement\/acceptances$/, (route) => this.learningBondAccept(route)],
+    ["POST", /^\/api\/learning-bond\/agreement\/signers$/, (route) => this.learningBondRequestSigner(route)],
+    ["GET", /^\/api\/learning-bond\/settings$/, (route) => this.learningBondSettings(route)],
+    ["PUT", /^\/api\/learning-bond\/settings$/, (route) => this.learningBondSaveSettings(route)],
+    ["GET", /^\/api\/learning-bond\/invitation$/, (route) => this.learningBondInvitation(route)],
+    ["PUT", /^\/api\/learning-bond\/invitation$/, (route) => this.learningBondSaveInvitation(route)],
+    ["GET", /^\/api\/learning-bond\/overview$/, (route) => this.learningBondOverview(route)],
+    ["POST", /^\/api\/learning-bond\/agreement\/signers\/(?<id>[^/]+)\/resend$/, (route, p) => this.learningBondResendSigner(route, p["id"]!)],
+    ["DELETE", /^\/api\/learning-bond\/agreement\/signers\/(?<id>[^/]+)$/, (route, p) => this.learningBondCancelSigner(route, p["id"]!)],
     [
       "GET",
       /^\/api\/g\/learning-bond\/(?<token>[^/]+)$/,
@@ -3193,6 +3205,144 @@ export class FakeApi {
     if (!this.modules.get(m.organizationId)!.includes("LearningBond"))
       return route.fulfill({ status: 404 });
     return route.fulfill({ json: { on: true } });
+  }
+
+  /**
+   * The caller of a Learning Bond agreement route: ManageSettings with Roster and Messages on, whether or not Learning Bond is (ADR 0077).
+   * Otherwise answers 401, 403 or 404.
+   */
+  private async learningBondAgreementCaller(route: Route): Promise<Membership | null> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) {
+      await this.unauthenticated(route);
+      return null;
+    }
+    if (!can.manageSettings(m)) {
+      await route.fulfill({ status: 403, json: { code: "forbidden" } });
+      return null;
+    }
+    const on = this.modules.get(m.organizationId)!;
+    if (!on.includes("Roster") || !on.includes("Messages")) {
+      await route.fulfill({ status: 404 });
+      return null;
+    }
+    return m;
+  }
+
+  /** GET /learning-bond/agreement (L2-136 criterion 1). */
+  private async learningBondAgreement(route: Route): Promise<void> {
+    const m = await this.learningBondAgreementCaller(route);
+    if (!m) return;
+    return this.learningBond.agreement(route, m, this.modules.get(m.organizationId)!.includes("LearningBond"));
+  }
+
+  /** POST /learning-bond/agreement/acceptances (L2-136 criteria 2 and 3). */
+  private async learningBondAccept(route: Route): Promise<void> {
+    const m = await this.learningBondAgreementCaller(route);
+    if (!m) return;
+    return this.learningBond.accept(route, m, "2026-11-05T21:12:00Z");
+  }
+
+  /** The caller of a gated Learning Bond settings route: ManageSettings (checked first, as the API authorizes before the module gate) with Learning Bond on; otherwise 401, 403 or 404. */
+  private async learningBondAdmin(route: Route): Promise<Membership | null> {
+    const m = memberships.find((x) => x.id === this.membershipId);
+    if (!m) {
+      await this.unauthenticated(route);
+      return null;
+    }
+    if (!can.manageSettings(m)) {
+      await route.fulfill({ status: 403, json: { code: "forbidden" } });
+      return null;
+    }
+    if (!this.modules.get(m.organizationId)!.includes("LearningBond")) {
+      await route.fulfill({ status: 404 });
+      return null;
+    }
+    return m;
+  }
+
+  /** The organization's running programs and the households each reaches through children on its roster (LearningBondCoverage). */
+  private learningBondPrograms(organizationId: string): FakeLearningBondProgram[] {
+    const householdOf = new Map(this.households.flatMap((h) => h.children.map((c) => [c.id, h.id] as const)));
+    return this.programs
+      .filter((p) => p.organizationId === organizationId && p.status === "Active")
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((p) => ({
+        id: p.id,
+        name: p.name,
+        households: [...new Set(p.roster.map((c) => householdOf.get(c)).filter((h): h is string => !!h))],
+      }));
+  }
+
+  /** GET /learning-bond/settings (L2-138 criterion 1). */
+  private async learningBondSettings(route: Route): Promise<void> {
+    const m = await this.learningBondAdmin(route);
+    if (!m) return;
+    return this.learningBond.getSettings(route, m, this.learningBondPrograms(m.organizationId));
+  }
+
+  /** PUT /learning-bond/settings (L2-138 criteria 2 to 4). */
+  private async learningBondSaveSettings(route: Route): Promise<void> {
+    const m = await this.learningBondAdmin(route);
+    if (!m) return;
+    return this.learningBond.saveSettings(route, m, this.learningBondPrograms(m.organizationId));
+  }
+
+  /** The languages the organization's households use, as codes in English, Spanish, French order; English when there are none. */
+  private learningBondLanguages(organizationId: string): string[] {
+    const code = (language: string) => (language === "Spanish" ? "es" : language === "French" ? "fr" : "en");
+    const used = new Set(this.households.filter((h) => h.organizationId === organizationId).map((h) => code(h.language)));
+    const codes = ["en", "es", "fr"].filter((c) => used.has(c));
+    return codes.length ? codes : ["en"];
+  }
+
+  /** GET /learning-bond/invitation (L2-139 criterion 1). */
+  private async learningBondInvitation(route: Route): Promise<void> {
+    const m = await this.learningBondAdmin(route);
+    if (!m) return;
+    const details = this.organizationDetailsOf(m.organizationId);
+    return this.learningBond.invitation(route, m, { name: details.name, city: details.city }, this.learningBondLanguages(m.organizationId));
+  }
+
+  /** PUT /learning-bond/invitation (L2-139 criteria 2 and 3). */
+  private async learningBondSaveInvitation(route: Route): Promise<void> {
+    const m = await this.learningBondAdmin(route);
+    if (!m) return;
+    return this.learningBond.saveInvitation(route, m);
+  }
+
+  /** GET /learning-bond/overview (L2-136 criteria 4 and 9). */
+  private async learningBondOverview(route: Route): Promise<void> {
+    const m = await this.learningBondAdmin(route);
+    if (!m) return;
+    return this.learningBond.overview(
+      route,
+      m,
+      this.organizationDetailsOf(m.organizationId).name,
+      this.learningBondPrograms(m.organizationId),
+      this.learningBondLanguages(m.organizationId),
+    );
+  }
+
+  /** POST /learning-bond/agreement/signers (L2-137 criterion 1). */
+  private async learningBondRequestSigner(route: Route): Promise<void> {
+    const m = await this.learningBondAgreementCaller(route);
+    if (!m) return;
+    return this.learningBond.requestSigner(route, m, this.organizationDetailsOf(m.organizationId).name, "2026-11-05T21:12:00Z");
+  }
+
+  /** POST /learning-bond/agreement/signers/{id}/resend (L2-137 criterion 6). */
+  private async learningBondResendSigner(route: Route, id: string): Promise<void> {
+    const m = await this.learningBondAgreementCaller(route);
+    if (!m) return;
+    return this.learningBond.resendSigner(route, m, id, this.organizationDetailsOf(m.organizationId).name, "2026-11-05T21:14:00Z");
+  }
+
+  /** DELETE /learning-bond/agreement/signers/{id} (L2-137 criterion 6). */
+  private async learningBondCancelSigner(route: Route, id: string): Promise<void> {
+    const m = await this.learningBondAgreementCaller(route);
+    if (!m) return;
+    return this.learningBond.cancelSigner(route, m, id);
   }
 
   /** GET /g/learning-bond/{token}: the organization from the link, then the module gate; every refusal is the same bare 404 (L2-162 criterion 6). */
@@ -5031,7 +5181,8 @@ export class FakeApi {
 
   private readonly websiteState = new FakeWebsite();
   /** Learning Bond links and agreement acceptances (ADR 0076). */
-  private readonly learningBond = new FakeLearningBond();
+  /** Learning Bond (ADR 0076): tests forget an acceptance or publish a new agreement version through it. */
+  readonly learningBond = new FakeLearningBond();
   private readonly websiteRequestState = new FakeWebsiteRequests(() => NOW);
 
   /** The requests visitors sent to an organization's public website, oldest first (L2-134). */
@@ -6408,7 +6559,7 @@ export class FakeApi {
       !errors.length &&
       on.includes("LearningBond") &&
       !this.modules.get(organizationId)!.includes("LearningBond") &&
-      !this.learningBond.acceptances.has(organizationId)
+      !this.learningBond.hasAccepted(organizationId)
     ) {
       errors.push({
         module: "LearningBond",

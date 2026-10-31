@@ -63,6 +63,11 @@ def crumbs(current: str) -> str:
     return breadcrumb([("Settings", page("settings-organization")), ("Learning Bond", page("settings-learning-bond"))], current)
 
 
+def crumbs_off(current: str) -> str:
+    """While Learning Bond is off the hub isn't served, so the agreement sits under Settings › Modules."""
+    return breadcrumb([("Settings", page("settings-organization")), ("Modules", page("settings-modules"))], current)
+
+
 def failed_load(title: str, back: str = "") -> str:
     acts = btn("Try again", "primary", icon_name="refresh") + (btn("Back to Learning Bond", "ghost", href=page("settings-learning-bond")) if back else "")
     return card(empty(title, "Check your connection and try again.", action=acts, error=True, icon_name="alert-triangle"), cls="card--flush")
@@ -77,7 +82,8 @@ def privacy_note(pos: str = "top: 5rem; right: 1rem;") -> str:
 
 
 # ------------------------------------------------------------------ Settings › Learning Bond (the hub)
-@screen("settings-learning-bond", "page", "Learning Bond settings", route="/settings/learning-bond", reqs=R_HUB, na={"empty": "The hub always lists the agreement, coverage, invitation and launch."})
+@screen("settings-learning-bond", "page", "Learning Bond settings", route="/settings/learning-bond", reqs=R_HUB,
+        na={"empty": "The hub always lists the agreement, coverage, invitation and launch."})
 def settings_learning_bond(S):
     hdr = page_header("Learning Bond", "Claims the money governments already owe your families’ children. Needs Roster and Messages.") + settings_nav("settings-learning-bond")
 
@@ -90,15 +96,11 @@ def settings_learning_bond(S):
             body = alert("warning", "A new version of the agreement needs accepting.", f"Version 3 took effect Sun 1 Nov 2026. Version {AGREEMENT_VERSION} was accepted by Tom Nguyen on {AGREEMENT_DATE}. Families already in progress continue; no new invitation goes out until it is accepted.",
                          actions=btn("Read and accept version 3", "primary", size="sm", href=page("learning-bond-agreement")))
             foot = ""
-        else:
-            body = alert("warning", "Not accepted yet", "Learning Bond stays off until someone with authority accepts the data-handling agreement.",
-                         actions=btn("Read the agreement", "primary", size="sm", href=page("learning-bond-agreement")) + btn("Ask someone else to sign", "ghost", size="sm", data_href=dialog("learning-bond-signer")))
-            foot = ""
         return card(body, title="Data-handling agreement", tid="agreement", footer=foot)
 
     coverage_card = card(facts([("Programs", "After‑School Tutoring, Saturday Sports · 112 households"), ("Who sees each family’s status", "Admin, Program director, Site lead, Youth worker")]),
                          title="Coverage", tid="coverage", footer=f'<a href="{page("learning-bond-coverage")}">Change coverage</a>')
-    invitation_card = card(facts([("Sender name", esc(SENDER)), ("Languages", "English and Spanish, the languages your households use"), ("Wording", "Platform-approved; only the sender name changes")]),
+    invitation_card = card(facts([("Sender name", esc(SENDER)), ("Languages", "English, Spanish and French, the languages your households use"), ("Wording", "Platform-approved; only the sender name changes")]),
                            title="Guardian invitation", tid="invitation", footer=f'<a href="{page("learning-bond-invitation")}">Preview and edit</a>')
 
     def launch_card(state="scheduled", *, disabled_reason=""):
@@ -120,8 +122,6 @@ def settings_learning_bond(S):
     S.add("default", "Settings › Learning Bond for Harbourview: the agreement accepted, coverage, the invitation sender and a launch scheduled for Monday.", nav="settings", user=T,
           main=hdr + grid(agreement_card(), launch_card()),
           notes=note("Learning Bond is in Settings only for admins. Program directors and site leads reach the dashboard and the families list from More.", "top: 5rem; right: 1rem;"))
-    S.add("not-accepted", "Learning Bond turned on in Modules but the agreement not yet accepted: Launch is disabled and the agreement card says what to do.", nav="settings", user=T,
-          main=hdr + grid(agreement_card("none"), launch_card(disabled_reason="Accept the data-handling agreement before launching.")))
     S.add("new-version", "The platform published version 3 of the agreement: families in progress continue, no new invitation is sent and Launch is disabled until it is accepted (L2-136).", nav="settings", user=T,
           main=hdr + alert("warning", "A new version of the agreement needs accepting.", "Launch is paused until Tom or a named signer accepts version 3.", banner=True, actions=btn("Read version 3", "primary", size="sm", href=page("learning-bond-agreement")))
           + grid(agreement_card("new-version"), launch_card(disabled_reason="A new version of the agreement needs accepting.")))
@@ -166,6 +166,10 @@ def learning_bond_agreement(S):
     S.add("accepted", "Accepted: who, when and which version; Launch is now possible.", nav="settings", user=T,
           main=hdr + layout(card(alert("success", f"Accepted by Tom Nguyen on {AGREEMENT_DATE}, version {AGREEMENT_VERSION}", "Recorded in the audit log. No family data has been collected yet.",
                                        actions=btn("Choose coverage", "primary", size="sm", href=page("learning-bond-coverage")) + btn("Back to Learning Bond", "ghost", size="sm", href=page("settings-learning-bond"))))))
+    S.add("accepted-off", "Accepted while Learning Bond is still off (reached from Read the agreement in Settings › Modules): the next step is to turn it on.", nav="settings", user=T,
+          main=crumbs_off("Agreement") + page_header("Learning Bond data-handling agreement", "One page. Accept it for Harbourview, or name the person who can.")
+          + layout(card(alert("success", f"Accepted by Tom Nguyen on {AGREEMENT_DATE}, version {AGREEMENT_VERSION}", "Recorded in the audit log. Turn Learning Bond on in Modules to choose coverage and the invitation.",
+                                       actions=btn("Turn on Learning Bond", "primary", size="sm", href=page("settings-modules"))))))
     S.add("waiting-signer", "Tom named Rev. Angela Baptiste as the signer: the page waits, with Resend and Cancel.", nav="settings", user=T,
           main=hdr + layout(card(f'<p>{icon("clock", "icon--sm")} <strong>Waiting for Rev. Angela Baptiste to sign.</strong></p><p class="text-muted">Board chair · angela.baptiste@harbourview.example · emailed Thu 5 Nov, 4:02 pm. The link works for 14 days.</p>'
                                  f'<div class="cluster">{btn("Resend", "", icon_name="mail")}{btn("Cancel", "ghost")}</div>', title="Named signer", tid="signer")),
@@ -232,9 +236,43 @@ def email_preview(lang: str, sender: str = SENDER) -> str:
             f'<p class="email__footer">{esc(sender)} via PromiseHub · Harbourview Youth Collective, Hamilton · <a href="{page("guardian-update")}">Unsubscribe</a></p></div>')
 
 
+# The admin's preview reads no household (L2-136 criterion 5), so it fills the platform wording with a sample child, guardian and link.
+PREVIEW_LINK = "promisehub.ca/lb/4r7k9x"
+
+
+def preview_sms(lang: str, sender: str = SENDER) -> str:
+    if lang == "es":
+        return f"{sender}: Maya podría tener derecho a hasta $2,000 para estudiar después de la secundaria. No cuesta nada. Toque para comprobarlo: {PREVIEW_LINK} (STOP para salir)"
+    if lang == "fr":
+        return f"{sender} : Maya pourrait recevoir jusqu’à 2 000 $ pour ses études après le secondaire. C’est gratuit. Touchez pour vérifier : {PREVIEW_LINK} (STOP pour arrêter)"
+    return f"{sender}: Maya may be owed up to $2,000 for school after high school. It costs nothing. Tap to check: {PREVIEW_LINK} (STOP to opt out)"
+
+
+def preview_email(lang: str, sender: str = SENDER) -> str:
+    title, text, action, foot = {
+        "en": ("Maya may be owed up to $2,000 for school after high school",
+               "Hi Alex. The Government of Canada puts the Canada Learning Bond into an RESP for families with lower incomes. It costs nothing and you don’t need to put in any money. Check in about 15 minutes on your phone.",
+               "Check now", f"{sender} via PromiseHub · Harbourview Youth Collective, Hamilton · Unsubscribe"),
+        "es": ("Maya podría tener derecho a hasta $2,000 para estudiar",
+               "Hola, Alex. El Gobierno de Canadá deposita el Bono de Estudios Canadiense en un RESP para familias con ingresos más bajos. No cuesta nada y no hace falta aportar dinero. Compruébelo en unos 15 minutos desde su teléfono.",
+               "Comprobar ahora", f"{sender} a través de PromiseHub · Harbourview Youth Collective, Hamilton · Dejar de recibir correos"),
+        "fr": ("Maya pourrait recevoir jusqu’à 2 000 $ pour ses études",
+               "Bonjour Alex. Le gouvernement du Canada verse le Bon d’études canadien dans un REEE pour les familles à revenu modeste. C’est gratuit et vous n’avez rien à verser. Vérifiez en 15 minutes environ sur votre téléphone.",
+               "Vérifier maintenant", f"{sender} via PromiseHub · Harbourview Youth Collective, Hamilton · Se désabonner"),
+    }[lang]
+    return (f'<div class="email"><p class="email__title">{esc(title)}</p><p class="email__text">{esc(text)}</p>'
+            f'<p class="email__action"><span class="email__button">{esc(action)}</span></p><p class="email__footer">{esc(foot)}</p></div>')
+
+
+def sms_segments(text: str) -> int:
+    gsm = "@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !\"#¤%&'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà"
+    single, multi = (160, 153) if all(c in gsm for c in text) else (70, 67)
+    return 1 if len(text) <= single else -(-len(text) // multi)
+
+
 @screen("learning-bond-invitation", "page", "Learning Bond invitation", route="/settings/learning-bond/invitation", reqs=R_INVITATION, na={"empty": "The invitation always has the platform text."})
 def learning_bond_invitation(S):
-    hdr = crumbs("Invitation") + page_header("Guardian invitation", "Platform-approved wording in English and Spanish, the languages your households use. You change only the sender name.")
+    hdr = crumbs("Invitation") + page_header("Guardian invitation", "Platform-approved wording in English, Spanish and French, the languages your households use. You change only the sender name.")
 
     def form(*, value=SENDER, err="", busy=False, saved=False):
         f = field("sender", "Sender name", value=value, error=err, help_="1 to 30 letters, numbers and spaces. Starts every text and signs every email.", attrs=' maxlength="30"', required=True)
@@ -242,15 +280,17 @@ def learning_bond_invitation(S):
         return f'<form class="stack" action="#" method="post" novalidate>{form_summary([("sender", err)]) if err else ""}{card(f, title="Sender", tid="sender")}{form_actions("Save", page("settings-learning-bond"), busy=busy, extra=status_)}</form>'
 
     def previews(sender=SENDER):
-        en = SMS_EN.replace(SENDER, sender)
-        es = SMS_ES.replace(SENDER, sender)
-        return (card(f'<h3 class="section-title">English</h3>{sms(en, segments=1 if len(en) <= 160 else 2)}<h3 class="section-title">Spanish</h3>{sms(es, segments=2)}', title="Text message", tid="sms")
-                + card(f'<h3 class="section-title">English</h3>{email_preview("en", sender)}<h3 class="section-title">Spanish</h3>{email_preview("es", sender)}', title="Email", tid="email"))
+        out = ""
+        for lang, name in (("en", "English"), ("es", "Spanish"), ("fr", "French")):
+            text = preview_sms(lang, sender)
+            out += card(f'<h3 class="section-title">Text message</h3>{sms(text, segments=sms_segments(text))}<h3 class="section-title">Email</h3>{preview_email(lang, sender)}',
+                        title=name, tid=f"preview-{lang}")
+        return out
 
     def layout(f, p):
         return f'<div class="split"><div class="stack form-width--lg">{f}</div><div class="stack">{p}</div></div>'
 
-    S.add("default", "The SMS and email in English and Spanish only, with the sender name and the segment count; French isn’t shown because no Harbourview household uses it.", nav="settings", user=T,
+    S.add("default", "The SMS and email in English, Spanish and French, the languages Harbourview’s households use, with the sender name and the segment count; a sample child, guardian and link fill the wording.", nav="settings", user=T,
           main=hdr + layout(form(), previews()), notes=note("The body is fixed by the platform and sent in each household’s language, falling back to English. Each child’s first name is filled in per household (L2-139).", "top: 5rem; right: 1rem;"))
     S.add("invalid", "A sender name with a link in it: 422 and the single rule.", nav="settings", user=T,
           main=hdr + layout(form(value="Harbourview hbv.ph/join", err="Use 1 to 30 letters, numbers and spaces."), previews("Harbourview hbv.ph/join")))

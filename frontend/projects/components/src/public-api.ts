@@ -78,6 +78,7 @@ export * from './lib/calendar/calendar-entry';
 export * from './lib/achievement-badges/achievement-badge-item';
 export * from './lib/recipient-count/recipient-count';
 export * from './lib/sms-preview/sms-preview';
+export * from './lib/email-preview/email-preview';
 export * from './lib/skeleton/skeleton';
 export * from './lib/stat/stat';
 export * from './lib/table/table';

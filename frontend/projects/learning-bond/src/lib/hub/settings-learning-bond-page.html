@@ -1,0 +1,122 @@
+<ph-page-header
+  title="Learning Bond"
+  subtitle="Claims the money governments already owe your families’ children. Needs Roster and Messages."
+/>
+@switch (state()) {
+  @case ('forbidden') {
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="lock"
+        title="Admins configure Learning Bond"
+        text="Ask an admin or a program director."
+      >
+        <ph-button link="/">Back to Today</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('error') {
+    <ph-tabs label="Settings sections" [links]="sections()" />
+    <ph-card [flush]="true">
+      <ph-empty-state
+        icon="warning"
+        tone="error"
+        title="We couldn’t load Learning Bond settings"
+        text="Check your connection and try again."
+      >
+        <ph-button variant="primary" icon="refresh" (click)="load()">Try again</ph-button>
+      </ph-empty-state>
+    </ph-card>
+  }
+  @case ('loading') {
+    <ph-tabs label="Settings sections" [links]="sections()" />
+    <div class="split" aria-busy="true" aria-label="Loading Learning Bond settings">
+      <ph-skeleton shape="card" />
+      <ph-skeleton shape="card" />
+    </div>
+  }
+  @default {
+    <ph-tabs label="Settings sections" [links]="sections()" />
+    @if (overview(); as o) {
+      @if (o.pendingVersion) {
+        <div data-testid="hub-new-version">
+          <ph-alert
+            tone="warning"
+            title="A new version of the agreement needs accepting."
+            [text]="
+              'Launch is paused until someone with authority accepts version ' +
+              o.pendingVersion +
+              '.'
+            "
+          >
+            <ph-button size="sm" variant="primary" link="/settings/learning-bond/agreement"
+              >Read version {{ o.pendingVersion }}</ph-button
+            >
+          </ph-alert>
+        </div>
+      }
+      <div class="split">
+        <div class="column">
+          <ph-card title="Data-handling agreement" data-testid="hub-data-handling-agreement">
+            @if (o.pendingVersion) {
+              <ph-alert
+                tone="warning"
+                title="A new version of the agreement needs accepting."
+                [text]="pendingText(o)"
+              >
+                <ph-button size="sm" variant="primary" link="/settings/learning-bond/agreement"
+                  >Read and accept version {{ o.pendingVersion }}</ph-button
+                >
+              </ph-alert>
+            } @else {
+              <div class="card-body">
+                <p>{{ acceptedLine(o) }}</p>
+                <p class="muted">
+                  What Learning Bond collects, where it goes and what your organization sees.
+                </p>
+                <p>
+                  <ph-button variant="ghost" size="sm" link="/settings/learning-bond/agreement"
+                    >Read the agreement</ph-button
+                  >
+                </p>
+              </div>
+            }
+          </ph-card>
+          <ph-card title="Coverage" data-testid="hub-coverage">
+            <div class="card-body">
+              <ph-description-list [facts]="coverageFacts()" />
+              <p>
+                <ph-button variant="ghost" size="sm" link="/settings/learning-bond/coverage"
+                  >Change coverage</ph-button
+                >
+              </p>
+            </div>
+          </ph-card>
+        </div>
+        <div class="column">
+          <ph-card title="Guardian invitation" data-testid="hub-guardian-invitation">
+            <div class="card-body">
+              <ph-description-list [facts]="invitationFacts()" />
+              <p>
+                <ph-button variant="ghost" size="sm" link="/settings/learning-bond/invitation"
+                  >Preview and edit</ph-button
+                >
+              </p>
+            </div>
+          </ph-card>
+          <ph-card title="Launch" data-testid="hub-launch">
+            <div class="card-body">
+              @if (o.launchBlocked; as reason) {
+                <p class="muted">{{ reason }}</p>
+                <div>
+                  <ph-button variant="primary" [disabled]="true">Launch</ph-button>
+                </div>
+              } @else {
+                <p>Choose a day, or let staff invite families one at a time at check-in.</p>
+              }
+            </div>
+          </ph-card>
+        </div>
+      </div>
+    }
+  }
+}

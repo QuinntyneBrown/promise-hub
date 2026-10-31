@@ -30,6 +30,11 @@ export function formatDay(iso: string): string {
   return day.format(new Date(iso.length === 10 ? `${iso}T12:00:00Z` : iso)).replace(',', '');
 }
 
+/** "Thu 29 Oct 2026" for a date (yyyy-mm-dd) or a moment: a day that may be in another year. */
+export function formatFullDay(iso: string): string {
+  return `${formatDay(iso)} ${formatDate(iso).split(' ').at(-1)}`;
+}
+
 /** "14 Nov 2026". */
 export function formatDate(iso: string): string {
   return date.format(new Date(iso.length === 10 ? `${iso}T12:00:00Z` : iso));

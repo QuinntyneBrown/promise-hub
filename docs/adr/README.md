@@ -80,3 +80,4 @@ One file per decision, numbered `NNNN-title.md`. Read the ones covering an area 
 | [0074](0074-detailed-reports-are-computed-on-read-with-sections-per-module-and-imports-place-and-invite.md) | Detailed reports are computed on read, with a section per module; imports place youth in cohorts and invite them |
 | [0075](0075-the-public-website-reads-published-content-by-address-and-stores-visitor-requests-per-organization.md) | The public website reads published content by address and stores visitor requests per organization |
 | [0076](0076-learning-bond-keeps-financial-data-encrypted-and-submits-only-on-the-guardians-request.md) | Learning Bond keeps financial data encrypted and submits only on the guardian's request |
+| [0077](0077-the-learning-bond-agreement-is-served-before-the-module-is-on-from-the-settings-library.md) | The Learning Bond agreement is served before the module is on, from the settings library |

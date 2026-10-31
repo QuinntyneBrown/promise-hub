@@ -1,6 +1,8 @@
+import { map } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NOTIFICATION_SETTINGS_API } from '@promisehub/api';
+import { NOTIFICATION_SETTINGS_API, SESSION_API, settingsSections } from '@promisehub/api';
 import {
   ErrorSummaryItem,
   PhButton,
@@ -14,7 +16,6 @@ import {
   PhTextField,
   ToastService,
 } from '@promisehub/components';
-import { SETTINGS_SECTIONS } from '../settings-sections';
 
 const ORDER = ['noShowDelayMinutes', 'smsCap'];
 
@@ -41,7 +42,12 @@ export class SettingsNotificationsPage {
   private readonly api = inject(NOTIFICATION_SETTINGS_API);
   private readonly toasts = inject(ToastService);
 
-  protected readonly sections = SETTINGS_SECTIONS;
+  protected readonly sections = toSignal(
+    inject(SESSION_API)
+      .current()
+      .pipe(map((s) => settingsSections(s.modules))),
+    { initialValue: settingsSections([]) },
+  );
   protected readonly state = signal<'loading' | 'loaded' | 'forbidden' | 'error'>('loading');
   protected readonly delay = signal('15');
   protected readonly emails = signal(true);

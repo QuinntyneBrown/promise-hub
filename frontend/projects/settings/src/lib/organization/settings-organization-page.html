@@ -13,7 +13,7 @@
   }
   @case ('error') {
     <div class="stack">
-      <ph-tabs label="Settings sections" [links]="sections" />
+      <ph-tabs label="Settings sections" [links]="sections()" />
       <ph-card [flush]="true">
         <ph-empty-state
           icon="warning"
@@ -28,13 +28,13 @@
   }
   @case ('loading') {
     <div class="stack" aria-busy="true" aria-label="Loading your organization’s settings">
-      <ph-tabs label="Settings sections" [links]="sections" />
+      <ph-tabs label="Settings sections" [links]="sections()" />
       <ph-skeleton shape="card" />
     </div>
   }
   @default {
     <div class="stack form">
-      <ph-tabs label="Settings sections" [links]="sections" />
+      <ph-tabs label="Settings sections" [links]="sections()" />
       @if (profile(); as p) {
         <ph-card title="Profile">
           <div class="card-body">

@@ -2,12 +2,12 @@
 
 | Design | Effort | Complete |
 |---|---|---|
-| accept-data-handling-agreement | 5 days | 0% |
+| accept-data-handling-agreement | 5 days | 60% |
 | complete-intake | 8 days | 10% |
-| configure-coverage-and-invitation | 4 days | 0% |
+| configure-coverage-and-invitation | 4 days | 90% |
 | estimate-learning-bond | 3 days | 0% |
 | follow-application-progress | 9 days | 0% |
-| gate-learning-bond-module | 4 days | 70% |
+| gate-learning-bond-module | 4 days | 80% |
 | give-and-withdraw-consent | 5 days | 0% |
 | launch-invitations | 6 days | 0% |
 | list-and-apply-for-benefits | 8 days | 0% |

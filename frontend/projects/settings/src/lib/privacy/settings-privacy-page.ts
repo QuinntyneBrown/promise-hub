@@ -1,6 +1,14 @@
+import { map } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ConsentPolicy, DataRequest, PRIVACY_API } from '@promisehub/api';
+import {
+  ConsentPolicy,
+  DataRequest,
+  PRIVACY_API,
+  SESSION_API,
+  settingsSections,
+} from '@promisehub/api';
 import {
   Fact,
   PhButton,
@@ -21,7 +29,6 @@ import {
 } from '@promisehub/components';
 import { ConsentPolicyDialog } from '../consent-policy-dialog/consent-policy-dialog';
 import { ConsentPolicyDialogData } from '../consent-policy-dialog-data';
-import { SETTINGS_SECTIONS } from '../settings-sections';
 
 /** Settings › Privacy and data (mock: settings-privacy): the region, consent retention and guardian requests. */
 @Component({
@@ -50,7 +57,12 @@ export class SettingsPrivacyPage {
   private readonly toasts = inject(ToastService);
   private readonly dialogs = inject(PhDialogs);
 
-  protected readonly sections = SETTINGS_SECTIONS;
+  protected readonly sections = toSignal(
+    inject(SESSION_API)
+      .current()
+      .pipe(map((s) => settingsSections(s.modules))),
+    { initialValue: settingsSections([]) },
+  );
   protected readonly state = signal<'loading' | 'loaded' | 'forbidden' | 'error'>('loading');
   protected readonly facts = signal<Fact[]>([]);
   protected readonly retention = signal('7');

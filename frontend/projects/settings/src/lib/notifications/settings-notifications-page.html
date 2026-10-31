@@ -13,7 +13,7 @@
   }
   @case ('error') {
     <div class="stack">
-      <ph-tabs label="Settings sections" [links]="sections" />
+      <ph-tabs label="Settings sections" [links]="sections()" />
       <ph-card [flush]="true">
         <ph-empty-state
           icon="warning"
@@ -28,14 +28,14 @@
   }
   @case ('loading') {
     <div class="stack" aria-busy="true" aria-label="Loading notification settings">
-      <ph-tabs label="Settings sections" [links]="sections" />
+      <ph-tabs label="Settings sections" [links]="sections()" />
       <ph-skeleton shape="card" />
       <ph-skeleton shape="card" />
     </div>
   }
   @default {
     <form class="stack form" novalidate (ngSubmit)="save()">
-      <ph-tabs label="Settings sections" [links]="sections" />
+      <ph-tabs label="Settings sections" [links]="sections()" />
       @if (summary().length) {
         <ph-error-summary [items]="summary()" />
       }

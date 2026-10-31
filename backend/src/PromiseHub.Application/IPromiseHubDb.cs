@@ -99,6 +99,8 @@ public interface IPromiseHubDb
     DbSet<Domain.LearningBond.LearningBondAgreement> LearningBondAgreements { get; }
     DbSet<Domain.LearningBond.LearningBondAgreementAcceptance> LearningBondAgreementAcceptances { get; }
     DbSet<Domain.LearningBond.LearningBondIntake> LearningBondIntakes { get; }
+    DbSet<Domain.LearningBond.LearningBondSignerRequest> LearningBondSignerRequests { get; }
+    DbSet<Domain.LearningBond.LearningBondSettings> LearningBondSettings { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

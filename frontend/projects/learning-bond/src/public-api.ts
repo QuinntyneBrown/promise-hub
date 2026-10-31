@@ -1,1 +1,1 @@
-export { routes, guardianRoutes } from './lib/learning-bond.routes';
+export { routes, settingsRoutes, guardianRoutes } from './lib/learning-bond.routes';
