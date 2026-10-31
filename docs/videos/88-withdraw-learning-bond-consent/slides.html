@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 88 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="88" data-video-title="Withdraw Learning Bond consent" data-parts="Introduction|Your consents|Stops and stays|Withdrawing|Starting again|Laptop|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 88</div>
+  <h1>Withdraw Learning Bond consent</h1>
+  <p class="lead">Taking consent back: what is destroyed, what is kept, and why</p>
+</section>
+
+<section id="withdraw-clip" data-part="1" data-cue="When Carmen opens her Learning Bond link" data-clip="clips/withdraw-phone.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Withdraw</h3><p>Your consents, the dialog, done.</p></div>
+</section>
+
+<section id="dialog" data-part="2" data-cue="Two lines spell it out.">
+  <div class="cols">
+    <img class="shot" alt="Your consents with Withdraw" src="shots/phone-your-consents.png">
+    <img class="shot" alt="Withdraw consent for Mateo? Stops and Stays" src="shots/phone-withdraw-dialog.png">
+  </div>
+</section>
+
+<section id="withdrawing" data-part="3" data-cue="Carmen withdraws.">
+  <h2>One unit of work</h2>
+  <ul>
+    <li>Unsent applications cancelled; reminders and waiting documents gone</li>
+    <li>Mateo's SIN destroyed; Carmen's and the tax answer when no child needs them</li>
+    <li>Sent: status, provider and dates kept, no SIN; later news texts nobody</li>
+    <li>Audited as Withdrawn, with no number</li>
+  </ul>
+  <p class="muted small">DELETE /g/learning-bond/{token}/consents/{id} · LearningBondWithdrawHandler</p>
+</section>
+
+<section id="withdrawn" data-part="3" data-cue="The withdrawal is recorded in the audit log">
+  <h2>Consent for Mateo withdrawn</h2>
+  <img class="shot" alt="Consent for Mateo withdrawn" src="shots/phone-withdrawn.png">
+</section>
+
+<section id="again-clip" data-part="4" data-cue="If Carmen changes her mind" data-clip="clips/again-phone.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>Starting again</h3><p>Consent, then the first question.</p></div>
+</section>
+
+<section id="desktop-clip" data-part="5" data-cue="On a laptop, Your consents and the dialog read the same" data-clip="clips/dialog-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>The dialog</h3><p>Cancel changes nothing.</p></div>
+</section>
+
+<section id="testing" data-part="6" data-cue="The API tests withdraw before Submit.">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>LearningBondWithdrawTests</code>: before and after Submit, a second child, starting over</li>
+    <li>Another household's link and an unknown consent: 404</li>
+    <li><code>withdraw</code> spec · laptop and phone · axe</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="7" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>Your consents lists each child, with Withdraw</li><li>The dialog says what stops and what stays</li><li>SINs and answers destroyed; sent status kept</li><li>Consenting again starts over</li></ul>
+  <p class="muted">Next: the benefits check</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

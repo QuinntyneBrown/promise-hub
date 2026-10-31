@@ -17,13 +17,22 @@ Both endpoints resolve the tenant through `GuardianAccess` and answer 404 when t
 Frontend:
 
 - **`LearningBondConsentPage`** (`frontend/projects/learning-bond/`, route `/g/learning-bond/:token/consent`) — `ph-checkbox` per eligible child with the child's name and the wording in the household's language, `ph-text-field` for the typed name (`autocomplete="name"`), `ph-error-summary` and per-field errors from the 422 body, `ph-button` Agree with a busy state, `ph-alert` on success with Continue to the intake. The page sends the wording version it displayed.
-- **`WithdrawLearningBondConsentDialog`** (`ph-dialog`, danger) — the fixed sentence "We'll stop and delete {first name}'s information here. Anything already sent to {provider} stays with them; contact them to close the RESP.", a Stops and Stays facts list, Withdraw consent and Cancel. No input to validate.
+- **Your consents** on `GuardianLearningBondPage`: one `ph-list-item` per consent in force ("Mateo · Learning Bond", "Signed Carmen Rivera · Thu 5 Nov · wording v1") with a ghost Withdraw labelled "Withdraw consent for Mateo"; after a withdrawal a success `ph-alert` says the information here is deleted. The page DTO's `Consents` carries each consent with the provider of the child's latest application.
+- **`LearningBondWithdrawDialog`** (`withdraw-learning-bond-consent`, `ph-dialog` tone danger) — the fixed sentence "We'll stop and delete {first name}'s information here. Anything already sent to {provider} stays with them; contact them to close the RESP.", a Stops and Stays facts list, Withdraw consent and Cancel. No input to validate.
 - **`LEARNING_BOND_API.giveConsent(token, request)`** — 201 with the stored consents, or the 422 errors; **`LEARNING_BOND_API.withdrawConsent(token, consentId)`** — 204.
 
 Backend:
 
 - **`LearningBondConsentHandler.GiveAsync`** (`PromiseHub.Application/LearningBond/`) — scope through `GuardianAccess` (trusted device required), module gate, then validation: at least one child ("Tick at least one child.") and a non-empty typed name ("Type your full name to sign."), both 422 with nothing stored. Each ticked child is checked against the household record: the signing guardian shall be a `Guardian` of that child's household or the answer is 403. One `LearningBondConsent` per ticked child is stored with `Scope.LearningBond`, `GuardianId`, `TypedName`, `WordingVersion`, `Language` and `GivenAt`; a `LearningBondClaim` in status `Started` is created for the child. Unticked children get no record and the intake never asks about them.
-- **`LearningBondConsentHandler.WithdrawAsync`** — loads the consent by id within the household (404 otherwise), sets `WithdrawnAt`, then in one unit of work: every `LearningBondApplication` of the child in `Draft` or `ReadyToSubmit` becomes `Cancelled`; the child's `LearningBondClaim.ChildSin` is destroyed; when no other child of the household holds an active consent, `LearningBondIntake` loses the guardian SIN and the tax-filing answer; every `LearningBondReminder` of the child is deleted; applications in `Submitted`, `Received` or `Deposited` keep status, provider and dates (`L2-152` criterion 3). Follow-up texts check for an active consent before queueing.
+- **`LearningBondWithdrawHandler.WithdrawAsync`** loads the consent by id within the household, otherwise 404. It sets `WithdrawnAt`, then, in one unit of work:
+  - every `LearningBondApplication` of the child in `Draft` or `ReadyToSubmit` becomes `Cancelled`;
+  - the child's SIN ciphertext is destroyed (`LearningBondClaim.Withdraw`), and a claim not yet sent ends as `NotCompleted`;
+  - when no other child of the household holds a consent in force, `LearningBondIntake.ClearAnswers` destroys the guardian's SIN and the tax-filing answer;
+  - every open `LearningBondReminder` of the child is cancelled;
+  - every `LearningBondDocument` not yet sent is deleted, along with its stored file;
+  - applications in `Submitted`, `Received` or `Deposited` keep their status, provider and dates (`L2-152` criterion 3).
+
+  The withdrawal is audited as `Withdrawn` on `LearningBondConsent`. The webhook still applies a provider's later event but texts only while the consent is in force. The intake treats a destroyed SIN as not given, so the questions start again.
 - **Independence from `GuardianConsent`** — `LearningBondConsent` is a separate entity in a separate table; no query joins the two and `GuardianConsentHandler` is unchanged (`L2-145` criterion 4).
 - **Re-consent** — a new consent after a withdrawal creates a new `LearningBondClaim`; the intake starts from the first question because the destroyed answers are gone (`L2-152` criterion 4).
 - **`POST /g/learning-bond/{token}/consents`**, **`DELETE /g/learning-bond/{token}/consents/{id}`** — `LearningBondGuardianEndpoints`.

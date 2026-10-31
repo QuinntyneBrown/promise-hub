@@ -34,7 +34,7 @@ public sealed class LearningBondIntakeHandler(IPromiseHubDb db, LearningBondGuar
         var code = GuardianLanguage.Code(scope.Household.Language);
         var year = TimeZoneInfo.ConvertTime(clock.GetUtcNow(), TimeZoneInfo.FindSystemTimeZoneById(scope.Organization.TimeZone)).Year - 1;
         return GuardianResult.Of(GuardianOutcome.Ok, new LearningBondIntakeDto(code, scope.Organization.Name, AgentFallbackCopy.Intake(code, child.FirstName), child.Id,
-            child.FirstName, child.FullName, child.DateOfBirth, year, intake?.GuardianSinLast3, claim.ChildSinLast3, intake?.TaxFiled?.ToString(),
+            child.FirstName, child.FullName, child.DateOfBirth, year, intake?.GuardianSin is { IsDestroyed: false } ? intake.GuardianSinLast3 : null, claim.ChildSinLast3, intake?.TaxFiled?.ToString(),
             claim.PausedReason == LearningBondPausedReason.AwaitingRecordFix));
     }
 

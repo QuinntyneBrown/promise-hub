@@ -88,6 +88,22 @@ public sealed class LearningBondClaim : ITenantOwned
         UpdatedAt = now;
     }
 
+    /// <summary>
+    /// Consent withdrawn (L2-152): the child's SIN is destroyed; a claim already sent keeps its status, provider and dates, any other ends as
+    /// Not completed.
+    /// </summary>
+    public void Withdraw(DateTimeOffset now)
+    {
+        ChildSinCiphertext = null;
+        PausedReason = null;
+        PausedAt = null;
+        if (Status is not (LearningBondClaimStatus.Submitted or LearningBondClaimStatus.Deposited))
+        {
+            Status = LearningBondClaimStatus.NotCompleted;
+        }
+        UpdatedAt = now;
+    }
+
     public void Pause(LearningBondPausedReason reason, DateTimeOffset now)
     {
         Status = LearningBondClaimStatus.Paused;

@@ -1,0 +1,18 @@
+<form novalidate (ngSubmit)="withdraw()">
+  <ph-dialog
+    tone="danger"
+    [title]="data.text.withdrawTitle(data.consent.firstName)"
+    [description]="data.text.withdrawText(data.consent.firstName, data.consent.provider)"
+  >
+    @if (failed()) {
+      <ph-alert tone="danger" [title]="data.text.failed" />
+    }
+    <ph-description-list [facts]="facts" />
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">{{ data.text.cancel }}</ph-button>
+      <ph-button variant="danger" type="submit" [busy]="busy()">{{
+        data.text.withdrawConfirm
+      }}</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

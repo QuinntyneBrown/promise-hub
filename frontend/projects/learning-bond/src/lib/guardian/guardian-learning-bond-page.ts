@@ -14,6 +14,7 @@ import {
   GuardianLearningBondChild,
   GuardianPageResult,
   LEARNING_BOND_API,
+  GuardianLearningBondConsent,
 } from '@promisehub/api';
 import {
   PhAgentMessage,
@@ -21,6 +22,7 @@ import {
   PhBadge,
   PhButton,
   PhCard,
+  PhDialogs,
   PhEmptyState,
   PhGuardianShell,
   PhList,
@@ -29,6 +31,10 @@ import {
   PhTextField,
 } from '@promisehub/components';
 import { guardianLearningBondText } from './guardian-learning-bond-text';
+import {
+  LearningBondWithdrawData,
+  LearningBondWithdrawDialog,
+} from './learning-bond-withdraw-dialog';
 
 type Step = 'contact' | 'code' | 'locked';
 
@@ -69,6 +75,8 @@ export class GuardianLearningBondPage implements OnInit {
   protected readonly failed = signal(false);
   protected readonly errors = signal<Record<string, string>>({});
   protected readonly chosen = signal<'NotNow' | 'NotInterested' | null>(null);
+  protected readonly withdrawnName = signal<string | null>(null);
+  private readonly dialogs = inject(PhDialogs);
   protected contact = '';
   protected code = '';
 
@@ -104,6 +112,32 @@ export class GuardianLearningBondPage implements OnInit {
   protected load(): void {
     this.result.set(null);
     this.api.guardianPage(this.token()).subscribe((r) => this.result.set(r));
+  }
+
+  /** Withdraw for a child (L2-152): the dialog says what stops and what stays; once withdrawn the page reloads. */
+  protected withdraw(consent: GuardianLearningBondConsent): void {
+    const data: LearningBondWithdrawData = { token: this.token(), consent, text: this.text() };
+    this.dialogs
+      .open<boolean, LearningBondWithdrawData, LearningBondWithdrawDialog>(
+        LearningBondWithdrawDialog,
+        data,
+      )
+      .closed.subscribe((done) => {
+        if (!done) return;
+        this.withdrawnName.set(consent.firstName);
+        this.load();
+      });
+  }
+
+  protected signedOn(iso: string): string {
+    return new Intl.DateTimeFormat(this.text().locale, {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      timeZone: 'America/Toronto',
+    })
+      .format(new Date(iso))
+      .replace(',', '');
   }
 
   /** Where a started claim goes on from (L2-151 criterion 4): its pause, its details, or what happens next. */

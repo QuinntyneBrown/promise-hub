@@ -100,6 +100,8 @@ export interface LearningBondApi {
     childId: string,
     remind: boolean,
   ): Observable<LearningBondPaused | null>;
+  /** DELETE /g/learning-bond/{token}/consents/{id}: withdraws a child's consent; its information here is deleted (L2-152). */
+  withdrawConsent(token: string, consentId: string): Observable<WriteOutcome>;
   /** GET /learning-bond/agreement: the current version, the organization's acceptance and the open signer request. */
   agreement(): Observable<LoadResult<LearningBondAgreement>>;
   /** POST /learning-bond/agreement/acceptances: accepts the current version; invalid without the authority box. */

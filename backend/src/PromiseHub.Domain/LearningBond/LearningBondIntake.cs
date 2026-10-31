@@ -46,6 +46,14 @@ public sealed class LearningBondIntake : ITenantOwned
     }
 
     /// <summary>Destroys the ciphertext and keeps the last three digits (L2-159 criterion 4). False when there was nothing to destroy.</summary>
+    /// <summary>No child of the household still has consent (L2-152 criterion 2): the guardian's SIN and the tax answer go.</summary>
+    public void ClearAnswers(DateTimeOffset now)
+    {
+        DestroyGuardianSin(now);
+        TaxFiled = null;
+        UpdatedAt = now;
+    }
+
     public bool DestroyGuardianSin(DateTimeOffset now)
     {
         if (GuardianSin is not { IsDestroyed: false } sin)

@@ -98,6 +98,36 @@
               </ph-list>
             </div>
           </ph-card>
+          @if (withdrawnName(); as name) {
+            <div data-testid="consent-withdrawn">
+              <ph-alert tone="success" [title]="t.withdrawnTitle(name)" [text]="t.withdrawnText" />
+            </div>
+          }
+          @if (page.consents?.length) {
+            <ph-card [title]="t.consentsTitle" [flush]="true">
+              <div data-testid="learning-bond-consents">
+                <ph-list [label]="t.consentsTitle" [inset]="true">
+                  @for (k of page.consents; track k.id) {
+                    <ph-list-item
+                      [title]="t.consentRow(k.firstName)"
+                      [meta]="t.consentMeta(k.typedName, signedOn(k.givenAt), k.wordingVersion)"
+                    >
+                      <div>
+                        <ph-button
+                          size="sm"
+                          variant="ghost"
+                          hasPopup="dialog"
+                          [label]="t.withdrawFor(k.firstName)"
+                          (click)="withdraw(k)"
+                          >{{ t.withdraw }}</ph-button
+                        >
+                      </div>
+                    </ph-list-item>
+                  }
+                </ph-list>
+              </div>
+            </ph-card>
+          }
           @if (
             claimable().length && chosen() !== 'NotInterested' && page.status !== 'NotInterested'
           ) {
