@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 84 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="84" data-video-title="Sign the data-handling agreement" data-parts="Introduction|Named signer|The email|The link|Authority|Thank you|Phone|Grace is told|Dead links|Testing|Recap" data-music="../assets/music/on-the-beach-intro-outro.mp3">
+
+<section id="title" data-part="0">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <div class="kicker">PromiseHub · Video 84</div>
+  <h1>Sign the data-handling agreement</h1>
+  <p class="lead">A named signer accepts for the organization through a single-use link, with no account</p>
+</section>
+
+<section id="journey" data-part="0" data-cue="This video follows the person who can">
+  <h2>The person who can sign</h2>
+  <ul>
+    <li>Grace, Northgate's admin, names Rev. Angela Baptiste, board chair</li>
+    <li>Angela opens the emailed link: no account, no sign-in</li>
+    <li>She accepts; Grace is told; the link stops working</li>
+  </ul>
+  <p class="muted small">L2-137 · L2-136 · L2-026 · L2-161 · ADR 0078</p>
+</section>
+
+<section id="email-clip" data-part="1" data-cue="Grace opens the agreement in Settings." data-clip="clips/email-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Name a signer</h3><p>Grace at Northgate, Learning Bond off.</p></div>
+</section>
+
+<section id="waiting" data-part="1" data-cue="and the page waits for Angela">
+  <h2>Waiting for Angela</h2>
+  <img class="shot" alt="Waiting for Rev. Angela Baptiste to sign, with Resend, See the email and Cancel" src="shots/desktop-waiting-signer.png">
+  <p class="muted small">POST /learning-bond/agreement/signers · one open request · 14 days</p>
+</section>
+
+<section id="email" data-part="2" data-cue="Grace can see exactly what Angela was sent.">
+  <h2>The email, in the words that were sent</h2>
+  <img class="shot" alt="Email preview: Grace Mensah asked you to accept the Learning Bond data-handling agreement" src="shots/desktop-email-preview.png">
+  <p class="muted small">LearningBondSignerEmailDto · ph-email-preview · LearningBondSignerEmailDialog</p>
+</section>
+
+<section id="signer-clip" data-part="3" data-cue="Angela opens the link on her laptop." data-clip="clips/signer-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>The signer's page</h3><p>No account; refused, then accepted.</p></div>
+</section>
+
+<section id="signer" data-part="3" data-cue="The page lives in the settings library">
+  <h2>No sign-in, the agreement in full</h2>
+  <img class="shot" alt="Accept the Learning Bond data-handling agreement for Northgate Community Church Kids" src="shots/desktop-signer.png">
+  <p class="muted small">/sign/learning-bond/:token · settings library · anonymous (ADR 0078)</p>
+</section>
+
+<section id="invalid" data-part="4" data-cue="Angela chooses Accept without ticking the box.">
+  <h2>The authority box first</h2>
+  <img class="shot" alt="Confirm you have authority to accept this agreement for Northgate Community Church Kids" src="shots/desktop-signer-invalid.png">
+  <p class="muted small">422 · nothing stored · the link still works</p>
+</section>
+
+<section id="accepted" data-part="5" data-cue="The page thanks her">
+  <h2>What was recorded</h2>
+  <img class="shot" alt="Thank you, Rev. Angela Baptiste: accepted on Thu 5 Nov 2026 at 4:30 pm, version 2" src="shots/desktop-signer-accepted.png">
+  <p class="muted small">LearningBondAgreementAcceptance.BySigner · audited as Signer: Rev. Angela Baptiste · link used</p>
+</section>
+
+<section id="phone-clip" data-part="6" data-cue="The same link works on Angela's phone" data-clip="clips/signer-phone.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Phone</span><h3>On a phone</h3><p>One column, then Accept.</p></div>
+</section>
+
+<section id="phone" data-part="6" data-cue="When she reaches the end">
+  <div class="cols">
+    <img class="shot" alt="The signer's page on a phone" src="shots/phone-signer.png">
+    <img class="shot" alt="Thank you on a phone" src="shots/phone-signer-accepted.png">
+  </div>
+</section>
+
+<section id="admin-clip" data-part="7" data-cue="Grace is told in two ways." data-clip="clips/admin-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Grace is told</h3><p>The notice, the acceptance, Modules.</p></div>
+</section>
+
+<section id="told" data-part="7" data-cue="The agreement page shows Accepted by">
+  <div class="cols">
+    <img class="shot" alt="Notice: Rev. Angela Baptiste, Board chair, accepted the Learning Bond data-handling agreement version 2" src="shots/desktop-notice.png">
+    <img class="shot" alt="Accepted by Rev. Angela Baptiste, with Turn on Learning Bond" src="shots/desktop-accepted-by-signer.png">
+  </div>
+</section>
+
+<section id="states-clip" data-part="8" data-cue="A used link, one that has passed its fourteen days" data-clip="clips/states-desktop.mp4">
+  <video class="clip" muted></video>
+  <div class="clip-notes"><span class="tag">Laptop</span><h3>Dead links</h3><p>Used, unknown, failed to load.</p></div>
+</section>
+
+<section id="states" data-part="8" data-cue="A link PromiseHub has never seen">
+  <div class="cols">
+    <div>
+      <img class="shot" alt="This link has expired. Ask Northgate Community Church Kids to send a new one." src="shots/desktop-signer-expired.png">
+      <img class="shot" alt="This link has expired. Ask the organization that sent it to send a new one." src="shots/desktop-signer-unknown.png">
+    </div>
+    <div>
+      <img class="shot" alt="We couldn't load the agreement, with Try again" src="shots/desktop-signer-error.png">
+    </div>
+  </div>
+</section>
+
+<section id="testing" data-part="9" data-cue="The API tests open the link">
+  <h2>How it is tested</h2>
+  <ul>
+    <li><code>LearningBondSignerLinkTests</code>: open while off, authority, acceptance, notice, email, audit, gone</li>
+    <li>Replaced, expired, cancelled, suspended and unknown links; Harbourview untouched</li>
+    <li><code>LearningBondSignerTests</code>: the email preview in the words that were sent</li>
+    <li><code>e2e/tests/learning-bond/signer-page.spec.ts</code>, <code>signer.spec.ts</code> · laptop and phone · axe</li>
+  </ul>
+</section>
+
+<section id="recap" data-part="10" data-cue="Things to remember.">
+  <img class="mark" alt="PromiseHub" src="../assets/mark.svg">
+  <h2>Things to remember</h2>
+  <ul class="recap"><li>No account: the link is the key, and only its hash is kept</li><li>The authority box is required; a refusal uses nothing up</li><li>Accepting records name, title and email, tells the admin, kills the link</li><li>Every dead link says whom to ask; an unknown one names no one</li></ul>
+  <p class="muted">Next: Tom launches the invitations</p>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>

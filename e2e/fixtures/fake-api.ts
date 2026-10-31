@@ -89,6 +89,7 @@ const NOTIFICATION_MODULES: Record<string, ModuleId[]> = {
   mentoring: ["Mentoring"],
   requests: ["Roster"],
   staff: ["Roster"],
+  agreement: ["Roster", "Messages"],
 };
 
 /** The kinds a member may choose, in order, with who receives each (L2-111). Mirrors backend NotificationKinds. */
@@ -145,6 +146,12 @@ const NOTIFICATION_KINDS: {
     name: "Staff invitations",
     hint: "When someone asks for a new invitation link.",
     receives: (m) => m.role === "Admin",
+  },
+  {
+    key: "agreement",
+    name: "Learning Bond agreement",
+    hint: "When a named signer accepts the Learning Bond data-handling agreement.",
+    receives: (m) => m.role === "Admin" || m.role === "ProgramDirector",
   },
 ];
 
@@ -2267,6 +2274,12 @@ export class FakeApi {
     ["GET", /^\/api\/learning-bond\/overview$/, (route) => this.learningBondOverview(route)],
     ["POST", /^\/api\/learning-bond\/agreement\/signers\/(?<id>[^/]+)\/resend$/, (route, p) => this.learningBondResendSigner(route, p["id"]!)],
     ["DELETE", /^\/api\/learning-bond\/agreement\/signers\/(?<id>[^/]+)$/, (route, p) => this.learningBondCancelSigner(route, p["id"]!)],
+    ["GET", /^\/api\/sign\/learning-bond\/(?<token>[^/]+)$/, (route, p) => this.learningBond.signerAgreement(route, p["token"]!, (id) => this.organizationDetailsOf(id).name)],
+    [
+      "POST",
+      /^\/api\/sign\/learning-bond\/(?<token>[^/]+)\/acceptances$/,
+      (route, p) => this.learningBondAcceptAsSigner(route, p["token"]!),
+    ],
     [
       "GET",
       /^\/api\/g\/learning-bond\/(?<token>[^/]+)$/,
@@ -3233,7 +3246,7 @@ export class FakeApi {
   private async learningBondAgreement(route: Route): Promise<void> {
     const m = await this.learningBondAgreementCaller(route);
     if (!m) return;
-    return this.learningBond.agreement(route, m, this.modules.get(m.organizationId)!.includes("LearningBond"));
+    return this.learningBond.agreement(route, m, this.modules.get(m.organizationId)!.includes("LearningBond"), this.organizationDetailsOf(m.organizationId).name);
   }
 
   /** POST /learning-bond/agreement/acceptances (L2-136 criteria 2 and 3). */
@@ -3343,6 +3356,13 @@ export class FakeApi {
     const m = await this.learningBondAgreementCaller(route);
     if (!m) return;
     return this.learningBond.cancelSigner(route, m, id);
+  }
+
+  /** POST /sign/learning-bond/{token}/acceptances (L2-137 criterion 2): anonymous; the requesting admin is told in the app and by email. */
+  private learningBondAcceptAsSigner(route: Route, token: string): Promise<void> {
+    return this.learningBond.acceptAsSigner(route, token, (id) => this.organizationDetailsOf(id).name, "2026-11-05T21:30:00Z", (organizationId, membershipId, text) =>
+      this.notify(organizationId, [membershipId], "agreement", text, "/settings/learning-bond/agreement"),
+    );
   }
 
   /** GET /g/learning-bond/{token}: the organization from the link, then the module gate; every refusal is the same bare 404 (L2-162 criterion 6). */
@@ -5182,7 +5202,7 @@ export class FakeApi {
   private readonly websiteState = new FakeWebsite();
   /** Learning Bond links and agreement acceptances (ADR 0076). */
   /** Learning Bond (ADR 0076): tests forget an acceptance or publish a new agreement version through it. */
-  readonly learningBond = new FakeLearningBond();
+  readonly learningBond = Object.assign(new FakeLearningBond(), { isSuspended: (id: string) => this.suspended.has(id) });
   private readonly websiteRequestState = new FakeWebsiteRequests(() => NOW);
 
   /** The requests visitors sent to an organization's public website, oldest first (L2-134). */

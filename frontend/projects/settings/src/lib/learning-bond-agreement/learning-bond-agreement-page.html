@@ -83,6 +83,13 @@
                   <ph-button icon="send" [busy]="resending()" (click)="resend(signer)"
                     >Resend</ph-button
                   >
+                  <ph-button
+                    variant="ghost"
+                    icon="inbox"
+                    hasPopup="dialog"
+                    (click)="seeTheEmail(signer)"
+                    >See the email</ph-button
+                  >
                   <ph-button variant="ghost" [busy]="cancelling()" (click)="cancelSigner(signer)"
                     >Cancel</ph-button
                   >

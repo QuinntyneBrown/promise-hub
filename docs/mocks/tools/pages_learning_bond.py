@@ -172,18 +172,29 @@ def learning_bond_agreement(S):
                                        actions=btn("Turn on Learning Bond", "primary", size="sm", href=page("settings-modules"))))))
     S.add("waiting-signer", "Tom named Rev. Angela Baptiste as the signer: the page waits, with Resend and Cancel.", nav="settings", user=T,
           main=hdr + layout(card(f'<p>{icon("clock", "icon--sm")} <strong>Waiting for Rev. Angela Baptiste to sign.</strong></p><p class="text-muted">Board chair · angela.baptiste@harbourview.example · emailed Thu 5 Nov, 4:02 pm. The link works for 14 days.</p>'
-                                 f'<div class="cluster">{btn("Resend", "", icon_name="mail")}{btn("Cancel", "ghost")}</div>', title="Named signer", tid="signer")),
+                                 f'<div class="cluster">{btn("Resend", "", icon_name="mail")}{btn("See the email", "ghost", icon_name="inbox", data_href=notif("learning-bond-email", "info"))}{btn("Cancel", "ghost")}</div>', title="Named signer", tid="signer")),
           notes=note("Only one signer request is open at a time; a new one replaces it and cancels its link (L2-137).", "top: 5rem; right: 1rem;"))
-    signer_main = (f'<h1>Accept the Learning Bond data-handling agreement for {esc(ORG)}</h1><p class="text-muted">Tom Nguyen (Admin) asked you, as board chair, to accept it. No PromiseHub account is needed.</p>'
-                   + card(agreement_text(), cls="reading")
-                   + f'<form class="card stack" action="#" method="post" novalidate>{fieldset("Authority", choice("auth", f"I, Angela Baptiste, have authority to accept this agreement for {esc(ORG)}", type_="checkbox"), fid="auth")}'
-                   f'{btn("Accept", "primary", type_="submit", size="lg", icon_name="check")}</form>'
-                   f'<p class="hint center">Questions? Email Tom Nguyen at tom@harbourview.example.</p>')
-    S.add("signer", "The named signer’s own page from the emailed link: the agreement, the authority box and Accept; no account needed (L2-137).", shell="guardian", main=signer_main)
+    signer_head = f'<h1>Accept the Learning Bond data-handling agreement for {esc(ORG)}</h1><p class="text-muted">Tom Nguyen asked you, as Board chair, to accept it. No PromiseHub account is needed.</p>'
+
+    def signer_main(*, err="", busy=False, checked=False):
+        box = fieldset("Authority", choice("auth", f"I, Rev. Angela Baptiste, have authority to accept this agreement for {esc(ORG)}", type_="checkbox", checked=checked, invalid=bool(err)), error=err, fid="auth")
+        return (signer_head + card(agreement_text(), cls="reading")
+                + f'<form class="card stack" action="#" method="post" novalidate>{form_summary([("auth", err)]) if err else ""}{box}'
+                f'{btn("Accept", "primary", type_="submit", size="lg", busy=busy, icon_name="check")}</form>'
+                '')
+    S.add("signer", "The named signer’s own page from the emailed link: the agreement, the authority box and Accept; no account needed (L2-137).", shell="guardian", main=signer_main())
+    S.add("signer-invalid", "The signer chose Accept without the authority box: 422 and the reason beside the box; nothing is stored and the link still works.", shell="guardian",
+          main=signer_main(err="Confirm you have authority to accept this agreement for Harbourview Youth Collective."))
+    S.add("signer-submitting", "Recording the signer’s acceptance.", shell="guardian", main=signer_main(checked=True, busy=True))
+    S.add("signer-loading", "The signer’s link opening.", shell="guardian", main=f'<h1 class="visually-hidden">Learning Bond data-handling agreement</h1>{skeleton_list(3, "Loading the agreement")}')
+    S.add("signer-error", "The signer’s page failed to load; Try again reads the link again and nothing is used up.", shell="guardian",
+          main='<h1>Learning Bond data-handling agreement</h1>' + failed_load("We couldn’t load the agreement"))
     S.add("signer-accepted", "The signer accepted: the acceptance records their name, title and email; Tom is notified; the link stops working.", shell="guardian",
-          main=f'<h1>Thank you, Angela</h1>' + card(alert("success", f"Accepted on Thu 5 Nov 2026, version {AGREEMENT_VERSION}", f"Recorded as Angela Baptiste, Board chair, angela.baptiste@harbourview.example. Tom Nguyen has been told. You can close this page.")))
+          main=f'<h1>Thank you, Rev. Angela Baptiste</h1>' + card(alert("success", f"Accepted on Thu 5 Nov 2026 at 4:30 pm, version {AGREEMENT_VERSION}", f"Recorded as Rev. Angela Baptiste, Board chair, angela.baptiste@harbourview.example. Tom Nguyen has been told. You can close this page.")))
     S.add("signer-expired", "The link was used, expired after 14 days, cancelled or replaced.", shell="guardian",
           main='<h1>This link has expired</h1>' + card(f'<p>Ask {esc(ORG)} to send a new one.</p>'))
+    S.add("signer-unknown", "A link PromiseHub doesn’t know: the same words, without naming any organization.", shell="guardian",
+          main='<h1>This link has expired</h1>' + card('<p>Ask the organization that sent it to send a new one.</p>'))
     S.add("loading", "The agreement loading.", nav="settings", user=T, main=crumbs("Agreement") + page_header("Learning Bond data-handling agreement", "") + f'<div class="split">{skeleton_list(3, "Loading the agreement")}{skeleton_form(1)}</div>')
     S.add("error", "The agreement failed to load.", nav="settings", user=T, main=crumbs("Agreement") + page_header("Learning Bond data-handling agreement", "") + failed_load("We couldn’t load the agreement", back="1"))
     S.add("forbidden", "A role without ManageSettings: 403.", nav="settings", user=J, main=crumbs("Agreement") + page_header("Learning Bond data-handling agreement", "") + forbidden("Admins accept the agreement", "Ask Tom Nguyen."))

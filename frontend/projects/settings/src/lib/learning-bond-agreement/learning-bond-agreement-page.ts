@@ -26,6 +26,7 @@ import {
   formatTime,
 } from '@promisehub/components';
 import { LearningBondSignerDialog } from '../learning-bond-signer-dialog/learning-bond-signer-dialog';
+import { LearningBondSignerEmailDialog } from '../learning-bond-signer-email-dialog/learning-bond-signer-email-dialog';
 
 /**
  * The Learning Bond data-handling agreement (mock: learning-bond-agreement, L2-136): one page in three sections, accepted for the
@@ -145,6 +146,14 @@ export class LearningBondAgreementPage {
         this.toasts.show({ tone: 'success', title: `Link sent to ${name}` });
         this.load();
       });
+  }
+
+  /** The email the signer received (learning-bond-email/info, L2-137 criterion 11). */
+  protected seeTheEmail(r: LearningBondSignerRequest): void {
+    this.dialogs.open<void, LearningBondSignerRequest, LearningBondSignerEmailDialog>(
+      LearningBondSignerEmailDialog,
+      r,
+    );
   }
 
   /** A new link to the same signer; the earlier one stops working (L2-137 criterion 6). */

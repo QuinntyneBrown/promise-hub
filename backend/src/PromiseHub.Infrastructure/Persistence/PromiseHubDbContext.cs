@@ -95,6 +95,7 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
     public DbSet<Domain.LearningBond.LearningBondAgreementAcceptance> LearningBondAgreementAcceptances => Set<Domain.LearningBond.LearningBondAgreementAcceptance>();
     public DbSet<Domain.LearningBond.LearningBondIntake> LearningBondIntakes => Set<Domain.LearningBond.LearningBondIntake>();
     public DbSet<Domain.LearningBond.LearningBondSignerRequest> LearningBondSignerRequests => Set<Domain.LearningBond.LearningBondSignerRequest>();
+    public DbSet<Domain.LearningBond.LearningBondSignerToken> LearningBondSignerTokens => Set<Domain.LearningBond.LearningBondSignerToken>();
     public DbSet<Domain.LearningBond.LearningBondSettings> LearningBondSettings => Set<Domain.LearningBond.LearningBondSettings>();
     public DbSet<DataRequest> DataRequests => Set<DataRequest>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
@@ -344,6 +345,8 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
         {
             e.HasIndex(a => new { a.OrganizationId, a.AgreementVersion });
             e.Property(a => a.AcceptedByName).HasMaxLength(200);
+            e.Property(a => a.SignerTitle).HasMaxLength(Domain.LearningBond.LearningBondSignerRequest.MaximumText);
+            e.Property(a => a.SignerEmail).HasMaxLength(320);
             e.Property(a => a.AcceptedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
         });
         // A named signer's single-use link is kept only as its hash (L2-137).
@@ -359,6 +362,14 @@ public sealed class PromiseHubDbContext(DbContextOptions<PromiseHubDbContext> op
             e.Property(r => r.ExpiresAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
             e.Property(r => r.CancelledAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
             e.Property(r => r.UsedAt).HasConversion(v => v == null ? (long?)null : v.Value.UtcTicks, v => v == null ? null : new DateTimeOffset(v.Value, TimeSpan.Zero));
+        });
+        // Every link issued for a signer request, as its hash, so a replaced link still names its organization (L2-137 criterion 9).
+        modelBuilder.Entity<Domain.LearningBond.LearningBondSignerToken>(e =>
+        {
+            e.HasIndex(t => t.TokenHash).IsUnique();
+            e.HasIndex(t => t.RequestId);
+            e.Property(t => t.TokenHash).HasMaxLength(64);
+            e.Property(t => t.IssuedAt).HasConversion(v => v.UtcTicks, v => new DateTimeOffset(v, TimeSpan.Zero));
         });
         // One settings row per organization: coverage, status roles and the sender name (L2-138, L2-139).
         modelBuilder.Entity<Domain.LearningBond.LearningBondSettings>(e =>

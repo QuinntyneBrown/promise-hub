@@ -32,8 +32,8 @@ public sealed class NotificationPreferencesTests : IAsyncLifetime
         Assert.Equal("When your work is graded, a quiz score is approved or you earn a badge.", grades.GetProperty("hint").GetString());
 
         Assert.Equal(["messages", "announcements"], Keys(await Get(Daniel)));
-        Assert.Equal(["incidents", "mentoring", "requests"], Keys(await Get(Marisol)));
-        Assert.Equal(["incidents", "mentoring", "requests", "staff"], Keys(await Get(Tom)));
+        Assert.Equal(["incidents", "mentoring", "requests", "agreement"], Keys(await Get(Marisol)));
+        Assert.Equal(["incidents", "mentoring", "requests", "staff", "agreement"], Keys(await Get(Tom)));
         Assert.Empty(await Get(Leo));
     }
 

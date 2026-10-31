@@ -55,5 +55,16 @@ public sealed class TenantContext : ITenantContext
         IsResolved = true;
     }
 
+    /// <summary>
+    /// A named signer acting through an emailed link (L2-137, ADR 0078): the organization comes from the link and the audit names the actor
+    /// "Signer: {name}", since the signer has no membership.
+    /// </summary>
+    public void ResolveForSigner(Guid organizationId, string name)
+    {
+        OrganizationId = organizationId;
+        ActorName = $"Signer: {name}";
+        IsResolved = true;
+    }
+
     public static TenantContext System() => new() { IsSystem = true, ActorName = "System" };
 }

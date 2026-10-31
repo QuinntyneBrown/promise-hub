@@ -51,4 +51,7 @@ public sealed class LearningBondSignerRequest : ITenantOwned
     }
 
     public void Cancel(DateTimeOffset now) => CancelledAt ??= now;
+
+    /// <summary>The signer accepted: the link stops working.</summary>
+    public void Use(DateTimeOffset now) => UsedAt ??= now;
 }

@@ -98,6 +98,19 @@ export class LearningBondAgreementPage extends BasePage {
     await this.waiting.getByRole('button', { name: 'Cancel' }).click();
   }
 
+  /** Opens the email the signer received (learning-bond-email/info). */
+  async seeTheEmail(): Promise<void> {
+    await this.waiting.getByRole('button', { name: 'See the email' }).click();
+  }
+
+  get emailDialog(): Locator {
+    return this.page.getByRole('dialog', { name: 'Email preview' });
+  }
+
+  emailPart(part: 'title' | 'text' | 'footer'): Locator {
+    return this.emailDialog.getByTestId(`email-${part}`);
+  }
+
   get toast(): Locator {
     return this.page.getByTestId('toast');
   }

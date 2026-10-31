@@ -244,6 +244,8 @@ public static class DependencyInjection
         services.AddScoped<LearningBond.LearningBondAgreementGate>();
         services.AddScoped<LearningBond.LearningBondAgreementHandler>();
         services.AddScoped<LearningBond.LearningBondSignerHandler>();
+        services.AddScoped<LearningBond.LearningBondSignerLinkAccess>();
+        services.AddScoped<LearningBond.LearningBondSignerLinkHandler>();
         services.AddScoped<LearningBond.LearningBondCoverage>();
         services.AddScoped<LearningBond.LearningBondSettingsHandler>();
         services.AddScoped<LearningBond.LearningBondInvitationHandler>();

@@ -1,6 +1,6 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, catchError, map, of } from 'rxjs';
 import { API_BASE_URL } from '../api-base-url';
 import { toLoad, toWrite } from '../http-results';
 import { LoadResult } from '../load-result';
@@ -14,6 +14,10 @@ import { LearningBondOverview } from './learning-bond-overview';
 import { LearningBondSettings } from './learning-bond-settings';
 import { RequestLearningBondSigner } from './request-learning-bond-signer';
 import { SaveLearningBondSettings } from './save-learning-bond-settings';
+import { LearningBondSignerAcceptance } from './learning-bond-signer-acceptance';
+import { LearningBondSignerAgreement } from './learning-bond-signer-agreement';
+import { LearningBondSignerOutcome } from './learning-bond-signer-outcome';
+import { LearningBondSignerResult } from './learning-bond-signer-result';
 
 @Injectable()
 export class HttpLearningBondApi implements LearningBondApi {
@@ -30,6 +34,47 @@ export class HttpLearningBondApi implements LearningBondApi {
         `${this.baseUrl}/g/learning-bond/${encodeURIComponent(token)}`,
       ),
     );
+  }
+
+  signerAgreement(token: string): Observable<LearningBondSignerResult> {
+    return this.http
+      .get<LearningBondSignerAgreement>(
+        `${this.baseUrl}/sign/learning-bond/${encodeURIComponent(token)}`,
+      )
+      .pipe(
+        map((value): LearningBondSignerResult => ({ status: 'loaded', value })),
+        catchError((error: HttpErrorResponse) =>
+          of<LearningBondSignerResult>(
+            error.status === 410
+              ? { status: 'expired', organization: error.error?.organization ?? '' }
+              : error.status === 404
+                ? { status: 'not-found' }
+                : { status: 'error' },
+          ),
+        ),
+      );
+  }
+
+  acceptAsSigner(token: string, authority: boolean): Observable<LearningBondSignerOutcome> {
+    return this.http
+      .post<LearningBondSignerAcceptance>(
+        `${this.baseUrl}/sign/learning-bond/${encodeURIComponent(token)}/acceptances`,
+        { authority },
+      )
+      .pipe(
+        map((value): LearningBondSignerOutcome => ({ status: 'accepted', value })),
+        catchError((error: HttpErrorResponse) =>
+          of<LearningBondSignerOutcome>(
+            error.status === 422
+              ? { status: 'invalid', errors: error.error?.errors ?? {} }
+              : error.status === 410
+                ? { status: 'expired', organization: error.error?.organization ?? '' }
+                : error.status === 404
+                  ? { status: 'not-found' }
+                  : { status: 'error' },
+          ),
+        ),
+      );
   }
 
   agreement(): Observable<LoadResult<LearningBondAgreement>> {

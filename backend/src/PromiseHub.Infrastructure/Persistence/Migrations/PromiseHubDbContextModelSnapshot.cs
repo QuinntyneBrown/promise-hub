@@ -2359,7 +2359,7 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                     b.Property<long>("AcceptedAt")
                         .HasColumnType("INTEGER");
 
-                    b.Property<Guid>("AcceptedByMembershipId")
+                    b.Property<Guid?>("AcceptedByMembershipId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("AcceptedByName")
@@ -2371,6 +2371,14 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SignerEmail")
+                        .HasMaxLength(320)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SignerTitle")
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -2517,6 +2525,38 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("LearningBondSignerRequests");
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondSignerToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("IssuedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("RequestId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("RequestId");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.ToTable("LearningBondSignerTokens");
                 });
 
             modelBuilder.Entity("PromiseHub.Domain.Mentoring.AssignedWork", b =>
@@ -4773,6 +4813,15 @@ namespace PromiseHub.Infrastructure.Persistence.Migrations
                 });
 
             modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondSignerRequest", b =>
+                {
+                    b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PromiseHub.Domain.LearningBond.LearningBondSignerToken", b =>
                 {
                     b.HasOne("PromiseHub.Domain.Organizations.Organization", null)
                         .WithMany()

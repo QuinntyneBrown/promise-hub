@@ -9,6 +9,8 @@ import type { LearningBondOverview } from './learning-bond-overview';
 import type { LearningBondSettings } from './learning-bond-settings';
 import type { RequestLearningBondSigner } from './request-learning-bond-signer';
 import type { SaveLearningBondSettings } from './save-learning-bond-settings';
+import type { LearningBondSignerOutcome } from './learning-bond-signer-outcome';
+import type { LearningBondSignerResult } from './learning-bond-signer-result';
 
 /**
  * The Learning Bond module (ADR 0076). Every call answers not-found while the module is off for the organization, except the agreement,
@@ -29,6 +31,10 @@ export interface LearningBondApi {
   resendSigner(id: string): Observable<WriteOutcome>;
   /** DELETE /learning-bond/agreement/signers/{id}: cancels the open request; its link stops working. */
   cancelSigner(id: string): Observable<WriteOutcome>;
+  /** GET /sign/learning-bond/{token}: the named signer's agreement, with no sign-in, whether Learning Bond is on or off (ADR 0078). */
+  signerAgreement(token: string): Observable<LearningBondSignerResult>;
+  /** POST /sign/learning-bond/{token}/acceptances: accepts as the named signer; invalid without the authority box. */
+  acceptAsSigner(token: string, authority: boolean): Observable<LearningBondSignerOutcome>;
   /** GET /learning-bond/settings: coverage and status roles, with each running program's households. */
   settings(): Observable<LoadResult<LearningBondSettings>>;
   /** PUT /learning-bond/settings: invalid for no program, a program that isn't running, or a role that may not see status. */

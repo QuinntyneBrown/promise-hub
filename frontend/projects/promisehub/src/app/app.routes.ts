@@ -56,6 +56,11 @@ export const routes: Routes = [
       ),
     title: 'Learning Bond isn’t available',
   },
+  // The named signer's Learning Bond agreement: anonymous and served while the module is off, from the settings library (ADR 0078).
+  {
+    path: 'sign/learning-bond',
+    loadChildren: () => import('@promisehub/settings').then((m) => m.learningBondSignerRoutes),
+  },
   // Guardian pages: anonymous, reached by a link and a code; the server answers for the link's organization.
   { path: 'g', loadChildren: () => import('@promisehub/guardian').then((m) => m.routes) },
   // The public website: anonymous; the library loads only when the server says the slug's site is published (ADR 0043).

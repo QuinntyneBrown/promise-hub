@@ -4,7 +4,7 @@ import { LearningBondAgreementPage } from '../../pages/learning-bond-agreement.p
 const angela = { name: 'Rev. Angela Baptiste', title: 'Board chair', email: 'angela.baptiste@northgate.example' };
 
 // L2-137 an admin names the person who accepts the agreement: one open request per organization, Waiting for, Resend and Cancel.
-// The signer's own page behind the emailed link is prompt 84.
+// The signer's own page behind the emailed link is in signer-page.spec.ts.
 test.describe('Learning Bond named signer', () => {
   test.use({ signedInAs: 'm-grace' });
   test.beforeEach(({ api }) => api.setModules('org-northgate', ['Roster', 'RollCall', 'QuickCards', 'Messages']));
@@ -43,6 +43,26 @@ test.describe('Learning Bond named signer', () => {
     await expect(agreement.signerFieldError('email')).toHaveText('Enter an email like name@example.org.');
     expect(api.learningBond.signerEmails).toEqual([]);
     await agreement.expectAccessible();
+  });
+
+  // L2-137 criterion 11 (learning-bond-email/info).
+  test('Given a signer is waiting, when Grace chooses See the email, then the email Angela received is shown and Escape closes it', async ({ page }) => {
+    const agreement = new LearningBondAgreementPage(page);
+    await agreement.open();
+    await agreement.askSigner(angela);
+    await agreement.sendTheLink();
+    await expect(agreement.waiting).toBeVisible();
+
+    await agreement.seeTheEmail();
+
+    await expect(agreement.emailPart('title')).toHaveText('Grace Mensah asked you to accept the Learning Bond data-handling agreement');
+    await expect(agreement.emailPart('text')).toContainText('Hello Rev. Angela Baptiste. Northgate Community Church Kids wants to offer Learning Bond');
+    await expect(agreement.emailPart('text')).toContainText('Grace Mensah named you, as Board chair. No PromiseHub account is needed. The link works once, for 14 days.');
+    await expect(agreement.emailPart('footer')).toHaveText('Northgate Community Church Kids via PromiseHub');
+    await agreement.expectAccessible();
+
+    await page.keyboard.press('Escape');
+    await expect(agreement.emailDialog).toBeHidden();
   });
 
   // L2-137 criterion 6.

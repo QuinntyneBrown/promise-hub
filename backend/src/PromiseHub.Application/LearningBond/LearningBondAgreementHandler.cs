@@ -24,7 +24,8 @@ public sealed class LearningBondAgreementHandler(IPromiseHubDb db, ITenantContex
         var earlier = current is null ? acceptances.FirstOrDefault(a => a.AgreementVersion < agreement.Version) : null;
         return new LearningBondAgreementDto(agreement.Version, agreement.EffectiveOn,
             [new("What we collect", agreement.WhatWeCollect), new("Where it goes", agreement.WhereItGoes), new("What your organization sees", agreement.WhatYourOrganizationSees)],
-            Dto(current), Dto(earlier), SignerDto(await signers.OpenAsync(cancellationToken)), await modules.IsOnAsync(ModuleId.LearningBond, cancellationToken));
+            Dto(current), Dto(earlier), await SignerDtoAsync(await signers.OpenAsync(cancellationToken), cancellationToken),
+            await modules.IsOnAsync(ModuleId.LearningBond, cancellationToken));
     }
 
     public async Task<Result> AcceptAsync(AcceptAgreementRequest request, CancellationToken cancellationToken = default)
@@ -51,8 +52,15 @@ public sealed class LearningBondAgreementHandler(IPromiseHubDb db, ITenantContex
     private async Task<LearningBondAgreement> CurrentAsync(CancellationToken cancellationToken) =>
         await db.LearningBondAgreements.AsNoTracking().OrderByDescending(a => a.Version).FirstAsync(cancellationToken);
 
-    private static LearningBondSignerRequestDto? SignerDto(LearningBondSignerRequest? r) =>
-        r is null ? null : new(r.Id, r.Name, r.Title, r.Email, r.SentAt, r.ExpiresAt);
+    private async Task<LearningBondSignerRequestDto?> SignerDtoAsync(LearningBondSignerRequest? r, CancellationToken cancellationToken)
+    {
+        if (r is null)
+        {
+            return null;
+        }
+        var organization = await db.Organizations.AsNoTracking().Where(o => o.Id == tenant.OrganizationId).Select(o => o.Name).SingleAsync(cancellationToken);
+        return new(r.Id, r.Name, r.Title, r.Email, r.SentAt, r.ExpiresAt, LearningBondSignerEmailDto.For(r, organization));
+    }
 
     private static LearningBondAcceptanceDto? Dto(LearningBondAgreementAcceptance? a) => a is null ? null : new(a.AgreementVersion, a.AcceptedByName, a.AcceptedAt);
 }
