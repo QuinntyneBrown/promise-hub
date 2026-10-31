@@ -29,7 +29,8 @@ export class GuardianLearningBondPage extends BasePage {
   async verify(contact: string, code: string): Promise<void> {
     await this.page.getByRole('textbox').first().fill(contact);
     await this.page.getByRole('button', { name: /^(Send the code|Enviar el código|Envoyer le code)$/ }).click();
-    await this.page.getByRole('textbox').first().fill(code);
+    // Wait for the code step: filling the first textbox before it appears would put the code in the contact field.
+    await this.page.getByRole('textbox', { name: /^(6-digit code|Código de 6 dígitos|Code à 6 chiffres)/ }).fill(code);
     await this.page.getByRole('button', { name: /^(Continue|Continuar|Continuer)$/ }).click();
   }
 
