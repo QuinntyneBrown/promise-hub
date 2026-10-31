@@ -62,6 +62,20 @@ public static class LearningBondTexts
     public const string SampleGuardian = "Alex";
     public const string SampleLink = "promisehub.ca/lb/4r7k9x";
 
+    /// <summary>The version of the consent wording below; a new wording is a new version (L2-145 criterion 2).</summary>
+    public const int ConsentVersion = 1;
+
+    /// <summary>The exact consent a guardian gives for one child (L2-145 criterion 1).</summary>
+    public static string Consent(string code, string child) => code switch
+    {
+        "es" => $"Acepto que Learning Bond recopile los números de seguro social de {child} y míos y nuestra situación fiscal, y los envíe al proveedor de RESP que yo elija "
+            + "y al Gobierno de Canadá para solicitar el Bono de Estudios Canadiense.",
+        "fr" => $"J’accepte que Learning Bond recueille les numéros d’assurance sociale de {child} et le mien ainsi que notre situation fiscale, et les envoie au fournisseur "
+            + "de REEE que je choisis et au gouvernement du Canada pour demander le Bon d’études canadien.",
+        _ => $"I agree that Learning Bond may collect {child}’s and my social insurance numbers and tax-filing status and send them to the RESP provider I choose and the "
+            + "Government of Canada to apply for the Canada Learning Bond.",
+    };
+
     /// <summary>"Mateo", "Mateo and Sofía", "Ana, Mateo and Sofía", with the language's "and".</summary>
     public static string Names(string code, IReadOnlyList<string> children)
     {

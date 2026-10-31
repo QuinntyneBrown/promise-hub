@@ -89,6 +89,11 @@ export class GuardianHomePage {
   protected readonly t = computed(() => guardianText(this.language()));
   protected readonly h = computed(() => homeText(this.language()));
   protected readonly p = computed(() => portalText(this.language()));
+
+  /** One line per covered child on the Learning Bond card (L2-144 criterion 7). */
+  protected learningBondText(children: { firstName: string; status: string }[]): string {
+    return children.map((c) => this.p().learningBondLine(c.firstName, c.status)).join(' ');
+  }
   protected readonly organization = computed(() => {
     const r = this.result();
     if (r?.status === 'loaded') return r.value.organization;

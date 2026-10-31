@@ -27,4 +27,9 @@ public sealed class LearningBondInvitation : ITenantOwned
     public Guid MessageId { get; private set; }
     public LearningBondLaunchMode How { get; private set; }
     public DateTimeOffset SentAt { get; private set; }
+
+    /// <summary>When the guardian said they aren't interested (L2-144 criterion 4): staff see Not interested and nothing more is sent.</summary>
+    public DateTimeOffset? DeclinedAt { get; private set; }
+
+    public void Decline(DateTimeOffset now) => DeclinedAt ??= now;
 }

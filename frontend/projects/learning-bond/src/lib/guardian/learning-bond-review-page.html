@@ -1,0 +1,116 @@
+<ph-guardian-shell [organization]="organization()" [attr.lang]="language()">
+  @let t = text();
+  @let r = result();
+  @if (!r) {
+    <h1 class="visually-hidden">{{ t.loading }}</h1>
+    <ph-skeleton shape="card" [attr.aria-label]="t.loading" />
+  } @else {
+    @switch (r.status) {
+      @case ('loaded') {
+        @let a = r.value;
+        <div class="stack">
+          <ph-stepper [current]="4" [total]="5" [label]="t.step(4)" />
+          @if (a.noProvider) {
+            <h1>{{ t.noProviderHeading }}</h1>
+            <ph-agent-message [speaker]="t.speaker" [text]="t.noProviderText" />
+            <div>
+              <ph-button
+                icon="globe"
+                href="https://www.canada.ca/en/services/benefits/education/education-savings/learning-bond.html"
+                target="_blank"
+                >{{ t.canadaLink }}</ph-button
+              >
+            </div>
+          } @else if (outcome() === 'sent') {
+            <h1>{{ t.reviewHeading(a.firstName) }}</h1>
+            <div data-testid="review-sent">
+              <ph-alert
+                tone="success"
+                [title]="t.sentTitle(a.firstName, a.provider ?? '')"
+                [text]="t.sentText"
+              />
+            </div>
+          } @else {
+            <h1>{{ t.reviewHeading(a.firstName) }}</h1>
+            <ph-agent-message [speaker]="t.speaker" [text]="a.explanation" />
+            <ph-card [title]="t.providerTitle">
+              <div class="stack" data-testid="review-provider">
+                <p class="plain provider">
+                  <strong>{{ a.provider }}</strong>
+                  <ph-badge tone="success">{{ t.recommended }}</ph-badge>
+                </p>
+                <p class="plain muted">{{ a.reason }}</p>
+                @if (a.providers.length > 1) {
+                  <div>
+                    <ph-button variant="ghost" hasPopup="dialog" (click)="chooseAnother(a)">{{
+                      t.chooseAnother
+                    }}</ph-button>
+                  </div>
+                }
+              </div>
+            </ph-card>
+            <ph-card [title]="t.applicationTitle" [flush]="true">
+              <div data-testid="review-fields">
+                <ph-list [label]="t.applicationTitle" [inset]="true">
+                  @for (row of rows(a); track row.label) {
+                    <ph-list-item [title]="row.label" [meta]="row.value" [error]="row.error">
+                      @if (row.field) {
+                        <ph-button
+                          size="sm"
+                          variant="ghost"
+                          icon="edit"
+                          hasPopup="dialog"
+                          [label]="t.edit(row.label)"
+                          (click)="edit(a, row)"
+                          >{{ t.editButton }}</ph-button
+                        >
+                      }
+                    </ph-list-item>
+                  }
+                </ph-list>
+              </div>
+            </ph-card>
+            <p class="plain muted">{{ t.sendsTo(a.firstName, a.provider ?? '') }}</p>
+            @if (outcome() === 'not-sent' || outcome() === 'error') {
+              <div data-testid="review-not-sent">
+                <ph-alert
+                  tone="danger"
+                  [title]="t.notSentTitle"
+                  [text]="t.notSentText(a.provider ?? '')"
+                />
+              </div>
+            } @else if (outcome() === 'stale') {
+              <ph-alert tone="warning" [title]="t.staleTitle" />
+            } @else if (outcome() === 'incomplete') {
+              <ph-alert tone="warning" [title]="t.addAddress" />
+            }
+            <ph-button
+              variant="primary"
+              size="lg"
+              icon="send"
+              [busy]="busy()"
+              (click)="submit(a)"
+              >{{ t.submitTo(a.provider ?? '') }}</ph-button
+            >
+          }
+        </div>
+      }
+      @case ('gone') {
+        <h1>{{ t.expiredHeading }}</h1>
+        <ph-card>
+          <p class="plain">{{ t.expiredText(r.organization ?? '') }}</p>
+        </ph-card>
+      }
+      @default {
+        <h1>{{ t.pageTitle }}</h1>
+        <ph-card [flush]="true">
+          <ph-empty-state icon="warning" tone="error" [title]="t.errorTitle" [text]="t.errorText">
+            <ph-button variant="primary" icon="refresh" (click)="load()">{{
+              t.tryAgain
+            }}</ph-button>
+          </ph-empty-state>
+        </ph-card>
+      }
+    }
+  }
+</ph-guardian-shell>

@@ -110,10 +110,10 @@ public static class GuardianEndpoints
 
     public const string EnrollCookie = "ph_enroll_device";
 
-    private static GuardianRequest Request(string token, HttpContext http) =>
+    internal static GuardianRequest Request(string token, HttpContext http) =>
         new(token, http.Request.Cookies[DeviceCookie], http.Request.Headers.UserAgent.ToString());
 
-    private static IResult ToHttp(GuardianResult result) => result.Outcome switch
+    internal static IResult ToHttp(GuardianResult result) => result.Outcome switch
     {
         GuardianOutcome.Ok => Results.Ok(result.Value),
         GuardianOutcome.Done => Results.NoContent(),
@@ -122,6 +122,10 @@ public static class GuardianEndpoints
         GuardianOutcome.VerificationRequired => Results.Json(result.Value, contentType: "application/problem+json", statusCode: StatusCodes.Status401Unauthorized),
         GuardianOutcome.Locked => Results.Json(new { code = "locked" }, contentType: "application/problem+json", statusCode: StatusCodes.Status423Locked),
         GuardianOutcome.NotFound => Results.NotFound(),
+        GuardianOutcome.Accepted => Results.Json(result.Value, statusCode: StatusCodes.Status202Accepted),
+        GuardianOutcome.NotSent => Results.Json(new { code = "not-sent" }, contentType: "application/problem+json", statusCode: StatusCodes.Status502BadGateway),
+        GuardianOutcome.Unavailable => Results.Json(new { code = "unavailable" }, contentType: "application/problem+json", statusCode: StatusCodes.Status503ServiceUnavailable),
+        GuardianOutcome.Forbidden => Results.Json(new { code = "forbidden" }, contentType: "application/problem+json", statusCode: StatusCodes.Status403Forbidden),
         GuardianOutcome.TooMany => Results.Json(new { code = "too-many" }, contentType: "application/problem+json", statusCode: StatusCodes.Status429TooManyRequests),
         GuardianOutcome.Conflict => Results.Json(result.Value ?? new { code = "conflict" }, contentType: "application/problem+json", statusCode: StatusCodes.Status409Conflict),
         _ => Results.Json(new { errors = result.Errors }, statusCode: StatusCodes.Status422UnprocessableEntity),

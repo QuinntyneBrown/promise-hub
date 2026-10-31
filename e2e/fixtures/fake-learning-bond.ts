@@ -91,7 +91,24 @@ export class FakeLearningBond {
   readonly links = new Map<string, FakeLearningBondLink>([
     ['tok-lb-rivera', { householdId: 'hh-rivera', organizationId: 'org-harbourview', language: 'es' }],
     ['tok-lb-northgate', { householdId: 'hh-northgate-rivera', organizationId: 'org-northgate', language: 'es' }],
+    ['tok-lb-haddad', { householdId: 'hh-haddad', organizationId: 'org-harbourview', language: 'fr' }],
   ]);
+
+  /** The agent's welcome line for the landing page (AgentFallbackCopy.Welcome). */
+  welcome(code: 'en' | 'es' | 'fr', organization: string): string {
+    if (code === 'es')
+      return `El Bono de Estudios Canadiense es dinero que el Gobierno de Canadá deposita en el RESP de un niño para familias con ingresos más bajos. No tiene que aportar dinero. Lo que escriba va al proveedor del RESP y al Gobierno de Canadá, no a ${organization}.`;
+    if (code === 'fr')
+      return `Le Bon d’études canadien est de l’argent que le gouvernement du Canada verse dans le REEE d’un enfant pour les familles à revenu modeste. Vous n’avez rien à verser. Ce que vous saisissez va au fournisseur de REEE et au gouvernement du Canada, pas à ${organization}.`;
+    return `The Canada Learning Bond is money the Government of Canada puts in a child’s RESP for families with lower incomes. You don’t need to put in any money. What you enter goes to the RESP provider and the Government of Canada, not to ${organization}.`;
+  }
+
+  /** "Up to" the amount for a child born in a year, as of 2026 (LearningBondRule v1); null before 2004. */
+  estimate(birthYear: number, currentYear = 2026): number | null {
+    if (birthYear < 2004 || birthYear > currentYear) return null;
+    const years = Math.min(currentYear, birthYear + 15) - birthYear + 1;
+    return Math.min(2000, 500 + (years - 1) * 100);
+  }
 
   /** organization → its open signer request (one per organization, L2-137 criterion 5). */
   readonly signers = new Map<string, FakeLearningBondSigner>();
@@ -283,6 +300,57 @@ export class FakeLearningBond {
     this.signers.delete(m.organizationId);
     return route.fulfill({ status: 204 });
   }
+
+  /** Learning Bond consents given (LearningBondConsent with scope LearningBond); each starts the child's claim. */
+  readonly consents: { householdId: string; childId: string; typedName: string; language: string; wordingVersion: number }[] = [];
+
+  /** The exact consent wording for one child (LearningBondTexts.Consent). */
+  consentWording(code: 'en' | 'es' | 'fr', child: string): string {
+    if (code === 'es')
+      return `Acepto que Learning Bond recopile los números de seguro social de ${child} y míos y nuestra situación fiscal, y los envíe al proveedor de RESP que yo elija y al Gobierno de Canadá para solicitar el Bono de Estudios Canadiense.`;
+    if (code === 'fr')
+      return `J’accepte que Learning Bond recueille les numéros d’assurance sociale de ${child} et le mien ainsi que notre situation fiscale, et les envoie au fournisseur de REEE que je choisis et au gouvernement du Canada pour demander le Bon d’études canadien.`;
+    return `I agree that Learning Bond may collect ${child}’s and my social insurance numbers and tax-filing status and send them to the RESP provider I choose and the Government of Canada to apply for the Canada Learning Bond.`;
+  }
+
+  /** The consent step's agent line (AgentFallbackCopy.Consent). */
+  consentLine(code: 'en' | 'es' | 'fr', organization: string): string {
+    if (code === 'es') return `Antes de preguntar nada, necesito su permiso por cada hijo. Es distinto del consentimiento del programa que dio a ${organization}.`;
+    if (code === 'fr') return `Avant de vous demander quoi que ce soit, j’ai besoin de votre permission pour chaque enfant. Elle est distincte du consentement au programme donné à ${organization}.`;
+    return `Before I ask anything, I need your permission for each child. It’s separate from the program consent you gave ${organization}.`;
+  }
+
+  /** household → its intake: the guardian SIN's last three digits and the tax answer, reused for every child (LearningBondIntake). */
+  readonly intakes = new Map<string, { guardianLast3: string | null; taxFiled: string | null }>();
+
+  /** child → its SIN's last three digits and whether a record fix was asked (LearningBondClaim). The fake keeps no whole SIN. */
+  readonly claims = new Map<string, { childLast3: string | null; recordFix: string | null }>();
+
+  /** The intake's agent line (AgentFallbackCopy.Intake). */
+  intakeLine(code: 'en' | 'es' | 'fr', child: string): string {
+    if (code === 'es') return `Ya tengo el nombre y la fecha de nacimiento de ${child} de la inscripción. Solo le pediré lo que falta: los números van en las casillas, nunca en un mensaje para mí.`;
+    if (code === 'fr')
+      return `J’ai déjà le nom et la date de naissance de ${child} grâce à l’inscription. Je ne demande que ce qui manque : les numéros vont dans les cases, jamais dans un message pour moi.`;
+    return `I already have ${child}’s name and date of birth from the enrolment. I’ll only ask for what’s missing: numbers go in the boxes, never in a message to me.`;
+  }
+
+  /** application id → the application as reviewed (LearningBondApplication); the fake keeps no SIN. */
+  readonly applications = new Map<
+    string,
+    { childId: string; householdId: string; province: string; provider: string | null; phone: string | null; email: string | null; address: string | null; reviewVersion: number; status: string }
+  >();
+
+  /** Applications the fake provider received (IRespProviderChannel): nothing is here before Submit. */
+  readonly submissions: { applicationId: string; provider: string }[] = [];
+
+  /** The province a new application is prepared for, from the organization's time zone (RespProviders.ProvinceOf). */
+  province = 'ON';
+
+  /** When true, the provider refuses and nothing is sent. */
+  providerFails = false;
+
+  /** Households whose guardian said they aren't interested (LearningBondInvitation.DeclinedAt). */
+  readonly declined = new Set<string>();
 
   /** Every invitation sent (LearningBondInvitation): a household is not invited again within 7 days (L2-140 criterion 5). */
   readonly invitations: { organizationId: string; householdId: string; sentAt: string }[] = [];
@@ -566,4 +634,20 @@ function inLaunchRange(date?: string): boolean {
 function launchDay(date: string): string {
   const d = new Date(`${date}T12:00:00Z`);
   return `${d.toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'UTC' })} ${d.getUTCDate()} ${d.toLocaleDateString('en-GB', { month: 'short', timeZone: 'UTC' })} ${d.getUTCFullYear()}`;
+}
+
+/** The nine digits of a SIN, or null: 9 digits after spaces and hyphens, the check digit (Luhn), not starting with 0 or 8 (L2-146 criterion 3). */
+export function sinDigits(value: string): string | null {
+  const digits = value.replace(/[\s-]/g, '');
+  if (!/^\d{9}$/.test(digits) || digits[0] === '0' || digits[0] === '8') return null;
+  let total = 0;
+  for (let i = 0; i < 9; i++) {
+    let d = Number(digits[i]);
+    if (i % 2 === 1) {
+      d *= 2;
+      if (d > 9) d -= 9;
+    }
+    total += d;
+  }
+  return total % 10 === 0 ? digits : null;
 }

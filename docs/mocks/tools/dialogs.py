@@ -1168,7 +1168,7 @@ def start_donation(S):
 
 
 # ------------------------------------------------------------------ Learning Bond (L1-026 to L1-029; pages_learning_bond.py and pages_learning_bond_guardian.py)
-from pages_learning_bond import LAUNCH_DATE, SENDER, PROVIDER  # noqa: E402
+from pages_learning_bond import LAUNCH_DATE, SENDER, PROVIDER, OTHER_PROVIDERS  # noqa: E402
 from pages_learning_bond_guardian import CONSENT_BEN  # noqa: E402
 R_SD_X = ["L2-161", "L2-162", "L2-163"]
 
@@ -1206,6 +1206,17 @@ simple("learning-bond-callback", "I’d rather talk to someone", "guardian-learn
                  + fieldset("Best time", choice("cb-when", "Mornings", small="9 am to noon") + choice("cb-when", "Afternoons", small="Noon to 5 pm", checked=True) + choice("cb-when", "Evenings", small="5 to 8 pm")),
        "Ask for a call", base_state="in-progress", icon_name="phone", invalid_err={"cb-phone": "Enter a 10-digit mobile number."},
        success_body=f'<p>{ORG} will call you. They will see where you are in the steps, never your SIN.</p><p class="text-muted">Asked Thu 5 Nov, 4:52 pm · afternoons · 905-555-0142.</p>')
+
+simple("learning-bond-edit-field", "Change phone", "learning-bond-review", ["L2-148", "L1-027"] + R_SD_X, "For this application only. Your family’s record isn’t changed.",
+       lambda e: field("application-field", "Phone", type_="tel", value="555-0142" if e else "905-555-0142", inputmode="tel", autocomplete="tel", required=True, error=(e or {}).get("application-field", ""), autofocus=True),
+       "Save", icon_name="edit", invalid_err={"application-field": "Enter a 10-digit mobile number."})
+
+simple("learning-bond-choose-provider", "Choose a provider", "learning-bond-review", ["L2-148", "L1-027"] + R_SD_X, "The same list for every organization, kept by the platform. No provider pays to be here.",
+       lambda e: fieldset("No-fee RESP providers that administer the Learning Bond",
+                          choice("prov", PROVIDER, small="No fees, no deposit needed, and it handles the Learning Bond", checked=True)
+                          + "".join(choice("prov", p, small="No fees, no deposit needed, and it handles the Learning Bond") for p in OTHER_PROVIDERS[:1]),
+                          error=(e or {}).get("prov", "")),
+       "Use this provider", icon_name="globe", invalid_err={"prov": "Choose a provider that serves your province."})
 
 simple("withdraw-learning-bond-consent", "Withdraw consent for Mateo?", "guardian-learning-bond", ["L2-152", "L2-058", "L1-027"] + R_SD_X, f"We’ll stop and delete Mateo’s information here. Anything already sent to {PROVIDER} stays with them; contact them to close the RESP.",
        lambda e: facts([("Stops", "Any unsubmitted application for Mateo is cancelled. His SIN and intake answers are deleted; so is yours if no other child still has consent. No more texts about him."),

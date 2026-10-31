@@ -81,6 +81,7 @@ export * from './lib/sms-preview/sms-preview';
 export * from './lib/email-preview/email-preview';
 export * from './lib/skeleton/skeleton';
 export * from './lib/stat/stat';
+export * from './lib/agent-message/agent-message';
 export * from './lib/table/table';
 export * from './lib/table/table-cell';
 export * from './lib/table/table-column';

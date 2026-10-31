@@ -1,0 +1,47 @@
+:host {
+  display: block;
+}
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.bubble {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-end;
+  max-width: var(--layout-form-wide);
+}
+.face {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--size-avatar-md);
+  height: var(--size-avatar-md);
+  border-radius: var(--radius-md);
+  background: var(--color-accent-subtle);
+  color: var(--color-fg-accent);
+}
+.text {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  border-end-start-radius: var(--radius-xs);
+  background: var(--color-accent-subtle);
+  color: var(--color-fg-default);
+  font: var(--text-body);
+}
+.hint {
+  margin: 0;
+  margin-inline-start: calc(var(--size-avatar-md) + var(--space-3));
+  font: var(--text-body-sm);
+  color: var(--color-fg-subtle);
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

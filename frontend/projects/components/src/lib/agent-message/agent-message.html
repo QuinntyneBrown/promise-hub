@@ -1,0 +1,11 @@
+<div class="chat" [attr.aria-label]="speaker()">
+  <div class="bubble">
+    <span class="face" aria-hidden="true"><ph-icon name="sparkle" /></span>
+    <p class="text" data-testid="agent-text">
+      <span class="visually-hidden">{{ speaker() }}: </span>{{ text() }}
+    </p>
+  </div>
+  @if (hint()) {
+    <p class="hint" data-testid="agent-hint">{{ hint() }}</p>
+  }
+</div>

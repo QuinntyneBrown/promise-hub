@@ -1,0 +1,22 @@
+<form novalidate (ngSubmit)="send()">
+  <ph-dialog [title]="data.text.fixTitle(data.firstName)">
+    <div class="stack">
+      @if (failed()) {
+        <ph-alert tone="danger" [title]="data.text.failed" />
+      }
+      <ph-textarea
+        inputId="fix-note"
+        [label]="data.text.fixLabel"
+        name="note"
+        [error]="error()"
+        [(ngModel)]="note"
+      />
+    </div>
+    <ng-container ngProjectAs="[phDialogFooter]">
+      <ph-button (click)="ref.close()">{{ data.text.fixCancel }}</ph-button>
+      <ph-button variant="primary" type="submit" [busy]="busy()">{{
+        data.text.fixSend(data.organization)
+      }}</ph-button>
+    </ng-container>
+  </ph-dialog>
+</form>

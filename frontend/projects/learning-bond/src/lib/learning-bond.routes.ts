@@ -1,6 +1,11 @@
 import { Routes } from '@angular/router';
 import { LearningBondCoveragePage } from './coverage/learning-bond-coverage-page';
 import { LearningBondFamiliesPage } from './families/learning-bond-families-page';
+import { GuardianLearningBondPage } from './guardian/guardian-learning-bond-page';
+import { LearningBondConsentPage } from './guardian/learning-bond-consent-page';
+import { LearningBondIntakePage } from './guardian/learning-bond-intake-page';
+import { LearningBondEstimatePage } from './guardian/learning-bond-estimate-page';
+import { LearningBondReviewPage } from './guardian/learning-bond-review-page';
 import { SettingsLearningBondPage } from './hub/settings-learning-bond-page';
 import { LearningBondInvitationPage } from './invitation/learning-bond-invitation-page';
 import { LearningBondLaunchPage } from './launch/learning-bond-launch-page';
@@ -48,5 +53,32 @@ export const settingsRoutes: Routes = [
   },
 ];
 
-/** Guardian pages under /g/learning-bond/:token, loaded only when the server answers the link (L2-162 criterion 6). Screens arrive with prompt 86 onward. */
-export const guardianRoutes: Routes = [];
+/** Guardian pages under /g/learning-bond/:token, loaded only when the server answers the link (L2-162 criterion 6). */
+export const guardianRoutes: Routes = [
+  {
+    path: '',
+    pathMatch: 'full',
+    component: GuardianLearningBondPage,
+    title: 'Learning Bond · PromiseHub',
+  },
+  {
+    path: 'consent',
+    component: LearningBondConsentPage,
+    title: 'Consent · Learning Bond · PromiseHub',
+  },
+  {
+    path: 'children/:childId/intake',
+    component: LearningBondIntakePage,
+    title: 'Details · Learning Bond · PromiseHub',
+  },
+  {
+    path: 'children/:childId/estimate',
+    component: LearningBondEstimatePage,
+    title: 'Estimate · Learning Bond · PromiseHub',
+  },
+  {
+    path: 'children/:childId/review',
+    component: LearningBondReviewPage,
+    title: 'Review · Learning Bond · PromiseHub',
+  },
+];
