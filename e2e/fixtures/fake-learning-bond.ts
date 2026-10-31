@@ -382,6 +382,9 @@ export class FakeLearningBond {
   /** The household's running total lines (LearningBondTotals). */
   readonly totalLines: { child: string | null; stream: string; amount: number; confirmed: boolean }[] = [];
 
+  /** The dashboard's raw figures per covered program name (LearningBondFigures); unset programs read 0. */
+  readonly figures = new Map<string, { invited: number; started: number; completed: number; children: number; estLb: number; estBen: number; confLb: number; confBen: number }>();
+
   /** When true, the provider refuses and nothing is sent. */
   providerFails = false;
 

@@ -405,7 +405,7 @@ def learning_bond_dashboard(S):
           + dash_table([DASH_ROWS[1]], ["Saturday Sports", "57", "19", "7", "9", "$13,300", "$3,300"]))
     S.add("loading", "The dashboard loading: skeletons in the final layout.", nav="learning-bond", user=M, main=page_header("Learning Bond", "") + skeleton_kpis(6) + skeleton_list(3, "Loading programs"))
     S.add("error", "The dashboard failed to load: Try again.", nav="learning-bond", user=M, main=hdr(False) + failed_load("We couldn’t load the dashboard"))
-    S.add("forbidden", "Jaylen (Site lead), no ViewReports: 403; he can still open the families list.", nav="learning-bond", user=J,
+    S.add("forbidden", "A role without ViewReports (a youth worker; site leads hold it): 403, with the covered households list.", nav="learning-bond", user=J,
           main=page_header("Learning Bond", "") + card(empty("Admins and program directors see the dashboard", "You can help families from the covered households list.", action=btn("Covered households", "primary", href=page("learning-bond-families")) + btn("Back to Today", "", href=page("today")), icon_name="lock"), cls="card--flush"))
 
 

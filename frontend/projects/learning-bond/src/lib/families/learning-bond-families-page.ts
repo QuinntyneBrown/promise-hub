@@ -1,7 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { catchError, EMPTY, map } from 'rxjs';
 import {
   LEARNING_BOND_API,
+  SESSION_API,
   LEARNING_BOND_FAMILY_STATUS_LABELS,
   LearningBondFamilies,
   LearningBondFamily,
@@ -60,6 +63,16 @@ const TONES: Partial<Record<LearningBondFamilyStatus, 'neutral' | 'info' | 'succ
 })
 export class LearningBondFamiliesPage {
   private readonly api = inject(LEARNING_BOND_API);
+  /** Roles that read reports also see the dashboard (L2-141). */
+  protected readonly readsReports = toSignal(
+    inject(SESSION_API)
+      .current()
+      .pipe(
+        map((session) => ['Admin', 'ProgramDirector', 'SiteLead'].includes(session.role)),
+        catchError(() => EMPTY),
+      ),
+    { initialValue: false },
+  );
   private readonly dialogs = inject(PhDialogs);
   private readonly toasts = inject(ToastService);
 

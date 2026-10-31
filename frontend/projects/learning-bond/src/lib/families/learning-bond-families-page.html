@@ -1,4 +1,8 @@
-<ph-page-header title="Learning Bond households" [subtitle]="subtitle()" />
+<ph-page-header title="Learning Bond households" [subtitle]="subtitle()">
+  @if (readsReports()) {
+    <ph-button icon="reports" link="..">Dashboard</ph-button>
+  }
+</ph-page-header>
 @switch (state()) {
   @case ('forbidden') {
     <ph-card [flush]="true">

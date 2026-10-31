@@ -15,18 +15,23 @@ Terms used in this document:
 
 Frontend:
 
-- **`LearningBondDashboardPage`** — `ph-chips` for program and period, six `ph-stat`s with the Learning Bond and benefits split as the caption, a `ph-table` by covered program with a total row, Export for funders and Covered households in the header. States: `empty` ("Families will appear here as they start."), `suppressed`, `filtered`, loading (`ph-skeleton` in the final layout), error (Try again), forbidden (no `ViewReports`, with a link to the families list). A `ph-alert` warning when a new agreement version is pending (`learning-bond-staff-notice` warning).
-- **`ExportLearningBondDialog`** (CDK Dialog) — `ph-text-field` From and To dates, the column list, `ph-alert` info "Recorded in the audit log with the row count. The link works for 7 days.", Export; success body with the file name and Download; 422 "Choose a start date on or before the end date." inline.
-- **`LEARNING_BOND_API`** — `getDashboard(filter)`, `export(request)`; the download uses the existing `REPORTS_API.download(exportId)`.
+- **`LearningBondDashboardPage`** (`frontend/projects/learning-bond/`, route `/learning-bond`) shows:
+  - `ph-page-header` with Export for funders and Covered households;
+  - `ph-select` filters for Program (all covered programs, or one) and Period (Last 30 days, Last 90 days, All time);
+  - six `ph-stat` figures, where the dollar ones carry "Learning Bond $X · benefits $Y" or "Withheld: fewer than 5 households";
+  - `ph-table` By covered program, or, just launched, the empty state "Families will appear here as they start.";
+  - a forbidden state for roles without `ViewReports`, with Covered households.
+- **`LearningBondExportDialog`** (`export-learning-bond`, CDK dialog) offers the period and Export. Once ready, a success `ph-alert` shows the file name and Download.
+- **`LearningBondFamiliesPage`** gains a Dashboard button for roles that read reports.
+- **API methods on `LEARNING_BOND_API`**: `dashboard(program, period)`, `exportForFunders(period)` and `exportUrl(id)`.
 
 Backend:
 
-- **`LearningBondDashboardHandler`** — `GET /learning-bond/dashboard?programId=&period=` (`ViewReports`, 403 otherwise, L2-141 criterion 4): resolves covered programs through `LearningBondCoverage`, loads the tenant's invitations, consents, claims and applications in the period, and computes the six figures overall and per program with `LearningBondFigures`. A per-program figure resting on fewer than 5 households is replaced by `Suppressed` and its dollars by null (criterion 3); the organization-wide figures follow the same rule. The query reads within the `L2-033` budget for reads: one aggregate query per table, no per-household round trip (criterion 5).
-- **`LearningBondFigures`** (`PromiseHub.Application/LearningBond/`) — pure functions from the loaded rows to `LearningBondFiguresDto`: counts, the two sums each split by `ApplicationKind`, and confirmed dollars per completed household for the export. Deposits reported by `LearningBondApplication` webhooks count here and in the guardian's running total (L2-150).
-- **`ExportLearningBondHandler`** — `POST /learning-bond/exports` (`ViewReports`): validates `from <= to` (422), computes the rows with `LearningBondFigures` for the period, writes one row per covered program and a total row with `ReportCsv`, each count of a row under 5 households as "<5" and its dollars blank (L2-143 criterion 2), stores a `ReportExport` of kind `LearningBond` named `{organization}-learning-bond-{from}-{to}.csv`, audits `Created` on `ReportExport` with the kind and row count, answers 201 with the export id and link (criterion 1 and 3). The existing export route answers the file for 7 days and 410 after (`ReportExport.Lifetime`, L2-025). `ReportExport` gains a `Kind` property, which the built class does not have today.
-- **DTO rule** — the dashboard and the CSV carry counts, sums and program names only: no household, guardian or child name, contact, date of birth or identifier, and no per-family amount (L2-143 criterion 3). Northgate's rows are never read because every table is under the tenant filter (L2-141 criterion 4).
-
-Tenant and module gate: both endpoints are in the `/learning-bond` group behind `RequireModule(ModuleId.LearningBond)`, so an organization with the module off answers 404 for the dashboard and the export (L2-143 criterion 4). Audited: each export as `Created` on `ReportExport`; opening the dashboard is a read of aggregates and is not audited.
+- **`LearningBondFigures`** computes the raw `LearningBondFigureSet` for any set of covered programs and period, applies the one suppression rule, and maps it to `LearningBondFiguresDto` (ADR 0084).
+- **`LearningBondDashboardHandler`**:
+  - `GetAsync(program, period)` returns the covered programs, the organization's figures and a row per program.
+  - `ExportAsync(period)` writes the CSV per program plus a total row: "<5" counts, blank dollars, and confirmed dollars per completed household. It stores a `ReportExport` (7 days) and audits it as Created, naming it a Learning Bond export with its row count.
+- **Endpoints**, in `LearningBondEndpoints`, behind the module gate and `RequirePermission(ViewReports)`: `GET /learning-bond/dashboard?program=&period=` and `POST /learning-bond/exports`. The download is `GET /reports/exports/{id}`, which answers 410 after 7 days.
 
 ## Requirements
 

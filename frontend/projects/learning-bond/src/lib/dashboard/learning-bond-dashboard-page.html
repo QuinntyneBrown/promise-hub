@@ -1,0 +1,94 @@
+<ph-page-header
+  title="Learning Bond"
+  subtitle="Uptake and dollars unlocked. Counts and sums, never a family’s details."
+>
+  @if (result()?.status === 'loaded') {
+    <ph-button icon="download" hasPopup="dialog" (click)="exportForFunders()"
+      >Export for funders</ph-button
+    >
+  }
+  <ph-button icon="families" link="families">Covered households</ph-button>
+</ph-page-header>
+@let r = result();
+@if (!r) {
+  <ph-skeleton shape="card" aria-label="Loading the dashboard" />
+} @else {
+  @switch (r.status) {
+    @case ('loaded') {
+      @let d = r.value;
+      <div class="stack">
+        <div class="filters">
+          <ph-select
+            inputId="dashboard-program"
+            label="Program"
+            name="program"
+            [options]="programOptions()"
+            [(ngModel)]="program"
+            (ngModelChange)="load()"
+          />
+          <ph-select
+            inputId="dashboard-period"
+            label="Period"
+            name="period"
+            [options]="periods"
+            [(ngModel)]="period"
+            (ngModelChange)="load()"
+          />
+        </div>
+        <div class="figures" data-testid="dashboard-figures">
+          <ph-stat label="Households invited" [value]="count(d.all.invited)" />
+          <ph-stat label="Started" [value]="count(d.all.started)" />
+          <ph-stat label="Completed" [value]="count(d.all.completed)" />
+          <ph-stat
+            label="Children with a Learning Bond application"
+            [value]="count(d.all.children)"
+          />
+          <ph-stat
+            label="Estimated dollars unlocked"
+            [value]="dollars(d.all.estimated)"
+            [caption]="split(d.all.estimated)"
+          />
+          <ph-stat
+            label="Confirmed dollars deposited"
+            [value]="dollars(d.all.confirmed)"
+            [caption]="split(d.all.confirmed)"
+          />
+        </div>
+        @if (d.empty) {
+          <ph-card [flush]="true">
+            <ph-empty-state
+              icon="sparkle"
+              title="Families will appear here as they start."
+              text="Counts and sums only, never a family."
+            />
+          </ph-card>
+        } @else {
+          <ph-table caption="By covered program" [columns]="columns" [rows]="rows(d.rows)" />
+        }
+      </div>
+    }
+    @case ('forbidden') {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="lock"
+          title="Admins and program directors see the dashboard"
+          text="You can help families from the covered households list."
+        >
+          <ph-button variant="primary" link="families">Covered households</ph-button>
+        </ph-empty-state>
+      </ph-card>
+    }
+    @default {
+      <ph-card [flush]="true">
+        <ph-empty-state
+          icon="warning"
+          tone="error"
+          title="We couldn’t load the dashboard"
+          text="Nothing was lost. Try again."
+        >
+          <ph-button variant="primary" icon="refresh" (click)="load()">Try again</ph-button>
+        </ph-empty-state>
+      </ph-card>
+    }
+  }
+}
